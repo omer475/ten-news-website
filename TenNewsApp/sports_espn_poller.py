@@ -1021,14 +1021,18 @@ def publish_sports_article(supabase, league_config: Dict, event: Dict,
     results = event['results']
     details = build_details_component(sport, results)
 
-    # Generate embedding for feed personalization (pgvector similarity search)
+    # Generate embeddings for feed personalization (pgvector similarity search)
     article_embedding = None
+    article_embedding_minilm = None
     try:
-        from step1_5_event_clustering import get_embedding
+        from step1_5_event_clustering import get_embedding, get_embedding_minilm
         embed_text = f"{generated['title']} Sports {league_config['topic']} {' '.join(countries)}"
         article_embedding = get_embedding(embed_text)
+        article_embedding_minilm = get_embedding_minilm(embed_text)
         if article_embedding:
-            print(f"      🧬 Embedding generated ({len(article_embedding)} dims)")
+            print(f"      🧬 Gemini embedding ({len(article_embedding)} dims)")
+        if article_embedding_minilm:
+            print(f"      🧠 MiniLM embedding ({len(article_embedding_minilm)} dims)")
     except Exception as e:
         print(f"      ⚠️ Embedding generation failed: {e}")
 
@@ -1051,6 +1055,7 @@ def publish_sports_article(supabase, league_config: Dict, event: Dict,
         'country_relevance': country_relevance,
         'num_sources': 1,
         'embedding': article_embedding,
+        'embedding_minilm': article_embedding_minilm,
     }
 
     try:

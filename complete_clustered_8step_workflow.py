@@ -1309,14 +1309,18 @@ def run_complete_pipeline():
                 failed_components = [c for c in selected if c not in successful_components]
                 print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
-            # Generate embedding for feed personalization (pgvector similarity search)
+            # Generate embeddings for feed personalization (pgvector similarity search)
             article_embedding = None
+            article_embedding_minilm = None
             try:
-                from step1_5_event_clustering import get_embedding
+                from step1_5_event_clustering import get_embedding, get_embedding_minilm
                 embed_text = f"{title} {synthesized.get('category', '')} {' '.join(article_topics or [])} {' '.join(article_countries or [])}"
                 article_embedding = get_embedding(embed_text)
+                article_embedding_minilm = get_embedding_minilm(embed_text)
                 if article_embedding:
-                    print(f"   🧬 [Cluster {cluster_id}] Embedding generated ({len(article_embedding)} dims)")
+                    print(f"   🧬 [Cluster {cluster_id}] Gemini embedding ({len(article_embedding)} dims)")
+                if article_embedding_minilm:
+                    print(f"   🧠 [Cluster {cluster_id}] MiniLM embedding ({len(article_embedding_minilm)} dims)")
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
@@ -1344,6 +1348,7 @@ def run_complete_pipeline():
                 'image_score': synthesized.get('image_score'),
                 'source_titles': source_titles,
                 'embedding': article_embedding,
+                'embedding_minilm': article_embedding_minilm,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()

@@ -533,36 +533,85 @@ def get_embedding(text: str) -> List[float]:
     """
     Get Gemini embedding for a text string.
     Uses gemini-embedding-001 model (replacement for deprecated text-embedding-004).
-    
+
     Args:
         text: Text to embed (article title)
-        
+
     Returns:
-        List of floats (768-dimensional vector)
+        List of floats (3072-dimensional vector)
     """
     try:
         api_key = get_gemini_api_key()
         # Clean text - remove HTML entities and special chars
         clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
         clean_text = clean_text.strip()[:500]  # Limit length
-        
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
-        
+
         payload = {
             "model": "models/gemini-embedding-001",
             "content": {
                 "parts": [{"text": clean_text}]
             }
         }
-        
+
         response = requests.post(url, json=payload, timeout=30)
         response.raise_for_status()
         result = response.json()
-        
+
         return result['embedding']['values']
     except Exception as e:
         print(f"  ⚠️ Embedding error: {e}")
         return None
+
+
+# ==========================================
+# MiniLM EMBEDDING (384-dim, better topic discrimination)
+# ==========================================
+
+_minilm_model = None
+
+def get_minilm_model():
+    """Lazy-load MiniLM model (only when first needed)."""
+    global _minilm_model
+    if _minilm_model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            _minilm_model = SentenceTransformer('all-MiniLM-L6-v2')
+            print(f"  🧠 MiniLM model loaded ({_minilm_model.get_sentence_embedding_dimension()}-dim)")
+        except Exception as e:
+            print(f"  ⚠️ MiniLM load failed: {e}")
+            return None
+    return _minilm_model
+
+
+def get_embedding_minilm(text: str) -> Optional[List[float]]:
+    """Get MiniLM embedding (384-dim) for feed ranking."""
+    try:
+        model = get_minilm_model()
+        if model is None:
+            return None
+        clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
+        clean_text = clean_text.strip()[:500]
+        emb = model.encode(clean_text)
+        return emb.tolist()
+    except Exception as e:
+        print(f"  ⚠️ MiniLM embedding error: {e}")
+        return None
+
+
+def get_embeddings_minilm_batch(texts: List[str]) -> List[Optional[List[float]]]:
+    """Get MiniLM embeddings for multiple texts (batch, fast)."""
+    try:
+        model = get_minilm_model()
+        if model is None:
+            return [None] * len(texts)
+        cleaned = [re.sub(r'&#\d+;|&\w+;', '', t).strip()[:500] for t in texts]
+        embs = model.encode(cleaned, batch_size=64, show_progress_bar=False)
+        return [e.tolist() for e in embs]
+    except Exception as e:
+        print(f"  ⚠️ MiniLM batch embedding error: {e}")
+        return [None] * len(texts)
 
 
 def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:

@@ -126,14 +126,126 @@ function getRecencyDecay(createdAt, category) {
 }
 
 // ==========================================
+// USER INTEREST PROFILE (from engagement history)
+// ==========================================
+
+async function buildUserInterestProfile(supabase, userId) {
+  // Get article IDs the user engaged with in the last 14 days
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: events } = await supabase
+    .from('user_article_events')
+    .select('article_id, event_type')
+    .eq('user_id', userId)
+    .gte('created_at', twoWeeksAgo)
+    .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view'])
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  if (!events || events.length === 0) return null;
+
+  // Weight by engagement type: saved > engaged > viewed
+  const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
+  const articleWeights = {};
+  for (const e of events) {
+    const w = eventWeights[e.event_type] || 1;
+    articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
+  }
+
+  const articleIds = Object.keys(articleWeights).map(Number).filter(Boolean);
+  if (articleIds.length === 0) return null;
+
+  // Fetch interest_tags for engaged articles (batch)
+  let allTags = [];
+  for (let i = 0; i < articleIds.length; i += 300) {
+    const batch = articleIds.slice(i, i + 300);
+    const { data } = await supabase
+      .from('published_articles')
+      .select('id, interest_tags')
+      .in('id', batch);
+    if (data) allTags = allTags.concat(data);
+  }
+
+  // Build weighted tag frequency map
+  const tagScores = {};
+  for (const article of allTags) {
+    const tags = safeJsonParse(article.interest_tags, []);
+    const weight = articleWeights[article.id] || 1;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      tagScores[t] = (tagScores[t] || 0) + weight;
+    }
+  }
+
+  // Normalize: divide by max score so top tag = 1.0
+  const maxScore = Math.max(...Object.values(tagScores), 1);
+  const profile = {};
+  for (const [tag, score] of Object.entries(tagScores)) {
+    profile[tag] = score / maxScore;
+  }
+
+  return profile;
+}
+
+function computeTagOverlap(article, userProfile) {
+  if (!userProfile) return 0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  if (tags.length === 0) return 0;
+
+  let totalScore = 0;
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    totalScore += userProfile[t] || 0;
+  }
+  // Average overlap per tag, capped at 1.0
+  return Math.min(totalScore / tags.length, 1.0);
+}
+
+// ==========================================
+// SKIP PROFILE (negative signals)
+// ==========================================
+
+async function getUserSkipProfile(supabase, userId) {
+  // Get stored skip profile (computed periodically)
+  const { data: user } = await supabase
+    .from('users')
+    .select('skip_profile')
+    .eq('id', userId)
+    .single();
+
+  return user?.skip_profile || null;
+}
+
+function computeSkipPenalty(article, skipProfile, interestProfile) {
+  if (!skipProfile) return 0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  if (tags.length === 0) return 0;
+
+  let skipScore = 0;
+  let interestScore = 0;
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    skipScore += skipProfile[t] || 0;
+    interestScore += interestProfile ? (interestProfile[t] || 0) : 0;
+  }
+  skipScore /= tags.length;
+  interestScore /= tags.length;
+
+  // Only penalize if skip signal is stronger than interest signal
+  const netSkip = Math.max(0, skipScore - interestScore * 0.5);
+  return Math.min(netSkip, 0.9); // Cap at 90% penalty
+}
+
+// ==========================================
 // SCORING WITHIN BUCKETS
 // ==========================================
 
-function scorePersonal(article, similarity) {
+function scorePersonal(article, similarity, tagOverlap) {
   const recency = getRecencyDecay(article.created_at, article.category);
   const aiScore = article.ai_final_score || 0;
-  // Similarity is primary (0-1 range × 1000), editorial score is secondary quality signal
-  return similarity * 1000 + (aiScore / 1000) * 300 * recency;
+  // Tag overlap is primary signal (what Instagram calls "interest scores")
+  // Embedding similarity is secondary (retrieval signal, not ranking signal)
+  // Quality and recency are supporting signals
+  return tagOverlap * 400 + similarity * 300 + (aiScore / 1000) * 100 * recency;
 }
 
 function scoreTrending(article) {
@@ -256,6 +368,8 @@ export default async function handler(req, res) {
 
     let userPrefs = null;
     let tasteVector = null;
+    let tasteVectorMinilm = null;
+    let skipProfile = null;
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
 
@@ -263,7 +377,7 @@ export default async function handler(req, res) {
       // Try lookup by users.id first, then by auth_user_id
       let { data: userData } = await supabase
         .from('users')
-        .select('id, home_country, followed_countries, followed_topics, taste_vector')
+        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
         .eq('id', userId)
         .single();
 
@@ -271,7 +385,7 @@ export default async function handler(req, res) {
         // userId might be the auth user ID — try auth_user_id link
         const { data: linkedUser } = await supabase
           .from('users')
-          .select('id, home_country, followed_countries, followed_topics, taste_vector')
+          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
           .eq('auth_user_id', userId)
           .single();
         if (linkedUser) userData = linkedUser;
@@ -282,6 +396,10 @@ export default async function handler(req, res) {
         tasteVector = userData.taste_vector;
         persUserId = userData.id;
       }
+
+      // Extract MiniLM taste vector and skip profile
+      tasteVectorMinilm = userData?.taste_vector_minilm || null;
+      skipProfile = userData?.skip_profile || null;
 
       // Check if user has interest clusters (PinnerSage-lite)
       if (tasteVector && persUserId) {
@@ -342,7 +460,8 @@ export default async function handler(req, res) {
     // DETERMINE FEED STRATEGY
     // ==========================================
 
-    const hasEmbeddingPersonalization = tasteVector || hasInterestClusters;
+    const hasEmbeddingPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
+    const similarityFloor = userPrefs?.similarity_floor || 0;
 
     if (hasEmbeddingPersonalization) {
       // ============================================
@@ -352,7 +471,10 @@ export default async function handler(req, res) {
         userId: persUserId || userId,
         userPrefs,
         tasteVector,
+        tasteVectorMinilm,
         hasInterestClusters,
+        similarityFloor,
+        skipProfile,
         seenArticleIds,
         limit,
         offset,
@@ -380,7 +502,7 @@ export default async function handler(req, res) {
 // ==========================================
 
 async function handleV2Feed(req, res, supabase, opts) {
-  const { userId, userPrefs, tasteVector, hasInterestClusters, seenArticleIds, limit, offset } = opts;
+  const { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters, similarityFloor, skipProfile, seenArticleIds, limit, offset } = opts;
 
   const now = Date.now();
   const seventyTwoHoursAgo = new Date(now - 72 * 60 * 60 * 1000).toISOString();
@@ -396,27 +518,50 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const excludeIds = seenArticleIds.length > 0 ? seenArticleIds : null;
 
-  // Build the personal query based on cluster availability
+  // Build the personal query — prefer MiniLM (better topic discrimination)
   let personalPromise;
-  if (hasInterestClusters) {
-    // PinnerSage-lite: multi-cluster ANN search
+  const minSim = similarityFloor || 0;
+  const useMinilm = !!tasteVectorMinilm;
+
+  if (hasInterestClusters && useMinilm) {
+    // MiniLM multi-cluster ANN search (best: HNSW indexed + 1.8x better discrimination)
+    personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
+      p_user_id: userId,
+      match_per_cluster: 50,
+      hours_window: 72,
+      exclude_ids: excludeIds,
+      min_similarity: minSim,
+    });
+  } else if (hasInterestClusters) {
+    // Gemini multi-cluster ANN search (fallback)
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
       p_user_id: userId,
       match_per_cluster: 50,
       hours_window: 72,
       exclude_ids: excludeIds,
+      min_similarity: minSim,
+    });
+  } else if (useMinilm) {
+    // MiniLM single taste vector search
+    personalPromise = supabase.rpc('match_articles_personal_minilm', {
+      query_embedding: tasteVectorMinilm,
+      match_count: 150,
+      hours_window: 72,
+      exclude_ids: excludeIds,
+      min_similarity: minSim,
     });
   } else {
-    // Single taste vector search
+    // Gemini single taste vector search (fallback)
     personalPromise = supabase.rpc('match_articles_personal', {
       query_embedding: tasteVector,
       match_count: 150,
       hours_window: 72,
       exclude_ids: excludeIds,
+      min_similarity: minSim,
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult] = await Promise.all([
+  const [personalResult, trendingResult, discoveryResult, userInterestProfile] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search — finds YOUR content
     personalPromise,
 
@@ -437,6 +582,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       .gte('ai_final_score', 400)
       .order('ai_final_score', { ascending: false })
       .limit(200),
+
+    // 4. USER INTEREST PROFILE: tag frequencies from engagement history
+    buildUserInterestProfile(supabase, userId),
   ]);
 
   if (personalResult.error) {
@@ -451,14 +599,60 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PROCESS CANDIDATES
   // ==========================================
 
-  const personalIds = new Set((personalResult.data || []).map(r => r.id));
   const personalSimilarityMap = {};
-  for (const r of (personalResult.data || [])) {
-    // Keep highest similarity if article appears in multiple clusters
-    if (!personalSimilarityMap[r.id] || r.similarity > personalSimilarityMap[r.id]) {
+  let personalIdOrder = []; // Ordered list of article IDs for the personal bucket
+
+  if (hasInterestClusters) {
+    // Round-robin across clusters for balanced interest representation
+    const clusterBuckets = {};
+    for (const r of (personalResult.data || [])) {
+      const ci = r.cluster_index ?? 0;
+      if (!clusterBuckets[ci]) clusterBuckets[ci] = [];
+      clusterBuckets[ci].push(r);
+      if (!personalSimilarityMap[r.id] || r.similarity > personalSimilarityMap[r.id]) {
+        personalSimilarityMap[r.id] = r.similarity;
+      }
+    }
+
+    // Sort each cluster by similarity
+    for (const ci of Object.keys(clusterBuckets)) {
+      clusterBuckets[ci].sort((a, b) => b.similarity - a.similarity);
+    }
+
+    // Round-robin: pick one from each cluster in turn
+    const clusterKeys = Object.keys(clusterBuckets).sort((a, b) =>
+      (clusterBuckets[b]?.length || 0) - (clusterBuckets[a]?.length || 0)
+    );
+    const pointers = {};
+    for (const ci of clusterKeys) pointers[ci] = 0;
+
+    const seen = new Set();
+    for (let round = 0; round < 200 && personalIdOrder.length < 150; round++) {
+      let addedAny = false;
+      for (const ci of clusterKeys) {
+        while (pointers[ci] < clusterBuckets[ci].length) {
+          const r = clusterBuckets[ci][pointers[ci]];
+          pointers[ci]++;
+          if (!seen.has(r.id)) {
+            seen.add(r.id);
+            personalIdOrder.push(r.id);
+            addedAny = true;
+            break;
+          }
+        }
+      }
+      if (!addedAny) break;
+    }
+  } else {
+    // Single taste vector: sort by similarity
+    const sorted = (personalResult.data || []).sort((a, b) => b.similarity - a.similarity);
+    for (const r of sorted) {
       personalSimilarityMap[r.id] = r.similarity;
+      personalIdOrder.push(r.id);
     }
   }
+
+  const personalIds = new Set(personalIdOrder);
 
   // TRENDING: category-cap to max 3 per category, exclude those already in Personal
   const trendingCategoryCounts = {};
@@ -531,15 +725,57 @@ async function handleV2Feed(req, res, supabase, opts) {
   // SCORE WITHIN BUCKETS
   // ==========================================
 
-  // Personal bucket: scored by similarity × 1000 + editorial quality
-  const personalScored = [...personalIds]
+  // Personal bucket: score by tag overlap (primary) + similarity (secondary) + skip penalty
+  // When round-robin is active, blend cluster order with tag-based ranking
+  const personalScoredRaw = personalIdOrder
     .filter(id => articleMap[id])
-    .map(id => ({
-      ...articleMap[id],
-      _score: scorePersonal(articleMap[id], personalSimilarityMap[id] || 0),
-      _similarity: personalSimilarityMap[id] || 0,
-    }))
+    .map((id, orderIndex) => {
+      const article = articleMap[id];
+      const similarity = personalSimilarityMap[id] || 0;
+      const tagOverlap = computeTagOverlap(article, userInterestProfile);
+      const skipPen = computeSkipPenalty(article, skipProfile, userInterestProfile);
+      let baseScore = hasInterestClusters
+        ? (1000 - orderIndex) * 0.3 + scorePersonal(article, similarity, tagOverlap)
+        : scorePersonal(article, similarity, tagOverlap);
+      // Apply skip penalty (demote articles matching user's skip profile)
+      baseScore *= (1 - skipPen);
+      return {
+        ...article,
+        _score: baseScore,
+        _similarity: similarity,
+        _tagOverlap: tagOverlap,
+        _skipPenalty: skipPen,
+      };
+    })
     .sort((a, b) => b._score - a._score);
+
+  // Topic saturation penalty: penalize repeated interest tags in the feed
+  // First article with tag "iran" = no penalty, second = -30%, third = -50%, etc.
+  const tagSaturation = {};
+  const personalScored = [];
+  for (const a of personalScoredRaw) {
+    const tags = safeJsonParse(a.interest_tags, []);
+    // Compute saturation penalty from tags already in the feed
+    let penalty = 0;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      const count = tagSaturation[t] || 0;
+      if (count >= 3) penalty += 0.4;       // 4th+ article with same tag: heavy penalty
+      else if (count >= 2) penalty += 0.25;  // 3rd article: moderate penalty
+      else if (count >= 1) penalty += 0.1;   // 2nd article: light penalty
+    }
+    // Average penalty across tags, cap at 0.8 (never fully zero out)
+    const avgPenalty = tags.length > 0 ? Math.min(penalty / tags.length, 0.8) : 0;
+    a._score = a._score * (1 - avgPenalty);
+
+    personalScored.push(a);
+
+    // Update saturation counts
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      tagSaturation[t] = (tagSaturation[t] || 0) + 1;
+    }
+  }
 
   // Track personal categories for discovery filtering
   for (const a of personalScored) {
@@ -595,6 +831,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     formatted.final_score = a._score;
     return formatted;
   });
+
+  // Log feed impressions for skip tracking (fire-and-forget, non-blocking)
+  if (userId && pageIds.length > 0) {
+    const impressions = pageIds.map(aid => ({ user_id: userId, article_id: aid }));
+    supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
+  }
 
   const hasMore = offset + limit < totalAvailable;
   const lastId = page[page.length - 1]?.id || 0;
