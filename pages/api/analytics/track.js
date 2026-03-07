@@ -118,7 +118,7 @@ export default async function handler(req, res) {
 
     // Update taste vector via EMA on engagement events (non-blocking)
     // This feeds the pgvector personalization system
-    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view']
+    const TASTE_UPDATE_EVENTS = ['article_view', 'article_engaged', 'article_saved', 'article_detail_view']
     if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
       // user.id IS the profiles.id (auth UUID) — update directly
       admin.rpc('update_taste_vector_ema_profiles', {

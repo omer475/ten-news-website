@@ -362,6 +362,10 @@ export default async function handler(req, res) {
     const followedTopics = req.query.followed_topics ? req.query.followed_topics.split(',') : [];
     const userId = req.query.user_id || null;
 
+    // Session signals from client (real-time skip/engage tracking)
+    const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
+    const sessionSkippedIds = req.query.skipped_ids ? req.query.skipped_ids.split(',').map(Number).filter(Boolean) : [];
+
     // ==========================================
     // LOAD USER DATA
     // ==========================================
@@ -485,6 +489,8 @@ export default async function handler(req, res) {
         similarityFloor,
         skipProfile,
         seenArticleIds,
+        sessionEngagedIds,
+        sessionSkippedIds,
         limit,
         offset,
       });
@@ -511,7 +517,9 @@ export default async function handler(req, res) {
 // ==========================================
 
 async function handleV2Feed(req, res, supabase, opts) {
-  const { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters, similarityFloor, skipProfile, seenArticleIds, limit, offset } = opts;
+  let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters, similarityFloor, skipProfile, seenArticleIds, sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+  sessionEngagedIds = sessionEngagedIds || [];
+  sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
   const seventyTwoHoursAgo = new Date(now - 72 * 60 * 60 * 1000).toISOString();
@@ -605,6 +613,49 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // ==========================================
+  // BLEND SESSION SIGNALS INTO PROFILES
+  // ==========================================
+
+  // Boost interest profile with tags from articles engaged in this session
+  if (sessionEngagedIds.length > 0) {
+    const { data: engagedArticles } = await supabase
+      .from('published_articles')
+      .select('interest_tags')
+      .in('id', sessionEngagedIds.slice(0, 20));
+    for (const a of (engagedArticles || [])) {
+      const tags = safeJsonParse(a.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        userInterestProfile[t] = Math.min((userInterestProfile[t] || 0) + 0.3, 1.0);
+      }
+    }
+  }
+
+  // Build session skip profile from articles skipped in this session
+  const sessionSkipTags = {};
+  if (sessionSkippedIds.length > 0) {
+    const { data: skippedArticles } = await supabase
+      .from('published_articles')
+      .select('interest_tags')
+      .in('id', sessionSkippedIds.slice(0, 20));
+    for (const a of (skippedArticles || [])) {
+      const tags = safeJsonParse(a.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        sessionSkipTags[t] = (sessionSkipTags[t] || 0) + 0.15;
+      }
+    }
+    // Merge session skips into stored skip profile
+    for (const [tag, score] of Object.entries(sessionSkipTags)) {
+      skipProfile = skipProfile || {};
+      skipProfile[tag] = Math.min((skipProfile[tag] || 0) + score, 0.9);
+    }
+  }
+
+  // Exclude session-engaged and session-skipped articles from results
+  const sessionExcludeIds = new Set([...sessionEngagedIds, ...sessionSkippedIds]);
+
+  // ==========================================
   // PROCESS CANDIDATES
   // ==========================================
 
@@ -661,6 +712,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Filter out session-excluded articles from personal candidates
+  personalIdOrder = personalIdOrder.filter(id => !sessionExcludeIds.has(id));
   const personalIds = new Set(personalIdOrder);
 
   // TRENDING: category-cap to max 3 per category, exclude those already in Personal
@@ -670,6 +723,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   for (const a of (trendingResult.data || [])) {
     if (personalIds.has(a.id)) continue; // Personal takes priority
     if (seenArticleIds.includes(a.id)) continue;
+    if (sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
     if (trendingCategoryCounts[cat] > 3) continue; // Max 3 per category
@@ -685,6 +739,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id)) continue;
     if (seenArticleIds.includes(a.id)) continue;
+    if (sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > 2) continue; // Max 2 per category for diversity

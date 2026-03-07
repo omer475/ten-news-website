@@ -7,11 +7,16 @@ struct FeedService {
         try await client.get("\(APIEndpoints.newsFeed)?page=\(page)&pageSize=\(pageSize)")
     }
 
-    func fetchMainFeed(cursor: String? = nil, limit: Int = 20, preferences: UserPreferences? = nil, userId: String? = nil) async throws -> MainFeedResponse {
+    func fetchMainFeed(
+        cursor: String? = nil,
+        limit: Int = 20,
+        preferences: UserPreferences? = nil,
+        userId: String? = nil,
+        engagedIds: [String] = [],
+        skippedIds: [String] = []
+    ) async throws -> MainFeedResponse {
         var params = "?limit=\(limit)"
         if let cursor { params += "&cursor=\(cursor)" }
-        // Send user_id first — backend uses it to load taste vector for embedding scoring
-        // Falls back to query-param prefs for tag-based scoring if no user_id
         if let uid = userId {
             params += "&user_id=\(uid)"
         }
@@ -25,6 +30,13 @@ struct FeedService {
             if !prefs.followedTopics.isEmpty {
                 params += "&followed_topics=\(prefs.followedTopics.joined(separator: ","))"
             }
+        }
+        // Session signals for server-side next-page personalization
+        if !engagedIds.isEmpty {
+            params += "&engaged_ids=\(engagedIds.joined(separator: ","))"
+        }
+        if !skippedIds.isEmpty {
+            params += "&skipped_ids=\(skippedIds.joined(separator: ","))"
         }
         return try await client.get("\(APIEndpoints.mainFeed)\(params)")
     }

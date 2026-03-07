@@ -27,12 +27,13 @@ DECLARE
     dim INT;
     i INT;
 BEGIN
-    -- Event type weights
+    -- Event type weights (lighter = less influence on taste vector)
     alpha := CASE p_event_type
         WHEN 'article_saved' THEN 0.15
         WHEN 'article_engaged' THEN 0.10
         WHEN 'article_detail_view' THEN 0.05
-        ELSE 0.05
+        WHEN 'article_view' THEN 0.02
+        ELSE 0.02
     END;
 
     -- Get article embeddings

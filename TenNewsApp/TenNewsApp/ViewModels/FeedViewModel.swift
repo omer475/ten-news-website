@@ -8,35 +8,34 @@ final class FeedViewModel {
     var isLoading = false
     var errorMessage: String?
     var hasMore = true
+    let reRanker = SessionReRanker()
+
     private var nextCursor: String? = nil
     private var currentPreferences: UserPreferences?
     private var currentUserId: String?
+    private var viewStartTimes: [String: Date] = [:]
 
     private let feedService = FeedService()
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
 
-    /// Articles in server-provided order (embedding-scored or tag-scored),
-    /// filtered to exclude those belonging to followed events.
-    /// Server handles all personalization via taste vector embeddings.
-    func articles(for preferences: UserPreferences = .empty) -> [Article] {
-        let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
-        guard !followedSlugs.isEmpty else { return allArticles }
-        return allArticles.filter { article in
-            guard let slug = article.worldEvent?.slug else { return true }
-            return !followedSlugs.contains(slug)
-        }
-    }
-
-    /// Legacy accessor for views that don't pass preferences
+    /// Articles in re-ranked order. Items already swiped past keep their position.
+    /// Unseen items are re-ranked in real-time by session signals.
     var articles: [Article] {
         let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
-        guard !followedSlugs.isEmpty else { return allArticles }
-        return allArticles.filter { article in
-            guard let slug = article.worldEvent?.slug else { return true }
-            return !followedSlugs.contains(slug)
+        let filtered: [Article]
+        if followedSlugs.isEmpty {
+            filtered = allArticles
+        } else {
+            filtered = allArticles.filter { article in
+                guard let slug = article.worldEvent?.slug else { return true }
+                return !followedSlugs.contains(slug)
+            }
         }
+        return reRanker.rerank(articles: filtered, currentIndex: currentIndex)
     }
+
+    // MARK: - Data Loading
 
     func loadInitialData(preferences: UserPreferences? = nil, userId: String? = nil) async {
         guard !isLoading else { return }
@@ -44,6 +43,7 @@ final class FeedViewModel {
         errorMessage = nil
         currentPreferences = preferences
         currentUserId = userId
+        reRanker.reset()
         do {
             let feedResponse = try await feedService.fetchMainFeed(
                 preferences: preferences,
@@ -54,14 +54,13 @@ final class FeedViewModel {
             hasMore = feedResponse.hasMore
             isLoading = false
 
-            // Load world events in background — don't block the feed
             Task {
                 if let eventsResponse = try? await eventService.fetchWorldEvents() {
                     worldEvents = eventsResponse.events
                 }
             }
         } catch {
-            print("❌ FeedViewModel loadInitialData error: \(error)")
+            print("FeedViewModel loadInitialData error: \(error)")
             errorMessage = error.localizedDescription
             isLoading = false
         }
@@ -71,10 +70,13 @@ final class FeedViewModel {
         guard hasMore, !isLoading else { return }
         isLoading = true
         do {
+            let signals = reRanker.sessionSignals
             let response = try await feedService.fetchMainFeed(
                 cursor: nextCursor,
                 preferences: currentPreferences,
-                userId: currentUserId
+                userId: currentUserId,
+                engagedIds: signals.engaged,
+                skippedIds: signals.skipped
             )
             allArticles.append(contentsOf: response.articles)
             nextCursor = response.nextCursor
@@ -85,9 +87,34 @@ final class FeedViewModel {
         }
     }
 
+    // MARK: - Swipe Signal Tracking
+
+    /// Call when a new card appears (user swiped to it)
+    func recordViewStart(at index: Int) {
+        let arts = articles
+        guard index < arts.count else { return }
+        viewStartTimes[arts[index].id.stringValue] = Date()
+    }
+
+    /// Call when user leaves a card (swiped away). Computes dwell time and feeds to re-ranker.
+    func recordSwipeAway(fromIndex: Int) {
+        let arts = articles
+        guard fromIndex < arts.count else { return }
+        let article = arts[fromIndex]
+        let dwellSeconds: TimeInterval
+        if let start = viewStartTimes[article.id.stringValue] {
+            dwellSeconds = Date().timeIntervalSince(start)
+        } else {
+            dwellSeconds = 0
+        }
+        viewStartTimes.removeValue(forKey: article.id.stringValue)
+        reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
+    }
+
     func trackArticleView(at index: Int) {
-        guard index < articles.count else { return }
-        let article = articles[index]
+        let arts = articles
+        guard index < arts.count else { return }
+        let article = arts[index]
         ReadingHistoryManager.shared.recordView(of: article)
         Task {
             try? await analytics.track(
@@ -109,5 +136,4 @@ final class FeedViewModel {
         let hex = categoryColors[article.category ?? ""] ?? "#3366CC"
         return Color(hex: hex)
     }
-
 }

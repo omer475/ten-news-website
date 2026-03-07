@@ -44,6 +44,7 @@
 		AF9FE0A55AFFED8F9541ECDB /* TenNewsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D5C1FABF1F31F9A1739EC6 /* TenNewsApp.swift */; };
 		1B3E66A18B5174097204BD68 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5027FD2B323AD36C3329A4DC /* Extensions.swift */; };
 		6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F129A9689C3124330A2529 /* HapticManager.swift */; };
+		SR01SESSION01BUILD00001 /* SessionReRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR01SESSION01FREF00001 /* SessionReRanker.swift */; };
 		34F5BECB4751CCFB5BCDD2C8 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A5BB7CE05E33F3D5F881FAF /* KeychainManager.swift */; };
 		D38339DC8FFC3E2444B34296 /* UserDefaultsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CEEEB13F9AE7D53C8C3A86 /* UserDefaultsManager.swift */; };
 		5FD8ABF49F9FDBB1E116B052 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C188F4CDE42AEC11BCBD6DD9 /* AppViewModel.swift */; };
@@ -153,6 +154,7 @@
 		F3D5C1FABF1F31F9A1739EC6 /* TenNewsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TenNewsApp.swift"; sourceTree = "<group>"; };
 		5027FD2B323AD36C3329A4DC /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extensions.swift"; sourceTree = "<group>"; };
 		07F129A9689C3124330A2529 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HapticManager.swift"; sourceTree = "<group>"; };
+		SR01SESSION01FREF00001 /* SessionReRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SessionReRanker.swift"; sourceTree = "<group>"; };
 		1A5BB7CE05E33F3D5F881FAF /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainManager.swift"; sourceTree = "<group>"; };
 		B9CEEEB13F9AE7D53C8C3A86 /* UserDefaultsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaultsManager.swift"; sourceTree = "<group>"; };
 		C188F4CDE42AEC11BCBD6DD9 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppViewModel.swift"; sourceTree = "<group>"; };
@@ -359,6 +361,7 @@
 				1A5BB7CE05E33F3D5F881FAF /* KeychainManager.swift */,
 				RH01READHIST01FREF0001 /* ReadingHistoryManager.swift */,
 				SF01SAFARI01FREF000001 /* SafariView.swift */,
+				SR01SESSION01FREF00001 /* SessionReRanker.swift */,
 				B9CEEEB13F9AE7D53C8C3A86 /* UserDefaultsManager.swift */,
 			);
 			path = "Utilities";
@@ -615,6 +618,7 @@
 				AF9FE0A55AFFED8F9541ECDB /* TenNewsApp.swift in Sources */,
 				1B3E66A18B5174097204BD68 /* Extensions.swift in Sources */,
 				6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */,
+				SR01SESSION01BUILD00001 /* SessionReRanker.swift in Sources */,
 				34F5BECB4751CCFB5BCDD2C8 /* KeychainManager.swift in Sources */,
 				D38339DC8FFC3E2444B34296 /* UserDefaultsManager.swift in Sources */,
 				5FD8ABF49F9FDBB1E116B052 /* AppViewModel.swift in Sources */,

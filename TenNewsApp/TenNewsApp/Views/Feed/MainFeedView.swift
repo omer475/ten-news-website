@@ -53,6 +53,8 @@ struct MainFeedView: View {
                     preferences: appViewModel.preferences,
                     userId: appViewModel.currentUser?.id
                 )
+                // Start dwell timer for the first card
+                viewModel.recordViewStart(at: 0)
             }
         }
     }
@@ -70,9 +72,15 @@ struct MainFeedView: View {
             )
         }
         .ignoresSafeArea()
-        .onChange(of: pagerIndex) { _, newIndex in
+        .onChange(of: pagerIndex) { oldIndex, newIndex in
+            // Record signal for the card we just left
+            if oldIndex != newIndex, oldIndex < sortedArticles.count {
+                viewModel.recordSwipeAway(fromIndex: oldIndex)
+            }
+
             currentPageIndex = newIndex
             viewModel.currentIndex = newIndex
+            viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)
             if newIndex >= sortedArticles.count - 3 {
                 Task { await viewModel.loadMoreIfNeeded() }
