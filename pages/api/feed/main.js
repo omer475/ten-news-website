@@ -374,21 +374,30 @@ export default async function handler(req, res) {
     let persUserId = null; // The users table ID (may differ from auth user ID)
 
     if (userId) {
-      // Try lookup by users.id first, then by auth_user_id
+      // Look up profiles table (where real users live, id = auth UUID)
       let { data: userData } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
         .eq('id', userId)
         .single();
 
       if (!userData) {
-        // userId might be the auth user ID — try auth_user_id link
-        const { data: linkedUser } = await supabase
+        // Fallback: try legacy users table
+        const { data: legacyUser } = await supabase
           .from('users')
           .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
-          .eq('auth_user_id', userId)
+          .eq('id', userId)
           .single();
-        if (linkedUser) userData = linkedUser;
+        if (!legacyUser) {
+          const { data: linkedUser } = await supabase
+            .from('users')
+            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
+            .eq('auth_user_id', userId)
+            .single();
+          if (linkedUser) userData = linkedUser;
+        } else {
+          userData = legacyUser;
+        }
       }
 
       if (userData) {
