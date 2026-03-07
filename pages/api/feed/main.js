@@ -860,15 +860,19 @@ async function handleFallbackFeed(req, res, supabase, opts) {
   // Public cache for non-personalized feed
   res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
 
-  const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  // 24h window for freshness (was 48h — old articles were flooding feed)
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  // Fetch more than needed so we can diversify
+  const fetchSize = Math.max(limit * 4, 60);
 
   const { data: articles, error, count } = await supabase
     .from('published_articles')
     .select(ARTICLE_COLUMNS, { count: 'exact' })
-    .gte('created_at', twoDaysAgo)
+    .gte('created_at', oneDayAgo)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .range(offset, offset + limit + 4);
+    .range(0, fetchSize);
 
   if (error) {
     console.error('Fallback feed query error:', error);
@@ -880,18 +884,60 @@ async function handleFallbackFeed(req, res, supabase, opts) {
   }
 
   // Filter out test articles
-  const filtered = articles.filter(a => {
+  let filtered = articles.filter(a => {
     const url = a?.url || '';
     const title = a?.title_news || a?.title || '';
     return !(/test/i.test(url) || /test/i.test(title));
   });
 
+  // Category cap: max 3 articles per category to prevent topic flooding
+  const categoryCounts = {};
+  const tagSaturation = {};
+  const diversified = [];
+
+  for (const a of filtered) {
+    const cat = a.category || 'Other';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    if (categoryCounts[cat] > 3) continue; // Hard cap per category
+
+    // Tag saturation penalty (same logic as personal feed)
+    const tags = safeJsonParse(a.interest_tags, []);
+    let penalty = 0;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      const cnt = tagSaturation[t] || 0;
+      if (cnt >= 3) penalty += 0.4;
+      else if (cnt >= 2) penalty += 0.25;
+      else if (cnt >= 1) penalty += 0.1;
+    }
+    const avgPenalty = tags.length > 0 ? Math.min(penalty / tags.length, 0.8) : 0;
+    const baseScore = a.ai_final_score || 0;
+    a._diversityScore = baseScore * (1 - avgPenalty);
+
+    // Update saturation counts
+    for (const tag of tags) {
+      tagSaturation[tag.toLowerCase()] = (tagSaturation[tag.toLowerCase()] || 0) + 1;
+    }
+
+    diversified.push(a);
+  }
+
+  // Re-sort by diversity-adjusted score
+  diversified.sort((a, b) => b._diversityScore - a._diversityScore);
+
+  // Paginate from the diversified list
+  const pageArticles = diversified.slice(offset, offset + limit);
+
+  if (pageArticles.length === 0) {
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
+  }
+
   // Fetch world events
-  const articleIds = filtered.slice(0, limit).map(a => a.id);
+  const articleIds = pageArticles.map(a => a.id);
   const eventMap = await fetchWorldEvents(supabase, articleIds);
 
   // Format articles
-  let formattedArticles = filtered.slice(0, limit).map(a => formatArticle(a, eventMap));
+  let formattedArticles = pageArticles.map(a => formatArticle(a, eventMap));
 
   // Apply tag-based personalization boost if user prefs exist
   if (userPrefs) {
@@ -902,14 +948,15 @@ async function handleFallbackFeed(req, res, supabase, opts) {
     formattedArticles.sort((a, b) => b.final_score - a.final_score);
   }
 
-  const hasMore = (count || 0) > offset + limit;
+  const totalDiversified = diversified.length;
+  const hasMore = totalDiversified > offset + limit;
   const nextCursor = hasMore ? String(offset + limit) : null;
 
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
-    total: count || formattedArticles.length,
+    total: totalDiversified,
   });
 }
 

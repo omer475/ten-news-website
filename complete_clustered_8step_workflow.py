@@ -43,7 +43,8 @@ from step6_7_claude_component_generation import ClaudeComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-from step6_world_event_detection import detect_world_events
+# Event detection paused (re-enable after app launch)
+# from step6_world_event_detection import detect_world_events
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -1373,26 +1374,6 @@ def run_complete_pipeline():
             
             # Mark cluster as successfully published
             update_cluster_status(cluster_id, 'published')
-            
-            # WORLD EVENT DETECTION
-            try:
-                title = synthesized.get('title', synthesized.get('title_news', ''))
-                content = synthesized.get('bullets', '')
-                
-                detect_world_events([{
-                    'id': published_article_id,
-                    'title': title,
-                    'content': content,
-                    'bullets': content,
-                    'image_url': synthesized.get('image_url'),
-                    'components': {
-                        'graph': components.get('graph'),
-                        'map': components.get('map'),
-                        'info_box': components.get('info_box')
-                    }
-                }])
-            except Exception as we_error:
-                print(f"   ⚠️ [Cluster {cluster_id}] World event detection skipped: {we_error}")
             
             return True
             
