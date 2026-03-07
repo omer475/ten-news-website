@@ -1,51 +1,14 @@
 # TEN NEWS - CLEANED ELITE RSS FEED LIST
-# Total: ~340 Premium Elite Sources
-# Categories: News, Business, Technology, Science, Consumer
+# Total: ~433 Premium Elite Sources
+# Categories: News, Business, Technology, Science, Consumer, Sports, Gaming,
+#             Entertainment, Fashion, Food, Music, Automotive, Humor, Crypto,
+#             History, Space, Travel, Design, Health, Nature, Outdoor, Home,
+#             Pets, Books
 # Countries (15): USA, UK, Canada, Australia, India, Germany, France, Spain,
 #                 Italy, Ukraine, Russia, Turkiye, China, Japan, Israel
 
 RSS_FEEDS = [
-    
-    # ========================================
-    # MAJOR INTERNATIONAL NEWS AGENCIES
-    # ========================================
-    {
-        'name': 'Reuters World',
-        'url': 'https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Reuters Breaking News',
-        'url': 'https://www.reutersagency.com/feed/?best-topics=breaking-news',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Associated Press Top News',
-        'url': 'https://feeds.apnews.com/rss/apf-topnews',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Associated Press International',
-        'url': 'https://feeds.apnews.com/rss/apf-international',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Associated Press US News',
-        'url': 'https://feeds.apnews.com/rss/apf-usnews',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Agence France-Presse (AFP)',
-        'url': 'https://www.afp.com/en/news/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # US PREMIUM NEWS
     # ========================================
@@ -68,45 +31,9 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'The New York Times Africa',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The New York Times Americas',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The New York Times Asia Pacific',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The New York Times Europe',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The New York Times Middle East',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'The New York Times Technology',
         'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
         'category': 'technology',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The New York Times Sports',
-        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
-        'category': 'consumer',
         'tier': 'premium'
     },
     {
@@ -146,30 +73,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Washington Post Business',
-        'url': 'https://feeds.washingtonpost.com/rss/business',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Washington Post Entertainment',
-        'url': 'https://feeds.washingtonpost.com/rss/entertainment',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'USA Today',
-        'url': 'https://www.usatoday.com/rss/',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Los Angeles Times',
-        'url': 'https://www.latimes.com/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'NPR News',
         'url': 'https://feeds.npr.org/1001/rss.xml',
         'category': 'news',
@@ -193,7 +96,7 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # UK PREMIUM NEWS
     # ========================================
@@ -240,42 +143,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Sky News Business',
-        'url': 'https://feeds.skynews.com/feeds/rss/business.xml',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Sky News Politics',
-        'url': 'https://feeds.skynews.com/feeds/rss/politics.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Sky News Technology',
-        'url': 'https://feeds.skynews.com/feeds/rss/technology.xml',
-        'category': 'technology',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Sky News Entertainment',
-        'url': 'https://feeds.skynews.com/feeds/rss/entertainment.xml',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Sky News Strange',
-        'url': 'https://feeds.skynews.com/feeds/rss/strange.xml',
-        'category': 'consumer',
-        'tier': 'standard'
-    },
-    {
-        'name': 'The Times (UK)',
-        'url': 'https://www.thetimes.co.uk/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'The Telegraph',
         'url': 'https://www.telegraph.co.uk/rss.xml',
         'category': 'news',
@@ -284,12 +151,6 @@ RSS_FEEDS = [
     {
         'name': 'The Independent',
         'url': 'https://www.independent.co.uk/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Economist World',
-        'url': 'https://www.economist.com/world/rss.xml',
         'category': 'news',
         'tier': 'premium'
     },
@@ -305,13 +166,7 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
-    {
-        'name': 'Daily Mail Money',
-        'url': 'https://www.dailymail.co.uk/money/index.rss',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # INTERNATIONAL PREMIUM NEWS (EXPANDED)
     # ========================================
@@ -324,60 +179,6 @@ RSS_FEEDS = [
     {
         'name': 'Deutsche Welle',
         'url': 'https://rss.dw.com/xml/rss-en-all',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Top Stories',
-        'url': 'https://rss.dw.com/atom/rss-en-top',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle World',
-        'url': 'https://rss.dw.com/atom/rss-en-world',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle EU',
-        'url': 'https://rss.dw.com/atom/rss-en-eu',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Africa',
-        'url': 'https://rss.dw.com/rdf/rss-en-africa',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Business',
-        'url': 'https://rss.dw.com/atom/rss-en-bus',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Science',
-        'url': 'https://rss.dw.com/atom/rss_en_science',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Environment',
-        'url': 'https://rss.dw.com/atom/rss_en_environment',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Sports',
-        'url': 'https://rss.dw.com/atom/rss-en-sports',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Deutsche Welle Asia',
-        'url': 'https://rss.dw.com/atom/rss-en-asia',
         'category': 'news',
         'tier': 'premium'
     },
@@ -448,24 +249,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'The Australian',
-        'url': 'https://www.theaustralian.com.au/feed/',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Toronto Star',
-        'url': 'https://www.thestar.com/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Globe and Mail (Canada)',
-        'url': 'https://www.theglobeandmail.com/rss/',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'El País English',
         'url': 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada',
         'category': 'news',
@@ -479,18 +262,12 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Haaretz',
-        'url': 'https://www.haaretz.com/cmlink/1.628756',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'UN News',
         'url': 'https://news.un.org/feed/subscribe/en/news/all/rss.xml',
         'category': 'news',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # PREMIUM NEWS MAGAZINES
     # ========================================
@@ -536,13 +313,7 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
-    {
-        'name': 'The Marshall Project',
-        'url': 'https://www.themarshallproject.org/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # PREMIUM BUSINESS & FINANCE NEWS
     # ========================================
@@ -555,12 +326,6 @@ RSS_FEEDS = [
     {
         'name': 'The Wall Street Journal',
         'url': 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Forbes',
-        'url': 'https://www.forbes.com/real-time/feed2/',
         'category': 'business',
         'tier': 'premium'
     },
@@ -606,16 +371,10 @@ RSS_FEEDS = [
         'category': 'business',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # STARTUP & ENTREPRENEURSHIP
     # ========================================
-    {
-        'name': 'TechCrunch',
-        'url': 'https://techcrunch.com/feed/',
-        'category': 'business',
-        'tier': 'premium'
-    },
     {
         'name': 'VentureBeat',
         'url': 'https://venturebeat.com/feed/',
@@ -628,22 +387,10 @@ RSS_FEEDS = [
         'category': 'business',
         'tier': 'premium'
     },
-    {
-        'name': 'Harvard Business Review',
-        'url': 'https://hbr.org/feed',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # INDUSTRY-SPECIFIC BUSINESS
     # ========================================
-    {
-        'name': 'Ad Age',
-        'url': 'https://adage.com/rss',
-        'category': 'business',
-        'tier': 'premium'
-    },
     {
         'name': 'Marketing Week',
         'url': 'https://www.marketingweek.com/feed/',
@@ -674,13 +421,7 @@ RSS_FEEDS = [
         'category': 'business',
         'tier': 'premium'
     },
-    {
-        'name': 'World Trade Organization News',
-        'url': 'https://www.wto.org/english/news_e/rss_e/press_e.xml',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # INTERNATIONAL BUSINESS
     # ========================================
@@ -709,7 +450,16 @@ RSS_FEEDS = [
         'category': 'business',
         'tier': 'premium'
     },
-    
+
+    # ========================================
+    # PERSONAL FINANCE & MARKETS
+    # ========================================
+    {'name': 'NerdWallet', 'url': 'https://www.nerdwallet.com/blog/feed/', 'category': 'business', 'tier': 'premium'},
+    {'name': 'Kiplinger', 'url': 'https://www.kiplinger.com/feed/all', 'category': 'business', 'tier': 'premium'},
+    {'name': 'MarketWatch', 'url': 'https://www.marketwatch.com/rss/topstories', 'category': 'business', 'tier': 'premium'},
+    {'name': 'Yahoo Finance', 'url': 'https://finance.yahoo.com/news/rssindex', 'category': 'business', 'tier': 'premium'},
+    {'name': 'Money Magazine', 'url': 'https://money.com/feed/', 'category': 'business', 'tier': 'premium'},
+
     # ========================================
     # TECHNOLOGY NEWS (BALANCED - REMOVED PURE TECH)
     # ========================================
@@ -767,7 +517,34 @@ RSS_FEEDS = [
         'category': 'technology',
         'tier': 'premium'
     },
-    
+
+    # ========================================
+    # AI & MACHINE LEARNING
+    # ========================================
+    {'name': 'The Verge AI', 'url': 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Ars Technica AI', 'url': 'https://arstechnica.com/ai/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'AI News', 'url': 'https://www.artificialintelligence-news.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'SiliconAngle AI', 'url': 'https://siliconangle.com/category/ai/feed/', 'category': 'technology', 'tier': 'premium'},
+
+    # ========================================
+    # TECH & GADGETS
+    # ========================================
+    {"name": "Tom's Guide", "url": "https://www.tomsguide.com/feeds/all", "category": "technology", "tier": "premium"},
+    {"name": "Tom's Hardware", "url": "https://www.tomshardware.com/feeds/all", "category": "technology", "tier": "premium"},
+    {'name': '9to5Mac', 'url': 'https://9to5mac.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': '9to5Google', 'url': 'https://9to5google.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'MacRumors', 'url': 'https://feeds.macrumors.com/MacRumors-All', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Android Authority', 'url': 'https://www.androidauthority.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'CNET', 'url': 'https://www.cnet.com/rss/news/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Digital Trends', 'url': 'https://www.digitaltrends.com/feed/', 'category': 'technology', 'tier': 'premium'},
+
+    # ========================================
+    # TECHNOLOGY - GENERAL
+    # ========================================
+    {'name': 'How-To Geek', 'url': 'https://www.howtogeek.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Ars Technica', 'url': 'https://arstechnica.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'TechRadar', 'url': 'https://www.techradar.com/rss', 'category': 'technology', 'tier': 'premium'},
+
     # ========================================
     # MAJOR SCIENCE JOURNALS
     # ========================================
@@ -783,43 +560,13 @@ RSS_FEEDS = [
         'category': 'science',
         'tier': 'premium'
     },
-    {
-        'name': 'PNAS',
-        'url': 'https://www.pnas.org/rss/current.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Cell',
-        'url': 'https://www.cell.com/cell/current.rss',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Lancet',
-        'url': 'https://www.thelancet.com/rssfeed/lancet_current.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'New England Journal of Medicine',
-        'url': 'https://www.nejm.org/action/showFeed?type=etoc&feed=rss&jc=nejm',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # SCIENCE NEWS ORGANIZATIONS
     # ========================================
     {
         'name': 'Science News',
         'url': 'https://www.sciencenews.org/feed',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Scientific American',
-        'url': 'https://www.scientificamerican.com/feeds/rss/news/',
         'category': 'science',
         'tier': 'premium'
     },
@@ -859,7 +606,26 @@ RSS_FEEDS = [
         'category': 'science',
         'tier': 'premium'
     },
-    
+
+    # ========================================
+    # SCIENCE - POPULAR / EXPLAINER
+    # ========================================
+    {'name': 'Popular Mechanics', 'url': 'https://www.popularmechanics.com/rss/all.xml/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Smithsonian Smart News', 'url': 'https://www.smithsonianmag.com/rss/smart-news/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Futurism', 'url': 'https://futurism.com/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'ScienceAlert', 'url': 'https://www.sciencealert.com/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Ars Technica Science', 'url': 'https://arstechnica.com/science/feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Interesting Engineering', 'url': 'https://interestingengineering.com/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Aeon', 'url': 'https://aeon.co/feed.rss', 'category': 'science', 'tier': 'premium'},
+    {'name': 'New Atlas', 'url': 'https://newatlas.com/index.rss', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Mental Floss', 'url': 'https://www.mentalfloss.com/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Big Think', 'url': 'https://bigthink.com/feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'The Conversation', 'url': 'https://theconversation.com/us/articles.atom', 'category': 'science', 'tier': 'premium'},
+    {'name': 'ZME Science', 'url': 'https://www.zmescience.com/feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'RealClearScience', 'url': 'https://www.realclearscience.com/index.xml', 'category': 'science', 'tier': 'standard'},
+    {'name': 'Knowable Magazine', 'url': 'https://knowablemagazine.org/rss', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Nautilus', 'url': 'https://nautil.us/feed/', 'category': 'science', 'tier': 'premium'},
+
     # ========================================
     # UNIVERSITY & RESEARCH INSTITUTIONS
     # ========================================
@@ -876,177 +642,9 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'MIT Architecture',
-        'url': 'https://news.mit.edu/rss/topic/architecture',
-        'category': 'science',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Biology & Genetics',
-        'url': 'https://news.mit.edu/rss/topic/biology-and-genetics',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Neuroscience',
-        'url': 'https://news.mit.edu/rss/topic/neuroscience-neurology-and-cognitive-sciences',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Business',
-        'url': 'https://news.mit.edu/rss/topic/business',
-        'category': 'business',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Chemistry',
-        'url': 'https://news.mit.edu/rss/topic/chemistry',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Chemical Engineering',
-        'url': 'https://news.mit.edu/rss/topic/chemical-engineering',
-        'category': 'science',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Civil Engineering',
-        'url': 'https://news.mit.edu/rss/topic/civil-engineering',
-        'category': 'science',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Climate & Sustainability',
-        'url': 'https://news.mit.edu/rss/topic/climate-change-and-sustainability',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Earth & Atmospheric Sciences',
-        'url': 'https://news.mit.edu/rss/topic/earth-and-atmospheric-sciences',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Economics',
-        'url': 'https://news.mit.edu/rss/topic/economics',
-        'category': 'business',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Energy',
-        'url': 'https://news.mit.edu/rss/topic/energy',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Environment',
-        'url': 'https://news.mit.edu/rss/topic/environment',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Health Sciences',
-        'url': 'https://news.mit.edu/rss/topic/health-sciences-and-technology',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT History',
-        'url': 'https://news.mit.edu/rss/topic/history',
-        'category': 'news',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Humanities',
-        'url': 'https://news.mit.edu/rss/topic/humanities',
-        'category': 'news',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Materials Science',
-        'url': 'https://news.mit.edu/rss/topic/materials-science-and-engineering',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Mathematics',
-        'url': 'https://news.mit.edu/rss/topic/mathematics',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Mechanical Engineering',
-        'url': 'https://news.mit.edu/rss/topic/mechanical-engineering',
-        'category': 'science',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Nanotech',
-        'url': 'https://news.mit.edu/rss/topic/nanotech',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Nuclear Engineering',
-        'url': 'https://news.mit.edu/rss/topic/nuclear-engineering',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Oceans',
-        'url': 'https://news.mit.edu/rss/topic/oceans',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Physics',
-        'url': 'https://news.mit.edu/rss/topic/physics',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Political Science',
-        'url': 'https://news.mit.edu/rss/topic/political-science',
-        'category': 'news',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Real Estate',
-        'url': 'https://news.mit.edu/rss/topic/real-estate',
-        'category': 'business',
-        'tier': 'standard'
-    },
-    {
-        'name': 'MIT Robotics',
-        'url': 'https://news.mit.edu/topic/mitrobotics-rss.xml',
-        'category': 'technology',
-        'tier': 'premium'
-    },
-    {
         'name': 'MIT Artificial Intelligence',
         'url': 'https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml',
         'category': 'technology',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Space',
-        'url': 'https://news.mit.edu/topic/mitspace-rss.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'MIT Science Technology & Society',
-        'url': 'https://news.mit.edu/rss/topic/science-technology-and-society',
-        'category': 'science',
-        'tier': 'standard'
-    },
-    {
-        'name': 'Stanford News',
-        'url': 'https://news.stanford.edu/feed',
-        'category': 'science',
         'tier': 'premium'
     },
     {
@@ -1055,16 +653,10 @@ RSS_FEEDS = [
         'category': 'science',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # SPACE & ASTRONOMY
     # ========================================
-    {
-        'name': 'Space.com',
-        'url': 'https://www.space.com/feeds/all',
-        'category': 'science',
-        'tier': 'premium'
-    },
     {
         'name': 'NASA',
         'url': 'https://www.nasa.gov/rss/dyn/breaking_news.rss',
@@ -1089,62 +681,35 @@ RSS_FEEDS = [
         'category': 'science',
         'tier': 'premium'
     },
-    
+
     # ========================================
-    # HEALTH & MEDICINE
+    # SPACE - ADDITIONAL
     # ========================================
+    {'name': 'Universe Today', 'url': 'https://www.universetoday.com/feed', 'category': 'space', 'tier': 'premium'},
+    {'name': 'Space.com', 'url': 'https://www.space.com/feeds/all', 'category': 'space', 'tier': 'premium'},
+    {'name': 'SpaceFlightNow', 'url': 'https://spaceflightnow.com/feed/', 'category': 'space', 'tier': 'premium'},
     {
-        'name': 'Johns Hopkins Medicine',
-        'url': 'https://www.hopkinsmedicine.org/news/rss',
-        'category': 'science',
+        'name': 'NASA Image of the Day',
+        'url': 'https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss',
+        'category': 'space',
         'tier': 'premium'
     },
     {
-        'name': 'Mayo Clinic News',
-        'url': 'https://newsnetwork.mayoclinic.org/feed/',
-        'category': 'science',
+        'name': 'Phys.org Space',
+        'url': 'https://phys.org/rss-feed/space-news/',
+        'category': 'space',
         'tier': 'premium'
     },
     {
-        'name': 'Harvard Medical School',
-        'url': 'https://hms.harvard.edu/news/feed',
-        'category': 'science',
+        'name': 'EarthSky',
+        'url': 'https://earthsky.org/feed/',
+        'category': 'space',
         'tier': 'premium'
     },
-    {
-        'name': 'CDC',
-        'url': 'https://tools.cdc.gov/podcasts/feed.asp?feedid=183',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'WHO News',
-        'url': 'https://www.who.int/rss-feeds/news-english.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # CLIMATE & ENVIRONMENT (EXPANDED)
     # ========================================
-    {
-        'name': 'NASA Climate',
-        'url': 'https://climate.nasa.gov/news/rss.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'NOAA News',
-        'url': 'https://www.noaa.gov/feed',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'IPCC',
-        'url': 'https://www.ipcc.ch/feed/',
-        'category': 'science',
-        'tier': 'premium'
-    },
     {
         'name': 'Grist',
         'url': 'https://grist.org/feed/',
@@ -1169,47 +734,7 @@ RSS_FEEDS = [
         'category': 'science',
         'tier': 'premium'
     },
-    
-    # ========================================
-    # PHYSICS & CHEMISTRY
-    # ========================================
-    {
-        'name': 'Physics World',
-        'url': 'https://physicsworld.com/feed/',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'ACS News',
-        'url': 'https://www.acs.org/content/acs/en/pressroom.rss',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'CERN',
-        'url': 'https://home.cern/news/feed',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'World Bank News',
-        'url': 'https://www.worldbank.org/en/news/all.rss',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'IMF News',
-        'url': 'https://www.imf.org/en/News/RSS?language_id=1',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'OECD News',
-        'url': 'https://www.oecd.org/newsroom/rss.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # CONSUMER NEWS (ELITE FASCINATION)
     # ========================================
@@ -1226,50 +751,8 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Forbes Billionaires',
-        'url': 'https://www.forbes.com/billionaires/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Forbes Lifestyle',
-        'url': 'https://www.forbes.com/lifestyle/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Mansion Global',
-        'url': 'https://www.mansionglobal.com/rss',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'WWD (Luxury Fashion)',
-        'url': 'https://wwd.com/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Business Insider Retail',
-        'url': 'https://www.businessinsider.com/retail',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Business Insider Personal Finance',
-        'url': 'https://www.businessinsider.com/personal-finance/feed',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
         'name': 'Visual Capitalist',
         'url': 'https://www.visualcapitalist.com/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Statista Chart of the Day',
-        'url': 'https://www.statista.com/chartoftheday/rss/',
         'category': 'consumer',
         'tier': 'premium'
     },
@@ -1298,68 +781,8 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Eurostat Press Releases',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat Population & Social',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_POPSOC&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat General Statistics',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_GENSTA&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat Economy & Finance',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_ECOFIN&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat Industry & Commerce',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_INDCOM&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat Transport',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_TRANSP&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
-        'category': 'business',
-        'tier': 'standard'
-    },
-    {
-        'name': 'Eurostat External Trade',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_EXTTRA&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
-        'category': 'business',
-        'tier': 'standard'
-    },
-    {
-        'name': 'Eurostat Environment & Energy',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_ENVENE&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Eurostat Research & Development',
-        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_RESDEV&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
         'name': 'STAT News',
         'url': 'https://www.statnews.com/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Longevity Technology',
-        'url': 'https://longevity.technology/feed/',
         'category': 'consumer',
         'tier': 'premium'
     },
@@ -1376,30 +799,21 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Sports Business Journal',
-        'url': 'https://www.sportsbusinessjournal.com/rss',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'TechCrunch Startups',
-        'url': 'https://techcrunch.com/startups/feed/',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
         'name': 'Sifted (EU Startups)',
         'url': 'https://sifted.eu/feed',
         'category': 'consumer',
         'tier': 'premium'
     },
-    {
-        'name': 'Times Higher Education',
-        'url': 'https://www.timeshighereducation.com/rss/site.xml',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    
+
+    # ========================================
+    # LIFESTYLE & REVIEWS
+    # ========================================
+    {'name': 'Lifehacker', 'url': 'https://lifehacker.com/feed/rss', 'category': 'consumer', 'tier': 'premium'},
+    {'name': 'Wirecutter', 'url': 'https://www.nytimes.com/wirecutter/feed/', 'category': 'consumer', 'tier': 'premium'},
+    {'name': 'Upworthy', 'url': 'https://www.upworthy.com/feed', 'category': 'consumer', 'tier': 'standard'},
+    {'name': 'Gizmodo', 'url': 'https://gizmodo.com/feed/rss', 'category': 'consumer', 'tier': 'premium'},
+    {'name': 'Mashable', 'url': 'https://mashable.com/feeds/rss/all', 'category': 'consumer', 'tier': 'premium'},
+
     # ========================================
     # POLITICO
     # ========================================
@@ -1439,13 +853,7 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
-    {
-        'name': 'Politico Picks',
-        'url': 'https://www.politico.com/rss/politicopicks.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # ABC NEWS (use largest image: width=1600, height=900)
     # ========================================
@@ -1456,7 +864,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'image_size': 'largest'  # Select width=1600, height=900
     },
-    
+
     # ========================================
     # CBS NEWS (fetch images from website via BrightData)
     # ========================================
@@ -1475,69 +883,13 @@ RSS_FEEDS = [
         'fetch_image_from_website': True
     },
     {
-        'name': 'CBS News Politics',
-        'url': 'https://www.cbsnews.com/latest/rss/politics',
-        'category': 'news',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
         'name': 'CBS News World',
         'url': 'https://www.cbsnews.com/latest/rss/world',
         'category': 'news',
         'tier': 'premium',
         'fetch_image_from_website': True
     },
-    {
-        'name': 'CBS News Health',
-        'url': 'https://www.cbsnews.com/latest/rss/health',
-        'category': 'science',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News MoneyWatch',
-        'url': 'https://www.cbsnews.com/latest/rss/moneywatch',
-        'category': 'business',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News Science',
-        'url': 'https://www.cbsnews.com/latest/rss/science',
-        'category': 'science',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News Technology',
-        'url': 'https://www.cbsnews.com/latest/rss/technology',
-        'category': 'technology',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News Entertainment',
-        'url': 'https://www.cbsnews.com/latest/rss/entertainment',
-        'category': 'consumer',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News Space',
-        'url': 'https://www.cbsnews.com/latest/rss/space',
-        'category': 'science',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    {
-        'name': 'CBS News Investigates',
-        'url': 'https://www.cbsnews.com/latest/rss/evening-news/cbs-news-investigates',
-        'category': 'news',
-        'tier': 'premium',
-        'fetch_image_from_website': True
-    },
-    
+
     # ========================================
     # NBC NEWS
     # ========================================
@@ -1547,7 +899,7 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # FOX NEWS
     # ========================================
@@ -1564,42 +916,12 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Fox News Politics',
-        'url': 'https://moxie.foxnews.com/google-publisher/politics.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Fox News Science',
-        'url': 'https://moxie.foxnews.com/google-publisher/science.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Fox News Health',
-        'url': 'https://moxie.foxnews.com/google-publisher/health.xml',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Fox News Sports',
-        'url': 'https://moxie.foxnews.com/google-publisher/sports.xml',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Fox News Travel',
-        'url': 'https://moxie.foxnews.com/google-publisher/travel.xml',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
         'name': 'Fox News Tech',
         'url': 'https://moxie.foxnews.com/google-publisher/tech.xml',
         'category': 'technology',
         'tier': 'premium'
     },
-    
+
     # ========================================
     # THE GUARDIAN (use largest image: width=700)
     # ========================================
@@ -1624,37 +946,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'image_size': 'largest'
     },
-    {
-        'name': 'The Guardian Global Development',
-        'url': 'https://www.theguardian.com/global-development/rss',
-        'category': 'news',
-        'tier': 'premium',
-        'image_size': 'largest'
-    },
-    {
-        'name': 'The Guardian UK Culture',
-        'url': 'https://www.theguardian.com/uk/culture/rss',
-        'category': 'consumer',
-        'tier': 'premium',
-        'image_size': 'largest'
-    },
-    
-    # ========================================
-    # CBC (CANADA)
-    # ========================================
-    {
-        'name': 'CBC Top Stories',
-        'url': 'https://www.cbc.ca/webfeed/rss/rss-topstories',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'CBC World',
-        'url': 'https://www.cbc.ca/webfeed/rss/rss-world',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    
+
     # ========================================
     # INDIA (5 feeds)
     # ========================================
@@ -1693,7 +985,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'India'
     },
-    
+
     # ========================================
     # TURKIYE (6 feeds)
     # ========================================
@@ -1739,7 +1031,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Turkiye'
     },
-    
+
     # ========================================
     # CHINA (4 feeds - China Daily Business already exists above)
     # ========================================
@@ -1764,27 +1056,13 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'China'
     },
-    {
-        'name': 'Caixin Global',
-        'url': 'https://gateway.caixin.com/api/data/global/feedlyRss.xml',
-        'category': 'business',
-        'tier': 'premium',
-        'country': 'China'
-    },
-    
+
     # ========================================
-    # RUSSIA (6 feeds)
+    # RUSSIA (5 feeds)
     # ========================================
     {
         'name': 'TASS',
         'url': 'https://tass.com/rss/v2.xml',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Russia'
-    },
-    {
-        'name': 'RT (Russia Today)',
-        'url': 'https://www.rt.com/rss/',
         'category': 'news',
         'tier': 'premium',
         'country': 'Russia'
@@ -1817,7 +1095,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Russia'
     },
-    
+
     # ========================================
     # UKRAINE (5 feeds)
     # ========================================
@@ -1856,7 +1134,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Ukraine'
     },
-    
+
     # ========================================
     # GERMANY (4 feeds)
     # ========================================
@@ -1888,20 +1166,13 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Germany'
     },
-    
+
     # ========================================
-    # FRANCE (4 feeds)
+    # FRANCE (3 feeds)
     # ========================================
     {
         'name': 'Le Monde',
         'url': 'https://www.lemonde.fr/rss/une.xml',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'France'
-    },
-    {
-        'name': 'Le Figaro',
-        'url': 'https://www.lefigaro.fr/rss/figaro_actualites.xml',
         'category': 'news',
         'tier': 'premium',
         'country': 'France'
@@ -1920,7 +1191,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'France'
     },
-    
+
     # ========================================
     # SPAIN (3 feeds - El País English already exists above)
     # ========================================
@@ -1945,7 +1216,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Spain'
     },
-    
+
     # ========================================
     # ITALY (3 feeds)
     # ========================================
@@ -1970,7 +1241,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Italy'
     },
-    
+
     # ========================================
     # JAPAN (5 feeds)
     # ========================================
@@ -2009,7 +1280,7 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Japan'
     },
-    
+
     # ========================================
     # AUSTRALIA (4 feeds)
     # ========================================
@@ -2041,17 +1312,10 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Australia'
     },
-    
+
     # ========================================
-    # CANADA (3 feeds)
+    # CANADA (2 feeds)
     # ========================================
-    {
-        'name': 'CBC Canada',
-        'url': 'https://www.cbc.ca/webfeed/rss/rss-canada',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Canada'
-    },
     {
         'name': 'Global News',
         'url': 'https://globalnews.ca/feed/',
@@ -2068,7 +1332,7 @@ RSS_FEEDS = [
     },
 
     # ========================================
-    # SPORTS (26 feeds)
+    # SPORTS (26 original feeds)
     # ========================================
 
     # ESPN
@@ -2221,12 +1485,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'MMA Fighting',
-        'url': 'https://www.mmafighting.com/rss/current',
-        'category': 'sports',
-        'tier': 'premium'
-    },
-    {
         'name': 'ESPNcricinfo',
         'url': 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml',
         'category': 'sports',
@@ -2234,7 +1492,18 @@ RSS_FEEDS = [
     },
 
     # ========================================
-    # GAMING (9 feeds)
+    # SPORTS - ADDITIONAL
+    # ========================================
+    {'name': 'Yahoo Sports', 'url': 'https://sports.yahoo.com/rss/', 'category': 'sports', 'tier': 'premium'},
+    {'name': 'Sky Sports News', 'url': 'https://www.skysports.com/rss/12040', 'category': 'sports', 'tier': 'premium'},
+    {'name': 'FourFourTwo', 'url': 'https://www.fourfourtwo.com/feeds/all', 'category': 'sports', 'tier': 'premium'},
+    {'name': 'CBS Sports', 'url': 'https://www.cbssports.com/rss/headlines/', 'category': 'sports', 'tier': 'premium'},
+    {'name': 'Talksport', 'url': 'https://talksport.com/feed/', 'category': 'sports', 'tier': 'premium'},
+    {'name': 'Wrestling Inc', 'url': 'https://www.wrestlinginc.com/feed/', 'category': 'sports', 'tier': 'standard'},
+    {'name': 'ClutchPoints', 'url': 'https://clutchpoints.com/feed/', 'category': 'sports', 'tier': 'premium'},
+
+    # ========================================
+    # GAMING (9 original feeds)
     # ========================================
     {
         'name': 'IGN',
@@ -2292,14 +1561,163 @@ RSS_FEEDS = [
     },
 
     # ========================================
-    # FOOD & RECIPES (7 feeds)
+    # GAMING - ADDITIONAL
+    # ========================================
+    {'name': 'Dexerto', 'url': 'https://www.dexerto.com/feed/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'Dot Esports', 'url': 'https://dotesports.com/feed', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'Game Rant', 'url': 'https://gamerant.com/feed/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'GamesRadar', 'url': 'https://www.gamesradar.com/rss/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'TheGamer', 'url': 'https://www.thegamer.com/feed/', 'category': 'gaming', 'tier': 'standard'},
+    {'name': 'Destructoid', 'url': 'https://www.destructoid.com/feed/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'PCGamesN', 'url': 'https://www.pcgamesn.com/mainrss.xml', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'Push Square', 'url': 'https://www.pushsquare.com/feeds/latest', 'category': 'gaming', 'tier': 'standard'},
+    {'name': 'Pure Xbox', 'url': 'https://www.purexbox.com/feeds/latest', 'category': 'gaming', 'tier': 'standard'},
+    {'name': 'Siliconera', 'url': 'https://www.siliconera.com/feed/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'Escapist Magazine', 'url': 'https://www.escapistmagazine.com/feed/', 'category': 'gaming', 'tier': 'premium'},
+    {'name': 'NintendoEverything', 'url': 'https://nintendoeverything.com/feed/', 'category': 'gaming', 'tier': 'standard'},
+    {'name': 'Esports Insider', 'url': 'https://esportsinsider.com/feed', 'category': 'gaming', 'tier': 'premium'},
+
+    # ========================================
+    # ENTERTAINMENT & MOVIES (10 original feeds)
     # ========================================
     {
-        'name': 'Serious Eats',
-        'url': 'https://www.seriouseats.com/feed',
-        'category': 'food',
+        'name': 'Variety',
+        'url': 'https://variety.com/feed/',
+        'category': 'entertainment',
         'tier': 'premium'
     },
+    {
+        'name': 'Deadline',
+        'url': 'https://deadline.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Hollywood Reporter',
+        'url': 'https://www.hollywoodreporter.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Collider',
+        'url': 'https://collider.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Screen Rant',
+        'url': 'https://screenrant.com/feed/',
+        'category': 'entertainment',
+        'tier': 'standard'
+    },
+    {
+        'name': 'IndieWire',
+        'url': 'https://www.indiewire.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The AV Club',
+        'url': 'https://www.avclub.com/rss',
+        'category': 'entertainment',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Rolling Stone',
+        'url': 'https://www.rollingstone.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Pitchfork',
+        'url': 'https://pitchfork.com/feed/feed-news/rss',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Rotten Tomatoes',
+        'url': 'https://editorial.rottentomatoes.com/feed/',
+        'category': 'entertainment',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # CELEBRITY & GOSSIP
+    # ========================================
+    {'name': 'E! Online', 'url': 'https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Page Six', 'url': 'https://pagesix.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Us Weekly', 'url': 'https://www.usmagazine.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Hollywood Life', 'url': 'https://hollywoodlife.com/feed/', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'PopSugar', 'url': 'https://www.popsugar.com/feed', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'Celebitchy', 'url': 'https://www.celebitchy.com/feed/', 'category': 'entertainment', 'tier': 'standard'},
+
+    # ========================================
+    # TV & STREAMING NEWS
+    # ========================================
+    {'name': 'TV Line', 'url': 'https://tvline.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {"name": "What's on Netflix", "url": "https://www.whats-on-netflix.com/feed/", "category": "entertainment", "tier": "premium"},
+    {'name': 'Decider', 'url': 'https://decider.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Den of Geek', 'url': 'https://www.denofgeek.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'SlashFilm', 'url': 'https://www.slashfilm.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'The Wrap', 'url': 'https://www.thewrap.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+
+    # ========================================
+    # MOVIES / COMICS / FANDOM
+    # ========================================
+    {'name': 'ScreenCrush', 'url': 'https://screencrush.com/feed/', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'ComicBook.com', 'url': 'https://comicbook.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Giant Freakin Robot', 'url': 'https://www.giantfreakinrobot.com/feed', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'Nerdist', 'url': 'https://nerdist.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'Looper', 'url': 'https://www.looper.com/feed/', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'CBR', 'url': 'https://www.cbr.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
+    {'name': 'MovieWeb', 'url': 'https://movieweb.com/feed/', 'category': 'entertainment', 'tier': 'standard'},
+    {'name': 'Consequence', 'url': 'https://consequence.net/feed/', 'category': 'entertainment', 'tier': 'premium'},
+
+    # ========================================
+    # FASHION & BEAUTY
+    # ========================================
+    {
+        'name': 'Vogue',
+        'url': 'https://www.vogue.com/feed/rss',
+        'category': 'fashion',
+        'tier': 'premium'
+    },
+    {
+        'name': 'GQ',
+        'url': 'https://www.gq.com/feed/rss',
+        'category': 'fashion',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Highsnobiety',
+        'url': 'https://www.highsnobiety.com/feed/',
+        'category': 'fashion',
+        'tier': 'standard'
+    },
+    {
+        'name': 'WWD',
+        'url': 'https://wwd.com/feed/',
+        'category': 'fashion',
+        'tier': 'premium'
+    },
+    {'name': 'Allure', 'url': 'https://www.allure.com/feed/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Glamour', 'url': 'https://www.glamour.com/feed/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Fashionista', 'url': 'https://fashionista.com/.rss/full/', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Who What Wear', 'url': 'https://www.whowhatwear.com/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Elle', 'url': 'https://www.elle.com/rss/all.xml/', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Cosmopolitan', 'url': 'https://www.cosmopolitan.com/rss/all.xml/', 'category': 'fashion', 'tier': 'premium'},
+    {"name": "Harper's Bazaar", "url": "https://www.harpersbazaar.com/rss/all.xml/", "category": "fashion", "tier": "premium"},
+    {'name': 'StyleCaster', 'url': 'https://stylecaster.com/feed/', 'category': 'fashion', 'tier': 'standard'},
+    {'name': 'Coveteur', 'url': 'https://coveteur.com/feed', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Bustle', 'url': 'https://www.bustle.com/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Teen Vogue', 'url': 'https://www.teenvogue.com/feed/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'i-D', 'url': 'https://i-d.co/feed/', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Dazed', 'url': 'https://www.dazeddigital.com/rss', 'category': 'fashion', 'tier': 'premium'},
+    {'name': 'Hypebeast', 'url': 'https://hypebeast.com/feed', 'category': 'fashion', 'tier': 'premium'},
+
+    # ========================================
+    # FOOD & RECIPES
+    # ========================================
     {
         'name': 'Bon Appetit',
         'url': 'https://www.bonappetit.com/feed/rss',
@@ -2307,20 +1725,8 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'The Kitchn',
-        'url': 'https://www.thekitchn.com/rss',
-        'category': 'food',
-        'tier': 'premium'
-    },
-    {
         'name': 'Taste of Home',
         'url': 'https://www.tasteofhome.com/feed/',
-        'category': 'food',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Food52',
-        'url': 'https://food52.com/blog.rss',
         'category': 'food',
         'tier': 'premium'
     },
@@ -2332,19 +1738,522 @@ RSS_FEEDS = [
     },
     {
         'name': 'Delish',
-        'url': 'https://www.delish.com/feed/',
+        'url': 'https://www.delish.com/rss/all.xml/',
         'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eater',
+        'url': 'https://www.eater.com/rss/index.xml',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Minimalist Baker',
+        'url': 'https://minimalistbaker.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Smitten Kitchen',
+        'url': 'https://smittenkitchen.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Budget Bytes',
+        'url': 'https://www.budgetbytes.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Cookie and Kate',
+        'url': 'https://cookieandkate.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Love and Lemons',
+        'url': 'https://www.loveandlemons.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Half Baked Harvest',
+        'url': 'https://www.halfbakedharvest.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Saveur',
+        'url': 'https://www.saveur.com/feed/',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Good Food',
+        'url': 'https://www.bbcgoodfood.com/feed',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Tasting Table',
+        'url': 'https://www.tastingtable.com/feed/',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Punch Drinks',
+        'url': 'https://punchdrink.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'VinePair',
+        'url': 'https://vinepair.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'NYT Dining & Wine',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/DiningandWine.xml',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Mashed',
+        'url': 'https://www.mashed.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'The Daily Meal',
+        'url': 'https://www.thedailymeal.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Food Republic',
+        'url': 'https://www.foodrepublic.com/feed/',
+        'category': 'food',
+        'tier': 'standard'
+    },
+    {
+        'name': 'TASTE Cooking',
+        'url': 'https://tastecooking.com/feed/',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'King Arthur Baking',
+        'url': 'https://www.kingarthurbaking.com/blog/feed',
+        'category': 'food',
+        'tier': 'standard'
+    },
+
+    # ========================================
+    # FOOD - ADDITIONAL
+    # ========================================
+    {'name': 'Damn Delicious', 'url': 'https://damndelicious.net/feed/', 'category': 'food', 'tier': 'standard'},
+    {'name': 'Pinch of Yum', 'url': 'https://pinchofyum.com/feed', 'category': 'food', 'tier': 'standard'},
+
+    # ========================================
+    # MUSIC (3 original feeds)
+    # ========================================
+    {
+        'name': 'Stereogum',
+        'url': 'https://www.stereogum.com/feed/',
+        'category': 'music',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Consequence of Sound',
+        'url': 'https://consequence.net/feed/',
+        'category': 'music',
+        'tier': 'premium'
+    },
+    {
+        'name': 'NME',
+        'url': 'https://www.nme.com/feed',
+        'category': 'music',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # MUSIC - ADDITIONAL
+    # ========================================
+    {'name': 'Billboard', 'url': 'https://www.billboard.com/feed/', 'category': 'music', 'tier': 'premium'},
+    {'name': 'BrooklynVegan', 'url': 'https://www.brooklynvegan.com/feed/', 'category': 'music', 'tier': 'standard'},
+    {'name': 'The Line of Best Fit', 'url': 'https://www.thelineofbestfit.com/feed', 'category': 'music', 'tier': 'standard'},
+    {'name': 'Soompi', 'url': 'https://www.soompi.com/feed', 'category': 'music', 'tier': 'premium'},
+    {'name': 'Far Out Magazine', 'url': 'https://faroutmagazine.co.uk/feed/', 'category': 'music', 'tier': 'standard'},
+    {'name': 'Louder Sound', 'url': 'https://www.loudersound.com/feeds/all', 'category': 'music', 'tier': 'premium'},
+    {'name': 'UPROXX Music', 'url': 'https://uproxx.com/music/feed/', 'category': 'music', 'tier': 'standard'},
+    {'name': 'Revolver Mag', 'url': 'https://www.revolvermag.com/feed', 'category': 'music', 'tier': 'standard'},
+
+    # ========================================
+    # AUTOMOTIVE (10 original feeds, 5 removed)
+    # ========================================
+    {
+        'name': 'Car and Driver',
+        'url': 'https://www.caranddriver.com/rss/all.xml/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Autocar',
+        'url': 'https://www.autocar.co.uk/rss',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Drive',
+        'url': 'https://www.thedrive.com/feed',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Jalopnik',
+        'url': 'https://jalopnik.com/rss',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Electrek',
+        'url': 'https://electrek.co/feed/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'InsideEVs',
+        'url': 'https://insideevs.com/rss/news/all/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Road and Track',
+        'url': 'https://www.roadandtrack.com/rss/all.xml/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Hagerty',
+        'url': 'https://www.hagerty.com/media/feed/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Carscoops',
+        'url': 'https://www.carscoops.com/feed/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Motorsport.com',
+        'url': 'https://www.motorsport.com/rss/all/news/',
+        'category': 'automotive',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # AUTOMOTIVE - ADDITIONAL
+    # ========================================
+    {'name': 'The Autopian', 'url': 'https://www.theautopian.com/feed/', 'category': 'automotive', 'tier': 'standard'},
+
+    # ========================================
+    # HISTORY (10 original feeds)
+    # ========================================
+    {
+        'name': 'History Extra (BBC)',
+        'url': 'https://www.historyextra.com/feed/',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Ancient Origins',
+        'url': 'https://www.ancient-origins.net/rss.xml',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'War History Online',
+        'url': 'https://www.warhistoryonline.com/feed',
+        'category': 'history',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Military History Now',
+        'url': 'https://militaryhistorynow.com/feed/',
+        'category': 'history',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Archaeology Magazine',
+        'url': 'https://www.archaeology.org/feed',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Warfare History Network',
+        'url': 'https://warfarehistorynetwork.com/feed/',
+        'category': 'history',
+        'tier': 'standard'
+    },
+    {
+        'name': 'HistoryNet',
+        'url': 'https://www.historynet.com/feed/',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Smithsonian History',
+        'url': 'https://www.smithsonianmag.com/rss/history/',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Live Science Archaeology',
+        'url': 'https://www.livescience.com/feeds/tag/archaeology',
+        'category': 'history',
+        'tier': 'premium'
+    },
+    {
+        'name': 'RealClearHistory',
+        'url': 'https://www.realclearhistory.com/index.xml',
+        'category': 'history',
+        'tier': 'standard'
+    },
+
+    # ========================================
+    # HISTORY - ADDITIONAL
+    # ========================================
+    {'name': 'The Collector', 'url': 'https://www.thecollector.com/feed/', 'category': 'history', 'tier': 'premium'},
+    {'name': 'The History Blog', 'url': 'https://www.thehistoryblog.com/feed', 'category': 'history', 'tier': 'standard'},
+
+    # ========================================
+    # HUMOR (NEW CATEGORY)
+    # ========================================
+    {'name': 'The Onion', 'url': 'https://theonion.com/feed/', 'category': 'humor', 'tier': 'premium'},
+    {'name': 'BuzzFeed', 'url': 'https://www.buzzfeed.com/index.xml', 'category': 'humor', 'tier': 'premium'},
+    {'name': 'Bored Panda', 'url': 'https://www.boredpanda.com/feed/', 'category': 'humor', 'tier': 'premium'},
+    {'name': 'The Babylon Bee', 'url': 'https://babylonbee.com/feed', 'category': 'humor', 'tier': 'premium'},
+    {'name': 'The Hard Times', 'url': 'https://thehardtimes.net/feed/', 'category': 'humor', 'tier': 'standard', 'fetch_image_from_website': True},
+    {'name': 'ClickHole', 'url': 'https://clickhole.com/feed/', 'category': 'humor', 'tier': 'standard', 'fetch_image_from_website': True},
+    {'name': 'The Daily Mash', 'url': 'https://www.thedailymash.co.uk/feed', 'category': 'humor', 'tier': 'standard'},
+    {'name': 'The Beaverton', 'url': 'https://www.thebeaverton.com/feed/', 'category': 'humor', 'tier': 'standard'},
+    {'name': 'Points in Case', 'url': 'https://www.pointsincase.com/feed', 'category': 'humor', 'tier': 'standard'},
+    {'name': 'The Chive', 'url': 'https://thechive.com/feed/', 'category': 'humor', 'tier': 'standard'},
+    {'name': 'Reductress', 'url': 'https://reductress.com/feed/', 'category': 'humor', 'tier': 'standard', 'fetch_image_from_website': True},
+
+    # ========================================
+    # CRYPTO (NEW CATEGORY)
+    # ========================================
+    {'name': 'CoinDesk', 'url': 'https://www.coindesk.com/arc/outboundfeeds/rss/', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'CoinTelegraph', 'url': 'https://cointelegraph.com/rss', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'The Block', 'url': 'https://www.theblock.co/rss.xml', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'Decrypt', 'url': 'https://decrypt.co/feed', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'Bitcoin Magazine', 'url': 'https://bitcoinmagazine.com/.rss/full/', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'DL News', 'url': 'https://www.dlnews.com/arc/outboundfeeds/rss/', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'The Defiant', 'url': 'https://thedefiant.io/feed', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'Crypto Briefing', 'url': 'https://cryptobriefing.com/feed/', 'category': 'crypto', 'tier': 'premium'},
+    {'name': 'CryptoSlate', 'url': 'https://cryptoslate.com/feed/', 'category': 'crypto', 'tier': 'premium'},
+
+    # ========================================
+    # TRAVEL (5 feeds)
+    # ========================================
+    {
+        'name': 'Conde Nast Traveler',
+        'url': 'https://www.cntraveler.com/feed/rss',
+        'category': 'travel',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Atlas Obscura',
+        'url': 'https://www.atlasobscura.com/feeds/latest',
+        'category': 'travel',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Nomadic Matt',
+        'url': 'https://www.nomadicmatt.com/travel-blog/feed/',
+        'category': 'travel',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Matador Network',
+        'url': 'https://matadornetwork.com/feed/',
+        'category': 'travel',
+        'tier': 'standard'
+    },
+    {
+        'name': 'The Points Guy',
+        'url': 'https://thepointsguy.com/feed/',
+        'category': 'travel',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # DESIGN & ARCHITECTURE (5 feeds)
+    # ========================================
+    {
+        'name': 'Architectural Digest',
+        'url': 'https://www.architecturaldigest.com/feed/rss',
+        'category': 'design',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Dezeen',
+        'url': 'https://www.dezeen.com/feed/',
+        'category': 'design',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ArchDaily',
+        'url': 'https://www.archdaily.com/feed',
+        'category': 'design',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Curbed',
+        'url': 'https://www.curbed.com/rss/index.xml',
+        'category': 'design',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Designboom',
+        'url': 'https://www.designboom.com/feed/',
+        'category': 'design',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # HEALTH & FITNESS (5 feeds)
+    # ========================================
+    {
+        'name': 'Self Magazine',
+        'url': 'https://www.self.com/feed/rss',
+        'category': 'health',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Healthline',
+        'url': 'https://www.healthline.com/rss/health-news',
+        'category': 'health',
+        'tier': 'premium'
+    },
+    {
+        'name': "Runner's World",
+        'url': 'https://www.runnersworld.com/rss/all.xml/',
+        'category': 'health',
+        'tier': 'premium'
+    },
+    {
+        'name': "Men's Health",
+        'url': 'https://www.menshealth.com/rss/all.xml/',
+        'category': 'health',
+        'tier': 'premium'
+    },
+    {
+        'name': "Women's Health",
+        'url': 'https://www.womenshealthmag.com/rss/all.xml/',
+        'category': 'health',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # NATURE & ENVIRONMENT (4 feeds)
+    # ========================================
+    {
+        'name': 'Mongabay',
+        'url': 'https://news.mongabay.com/feed/',
+        'category': 'nature',
+        'tier': 'premium'
+    },
+    {
+        'name': 'All About Birds',
+        'url': 'https://www.allaboutbirds.org/news/feed/',
+        'category': 'nature',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Cool Green Science',
+        'url': 'https://blog.nature.org/feed/',
+        'category': 'nature',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Guardian Wildlife',
+        'url': 'https://www.theguardian.com/environment/wildlife/rss',
+        'category': 'nature',
+        'tier': 'premium',
+        'image_size': 'largest'
+    },
+
+    # ========================================
+    # OUTDOOR & ADVENTURE (2 feeds)
+    # ========================================
+    {
+        'name': 'Outside Online',
+        'url': 'https://www.outsideonline.com/feed/',
+        'category': 'outdoor',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Backpacker Magazine',
+        'url': 'https://www.backpacker.com/feed/',
+        'category': 'outdoor',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # HOME & DIY (2 feeds)
+    # ========================================
+    {
+        'name': 'Bob Vila',
+        'url': 'https://www.bobvila.com/feed',
+        'category': 'home',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Apartment Therapy',
+        'url': 'https://www.apartmenttherapy.com/main.rss',
+        'category': 'home',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # PETS & ANIMALS (2 feeds)
+    # ========================================
+    {
+        'name': 'Dogster',
+        'url': 'https://www.dogster.com/feed',
+        'category': 'pets',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Catster',
+        'url': 'https://www.catster.com/feed',
+        'category': 'pets',
+        'tier': 'standard'
+    },
+
+    # ========================================
+    # BOOKS & LITERATURE (2 feeds)
+    # ========================================
+    {
+        'name': 'Book Riot',
+        'url': 'https://bookriot.com/feed/',
+        'category': 'books',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Literary Hub',
+        'url': 'https://lithub.com/feed/',
+        'category': 'books',
         'tier': 'premium'
     },
 ]
 
-# Total: ~340 Elite Premium RSS Feeds
-# Includes: Politico (7), ABC News (1), CBS News (11), NBC News (1), Fox News (8), The Guardian (5), CBC Canada (2)
-# Country Feeds: India (5), Turkiye (6), China (4+1), Russia (6), Ukraine (5),
-#                Germany (4), France (4), Spain (3+1), Italy (3), Japan (5),
-#                Australia (4), Canada (3)
-# Focused on: Elite news, authoritative business, serious science, consumer fascination
-#
 # SPECIAL IMAGE HANDLING NOTES:
 # - ABC News: Use largest image size (width=1600, height=900) - marked with image_size='largest'
 # - CBS News: Fetch images from website via BrightData - marked with fetch_image_from_website=True
@@ -2361,7 +2270,7 @@ ALL_SOURCES = [(feed['name'], feed['url'], feed.get('country', '')) for feed in 
 # Only print stats when run directly (not when imported)
 if __name__ == "__main__":
     print(f"Total RSS Feeds: {len(RSS_FEEDS)}")
-    
+
     print(f"\nBreakdown by category:")
     categories = {}
     for feed in RSS_FEEDS:
@@ -2372,14 +2281,21 @@ if __name__ == "__main__":
         count = categories[category]
         pct = count / len(RSS_FEEDS) * 100
         print(f"  {category.capitalize():15s}: {count:3d} feeds ({pct:5.1f}%)")
-    
+
     print(f"\nCountry-tagged feeds:")
     countries = {}
     for feed in RSS_FEEDS:
         country = feed.get('country', 'Global/Untagged')
         countries[country] = countries.get(country, 0) + 1
-    
+
     for country in sorted(countries.keys()):
         count = countries[country]
         print(f"  {country:25s}: {count:3d} feeds")
 
+    # Check for duplicate names
+    names = [feed['name'] for feed in RSS_FEEDS]
+    duplicates = [name for name in set(names) if names.count(name) > 1]
+    if duplicates:
+        print(f"\nWARNING - Duplicate feed names: {duplicates}")
+    else:
+        print(f"\nNo duplicate feed names found.")
