@@ -82,7 +82,7 @@ struct MainFeedView: View {
             viewModel.currentIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)
-            if newIndex >= sortedArticles.count - 3 {
+            if newIndex >= sortedArticles.count - 5 {
                 Task { await viewModel.loadMoreIfNeeded() }
             }
         }

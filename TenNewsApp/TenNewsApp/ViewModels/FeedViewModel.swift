@@ -46,6 +46,7 @@ final class FeedViewModel {
         reRanker.reset()
         do {
             let feedResponse = try await feedService.fetchMainFeed(
+                limit: 10,
                 preferences: preferences,
                 userId: userId
             )
@@ -73,6 +74,7 @@ final class FeedViewModel {
             let signals = reRanker.sessionSignals
             let response = try await feedService.fetchMainFeed(
                 cursor: nextCursor,
+                limit: 10,
                 preferences: currentPreferences,
                 userId: currentUserId,
                 engagedIds: signals.engaged,

@@ -451,10 +451,9 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
+    // Always fetch seen articles to exclude (fresh candidates each request, like TikTok)
     let seenArticleIds = [];
-    if ((persUserId || userId) && offset > 0) {
-      // Get recently viewed articles to exclude from results
-      // user_article_events uses auth user ID (user.id from auth)
+    if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id')
@@ -871,8 +870,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length;
   const interleaved = interleave(personalScored, trendingScored, discoveryScored, totalAvailable);
 
-  // Apply pagination
-  const page = interleaved.slice(offset, offset + limit);
+  // Fresh candidates each request (no offset pagination — seen articles already excluded)
+  const page = interleaved.slice(0, limit);
 
   if (page.length === 0) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: totalAvailable });
@@ -902,9 +901,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  const hasMore = offset + limit < totalAvailable;
-  const lastId = page[page.length - 1]?.id || 0;
-  const nextCursor = hasMore ? `v2_${offset + limit}_${lastId}` : null;
+  // Has more if we generated more candidates than one page
+  const hasMore = totalAvailable > limit;
+  const nextCursor = hasMore ? `v2_fresh` : null;
 
   return res.status(200).json({
     articles: formattedArticles,
