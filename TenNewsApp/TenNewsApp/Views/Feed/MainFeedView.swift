@@ -73,7 +73,8 @@ struct MainFeedView: View {
         }
         .ignoresSafeArea()
         .onChange(of: pagerIndex) { oldIndex, newIndex in
-            // Record signal for the card we just left
+            // Record signal for the card we just left — this measures dwell time
+            // and sends the appropriate event (article_skipped / article_view / article_engaged)
             if oldIndex != newIndex, oldIndex < sortedArticles.count {
                 viewModel.recordSwipeAway(fromIndex: oldIndex)
             }
@@ -81,7 +82,7 @@ struct MainFeedView: View {
             currentPageIndex = newIndex
             viewModel.currentIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
-            viewModel.trackArticleView(at: newIndex)
+            viewModel.trackArticleView(at: newIndex)  // reading history only, no analytics event
             if newIndex >= sortedArticles.count - 5 {
                 Task { await viewModel.loadMoreIfNeeded() }
             }

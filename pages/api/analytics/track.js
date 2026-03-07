@@ -118,7 +118,10 @@ export default async function handler(req, res) {
 
     // Update taste vector via EMA on engagement events (non-blocking)
     // This feeds the pgvector personalization system
-    const TASTE_UPDATE_EVENTS = ['article_view', 'article_engaged', 'article_saved', 'article_detail_view']
+    // NOTE: article_view is NOT included — passive views pollute the taste vector
+    // toward dominant content. Only real engagement signals update the vector.
+    // article_skipped pushes the vector AWAY from skipped content and builds skip_profile.
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped']
     if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
       // user.id IS the profiles.id (auth UUID) — update directly
       admin.rpc('update_taste_vector_ema_profiles', {
@@ -132,6 +135,52 @@ export default async function handler(req, res) {
           console.log('[analytics] Taste vector updated for user:', user.id?.substring(0, 8))
         }
       })
+    }
+
+    // Build skip_profile from skipped articles (non-blocking)
+    if (event_type === 'article_skipped' && article_id) {
+      admin
+        .from('published_articles')
+        .select('interest_tags')
+        .eq('id', article_id)
+        .single()
+        .then(({ data: articleData }) => {
+          if (!articleData) return
+          const tags = typeof articleData.interest_tags === 'string'
+            ? JSON.parse(articleData.interest_tags || '[]')
+            : (articleData.interest_tags || [])
+          if (tags.length === 0) return
+
+          // Load current skip_profile, update, and save
+          admin
+            .from('profiles')
+            .select('skip_profile')
+            .eq('id', user.id)
+            .single()
+            .then(({ data: profileData }) => {
+              const skipProfile = profileData?.skip_profile || {}
+              for (const tag of tags) {
+                const t = tag.toLowerCase()
+                skipProfile[t] = Math.min((skipProfile[t] || 0) + 0.05, 0.9)
+              }
+              admin
+                .from('profiles')
+                .update({ skip_profile: skipProfile })
+                .eq('id', user.id)
+                .then(() => {})
+                .catch(() => {
+                  // Fallback to users table
+                  admin
+                    .from('users')
+                    .update({ skip_profile: skipProfile })
+                    .eq('id', user.id)
+                    .then(() => {})
+                    .catch(() => {})
+                })
+            })
+            .catch(() => {})
+        })
+        .catch(() => {})
     }
 
     return res.status(200).json({ ok: true })

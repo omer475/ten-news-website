@@ -2,7 +2,7 @@ import Foundation
 
 /// Real-time client-side feed re-ranker.
 /// Tracks dwell time per article as the user swipes.
-/// Fast swipe (<2s) = skip signal. Engaged (>=5s) = interest signal.
+/// Fast swipe (<3s) = skip signal. Engaged (>=5s) = interest signal.
 /// Re-ranks unseen articles instantly using tag/category overlap with session signals.
 @MainActor @Observable
 final class SessionReRanker {
@@ -13,7 +13,7 @@ final class SessionReRanker {
     private var interestProfile: [String: Double] = [:]
     private var skipProfile: [String: Double] = [:]
 
-    private let skipThreshold: TimeInterval = 2.0
+    private let skipThreshold: TimeInterval = 3.0
     private let engageThreshold: TimeInterval = 5.0
 
     // MARK: - Record Signal
