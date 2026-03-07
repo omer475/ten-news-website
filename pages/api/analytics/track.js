@@ -137,6 +137,46 @@ export default async function handler(req, res) {
       })
     }
 
+    // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
+    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view']
+    const TAG_PROFILE_WEIGHTS = { article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
+      const tagWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
+      admin
+        .from('published_articles')
+        .select('interest_tags')
+        .eq('id', article_id)
+        .single()
+        .then(({ data: articleData }) => {
+          if (!articleData) return
+          const tags = typeof articleData.interest_tags === 'string'
+            ? JSON.parse(articleData.interest_tags || '[]')
+            : (articleData.interest_tags || [])
+          if (tags.length === 0) return
+
+          admin
+            .from('profiles')
+            .select('tag_profile')
+            .eq('id', user.id)
+            .single()
+            .then(({ data: profileData }) => {
+              const tagProfile = profileData?.tag_profile || {}
+              for (const tag of tags) {
+                const t = tag.toLowerCase()
+                tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.0)
+              }
+              admin
+                .from('profiles')
+                .update({ tag_profile: tagProfile })
+                .eq('id', user.id)
+                .then(() => {})
+                .catch(() => {})
+            })
+            .catch(() => {})
+        })
+        .catch(() => {})
+    }
+
     // Build skip_profile from skipped articles (non-blocking)
     if (event_type === 'article_skipped' && article_id) {
       admin
