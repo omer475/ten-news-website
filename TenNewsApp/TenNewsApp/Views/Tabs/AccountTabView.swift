@@ -5,6 +5,7 @@ struct AccountTabView: View {
     @State private var showSettings = false
     @State private var appeared = false
     @State private var showSignOutConfirm = false
+    @State private var showSignUp = false
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var prefs: UserPreferences { appViewModel.preferences }
@@ -61,7 +62,10 @@ struct AccountTabView: View {
                     }
                 }
             }
+            .background(Color(white: 0.06))
+            .toolbarColorScheme(.dark, for: .navigationBar)
         }
+        .environment(\.colorScheme, .dark)
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 preferences: appViewModel.preferences,
@@ -72,6 +76,30 @@ struct AccountTabView: View {
                     appViewModel.logout()
                 }
             )
+        }
+        .sheet(isPresented: $showSignUp) {
+            NavigationStack {
+                SignupView(
+                    onSignup: { user, session in
+                        appViewModel.login(user: user, session: session)
+                        appViewModel.completeOnboarding(with: appViewModel.preferences)
+                        showSignUp = false
+                    },
+                    onShowLogin: {
+                        showSignUp = false
+                    }
+                )
+                .navigationTitle("Create Account")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showSignUp = false }
+                    }
+                }
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
         }
         .confirmationDialog("Sign Out", isPresented: $showSignOutConfirm) {
             Button("Sign Out", role: .destructive) {
@@ -105,17 +133,21 @@ struct AccountTabView: View {
                 Text(user?.displayName ?? "News Reader")
                     .font(.system(size: 20, weight: .bold))
 
-                if let email = user?.email {
+                if appViewModel.isGuest {
+                    Text("Browsing as Guest")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                } else if let email = user?.email {
                     Text(email)
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
 
                 HStack(spacing: 5) {
-                    Image(systemName: "checkmark.seal.fill")
+                    Image(systemName: appViewModel.isGuest ? "person.fill" : "checkmark.seal.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(.blue)
-                    Text("Ten News Reader")
+                        .foregroundStyle(appViewModel.isGuest ? Color.gray : Color.blue)
+                    Text(appViewModel.isGuest ? "Guest Reader" : "Ten News Reader")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -263,14 +295,35 @@ struct AccountTabView: View {
             .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
             .padding(.top, 16)
 
-            // Sign out
+            if appViewModel.isGuest {
+                // Guest: offer to create account
+                Button {
+                    showSignUp = true
+                    HapticManager.light()
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("Create Account")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.blue)
+                        Spacer()
+                    }
+                    .frame(height: 48)
+                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+                    .contentShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(AccountButtonStyle())
+                .padding(.top, 16)
+            }
+
+            // Sign out / Reset
             Button {
                 showSignOutConfirm = true
                 HapticManager.light()
             } label: {
                 HStack {
                     Spacer()
-                    Text("Sign Out")
+                    Text(appViewModel.isGuest ? "Reset & Start Over" : "Sign Out")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(.red)
                     Spacer()
@@ -283,7 +336,7 @@ struct AccountTabView: View {
             .padding(.top, 16)
 
             // Version
-            Text("Ten News v1.0")
+            Text("Today+ v1.0")
                 .font(.system(size: 12))
                 .foregroundStyle(.quaternary)
                 .padding(.top, 20)

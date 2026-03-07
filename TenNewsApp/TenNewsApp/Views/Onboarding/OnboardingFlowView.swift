@@ -52,6 +52,8 @@ struct OnboardingFlowView: View {
                     viewModel.nextStep()
                 }, onSignIn: {
                     showSignIn = true
+                }, onGuest: {
+                    appViewModel.continueAsGuest()
                 })
                 .transition(.asymmetric(insertion: .opacity, removal: .push(from: .leading)))
             case .country:
@@ -224,6 +226,19 @@ struct OnboardingFlowView: View {
                     }
                 }
                 .disabled(!viewModel.canProceed)
+
+                if viewModel.isLastStep {
+                    Button {
+                        HapticManager.light()
+                        let prefs = viewModel.buildPreferences()
+                        appViewModel.continueAsGuest(with: prefs)
+                    } label: {
+                        Text("Continue as Guest")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .frame(height: 36)
+                    }
+                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 30)
@@ -426,6 +441,7 @@ private struct WelcomeScene: View {
     let accent: Color
     let onContinue: () -> Void
     let onSignIn: () -> Void
+    var onGuest: (() -> Void)? = nil
 
     @State private var phase = 0
 
@@ -482,6 +498,20 @@ private struct WelcomeScene: View {
                             .frame(height: 54)
                             .background(accent.gradient, in: Capsule())
                             .overlay(Capsule().stroke(.white.opacity(0.2), lineWidth: 1))
+                    }
+
+                    // Continue as Guest
+                    Button {
+                        HapticManager.light()
+                        onGuest?()
+                    } label: {
+                        Text("Continue as Guest")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(.white.opacity(0.06), in: Capsule())
+                            .overlay(Capsule().stroke(.white.opacity(0.1), lineWidth: 1))
                     }
 
                     Button {
