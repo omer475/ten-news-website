@@ -365,6 +365,8 @@ export default async function handler(req, res) {
     // Session signals from client (real-time skip/engage tracking)
     const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
     const sessionSkippedIds = req.query.skipped_ids ? req.query.skipped_ids.split(',').map(Number).filter(Boolean) : [];
+    // Client-sent seen IDs for dedup (prevents repeats even for guests without server events)
+    const clientSeenIds = req.query.seen_ids ? req.query.seen_ids.split(',').map(Number).filter(Boolean) : [];
 
     // ==========================================
     // LOAD USER DATA
@@ -458,7 +460,7 @@ export default async function handler(req, res) {
         .from('user_article_events')
         .select('article_id')
         .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view'])
+        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
         .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(500);
@@ -466,6 +468,10 @@ export default async function handler(req, res) {
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
       }
+    }
+    // Merge client-sent seen IDs (handles guests and races where server events haven't persisted yet)
+    if (clientSeenIds.length > 0) {
+      seenArticleIds = [...new Set([...seenArticleIds, ...clientSeenIds])];
     }
 
     // ==========================================
@@ -914,27 +920,32 @@ async function handleV2Feed(req, res, supabase, opts) {
 }
 
 // ==========================================
-// FALLBACK FEED: Tag-based (for new users)
+// EXPLORATION FEED: Diverse discovery for new users
 // ==========================================
+// TikTok-style cold start: show the BEST article from EACH category,
+// round-robin interleaved. No category dominates. The user's dwell-time
+// signals (skip <3s / engage >=5s) quickly build a taste vector, and
+// subsequent requests switch to the personalized V2 feed.
 
 async function handleFallbackFeed(req, res, supabase, opts) {
   const { userPrefs, seenArticleIds, limit, offset } = opts;
 
-  // Public cache for non-personalized feed
-  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+  // Short cache — new users' feeds should adapt fast
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
 
   const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  const { data: articles, error, count } = await supabase
+  // Fetch a large pool of recent quality articles
+  const { data: articles, error } = await supabase
     .from('published_articles')
-    .select(ARTICLE_COLUMNS, { count: 'exact' })
+    .select(ARTICLE_COLUMNS)
     .gte('created_at', twoDaysAgo)
+    .gte('ai_final_score', 400)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit + 4);
+    .limit(300);
 
   if (error) {
-    console.error('Fallback feed query error:', error);
+    console.error('Exploration feed query error:', error);
     return res.status(500).json({ error: 'Failed to fetch articles' });
   }
 
@@ -942,15 +953,50 @@ async function handleFallbackFeed(req, res, supabase, opts) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
   }
 
-  // Filter out test articles
-  let filtered = articles.filter(a => {
+  // Filter out test articles and already-seen articles
+  const seenSet = new Set(seenArticleIds || []);
+  const filtered = articles.filter(a => {
+    if (seenSet.has(a.id)) return false;
     const url = a?.url || '';
     const title = a?.title_news || a?.title || '';
     return !(/test/i.test(url) || /test/i.test(title));
   });
 
-  // Paginate
-  const pageArticles = filtered.slice(0, limit);
+  // Group by category, pick top articles per category (sorted by score)
+  const byCategory = {};
+  for (const a of filtered) {
+    const cat = a.category || 'Other';
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(a);
+  }
+
+  // Sort categories by how many articles they have (largest first for round-robin)
+  const categoryOrder = Object.keys(byCategory).sort(
+    (a, b) => byCategory[b].length - byCategory[a].length
+  );
+
+  // Cap per category: max 2 articles from any single category per page of 10
+  // This ensures no topic floods the exploration feed
+  const maxPerCategory = Math.max(2, Math.ceil(limit / Math.max(categoryOrder.length, 1)));
+
+  // Round-robin interleave: pick 1 from each category, repeat
+  const result = [];
+  const categoryPointers = {};
+  for (const cat of categoryOrder) categoryPointers[cat] = 0;
+
+  for (let round = 0; result.length < limit + 10 && round < 20; round++) {
+    for (const cat of categoryOrder) {
+      if (result.length >= limit + 10) break;
+      const ptr = categoryPointers[cat];
+      if (ptr >= byCategory[cat].length) continue;
+      if (ptr >= maxPerCategory) continue;
+      result.push(byCategory[cat][ptr]);
+      categoryPointers[cat] = ptr + 1;
+    }
+  }
+
+  // Apply offset pagination for subsequent pages
+  const pageArticles = result.slice(offset, offset + limit);
 
   if (pageArticles.length === 0) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
@@ -961,7 +1007,12 @@ async function handleFallbackFeed(req, res, supabase, opts) {
   const eventMap = await fetchWorldEvents(supabase, articleIds);
 
   // Format articles
-  let formattedArticles = pageArticles.map(a => formatArticle(a, eventMap));
+  let formattedArticles = pageArticles.map(a => {
+    const formatted = formatArticle(a, eventMap);
+    formatted.bucket = 'exploration';
+    formatted.final_score = a.ai_final_score || 0;
+    return formatted;
+  });
 
   // Apply tag-based personalization boost if user prefs exist
   if (userPrefs) {
@@ -972,14 +1023,14 @@ async function handleFallbackFeed(req, res, supabase, opts) {
     formattedArticles.sort((a, b) => b.final_score - a.final_score);
   }
 
-  const hasMore = (count || 0) > offset + limit;
+  const hasMore = result.length > offset + limit;
   const nextCursor = hasMore ? String(offset + limit) : null;
 
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
-    total: count || formattedArticles.length,
+    total: result.length,
   });
 }
 

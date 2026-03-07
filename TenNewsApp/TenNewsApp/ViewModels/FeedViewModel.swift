@@ -72,15 +72,19 @@ final class FeedViewModel {
         isLoading = true
         do {
             let signals = reRanker.sessionSignals
+            let existingIds = allArticles.map { $0.id.stringValue }
             let response = try await feedService.fetchMainFeed(
                 cursor: nextCursor,
                 limit: 10,
                 preferences: currentPreferences,
                 userId: currentUserId,
                 engagedIds: signals.engaged,
-                skippedIds: signals.skipped
+                skippedIds: signals.skipped,
+                seenIds: existingIds
             )
-            allArticles.append(contentsOf: response.articles)
+            let existingSet = Set(existingIds)
+            let newArticles = response.articles.filter { !existingSet.contains($0.id.stringValue) }
+            allArticles.append(contentsOf: newArticles)
             nextCursor = response.nextCursor
             hasMore = response.hasMore
             isLoading = false
@@ -98,7 +102,11 @@ final class FeedViewModel {
         viewStartTimes[arts[index].id.stringValue] = Date()
     }
 
-    /// Call when user leaves a card (swiped away). Computes dwell time and feeds to re-ranker.
+    /// Call when user leaves a card (swiped away). Computes dwell time,
+    /// feeds to re-ranker, and sends the appropriate analytics event:
+    ///  - <3s dwell → article_skipped (pushes taste vector AWAY)
+    ///  - 3-5s dwell → article_view (neutral, no taste vector update)
+    ///  - >=5s dwell → article_engaged (pulls taste vector toward content)
     func recordSwipeAway(fromIndex: Int) {
         let arts = articles
         guard fromIndex < arts.count else { return }
@@ -111,6 +119,23 @@ final class FeedViewModel {
         }
         viewStartTimes.removeValue(forKey: article.id.stringValue)
         reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
+
+        // Send dwell-based event to server
+        let event: String
+        if dwellSeconds < 3.0 {
+            event = "article_skipped"
+        } else if dwellSeconds >= 5.0 {
+            event = "article_engaged"
+        } else {
+            event = "article_view"
+        }
+        Task {
+            try? await analytics.track(
+                event: event,
+                articleId: Int(article.id.stringValue),
+                metadata: ["dwell": String(format: "%.1f", dwellSeconds)]
+            )
+        }
     }
 
     func trackArticleView(at index: Int) {
@@ -118,13 +143,6 @@ final class FeedViewModel {
         guard index < arts.count else { return }
         let article = arts[index]
         ReadingHistoryManager.shared.recordView(of: article)
-        Task {
-            try? await analytics.track(
-                event: "article_view",
-                articleId: Int(article.id.stringValue),
-                metadata: ["index": String(index)]
-            )
-        }
     }
 
     /// Color for article based on category

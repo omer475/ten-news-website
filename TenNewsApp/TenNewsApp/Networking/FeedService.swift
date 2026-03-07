@@ -13,7 +13,8 @@ struct FeedService {
         preferences: UserPreferences? = nil,
         userId: String? = nil,
         engagedIds: [String] = [],
-        skippedIds: [String] = []
+        skippedIds: [String] = [],
+        seenIds: [String] = []
     ) async throws -> MainFeedResponse {
         var params = "?limit=\(limit)"
         if let cursor { params += "&cursor=\(cursor)" }
@@ -37,6 +38,10 @@ struct FeedService {
         }
         if !skippedIds.isEmpty {
             params += "&skipped_ids=\(skippedIds.joined(separator: ","))"
+        }
+        // Client-side seen IDs for dedup (ensures no repeats even without server-side events)
+        if !seenIds.isEmpty {
+            params += "&seen_ids=\(seenIds.prefix(200).joined(separator: ","))"
         }
         return try await client.get("\(APIEndpoints.mainFeed)\(params)")
     }
