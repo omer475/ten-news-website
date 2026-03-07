@@ -470,13 +470,13 @@ export default async function handler(req, res) {
         // Fallback: try legacy users table
         const { data: legacyUser } = await supabase
           .from('users')
-          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
+          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
           .eq('id', userId)
           .single();
         if (!legacyUser) {
           const { data: linkedUser } = await supabase
             .from('users')
-            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile')
+            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
             .eq('auth_user_id', userId)
             .single();
           if (linkedUser) userData = linkedUser;
