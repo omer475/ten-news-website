@@ -206,6 +206,46 @@ DO NOT SELECT IF:
 FREQUENCY: ~10% of stories
 
 ═══════════════════════════════════════════════════════════════
+🏆 SCORE CARD
+═══════════════════════════════════════════════════════════════
+
+Shows completed match/game results with final scores.
+
+SELECT ONLY IF:
+- Article is about a COMPLETED match/game with FINAL scores
+- Both teams/competitors and their scores are clearly stated
+- This is a match RESULT, not a preview, transfer, or opinion piece
+
+DO NOT SELECT IF:
+- Article is about transfers, signings, contracts, injuries
+- Article is a match preview or prediction
+- Article is about sports politics, doping, coaching changes
+- No final score is mentioned
+
+WHEN SELECTED: Scorecard REPLACES all other components. Do NOT add details/timeline/graph/map alongside scorecard.
+
+FREQUENCY: ~30% of Sports articles
+
+═══════════════════════════════════════════════════════════════
+🍳 RECIPE CARD
+═══════════════════════════════════════════════════════════════
+
+Shows recipe info: cook time, difficulty, servings.
+
+SELECT ONLY IF:
+- Article IS an actual recipe with ingredients and/or instructions
+- Has specific cooking details (time, servings, ingredients list)
+
+DO NOT SELECT IF:
+- Article is about restaurants, food industry, food trends
+- Article is a restaurant review or food news
+- No actual recipe with ingredients/instructions
+
+WHEN SELECTED: Recipe REPLACES all other components. Do NOT add details/timeline/graph/map alongside recipe.
+
+FREQUENCY: ~50% of Food articles
+
+═══════════════════════════════════════════════════════════════
 TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
@@ -213,6 +253,8 @@ Most stories (80%): ["details"] - Just details, nothing else
 Incidents with SPECIFIC location: ["map", "details"]
 Economic news with data: ["graph", "details"]
 Complex ongoing sagas (very rare, ~5%): ["timeline", "details"]
+Completed match results: ["scorecard"] - EXCLUSIVE, no other components
+Actual recipes: ["recipe"] - EXCLUSIVE, no other components
 
 MISTAKES TO AVOID:
 ✗ Adding timeline to every story (timeline is for ~5% of stories only!)
@@ -222,6 +264,8 @@ MISTAKES TO AVOID:
 ✗ Adding timeline for single events (plane crash, earthquake, announcement)
 ✗ Adding graph with made-up data
 ✗ Adding details that duplicate bullets
+✗ Adding scorecard for non-match sports articles (transfers, previews, etc.)
+✗ Adding recipe for food industry/restaurant news
 
 ═══════════════════════════════════════════════════════════════
 DECISION EXAMPLES
@@ -231,74 +275,92 @@ DECISION EXAMPLES
 → MAP: YES - "Vilnius International Airport" is SPECIFIC location
 → TIMELINE: NO - Single incident, readers don't need background
 → DETAILS: YES - If additional facts available
-→ components: ["map", "details"]
+→ components: ["map", "details"], article_type: "standard"
 
 "Putin Announces New Nuclear Policy"
 → MAP: NO - Kremlin is famous, everyone knows where it is
 → TIMELINE: NO - Single announcement, not ongoing saga
 → DETAILS: YES
-→ components: ["details"]
+→ components: ["details"], article_type: "standard"
 
 "Epstein Files Released After Years of Secrecy"
 → MAP: NO - No specific incident location
 → TIMELINE: YES - Reader needs to understand "what is this case about?"
 → DETAILS: YES
-→ components: ["timeline", "details"]
+→ components: ["timeline", "details"], article_type: "standard"
 
 "Fed Raises Interest Rates to 5.5%"
 → MAP: NO - No specific location
 → TIMELINE: NO - Single announcement, not complex history
 → GRAPH: YES - Real rate history from Fed
 → DETAILS: YES
-→ components: ["graph", "details"]
+→ components: ["graph", "details"], article_type: "standard"
 
 "Earthquake Kills 50 in Turkey"
 → MAP: YES - Show SPECIFIC epicenter location (e.g., "Gaziantep Province epicenter")
 → TIMELINE: NO - Single disaster, no complex background needed
 → DETAILS: YES
-→ components: ["map", "details"]
+→ components: ["map", "details"], article_type: "standard"
 
 "SNL Mocks Trump in Christmas Sketch"
 → MAP: NO - Nobody cares where TV studio is
 → TIMELINE: NO - Entertainment news, no background needed
 → DETAILS: YES - If additional facts
-→ components: ["details"]
+→ components: ["details"], article_type: "standard"
 
 "Russia Strikes Ukrainian Power Plant with Missiles"
 → MAP: YES - Show the SPECIFIC power plant location
 → TIMELINE: NO - Single attack (unless user needs war background)
 → DETAILS: YES
-→ components: ["map", "details"]
+→ components: ["map", "details"], article_type: "standard"
 
 "Ukraine War Enters Third Year as Peace Talks Collapse"
 → MAP: NO - Just "Ukraine" is too vague, no specific location
 → TIMELINE: YES - Reader needs "how did we get here" context
 → DETAILS: YES
-→ components: ["timeline", "details"]
+→ components: ["timeline", "details"], article_type: "standard"
 
 "NASA Artemis Mission Lands on Moon"
 → MAP: NO - Moon is NOT on Earth, no map for space
 → TIMELINE: NO - Single event
 → DETAILS: YES
-→ components: ["details"]
+→ components: ["details"], article_type: "standard"
 
 "SpaceX Starship Explodes Over Mars"
 → MAP: NO - Mars is NOT on Earth, no map for space
 → TIMELINE: NO - Single event
 → DETAILS: YES
-→ components: ["details"]
+→ components: ["details"], article_type: "standard"
 
 "Apple Announces iPhone 17"
 → MAP: NO - Apple Park is well-known, boring
 → TIMELINE: NO - Product launch, no history needed
 → DETAILS: YES
-→ components: ["details"]
+→ components: ["details"], article_type: "standard"
 
 "Trade War Between US and China Intensifies"
 → MAP: NO - Just "US" and "China" are too vague
 → TIMELINE: MAYBE - Only if reader needs trade war background
 → DETAILS: YES
-→ components: ["details"] or ["timeline", "details"]
+→ components: ["details"] or ["timeline", "details"], article_type: "standard"
+
+"Arsenal Beats Chelsea 3-1 in Premier League"
+→ SCORECARD: YES - Completed match with final scores
+→ components: ["scorecard"], article_type: "match_result"
+
+"Mbappe Signs 5-Year Deal with Real Madrid"
+→ SCORECARD: NO - Transfer news, not a match result
+→ DETAILS: YES
+→ components: ["details"], article_type: "standard"
+
+"Easy 30-Minute Pasta Carbonara Recipe"
+→ RECIPE: YES - Actual recipe with cooking details
+→ components: ["recipe"], article_type: "recipe"
+
+"NYC's Best New Restaurants of 2026"
+→ RECIPE: NO - Restaurant news, not an actual recipe
+→ DETAILS: YES
+→ components: ["details"], article_type: "standard"
 
 ═══════════════════════════════════════════════════════════════
 EMOJI SELECTION
@@ -316,6 +378,7 @@ Choose ONE emoji:
 🔪 Crime              💰 Business            📺 TV/Media
 ☢️ Nuclear            🗳️ Elections           🤝 Diplomacy
 ✈️ Plane crash        🌊 Natural disaster    🔥 Fire
+🍳 Cooking/Food       🎮 Gaming
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT FORMAT
@@ -325,7 +388,8 @@ OUTPUT FORMAT
   "components": ["map", "details"],
   "emoji": "✈️",
   "graph_type": null,
-  "map_locations": ["Vilnius International Airport, Vilnius, Lithuania"]
+  "map_locations": ["Vilnius International Airport, Vilnius, Lithuania"],
+  "article_type": "standard"
 }
 
 RULES:
@@ -333,6 +397,7 @@ RULES:
 - emoji: Single emoji for the story
 - graph_type: "line", "bar", or "area" if graph selected, null otherwise
 - map_locations: Array of specific locations if map selected, null otherwise
+- article_type: "standard", "match_result" (if scorecard), or "recipe" (if recipe)
 """
 
 
@@ -528,15 +593,15 @@ class GeminiComponentSelector:
             return self._get_fallback_selection()
         
         # Filter out any non-string components
-        # NOTE: 'map' is now re-enabled
-        valid_component_names = {'timeline', 'details', 'graph', 'map'}  # All 4 components enabled
+        # NOTE: 'map' is now re-enabled, 'scorecard' and 'recipe' are exclusive components
+        valid_component_names = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
         filtered_components = []
         for comp in components:
             if isinstance(comp, str):
                 if comp in valid_component_names:
                     filtered_components.append(comp)
                 else:
-                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map)")
+                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map, scorecard, recipe)")
             elif isinstance(comp, dict):
                 # Sometimes Gemini returns dicts - try to extract the component name
                 if 'name' in comp:
@@ -549,8 +614,14 @@ class GeminiComponentSelector:
                     print(f"  ⚠ Invalid component dict (no 'name' field): {comp}")
             else:
                 print(f"  ⚠ Invalid component type: {type(comp)} - value: {comp}")
-        
+
         components = filtered_components
+
+        # Scorecard and recipe are exclusive — strip all other components if present
+        if 'scorecard' in components:
+            components = ['scorecard']
+        elif 'recipe' in components:
+            components = ['recipe']
         
         # Ensure minimum components - if empty or too few, use fallback (need article reference for smart fallback)
         if len(components) < self.config.min_components:
@@ -603,34 +674,38 @@ class GeminiComponentSelector:
                 'emoji': '🌍',
                 'graph_type': None,
                 'graph_data_needed': None,
-                'map_locations': []
+                'map_locations': [],
+                'article_type': 'standard'
             }
-        
+
         # Check for data/trend indicators
         elif any(word in title_lower for word in ['rate', 'price', 'percent', 'increases', 'falls', 'stock', 'market']):
             return {
                 'components': ['graph', 'details'],
                 'emoji': '📈',
                 'graph_type': 'line',
-                'graph_data_needed': 'historical data'
+                'graph_data_needed': 'historical data',
+                'article_type': 'standard'
             }
-        
+
         # Check for ongoing sagas that need timeline (very selective)
         elif any(phrase in title_lower for phrase in ['war enters', 'conflict continues', 'investigation reveals', 'files released', 'trial continues']):
             return {
                 'components': ['timeline', 'details'],
                 'emoji': '📰',
                 'graph_type': None,
-                'graph_data_needed': None
+                'graph_data_needed': None,
+                'article_type': 'standard'
             }
-        
+
         # Default fallback - JUST DETAILS (most stories only need details)
         else:
             return {
                 'components': ['details'],
                 'emoji': '📰',
                 'graph_type': None,
-                'graph_data_needed': None
+                'graph_data_needed': None,
+                'article_type': 'standard'
             }
     
     def select_components_batch(self, articles: List[Dict]) -> List[Dict]:
@@ -653,7 +728,9 @@ class GeminiComponentSelector:
             'timeline': 0,
             'details': 0,
             'graph': 0,
-            'map': 0
+            'map': 0,
+            'scorecard': 0,
+            'recipe': 0
         }
         
         for i, article in enumerate(articles, 1):
@@ -680,6 +757,7 @@ class GeminiComponentSelector:
                 article_with_components['graph_type'] = selection.get('graph_type')
                 article_with_components['graph_data_needed'] = selection.get('graph_data_needed')
                 article_with_components['map_locations'] = selection.get('map_locations')
+                article_with_components['article_type'] = selection.get('article_type', 'standard')
                 
                 results.append(article_with_components)
                 
@@ -748,7 +826,7 @@ def validate_component_selections(articles: List[Dict]) -> tuple[bool, List[str]
             errors.append(f"Article {i} has {len(components)} components (max 4)")
         
         # Check valid component names
-        valid_components = {'timeline', 'details', 'graph', 'map'}
+        valid_components = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
         for comp in components:
             if comp not in valid_components:
                 errors.append(f"Article {i} has invalid component: {comp}")

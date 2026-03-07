@@ -1,16 +1,17 @@
-# STEP 6: COMPONENT GENERATION (Timeline, Details, Graph)
+# STEP 7: COMPONENT GENERATION (Timeline, Details, Graph)
 # ================================================================
-# Purpose: Generate supplementary components using Perplexity search context
-# Model: Gemini 2.0 Flash (switched from Claude due to API limits)
-# Input: Articles with dual-language content from Step 5 + Perplexity context from Step 4
+# Purpose: Generate supplementary components using Gemini context search data
+# Model: Gemini 2.0 Flash
+# Input: Articles with components selected in Step 6 + context from Step 5
 # Output: Timeline, Details, Graph based on web search results
-# Writes: timeline, details, graph (as selected by Gemini in Step 3)
+# Writes: timeline, details, graph (as selected by Gemini in Step 6)
 # Cost: ~$0.10 per 100 articles
 # Time: ~2-3 minutes for 100 articles
 
 import requests
 import json
 import time
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
@@ -37,6 +38,7 @@ class ComponentWriterConfig:
 
 COMPONENT_PROMPT = """Generate components for this news article.
 
+TODAY'S DATE: {today}
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 SELECTED COMPONENTS: {components}
@@ -94,8 +96,10 @@ EACH EVENT MUST:
 ✓ Be 15-25 words long
 ✓ Explain WHAT happened AND WHY it matters
 ✓ Help the reader understand the CONTEXT of today's news
-✓ Be from recent past (usually last 1-5 years)
+✓ Be from recent past (usually last 1-5 years) — use TODAY'S DATE above as reference
+✓ NEVER write a past date as if it is in the future. If a date is before TODAY'S DATE, use past tense
 ✓ Be directly relevant to this specific story
+✓ All dates must make sense relative to today's date (no future dates unless they are upcoming events)
 
 THE TIMELINE SHOULD TELL A STORY:
 - First event: "This is how it all started..."
@@ -382,6 +386,69 @@ BAD GRAPH DATA:
 ✗ Made-up projections
 
 ═══════════════════════════════════════════════════════════════
+🏆 SCORE CARD
+═══════════════════════════════════════════════════════════════
+
+Generate match result data for a completed sports match.
+
+REQUIREMENTS:
+✓ Both team names
+✓ Both final scores (integers)
+✓ Scorers with team, player name, and minute
+✓ Competition name
+✓ Key match stats (possession, shots, etc.)
+✓ Standing impact if available
+
+OUTPUT FORMAT:
+{
+  "home_team": "Arsenal",
+  "away_team": "Chelsea",
+  "home_score": 3,
+  "away_score": 1,
+  "scorers": [
+    {"team": "home", "player": "Saka", "minute": "23'"},
+    {"team": "home", "player": "Havertz", "minute": "55'"},
+    {"team": "home", "player": "Trossard", "minute": "78'"},
+    {"team": "away", "player": "Palmer", "minute": "41'"}
+  ],
+  "stats": {"possession": ["58%", "42%"], "shots": ["14(7)", "9(3)"]},
+  "competition": "Premier League",
+  "standing_impact": "1st (+3 pts)"
+}
+
+BAD SCORE CARD:
+✗ Missing team names or scores
+✗ Made-up scorer names not in the article
+✗ No competition name
+
+═══════════════════════════════════════════════════════════════
+🍳 RECIPE CARD
+═══════════════════════════════════════════════════════════════
+
+Generate recipe summary data.
+
+REQUIREMENTS:
+✓ Ingredients list (at least 2 ingredients)
+✓ Cook time
+✓ Difficulty level (Easy/Medium/Hard)
+✓ Number of servings
+✓ Approximate calories per serving (if available, otherwise estimate)
+
+OUTPUT FORMAT:
+{
+  "ingredients": ["200g pasta", "2 cloves garlic", "150ml cream", "50g parmesan"],
+  "cook_time": "30 min",
+  "difficulty": "Easy",
+  "serves": 4,
+  "calories": 480
+}
+
+BAD RECIPE CARD:
+✗ Fewer than 2 ingredients
+✗ Missing cook time
+✗ No servings count
+
+═══════════════════════════════════════════════════════════════
 FINAL OUTPUT
 ═══════════════════════════════════════════════════════════════
 
@@ -391,7 +458,9 @@ Return ONLY valid JSON with selected components:
   "map": [...],
   "timeline": [...],
   "details": [...],
-  "graph": {...}
+  "graph": {...},
+  "scorecard": {...},
+  "recipe": {...}
 }
 
 Include ONLY components that were selected.
@@ -430,7 +499,7 @@ CHECKLIST BEFORE SUBMITTING
 # CLAUDE COMPONENT WRITER CLASS
 # ==========================================
 
-class ClaudeComponentWriter:
+class GeminiComponentWriter:
     """
     Generates article components using Gemini 2.0 Flash
     Components: Timeline, Details, Graph
@@ -602,7 +671,9 @@ class ClaudeComponentWriter:
 
         # Format the prompt template with article data using replace (not .format()
         # because the prompt contains JSON examples with braces)
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
         formatted_prompt = COMPONENT_PROMPT
+        formatted_prompt = formatted_prompt.replace('{today}', today)
         formatted_prompt = formatted_prompt.replace('{title}', title)
         formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
         formatted_prompt = formatted_prompt.replace('{components}', ', '.join(components))
@@ -612,86 +683,152 @@ class ClaudeComponentWriter:
     
     def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
         """
-        Validate component output
-        
+        Validate component output PER-COMPONENT.
+        Invalid components are removed from result but valid ones are kept.
+
         Returns:
-            (is_valid, errors)
+            (is_valid, errors) - is_valid is True if at least one component survived
         """
         errors = []
-        
+
+        # --- TIMELINE validation ---
         if 'timeline' in selected_components:
             if 'timeline' not in result:
                 errors.append("Timeline selected but not in output")
-            elif len(result['timeline']) < 2 or len(result['timeline']) > 4:
-                errors.append(f"Timeline event count: {len(result['timeline'])} (need 2-4)")
-        
+            elif not isinstance(result['timeline'], list):
+                errors.append("Timeline is not a list")
+                del result['timeline']
+            elif len(result['timeline']) < 2:
+                errors.append(f"Timeline event count: {len(result['timeline'])} (need at least 2)")
+                del result['timeline']
+            elif len(result['timeline']) > 4:
+                # Too many events - just trim to 4 instead of failing
+                result['timeline'] = result['timeline'][:4]
+
+        # --- DETAILS validation (relaxed: keep details with or without numbers) ---
         if 'details' in selected_components:
             if 'details' not in result:
                 errors.append("Details selected but not in output")
             else:
-                # Filter to only details that have numbers, then keep best 3
                 valid_details = []
+                details_with_numbers = []
                 for detail in result['details']:
-                    if isinstance(detail, dict):
+                    if isinstance(detail, dict) and detail.get('label') and detail.get('value'):
+                        valid_details.append(detail)
                         value = str(detail.get('value', ''))
                         if any(char.isdigit() for char in value):
-                            valid_details.append(detail)
-                    elif isinstance(detail, str):
+                            details_with_numbers.append(detail)
+                    elif isinstance(detail, str) and len(detail) > 3:
+                        valid_details.append(detail)
                         if any(char.isdigit() for char in detail):
-                            valid_details.append(detail)
-                
-                if len(valid_details) >= 3:
-                    # Keep only the first 3 valid details (with numbers)
+                            details_with_numbers.append(detail)
+
+                # Prefer details with numbers, but accept without if that's all we have
+                if len(details_with_numbers) >= 3:
+                    result['details'] = details_with_numbers[:3]
+                elif len(valid_details) >= 2:
+                    # Use whatever valid details we have (at least 2)
                     result['details'] = valid_details[:3]
+                    errors.append(f"Only {len(details_with_numbers)} details have numbers, using {len(result['details'])} valid details")
                 else:
-                    errors.append(f"Only {len(valid_details)} details have numbers (need at least 3)")
-        
+                    errors.append(f"Only {len(valid_details)} valid details (need at least 2)")
+                    del result['details']
+
+        # --- GRAPH validation ---
         if 'graph' in selected_components:
             if 'graph' not in result:
                 errors.append("Graph selected but not in output")
-        
+            elif isinstance(result['graph'], dict):
+                if not result['graph'].get('data') or len(result['graph'].get('data', [])) < 3:
+                    errors.append("Graph has fewer than 3 data points")
+                    del result['graph']
+
+        # --- MAP validation (relaxed: allow cities, just block countries/continents/space) ---
         if 'map' in selected_components:
             if 'map' not in result:
                 errors.append("Map selected but not in output")
             elif not isinstance(result['map'], list) or len(result['map']) < 1:
                 errors.append("Map must have at least 1 location")
+                if 'map' in result:
+                    del result['map']
             else:
-                # Validate each location has required fields and is precise (not just country/city)
-                vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 
-                                   'middle east', 'europe', 'asia', 'australia', 'sydney', 'moscow', 'gaza city',
-                                   'baltimore', 'new york', 'london', 'paris', 'tokyo', 'beijing', 'california',
-                                   'new south wales', 'eastern europe', 'downtown', 'city center', 'suburbs',
-                                   'kyiv', 'kiev', 'tehran', 'gaza', 'west bank', 'crimea']
-                # Space locations that are NOT on Earth
+                # Only block truly vague locations (countries/continents) and space
+                too_vague = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states',
+                             'middle east', 'europe', 'asia', 'africa', 'south america', 'north america',
+                             'eastern europe', 'downtown', 'city center', 'suburbs']
                 space_locations = ['moon', 'mars', 'jupiter', 'saturn', 'venus', 'mercury', 'neptune', 'uranus',
                                    'pluto', 'asteroid', 'comet', 'space station', 'international space station',
                                    'iss', 'lunar', 'orbit', 'outer space', 'milky way', 'galaxy', 'sun', 'solar']
-                # Famous buildings everyone knows
-                famous_buildings = ['kremlin', 'white house', 'capitol', 'capitol building', '10 downing street',
-                                    'downing street', 'elysee palace', 'buckingham palace', 'pentagon']
                 valid_types = ['venue', 'building', 'landmark', 'infrastructure', 'military', 'transport', 'street']
+
+                valid_locations = []
                 for i, loc in enumerate(result['map']):
                     if not isinstance(loc, dict):
                         errors.append(f"Map location {i+1} is not a dict")
-                    elif 'name' not in loc or 'coordinates' not in loc:
+                        continue
+                    if 'name' not in loc or 'coordinates' not in loc:
                         errors.append(f"Map location {i+1} missing name or coordinates")
+                        continue
+
+                    loc_name_lower = loc.get('name', '').lower().strip()
+
+                    if loc_name_lower in too_vague:
+                        errors.append(f"Map location '{loc.get('name')}' too vague (country/region)")
+                        continue
+                    if any(space in loc_name_lower for space in space_locations):
+                        errors.append(f"Map location '{loc.get('name')}' not on Earth")
+                        continue
+
+                    # Validate coordinates
+                    coords = loc.get('coordinates', {})
+                    if isinstance(coords, dict) and 'lat' in coords and 'lng' in coords:
+                        # Fix type if present but invalid
+                        if 'type' in loc and loc['type'] not in valid_types:
+                            loc['type'] = 'landmark'
+                        valid_locations.append(loc)
                     else:
-                        loc_name_lower = loc.get('name', '').lower()
-                        if loc_name_lower in vague_locations:
-                            errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific venue/building/landmark)")
-                        elif any(space in loc_name_lower for space in space_locations):
-                            errors.append(f"Map location {i+1} is not on Earth: '{loc.get('name')}' (must be on planet Earth)")
-                        elif loc_name_lower in famous_buildings or any(fb in loc_name_lower for fb in famous_buildings):
-                            errors.append(f"Map location {i+1} is too well-known: '{loc.get('name')}' (everyone knows where this is)")
-                    # Validate type field if present
-                    if isinstance(loc, dict) and 'type' in loc and loc['type'] not in valid_types:
-                        errors.append(f"Map location {i+1} has invalid type: '{loc.get('type')}'")
-                    # Validate coordinates format
-                    if isinstance(loc, dict) and 'coordinates' in loc and isinstance(loc['coordinates'], dict):
-                        if 'lat' not in loc['coordinates'] or 'lng' not in loc['coordinates']:
-                            errors.append(f"Map location {i+1} coordinates missing lat or lng")
-        
-        return len(errors) == 0, errors
+                        errors.append(f"Map location '{loc.get('name')}' has invalid coordinates")
+
+                if valid_locations:
+                    result['map'] = valid_locations
+                else:
+                    errors.append("No valid map locations survived validation")
+                    del result['map']
+
+        # --- SCORECARD validation ---
+        if 'scorecard' in selected_components:
+            if 'scorecard' not in result:
+                errors.append("Scorecard selected but not in output")
+            elif not isinstance(result['scorecard'], dict):
+                errors.append("Scorecard is not a dict")
+                del result['scorecard']
+            else:
+                sc = result['scorecard']
+                if not sc.get('home_team') or not sc.get('away_team'):
+                    errors.append("Scorecard missing team names")
+                    del result['scorecard']
+                elif sc.get('home_score') is None or sc.get('away_score') is None:
+                    errors.append("Scorecard missing scores")
+                    del result['scorecard']
+
+        # --- RECIPE validation ---
+        if 'recipe' in selected_components:
+            if 'recipe' not in result:
+                errors.append("Recipe selected but not in output")
+            elif not isinstance(result['recipe'], dict):
+                errors.append("Recipe is not a dict")
+                del result['recipe']
+            else:
+                ingredients = result['recipe'].get('ingredients', [])
+                if not isinstance(ingredients, list) or len(ingredients) < 2:
+                    errors.append(f"Recipe has {len(ingredients) if isinstance(ingredients, list) else 0} ingredients (need at least 2)")
+                    del result['recipe']
+
+        # Check if at least one component survived
+        surviving = [c for c in selected_components if c in result]
+        has_any_component = len(surviving) > 0
+
+        return has_any_component, errors
     
     def write_all_articles(self, articles: List[Dict]) -> List[Dict]:
         """
@@ -766,7 +903,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     
     load_dotenv()
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+    api_key = os.getenv('GEMINI_API_KEY')
     
     # Test with a sample article
     test_article = {
@@ -778,7 +915,7 @@ if __name__ == "__main__":
         }
     }
     
-    writer = ClaudeComponentWriter(api_key)
+    writer = GeminiComponentWriter(api_key)
     components = writer.write_components(test_article)
     
     print("\n✅ Generated components:")

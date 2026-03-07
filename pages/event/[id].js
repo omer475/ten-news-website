@@ -1,7 +1,14 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import TodayPlusLoader from '../../components/TodayPlusLoader';
+
+// Dynamic import for data analytics (uses Recharts)
+const DataAnalyticsSection = dynamic(
+  () => import('../../components/events/DataAnalyticsSection'),
+  { ssr: false }
+);
 
 // ============================================
 // UTILITIES (DO NOT MODIFY)
@@ -228,19 +235,6 @@ function SectionHead({ title, subtitle, accentColor, style }) {
 }
 
 // ============================================
-// STANCE CONFIG FOR PERSPECTIVES
-// ============================================
-
-const stanceCfg = {
-  supportive: { color: '#10b981', bg: '#10b98112', label: 'Supports' },
-  opposed: { color: '#ef4444', bg: '#ef444412', label: 'Opposes' },
-  concerned: { color: '#f59e0b', bg: '#f59e0b12', label: 'Concerned' },
-  neutral: { color: '#6b7280', bg: '#6b728012', label: 'Neutral' },
-  defensive: { color: '#3b82f6', bg: '#3b82f612', label: 'Defending' },
-  divided: { color: '#8b5cf6', bg: '#8b5cf612', label: 'Divided' }
-};
-
-// ============================================
 // LATEST DEVELOPMENT SECTION
 // ============================================
 
@@ -446,13 +440,15 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [showAllRecent, setShowAllRecent] = useState(false);
+  const RECENT_COLLAPSE_LIMIT = 20;
   
-  // Build "This Week" from liveUpdates (all articles linked to event from last 7 days)
+  // Build "This Week" from liveUpdates + current-week timeline entries
   // Build "Historical" from world_event_timeline entries older than 7 days
   const { recentEntries, historicalEntries } = useMemo(() => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
-    // "This Week" = all linked articles from the last 7 days (from liveUpdates)
+
+    // "This Week" = linked articles from last 7 days (from liveUpdates)
     const recent = (liveUpdates || [])
       .filter(update => {
         const pubDate = new Date(update.publishedAt);
@@ -466,11 +462,29 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         image: update.image,
         isArticle: true
       }));
-    
-    // "Historical" = timeline entries older than 7 days + any old articles
+
+    // Also merge current-week timeline entries into "This Week"
+    const recentHeadlines = new Set(recent.map(r => r.headline?.toLowerCase()));
+    if (entries && entries.length > 0) {
+      entries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        if (entryDate >= sevenDaysAgo) {
+          // De-duplicate: skip if we already have an article with the same headline
+          if (!recentHeadlines.has(entry.headline?.toLowerCase())) {
+            recent.push({
+              id: entry.id || `tl-${entry.date}`,
+              date: entry.date,
+              headline: entry.headline,
+              summary: entry.summary,
+              isArticle: false
+            });
+          }
+        }
+      });
+    }
+
+    // "Historical" = timeline entries older than 7 days
     const historical = [];
-    
-    // Add timeline entries (from world_event_timeline table)
     if (entries && entries.length > 0) {
       entries.forEach(entry => {
         const entryDate = new Date(entry.date);
@@ -479,11 +493,11 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         }
       });
     }
-    
-    // Sort: newest first for recent, oldest first for historical
-    recent.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Sort: oldest first for both (latest entry at the bottom)
+    recent.sort((a, b) => new Date(a.date) - new Date(b.date));
     historical.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     return { recentEntries: recent, historicalEntries: historical };
   }, [entries, liveUpdates]);
   
@@ -582,38 +596,64 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         )}
         
         {/* Recent Timeline (Always Visible) */}
-        {recentEntries.length > 0 ? (
-          <div className="timeline-track recent">
-            <div className="timeline-bg-line recent" />
-            <div className="timeline-fill-line" style={{ height: `${recentLineHeight}%` }} />
-            
-            {recentEntries.map((entry, i) => {
-              const entryStart = 0.2 + (i / Math.max(recentEntries.length, 1)) * 0.28;
-              const entryOpacity = remap(p, entryStart, entryStart + 0.05, 0, 1);
-              const entryX = remap(p, entryStart, entryStart + 0.06, -16, 0);
-              const isLast = i === recentEntries.length - 1;
-              
-              return (
-                <div 
-                  key={entry.id || `recent-${i}`} 
-                  className="timeline-entry"
-                  style={{ opacity: entryOpacity, transform: `translateX(${entryX}px)` }}
-                >
-                  <div 
-                    className={`timeline-dot recent ${isLast ? 'last' : ''}`}
-                    style={{ borderColor: accentColor, ...(isLast ? { background: accentColor } : {}) }}
-                  />
-                  <div className="timeline-entry-content">
-                    <span className="timeline-date" style={{ color: accentColor }}>
-                      {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                    <span className="timeline-headline">{entry.headline}</span>
+        {recentEntries.length > 0 ? (() => {
+          const needsCollapse = recentEntries.length > RECENT_COLLAPSE_LIMIT;
+          const visibleRecent = needsCollapse && !showAllRecent
+            ? recentEntries.slice(recentEntries.length - RECENT_COLLAPSE_LIMIT)
+            : recentEntries;
+          const hiddenCount = recentEntries.length - visibleRecent.length;
+
+          return (
+            <div className="timeline-track recent">
+              <div className="timeline-bg-line recent" />
+              <div className="timeline-fill-line" style={{ height: `${recentLineHeight}%` }} />
+
+              {/* Show earlier entries button */}
+              {needsCollapse && !showAllRecent && (
+                <button className="show-more-btn" onClick={() => setShowAllRecent(true)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+                  Show {hiddenCount} earlier update{hiddenCount > 1 ? 's' : ''}
+                </button>
+              )}
+              {needsCollapse && showAllRecent && (
+                <button className="show-more-btn" onClick={() => setShowAllRecent(false)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                  Show less
+                </button>
+              )}
+
+              {visibleRecent.map((entry, i) => {
+                const entryStart = 0.2 + (i / Math.max(visibleRecent.length, 1)) * 0.28;
+                const entryOpacity = remap(p, entryStart, entryStart + 0.05, 0, 1);
+                const entryX = remap(p, entryStart, entryStart + 0.06, -16, 0);
+                const isLast = i === visibleRecent.length - 1;
+
+                return (
+                  <div
+                    key={entry.id || `recent-${i}`}
+                    className="timeline-entry"
+                    style={{ opacity: entryOpacity, transform: `translateX(${entryX}px)` }}
+                  >
+                    <div
+                      className={`timeline-dot recent ${isLast ? 'last' : ''}`}
+                      style={{ borderColor: accentColor, ...(isLast ? { background: accentColor } : {}) }}
+                    />
+                    <div className="timeline-entry-content">
+                      <span className="timeline-date" style={{ color: accentColor }}>
+                        {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                      <span className="timeline-headline">{entry.headline}</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
+                );
+              })}
+            </div>
+          );
+        })() : (
           <div className="no-recent">No updates this week</div>
         )}
       </div>
@@ -966,7 +1006,32 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
           font-size: 13px;
           color: #9ca3af;
         }
-        
+
+        /* Show more/less button for long timelines */
+        .show-more-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          width: 100%;
+          padding: 10px 16px;
+          margin-bottom: 14px;
+          background: #f3f3f5;
+          border: 1px solid rgba(0,0,0,0.04);
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #48484a;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .show-more-btn:hover {
+          background: #eaeaec;
+        }
+        .show-more-btn:active {
+          transform: scale(0.98);
+        }
+
         @media (max-width: 480px) {
           .section-inner {
             padding: 28px 20px;
@@ -1225,98 +1290,35 @@ function WatchSection({ items, accentColor }) {
 }
 
 // ============================================
-// PERSPECTIVES SECTION
+// DATA ANALYTICS SECTION
 // ============================================
 
-function PerspectivesSection({ perspectives, accentColor }) {
+function AnalyticsSection({ data, dataSources, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [userInteracted, setUserInteracted] = useState(false);
-  const intervalRef = useRef(null);
-  
-  useEffect(() => {
-    if (!perspectives || perspectives.length <= 1 || userInteracted) return;
-    intervalRef.current = setInterval(() => {
-      setActiveIdx(prev => (prev + 1) % perspectives.length);
-    }, 5000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [perspectives, userInteracted]);
-  
-  const handleSelect = (idx) => {
-    setUserInteracted(true);
-    setActiveIdx(idx);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-  
-  if (!perspectives || perspectives.length === 0) return null;
-  
-  const active = perspectives[activeIdx];
-  const cfg = stanceCfg[active?.stance] || stanceCfg.neutral;
-  
+
+  if (!data || !data.charts || data.charts.length === 0) return null;
+
   const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
   const headerY = remap(p, 0.14, 0.26, 16, 0);
-  const pillsOpacity = remap(p, 0.22, 0.3, 0, 1);
-  const cardOpacity = remap(p, 0.26, 0.34, 0, 1);
-  const cardScale = remap(p, 0.26, 0.36, 0.94, 1);
-  
+  const contentOpacity = remap(p, 0.2, 0.35, 0, 1);
+  const contentY = remap(p, 0.2, 0.35, 20, 0);
+
   return (
     <section ref={ref} className="full-section">
       <div className="section-inner">
-        <SectionHead 
-          title="Perspectives" 
-          subtitle={`${perspectives.length} viewpoints`}
+        <SectionHead
+          title="Data Analytics"
+          subtitle={`${data.charts.length} chart${data.charts.length > 1 ? 's' : ''}`}
           accentColor={accentColor}
           style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
         />
-        
-        {/* Pills */}
-        <div className="persp-pills" style={{ opacity: pillsOpacity }}>
-          {perspectives.map((persp, i) => {
-            const pCfg = stanceCfg[persp.stance] || stanceCfg.neutral;
-            const isActive = i === activeIdx;
-            return (
-              <button 
-                key={i}
-                className={`persp-pill ${isActive ? 'active' : ''}`}
-                onClick={() => handleSelect(i)}
-              >
-                <span className="persp-pill-dot" style={{ background: isActive ? '#fff' : pCfg.color }} />
-                {persp.entity?.split(' ').slice(0, 2).join(' ')}
-              </button>
-            );
-          })}
+
+        <div style={{ opacity: contentOpacity, transform: `translateY(${contentY}px)`, willChange: 'opacity, transform' }}>
+          <DataAnalyticsSection data={data} dataSources={dataSources} />
         </div>
-        
-        {/* Card */}
-        <div 
-          className="persp-card"
-          style={{ opacity: cardOpacity, transform: `scale(${cardScale})` }}
-          key={activeIdx}
-        >
-          <div className="persp-card-header">
-            <span className="persp-entity">{active.entity}</span>
-            <span className="persp-stance" style={{ color: cfg.color, background: cfg.bg }}>
-              {cfg.label}
-            </span>
-          </div>
-          <p className="persp-quote">"{active.position}"</p>
-        </div>
-        
-        {/* Nav dots */}
-        {perspectives.length > 1 && (
-          <div className="persp-dots">
-            {perspectives.map((_, i) => (
-              <button 
-                key={i}
-                className={`persp-dot ${i === activeIdx ? 'active' : ''}`}
-                onClick={() => handleSelect(i)}
-              />
-            ))}
-          </div>
-        )}
       </div>
-      
+
       <style jsx>{`
         .full-section {
           border-top: 1px solid rgba(0,0,0,0.05);
@@ -1326,498 +1328,7 @@ function PerspectivesSection({ perspectives, accentColor }) {
           max-width: 680px;
           margin: 0 auto;
         }
-        .persp-pills {
-          display: flex;
-          gap: 8px;
-          overflow-x: auto;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          margin-bottom: 16px;
-          will-change: opacity;
-        }
-        .persp-pills::-webkit-scrollbar { display: none; }
-        .persp-pill {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          padding: 10px 16px;
-          border: none;
-          border-radius: 12px;
-          background: #f3f3f5;
-          font-size: 13px;
-          font-weight: 600;
-          color: #48484a;
-          cursor: pointer;
-          white-space: nowrap;
-          flex-shrink: 0;
-          transition: all 0.2s ease;
-        }
-        .persp-pill.active {
-          background: #1d1d1f;
-          color: #fff;
-        }
-        .persp-pill-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-        }
-        .persp-card {
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.06);
-          border-radius: 20px;
-          padding: 20px 22px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
-          animation: si 0.4s cubic-bezier(0.22,1,0.36,1);
-          will-change: opacity, transform;
-        }
-        .persp-card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 14px;
-        }
-        .persp-entity {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1d1d1f;
-        }
-        .persp-stance {
-          font-size: 10px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          padding: 5px 12px;
-          border-radius: 20px;
-        }
-        .persp-quote {
-          font-size: 14px;
-          font-style: italic;
-          color: #48484a;
-          line-height: 1.7;
-          margin: 0;
-        }
-        .persp-dots {
-          display: flex;
-          justify-content: center;
-          gap: 6px;
-          margin-top: 18px;
-        }
-        .persp-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #d1d5db;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .persp-dot.active {
-          width: 20px;
-          border-radius: 3px;
-          background: #1d1d1f;
-        }
-        
-        @keyframes si {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        @media (max-width: 480px) {
-          .section-inner {
-            padding: 28px 20px;
-          }
-        }
-      `}</style>
-    </section>
-  );
-}
 
-// ============================================
-// HISTORICAL CONTEXT SECTION
-// ============================================
-
-function HistoricalSection({ data, accentColor }) {
-  const ref = useRef(null);
-  const p = useScrollProgress(ref);
-  const [expandedIdx, setExpandedIdx] = useState(-1);
-  
-  if (!data || !data.comparisons || data.comparisons.length === 0) return null;
-  
-  const { comparisons, timeline_insight, context_note } = data;
-  
-  const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
-  const headerY = remap(p, 0.14, 0.26, 16, 0);
-  const insightOpacity = remap(p, 0.2, 0.3, 0, 1);
-  
-  return (
-    <section ref={ref} className="full-section">
-      <div className="section-inner">
-        <SectionHead 
-          title="Historical Context" 
-          subtitle={`${comparisons.length} precedent${comparisons.length > 1 ? 's' : ''}`}
-          accentColor={accentColor}
-          style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
-        />
-        
-        {timeline_insight && (
-          <p className="hist-insight" style={{ opacity: insightOpacity }}>{timeline_insight}</p>
-        )}
-        
-        <div className="hist-panels">
-          {comparisons.map((comp, i) => {
-            const panelStart = 0.26 + i * 0.055;
-            const panelOpacity = remap(p, panelStart, panelStart + 0.08, 0, 1);
-            const panelY = remap(p, panelStart, panelStart + 0.08, 20, 0);
-            const isOpen = expandedIdx === i;
-            
-            return (
-              <div 
-                key={i}
-                className={`hist-panel ${isOpen ? 'expanded' : ''}`}
-                style={{ opacity: panelOpacity, transform: `translateY(${panelY}px)` }}
-              >
-                <button className="hist-panel-header" onClick={() => setExpandedIdx(isOpen ? -1 : i)}>
-                  <div className="hist-header-content">
-                    <span className="hist-event-name">{comp.event_name}</span>
-                    <span className="hist-years">{comp.years}</span>
-                  </div>
-                  <span className={`hist-chevron ${isOpen ? 'open' : ''}`}>▾</span>
-                </button>
-                
-                {isOpen && (
-                  <div className="hist-panel-content">
-                    <p className="hist-summary">{comp.summary}</p>
-                    
-                    <div className="hist-grid">
-                      <div className="hist-box similar">
-                        <span className="hist-box-label">Similarities</span>
-                        <ul className="hist-box-list">
-                          {comp.similarities?.slice(0, 3).map((s, si) => (
-                            <li key={si}>{s}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="hist-box different">
-                        <span className="hist-box-label">Differences</span>
-                        <ul className="hist-box-list">
-                          {comp.differences?.slice(0, 3).map((d, di) => (
-                            <li key={di}>{d}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {context_note && (
-          <p className="hist-context-note">{context_note}</p>
-        )}
-      </div>
-      
-      <style jsx>{`
-        .full-section {
-          border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .section-inner {
-          padding: 36px 28px;
-          max-width: 680px;
-          margin: 0 auto;
-        }
-        .hist-insight {
-          font-size: 15px;
-          color: #48484a;
-          line-height: 1.65;
-          margin: 0 0 20px 0;
-          will-change: opacity;
-        }
-        .hist-panels {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .hist-panel {
-          background: #f9f9fb;
-          border: 1px solid rgba(0,0,0,0.04);
-          border-radius: 16px;
-          overflow: hidden;
-          transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
-          will-change: opacity, transform, background, box-shadow;
-        }
-        .hist-panel.expanded {
-          background: #fff;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        }
-        .hist-panel-header {
-          width: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 16px 20px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          text-align: left;
-        }
-        .hist-header-content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .hist-event-name {
-          font-size: 15px;
-          font-weight: 600;
-          color: #1d1d1f;
-          line-height: 1.4;
-        }
-        .hist-years {
-          display: inline-block;
-          width: fit-content;
-          font-size: 11px;
-          color: #6b7280;
-          background: rgba(0,0,0,0.04);
-          padding: 4px 10px;
-          border-radius: 6px;
-        }
-        .hist-chevron {
-          font-size: 14px;
-          color: #9ca3af;
-          transition: transform 0.25s ease;
-          margin-top: 2px;
-          flex-shrink: 0;
-        }
-        .hist-chevron.open {
-          transform: rotate(180deg);
-          color: #1d1d1f;
-        }
-        .hist-panel-content {
-          padding: 0 20px 20px;
-          animation: ru 0.25s ease;
-        }
-        .hist-summary {
-          font-size: 14px;
-          color: #48484a;
-          line-height: 1.6;
-          margin: 0 0 16px 0;
-        }
-        .hist-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .hist-box {
-          padding: 14px 16px;
-          border-radius: 12px;
-        }
-        .hist-box.similar {
-          background: rgba(16, 185, 129, 0.06);
-        }
-        .hist-box.different {
-          background: rgba(239, 68, 68, 0.06);
-        }
-        .hist-box-label {
-          display: block;
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 8px;
-        }
-        .hist-box.similar .hist-box-label {
-          color: #059669;
-        }
-        .hist-box.different .hist-box-label {
-          color: #dc2626;
-        }
-        .hist-box-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .hist-box-list li {
-          font-size: 12px;
-          color: #48484a;
-          line-height: 1.5;
-          padding-left: 12px;
-          position: relative;
-          margin-bottom: 6px;
-        }
-        .hist-box-list li:last-child {
-          margin-bottom: 0;
-        }
-        .hist-box-list li::before {
-          content: '·';
-          position: absolute;
-          left: 0;
-          color: #9ca3af;
-          font-weight: 700;
-        }
-        .hist-context-note {
-          font-size: 11px;
-          font-style: italic;
-          color: #9ca3af;
-          line-height: 1.5;
-          margin: 16px 0 0 0;
-        }
-        
-        @keyframes ru {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @media (max-width: 480px) {
-          .section-inner {
-            padding: 28px 20px;
-          }
-          .hist-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-// ============================================
-// LIVE UPDATES SECTION
-// ============================================
-
-function LiveUpdatesSection({ updates, totalArticles, accentColor }) {
-  const ref = useRef(null);
-  const p = useScrollProgress(ref);
-  
-  if (!updates || updates.length === 0) return null;
-  
-  const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
-  const headerY = remap(p, 0.14, 0.26, 16, 0);
-  
-  return (
-    <section ref={ref} className="full-section">
-      <div className="section-inner">
-        <SectionHead 
-          title="Live Updates" 
-          subtitle={`${totalArticles || updates.length} articles`}
-          accentColor={accentColor}
-          style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
-        />
-        
-        <div className="live-feed">
-          {updates.slice(0, 10).map((update, i) => {
-            const itemStart = 0.2 + i * 0.035;
-            const itemOpacity = remap(p, itemStart, itemStart + 0.06, 0, 1);
-            const itemX = remap(p, itemStart, itemStart + 0.06, -16, 0);
-            
-            return (
-              <div 
-                key={update.id || i}
-                className="live-item"
-                style={{ opacity: itemOpacity, transform: `translateX(${itemX}px)` }}
-              >
-                {update.image && (
-                  <img className="live-img" src={update.image} alt="" loading="lazy" />
-                )}
-                <div className="live-content">
-                  <span className="live-title">{update.title}</span>
-                  <div className="live-meta">
-                    {update.category && (
-                      <>
-                        <span className="live-category" style={{ color: accentColor }}>{update.category}</span>
-                        <span className="live-sep">·</span>
-                      </>
-                    )}
-                    <span className="live-time">{update.time}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        {totalArticles > 10 && (
-          <p className="live-footer">Showing latest of {totalArticles} articles</p>
-        )}
-      </div>
-      
-      <style jsx>{`
-        .full-section {
-          border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .section-inner {
-          padding: 36px 28px;
-          max-width: 680px;
-          margin: 0 auto;
-        }
-        .live-feed {
-          display: flex;
-          flex-direction: column;
-        }
-        .live-item {
-          display: flex;
-          gap: 14px;
-          padding: 16px 0;
-          border-bottom: 1px solid rgba(0,0,0,0.05);
-          will-change: opacity, transform;
-        }
-        .live-item:first-child {
-          padding-top: 0;
-        }
-        .live-item:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-        }
-        .live-img {
-          width: 68px;
-          height: 68px;
-          border-radius: 12px;
-          object-fit: cover;
-          flex-shrink: 0;
-          background: #f5f5f7;
-        }
-        .live-content {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 6px;
-        }
-        .live-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: #1d1d1f;
-          line-height: 1.35;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .live-meta {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-        }
-        .live-category {
-          font-weight: 600;
-        }
-        .live-sep {
-          color: #c4c4c6;
-        }
-        .live-time {
-          color: #86868b;
-        }
-        .live-footer {
-          text-align: center;
-          font-size: 12px;
-          color: #9ca3af;
-          margin: 20px 0 0 0;
-        }
-        
         @media (max-width: 480px) {
           .section-inner {
             padding: 28px 20px;
@@ -1974,7 +1485,7 @@ export default function EventPage() {
                 id: t.id,
                 date: t.date || t.rawDate,
                 headline: t.headline,
-                source_article_id: t.source_article_id || t.articleId
+                summary: t.summary || ''
               })) || [],
               background: apiEvent.background,
               keyFacts: apiEvent.keyFacts || apiEvent.key_facts || [],
@@ -1986,6 +1497,8 @@ export default function EventPage() {
               show_day_counter: apiEvent.showDayCounter || apiEvent.show_day_counter || false,
               dayCounter: apiEvent.dayCounter || null,
               components: apiEvent.components || components || null,
+              dataAnalytics: apiEvent.dataAnalytics || apiEvent.components?.data_analytics || null,
+              dataSources: apiEvent.dataSources || [],
               lastArticleAt: apiEvent.lastArticleAt || null
             });
             if (apiEvent.blur_color && !colorExtractedRef.current) {
@@ -2337,19 +1850,17 @@ export default function EventPage() {
           </div>
         )}
 
-        {/* Scroll-Animated Sections - Mandatory sections first, then optional */}
-        {/* MANDATORY: Latest Development */}
+        {/* Scroll-Animated Sections */}
+        {/* 1. MANDATORY: Latest Development (with key stats) */}
         <LatestSection latest={event.latestDevelopment} accentColor={event.accentColor} />
-        {/* MANDATORY: Background */}
-        <BackgroundSection text={event.background} accentColor={event.accentColor} />
-        {/* MANDATORY: Timeline (This Week from live articles + Historical) */}
-        <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
-        {/* OPTIONAL: Based on event relevance */}
+        {/* 2. OPTIONAL: What to Watch */}
         <WatchSection items={event.components?.what_to_watch} accentColor={event.accentColor} />
-        <PerspectivesSection perspectives={event.components?.perspectives} accentColor={event.accentColor} />
-        <HistoricalSection data={event.components?.historical_comparison} accentColor={event.accentColor} />
-        {/* ALL ARTICLES: Full list of linked articles */}
-        <LiveUpdatesSection updates={event.liveUpdates} totalArticles={event.totalArticles} accentColor={event.accentColor} />
+        {/* 3. MANDATORY: Timeline (This Week from live articles + Historical) */}
+        <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
+        {/* 4. OPTIONAL: Data Analytics */}
+        <AnalyticsSection data={event.dataAnalytics || event.components?.data_analytics} dataSources={event.dataSources} accentColor={event.accentColor} />
+        {/* 7. MANDATORY: Background (context) */}
+        <BackgroundSection text={event.background} accentColor={event.accentColor} />
         <Footer />
       </div>
     </>

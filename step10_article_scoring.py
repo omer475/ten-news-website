@@ -150,10 +150,14 @@ Score based on four factors:
 | Mass casualties 30-50 | 880-930 |
 | Mass casualties 10-30 | 830-890 |
 | Deaths 5-10 | 750-830 |
-| Major infrastructure failure | 750-840 |
-| Deaths 2-5 | 600-750 |
-| Single notable death incident | 500-680 |
-| Minor incidents | 300-500 |
+| Major infrastructure failure (bridges, rail, power grid) | 750-840 |
+| Deaths 2-5 (systemic cause: factory, mine, transport) | 600-750 |
+| Deaths 2-5 (individual crime: murder, stabbing, shooting) | 300-500 |
+| Single death in fire / accident / crime | 250-450 |
+| Individual crime (assault, robbery, domestic violence) | 200-400 |
+| Minor local incidents | 200-400 |
+
+**CRITICAL: Individual crime is NOT important news.** "Man stabs wife", "Son kills father", "Person arrested for murder" — these are tragic but affect NO ONE beyond the people involved. They belong in the 200-400 range, NOT 600+. Only systemic/institutional violence (terrorism, mass shootings, police brutality patterns) scores higher.
 
 ### ENTERTAINMENT & CELEBRITIES
 
@@ -186,6 +190,9 @@ Score based on four factors:
 
 | Trigger | Penalty |
 |---------|---------|
+| Individual crime (murder, stabbing, domestic violence) | -200 |
+| Single person accident (house fire, car crash, drowning) | -150 |
+| Local celebrity/sports scandal (drugs, arrest) | -100 |
 | "Warns" / "Faces" without concrete action | -30 |
 | "Seeks / Eyes / Considers" (speculation) | -30 |
 | "May / Could / Might" without event | -40 |
@@ -229,6 +236,34 @@ You will receive previously scored articles as anchors. Use them to maintain con
 
 ---
 
+## IMPORTANT: INDEPENDENT SCORING
+
+**WARNING:** Reference articles from the database may be biased high (most clustering around 850-930). Do NOT let them pull your scores upward. Score each article INDEPENDENTLY using the tier criteria above, then cross-check with references for consistency. If all references score 860+, that means previous scoring was too compressed — YOU should fix this by using the full range.
+
+---
+
+## SCORE ANCHORS (FIXED REFERENCE POINTS)
+
+These anchors are ABSOLUTE — they take precedence over any database references:
+
+| Article Type | Anchor Score |
+|-------------|-------------|
+| Major country declares war on another | **960** |
+| Super Bowl / World Cup Final result | **910** |
+| Prime Minister calls snap election | **870** |
+| Major tech acquisition ($5B+) | **820** |
+| Startup raises $50M in Series B | **620** |
+| Regular season Premier League match (mid-table) | **520** |
+| Celebrity spotted at fashion event | **380** |
+| Man arrested for stabbing family member | **300** |
+| Person dies in house fire in small town | **280** |
+| Local coach arrested for crime | **250** |
+| Local council approves parking regulations | **150** |
+
+Use these anchors as your PRIMARY baseline. Ask: "Is this article more or less important than each anchor?" and score accordingly.
+
+---
+
 ## EXAMPLES
 
 | Article | Score | Why |
@@ -249,15 +284,50 @@ You will receive previously scored articles as anchors. Use them to maintain con
 
 ---
 
+## PERSONALIZATION RELEVANCE
+
+### Topic Relevance (0-100)
+Score how relevant this article is to each topic:
+- **90-100**: Core subject (an F1 race result → f1: 95)
+- **60-89**: Strongly related (a startup acquisition → startups: 75)
+- **30-59**: Somewhat related (a tech company mentioned → tech_industry: 40)
+- **0-29**: Barely related — don't include these, omit them
+
+**Available topics:** economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming, entertainment, music, gaming, travel
+
+### Country Relevance (0-100) — NATIONAL IMPORTANCE, not geographic location
+Score how important this article is FOR CITIZENS of each country. This is NOT about where it happened — it is about whether citizens of that country NEED to know this.
+
+- **90-100**: NATIONALLY CRITICAL — Affects the entire nation (elections, national policy, constitutional crisis, major infrastructure failure, national disaster)
+- **70-89**: REGIONALLY SIGNIFICANT — Affects a large region or major sector (regional elections, major strikes, significant economic policy, regional disasters affecting thousands)
+- **40-69**: NOTABLE — Worth knowing but limited national impact (city-level events, court cases with public interest, notable cultural events)
+- **20-39**: MINOR — Individual incidents with no broader impact (local crime, minor accidents, celebrity drama, routine sports results)
+- **0-19**: IRRELEVANT — omit
+
+EXAMPLES:
+- "Spain reopens Madrid-Sevilla rail after crash" → spain: 85 (national infrastructure, millions affected)
+- "PM Sanchez backs candidate in regional election" → spain: 80 (national politics)
+- "Man stabs family member in small Spanish town" → spain: 15 (individual crime, omit)
+- "House fire kills one person in Avila" → spain: 10 (individual tragedy, omit)
+- "Turkish celebrity tests positive in drug probe" → turkiye: 30 (minor celebrity scandal)
+
+**Available countries:** usa, uk, china, russia, germany, france, spain, italy, ukraine, turkiye, india, japan, israel, canada, australia
+
+Only output topics with relevance >= 30. Only output countries with relevance >= 20.
+
+---
+
 ## OUTPUT FORMAT
 
-Return ONLY a JSON object with the score:
+Return ONLY a JSON object with the score and relevance:
 
 ```json
-{"score": 850}
+{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}}
 ```
 
-Nothing else. Just the score.
+- `topic_relevance`: only include topics with relevance >= 30
+- `country_relevance`: only include countries with relevance >= 20 (national importance, NOT geographic)
+- If no topics/countries are relevant, use empty objects: `{}`
 """
 
 
@@ -268,7 +338,7 @@ def get_supabase_client() -> Client:
     return create_client(url, key)
 
 
-def get_reference_articles(supabase: Client, limit: int = 20) -> List[Dict]:
+def get_reference_articles(supabase: Client, limit: int = 100) -> List[Dict]:
     """
     Fetch recently scored articles from Supabase to use as calibration references.
     Returns a diverse set of articles across different score ranges.
@@ -311,7 +381,7 @@ def get_reference_articles(supabase: Client, limit: int = 20) -> List[Dict]:
         # Sort by score descending for clear presentation
         references.sort(key=lambda x: x.get('ai_final_score', 0), reverse=True)
         
-        return references[:8]  # Return max 8 references
+        return references[:10]  # Return max 10 references for wider diversity
         
     except Exception as e:
         print(f"⚠️ Could not fetch reference articles: {e}")
@@ -324,9 +394,10 @@ def score_article(
     api_key: str,
     reference_articles: Optional[List[Dict]] = None,
     max_retries: int = 3
-) -> int:
+) -> Dict:
     """
     Score a written article from 0-1000 using Gemini V18 scoring with reference calibration.
+    Also returns topic and country relevance scores for personalization.
 
     Args:
         title: Article title
@@ -336,7 +407,7 @@ def score_article(
         max_retries: Maximum retry attempts
 
     Returns:
-        Score from 0-1000 (all scored articles are published)
+        Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
@@ -653,16 +724,16 @@ Both deserve visibility. Score accordingly.
 """
     
     # Build the article text
-    article_text = "Score this article. Return JSON with score only.\n\n"
-    
+    article_text = "Score this article INDEPENDENTLY using the tier criteria and score anchors as your primary baseline. Return JSON with score only.\n\n"
+
     # Add reference articles if available
     if reference_articles:
-        article_text += "**REFERENCE ARTICLES (for calibration):**\n"
+        article_text += "**REFERENCE ARTICLES (may skew high — use score anchors as primary baseline):**\n"
         for ref in reference_articles:
             score = ref.get('ai_final_score', 0)
             title_ref = ref.get('title_news', 'Unknown')[:80]
             article_text += f'"{title_ref}" | {score}\n'
-        article_text += "\n"
+        article_text += "\nREMINDER: Use the SCORE ANCHORS from the system prompt as your primary reference, not the articles above.\n\n"
     
     # Add the article to score
     article_text += "**ARTICLE TO SCORE:**\n"
@@ -671,7 +742,7 @@ Both deserve visibility. Score accordingly.
     for bullet in bullets:
         article_text += f"- {bullet}\n"
     
-    article_text += '\nReturn JSON: {"score": XXX}'
+    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}}'
     
     # Prepare request
     request_data = {
@@ -693,11 +764,13 @@ Both deserve visibility. Score accordingly.
         }
     }
     
+    default_result = {'score': 500, 'topic_relevance': {}, 'country_relevance': {}}
+
     # Retry logic
     for attempt in range(max_retries):
         try:
             response = requests.post(url, json=request_data, timeout=60)
-            
+
             if response.status_code == 429:
                 wait_time = (2 ** attempt) * 15
                 if attempt < max_retries - 1:
@@ -706,28 +779,36 @@ Both deserve visibility. Score accordingly.
                     continue
                 else:
                     print(f"  ❌ Rate limit exceeded")
-                    return 500  # Default score on failure
-            
+                    return default_result
+
             response.raise_for_status()
             result = response.json()
-            
+
             if 'candidates' in result and len(result['candidates']) > 0:
                 candidate = result['candidates'][0]
                 if 'content' in candidate and 'parts' in candidate['content']:
                     response_text = candidate['content']['parts'][0]['text']
-                    print(f"   🔍 Scoring raw response: {response_text[:200]}")
-                    
+                    print(f"   🔍 Scoring raw response: {response_text[:300]}")
+
                     # Parse JSON response
                     try:
                         parsed = json.loads(response_text)
 
-                        # Preferred format: {"score": 850}
+                        # Extract relevance data from parsed response
+                        topic_relevance = {}
+                        country_relevance = {}
+
+                        # Preferred format: {"score": 850, "topic_relevance": {...}, "country_relevance": {...}}
                         if isinstance(parsed, dict) and 'score' in parsed:
                             score = parsed.get('score', 500)
+                            topic_relevance = parsed.get('topic_relevance', {})
+                            country_relevance = parsed.get('country_relevance', {})
                         # Array format: [{"title": "...", "score": 865, ...}]
                         elif isinstance(parsed, list) and len(parsed) > 0:
                             first = parsed[0] if isinstance(parsed[0], dict) else {}
                             score = first.get('score', 500)
+                            topic_relevance = first.get('topic_relevance', {})
+                            country_relevance = first.get('country_relevance', {})
                         # Alternative dict format: {"scores": [{"title": "...", "score": 920}, ...]}
                         elif isinstance(parsed, dict) and isinstance(parsed.get('scores'), list):
                             scores = parsed.get('scores') or []
@@ -741,26 +822,40 @@ Both deserve visibility. Score accordingly.
                             if best is None and scores:
                                 best = scores[0] if isinstance(scores[0], dict) else None
                             score = (best or {}).get('score', 500)
+                            topic_relevance = (best or {}).get('topic_relevance', {})
+                            country_relevance = (best or {}).get('country_relevance', {})
                         else:
                             # Last resort: try to find any number in the response
                             import re as _re
                             num_match = _re.search(r'\b(\d{1,4})\b', response_text)
                             score = int(num_match.group(1)) if num_match else 500
-                        
+
                         # Validate score range
                         score = max(0, min(1000, int(score)))
-                        return score
-                        
+
+                        # Clean relevance dicts: only keep valid entries
+                        if isinstance(topic_relevance, dict):
+                            topic_relevance = {k: int(v) for k, v in topic_relevance.items() if isinstance(v, (int, float)) and int(v) >= 30}
+                        else:
+                            topic_relevance = {}
+                        if isinstance(country_relevance, dict):
+                            # Country relevance threshold is 20 (national importance, not geographic)
+                            country_relevance = {k: int(v) for k, v in country_relevance.items() if isinstance(v, (int, float)) and int(v) >= 20}
+                        else:
+                            country_relevance = {}
+
+                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance}
+
                     except json.JSONDecodeError:
                         # Try to extract score from text
                         import re
                         match = re.search(r'"score"\s*:\s*(\d+)', response_text)
                         if match:
-                            return max(0, min(1000, int(match.group(1))))
-                        return 500  # Default
-            
-            return 500  # Default on parsing failure
-            
+                            return {'score': max(0, min(1000, int(match.group(1)))), 'topic_relevance': {}, 'country_relevance': {}}
+                        return default_result
+
+            return default_result  # Default on parsing failure
+
         except requests.exceptions.RequestException as e:
             if attempt < max_retries - 1:
                 wait_time = (2 ** attempt) * 5
@@ -768,12 +863,12 @@ Both deserve visibility. Score accordingly.
                 time.sleep(wait_time)
                 continue
             print(f"  ❌ Scoring failed: {e}")
-            return 500  # Default score on failure
+            return default_result
         except Exception as e:
             print(f"  ❌ Unexpected error in scoring: {e}")
-            return 500  # Default score on failure
-    
-    return 500  # Default if all retries fail
+            return default_result
+
+    return default_result  # Default if all retries fail
 
 
 def score_article_with_references(
@@ -781,18 +876,18 @@ def score_article_with_references(
     bullets: List[str],
     api_key: str,
     supabase: Optional[Client] = None
-) -> int:
+) -> Dict:
     """
     Score an article with automatic reference fetching from Supabase.
-    
+
     Args:
         title: Article title
         bullets: Summary bullets
         api_key: Google AI API key
         supabase: Supabase client (optional, will create if not provided)
-    
+
     Returns:
-        Score from 0-1000
+        Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     if supabase is None:
         supabase = get_supabase_client()

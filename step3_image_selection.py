@@ -36,10 +36,13 @@ MAJOR_SOURCES = {
 
 # Domains to exclude (ads, tracking pixels, logos)
 BLACKLISTED_DOMAINS = {
-    'doubleclick.net', 'googlesyndication.com', 'ads.', 'adserver',
+    'doubleclick.net', 'googlesyndication.com', 'adserver',
     'pixel.', 'tracker.', 'analytics.', 'facebook.com/tr',
-    'twitter.com/i/jot', 'logo.', 'icon.'
+    'twitter.com/i/jot'
 }
+
+# Substrings that must appear at the START of the domain (not anywhere in it)
+BLACKLISTED_DOMAIN_PREFIXES = {'ads.', 'logo.', 'icon.'}
 
 # Image formats
 PREFERRED_FORMATS = {'jpg', 'jpeg', 'webp', 'png'}
@@ -125,29 +128,55 @@ class ImageSelector:
             'quality_score': best['quality_score']
         }
     
+    # URL path patterns that indicate logos, icons, branding, or placeholder images
+    LOGO_URL_PATTERNS = [
+        'logo', 'brand', 'favicon', 'icon', 'avatar', 'placeholder',
+        'default-image', 'default_image', 'fallback', 'site-image',
+        'og-default', 'og_default', 'share-image', 'share_image',
+        'masthead', 'banner-logo', 'header-logo', 'site-logo',
+        'publisher-logo', 'source-logo', 'news-logo', 'channel-logo',
+        'no-image', 'no_image', 'noimage', 'missing-image', 'generic-image',
+        'category-image', 'section-image', 'topic-image', 'default-thumb',
+        'default_thumbnail', 'blank.', 'empty.', '1x1.', 'spacer.',
+    ]
+
     def _is_valid_image(self, candidate: Dict) -> bool:
         """
         Filter out invalid/low-quality images
         """
         url = candidate['url']
-        
+
         # Check URL exists
         if not url or len(url) < 10:
             return False
-        
+
         # Check blacklisted domains
         try:
-            domain = urlparse(url).netloc.lower()
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower()
             for blacklisted in BLACKLISTED_DOMAINS:
                 if blacklisted in domain:
                     if self.debug:
                         print(f"      ❌ Filtered (blacklisted domain): {domain}")
                     return False
-        except:
+            for prefix in BLACKLISTED_DOMAIN_PREFIXES:
+                if domain.startswith(prefix):
+                    if self.debug:
+                        print(f"      ❌ Filtered (blacklisted domain prefix): {domain}")
+                    return False
+        except Exception:
             return False
-        
-        # Check file extension
+
         url_lower = url.lower()
+
+        # Check URL path for logo/brand/placeholder patterns
+        for pattern in self.LOGO_URL_PATTERNS:
+            if pattern in url_lower:
+                if self.debug:
+                    print(f"      ❌ Filtered (logo/brand URL pattern '{pattern}'): {url[:80]}")
+                return False
+
+        # Check file extension
         extension = url_lower.split('.')[-1].split('?')[0]  # Handle query params
         
         if extension in EXCLUDED_FORMATS:
@@ -159,11 +188,11 @@ class ImageSelector:
         width = candidate.get('width', 0)
         height = candidate.get('height', 0)
         
-        # If we have dimensions, enforce minimum size
+        # If we have dimensions, enforce minimum size (720x400 for good quality)
         if width > 0 and height > 0:
-            if width < 400 or height < 300:
+            if width < 720 or height < 400:
                 if self.debug:
-                    print(f"      ❌ Filtered (too small): {width}x{height}px")
+                    print(f"      ❌ Filtered (too small): {width}x{height}px (min: 720x400)")
                 return False
             
             # Check aspect ratio (avoid extreme ratios)
@@ -181,57 +210,59 @@ class ImageSelector:
         """
         score = 0.0
         
-        # Factor 1: Source Reputation (30 points)
-        source_name = candidate['source_name'].lower()
-        
-        if any(premium in source_name for premium in PREMIUM_SOURCES):
-            score += 30
-        elif any(major in source_name for major in MAJOR_SOURCES):
-            score += 15
-        
-        # Factor 2: Article Score (20 points)
-        # Gemini score is 70-100, normalize to 0-20
-        article_score = candidate.get('article_score', 70)
-        normalized = ((article_score - 70) / 30) * 20  # 70-100 → 0-20
-        score += max(0, min(20, normalized))
-        
-        # Factor 3: Image Dimensions (30 points)
+        # Factor 1: Image Dimensions by pixel area (50 points) — dominant factor
         width = candidate.get('width', 0)
         height = candidate.get('height', 0)
-        
-        if width >= 1200:
+        area = width * height
+
+        if area >= 1_500_000:      # e.g. 1500x1000
+            score += 50
+        elif area >= 800_000:      # e.g. 1000x800
+            score += 40
+        elif area >= 400_000:      # e.g. 800x500
             score += 30
-        elif width >= 800:
-            score += 20
-        elif width >= 600:
-            score += 10
-        elif width > 0:  # Has dimensions but small
+        elif area >= 200_000:      # e.g. 600x333
+            score += 15
+        elif area > 0:
             score += 5
         else:
             # No dimension data - assume medium quality
             score += 15
-        
-        # Factor 4: Aspect Ratio (20 points)
+
+        # Factor 2: Source Reputation (25 points)
+        source_name = candidate['source_name'].lower()
+
+        if any(premium in source_name for premium in PREMIUM_SOURCES):
+            score += 25
+        elif any(major in source_name for major in MAJOR_SOURCES):
+            score += 12
+
+        # Factor 3: Aspect Ratio (15 points)
         if width > 0 and height > 0:
             aspect_ratio = width / height
-            
+
             # 16:9 ideal (1.78)
             if 1.7 <= aspect_ratio <= 1.85:
-                score += 20
+                score += 15
             # 4:3 or 3:2 (1.33 or 1.5)
             elif 1.2 <= aspect_ratio <= 1.6:
-                score += 15
+                score += 11
             # Slightly wide
             elif 1.6 < aspect_ratio <= 2.0:
-                score += 12
+                score += 9
             # Acceptable
             elif 1.0 <= aspect_ratio < 1.2:
-                score += 10
+                score += 7
         else:
             # No dimension data - neutral score
-            score += 10
-        
-        # Bonus: Image Format (5 points)
+            score += 7
+
+        # Factor 4: Gemini AI Score (5 points)
+        article_score = candidate.get('article_score', 70)
+        normalized = ((article_score - 70) / 30) * 5  # 70-100 → 0-5
+        score += max(0, min(5, normalized))
+
+        # Factor 5: Image Format (5 points)
         url = candidate['url'].lower()
         if '.webp' in url:
             score += 5

@@ -110,7 +110,9 @@ const formatArticle = (article) => {
     views: article.view_count || 0,
     interest_tags: safeJsonParse(article.interest_tags, []),
     countries: safeJsonParse(article.countries, []),
-    topics: safeJsonParse(article.topics, [])
+    topics: safeJsonParse(article.topics, []),
+    topic_relevance: safeJsonParse(article.topic_relevance, {}),
+    country_relevance: safeJsonParse(article.country_relevance, {})
   };
 };
 
@@ -128,9 +130,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Pagination support - load 30 articles at a time to prevent browser crashes
+  // Pagination support - fetch all articles on page 1 for client-side personalization
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 30;
+  const pageSize = parseInt(req.query.pageSize) || 2000;
   const offset = (page - 1) * pageSize;
 
   // Check for test mode (for testing Timeline & Graph components)
@@ -213,20 +215,37 @@ export default async function handler(req, res) {
       const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // Query published articles from last 24 hours with proper pagination
-      console.log('📊 Querying published_articles, since:', twentyFourHoursAgo, 'page:', page, 'offset:', offset);
-      
-      const { data: articles, error, count } = await supabase
-        .from('published_articles')
-        .select('*', { count: 'exact' })
-        .gte('created_at', twentyFourHoursAgo)
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .range(offset, offset + pageSize + 9);
+      // Query published articles from last 24 hours
+      // For large pageSize (>1000), fetch in batches to work around Supabase row limits
+      console.log('📊 Querying published_articles, since:', twentyFourHoursAgo, 'page:', page, 'offset:', offset, 'pageSize:', pageSize);
 
-      console.log('📊 Query result:', { 
-        error: error?.message || 'none', 
-        articlesCount: articles?.length || 0 
+      let articles = [];
+      let error = null;
+      let count = 0;
+      const BATCH_SIZE = 1000;
+      const totalNeeded = pageSize + 10;
+
+      for (let batchOffset = offset; batchOffset < offset + totalNeeded; batchOffset += BATCH_SIZE) {
+        const batchEnd = Math.min(batchOffset + BATCH_SIZE - 1, offset + totalNeeded - 1);
+        const result = await supabase
+          .from('published_articles')
+          .select('*', { count: 'exact' })
+          .gte('created_at', twentyFourHoursAgo)
+          .order('ai_final_score', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(batchOffset, batchEnd);
+
+        if (result.error) { error = result.error; break; }
+        if (result.count) count = result.count;
+        if (result.data) articles = articles.concat(result.data);
+        // Stop if we got fewer rows than requested (no more data)
+        if (!result.data || result.data.length < (batchEnd - batchOffset + 1)) break;
+      }
+
+      console.log('📊 Query result:', {
+        error: error?.message || 'none',
+        articlesCount: articles?.length || 0
       });
 
       if (!error && articles && articles.length > 0) {
@@ -248,8 +267,8 @@ export default async function handler(req, res) {
           return (now - articleTime) < twentyFourHoursMs;
         });
 
-        // Fetch event associations for articles
-        const articleIds = filteredArticles.slice(0, pageSize).map(a => a.id);
+        // Fetch event associations for top articles only (limit to 100 to keep query fast)
+        const articleIds = filteredArticles.slice(0, 100).map(a => a.id);
         let eventMap = {};
         
         try {

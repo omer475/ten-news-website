@@ -21,3 +21,8 @@ test-*.py
 
 # Processing logs (for debugging)
 processing_log_*.json
+
+# Large files
+*.db
+*.log
+.next/cache/

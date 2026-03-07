@@ -50,11 +50,13 @@ export default async function handler(req, res) {
         day_counter_type,
         show_day_counter,
         components,
+        data_analytics,
+        data_sources,
         timeline:world_event_timeline(
           id,
           date,
           headline,
-          source_article_id
+          summary
         ),
         latest:world_event_latest(
           title,
@@ -66,7 +68,7 @@ export default async function handler(req, res) {
       `)
       .eq('slug', slug)
       .single();
-    
+
     if (fullQuery.error && fullQuery.error.code === 'PGRST204') {
       // Column doesn't exist, try with base schema only
       const baseQuery = await supabase
@@ -89,7 +91,7 @@ export default async function handler(req, res) {
             id,
             date,
             headline,
-            source_article_id
+            summary
           ),
           latest:world_event_latest(
             title,
@@ -223,7 +225,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // Smart event components (perspectives, what_to_watch, etc.) from world_events.components
+    // Smart event components (what_to_watch, data_analytics) from world_events.components
     const smartComponents = event.components || {};
     
     // Article components from world_event_latest.components (graph, details, info_boxes)
@@ -292,8 +294,11 @@ export default async function handler(req, res) {
         endsAt: endsAt,
         dayCounterType: dayCounterType,
         showDayCounter: showDayCounter,
-        // Smart event components (perspectives, what_to_watch, geographic_impact, historical_comparison)
+        // Smart event components (what_to_watch, data_analytics)
         components: smartComponents,
+        // Dedicated data analytics column (prefer over components.data_analytics)
+        dataAnalytics: event.data_analytics || event.components?.data_analytics || null,
+        dataSources: event.data_sources || [],
         createdAt: event.created_at,
         lastArticleAt: event.last_article_at,
         // Latest development with article components (graph, details, info_boxes)
@@ -302,7 +307,7 @@ export default async function handler(req, res) {
           id: t.id,
           date: t.date,
           headline: t.headline,
-          source_article_id: t.source_article_id
+          summary: t.summary || ''
         })) : [],
         totalArticles: totalArticles || 0,
         liveUpdates: liveUpdates,
