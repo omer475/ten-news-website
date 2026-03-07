@@ -999,12 +999,20 @@ def run_complete_pipeline():
                 print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
             
             if not selected_image:
-                selected_image = {
-                    'url': valid_candidates[0]['url'],
-                    'source_name': valid_candidates[0]['source_name'],
-                    'quality_score': valid_candidates[0]['quality_score']
-                }
-                print(f"   ↩️  [Cluster {cluster_id}] Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+                # Only fall back to rule-based if it's from a trusted English-language source
+                fallback = valid_candidates[0]
+                fallback_source = (fallback.get('source_name') or '').lower()
+                trusted_fallback_sources = ['reuters', 'ap', 'afp', 'getty', 'bbc', 'cnn', 'nyt',
+                    'guardian', 'washington post', 'al jazeera english', 'france24', 'dw']
+                if any(t in fallback_source for t in trusted_fallback_sources):
+                    selected_image = {
+                        'url': fallback['url'],
+                        'source_name': fallback['source_name'],
+                        'quality_score': fallback['quality_score']
+                    }
+                    print(f"   ↩️  [Cluster {cluster_id}] Using trusted fallback: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+                else:
+                    print(f"   ❌ [Cluster {cluster_id}] No suitable image — fallback source '{fallback_source}' not trusted, skipping image")
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:

@@ -34,6 +34,13 @@ BLACKLISTED_DOMAINS = {
     'twitter.com/i/jot', 'logo.', 'icon.'
 }
 
+# Sources whose images often have non-English text/overlays burned in — deprioritize heavily
+TEXT_OVERLAY_SOURCES = {
+    'ria novosti', 'ria.ru', 'tass', 'rt', 'sputnik',
+    'xinhua', 'cctv', 'cgtn', 'people\'s daily',
+    'nhk', 'yonhap',
+}
+
 # Image formats
 PREFERRED_FORMATS = {'jpg', 'jpeg', 'webp', 'png'}
 EXCLUDED_FORMATS = {'gif', 'svg', 'ico', 'bmp'}
@@ -146,6 +153,14 @@ class ImageSelector:
                     if self.debug:
                         print(f"   ❌ Filtered (blacklisted domain): {domain}")
                     return False
+            # Filter image URLs from domains known for text-overlay images
+            text_overlay_domains = ['ria.ru', 'cdn.ria.ru', 'tass.com', 'cdn.tass.com',
+                                    'sputniknews.com', 'cdni.rt.com', 'cdn.rt.com']
+            for tod in text_overlay_domains:
+                if tod in domain:
+                    if self.debug:
+                        print(f"   ❌ Filtered (text-overlay image domain): {domain}")
+                    return False
         except:
             return False
 
@@ -194,8 +209,13 @@ class ImageSelector:
         
         # Factor 1: Source Reputation (30 points)
         source_name = candidate['source_name'].lower()
-        
-        if any(premium in source_name for premium in PREMIUM_SOURCES):
+
+        # Heavy penalty for sources known to have text-overlay images
+        if any(s in source_name for s in TEXT_OVERLAY_SOURCES):
+            score -= 40
+            if self.debug:
+                print(f"   ⚠️  Text-overlay source penalty (-40): {source_name}")
+        elif any(premium in source_name for premium in PREMIUM_SOURCES):
             score += 30
         elif any(major in source_name for major in MAJOR_SOURCES):
             score += 15

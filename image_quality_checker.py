@@ -41,32 +41,29 @@ class ImageQualityChecker:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-2.0-flash')
         
-        self.prompt = """Analyze this news article image and determine if it's suitable for publication on a professional news website.
+        self.prompt = """Analyze this news article image for a professional English-language news app. Determine if it's clean and suitable.
 
-IMPORTANT: Be LENIENT. A real photograph with a small watermark or corner logo is MUCH better than no image at all. Only reject truly unsuitable images.
+REJECT if ANY of these apply:
+- Text burned into the image: headlines, captions, news tickers, or any readable text overlaid on the photo (especially non-English text like Russian, Arabic, Chinese, etc.)
+- TV broadcast screenshot with chyrons, banners, lower thirds, tickers, or news desk visible
+- News anchors/presenters in TV studios
+- The image is primarily a logo/brand with no real photo content
+- Dark/black placeholder images or solid color backgrounds
+- Very low quality, extremely blurry, or heavily pixelated
+- Image has graphics, arrows, circles, or editorial annotations drawn on it
+- Screenshot of a website, social media post, or another news article
+- Image has a large visible watermark that covers a significant area (more than a small corner)
 
-REJECT ONLY if the image is one of these (strict list):
-- The image is JUST a logo/brand with no real photo content (e.g. the entire image is the Reuters logo, BBC logo, etc.)
-- TV broadcast screenshot with chyrons, "BREAKING NEWS" banners, lower thirds, and news desk visible
-- News anchors/presenters sitting at news desks in TV studios
-- Dark/black placeholder images with just a category word (e.g. "Science", "Business")
-- Solid color background with only text — not a photograph at all
-- Very low quality, extremely blurry, or heavily pixelated images that are unrecognizable
-- The image is primarily text/typography with no photographic content
+ACCEPT only if ALL of these are true:
+- It is a clean photograph of a real scene, person, place, event, or object
+- The photo is NOT obscured by text overlays, headlines, or captions burned into the image
+- A small corner watermark or credit line (AP, Reuters, AFP, Getty) is fine — but large text across the image is NOT
+- The photo is reasonably sharp and well-lit
+- Charts, graphs, and infographics with English text are acceptable
 
-ACCEPT all of these (be generous):
-- Real photographs even if they have a small logo watermark in a corner — this is NORMAL for news photos, accept them
-- Photos with a news agency credit line or small watermark (AP, Reuters, AFP, RIA Novosti, France24, CBC etc.) — ACCEPT, this is standard
-- Company logos/products that are THE SUBJECT of the news story (e.g. Microsoft logo for a Microsoft news story) — ACCEPT
-- Professional news photography of any quality above "extremely blurry"
-- Photos of real people, places, events, objects related to the news
-- Stock photos without watermarks
-- Charts, graphs, infographics — ACCEPT, these are informative
-- Photos with minor text overlays if the underlying photo is real and visible
+KEY RULE: The image must look like a clean editorial photograph. If there is ANY readable text overlay burned into the photo (headlines, titles, captions in any language), REJECT it. A small agency credit in a corner is okay, but text covering the image is not.
 
-KEY RULE: If the image contains a REAL PHOTOGRAPH underneath, even with logos/watermarks/overlays, mark it as SUITABLE. Only reject if there is NO real photograph (pure logos, pure text, pure solid colors, TV studio screenshots).
-
-Respond ONLY with valid JSON format (no markdown, no code blocks):
+Respond ONLY with valid JSON (no markdown, no code blocks):
 {
     "suitable": true or false,
     "confidence": 0-100,
