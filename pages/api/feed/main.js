@@ -655,22 +655,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise,
 
     // 2. TRENDING: high editorial score, last 24h
+    // Cold-start users need more trending articles since personal pool is empty
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at')
-      .gte('created_at', twentyFourHoursAgo)
-      .gte('ai_final_score', 750)
+      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
+      .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
       .order('ai_final_score', { ascending: false })
-      .limit(50),
+      .limit(hasAnyPersonalization ? 50 : 300),
 
     // 3. DISCOVERY: diverse quality content, wider pool
+    // Cold-start: fetch much larger pool to compensate for empty personal
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at')
-      .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 400)
+      .gte('created_at', hasAnyPersonalization ? fortyEightHoursAgo : seventyTwoHoursAgo)
+      .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
       .order('ai_final_score', { ascending: false })
-      .limit(200),
+      .limit(hasAnyPersonalization ? 200 : 500),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -785,7 +787,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   personalIdOrder = personalIdOrder.filter(id => !sessionExcludeIds.has(id));
   const personalIds = new Set(personalIdOrder);
 
-  // TRENDING: category-cap to max 3 per category, exclude personal/seen
+  // TRENDING: category-cap per category, exclude personal/seen
+  // Cold-start users get higher caps since they have no personal pool
+  const trendingCatMax = hasAnyPersonalization ? 3 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -793,21 +797,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
-    if (trendingCategoryCounts[cat] > 3) continue;
+    if (trendingCategoryCounts[cat] > trendingCatMax) continue;
     trendingIds.add(a.id);
     trendingArticleMeta.push(a);
   }
 
   // DISCOVERY: diverse categories, exclude personal & trending
+  // Cold-start: much higher caps to fill the feed
+  const discoveryCatMax = hasAnyPersonalization ? 2 : 8;
+  const discoveryTotalMax = hasAnyPersonalization ? 30 : 200;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
-    if (discoveryCategoryCounts[cat] > 2) continue;
+    if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
     discoveryArticleMeta.push(a);
-    if (discoveryArticleMeta.length >= 30) break;
+    if (discoveryArticleMeta.length >= discoveryTotalMax) break;
   }
 
   // ==========================================
