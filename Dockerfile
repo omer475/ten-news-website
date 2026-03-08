@@ -46,5 +46,10 @@ COPY cloudrun_entrypoint.py .
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Run the entrypoint
-CMD ["python", "cloudrun_entrypoint.py"]
+# Expose the port Cloud Run expects
+ENV PORT=8080
+EXPOSE 8080
+
+# Start gunicorn web server (Cloud Run sends HTTP triggers from Cloud Scheduler)
+# Timeout 600s = 10 min to allow full pipeline execution per request
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 1 --timeout 600 cloudrun_entrypoint:app
