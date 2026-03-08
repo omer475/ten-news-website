@@ -562,42 +562,28 @@ export default async function handler(req, res) {
     }
 
     // ==========================================
-    // DETERMINE FEED STRATEGY
+    // ALWAYS USE V2 FEED
+    // For cold-start users without taste vectors, V2 fills with
+    // trending + discovery articles via MMR diversity.
     // ==========================================
 
-    const hasEmbeddingPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
     const similarityFloor = userPrefs?.similarity_floor || 0;
 
-    if (hasEmbeddingPersonalization) {
-      // ============================================
-      // V2 FEED: Professional-Grade Personalization
-      // ============================================
-      return await handleV2Feed(req, res, supabase, {
-        userId: persUserId || userId,
-        userPrefs,
-        tasteVector,
-        tasteVectorMinilm,
-        hasInterestClusters,
-        similarityFloor,
-        skipProfile,
-        storedTagProfile,
-        seenArticleIds,
-        sessionEngagedIds,
-        sessionSkippedIds,
-        limit,
-        offset,
-      });
-    } else {
-      // ============================================
-      // FALLBACK: Tag-based scoring (unchanged for new users)
-      // ============================================
-      return await handleFallbackFeed(req, res, supabase, {
-        userPrefs,
-        seenArticleIds,
-        limit,
-        offset,
-      });
-    }
+    return await handleV2Feed(req, res, supabase, {
+      userId: persUserId || userId,
+      userPrefs,
+      tasteVector,
+      tasteVectorMinilm,
+      hasInterestClusters,
+      similarityFloor,
+      skipProfile,
+      storedTagProfile,
+      seenArticleIds,
+      sessionEngagedIds,
+      sessionSkippedIds,
+      limit,
+      offset,
+    });
 
   } catch (error) {
     console.error('Main feed error:', error);
@@ -635,8 +621,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
+  // For cold-start users without any embedding data, skip the personal query
+  // entirely — V2 will fill the feed with trending + discovery articles.
+  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
   let personalPromise;
-  if (hasInterestClusters && useMinilm) {
+  if (!hasAnyPersonalization) {
+    // Cold-start: no personal candidates, trending + discovery will fill all slots
+    personalPromise = Promise.resolve({ data: [], error: null });
+  } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
       p_user_id: userId, match_per_cluster: 50, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
@@ -685,10 +677,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   ]);
 
   if (personalResult.error) {
-    console.error('Personal query error:', personalResult.error);
-    return await handleFallbackFeed(req, res, supabase, {
-      userPrefs, seenArticleIds, limit, offset,
-    });
+    console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
+    // Continue with empty personal results — trending + discovery will fill the feed
   }
 
   // ==========================================
