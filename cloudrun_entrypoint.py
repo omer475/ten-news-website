@@ -1,8 +1,8 @@
 """
 Cloud Run Entrypoint for Ten News
 ==================================
-HTTP server that receives Cloud Scheduler triggers and runs the news pipeline.
-Cloud Scheduler hits POST / every 10 minutes.
+Runs a SINGLE iteration of the news workflow.
+Cloud Scheduler triggers this as a Cloud Run Job every 10 minutes.
 Includes run lock to prevent overlapping executions.
 """
 
@@ -10,9 +10,7 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta, timezone
-from flask import Flask, jsonify, request
 
-app = Flask(__name__)
 
 # Run lock timeout - if a run has been going for longer than this, assume it crashed
 RUN_LOCK_TIMEOUT_MINUTES = 30
@@ -60,7 +58,6 @@ def acquire_run_lock(supabase):
 
     except Exception as e:
         print(f"⚠️ Run lock check failed (proceeding anyway): {e}")
-        # If the lock table doesn't exist yet, proceed without locking
         return True
 
 
@@ -77,11 +74,8 @@ def release_run_lock(supabase):
         print(f"⚠️ Could not release run lock: {e}")
 
 
-def run_news_workflow():
-    """
-    Execute a single iteration of the news workflow.
-    Returns tuple of (success: bool, message: str, stats: dict)
-    """
+def main():
+    """Main entry point - runs once and exits (Cloud Run Job)"""
     start_time = time.time()
     stats = {
         'articles_processed': 0,
@@ -92,7 +86,7 @@ def run_news_workflow():
 
     try:
         print("=" * 60)
-        print(f"🚀 TEN NEWS - Cloud Run Execution")
+        print(f"🚀 TEN NEWS - Cloud Run Job Execution")
         print(f"⏰ Started at: {datetime.now().isoformat()}")
         print("=" * 60)
 
@@ -105,7 +99,8 @@ def run_news_workflow():
         # Check run lock - skip if another run is active
         if not acquire_run_lock(supabase):
             elapsed = time.time() - start_time
-            return True, f"Skipped (another run active) in {elapsed:.1f}s", stats
+            print(f"Skipped (another run active) in {elapsed:.1f}s")
+            sys.exit(0)
 
         try:
             # Run a single cycle of the workflow
@@ -117,8 +112,7 @@ def run_news_workflow():
             elapsed = time.time() - start_time
             print(f"\n✅ Workflow completed in {elapsed:.1f} seconds")
             print(f"📊 Stats: {stats}")
-
-            return True, f"Workflow completed in {elapsed:.1f}s", stats
+            sys.exit(0)
 
         finally:
             # Always release the lock, even if the run fails
@@ -128,7 +122,6 @@ def run_news_workflow():
         elapsed = time.time() - start_time
         error_msg = f"Workflow failed after {elapsed:.1f}s: {str(e)}"
         print(f"\n❌ {error_msg}")
-        stats['errors'].append(str(e))
 
         # Try to release lock on error
         try:
@@ -137,35 +130,8 @@ def run_news_workflow():
         except Exception:
             pass
 
-        return False, error_msg, stats
-
-
-@app.route('/', methods=['GET', 'POST'])
-def trigger_workflow():
-    """HTTP endpoint to trigger the news workflow"""
-    print(f"📥 Received trigger request at {datetime.now().isoformat()}")
-
-    success, message, stats = run_news_workflow()
-
-    status_code = 200 if success else 500
-    return jsonify({
-        'success': success,
-        'message': message,
-        'stats': stats,
-        'timestamp': datetime.now().isoformat()
-    }), status_code
-
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint for Cloud Run"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.now().isoformat()
-    }), 200
+        sys.exit(1)
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    print(f"🌐 Starting Flask server on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    main()
