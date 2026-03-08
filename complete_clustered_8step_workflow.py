@@ -39,7 +39,7 @@ from image_quality_checker import ImageQualityChecker, check_and_select_best_ima
 from step4_multi_source_synthesis import MultiSourceSynthesizer
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
-from step6_7_claude_component_generation import ClaudeComponentWriter
+from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
@@ -531,7 +531,7 @@ if not all([gemini_key, anthropic_key, brightdata_key]):
 brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
-component_writer = ClaudeComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
+component_writer = GeminiComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
 fact_verifier = FactVerifier(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
 
 
