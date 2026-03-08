@@ -607,7 +607,7 @@ def fetch_rss_articles(max_articles_per_source=10):
     
     # Parallel fetch from all sources
     with ThreadPoolExecutor(max_workers=50) as executor:
-        futures = [executor.submit(fetch_one_source, name, url) for name, url in ALL_SOURCES]
+        futures = [executor.submit(fetch_one_source, name, url) for name, url, *_ in ALL_SOURCES]
         for future in as_completed(futures):
             source_name, source_articles = future.result()
             if source_articles:
