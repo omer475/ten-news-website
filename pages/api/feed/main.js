@@ -139,10 +139,11 @@ function getRecencyDecay(createdAt, category) {
 
 async function buildUserInterestProfile(supabase, userId) {
   // Get article IDs the user engaged with in the last 14 days
+  // IMPROVEMENT 2: Also fetch view_seconds for dwell-time weighting
   const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const { data: events } = await supabase
     .from('user_article_events')
-    .select('article_id, event_type')
+    .select('article_id, event_type, metadata')
     .eq('user_id', userId)
     .gte('created_at', twoWeeksAgo)
     .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view'])
@@ -152,10 +153,18 @@ async function buildUserInterestProfile(supabase, userId) {
   if (!events || events.length === 0) return null;
 
   // Weight by engagement type: saved > engaged > viewed
+  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled)
   const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
   const articleWeights = {};
   for (const e of events) {
-    const w = eventWeights[e.event_type] || 1;
+    let w = eventWeights[e.event_type] || 1;
+    // Extract dwell time from metadata
+    const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
+                         e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
+    if (dwellSeconds > 5) {
+      // 10s → 1.0x bonus, 20s → 2.0x, 60s → 3.58x
+      w *= (1 + Math.log2(dwellSeconds / 5));
+    }
     articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
   }
 
@@ -264,11 +273,26 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   let momentumBoost = 0;
   let skipScore = 0;
 
+  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days
+  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
+  const now = Date.now();
+
   for (const tag of tags) {
     const t = tag.toLowerCase();
     tagScore += tagProfile[t] || 0;
     momentumBoost += sessionBoosts[t] || 0;
-    if (skipProfile) skipScore += skipProfile[t] || 0;
+    if (skipProfile) {
+      const entry = skipProfile[t];
+      if (typeof entry === 'object' && entry !== null && entry.w) {
+        // Time-stamped skip entry: { w: weight, t: timestamp }
+        const age = now - new Date(entry.t || 0).getTime();
+        const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
+        skipScore += entry.w * decay;
+      } else if (typeof entry === 'number') {
+        // Legacy flat number — apply 50% decay as default
+        skipScore += entry * 0.5;
+      }
+    }
   }
 
   tagScore /= n;
@@ -280,7 +304,6 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   const skipPenalty = Math.min(netSkip, 0.9);
 
   // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  // Recency is now a major factor — fresh articles get strong advantage
   const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
   return base * (1 - skipPenalty);
 }
@@ -623,29 +646,30 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Build personal candidate query (pgvector ANN search)
   // For cold-start users without any embedding data, skip the personal query
   // entirely — V2 will fill the feed with trending + discovery articles.
+  // IMPROVEMENT 1: Deeper pages request more candidates
   const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
+  const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
   let personalPromise;
   if (!hasAnyPersonalization) {
-    // Cold-start: no personal candidates, trending + discovery will fill all slots
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: 50, hours_window: 72,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: 50, hours_window: 72,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: 150, hours_window: 72,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: 150, hours_window: 72,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -899,17 +923,28 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
+  // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
+  // Cap articles per world_event/cluster to prevent event flooding
+  // (e.g., 15 Iran war articles won't all appear in the feed)
+  // ==========================================
+
+  const WORLD_EVENT_CAP = 3;   // max articles per world event
+  const CLUSTER_CAP = 3;       // max articles per article cluster
+
+  // Pre-fetch world event associations for all candidates
+  const candidateEventMap = await fetchWorldEvents(supabase, uniqueIds);
+  for (const [aid, event] of Object.entries(candidateEventMap)) {
+    if (articleMap[aid]) articleMap[aid]._world_event_id = event?.id || null;
+  }
+
+  // ==========================================
   // PHASE 6: MMR-BASED SLOT FILLING (variable reward pattern)
-  // Each slot picks the best candidate from its bucket using MMR
-  // to maximize both relevance AND diversity from already-selected articles.
+  // IMPROVEMENT 3: World-event and cluster dedup during selection
+  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
   //
   // Slot pattern per 10 cards:
   //   P P T P P S P P T S
   //   ~60% personal, 20% trending, 20% surprise/discovery
-  //
-  // S = Surprise: 60% chance discovery (new topic), 40% chance personal
-  //     tail (serendipity — unexpected match from lower scores).
-  //     This creates the "variable reward" dopamine pattern.
   // ==========================================
 
   const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
@@ -919,44 +954,153 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
-  for (let pos = 0; selected.length < limit; pos++) {
-    const slot = SLOTS[pos % SLOTS.length];
-    let picked = null;
+  // IMPROVEMENT 3: Track world event and cluster counts
+  const eventCounts = {};
+  const clusterCounts = {};
 
-    if (slot === 'P') {
-      // Personal slot: high relevance, moderate diversity
-      picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(tPool, selected, tagCache, 0.8);
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.5);
-    } else if (slot === 'T') {
-      // Trending slot: quality matters more (higher lambda)
-      picked = mmrSelect(tPool, selected, tagCache, 0.85);
-      if (!picked) picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.5);
-    } else {
-      // SURPRISE slot: variable reward for dopamine optimization
-      if (Math.random() < 0.6 && dPool.length > 0) {
-        // 60%: discovery (maximize diversity, low lambda)
-        picked = mmrSelect(dPool, selected, tagCache, 0.4);
-      } else if (pPool.length > 3) {
-        // 40%: personal tail — serendipity from unexpected lower-scored matches
-        const tailStart = Math.floor(pPool.length * 0.5);
-        const tailEnd = pPool.length;
-        if (tailStart < tailEnd) {
-          const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
-          picked = pPool.splice(tailIdx, 1)[0];
-        }
-      }
-      // Fallback chain for surprise slot
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.4);
-      if (!picked) picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(tPool, selected, tagCache, 0.8);
+  function isEventCapped(article) {
+    const eventId = article._world_event_id;
+    const clusterId = article.cluster_id;
+    if (eventId && (eventCounts[eventId] || 0) >= WORLD_EVENT_CAP) return true;
+    if (clusterId && (clusterCounts[clusterId] || 0) >= CLUSTER_CAP) return true;
+    return false;
+  }
+
+  function recordEventSelection(article) {
+    const eventId = article._world_event_id;
+    const clusterId = article.cluster_id;
+    if (eventId) eventCounts[eventId] = (eventCounts[eventId] || 0) + 1;
+    if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
+  }
+
+  // IMPROVEMENT 3: MMR select with event/cluster dedup
+  function mmrSelectDeduped(pool, sel, tc, lambda) {
+    let attempts = 0;
+    while (attempts < 5 && pool.length > 0) {
+      const picked = mmrSelect(pool, sel, tc, lambda);
+      if (!picked) return null;
+      if (!isEventCapped(picked)) return picked;
+      // Capped — skip this one and try next
+      attempts++;
+    }
+    return null;
+  }
+
+  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
+  if (!hasAnyPersonalization) {
+    // Group all candidates by category for bandit
+    const categoryPools = {};
+    for (const a of [...trendingScored, ...discoveryScored]) {
+      const cat = a.category || 'Other';
+      if (!categoryPools[cat]) categoryPools[cat] = [];
+      categoryPools[cat].push(a);
     }
 
-    if (!picked) break;
+    // Initialize Beta priors (uniform)
+    const banditState = {};
+    for (const cat of Object.keys(categoryPools)) {
+      banditState[cat] = { alpha: 1, beta: 1 };
+    }
 
-    picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
-    selected.push(picked);
+    // Update priors from session signals
+    for (const id of sessionEngagedIds) {
+      const art = articleMap[id];
+      if (art) {
+        const cat = art.category || 'Other';
+        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+        banditState[cat].alpha += 2; // Engage = strong positive
+      }
+    }
+    for (const id of sessionSkippedIds) {
+      const art = articleMap[id];
+      if (art) {
+        const cat = art.category || 'Other';
+        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+        banditState[cat].beta += 1; // Skip = mild negative
+      }
+    }
+
+    // Thompson Sampling: sample from Beta distribution per category
+    function sampleBeta(alpha, beta) {
+      // Approximation using Jitter method for Beta(a,b)
+      // For small a,b: use uniform jitter around mean
+      const mean = alpha / (alpha + beta);
+      const variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1));
+      const std = Math.sqrt(variance);
+      // Box-Muller for normal sample
+      const u1 = Math.random();
+      const u2 = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
+      return Math.max(0, Math.min(1, mean + z * std));
+    }
+
+    // Fill slots via Thompson Sampling with diversity
+    let banditAttempts = 0;
+    while (selected.length < limit && banditAttempts < limit * 3) {
+      banditAttempts++;
+      // Sample from each category's Beta distribution
+      let bestSample = -1;
+      let bestCat = null;
+      for (const [cat, state] of Object.entries(banditState)) {
+        if (!categoryPools[cat] || categoryPools[cat].length === 0) continue;
+        const sample = sampleBeta(state.alpha, state.beta);
+        if (sample > bestSample) {
+          bestSample = sample;
+          bestCat = cat;
+        }
+      }
+      if (!bestCat) break;
+
+      const pool = categoryPools[bestCat];
+      const picked = mmrSelect(pool, selected, tagCache, 0.6);
+      if (!picked) {
+        delete categoryPools[bestCat]; // Exhausted
+        continue;
+      }
+      if (isEventCapped(picked)) continue;
+
+      picked.bucket = 'bandit';
+      recordEventSelection(picked);
+      selected.push(picked);
+    }
+  } else {
+    // Personalized user: standard slot-filling
+    for (let pos = 0; selected.length < limit; pos++) {
+      const slot = SLOTS[pos % SLOTS.length];
+      let picked = null;
+
+      if (slot === 'P') {
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else if (slot === 'T') {
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else {
+        // SURPRISE slot: variable reward
+        if (Math.random() < 0.6 && dPool.length > 0) {
+          picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        } else if (pPool.length > 3) {
+          const tailStart = Math.floor(pPool.length * 0.5);
+          const tailEnd = pPool.length;
+          if (tailStart < tailEnd) {
+            const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
+            const candidate = pPool.splice(tailIdx, 1)[0];
+            if (candidate && !isEventCapped(candidate)) picked = candidate;
+          }
+        }
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+      }
+
+      if (!picked) break;
+
+      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      recordEventSelection(picked);
+      selected.push(picked);
+    }
   }
 
   // ==========================================
@@ -975,7 +1119,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const pageIds = selected.map(a => a.id);
-  const eventMap = await fetchWorldEvents(supabase, pageIds);
+  // Re-use the candidate event map we already fetched (no duplicate query)
+  const eventMap = candidateEventMap;
 
   const formattedArticles = selected.map(a => {
     const formatted = formatArticle(a, eventMap);
@@ -990,9 +1135,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
+  // IMPROVEMENT 1: True pagination — encode actual offset in cursor
   const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length;
-  const hasMore = totalAvailable > limit;
-  const nextCursor = hasMore ? 'v2_fresh' : null;
+  const totalServed = offset + selected.length;
+  const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
+  const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
 
   return res.status(200).json({
     articles: formattedArticles,
