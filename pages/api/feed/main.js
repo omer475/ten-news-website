@@ -121,8 +121,16 @@ const HARD_NEWS_CATEGORIES = ['World', 'Politics', 'Business', 'Finance'];
 
 function getRecencyDecay(createdAt, category) {
   const hoursOld = (Date.now() - new Date(createdAt).getTime()) / 3600000;
-  const rate = HARD_NEWS_CATEGORIES.includes(category) ? 0.04 : 0.015;
-  return Math.exp(-rate * hoursOld);
+  if (HARD_NEWS_CATEGORIES.includes(category)) {
+    // Hard news: strong freshness preference
+    // <12h: ~1.0, 24h: ~0.38, 48h: ~0.07, 72h: ~0.01
+    if (hoursOld <= 12) return Math.exp(-0.02 * hoursOld);
+    if (hoursOld <= 24) return Math.exp(-0.04 * hoursOld);
+    return Math.exp(-0.06 * hoursOld); // >24h hard news decays fast
+  }
+  // Soft news (Tech, Health, Science, Entertainment, Sports): gentler decay
+  // <24h: ~0.85, 48h: ~0.49, 72h: ~0.34
+  return Math.exp(-0.015 * hoursOld);
 }
 
 // ==========================================
@@ -271,20 +279,19 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   const netSkip = Math.max(0, skipScore - tagScore * 0.5);
   const skipPenalty = Math.min(netSkip, 0.9);
 
-  // Tag match (400) + Session momentum (200) + Similarity (300) + Quality*Recency (100)
-  const base = tagScore * 400 + momentumBoost * 200 + similarity * 300 + (aiScore / 1000) * 100 * recency;
+  // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
+  // Recency is now a major factor — fresh articles get strong advantage
+  const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
   return base * (1 - skipPenalty);
 }
 
 function scoreTrendingV3(article) {
-  const hoursOld = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
-  const recency = Math.exp(-0.04 * hoursOld);
+  const recency = getRecencyDecay(article.created_at, article.category);
   return (article.ai_final_score || 0) * recency;
 }
 
 function scoreDiscoveryV3(article, personalCategories) {
-  const hoursOld = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
-  const recency = Math.exp(-0.02 * hoursOld);
+  const recency = getRecencyDecay(article.created_at, article.category);
   // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   // Random factor for variable reward (surprise element)
