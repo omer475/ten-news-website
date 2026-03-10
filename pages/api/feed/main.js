@@ -17,126 +17,82 @@ const safeJsonParse = (value, fallback = null) => {
 // ==========================================
 
 const ONBOARDING_TOPIC_MAP = {
-  // ── Politics ──
-  'War & Conflict':              { categories: ['Politics'], tags: ['war', 'conflict', 'military', 'defense', 'armed forces', 'invasion'] },
-  'US Politics':                 { categories: ['Politics'], tags: ['us politics', 'congress', 'senate', 'white house', 'republican', 'democrat', 'trump', 'biden'] },
-  'European Politics':           { categories: ['Politics'], tags: ['european politics', 'eu', 'european union', 'brexit', 'nato', 'parliament'] },
-  'Asian Politics':              { categories: ['Politics'], tags: ['asian politics', 'china', 'india', 'japan', 'southeast asia', 'asean'] },
-  'Middle East':                 { categories: ['Politics'], tags: ['middle east', 'iran', 'israel', 'saudi arabia', 'palestine', 'gulf'] },
-  'Latin America':               { categories: ['Politics'], tags: ['latin america', 'brazil', 'mexico', 'argentina', 'colombia', 'venezuela'] },
-  'Africa & Oceania':            { categories: ['Politics'], tags: ['africa', 'oceania', 'australia', 'nigeria', 'south africa', 'kenya'] },
-  'Human Rights & Civil Liberties': { categories: ['Politics'], tags: ['human rights', 'civil liberties', 'freedom', 'protest', 'democracy', 'censorship'] },
+  // ── Politics (8) ──
+  'War & Conflict':              { categories: ['Politics'], tags: ['war', 'conflict', 'military', 'defense', 'armed forces', 'invasion', 'military conflict', 'military strikes'] },
+  'US Politics':                 { categories: ['Politics'], tags: ['us politics', 'congress', 'senate', 'white house', 'republican', 'democrat', 'trump', 'biden', 'republican party', 'supreme court', 'pentagon'] },
+  'European Politics':           { categories: ['Politics'], tags: ['european politics', 'eu', 'european union', 'brexit', 'nato', 'parliament', 'germany', 'france', 'uk', 'hungary', 'spain'] },
+  'Asian Politics':              { categories: ['Politics'], tags: ['asian politics', 'china', 'india', 'japan', 'southeast asia', 'asean', 'asia', 'north korea', 'taiwan'] },
+  'Middle East':                 { categories: ['Politics'], tags: ['middle east', 'iran', 'israel', 'saudi arabia', 'palestine', 'gulf', 'lebanon', 'hezbollah', 'tehran', 'strait of hormuz'] },
+  'Latin America':               { categories: ['Politics'], tags: ['latin america', 'brazil', 'mexico', 'argentina', 'colombia', 'venezuela', 'cuba'] },
+  'Africa & Oceania':            { categories: ['Politics'], tags: ['africa', 'oceania', 'australia', 'nigeria', 'south africa', 'kenya', 'egypt'] },
+  'Human Rights & Civil Liberties': { categories: ['Politics'], tags: ['human rights', 'civil liberties', 'freedom', 'protest', 'democracy', 'censorship', 'war crimes'] },
 
-  // ── Sports ──
-  'NFL':                         { categories: ['Sports'], tags: ['nfl', 'american football', 'quarterback', 'super bowl', 'touchdown'] },
-  'NBA':                         { categories: ['Sports'], tags: ['nba', 'basketball', 'lakers', 'celtics', 'lebron', 'dunk'] },
-  'Soccer/Football':             { categories: ['Sports'], tags: ['soccer', 'football', 'premier league', 'champions league', 'la liga', 'bundesliga', 'serie a', 'mls', 'fifa'] },
+  // ── Sports (8) ──
+  'NFL':                         { categories: ['Sports'], tags: ['nfl', 'american football', 'quarterback', 'super bowl', 'touchdown', 'wide receiver'] },
+  'NBA':                         { categories: ['Sports'], tags: ['nba', 'basketball', 'lakers', 'celtics', 'lebron', 'dunk', 'playoffs'] },
+  'Soccer/Football':             { categories: ['Sports'], tags: ['soccer', 'football', 'premier league', 'champions league', 'la liga', 'bundesliga', 'serie a', 'mls', 'fifa', 'world cup'] },
   'MLB/Baseball':                { categories: ['Sports'], tags: ['mlb', 'baseball', 'world series', 'home run', 'pitcher'] },
-  'Tennis':                      { categories: ['Sports'], tags: ['tennis', 'grand slam', 'wimbledon', 'us open', 'atp', 'wta'] },
-  'Cricket':                     { categories: ['Sports'], tags: ['cricket', 'ipl', 'test match', 'ashes', 'world cup cricket', 't20'] },
+  'Cricket':                     { categories: ['Sports'], tags: ['cricket', 'ipl', 'test match', 'ashes', 'world cup cricket', 't20', 'bcci'] },
   'F1 & Motorsport':             { categories: ['Sports'], tags: ['f1', 'formula 1', 'motorsport', 'nascar', 'indycar', 'grand prix', 'racing'] },
-  'NHL/Hockey':                  { categories: ['Sports'], tags: ['nhl', 'hockey', 'ice hockey', 'stanley cup'] },
-  'Golf':                        { categories: ['Sports'], tags: ['golf', 'pga', 'masters', 'ryder cup', 'lpga'] },
-  'Boxing & MMA/UFC':            { categories: ['Sports'], tags: ['boxing', 'mma', 'ufc', 'fight', 'knockout', 'heavyweight'] },
-  'College Sports':              { categories: ['Sports'], tags: ['college sports', 'ncaa', 'march madness', 'college football', 'college basketball'] },
-  'Rugby':                       { categories: ['Sports'], tags: ['rugby', 'rugby union', 'rugby league', 'six nations', 'world cup rugby'] },
-  'Olympics & Paralympics':      { categories: ['Sports'], tags: ['olympics', 'paralympics', 'olympic games', 'gold medal', 'ioc'] },
-  'Wrestling/WWE/AEW':           { categories: ['Sports', 'Entertainment'], tags: ['wrestling', 'wwe', 'aew', 'wrestlemania', 'smackdown', 'raw'] },
-  'Horse Racing':                { categories: ['Sports'], tags: ['horse racing', 'kentucky derby', 'preakness', 'jockey', 'thoroughbred'] },
+  'Boxing & MMA/UFC':            { categories: ['Sports'], tags: ['boxing', 'mma', 'ufc', 'fight', 'knockout', 'heavyweight', 'bout'] },
+  'Olympics & Paralympics':      { categories: ['Sports'], tags: ['olympics', 'paralympics', 'olympic games', 'gold medal', 'ioc', 'olympic'] },
 
-  // ── Business ──
-  'Oil & Energy':                { categories: ['Business'], tags: ['oil', 'energy', 'opec', 'natural gas', 'renewable energy', 'petroleum'] },
-  'Automotive':                  { categories: ['Business'], tags: ['automotive', 'cars', 'tesla', 'ford', 'gm', 'toyota', 'electric vehicles'] },
+  // ── Business (8) ──
+  'Oil & Energy':                { categories: ['Business'], tags: ['oil', 'energy', 'opec', 'natural gas', 'renewable energy', 'petroleum', 'oil prices', 'crude oil', 'energy security', 'nuclear energy'] },
+  'Automotive':                  { categories: ['Business'], tags: ['automotive', 'cars', 'tesla', 'ford', 'gm', 'toyota', 'electric vehicles', 'ev'] },
   'Retail & Consumer':           { categories: ['Business'], tags: ['retail', 'consumer', 'amazon', 'walmart', 'shopping', 'e-commerce'] },
   'Corporate Deals':             { categories: ['Business'], tags: ['merger', 'acquisition', 'deal', 'takeover', 'ipo', 'corporate'] },
-  'Trade & Tariffs':             { categories: ['Business'], tags: ['trade', 'tariffs', 'sanctions', 'import', 'export', 'trade war'] },
-  'Corporate Earnings & Reports': { categories: ['Business'], tags: ['earnings', 'quarterly results', 'revenue', 'profit', 'financial results'] },
+  'Trade & Tariffs':             { categories: ['Business'], tags: ['trade', 'tariffs', 'sanctions', 'import', 'export', 'trade war', 'supply chain'] },
+  'Corporate Earnings':          { categories: ['Business'], tags: ['earnings', 'quarterly results', 'revenue', 'profit', 'financial results'] },
   'Startups & Venture Capital':  { categories: ['Business', 'Finance'], tags: ['startup', 'venture capital', 'funding', 'seed round', 'unicorn', 'vc'] },
   'Real Estate':                 { categories: ['Business', 'Finance'], tags: ['real estate', 'property', 'housing', 'mortgage', 'commercial real estate'] },
-  'Aviation & Airlines':         { categories: ['Business'], tags: ['aviation', 'airlines', 'boeing', 'airbus', 'flights', 'airport'] },
-  'Agriculture & Commodities':   { categories: ['Business'], tags: ['agriculture', 'commodities', 'farming', 'crops', 'wheat', 'grain'] },
 
-  // ── Entertainment ──
-  'Movies & Film':               { categories: ['Entertainment'], tags: ['movies', 'film', 'box office', 'hollywood', 'director', 'cinema', 'oscar'] },
+  // ── Entertainment (6) ──
+  'Movies & Film':               { categories: ['Entertainment'], tags: ['movies', 'film', 'box office', 'hollywood', 'director', 'cinema', 'oscar', 'oscars'] },
   'TV & Streaming':              { categories: ['Entertainment'], tags: ['tv', 'streaming', 'netflix', 'hbo', 'disney plus', 'series', 'show'] },
-  'Music':                       { categories: ['Entertainment'], tags: ['music', 'album', 'concert', 'tour', 'grammy', 'rapper', 'singer'] },
+  'Music':                       { categories: ['Entertainment'], tags: ['music', 'album', 'concert', 'tour', 'grammy', 'rapper', 'singer', 'beyonce'] },
   'Gaming':                      { categories: ['Entertainment', 'Tech'], tags: ['gaming', 'video games', 'playstation', 'xbox', 'nintendo', 'esports', 'steam'] },
-  'Celebrity News':              { categories: ['Entertainment'], tags: ['celebrity', 'famous', 'scandal', 'gossip', 'paparazzi', 'star'] },
+  'Celebrity News':              { categories: ['Entertainment'], tags: ['celebrity', 'famous', 'scandal', 'gossip', 'paparazzi', 'star', 'billionaire'] },
   'K-Pop & K-Drama':             { categories: ['Entertainment'], tags: ['k-pop', 'k-drama', 'korean', 'bts', 'blackpink', 'kdrama', 'hallyu'] },
-  'Awards & Festivals':          { categories: ['Entertainment'], tags: ['awards', 'festival', 'oscar', 'emmy', 'grammy', 'cannes', 'sundance', 'golden globe'] },
-  'Books & Literature':          { categories: ['Entertainment', 'Lifestyle'], tags: ['books', 'literature', 'author', 'novel', 'bestseller', 'publishing'] },
 
-  // ── Tech ──
+  // ── Tech (6) ──
   'AI & Machine Learning':       { categories: ['Tech'], tags: ['ai', 'artificial intelligence', 'machine learning', 'chatgpt', 'openai', 'deep learning', 'llm'] },
-  'Smartphones & Gadgets':       { categories: ['Tech'], tags: ['smartphone', 'iphone', 'samsung', 'pixel', 'gadget', 'wearable', 'apple'] },
+  'Smartphones & Gadgets':       { categories: ['Tech'], tags: ['smartphone', 'iphone', 'samsung', 'pixel', 'gadget', 'wearable', 'apple', 'android'] },
   'Social Media':                { categories: ['Tech'], tags: ['social media', 'twitter', 'instagram', 'tiktok', 'facebook', 'meta', 'x'] },
-  'Cybersecurity':               { categories: ['Tech'], tags: ['cybersecurity', 'hacking', 'data breach', 'ransomware', 'privacy', 'encryption'] },
-  'Cloud & Enterprise':          { categories: ['Tech'], tags: ['cloud', 'enterprise', 'aws', 'azure', 'saas', 'microsoft', 'google cloud'] },
-  'EVs & Autonomous Vehicles':   { categories: ['Tech', 'Business'], tags: ['ev', 'electric vehicle', 'autonomous', 'self-driving', 'tesla', 'waymo'] },
-  'Space Tech':                  { categories: ['Tech', 'Science'], tags: ['space tech', 'spacex', 'nasa', 'rocket', 'satellite', 'starship', 'blue origin'] },
+  'Cybersecurity':               { categories: ['Tech'], tags: ['cybersecurity', 'hacking', 'data breach', 'ransomware', 'privacy', 'encryption', 'vulnerability'] },
+  'Space Tech':                  { categories: ['Tech', 'Science'], tags: ['space tech', 'spacex', 'nasa', 'rocket', 'satellite', 'starship', 'blue origin', 'space exploration'] },
   'Robotics & Hardware':         { categories: ['Tech'], tags: ['robotics', 'robot', 'hardware', 'chip', 'semiconductor', 'nvidia', 'processor'] },
 
-  // ── Science ──
-  'Space & Astronomy':           { categories: ['Science'], tags: ['space', 'astronomy', 'nasa', 'mars', 'telescope', 'galaxy', 'asteroid'] },
-  'Climate & Environment':       { categories: ['Science'], tags: ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'pollution', 'biodiversity'] },
+  // ── Science (4) ──
+  'Space & Astronomy':           { categories: ['Science'], tags: ['space', 'astronomy', 'nasa', 'mars', 'telescope', 'galaxy', 'asteroid', 'planet'] },
+  'Climate & Environment':       { categories: ['Science'], tags: ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'pollution', 'biodiversity', 'climate change'] },
   'Biology & Nature':            { categories: ['Science'], tags: ['biology', 'nature', 'wildlife', 'evolution', 'genetics', 'species', 'ecosystem'] },
-  'Physics & Chemistry':         { categories: ['Science'], tags: ['physics', 'chemistry', 'quantum', 'particle', 'atom', 'experiment'] },
-  'Archaeology & History':       { categories: ['Science', 'Lifestyle'], tags: ['archaeology', 'history', 'ancient', 'discovery', 'fossil', 'civilization'] },
   'Earth Science':               { categories: ['Science'], tags: ['earth science', 'geology', 'earthquake', 'volcano', 'ocean', 'weather'] },
 
-  // ── Health ──
+  // ── Health (4) ──
   'Medical Breakthroughs':       { categories: ['Health'], tags: ['medical', 'breakthrough', 'treatment', 'cure', 'clinical trial', 'surgery'] },
   'Public Health':               { categories: ['Health'], tags: ['public health', 'pandemic', 'vaccine', 'cdc', 'who', 'outbreak', 'disease'] },
   'Mental Health':               { categories: ['Health'], tags: ['mental health', 'anxiety', 'depression', 'therapy', 'mindfulness', 'wellbeing'] },
-  'Fitness & Exercise':          { categories: ['Health', 'Lifestyle'], tags: ['fitness', 'exercise', 'workout', 'gym', 'running', 'training'] },
-  'Pharma & Drug Industry':      { categories: ['Health', 'Business'], tags: ['pharma', 'pharmaceutical', 'drug', 'fda', 'medication', 'biotech'] },
-  'Nutrition & Diet':            { categories: ['Health'], tags: ['nutrition', 'diet', 'vitamin', 'protein', 'healthy eating', 'supplement'] },
+  'Pharma & Drug Industry':      { categories: ['Health', 'Business'], tags: ['pharma', 'pharmaceutical', 'drug', 'fda', 'medication', 'biotech', 'pharmaceuticals'] },
 
-  // ── Finance ──
+  // ── Finance (3) ──
   'Stock Markets':               { categories: ['Finance', 'Business'], tags: ['stock market', 'wall street', 'nasdaq', 'sp500', 'dow jones', 'shares', 'trading'] },
-  'Banking & Lending':           { categories: ['Finance'], tags: ['banking', 'lending', 'interest rate', 'federal reserve', 'loan', 'credit'] },
+  'Banking & Lending':           { categories: ['Finance'], tags: ['banking', 'lending', 'interest rate', 'federal reserve', 'loan', 'credit', 'inflation'] },
   'Commodities':                 { categories: ['Finance', 'Business'], tags: ['commodities', 'gold', 'silver', 'oil price', 'futures', 'copper'] },
-  'Personal Finance':            { categories: ['Finance'], tags: ['personal finance', 'savings', 'retirement', 'investing', 'budget', '401k'] },
 
-  // ── Crypto ──
+  // ── Crypto (3) ──
   'Bitcoin':                     { categories: ['Finance', 'Tech'], tags: ['bitcoin', 'btc', 'satoshi', 'mining', 'halving'] },
-  'Altcoins & Tokens':           { categories: ['Finance', 'Tech'], tags: ['altcoin', 'ethereum', 'solana', 'cardano', 'token', 'crypto'] },
   'DeFi & Web3':                 { categories: ['Finance', 'Tech'], tags: ['defi', 'web3', 'blockchain', 'smart contract', 'dao', 'decentralized'] },
-  'Crypto Regulation & Legal':   { categories: ['Finance', 'Tech'], tags: ['crypto regulation', 'sec', 'crypto law', 'crypto ban', 'crypto tax'] },
-  'NFTs & Digital Assets':       { categories: ['Finance', 'Tech'], tags: ['nft', 'digital asset', 'collectible', 'opensea', 'digital art'] },
+  'Crypto Regulation & Legal':   { categories: ['Finance', 'Tech'], tags: ['crypto regulation', 'sec', 'crypto law', 'crypto ban', 'crypto tax', 'cryptocurrency'] },
 
-  // ── Food ──
-  'Recipes & Cooking Tips':      { categories: ['Lifestyle'], tags: ['recipe', 'cooking', 'baking', 'chef tips', 'kitchen', 'meal prep'] },
-  'Restaurant Reviews & Openings': { categories: ['Lifestyle'], tags: ['restaurant', 'dining', 'review', 'michelin', 'food critic', 'new restaurant'] },
-  'Food Trends & Viral Recipes': { categories: ['Lifestyle'], tags: ['food trend', 'viral recipe', 'tiktok food', 'food hack', 'trending food'] },
-  'Food Safety & Recalls':       { categories: ['Lifestyle', 'Health'], tags: ['food safety', 'recall', 'fda', 'contamination', 'food poisoning'] },
-  'Drinks & Cocktails':          { categories: ['Lifestyle'], tags: ['drinks', 'cocktail', 'wine', 'beer', 'coffee', 'bartender'] },
-  'Chef & Food Personality News': { categories: ['Lifestyle', 'Entertainment'], tags: ['chef', 'food personality', 'gordon ramsay', 'food network', 'cooking show'] },
-
-  // ── Travel ──
-  'Airlines & Flights':          { categories: ['Lifestyle', 'Business'], tags: ['airlines', 'flights', 'airport', 'frequent flyer', 'boarding', 'delay'] },
-  'Hotels & Resorts':            { categories: ['Lifestyle'], tags: ['hotel', 'resort', 'accommodation', 'luxury hotel', 'airbnb', 'booking'] },
-  'Destinations & Guides':       { categories: ['Lifestyle'], tags: ['destination', 'travel guide', 'tourism', 'vacation', 'itinerary', 'sightseeing'] },
-  'Travel Disruptions':          { categories: ['Lifestyle'], tags: ['travel disruption', 'flight cancel', 'strike', 'travel warning', 'travel ban'] },
-  'Cruises & Adventure Travel':  { categories: ['Lifestyle'], tags: ['cruise', 'adventure travel', 'backpacking', 'safari', 'hiking', 'expedition'] },
-  'Travel Tips & Deals':         { categories: ['Lifestyle'], tags: ['travel tips', 'travel deal', 'cheap flights', 'travel hack', 'loyalty program'] },
-
-  // ── Lifestyle ──
-  'Home & Garden':               { categories: ['Lifestyle'], tags: ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'] },
+  // ── Lifestyle (3) ──
   'Pets & Animals':              { categories: ['Lifestyle'], tags: ['pets', 'animals', 'dog', 'cat', 'veterinary', 'adoption', 'wildlife'] },
-  'Relationships & Dating':      { categories: ['Lifestyle'], tags: ['relationship', 'dating', 'love', 'marriage', 'divorce', 'dating app'] },
-  'Parenting & Family':          { categories: ['Lifestyle'], tags: ['parenting', 'family', 'children', 'baby', 'school', 'motherhood'] },
+  'Home & Garden':               { categories: ['Lifestyle'], tags: ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'] },
   'Shopping & Product Reviews':  { categories: ['Lifestyle'], tags: ['shopping', 'product review', 'best buy', 'deal', 'discount', 'gadget review'] },
-  'Architecture & Interior Design': { categories: ['Lifestyle'], tags: ['architecture', 'interior design', 'building', 'modern design', 'home design'] },
-  'Outdoor & Adventure':         { categories: ['Lifestyle'], tags: ['outdoor', 'adventure', 'camping', 'hiking', 'mountain', 'nature'] },
 
-  // ── Fashion ──
-  'Fashion Weeks':               { categories: ['Lifestyle', 'Entertainment'], tags: ['fashion week', 'runway', 'paris fashion', 'milan fashion', 'new york fashion'] },
-  'Celebrity Style & Red Carpet': { categories: ['Lifestyle', 'Entertainment'], tags: ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala'] },
-  'Beauty & Skincare':           { categories: ['Lifestyle'], tags: ['beauty', 'skincare', 'makeup', 'cosmetics', 'moisturizer', 'serum'] },
-  'Brands & Designers':          { categories: ['Lifestyle'], tags: ['fashion brand', 'designer', 'gucci', 'louis vuitton', 'chanel', 'luxury'] },
+  // ── Fashion (2) ──
   'Sneakers & Streetwear':       { categories: ['Lifestyle'], tags: ['sneakers', 'streetwear', 'nike', 'adidas', 'jordan', 'yeezy', 'drop'] },
-  'Affordable Fashion & Deals':  { categories: ['Lifestyle'], tags: ['affordable fashion', 'fashion deal', 'sale', 'budget style', 'thrift', 'fast fashion'] },
+  'Celebrity Style & Red Carpet': { categories: ['Lifestyle', 'Entertainment'], tags: ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'] },
 };
 
 // ==========================================
