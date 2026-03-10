@@ -11,6 +11,83 @@ const safeJsonParse = (value, fallback = null) => {
 };
 
 // ==========================================
+// ONBOARDING TOPIC → INTEREST TAG MAPPING
+// Maps onboarding topic codes to the interest_tags and categories used by the feed.
+// Used to warm-start new users. Fades as real engagement builds tag_profile.
+// ==========================================
+
+const ONBOARDING_TOPIC_MAP = {
+  // Business & Finance
+  economics: { tags: ['economics', 'economy', 'gdp', 'trade'], category: 'Business' },
+  stock_markets: { tags: ['stock market', 'wall street', 'stocks', 'investing', 'nasdaq'], category: 'Finance' },
+  banking: { tags: ['banking', 'finance', 'federal reserve', 'interest rates', 'central bank'], category: 'Finance' },
+  startups: { tags: ['startups', 'venture capital', 'silicon valley', 'funding'], category: 'Business' },
+  // Technology
+  ai: { tags: ['artificial intelligence', 'machine learning', 'ai', 'chatgpt', 'openai', 'deep learning'], category: 'Tech' },
+  tech_industry: { tags: ['tech', 'technology', 'apple', 'google', 'microsoft', 'meta'], category: 'Tech' },
+  consumer_tech: { tags: ['smartphone', 'iphone', 'gadgets', 'consumer tech', 'wearable'], category: 'Tech' },
+  cybersecurity: { tags: ['cybersecurity', 'hacking', 'data breach', 'privacy', 'encryption'], category: 'Tech' },
+  space: { tags: ['space', 'nasa', 'spacex', 'rocket', 'satellite', 'aerospace', 'astronomy'], category: 'Science' },
+  // Science & Health
+  science: { tags: ['science', 'research', 'physics', 'biology', 'chemistry', 'discovery'], category: 'Science' },
+  climate: { tags: ['climate change', 'environment', 'renewable energy', 'emissions', 'carbon', 'sustainability'], category: 'Science' },
+  health: { tags: ['health', 'medicine', 'vaccine', 'cancer', 'mental health', 'public health'], category: 'Health' },
+  biotech: { tags: ['biotech', 'gene therapy', 'clinical trial', 'pharmaceutical', 'drug'], category: 'Health' },
+  // Politics & World
+  politics: { tags: ['politics', 'election', 'congress', 'parliament', 'legislation', 'policy'], category: 'Politics' },
+  geopolitics: { tags: ['geopolitics', 'international relations', 'diplomacy', 'sanctions', 'nato'], category: 'Politics' },
+  conflicts: { tags: ['conflict', 'war', 'military', 'defense', 'missile'], category: 'World' },
+  human_rights: { tags: ['human rights', 'refugees', 'freedom', 'protest', 'civil rights'], category: 'Politics' },
+  // Sports
+  football: { tags: ['football', 'soccer', 'premier league', 'champions league', 'la liga', 'fifa'], category: 'Sports' },
+  american_football: { tags: ['nfl', 'american football', 'super bowl', 'quarterback'], category: 'Sports' },
+  basketball: { tags: ['basketball', 'nba', 'lebron', 'lakers'], category: 'Sports' },
+  tennis: { tags: ['tennis', 'grand slam', 'wimbledon', 'australian open'], category: 'Sports' },
+  f1: { tags: ['formula 1', 'f1', 'grand prix', 'verstappen', 'hamilton'], category: 'Sports' },
+  cricket: { tags: ['cricket', 't20', 'odi', 'test match', 'ipl', 'world cup cricket'], category: 'Sports' },
+  combat_sports: { tags: ['ufc', 'mma', 'boxing', 'combat sports'], category: 'Sports' },
+  olympics: { tags: ['olympics', 'olympic games', 'gold medal'], category: 'Sports' },
+  golf: { tags: ['golf', 'pga', 'masters'], category: 'Sports' },
+  winter_sports: { tags: ['skiing', 'winter sports', 'ice skating', 'snowboard'], category: 'Sports' },
+  ice_hockey: { tags: ['ice hockey', 'nhl', 'hockey'], category: 'Sports' },
+  rugby: { tags: ['rugby', 'six nations', 'world rugby'], category: 'Sports' },
+  swimming: { tags: ['swimming', 'aquatics'], category: 'Sports' },
+  // Lifestyle
+  entertainment: { tags: ['entertainment', 'movies', 'streaming', 'netflix', 'celebrity'], category: 'Entertainment' },
+  music: { tags: ['music', 'concert', 'album', 'artist', 'grammy'], category: 'Entertainment' },
+  gaming: { tags: ['gaming', 'video games', 'esports', 'playstation', 'xbox', 'nintendo'], category: 'Gaming', altCategories: ['Tech'] },
+  travel: { tags: ['travel', 'tourism', 'airline', 'destination'], category: 'Entertainment' },
+  // Finance
+  crypto: { tags: ['cryptocurrency', 'bitcoin', 'ethereum', 'blockchain', 'defi', 'nft'], category: 'Finance' },
+  // Lifestyle
+  food: { tags: ['food', 'recipe', 'cooking', 'cuisine', 'restaurant', 'chef'], category: 'Lifestyle' },
+  cooking: { tags: ['cooking', 'recipe', 'baking', 'chef', 'kitchen'], category: 'Lifestyle' },
+  fashion: { tags: ['fashion', 'designer', 'runway', 'style', 'clothing', 'couture'], category: 'Lifestyle' },
+  beauty: { tags: ['beauty', 'skincare', 'makeup', 'cosmetics'], category: 'Lifestyle' },
+  lifestyle: { tags: ['lifestyle', 'wellness', 'self-care', 'home'], category: 'Lifestyle' },
+  home_design: { tags: ['interior design', 'home decor', 'architecture', 'renovation'], category: 'Lifestyle' },
+  fitness: { tags: ['fitness', 'exercise', 'workout', 'training', 'gym'], category: 'Health' },
+  wellness: { tags: ['wellness', 'meditation', 'mindfulness', 'mental health', 'self-care'], category: 'Health' },
+};
+
+// Build onboarding boost profile from followed_topics.
+// Returns { tagBoosts: { tag: weight }, categoryBoosts: { cat: weight } }
+function buildOnboardingProfile(followedTopics) {
+  if (!followedTopics || followedTopics.length === 0) return null;
+  const tagBoosts = {};
+  const categoryBoosts = {};
+  for (const topicCode of followedTopics) {
+    const mapping = ONBOARDING_TOPIC_MAP[topicCode];
+    if (!mapping) continue;
+    for (const tag of mapping.tags) {
+      tagBoosts[tag] = 0.3; // Moderate initial weight
+    }
+    categoryBoosts[mapping.category] = (categoryBoosts[mapping.category] || 0) + 1;
+  }
+  return { tagBoosts, categoryBoosts };
+}
+
+// ==========================================
 // ARTICLE FORMATTING (unchanged from before)
 // ==========================================
 
@@ -137,25 +214,38 @@ function getRecencyDecay(createdAt, category) {
 // USER INTEREST PROFILE (entity-level tag weights from engagement history)
 // ==========================================
 
+// Module-level flag for legacy mode (set by handleV2Feed before calling)
+let _legacyMode = false;
+
 async function buildUserInterestProfile(supabase, userId) {
   // Get article IDs the user engaged with in the last 14 days
+  // IMPROVEMENT 2: Also fetch view_seconds for dwell-time weighting
   const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const { data: events } = await supabase
     .from('user_article_events')
-    .select('article_id, event_type')
+    .select('article_id, event_type, metadata')
     .eq('user_id', userId)
     .gte('created_at', twoWeeksAgo)
-    .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view'])
+    .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view', 'source_clicked'])
     .order('created_at', { ascending: false })
     .limit(500);
 
   if (!events || events.length === 0) return null;
 
   // Weight by engagement type: saved > engaged > viewed
-  const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
+  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled) — skipped in legacy mode
+  const eventWeights = { source_clicked: 6, article_saved: 3, article_engaged: 2, article_detail_view: 1 };
   const articleWeights = {};
   for (const e of events) {
-    const w = eventWeights[e.event_type] || 1;
+    let w = eventWeights[e.event_type] || 1;
+    // Extract dwell time from metadata (IMPROVEMENT 2 — disabled in legacy mode)
+    if (!_legacyMode) {
+      const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
+                           e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
+      if (dwellSeconds > 5) {
+        w *= (1 + Math.log2(dwellSeconds / 5));
+      }
+    }
     articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
   }
 
@@ -264,11 +354,33 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   let momentumBoost = 0;
   let skipScore = 0;
 
+  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days (disabled in legacy mode)
+  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
+  const now = Date.now();
+
   for (const tag of tags) {
     const t = tag.toLowerCase();
     tagScore += tagProfile[t] || 0;
     momentumBoost += sessionBoosts[t] || 0;
-    if (skipProfile) skipScore += skipProfile[t] || 0;
+    if (skipProfile) {
+      const entry = skipProfile[t];
+      if (_legacyMode) {
+        // Legacy: flat penalty, no time decay
+        if (typeof entry === 'object' && entry !== null && entry.w) {
+          skipScore += entry.w;
+        } else if (typeof entry === 'number') {
+          skipScore += entry;
+        }
+      } else {
+        if (typeof entry === 'object' && entry !== null && entry.w) {
+          const age = now - new Date(entry.t || 0).getTime();
+          const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
+          skipScore += entry.w * decay;
+        } else if (typeof entry === 'number') {
+          skipScore += entry * 0.5;
+        }
+      }
+    }
   }
 
   tagScore /= n;
@@ -280,7 +392,6 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   const skipPenalty = Math.min(netSkip, 0.9);
 
   // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  // Recency is now a major factor — fresh articles get strong advantage
   const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
   return base * (1 - skipPenalty);
 }
@@ -562,42 +673,32 @@ export default async function handler(req, res) {
     }
 
     // ==========================================
-    // DETERMINE FEED STRATEGY
+    // ALWAYS USE V2 FEED
+    // For cold-start users without taste vectors, V2 fills with
+    // trending + discovery articles via MMR diversity.
     // ==========================================
 
-    const hasEmbeddingPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
     const similarityFloor = userPrefs?.similarity_floor || 0;
 
-    if (hasEmbeddingPersonalization) {
-      // ============================================
-      // V2 FEED: Professional-Grade Personalization
-      // ============================================
-      return await handleV2Feed(req, res, supabase, {
-        userId: persUserId || userId,
-        userPrefs,
-        tasteVector,
-        tasteVectorMinilm,
-        hasInterestClusters,
-        similarityFloor,
-        skipProfile,
-        storedTagProfile,
-        seenArticleIds,
-        sessionEngagedIds,
-        sessionSkippedIds,
-        limit,
-        offset,
-      });
-    } else {
-      // ============================================
-      // FALLBACK: Tag-based scoring (unchanged for new users)
-      // ============================================
-      return await handleFallbackFeed(req, res, supabase, {
-        userPrefs,
-        seenArticleIds,
-        limit,
-        offset,
-      });
-    }
+    // v2_legacy=1 disables all 5 improvements (for A/B comparison testing)
+    const legacyMode = req.query.v2_legacy === '1';
+
+    return await handleV2Feed(req, res, supabase, {
+      userId: persUserId || userId,
+      userPrefs,
+      tasteVector,
+      tasteVectorMinilm,
+      hasInterestClusters,
+      similarityFloor,
+      skipProfile,
+      storedTagProfile,
+      seenArticleIds,
+      sessionEngagedIds,
+      sessionSkippedIds,
+      limit,
+      offset,
+      legacyMode,
+    });
 
   } catch (error) {
     console.error('Main feed error:', error);
@@ -614,7 +715,9 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        sessionEngagedIds, sessionSkippedIds, limit, offset, legacyMode } = opts;
+  legacyMode = legacyMode || false;
+  _legacyMode = legacyMode; // Set module-level flag for buildUserInterestProfile
   sessionEngagedIds = sessionEngagedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
@@ -635,60 +738,220 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
+  // IMPROVEMENT 6: Session embedding — for cold-start users with engaged articles,
+  // build an on-the-fly taste vector by averaging engaged articles' embeddings.
+  // This gives cold-start users the SAME pgvector search as logged-in users.
+  let sessionTasteVector = null;
+  if (!tasteVector && !tasteVectorMinilm && !hasInterestClusters && sessionEngagedIds.length >= 2) {
+    // Fetch embeddings for engaged articles
+    const { data: engagedEmbs } = await supabase
+      .from('published_articles')
+      .select('embedding_minilm')
+      .in('id', sessionEngagedIds.slice(0, 20));
+
+    if (engagedEmbs && engagedEmbs.length >= 2) {
+      const validEmbs = engagedEmbs.filter(e => e.embedding_minilm && e.embedding_minilm.length === 384);
+      if (validEmbs.length >= 2) {
+        // Average the embeddings (weighted: more recent = higher weight)
+        const dim = 384;
+        sessionTasteVector = new Array(dim).fill(0);
+        let totalWeight = 0;
+        for (let i = 0; i < validEmbs.length; i++) {
+          // More recent engagements get higher weight (latest = 2x, oldest = 1x)
+          const weight = 1 + (i / validEmbs.length);
+          for (let d = 0; d < dim; d++) {
+            sessionTasteVector[d] += validEmbs[i].embedding_minilm[d] * weight;
+          }
+          totalWeight += weight;
+        }
+        // Normalize
+        for (let d = 0; d < dim; d++) {
+          sessionTasteVector[d] /= totalWeight;
+        }
+
+        // IMPROVEMENT 3: Persist session taste vector to profile (non-blocking).
+        // Bootstraps the user's stored MiniLM vector so subsequent requests
+        // use stored personalization instead of recomputing from session.
+        // The EMA from track.js will refine this vector on future engagements.
+        if (userId) {
+          supabase
+            .from('profiles')
+            .update({ taste_vector_minilm: sessionTasteVector })
+            .eq('id', userId)
+            .is('taste_vector_minilm', null)  // Only if not already set (avoid overwriting EMA-refined vector)
+            .then(({ error }) => {
+              if (error) console.log('[feed] Session vector persist failed:', error.message);
+              else console.log('[feed] Session MiniLM vector persisted for:', userId?.substring(0, 8));
+            });
+        }
+      }
+    }
+  }
+
+  // IMPROVEMENT 1: Deeper pages request more candidates
+  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters || sessionTasteVector;
+  const personalMatchCount = legacyMode ? 150 : Math.min(150 + offset, 400); // Widen pool for deeper pages
   let personalPromise;
-  if (hasInterestClusters && useMinilm) {
+  if (!tasteVector && !tasteVectorMinilm && !hasInterestClusters && !sessionTasteVector) {
+    personalPromise = Promise.resolve({ data: [], error: null });
+  } else if (sessionTasteVector && !tasteVectorMinilm && !tasteVector) {
+    // Cold-start with session embedding — use pgvector search with on-the-fly taste vector
+    personalPromise = supabase.rpc('match_articles_personal_minilm', {
+      query_embedding: sessionTasteVector, match_count: personalMatchCount, hours_window: 72,
+      exclude_ids: excludeIds, min_similarity: 0.1, // Lower floor for session vectors (noisier)
+    });
+  } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: 50, hours_window: 72,
+      p_user_id: userId, match_per_cluster: legacyMode ? 50 : Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: 50, hours_window: 72,
+      p_user_id: userId, match_per_cluster: legacyMode ? 50 : Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: 150, hours_window: 72,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: 150, hours_window: 72,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile] = await Promise.all([
+  // IMPROVEMENT 6: Skip buildUserInterestProfile when stored tag_profile exists.
+  // track.js incrementally maintains tag_profile on every engagement — the stored version
+  // is already up-to-date. This saves 2 DB queries (events + article tags).
+  const hasStoredTagProfile = storedTagProfile && Object.keys(storedTagProfile).length > 0;
+  const interestProfilePromise = hasStoredTagProfile
+    ? Promise.resolve(null)
+    : buildUserInterestProfile(supabase, userId);
+
+  // IMPROVEMENT 6: Merge trending + discovery into a single query.
+  // Discovery is a superset (wider time window, lower score floor).
+  // Fetch one pool and split by score threshold in code — saves 1 DB query.
+  const poolTimeWindow = hasAnyPersonalization ? fortyEightHoursAgo : seventyTwoHoursAgo;
+  const poolScoreFloor = 200;
+  const poolLimit = 2000;
+
+  const [personalResult, combinedPoolResult, userInterestProfile] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24h
+    // 2. COMBINED trending+discovery pool (single query instead of two)
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at')
-      .gte('created_at', twentyFourHoursAgo)
-      .gte('ai_final_score', 750)
+      .gte('created_at', poolTimeWindow)
+      .gte('ai_final_score', poolScoreFloor)
       .order('ai_final_score', { ascending: false })
-      .limit(50),
+      .limit(poolLimit),
 
-    // 3. DISCOVERY: diverse quality content, wider pool
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at')
-      .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 400)
-      .order('ai_final_score', { ascending: false })
-      .limit(200),
-
-    // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
-    buildUserInterestProfile(supabase, userId),
+    // 3. USER INTEREST PROFILE: entity-level tag weights (skipped if stored tag_profile exists)
+    interestProfilePromise,
   ]);
 
+  // Split combined pool into trending (high-score recent) and discovery (rest)
+  const trendingScoreFloor = hasAnyPersonalization ? 750 : 500;
+  const trendingTimeFloor = hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo;
+  const trendingData = [];
+  const discoveryData = [];
+  for (const a of (combinedPoolResult.data || [])) {
+    if (a.ai_final_score >= trendingScoreFloor && a.created_at >= trendingTimeFloor) {
+      trendingData.push(a);
+    }
+    // All articles go into discovery pool (trending articles can also be discovery candidates)
+    discoveryData.push(a);
+  }
+  const trendingResult = { data: trendingData };
+  const discoveryResult = { data: discoveryData };
+
+  // ==========================================
+  // INTEREST CATEGORY ENRICHMENT (cold-start onboarded users)
+  // The global pool sorted by ai_final_score under-represents niche
+  // categories (Sports ~580 median vs Politics ~780). Fetch additional
+  // candidates for each followed category so they have enough articles.
+  // ==========================================
+  if (!hasAnyPersonalization && userPrefs?.followed_topics?.length > 0) {
+    // Build interest categories with alt-category support
+    // (e.g., "Gaming" articles are historically categorized as "Tech")
+    const interestCategories = new Map(); // category → Set of DB categories to query
+    for (const topic of userPrefs.followed_topics) {
+      const mapping = ONBOARDING_TOPIC_MAP[topic];
+      if (!mapping) continue;
+      if (!interestCategories.has(mapping.category)) {
+        interestCategories.set(mapping.category, new Set([mapping.category]));
+      }
+      // Add alternative DB categories (for historical data with different category names)
+      if (mapping.altCategories) {
+        for (const alt of mapping.altCategories) {
+          interestCategories.get(mapping.category).add(alt);
+        }
+      }
+    }
+
+    // Count existing candidates per interest category
+    const allInterestDbCats = new Set();
+    for (const dbCats of interestCategories.values()) {
+      for (const c of dbCats) allInterestDbCats.add(c);
+    }
+    const catCounts = {};
+    for (const a of discoveryData) {
+      if (allInterestDbCats.has(a.category)) {
+        catCounts[a.category] = (catCounts[a.category] || 0) + 1;
+      }
+    }
+
+    // Fetch more candidates for under-represented interest categories
+    const enrichPromises = [];
+    const enrichCats = [];
+    for (const [cat, dbCats] of interestCategories) {
+      const totalExisting = [...dbCats].reduce((s, c) => s + (catCounts[c] || 0), 0);
+      if (totalExisting < 80) {
+        enrichCats.push(cat);
+        // Query all DB categories that map to this interest (e.g., Gaming + Tech for gaming)
+        for (const dbCat of dbCats) {
+          enrichPromises.push(
+            supabase
+              .from('published_articles')
+              .select('id, ai_final_score, category, created_at')
+              .eq('category', dbCat)
+              .gte('created_at', seventyTwoHoursAgo)
+              .gte('ai_final_score', 100)
+              .order('ai_final_score', { ascending: false })
+              .limit(150)
+          );
+        }
+      }
+    }
+
+    if (enrichPromises.length > 0) {
+      const enrichResults = await Promise.all(enrichPromises);
+      const poolIds = new Set([...trendingData, ...discoveryData].map(a => a.id));
+      let enrichedCount = 0;
+      for (const result of enrichResults) {
+        for (const a of (result.data || [])) {
+          if (!poolIds.has(a.id)) {
+            discoveryData.push(a);
+            poolIds.add(a.id);
+            enrichedCount++;
+          }
+        }
+      }
+      if (enrichedCount > 0) {
+        console.log('[feed] Interest enrichment: +' + enrichedCount + ' articles for', enrichCats.join(', '));
+      }
+    }
+  }
+
   if (personalResult.error) {
-    console.error('Personal query error:', personalResult.error);
-    return await handleFallbackFeed(req, res, supabase, {
-      userPrefs, seenArticleIds, limit, offset,
-    });
+    console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
+  }
+  if (combinedPoolResult.error) {
+    console.error('Combined pool query error:', combinedPoolResult.error);
   }
 
   // ==========================================
@@ -699,7 +962,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // Use stored tag_profile if available (incrementally updated via track.js),
   // fall back to dynamically computed interest profile
-  const baseTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
+  const baseTagProfile = hasStoredTagProfile
     ? storedTagProfile
     : (userInterestProfile || {});
 
@@ -707,6 +970,31 @@ async function handleV2Feed(req, res, supabase, opts) {
   const effectiveTagProfile = { ...baseTagProfile };
   for (const [tag, boost] of Object.entries(momentum.boosts)) {
     effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.0);
+  }
+
+  // ==========================================
+  // ONBOARDING WARM-START WITH DECAY
+  // New users get a boost from their onboarding topic selections.
+  // The boost fades as real engagement builds (tagProfileSize as proxy).
+  // Fully gone after ~50 tag entries in tag_profile.
+  // ==========================================
+  const tagProfileSize = storedTagProfile ? Object.keys(storedTagProfile).length : 0;
+  const onboardingDecay = Math.max(0, 1 - tagProfileSize / 50);
+  let onboardingProfile = null;
+  if (onboardingDecay > 0 && userPrefs?.followed_topics) {
+    onboardingProfile = buildOnboardingProfile(userPrefs.followed_topics);
+    if (onboardingProfile) {
+      // Merge decayed onboarding tag boosts into effective tag profile
+      for (const [tag, weight] of Object.entries(onboardingProfile.tagBoosts)) {
+        const decayedWeight = weight * onboardingDecay;
+        // Only apply if real engagement hasn't already set a higher weight
+        if ((effectiveTagProfile[tag] || 0) < decayedWeight) {
+          effectiveTagProfile[tag] = decayedWeight;
+        }
+      }
+      console.log('[feed] Onboarding warm-start active, decay:', onboardingDecay.toFixed(2),
+        'topics:', userPrefs.followed_topics.length, 'tag boosts:', Object.keys(onboardingProfile.tagBoosts).length);
+    }
   }
 
   // Merge session skip penalties into skip profile
@@ -795,34 +1083,29 @@ async function handleV2Feed(req, res, supabase, opts) {
   personalIdOrder = personalIdOrder.filter(id => !sessionExcludeIds.has(id));
   const personalIds = new Set(personalIdOrder);
 
-  // TRENDING: category-cap to max 3 per category, exclude personal/seen
-  const trendingCategoryCounts = {};
+  // TRENDING: category-cap per category, exclude personal/seen
+  // Cold-start users get higher caps since they have no personal pool
   const trendingIds = new Set();
   const trendingArticleMeta = [];
   for (const a of (trendingResult.data || [])) {
     if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
-    const cat = a.category || 'Other';
-    trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
-    if (trendingCategoryCounts[cat] > 3) continue;
     trendingIds.add(a.id);
     trendingArticleMeta.push(a);
   }
 
-  // DISCOVERY: diverse categories, exclude personal & trending
-  const discoveryCategoryCounts = {};
+  // DISCOVERY: all remaining articles, exclude personal & trending & seen
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
-    const cat = a.category || 'Other';
-    discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
-    if (discoveryCategoryCounts[cat] > 2) continue;
     discoveryArticleMeta.push(a);
-    if (discoveryArticleMeta.length >= 30) break;
   }
 
   // ==========================================
-  // PHASE 4: FETCH FULL ARTICLE DATA
+  // PHASE 4: FETCH SCORING DATA (lightweight — only columns needed for ranking)
+  // Full article data is fetched later only for the final selected articles.
   // ==========================================
+
+  const SCORING_COLUMNS = 'id, ai_final_score, category, created_at, interest_tags, cluster_id, topics';
 
   const allCandidateIds = [
     ...personalIds,
@@ -835,23 +1118,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
   }
 
-  // Fetch full article data in batches
+  // Fetch lightweight scoring data in batches
   let allArticles = [];
   for (let i = 0; i < uniqueIds.length; i += 300) {
     const batch = uniqueIds.slice(i, i + 300);
     const { data, error } = await supabase
       .from('published_articles')
-      .select(ARTICLE_COLUMNS)
+      .select(SCORING_COLUMNS)
       .in('id', batch);
     if (!error && data) allArticles = allArticles.concat(data);
   }
 
-  // Filter out test articles
-  allArticles = allArticles.filter(a => {
-    const url = a?.url || '';
-    const title = a?.title_news || a?.title || '';
-    return !(/test/i.test(url) || /test/i.test(title));
-  });
+  // Test article filtering deferred to full data fetch (Phase 7.5)
 
   const articleMap = {};
   for (const a of allArticles) articleMap[a.id] = a;
@@ -881,85 +1159,425 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency
+  // Onboarding category boost multiplier (for trending + discovery scoring)
+  const onboardingCatBoosts = (onboardingProfile && onboardingDecay > 0)
+    ? onboardingProfile.categoryBoosts : null;
+  function getOnboardingCatMultiplier(category) {
+    if (!onboardingCatBoosts || !category) return 1.0;
+    const boostCount = onboardingCatBoosts[category] || 0;
+    if (boostCount === 0) return 1.0;
+    // Each selected topic in this category adds a decayed boost
+    // e.g., 2 sports topics at full decay → 1 + 2*0.3*1.0 = 1.6×
+    return 1.0 + boostCount * 0.3 * onboardingDecay;
+  }
+
+  // Trending bucket: editorial importance x recency (+ onboarding boost)
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id]),
+      _score: scoreTrendingV3(articleMap[a.id]) * getOnboardingCatMultiplier(articleMap[a.id].category),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration
+  // Discovery bucket: boost unfamiliar categories for true exploration (+ onboarding boost)
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories) * getOnboardingCatMultiplier(articleMap[a.id].category),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
+  // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
+  // Cap articles per world_event/cluster to prevent event flooding
+  // (e.g., 15 Iran war articles won't all appear in the feed)
+  // ==========================================
+
+  const WORLD_EVENT_CAP = 4;   // max articles per world event
+  const CLUSTER_CAP = 4;       // max articles per article cluster
+
+  // Pre-fetch world event associations for all candidates
+  const candidateEventMap = await fetchWorldEvents(supabase, uniqueIds);
+  for (const [aid, event] of Object.entries(candidateEventMap)) {
+    if (articleMap[aid]) articleMap[aid]._world_event_id = event?.id || null;
+  }
+
+  // ==========================================
   // PHASE 6: MMR-BASED SLOT FILLING (variable reward pattern)
-  // Each slot picks the best candidate from its bucket using MMR
-  // to maximize both relevance AND diversity from already-selected articles.
+  // IMPROVEMENT 3: World-event and cluster dedup during selection
+  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
   //
   // Slot pattern per 10 cards:
   //   P P T P P S P P T S
   //   ~60% personal, 20% trending, 20% surprise/discovery
-  //
-  // S = Surprise: 60% chance discovery (new topic), 40% chance personal
-  //     tail (serendipity — unexpected match from lower scores).
-  //     This creates the "variable reward" dopamine pattern.
   // ==========================================
 
-  const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
+  // Adaptive slot pattern: mix adjusts based on personalization confidence
+  // Strong profile → more personal, less discovery
+  // Weak/new profile → more trending + discovery for exploration
+  let SLOTS;
+  if (legacyMode) {
+    SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
+  } else {
+    const hasStrongProfile = (tasteVector || tasteVectorMinilm) && tagProfileSize >= 10;
+    const hasMediumProfile = (tasteVector || tasteVectorMinilm) || tagProfileSize >= 5;
+    const hasSessionOnly = sessionTasteVector && !tasteVector && !tasteVectorMinilm;
+
+    if (hasStrongProfile) {
+      // Established user: 70% personal, 20% trending, 10% surprise
+      SLOTS = ['P', 'P', 'P', 'T', 'P', 'P', 'P', 'S', 'P', 'T'];
+    } else if (hasMediumProfile) {
+      // Growing user: 60% personal, 20% trending, 20% surprise (default)
+      SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
+    } else if (hasSessionOnly) {
+      // Session-only personalization: 40% personal, 30% trending, 30% surprise
+      SLOTS = ['P', 'T', 'S', 'P', 'T', 'S', 'P', 'T', 'P', 'S'];
+    } else {
+      // Minimal data: 30% personal, 40% trending, 30% surprise
+      SLOTS = ['T', 'P', 'S', 'T', 'P', 'T', 'S', 'P', 'T', 'S'];
+    }
+  }
 
   const selected = [];
   const pPool = [...personalScored];
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
-  for (let pos = 0; selected.length < limit; pos++) {
-    const slot = SLOTS[pos % SLOTS.length];
-    let picked = null;
+  // IMPROVEMENT 3: Track world event and cluster counts
+  const eventCounts = {};
+  const clusterCounts = {};
 
-    if (slot === 'P') {
-      // Personal slot: high relevance, moderate diversity
-      picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(tPool, selected, tagCache, 0.8);
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.5);
-    } else if (slot === 'T') {
-      // Trending slot: quality matters more (higher lambda)
-      picked = mmrSelect(tPool, selected, tagCache, 0.85);
-      if (!picked) picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.5);
-    } else {
-      // SURPRISE slot: variable reward for dopamine optimization
-      if (Math.random() < 0.6 && dPool.length > 0) {
-        // 60%: discovery (maximize diversity, low lambda)
-        picked = mmrSelect(dPool, selected, tagCache, 0.4);
-      } else if (pPool.length > 3) {
-        // 40%: personal tail — serendipity from unexpected lower-scored matches
-        const tailStart = Math.floor(pPool.length * 0.5);
-        const tailEnd = pPool.length;
-        if (tailStart < tailEnd) {
-          const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
-          picked = pPool.splice(tailIdx, 1)[0];
-        }
-      }
-      // Fallback chain for surprise slot
-      if (!picked) picked = mmrSelect(dPool, selected, tagCache, 0.4);
-      if (!picked) picked = mmrSelect(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelect(tPool, selected, tagCache, 0.8);
+  // IMPROVEMENT 7: Tag saturation / fatigue system (like TikTok)
+  // Tracks how many times each tag has appeared in selected articles.
+  // The more a tag has been shown, the harder it is for new articles with that tag to be selected.
+  const tagSaturation = {};
+  const categorySaturation = {};
+  const TAG_SATURATION_CAP = 4;       // After 4 articles with same tag, heavy penalty
+  const CATEGORY_CAP_PER_PAGE = 5;    // Max articles from same category per page of 25
+
+  function getTagFatigue(article) {
+    if (legacyMode) return 1.0; // No fatigue in legacy mode
+    const tags = safeJsonParse(article.interest_tags, []);
+    if (tags.length === 0) return 1.0;
+
+    let maxSaturation = 0;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      const count = tagSaturation[t] || 0;
+      maxSaturation = Math.max(maxSaturation, count);
     }
 
-    if (!picked) break;
+    // Fatigue multiplier: 1.0 → 0.7 → 0.4 → 0.2 → 0.1
+    // Each repeat makes it exponentially harder to appear
+    if (maxSaturation === 0) return 1.0;
+    if (maxSaturation === 1) return 0.7;
+    if (maxSaturation === 2) return 0.4;
+    if (maxSaturation === 3) return 0.2;
+    return 0.1; // 4+ = almost blocked
+  }
 
-    picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
-    selected.push(picked);
+  function isSaturated(article) {
+    if (legacyMode) return false;
+    const cat = article.category || 'Other';
+    if ((categorySaturation[cat] || 0) >= CATEGORY_CAP_PER_PAGE) return true;
+    // Hard block if dominant tag seen 6+ times
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      if ((tagSaturation[tag.toLowerCase()] || 0) >= 6) return true;
+    }
+    return false;
+  }
+
+  function isEventCapped(article) {
+    if (legacyMode) return false;
+    const eventId = article._world_event_id;
+    const clusterId = article.cluster_id;
+    if (eventId && (eventCounts[eventId] || 0) >= WORLD_EVENT_CAP) return true;
+    if (clusterId && (clusterCounts[clusterId] || 0) >= CLUSTER_CAP) return true;
+    return false;
+  }
+
+  function recordSelection(article) {
+    // Event/cluster tracking
+    const eventId = article._world_event_id;
+    const clusterId = article.cluster_id;
+    if (eventId) eventCounts[eventId] = (eventCounts[eventId] || 0) + 1;
+    if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
+    // Tag saturation tracking
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      tagSaturation[t] = (tagSaturation[t] || 0) + 1;
+    }
+    // Category saturation tracking
+    const cat = article.category || 'Other';
+    categorySaturation[cat] = (categorySaturation[cat] || 0) + 1;
+  }
+
+  // IMPROVEMENT 3: MMR select with event/cluster dedup + tag fatigue
+  function mmrSelectDeduped(pool, sel, tc, lambda) {
+    let attempts = 0;
+    while (attempts < 10 && pool.length > 0) {
+      const picked = mmrSelect(pool, sel, tc, lambda);
+      if (!picked) return null;
+      if (isEventCapped(picked) || isSaturated(picked)) {
+        attempts++;
+        continue;
+      }
+      // Apply tag fatigue to score — low fatigue articles win ties
+      picked._score *= getTagFatigue(picked);
+      return picked;
+    }
+    return null;
+  }
+
+  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
+  // Now with TAG-LEVEL session scoring within each category
+  if (!hasAnyPersonalization) {
+    // Score each candidate using session tag momentum (not just category-level)
+    function scoreBanditArticle(article) {
+      const tags = safeJsonParse(article.interest_tags, []);
+      const n = Math.max(tags.length, 1);
+      let boost = 0;
+      let penalty = 0;
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        boost += momentum.boosts[t] || 0;
+        penalty += momentum.skipPenalties[t] || 0;
+      }
+      const sessionScore = (boost - penalty) / n;
+      // Blend: 60% base quality score, 40% session signal
+      const baseScore = article._score || 0;
+      const maxBase = Math.max(baseScore, 1);
+      return baseScore + sessionScore * maxBase * 0.4;
+    }
+
+    // Group all candidates by category for bandit, re-scored with session signals
+    const categoryPools = {};
+    for (const a of [...trendingScored, ...discoveryScored]) {
+      const cat = a.category || 'Other';
+      if (!categoryPools[cat]) categoryPools[cat] = [];
+      a._banditScore = scoreBanditArticle(a);
+      categoryPools[cat].push(a);
+    }
+
+    // Sort each category pool by session-adjusted score (best matches first)
+    for (const cat of Object.keys(categoryPools)) {
+      categoryPools[cat].sort((a, b) => b._banditScore - a._banditScore);
+    }
+
+    // Initialize Beta priors — warm-start from onboarding if available
+    const banditState = {};
+    for (const cat of Object.keys(categoryPools)) {
+      banditState[cat] = { alpha: 1, beta: 1 };
+    }
+
+    // Warm-start bandit priors from onboarding category preferences (with decay)
+    if (onboardingProfile && onboardingDecay > 0) {
+      for (const [cat, count] of Object.entries(onboardingProfile.categoryBoosts)) {
+        if (banditState[cat]) {
+          // Each onboarding category selection adds decayed alpha
+          // e.g., 2 sports topics at full decay=1.0 → alpha += 4 (strong prior)
+          banditState[cat].alpha += count * 2 * onboardingDecay;
+        }
+      }
+    }
+
+    // Update priors from session signals (category-level)
+    for (const id of sessionEngagedIds) {
+      const art = articleMap[id];
+      if (art) {
+        const cat = art.category || 'Other';
+        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+        banditState[cat].alpha += 2; // Engage = strong positive
+      }
+    }
+    for (const id of sessionSkippedIds) {
+      const art = articleMap[id];
+      if (art) {
+        const cat = art.category || 'Other';
+        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+        banditState[cat].beta += 1; // Skip = mild negative
+      }
+    }
+
+    // Also compute tag-level category affinity from session signals
+    // This boosts categories whose top articles match engaged tags
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      if (pool.length === 0) continue;
+      // Average bandit score of top 3 articles in this category
+      const topAvg = pool.slice(0, 3).reduce((s, a) => s + a._banditScore, 0) / Math.min(pool.length, 3);
+      // If top articles in this category match session interests, boost the category
+      if (topAvg > 0 && momentum.boosts && Object.keys(momentum.boosts).length > 0) {
+        const topTags = safeJsonParse(pool[0].interest_tags, []).map(t => t.toLowerCase());
+        const tagMatch = topTags.filter(t => momentum.boosts[t]).length;
+        if (tagMatch >= 2) {
+          banditState[cat].alpha += tagMatch; // Strong tag match boosts category selection
+        }
+      }
+    }
+
+    // ==========================================
+    // INTEREST-PROPORTIONAL PRE-FILL (onboarded cold-start users)
+    // Before Thompson Sampling, guarantee minimum slots for each
+    // interest category. A sports fan WILL see sports articles.
+    // The bandit then fills remaining slots for diversity/trending.
+    // ==========================================
+    if (userPrefs?.followed_topics?.length > 0) {
+      const catQuota = {};
+      let totalTopicWeight = 0;
+      for (const topic of userPrefs.followed_topics) {
+        const mapping = ONBOARDING_TOPIC_MAP[topic];
+        if (mapping) {
+          catQuota[mapping.category] = (catQuota[mapping.category] || 0) + 1;
+          totalTopicWeight++;
+        }
+      }
+
+      // 70% of feed for interests, 30% for bandit diversity/trending
+      const interestSlots = Math.ceil(limit * 0.7);
+
+      // Allocate proportionally (min 2 per category)
+      const allocation = {};
+      let totalAllocated = 0;
+      for (const [cat, weight] of Object.entries(catQuota)) {
+        allocation[cat] = Math.max(2, Math.round((weight / totalTopicWeight) * interestSlots));
+        totalAllocated += allocation[cat];
+      }
+      // Trim if over-allocated
+      while (totalAllocated > interestSlots) {
+        const biggest = Object.entries(allocation).sort((a, b) => b[1] - a[1])[0];
+        if (biggest && biggest[1] > 2) {
+          allocation[biggest[0]]--;
+          totalAllocated--;
+        } else break;
+      }
+
+      // Build alt-category lookup for quota filling
+      // e.g., Gaming quota can also pull from Tech pool (where gaming articles historically live)
+      const quotaAltCats = {};
+      for (const topic of userPrefs.followed_topics) {
+        const mapping = ONBOARDING_TOPIC_MAP[topic];
+        if (mapping?.altCategories) {
+          if (!quotaAltCats[mapping.category]) quotaAltCats[mapping.category] = [];
+          for (const alt of mapping.altCategories) {
+            if (!quotaAltCats[mapping.category].includes(alt)) quotaAltCats[mapping.category].push(alt);
+          }
+        }
+      }
+
+      // Fill interest slots from each category pool (MMR for within-category diversity)
+      for (const [cat, quota] of Object.entries(allocation)) {
+        // Merge primary + alt category pools
+        let pool = categoryPools[cat] ? [...categoryPools[cat]] : [];
+        for (const altCat of (quotaAltCats[cat] || [])) {
+          if (categoryPools[altCat]) pool = pool.concat([...categoryPools[altCat]]);
+        }
+        if (pool.length === 0) continue;
+        let filled = 0;
+        let attempts = 0;
+        while (filled < quota && pool.length > 0 && attempts < quota * 3) {
+          attempts++;
+          const picked = mmrSelect(pool, selected, tagCache, 0.6);
+          if (!picked) break;
+          if (isEventCapped(picked)) continue;
+          // Skip isSaturated for interest categories — user explicitly asked for these
+          picked._score *= getTagFatigue(picked);
+          picked.bucket = 'interest';
+          recordSelection(picked);
+          selected.push(picked);
+          filled++;
+        }
+      }
+
+      console.log('[feed] Interest pre-fill:', JSON.stringify(allocation),
+        '→ filled:', selected.length, '/', interestSlots);
+    }
+
+    // Thompson Sampling: sample from Beta distribution per category
+    // Fills remaining slots (diversity/trending) after interest pre-fill
+    function sampleBeta(alpha, beta) {
+      const mean = alpha / (alpha + beta);
+      const variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1));
+      const std = Math.sqrt(variance);
+      const u1 = Math.random();
+      const u2 = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
+      return Math.max(0, Math.min(1, mean + z * std));
+    }
+
+    // Fill slots via Thompson Sampling with diversity
+    let banditAttempts = 0;
+    while (selected.length < limit && banditAttempts < limit * 3) {
+      banditAttempts++;
+      let bestSample = -1;
+      let bestCat = null;
+      for (const [cat, state] of Object.entries(banditState)) {
+        if (!categoryPools[cat] || categoryPools[cat].length === 0) continue;
+        const sample = sampleBeta(state.alpha, state.beta);
+        if (sample > bestSample) {
+          bestSample = sample;
+          bestCat = cat;
+        }
+      }
+      if (!bestCat) break;
+
+      const pool = categoryPools[bestCat];
+      const picked = mmrSelect(pool, selected, tagCache, 0.6);
+      if (!picked) {
+        delete categoryPools[bestCat]; // Exhausted
+        continue;
+      }
+      if (isEventCapped(picked) || isSaturated(picked)) continue;
+
+      // Apply tag fatigue to bandit articles too
+      picked._score *= getTagFatigue(picked);
+      picked.bucket = 'bandit';
+      recordSelection(picked);
+      selected.push(picked);
+    }
+  } else {
+    // Personalized user: standard slot-filling
+    for (let pos = 0; selected.length < limit; pos++) {
+      const slot = SLOTS[pos % SLOTS.length];
+      let picked = null;
+
+      if (slot === 'P') {
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else if (slot === 'T') {
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else {
+        // SURPRISE slot: variable reward
+        if (Math.random() < 0.6 && dPool.length > 0) {
+          picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        } else if (pPool.length > 3) {
+          const tailStart = Math.floor(pPool.length * 0.5);
+          const tailEnd = pPool.length;
+          if (tailStart < tailEnd) {
+            const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
+            const candidate = pPool.splice(tailIdx, 1)[0];
+            if (candidate && !isEventCapped(candidate)) picked = candidate;
+          }
+        }
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+      }
+
+      if (!picked) break;
+
+      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      recordSelection(picked);
+      selected.push(picked);
+    }
   }
 
   // ==========================================
@@ -970,7 +1588,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   enforceConsecutiveLimit(selected, 2);
 
   // ==========================================
-  // PHASE 8: FORMAT & RESPOND
+  // PHASE 7.5: LAZY LOAD — FETCH FULL DATA FOR SELECTED ARTICLES ONLY
+  // Phase 4 fetched only scoring columns (~7 fields) for all ~400 candidates.
+  // Now fetch all display columns only for the ~20 selected articles.
   // ==========================================
 
   if (selected.length === 0) {
@@ -978,9 +1598,34 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const pageIds = selected.map(a => a.id);
-  const eventMap = await fetchWorldEvents(supabase, pageIds);
 
-  const formattedArticles = selected.map(a => {
+  const { data: fullArticles, error: fullError } = await supabase
+    .from('published_articles')
+    .select(ARTICLE_COLUMNS)
+    .in('id', pageIds);
+
+  if (fullError) {
+    console.error('[feed] Full article fetch error:', fullError.message);
+  }
+
+  // Build map of full data, filter test articles
+  const fullMap = {};
+  for (const a of (fullArticles || [])) {
+    const url = a?.url || '';
+    const title = a?.title_news || a?.title || '';
+    if (/test/i.test(url) || /test/i.test(title)) continue;
+    fullMap[a.id] = a;
+  }
+
+  // Merge full data into selected articles (preserve scoring metadata)
+  const fullyLoaded = selected
+    .filter(a => fullMap[a.id])
+    .map(a => ({ ...fullMap[a.id], bucket: a.bucket, _score: a._score }));
+
+  // Re-use the candidate event map we already fetched (no duplicate query)
+  const eventMap = candidateEventMap;
+
+  const formattedArticles = fullyLoaded.map(a => {
     const formatted = formatArticle(a, eventMap);
     formatted.bucket = a.bucket;
     formatted.final_score = a._score;
@@ -988,14 +1633,24 @@ async function handleV2Feed(req, res, supabase, opts) {
   });
 
   // Log feed impressions for skip tracking (fire-and-forget)
-  if (userId && pageIds.length > 0) {
-    const impressions = pageIds.map(aid => ({ user_id: userId, article_id: aid }));
+  const finalIds = fullyLoaded.map(a => a.id);
+  if (userId && finalIds.length > 0) {
+    const impressions = finalIds.map(aid => ({ user_id: userId, article_id: aid }));
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
+  // IMPROVEMENT 1: True pagination — encode actual offset in cursor (legacy: fake cursor)
   const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length;
-  const hasMore = totalAvailable > limit;
-  const nextCursor = hasMore ? 'v2_fresh' : null;
+  let nextCursor, hasMore;
+  if (legacyMode) {
+    // Legacy: always return same fake cursor (causes duplicates)
+    hasMore = totalAvailable > selected.length;
+    nextCursor = hasMore ? 'v2_fresh' : null;
+  } else {
+    const totalServed = offset + selected.length;
+    hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
+    nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
+  }
 
   return res.status(200).json({
     articles: formattedArticles,
