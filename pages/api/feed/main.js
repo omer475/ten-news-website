@@ -846,12 +846,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   const followedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
   const interestCategories = new Set();
   const interestAltCategories = new Set();
+  const interestTags = new Set(); // All subtopic tags for tag-level matching
 
   for (const topic of followedTopics) {
     const mapping = ONBOARDING_TOPIC_MAP[topic];
     if (mapping) {
       mapping.categories.forEach(c => interestCategories.add(c));
       if (mapping.altCategories) mapping.altCategories.forEach(c => interestAltCategories.add(c));
+      mapping.tags.forEach(t => interestTags.add(t.toLowerCase()));
     }
   }
 
@@ -862,12 +864,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
-        .select('id, ai_final_score, category, created_at')
+        .select('id, ai_final_score, category, created_at, interest_tags')
         .eq('category', cat)
         .gte('created_at', fortyEightHoursAgo)
         .gte('ai_final_score', 200)
         .order('ai_final_score', { ascending: false })
-        .limit(20)
+        .limit(40)
     );
     const catResults = await Promise.all(catPromises);
     for (const r of catResults) {
@@ -1108,13 +1110,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
+  // Boost articles whose interest_tags overlap with the user's subtopic tags
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: (articleMap[a.id].ai_final_score || 0) * (interestCategories.has(a.category) ? 1.3 : 1.0),
-      _bucket: 'interest',
-    }))
+    .map(a => {
+      const article = articleMap[a.id];
+      const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+      // Count how many of the article's tags match the user's subtopic tags
+      const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
+      // Base score + category boost + subtopic tag match boost
+      const catBoost = interestCategories.has(a.category) ? 1.3 : 1.0;
+      const tagBoost = 1.0 + (tagMatches * 0.15); // +15% per matching tag
+      return {
+        ...article,
+        _score: (article.ai_final_score || 0) * catBoost * tagBoost,
+        _tagMatches: tagMatches,
+        _bucket: 'interest',
+      };
+    })
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
