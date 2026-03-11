@@ -121,7 +121,7 @@ export default async function handler(req, res) {
         .from('published_articles')
         .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
         .order('published_at', { ascending: false })
-        .limit(500)
+        .limit(1000)
 
       if (articles) {
         // Match articles to topics
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
           for (const topicName of allTopicNames) {
             if (!tags.includes(topicName.toLowerCase())) continue
             if (!topicArticles[topicName]) topicArticles[topicName] = []
-            if (topicArticles[topicName].length >= 3) continue
+            if (topicArticles[topicName].length >= 50) continue
 
             topicArticles[topicName].push({
               id: article.id,
