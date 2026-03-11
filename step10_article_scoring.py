@@ -317,17 +317,32 @@ Only output topics with relevance >= 30. Only output countries with relevance >=
 
 ---
 
+## FRESHNESS CLASSIFICATION
+
+Classify each article's shelf life — how long it stays relevant:
+
+| Category | freshness_category | shelf_life_days | Examples |
+|----------|-------------------|-----------------|----------|
+| Breaking | "breaking" | 1-2 | Wars, shootings, elections, major disasters, terrorist attacks |
+| Short | "short" | 3-7 | Sports results, transfers, match recaps, tech launches, album releases, stock crashes |
+| Medium | "medium" | 7-14 | Reviews, explainers, interviews, music videos, policy analysis |
+| Evergreen | "evergreen" | 30-90 | Recipes, health tips, how-tos, lifestyle, workout guides, travel guides |
+
+---
+
 ## OUTPUT FORMAT
 
-Return ONLY a JSON object with the score and relevance:
+Return ONLY a JSON object with the score, relevance, and freshness:
 
 ```json
-{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}}
+{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}, "freshness_category": "short", "shelf_life_days": 5}
 ```
 
 - `topic_relevance`: only include topics with relevance >= 30
 - `country_relevance`: only include countries with relevance >= 20 (national importance, NOT geographic)
 - If no topics/countries are relevant, use empty objects: `{}`
+- `freshness_category`: one of "breaking", "short", "medium", "evergreen"
+- `shelf_life_days`: integer, how many days this article stays relevant
 """
 
 
@@ -742,7 +757,7 @@ Both deserve visibility. Score accordingly.
     for bullet in bullets:
         article_text += f"- {bullet}\n"
     
-    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}}'
+    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}, "freshness_category": "short|medium|breaking|evergreen", "shelf_life_days": N}'
     
     # Prepare request
     request_data = {
@@ -844,7 +859,14 @@ Both deserve visibility. Score accordingly.
                         else:
                             country_relevance = {}
 
-                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance}
+                        # Extract freshness fields
+                        freshness_category = parsed.get('freshness_category', 'medium') if isinstance(parsed, dict) else 'medium'
+                        shelf_life_days = parsed.get('shelf_life_days', 7) if isinstance(parsed, dict) else 7
+                        if freshness_category not in ('breaking', 'short', 'medium', 'evergreen'):
+                            freshness_category = 'medium'
+                        shelf_life_days = max(1, min(90, int(shelf_life_days))) if shelf_life_days else 7
+
+                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance, 'freshness_category': freshness_category, 'shelf_life_days': shelf_life_days}
 
                     except json.JSONDecodeError:
                         # Try to extract score from text

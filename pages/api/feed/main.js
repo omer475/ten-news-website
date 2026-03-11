@@ -199,23 +199,17 @@ function formatArticle(article, eventMap = {}) {
 }
 
 // ==========================================
-// RECENCY DECAY (category-aware)
+// RECENCY DECAY (shelf-life-aware)
+// Articles decay relative to their own shelf_life_days.
+// Breaking news (1-2d) dies fast. Evergreen (30-90d) stays discoverable.
 // ==========================================
 
-const HARD_NEWS_CATEGORIES = ['World', 'Politics', 'Business', 'Finance'];
-
-function getRecencyDecay(createdAt, category) {
-  const hoursOld = (Date.now() - new Date(createdAt).getTime()) / 3600000;
-  if (HARD_NEWS_CATEGORIES.includes(category)) {
-    // Hard news: strong freshness preference
-    // <12h: ~1.0, 24h: ~0.38, 48h: ~0.07, 72h: ~0.01
-    if (hoursOld <= 12) return Math.exp(-0.02 * hoursOld);
-    if (hoursOld <= 24) return Math.exp(-0.04 * hoursOld);
-    return Math.exp(-0.06 * hoursOld); // >24h hard news decays fast
-  }
-  // Soft news (Tech, Health, Science, Entertainment, Sports): gentler decay
-  // <24h: ~0.85, 48h: ~0.49, 72h: ~0.34
-  return Math.exp(-0.015 * hoursOld);
+function getRecencyDecay(createdAt, category, shelfLifeDays) {
+  const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
+  const shelfLifeHours = (shelfLifeDays || 7) * 24;
+  const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
+  // Blend: 40% freshness decay, 60% baseline (so even old evergreen content keeps value)
+  return freshnessMultiplier * 0.4 + 0.6;
 }
 
 // ==========================================
@@ -350,7 +344,7 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 
 function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
   const tags = safeJsonParse(article.interest_tags, []);
-  const recency = getRecencyDecay(article.created_at, article.category);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   const aiScore = article.ai_final_score || 0;
   const n = Math.max(tags.length, 1);
 
@@ -394,12 +388,12 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 }
 
 function scoreTrendingV3(article) {
-  const recency = getRecencyDecay(article.created_at, article.category);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   return (article.ai_final_score || 0) * recency;
 }
 
 function scoreDiscoveryV3(article, personalCategories) {
-  const recency = getRecencyDecay(article.created_at, article.category);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   // Random factor for variable reward (surprise element)
@@ -526,6 +520,7 @@ const ARTICLE_COLUMNS = [
   'components_order', 'components', 'countries', 'topics',
   'country_relevance', 'topic_relevance', 'interest_tags',
   'num_sources', 'cluster_id', 'version_number', 'view_count',
+  'shelf_life_days', 'freshness_category',
 ].join(', ');
 
 // ==========================================
@@ -713,6 +708,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
+  const ninetyDaysAgo = new Date(now - 90 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
   const fortyEightHoursAgo = new Date(now - 48 * 3600000).toISOString();
@@ -739,22 +735,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 2160,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 2160,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 2160,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 2160,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -767,7 +763,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     // Cold-start users need more trending articles since personal pool is empty
     supabase
       .from('published_articles')
-      .select('id, ai_final_score, category, created_at')
+      .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
       .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
       .order('ai_final_score', { ascending: false })
@@ -777,8 +773,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     // Cold-start: fetch much larger pool to compensate for empty personal
     supabase
       .from('published_articles')
-      .select('id, ai_final_score, category, created_at')
-      .gte('created_at', hasAnyPersonalization ? fortyEightHoursAgo : seventyTwoHoursAgo)
+      .select('id, ai_final_score, category, created_at, shelf_life_days')
+      .gte('created_at', ninetyDaysAgo)
       .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 200 : 500),
@@ -820,12 +816,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
-        .select('id, ai_final_score, category, created_at, interest_tags')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', fortyEightHoursAgo)
-        .gte('ai_final_score', 200)
+        .gte('created_at', ninetyDaysAgo)
+        .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
-        .limit(40)
+        .limit(100)
     );
     const catResults = await Promise.all(catPromises);
     for (const r of catResults) {
@@ -1075,11 +1071,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Count how many of the article's tags match the user's subtopic tags
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
       // Base score + category boost + subtopic tag match boost
-      const catBoost = interestCategories.has(a.category) ? 1.3 : 1.0;
-      const tagBoost = 1.0 + (tagMatches * 0.15); // +15% per matching tag
+      const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
+      const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost,
+        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
@@ -1092,8 +1088,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   // (e.g., 15 Iran war articles won't all appear in the feed)
   // ==========================================
 
-  const WORLD_EVENT_CAP = 3;   // max articles per world event
-  const CLUSTER_CAP = 3;       // max articles per article cluster
+  const WORLD_EVENT_CAP = 4;   // max articles per world event (was 3)
+  const CLUSTER_CAP = 4;       // max articles per article cluster (was 3)
 
   // Pre-fetch world event associations for all candidates
   const candidateEventMap = await fetchWorldEvents(supabase, uniqueIds);
@@ -1235,7 +1231,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     // This ensures Sports/Gaming/etc. users actually see their topics.
     // ==========================================
 
-    const interestSlots = Math.ceil(limit * 0.7);
+    const interestSlots = Math.ceil(limit * 0.8);
     const diversitySlots = limit - interestSlots;
 
     // Pre-fill interest quota: per-category round-robin from interest pool
@@ -1408,13 +1404,13 @@ async function handleFallbackFeed(req, res, supabase, opts) {
   // Short cache — new users' feeds should adapt fast
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
 
-  const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const ninetyDaysAgoCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Fetch a large pool of recent quality articles
+  // Fetch a large pool of articles within max shelf life window
   const { data: articles, error } = await supabase
     .from('published_articles')
     .select(ARTICLE_COLUMNS)
-    .gte('created_at', twoDaysAgo)
+    .gte('created_at', ninetyDaysAgoCutoff)
     .gte('ai_final_score', 400)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
     .limit(300);

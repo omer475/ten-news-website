@@ -28,6 +28,8 @@ import os
 from dotenv import load_dotenv
 import warnings
 import urllib3
+from io import BytesIO
+from PIL import Image
 
 # Import all pipeline components
 from rss_sources import ALL_SOURCES
@@ -46,6 +48,81 @@ from step11_article_tagging import tag_article
 # Event detection paused (re-enable after app launch)
 # from step6_world_event_detection import detect_world_events
 from supabase import create_client
+
+# ==========================================
+# SUBTOPIC TAGGING — appends subtopic names to interest_tags
+# so the feed can match user-selected subtopics directly
+# ==========================================
+
+SUBTOPIC_MAP = {
+    'War & Conflict': ['war', 'conflict', 'military', 'defense', 'armed forces', 'invasion', 'military conflict', 'military strikes', 'air strikes', 'bombing'],
+    'US Politics': ['us politics', 'congress', 'senate', 'white house', 'republican', 'democrat', 'trump', 'biden', 'republican party', 'supreme court', 'pentagon'],
+    'European Politics': ['european politics', 'eu', 'european union', 'brexit', 'nato', 'parliament', 'germany', 'france', 'uk', 'hungary', 'spain'],
+    'Asian Politics': ['asian politics', 'china', 'india', 'japan', 'southeast asia', 'asean', 'asia', 'north korea', 'south korea', 'taiwan'],
+    'Middle East': ['middle east', 'iran', 'israel', 'saudi arabia', 'palestine', 'gulf', 'lebanon', 'hezbollah', 'tehran', 'strait of hormuz'],
+    'Latin America': ['latin america', 'brazil', 'mexico', 'argentina', 'colombia', 'venezuela', 'cuba'],
+    'Africa & Oceania': ['africa', 'oceania', 'australia', 'nigeria', 'south africa', 'kenya', 'egypt'],
+    'Human Rights & Civil Liberties': ['human rights', 'civil liberties', 'freedom', 'protest', 'democracy', 'censorship', 'war crimes'],
+    'NFL': ['nfl', 'american football', 'quarterback', 'super bowl', 'touchdown', 'wide receiver', 'running back'],
+    'NBA': ['nba', 'basketball', 'lakers', 'celtics', 'lebron', 'dunk', 'playoffs'],
+    'Soccer/Football': ['soccer', 'football', 'premier league', 'champions league', 'la liga', 'bundesliga', 'serie a', 'mls', 'fifa', 'world cup'],
+    'MLB/Baseball': ['mlb', 'baseball', 'world series', 'home run', 'pitcher'],
+    'Cricket': ['cricket', 'ipl', 'test match', 'ashes', 'world cup cricket', 't20', 'bcci'],
+    'F1 & Motorsport': ['f1', 'formula 1', 'motorsport', 'nascar', 'indycar', 'grand prix', 'racing'],
+    'Boxing & MMA/UFC': ['boxing', 'mma', 'ufc', 'fight', 'knockout', 'heavyweight', 'bout'],
+    'Olympics & Paralympics': ['olympics', 'paralympics', 'olympic games', 'gold medal', 'ioc', 'olympic'],
+    'Oil & Energy': ['oil', 'energy', 'opec', 'natural gas', 'renewable energy', 'petroleum', 'oil prices', 'crude oil', 'energy security', 'nuclear energy'],
+    'Automotive': ['automotive', 'cars', 'tesla', 'ford', 'gm', 'toyota', 'electric vehicles', 'ev'],
+    'Retail & Consumer': ['retail', 'consumer', 'amazon', 'walmart', 'shopping', 'e-commerce'],
+    'Corporate Deals': ['merger', 'acquisition', 'deal', 'takeover', 'ipo', 'corporate'],
+    'Trade & Tariffs': ['trade', 'tariffs', 'sanctions', 'import', 'export', 'trade war', 'supply chain'],
+    'Corporate Earnings': ['earnings', 'quarterly results', 'revenue', 'profit', 'financial results'],
+    'Startups & Venture Capital': ['startup', 'venture capital', 'funding', 'seed round', 'unicorn', 'vc'],
+    'Real Estate': ['real estate', 'property', 'housing', 'mortgage', 'commercial real estate'],
+    'Movies & Film': ['movies', 'film', 'box office', 'hollywood', 'director', 'cinema', 'oscar', 'oscars'],
+    'TV & Streaming': ['tv', 'streaming', 'netflix', 'hbo', 'disney plus', 'series', 'show'],
+    'Music': ['music', 'album', 'concert', 'tour', 'grammy', 'rapper', 'singer', 'beyonce'],
+    'Gaming': ['gaming', 'video games', 'playstation', 'xbox', 'nintendo', 'esports', 'steam'],
+    'Celebrity News': ['celebrity', 'famous', 'scandal', 'gossip', 'paparazzi', 'star', 'billionaire'],
+    'K-Pop & K-Drama': ['k-pop', 'k-drama', 'korean', 'bts', 'blackpink', 'kdrama', 'hallyu'],
+    'AI & Machine Learning': ['ai', 'artificial intelligence', 'machine learning', 'chatgpt', 'openai', 'deep learning', 'llm'],
+    'Smartphones & Gadgets': ['smartphone', 'iphone', 'samsung', 'pixel', 'gadget', 'wearable', 'apple', 'android'],
+    'Social Media': ['social media', 'twitter', 'instagram', 'tiktok', 'facebook', 'meta'],
+    'Cybersecurity': ['cybersecurity', 'hacking', 'data breach', 'ransomware', 'privacy', 'encryption', 'vulnerability'],
+    'Space Tech': ['space tech', 'spacex', 'nasa', 'rocket', 'satellite', 'starship', 'blue origin', 'space exploration'],
+    'Robotics & Hardware': ['robotics', 'robot', 'hardware', 'chip', 'semiconductor', 'nvidia', 'processor'],
+    'Space & Astronomy': ['space', 'astronomy', 'nasa', 'mars', 'telescope', 'galaxy', 'asteroid', 'planet'],
+    'Climate & Environment': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'pollution', 'biodiversity', 'climate change'],
+    'Biology & Nature': ['biology', 'nature', 'wildlife', 'evolution', 'genetics', 'species', 'ecosystem'],
+    'Earth Science': ['earth science', 'geology', 'earthquake', 'volcano', 'ocean', 'weather'],
+    'Medical Breakthroughs': ['medical', 'breakthrough', 'treatment', 'cure', 'clinical trial', 'surgery'],
+    'Public Health': ['public health', 'pandemic', 'vaccine', 'cdc', 'who', 'outbreak', 'disease'],
+    'Mental Health': ['mental health', 'anxiety', 'depression', 'therapy', 'mindfulness', 'wellbeing'],
+    'Pharma & Drug Industry': ['pharma', 'pharmaceutical', 'drug', 'fda', 'medication', 'biotech', 'pharmaceuticals'],
+    'Stock Markets': ['stock market', 'wall street', 'nasdaq', 'sp500', 'dow jones', 'shares', 'trading'],
+    'Banking & Lending': ['banking', 'lending', 'interest rate', 'federal reserve', 'loan', 'credit', 'inflation'],
+    'Commodities': ['commodities', 'gold', 'silver', 'oil price', 'futures', 'copper'],
+    'Bitcoin': ['bitcoin', 'btc', 'satoshi', 'mining', 'halving'],
+    'DeFi & Web3': ['defi', 'web3', 'blockchain', 'smart contract', 'dao', 'decentralized'],
+    'Crypto Regulation & Legal': ['crypto regulation', 'sec', 'crypto law', 'crypto ban', 'crypto tax', 'cryptocurrency'],
+    'Pets & Animals': ['pets', 'animals', 'dog', 'cat', 'veterinary', 'adoption', 'wildlife'],
+    'Home & Garden': ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'],
+    'Shopping & Product Reviews': ['shopping', 'product review', 'best buy', 'deal', 'discount', 'gadget review'],
+    'Sneakers & Streetwear': ['sneakers', 'streetwear', 'nike', 'adidas', 'jordan', 'yeezy', 'drop'],
+    'Celebrity Style & Red Carpet': ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'],
+}
+
+def enrich_with_subtopics(interest_tags, title):
+    """Append matching subtopic names to interest_tags list."""
+    if not interest_tags:
+        interest_tags = []
+    tag_set = set(t.lower() for t in interest_tags)
+    title_lower = (title or '').lower()
+    for subtopic, keywords in SUBTOPIC_MAP.items():
+        if subtopic.lower() not in tag_set:
+            if any(kw in tag_set or kw in title_lower for kw in keywords):
+                interest_tags.append(subtopic)
+    return interest_tags
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -521,11 +598,10 @@ clustering_engine = EventClusteringEngine()
 
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
-anthropic_key = os.getenv('ANTHROPIC_API_KEY')
 brightdata_key = os.getenv('BRIGHTDATA_API_KEY')
 
-if not all([gemini_key, anthropic_key, brightdata_key]):
-    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY, BRIGHTDATA_API_KEY)")
+if not all([gemini_key, brightdata_key]):
+    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, BRIGHTDATA_API_KEY)")
 
 # Initialize Bright Data fetcher
 brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
@@ -657,44 +733,6 @@ def fetch_rss_articles(max_articles_per_source=10):
 # COMPLETE PIPELINE
 # ==========================================
 
-def check_api_health():
-    """Quick health check on Anthropic API before starting pipeline.
-    Catches credit/billing issues early instead of failing on every cluster."""
-    print("🔑 Checking Anthropic API health...")
-    try:
-        test_response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": anthropic_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            },
-            json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 10,
-                "messages": [{"role": "user", "content": "Hi"}]
-            },
-            timeout=15
-        )
-        if test_response.status_code >= 400:
-            try:
-                error_body = test_response.json()
-                error_msg = error_body.get('error', {}).get('message', test_response.text[:500])
-                error_type = error_body.get('error', {}).get('type', 'unknown')
-            except Exception:
-                error_msg = test_response.text[:500]
-                error_type = 'unknown'
-            print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: [{error_type}] {error_msg}")
-            print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
-            return False
-        print("✅ Anthropic API is healthy")
-        return True
-    except Exception as e:
-        print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: {type(e).__name__}: {str(e)[:300]}")
-        print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
-        return False
-
-
 def run_complete_pipeline():
     """Run the complete 9-step clustered news workflow"""
 
@@ -704,9 +742,9 @@ def run_complete_pipeline():
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
 
-    # PRE-CHECK: Verify API keys are working before wasting time
-    if not check_api_health():
-        print("⚠️  Aborting pipeline - Anthropic API not available")
+    # PRE-CHECK: Verify Gemini API key exists
+    if not gemini_key:
+        print("⚠️  Aborting pipeline - GEMINI_API_KEY not set")
         return
 
     # STEP 0: RSS Feed Collection
@@ -965,6 +1003,22 @@ def run_complete_pipeline():
                     'height': source.get('image_height', 0)
                 })
             
+            # Fetch real dimensions for candidates missing width/height
+            for candidate in all_candidates:
+                if candidate.get('width', 0) == 0 or candidate.get('height', 0) == 0:
+                    try:
+                        resp = requests.get(candidate['url'], timeout=5, stream=True, headers={
+                            'User-Agent': 'Mozilla/5.0 (compatible; TenNewsBot/1.0)'
+                        })
+                        resp.raise_for_status()
+                        # Read up to 512KB to get image header
+                        chunk = resp.raw.read(524288)
+                        resp.close()
+                        img = Image.open(BytesIO(chunk))
+                        candidate['width'], candidate['height'] = img.size
+                    except Exception:
+                        pass  # Keep width=0, height=0 — filter will handle it
+
             valid_candidates = []
             for candidate in all_candidates:
                 if selector._is_valid_image(candidate):
@@ -999,20 +1053,14 @@ def run_complete_pipeline():
                 print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
             
             if not selected_image:
-                # Only fall back to rule-based if it's from a trusted English-language source
+                # Use top rule-based candidate as fallback (dimensions already verified)
                 fallback = valid_candidates[0]
-                fallback_source = (fallback.get('source_name') or '').lower()
-                trusted_fallback_sources = ['reuters', 'ap', 'afp', 'getty', 'bbc', 'cnn', 'nyt',
-                    'guardian', 'washington post', 'al jazeera english', 'france24', 'dw']
-                if any(t in fallback_source for t in trusted_fallback_sources):
-                    selected_image = {
-                        'url': fallback['url'],
-                        'source_name': fallback['source_name'],
-                        'quality_score': fallback['quality_score']
-                    }
-                    print(f"   ↩️  [Cluster {cluster_id}] Using trusted fallback: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
-                else:
-                    print(f"   ❌ [Cluster {cluster_id}] No suitable image — fallback source '{fallback_source}' not trusted, skipping image")
+                selected_image = {
+                    'url': fallback['url'],
+                    'source_name': fallback['source_name'],
+                    'quality_score': fallback['quality_score']
+                }
+                print(f"   ↩️  [Cluster {cluster_id}] Using rule-based fallback: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
@@ -1037,7 +1085,7 @@ def run_complete_pipeline():
             if not synthesized:
                 print(f"   ❌ [Cluster {cluster_id}] Synthesis failed")
                 update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
-                    'Claude API failed to synthesize article from sources')
+                    'Gemini API failed to synthesize article from sources')
                 return False
             
             synthesized['image_url'] = selected_image['url']
@@ -1260,6 +1308,8 @@ def run_complete_pipeline():
             article_category = synthesized.get('category', 'Other')
             
             article_score = 750  # default
+            shelf_life_days = 7
+            freshness_category = 'medium'
             interest_tags = []
             article_countries = []
             article_topics = []
@@ -1282,8 +1332,15 @@ def run_complete_pipeline():
                 tagging_future = step_executor.submit(_tagging_with_sem)
                 
                 try:
-                    article_score = score_future.result(timeout=30)
-                    print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000")
+                    score_result = score_future.result(timeout=30)
+                    # score_article_with_references returns {'score': int, 'topic_relevance': {}, 'country_relevance': {}, 'freshness_category': str, 'shelf_life_days': int}
+                    if isinstance(score_result, dict):
+                        article_score = score_result.get('score', 750)
+                        shelf_life_days = score_result.get('shelf_life_days', 7)
+                        freshness_category = score_result.get('freshness_category', 'medium')
+                    else:
+                        article_score = int(score_result) if score_result else 750
+                    print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000, shelf_life: {shelf_life_days}d ({freshness_category})")
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Scoring failed: {e}")
                 
@@ -1302,8 +1359,11 @@ def run_complete_pipeline():
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
+            # Enrich interest_tags with subtopic names for feed matching
+            interest_tags = enrich_with_subtopics(interest_tags, title)
+
             five_ws = synthesized.get('five_ws', {})
-            
+
             source_titles = [
                 {
                     'title': s.get('title', 'Unknown'),
@@ -1333,6 +1393,28 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
+            # ANN concept entity tagging: find matching entities via embedding similarity
+            if article_embedding_minilm:
+                try:
+                    emb_str = '[' + ','.join(str(x) for x in article_embedding_minilm) + ']'
+                    ann_result = supabase.rpc('match_concept_entities', {
+                        'query_embedding': emb_str,
+                        'match_threshold': 0.35,
+                        'match_count': 8
+                    }).execute()
+                    if ann_result.data:
+                        concept_tags = [r['entity_name'] for r in ann_result.data]
+                        # Add to interest_tags (avoid duplicates)
+                        existing_lower = {t.lower() for t in interest_tags}
+                        for ct in concept_tags:
+                            if ct.lower() not in existing_lower:
+                                interest_tags.append(ct)
+                                existing_lower.add(ct.lower())
+                        print(f"   🎯 [Cluster {cluster_id}] Concept entities: {concept_tags}")
+                except Exception as e:
+                    # Non-blocking: concept tagging is optional
+                    print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1356,6 +1438,8 @@ def run_complete_pipeline():
                 'image_source': synthesized.get('image_source'),
                 'image_score': synthesized.get('image_score'),
                 'source_titles': source_titles,
+                'shelf_life_days': shelf_life_days,
+                'freshness_category': freshness_category,
                 'embedding': article_embedding,
                 'embedding_minilm': article_embedding_minilm,
             }
@@ -1430,8 +1514,8 @@ def run_complete_pipeline():
 
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
-    Synthesize one article from multiple sources using Claude (better rate limits than Gemini)
-    
+    Synthesize one article from multiple sources using Gemini.
+
     Args:
         sources: List of source articles
         cluster_id: Cluster ID
@@ -1440,14 +1524,8 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import requests
     import json
     import time
-    
-    # Use Claude API (better rate limits than Gemini)
-    claude_url = "https://api.anthropic.com/v1/messages"
-    claude_headers = {
-        "x-api-key": anthropic_key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
+
+    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -1791,18 +1869,18 @@ Return ONLY valid JSON, no markdown, no explanations."""
     # Try up to 5 times with exponential backoff
     for attempt in range(5):
         try:
-            # Build Claude API request
+            # Build Gemini API request
             request_data = {
-                "model": "claude-sonnet-4-5-20250929",
-                "max_tokens": 2048,
-                "temperature": 0.3,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 2048,
+                    "responseMimeType": "application/json"
+                }
             }
-            
-            response = requests.post(claude_url, headers=claude_headers, json=request_data, timeout=60)
-            
+
+            response = requests.post(gemini_synthesis_url, json=request_data, timeout=60)
+
             # Handle rate limiting with exponential backoff
             if response.status_code == 429:
                 wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
@@ -1811,63 +1889,58 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 continue
 
             if response.status_code >= 400:
-                # Log the actual error body for debugging
                 try:
                     error_body = response.json()
-                    error_msg = error_body.get('error', {}).get('message', response.text[:500])
-                    error_type = error_body.get('error', {}).get('type', 'unknown')
-                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): [{error_type}] {error_msg}")
+                    error_msg = str(error_body.get('error', {}).get('message', response.text[:500]))
+                    print(f"   ⚠️  Gemini API error (attempt {attempt + 1}/5): {error_msg[:300]}")
                 except Exception:
-                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
+                    print(f"   ⚠️  Gemini API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
                 if attempt < 4:
                     time.sleep(3)
                 continue
 
             response_json = response.json()
-            
-            # Check if response has expected structure
-            if 'content' not in response_json or not response_json['content']:
-                print(f"   ⚠️  No content in Claude response (attempt {attempt + 1}/5)")
-                print(f"      Response: {str(response_json)[:200]}")
+
+            # Get response text from Gemini format
+            candidates = response_json.get('candidates', [])
+            if not candidates:
+                print(f"   ⚠️  No candidates in Gemini response (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Get response text from Claude format
-            response_text = response_json['content'][0].get('text', '')
-            
+
+            response_text = candidates[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+
             if not response_text:
-                print(f"   ⚠️  Empty response from Claude (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Empty response from Gemini (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
+
             # Clean response (remove markdown if present)
             response_text = response_text.replace('```json', '').replace('```', '').strip()
-            
-            # Debug: Check if response is empty after cleaning
+
             if not response_text:
                 print(f"   ⚠️  Response empty after cleaning (attempt {attempt + 1}/5)")
-                print(f"      Original length: {len(response_json['content'][0].get('text', ''))}")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Check if Claude returned commentary instead of JSON
+
+            # Check if model returned commentary instead of JSON
             if response_text.startswith('Looking') or response_text.startswith('I ') or not response_text.startswith('{'):
-                print(f"   ⚠️  Claude returned text instead of JSON (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Gemini returned text instead of JSON (attempt {attempt + 1}/5)")
                 print(f"      Preview: {response_text[:100]}...")
                 if attempt < 4:
                     time.sleep(3)
                     continue
                 return None
-            
+
             # Parse JSON
             result = json.loads(response_text)
-            
+
             # Validate required fields (new format with 5W's - no content field)
             required = ['title', 'summary_bullets', 'five_ws', 'category']
             if all(k in result for k in required):
@@ -1882,7 +1955,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     time.sleep(3)
                     continue
                 return None
-            
+
         except json.JSONDecodeError as e:
             print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
             print(f"      Response preview: {response_text[:200] if response_text else 'EMPTY'}...")
@@ -1890,21 +1963,21 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 time.sleep(3)
                 continue
             return None
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = str(e)
             print(f"   ⚠️  API error (attempt {attempt + 1}/5): {error_msg[:100]}")
             if attempt < 4:
                 time.sleep(3)
             continue
-            
+
         except Exception as e:
             print(f"   ⚠️  Synthesis error (attempt {attempt + 1}/5): {str(e)[:100]}")
             if attempt < 4:
                 time.sleep(3)
                 continue
             return None
-    
+
     print(f"   ❌ Failed after 5 attempts")
     return None
 
