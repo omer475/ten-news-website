@@ -10,6 +10,10 @@ final class FeedViewModel {
     var hasMore = true
     let reRanker = SessionReRanker()
 
+    /// Stable article list — only rebuilt after data loads, NOT during swipe signals.
+    /// This prevents the re-ranker from reordering articles mid-swipe.
+    private(set) var articles: [Article] = []
+
     private var nextCursor: String? = nil
     private var currentPreferences: UserPreferences?
     private var currentUserId: String?
@@ -19,21 +23,22 @@ final class FeedViewModel {
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
 
-    /// Articles in re-ranked order. Items already swiped past keep their position.
-    /// Unseen items are re-ranked in real-time by session signals.
-    var articles: [Article] {
-        let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
-        let filtered: [Article]
-        if followedSlugs.isEmpty {
-            filtered = allArticles
-        } else {
-            filtered = allArticles.filter { article in
-                guard let slug = article.worldEvent?.slug else { return true }
-                return !followedSlugs.contains(slug)
-            }
-        }
-        return reRanker.rerank(articles: filtered, currentIndex: currentIndex)
+    /// Returns true if the article passes feed filters.
+    /// V2 handles recency via time-decay scoring, so no client-side age filter needed.
+    private func passesFeedFilters(_ article: Article, followedSlugs: Set<String>) -> Bool {
+        if let slug = article.worldEvent?.slug, followedSlugs.contains(slug) { return false }
+        return true
     }
+
+    /// Rebuild the article list from allArticles with filtering and re-ranking.
+    /// Call after initial data load and refresh — NOT during loadMore or swipe signals.
+    func rebuildArticleList() {
+        let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
+        let filtered = allArticles.filter { passesFeedFilters($0, followedSlugs: followedSlugs) }
+        articles = reRanker.rerank(articles: filtered, currentIndex: currentIndex)
+    }
+
+    private let fetchLimit = 25
 
     // MARK: - Data Loading
 
@@ -46,14 +51,20 @@ final class FeedViewModel {
         reRanker.reset()
         do {
             let feedResponse = try await feedService.fetchMainFeed(
-                limit: 10,
+                limit: fetchLimit,
                 preferences: preferences,
                 userId: userId
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor
             hasMore = feedResponse.hasMore
+            rebuildArticleList()
             isLoading = false
+
+            // If filters removed everything but server has more, keep fetching
+            if articles.isEmpty && hasMore {
+                await loadMoreUntilVisible()
+            }
 
             Task {
                 if let eventsResponse = try? await eventService.fetchWorldEvents() {
@@ -69,13 +80,20 @@ final class FeedViewModel {
 
     func loadMoreIfNeeded() async {
         guard hasMore, !isLoading else { return }
+        await loadMoreBatch()
+    }
+
+    /// Fetch one batch, filter, append visible articles, and re-rank the new batch.
+    /// Returns the count of articles that passed filters.
+    @discardableResult
+    private func loadMoreBatch() async -> Int {
         isLoading = true
         do {
             let signals = reRanker.sessionSignals
             let existingIds = allArticles.map { $0.id.stringValue }
             let response = try await feedService.fetchMainFeed(
                 cursor: nextCursor,
-                limit: 10,
+                limit: fetchLimit,
                 preferences: currentPreferences,
                 userId: currentUserId,
                 engagedIds: signals.engaged,
@@ -87,8 +105,55 @@ final class FeedViewModel {
             allArticles.append(contentsOf: newArticles)
             nextCursor = response.nextCursor
             hasMore = response.hasMore
+
+            // Filter and re-rank new batch among themselves (don't reorder existing articles)
+            let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
+            let filtered = newArticles.filter { passesFeedFilters($0, followedSlugs: followedSlugs) }
+            let ranked = reRanker.rerank(articles: filtered, currentIndex: -1)
+            articles.append(contentsOf: ranked)
             isLoading = false
+            return filtered.count
         } catch {
+            isLoading = false
+            return 0
+        }
+    }
+
+    /// Keep fetching batches until we have visible articles or the server says no more.
+    private func loadMoreUntilVisible() async {
+        var retries = 0
+        while hasMore && retries < 3 {
+            let added = await loadMoreBatch()
+            if added > 0 { break }
+            retries += 1
+        }
+    }
+
+    /// Pull-to-refresh: reload from scratch while preserving preferences
+    func refresh() async {
+        nextCursor = nil
+        hasMore = true
+        reRanker.reset()
+        viewStartTimes.removeAll()
+        isLoading = true
+        errorMessage = nil
+        do {
+            let feedResponse = try await feedService.fetchMainFeed(
+                limit: fetchLimit,
+                preferences: currentPreferences,
+                userId: currentUserId
+            )
+            allArticles = feedResponse.articles
+            nextCursor = feedResponse.nextCursor
+            hasMore = feedResponse.hasMore
+            rebuildArticleList()
+            isLoading = false
+
+            if articles.isEmpty && hasMore {
+                await loadMoreUntilVisible()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
             isLoading = false
         }
     }
@@ -120,7 +185,7 @@ final class FeedViewModel {
         viewStartTimes.removeValue(forKey: article.id.stringValue)
         reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
 
-        // Send dwell-based event to server
+        // Send dwell-based event to server (V2 uses dwell time for interest profile weighting)
         let event: String
         if dwellSeconds < 3.0 {
             event = "article_skipped"
@@ -133,7 +198,12 @@ final class FeedViewModel {
             try? await analytics.track(
                 event: event,
                 articleId: Int(article.id.stringValue),
-                metadata: ["dwell": String(format: "%.1f", dwellSeconds)]
+                category: article.category,
+                metadata: [
+                    "dwell": String(format: "%.1f", dwellSeconds),
+                    "total_active_seconds": String(format: "%.1f", dwellSeconds),
+                    "bucket": article.bucket ?? "unknown"
+                ]
             )
         }
     }

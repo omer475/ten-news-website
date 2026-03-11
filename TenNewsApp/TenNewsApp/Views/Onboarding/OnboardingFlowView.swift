@@ -5,229 +5,326 @@ struct OnboardingFlowView: View {
     @State private var viewModel = OnboardingViewModel()
     @State private var showSignIn = false
     @State private var showSignUp = false
-    @State private var searchText = ""
-    @State private var orbPhase: CGFloat = 0
+    @State private var contentRevealed = false
 
-    private var accent: Color { TimeOfDay.current.accentColor }
+    private var accent: Color { .blue }
 
     var body: some View {
         ZStack {
-            // Deep gradient background
-            LinearGradient(
-                stops: [
-                    .init(color: Color(hex: "#0a0a1a"), location: 0),
-                    .init(color: Color(hex: "#111128"), location: 0.4),
-                    .init(color: Color(hex: "#1a1035"), location: 0.7),
-                    .init(color: Color(hex: "#0d0d20"), location: 1),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            // Ambient orbs
-            GeometryReader { geo in
-                Circle()
-                    .fill(accent.opacity(0.12))
-                    .frame(width: 300, height: 300)
-                    .blur(radius: 100)
-                    .offset(
-                        x: geo.size.width * 0.3 + sin(orbPhase * 0.5) * 25,
-                        y: geo.size.height * 0.08 + cos(orbPhase * 0.4) * 15
-                    )
-                Circle()
-                    .fill(Color.purple.opacity(0.08))
-                    .frame(width: 250, height: 250)
-                    .blur(radius: 90)
-                    .offset(
-                        x: -geo.size.width * 0.15 + cos(orbPhase * 0.6) * 30,
-                        y: geo.size.height * 0.55 + sin(orbPhase * 0.7) * 20
-                    )
-            }
-            .ignoresSafeArea()
+            Color.white
+                .ignoresSafeArea()
 
             switch viewModel.currentStep {
             case .welcome:
-                WelcomeScene(accent: accent, onContinue: {
-                    viewModel.nextStep()
-                }, onSignIn: {
-                    showSignIn = true
-                }, onGuest: {
-                    appViewModel.continueAsGuest()
-                })
-                .transition(.asymmetric(insertion: .opacity, removal: .push(from: .leading)))
+                welcomeView
+                    .transition(.asymmetric(insertion: .opacity, removal: .push(from: .leading)))
             case .country:
-                selectionScene(
-                    step: 1,
-                    title: "Where are you",
-                    titleAccent: "based?",
-                    subtitle: "We'll prioritize news from your region"
-                ) { countryGrid(single: true) }
-            case .countries:
-                selectionScene(
-                    step: 2,
-                    title: "Follow more",
-                    titleAccent: "countries",
-                    subtitle: "\(viewModel.selectedCountries.count) selected",
-                    showSkip: true
-                ) { countryGrid(single: false) }
+                countryPage
+                    .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
             case .topics:
-                selectionScene(
-                    step: 3,
-                    title: "What gets you",
-                    titleAccent: "excited?",
-                    subtitle: topicSubtitle
-                ) { topicGrid }
+                topicsPage
+                    .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
             }
         }
-        .onAppear {
-            withAnimation(.linear(duration: 14).repeatForever(autoreverses: true)) {
-                orbPhase = .pi * 2
-            }
-        }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
         .sheet(isPresented: $showSignIn) { signInSheet }
         .sheet(isPresented: $showSignUp) { signUpSheet }
+        .onChange(of: viewModel.currentStep) {
+            // Reset reveal for new page, trigger after typing finishes
+            contentRevealed = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    contentRevealed = true
+                }
+            }
+        }
         .onAppear { handleDebugLaunch() }
     }
 
-    private func handleDebugLaunch() {
-        let args = ProcessInfo.processInfo.arguments
-        if args.contains("--screenshot-step-1") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                viewModel.debugJumpTo(.country)
+    // MARK: - Welcome
+
+    private var welcomeView: some View {
+        WelcomeScene(accent: accent, onContinue: {
+            goNext()
+        }, onSignIn: {
+            showSignIn = true
+        }, onGuest: {
+            goNext()
+        })
+    }
+
+    // MARK: - Country Selection
+
+    private var countryPage: some View {
+        onboardingPage(
+            step: 1,
+            title: "Where are you from?",
+            canProceed: viewModel.selectedCountry != nil,
+            ctaLabel: "Continue",
+            showSkip: true
+        ) {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 6) {
+                    ForEach(viewModel.availableCountries) { country in
+                        let isSelected = viewModel.selectedCountry == country.id
+
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                viewModel.selectCountry(country.id)
+                            }
+                        } label: {
+                            HStack(spacing: 14) {
+                                Text(country.flag)
+                                    .font(.system(size: 32))
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(country.name)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(isSelected ? .white : Color.black.opacity(0.85))
+                                    Text(country.region)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(isSelected ? .white.opacity(0.7) : Color.black.opacity(0.3))
+                                }
+
+                                Spacer()
+
+                                if isSelected {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 22))
+                                        .foregroundStyle(.white)
+                                        .transition(.scale.combined(with: .opacity))
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(isSelected ? Color.blue.opacity(0.15) : Color.black.opacity(0.04))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .strokeBorder(isSelected ? Color.blue.opacity(0.3) : .clear, lineWidth: 1.5)
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(RowPressStyle())
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 120)
             }
-        } else if args.contains("--screenshot-step-2") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                viewModel.debugJumpTo(.countries)
+            .opacity(contentRevealed ? 1 : 0)
+            .offset(y: contentRevealed ? 0 : 20)
+            .animation(.spring(response: 0.5, dampingFraction: 0.85), value: contentRevealed)
+        }
+    }
+
+    // MARK: - Topics
+
+    private var topicsPage: some View {
+        let total = viewModel.selectedTopics.count
+        let minTopics = 3
+
+        return onboardingPage(
+            step: 2,
+            title: "What interests you?",
+            subtitle: "Pick 3 or more to personalize your feed",
+            canProceed: total >= minTopics,
+            ctaLabel: total < minTopics ? "Pick \(minTopics - total) more" : "Get Started",
+            showSkip: false,
+            isLastStep: true
+        ) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    ForEach(Array(TopicCategories.all.enumerated()), id: \.element.id) { index, category in
+                        categorySection(category, index: index)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .padding(.bottom, 160)
             }
-        } else if args.contains("--screenshot-step-3") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                viewModel.debugJumpTo(.topics)
+            .opacity(contentRevealed ? 1 : 0)
+            .offset(y: contentRevealed ? 0 : 20)
+            .animation(.spring(response: 0.5, dampingFraction: 0.85), value: contentRevealed)
+        }
+    }
+
+    // MARK: - Category Section
+
+    private func categorySection(_ category: TopicCategory, index: Int) -> some View {
+        let tint = categoryTint(for: category.id)
+        let count = viewModel.selectedCountInCategory(category)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                // Colored icon badge
+                Image(systemName: category.icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(tint.gradient, in: RoundedRectangle(cornerRadius: 8))
+
+                Text(category.name)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(tint)
+
+                if count > 0 {
+                    Text("\(count)/\(category.subtopics.count)")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(tint.opacity(0.7))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(tint.opacity(0.1), in: Capsule())
+                        .transition(.scale.combined(with: .opacity))
+                }
+
+                Spacer()
+            }
+            .animation(.spring(response: 0.3), value: count)
+
+            GlassEffectContainer {
+                FlowLayoutView(spacing: 8) {
+                    ForEach(category.subtopics) { topic in
+                        topicChip(topic, tint: tint)
+                    }
+                }
             }
         }
     }
 
-    private var topicSubtitle: String {
-        let c = viewModel.selectedTopics.count
-        return c < 3 ? "Pick at least \(3 - c) more" : "\(c) selected"
+    private func topicChip(_ topic: Topic, tint: Color) -> some View {
+        let isOn = viewModel.selectedTopics.contains(topic.id)
+
+        return Button {
+            viewModel.toggleTopic(topic.id)
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: isOn ? "checkmark" : topic.icon)
+                    .font(.system(size: isOn ? 10 : 11, weight: .semibold))
+                Text(topic.name)
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .foregroundStyle(isOn ? .white : tint.opacity(0.8))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .glassEffect(
+                isOn ? .regular.tint(tint) : .regular,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(ChipPressStyle())
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isOn)
     }
 
-    // MARK: - Selection Scene Template
+    // MARK: - Page Template
 
-    private func selectionScene<Content: View>(
+    private func onboardingPage<Content: View>(
         step: Int,
         title: String,
-        titleAccent: String,
-        subtitle: String,
+        subtitle: String? = nil,
+        canProceed: Bool,
+        ctaLabel: String,
         showSkip: Bool = false,
+        isLastStep: Bool = false,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(spacing: 0) {
-            // Top bar
-            HStack {
-                Button {
-                    viewModel.previousStep()
-                    HapticManager.light()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .frame(width: 36, height: 36)
-                        .background(.white.opacity(0.08), in: Circle())
-                }
-
-                Spacer()
-
-                // Progress bar
-                HStack(spacing: 4) {
-                    ForEach(1...3, id: \.self) { i in
-                        Capsule()
-                            .fill(i <= step ? accent : .white.opacity(0.15))
-                            .frame(width: i == step ? 20 : 6, height: 4)
-                    }
-                }
-
-                Spacer()
-                Color.clear.frame(width: 36, height: 36)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-
-            // Title block
-            VStack(alignment: .leading, spacing: 4) {
-                TypingTextView(fullText: title, typingSpeed: 0.03, startDelay: 0.15)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(.white)
-                    .tracking(-0.5)
-
-                TypingTextView(fullText: titleAccent, typingSpeed: 0.04, startDelay: 0.6)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(accent)
-                    .tracking(-0.5)
-
-                Text(subtitle)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .padding(.top, 4)
-                    .onboardSlideIn(delay: 1.2)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 24)
-            .padding(.top, 14)
-
-            // Content
-            content()
-                .onboardSlideIn(delay: 1.3)
-
-            // Bottom CTA
-            HStack(spacing: 10) {
-                if showSkip {
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                // Nav bar
+                HStack {
                     Button {
-                        viewModel.nextStep()
+                        viewModel.previousStep()
                         HapticManager.light()
                     } label: {
-                        Text("Skip")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .frame(height: 54)
-                            .frame(maxWidth: .infinity)
-                            .background(.white.opacity(0.06), in: Capsule())
-                            .overlay(Capsule().stroke(.white.opacity(0.08), lineWidth: 1))
-                    }
-                }
-
-                Button {
-                    if viewModel.isLastStep { showSignUp = true }
-                    else { viewModel.nextStep() }
-                    HapticManager.medium()
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(viewModel.isLastStep ? "Let's Go" : "Continue")
-                            .font(.system(size: 17, weight: .bold))
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 12, weight: .bold))
-                    }
-                    .foregroundStyle(viewModel.canProceed ? .white : .white.opacity(0.3))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(
-                        viewModel.canProceed
-                            ? AnyShapeStyle(accent.gradient)
-                            : AnyShapeStyle(Color.white.opacity(0.06)),
-                        in: Capsule()
-                    )
-                    .overlay {
-                        if viewModel.canProceed {
-                            Capsule().stroke(.white.opacity(0.2), lineWidth: 1)
-                        } else {
-                            Capsule().stroke(.white.opacity(0.06), lineWidth: 1)
+                        GlassEffectContainer {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.black.opacity(0.7))
+                                .frame(width: 36, height: 36)
+                                .glassEffect(.regular, in: Circle())
                         }
                     }
-                }
-                .disabled(!viewModel.canProceed)
+                    .buttonStyle(NavBackStyle())
 
-                if viewModel.isLastStep {
+                    Spacer()
+
+                    HStack(spacing: 5) {
+                        ForEach(1...2, id: \.self) { i in
+                            Capsule()
+                                .fill(i == step ? accent : Color.black.opacity(0.12))
+                                .frame(width: i == step ? 20 : 6, height: 6)
+                        }
+                    }
+                    .animation(.spring(response: 0.4), value: step)
+
+                    Spacer()
+
+                    if showSkip {
+                        Button {
+                            viewModel.nextStep()
+                            HapticManager.light()
+                        } label: {
+                            Text("Skip")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.black.opacity(0.35))
+                        }
+                        .frame(width: 36)
+                    } else {
+                        Color.clear.frame(width: 36, height: 36)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+
+                // Title
+                VStack(alignment: .leading, spacing: 6) {
+                    TypingTextView(fullText: title, typingSpeed: 0.055, startDelay: 0.2)
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(Color.black)
+                        .tracking(-0.5)
+
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundStyle(Color.black.opacity(0.4))
+                            .opacity(contentRevealed ? 1 : 0)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
+                .padding(.bottom, 14)
+
+                // Content (revealed after typing)
+                content()
+            }
+
+            // CTA — Apple Liquid Glass button
+            VStack(spacing: 8) {
+                GlassEffectContainer {
+                    Button {
+                        if isLastStep { showSignUp = true }
+                        else { goNext() }
+                        HapticManager.medium()
+                    } label: {
+                        Text(ctaLabel)
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(canProceed ? .white : Color.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .glassEffect(
+                                canProceed ? .regular.tint(.blue.opacity(0.5)) : .regular,
+                                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            )
+                    }
+                    .disabled(!canProceed)
+                    .buttonStyle(CTAPressStyle())
+                    .animation(.spring(response: 0.22), value: canProceed)
+                }
+
+                if isLastStep {
                     Button {
                         HapticManager.light()
                         let prefs = viewModel.buildPreferences()
@@ -235,147 +332,48 @@ struct OnboardingFlowView: View {
                     } label: {
                         Text("Continue as Guest")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .frame(height: 36)
+                            .foregroundStyle(Color.black.opacity(0.4))
                     }
+                    .frame(height: 24)
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 30)
-            .animation(.spring(response: 0.3), value: viewModel.canProceed)
-        }
-        .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
-    }
-
-    // MARK: - Country Grid
-
-    private func countryGrid(single: Bool) -> some View {
-        ScrollView(showsIndicators: false) {
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: 10),
-                    GridItem(.flexible(), spacing: 10),
-                    GridItem(.flexible(), spacing: 10),
-                ],
-                spacing: 10
-            ) {
-                ForEach(viewModel.availableCountries) { country in
-                    let isSelected = single
-                        ? viewModel.selectedCountry == country.id
-                        : viewModel.selectedCountries.contains(country.id)
-                    let isHome = !single && country.id == viewModel.selectedCountry
-
-                    DarkCountryCard(
-                        country: country,
-                        isSelected: isSelected,
-                        isHome: isHome,
-                        accent: accent
-                    ) {
-                        if single {
-                            viewModel.selectCountry(country.id)
-                        } else if !isHome {
-                            viewModel.toggleCountry(country.id)
-                        }
-                    }
-                    .opacity(isHome ? 0.5 : 1)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 16)
+            .padding(.bottom, 4)
+            .opacity(contentRevealed ? 1 : 0)
+            .offset(y: contentRevealed ? 0 : 20)
+            .animation(.spring(response: 0.5, dampingFraction: 0.85).delay(0.1), value: contentRevealed)
         }
     }
 
-    // MARK: - Topic Grid
+    // MARK: - Helpers
 
-    private var topicGrid: some View {
-        VStack(spacing: 0) {
-            // Search
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.35))
-                TextField("Search topics...", text: $searchText)
-                    .font(.system(size: 15))
-                    .foregroundStyle(.white)
-                    .autocorrectionDisabled()
-                if !searchText.isEmpty {
-                    Button { searchText = "" } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.white.opacity(0.3))
-                    }
-                }
-            }
-            .padding(.horizontal, 14)
-            .frame(height: 42)
-            .background(.white.opacity(0.06), in: Capsule())
-            .overlay(Capsule().stroke(.white.opacity(0.08), lineWidth: 1))
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-
-            ScrollView(showsIndicators: false) {
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)],
-                    spacing: 10
-                ) {
-                    ForEach(filteredTopics) { topic in
-                        let sel = viewModel.selectedTopics.contains(topic.id)
-                        DarkTopicCard(
-                            topic: topic,
-                            gradient: topicGradient(for: topic.id),
-                            isSelected: sel
-                        ) {
-                            viewModel.toggleTopic(topic.id)
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 14)
-                .padding(.bottom, 16)
-            }
-        }
+    private func goNext() {
+        viewModel.nextStep()
     }
 
-    private var filteredTopics: [Topic] {
-        if searchText.isEmpty { return viewModel.availableTopics }
-        return viewModel.availableTopics.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    private func topicGradient(for id: String) -> [Color] {
+    private func categoryTint(for id: String) -> Color {
         switch id {
-        case "politics":       return [Color(hex: "#1e3a6e"), Color(hex: "#4a6cf7")]
-        case "economy":        return [Color(hex: "#0d5e4a"), Color(hex: "#10b981")]
-        case "technology":     return [Color(hex: "#5b21b6"), Color(hex: "#8b5cf6")]
-        case "science":        return [Color(hex: "#6d28d9"), Color(hex: "#c084fc")]
-        case "health":         return [Color(hex: "#9f1239"), Color(hex: "#fb7185")]
-        case "environment":    return [Color(hex: "#065f46"), Color(hex: "#34d399")]
-        case "business":       return [Color(hex: "#1e293b"), Color(hex: "#475569")]
-        case "defense":        return [Color(hex: "#374151"), Color(hex: "#6b7280")]
-        case "diplomacy":      return [Color(hex: "#155e75"), Color(hex: "#22d3ee")]
-        case "energy":         return [Color(hex: "#92400e"), Color(hex: "#fbbf24")]
-        case "ai":             return [Color(hex: "#3730a3"), Color(hex: "#818cf8")]
-        case "space":          return [Color(hex: "#1e1b4b"), Color(hex: "#6366f1")]
-        case "cybersecurity":  return [Color(hex: "#134e4a"), Color(hex: "#2dd4bf")]
-        case "trade":          return [Color(hex: "#44403c"), Color(hex: "#a8a29e")]
-        case "climate":        return [Color(hex: "#14532d"), Color(hex: "#4ade80")]
-        case "human_rights":   return [Color(hex: "#9a3412"), Color(hex: "#fb923c")]
-        case "migration":      return [Color(hex: "#0c4a6e"), Color(hex: "#38bdf8")]
-        case "education":      return [Color(hex: "#78350f"), Color(hex: "#d97706")]
-        case "finance":        return [Color(hex: "#713f12"), Color(hex: "#facc15")]
-        case "crypto":         return [Color(hex: "#9a3412"), Color(hex: "#f97316")]
-        case "sports":         return [Color(hex: "#991b1b"), Color(hex: "#f87171")]
-        case "entertainment":  return [Color(hex: "#831843"), Color(hex: "#f472b6")]
-        case "culture":        return [Color(hex: "#701a75"), Color(hex: "#e879f9")]
-        case "conflict":       return [Color(hex: "#1f2937"), Color(hex: "#6b7280")]
-        case "disaster":       return [Color(hex: "#7f1d1d"), Color(hex: "#ef4444")]
-        case "law":            return [Color(hex: "#1e3a5f"), Color(hex: "#60a5fa")]
-        case "transportation": return [Color(hex: "#292524"), Color(hex: "#78716c")]
-        case "agriculture":    return [Color(hex: "#365314"), Color(hex: "#84cc16")]
-        case "infrastructure": return [Color(hex: "#3f3f46"), Color(hex: "#a1a1aa")]
-        default:               return [Color(hex: "#374151"), Color(hex: "#9ca3af")]
+        case "politics":       return Color(hex: "#5856D6")
+        case "sports":         return Color(hex: "#FF9500")
+        case "business":       return Color(hex: "#34C759")
+        case "entertainment":  return Color(hex: "#FF2D55")
+        case "tech":           return Color(hex: "#007AFF")
+        case "science":        return Color(hex: "#AF52DE")
+        case "health":         return Color(hex: "#FF3B30")
+        case "finance":        return Color(hex: "#30B0C7")
+        case "crypto":         return Color(hex: "#F7931A")
+        case "lifestyle":      return Color(hex: "#A2845E")
+        case "fashion":        return Color(hex: "#E91E8C")
+        default:               return .gray
+        }
+    }
+
+    private func handleDebugLaunch() {
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--screenshot-step-1") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.country) }
+        } else if args.contains("--screenshot-step-2") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.topics) }
         }
     }
 
@@ -446,109 +444,121 @@ private struct WelcomeScene: View {
     @State private var phase = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        ZStack {
+            LinearGradient(
+                stops: [
+                    .init(color: Color(hex: "#0a0a1a"), location: 0),
+                    .init(color: Color(hex: "#111128"), location: 0.4),
+                    .init(color: Color(hex: "#1a1035"), location: 0.7),
+                    .init(color: Color(hex: "#0d0d20"), location: 1),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
-            // Brand
-            VStack(spacing: 12) {
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    if phase >= 1 {
-                        TypingTextView(fullText: "Today", typingSpeed: 0.07, startDelay: 0)
-                            .font(.system(size: 58, weight: .heavy, design: .serif))
-                            .foregroundStyle(.white)
-                            .tracking(-2)
-                    }
-                    if phase >= 2 {
-                        Text("+")
-                            .font(.system(size: 58, weight: .heavy, design: .serif))
-                            .foregroundStyle(accent)
-                            .tracking(-2)
-                    }
-                }
+            VStack(spacing: 0) {
+                Spacer()
 
-                if phase >= 3 {
-                    TypingTextView(fullText: "News, reimagined.", typingSpeed: 0.04, startDelay: 0.1)
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .tracking(1)
-                }
-            }
-
-            Spacer()
-
-            if phase >= 4 {
-                VStack(spacing: 14) {
-                    // Feature badges
-                    HStack(spacing: 8) {
-                        badge(icon: "brain", text: "AI-Powered")
-                        badge(icon: "person.fill", text: "Personalized")
-                        badge(icon: "bolt.fill", text: "Real-time")
-                    }
-                    .padding(.bottom, 6)
-
-                    // CTA
-                    Button {
-                        HapticManager.medium()
-                        onContinue()
-                    } label: {
-                        Text("Get Started")
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .background(accent.gradient, in: Capsule())
-                            .overlay(Capsule().stroke(.white.opacity(0.2), lineWidth: 1))
-                    }
-
-                    // Continue as Guest
-                    Button {
-                        HapticManager.light()
-                        onGuest?()
-                    } label: {
-                        Text("Continue as Guest")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.7))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(.white.opacity(0.06), in: Capsule())
-                            .overlay(Capsule().stroke(.white.opacity(0.1), lineWidth: 1))
-                    }
-
-                    Button {
-                        HapticManager.light()
-                        onSignIn()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text("Already have an account?")
-                                .foregroundStyle(.white.opacity(0.35))
-                            Text("Sign In")
-                                .foregroundStyle(.white.opacity(0.7))
-                                .fontWeight(.semibold)
+                VStack(spacing: 12) {
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        if phase >= 1 {
+                            TypingTextView(fullText: "Today", typingSpeed: 0.07, startDelay: 0)
+                                .font(.system(size: 58, weight: .heavy, design: .serif))
+                                .foregroundStyle(.white)
+                                .tracking(-2)
                         }
-                        .font(.system(size: 14))
-                        .frame(height: 40)
+                        if phase >= 2 {
+                            Text("+")
+                                .font(.system(size: 58, weight: .heavy, design: .serif))
+                                .foregroundStyle(accent)
+                                .tracking(-2)
+                        }
+                    }
+
+                    if phase >= 3 {
+                        TypingTextView(fullText: "News, reimagined.", typingSpeed: 0.04, startDelay: 0.1)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .tracking(1)
                     }
                 }
-                .padding(.horizontal, 28)
-                .padding(.bottom, 44)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+
+                Spacer()
+
+                if phase >= 4 {
+                    VStack(spacing: 14) {
+                        HStack(spacing: 8) {
+                            welcomeBadge(icon: "brain", text: "AI-Powered")
+                            welcomeBadge(icon: "person.fill", text: "Personalized")
+                            welcomeBadge(icon: "bolt.fill", text: "Real-time")
+                        }
+                        .padding(.bottom, 6)
+
+                        Button {
+                            HapticManager.medium()
+                            onContinue()
+                        } label: {
+                            Text("Get Started")
+                                .font(.system(size: 17, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 54)
+                                .background(accent.gradient, in: Capsule())
+                        }
+
+                        Button {
+                            HapticManager.light()
+                            onGuest?()
+                        } label: {
+                            GlassEffectContainer {
+                                Text("Continue as Guest")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.6))
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 48)
+                                    .glassEffect(.regular, in: Capsule())
+                            }
+                        }
+
+                        Button {
+                            HapticManager.light()
+                            onSignIn()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Already have an account?")
+                                    .foregroundStyle(.white.opacity(0.3))
+                                Text("Sign In")
+                                    .foregroundStyle(.white.opacity(0.65))
+                                    .fontWeight(.semibold)
+                            }
+                            .font(.system(size: 14))
+                            .frame(height: 40)
+                        }
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 44)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
         }
+        .preferredColorScheme(.dark)
         .onAppear { run() }
     }
 
-    private func badge(icon: String, text: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 9, weight: .bold))
-            Text(text)
-                .font(.system(size: 11, weight: .semibold))
+    private func welcomeBadge(icon: String, text: String) -> some View {
+        GlassEffectContainer {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 9, weight: .bold))
+                Text(text)
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(.white.opacity(0.45))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .glassEffect(.regular, in: Capsule())
         }
-        .foregroundStyle(.white.opacity(0.45))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.white.opacity(0.06), in: Capsule())
-        .overlay(Capsule().stroke(.white.opacity(0.08), lineWidth: 1))
     }
 
     private func run() {
@@ -567,169 +577,71 @@ private struct WelcomeScene: View {
     }
 }
 
-// MARK: - Country Card (dark glass)
+// MARK: - Flow Layout
 
-private struct DarkCountryCard: View {
-    let country: Country
-    let isSelected: Bool
-    var isHome: Bool = false
-    let accent: Color
-    let action: () -> Void
+private struct FlowLayoutView: Layout {
+    var spacing: CGFloat = 8
 
-    var body: some View {
-        Button {
-            HapticManager.light()
-            action()
-        } label: {
-            VStack(spacing: 6) {
-                Text(country.flag)
-                    .font(.system(size: 40))
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(proposal: proposal, subviews: subviews).size
+    }
 
-                Text(country.name)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.6))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 100)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isSelected ? accent.opacity(0.15) : .white.opacity(0.04))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isSelected ? accent.opacity(0.5) : .white.opacity(0.06), lineWidth: isSelected ? 1.5 : 1)
-            )
-            .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    ZStack {
-                        Circle().fill(accent).frame(width: 20, height: 20)
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundStyle(.white)
-                    }
-                    .offset(x: -8, y: 8)
-                    .transition(.scale.combined(with: .opacity))
-                }
-            }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrange(proposal: proposal, subviews: subviews)
+        for (i, pos) in result.positions.enumerated() {
+            subviews[i].place(at: CGPoint(x: bounds.minX + pos.x, y: bounds.minY + pos.y), proposal: .unspecified)
         }
-        .buttonStyle(DarkTileBounce())
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
+
+    private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
+        let maxW = proposal.width ?? .infinity
+        var positions: [CGPoint] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0
+
+        for sub in subviews {
+            let s = sub.sizeThatFits(.unspecified)
+            if x + s.width > maxW && x > 0 {
+                x = 0; y += rowH + spacing; rowH = 0
+            }
+            positions.append(CGPoint(x: x, y: y))
+            rowH = max(rowH, s.height)
+            x += s.width + spacing
+        }
+        return (CGSize(width: maxW, height: y + rowH), positions)
     }
 }
 
-// MARK: - Topic Card (dark gradient)
+// MARK: - Button Styles
 
-private struct DarkTopicCard: View {
-    let topic: Topic
-    let gradient: [Color]
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            HapticManager.light()
-            action()
-        } label: {
-            ZStack(alignment: .bottomLeading) {
-                // Gradient bg
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: isSelected ? gradient : [gradient[0].opacity(0.4), gradient[1].opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                // Dark overlay when not selected
-                if !isSelected {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(.black.opacity(0.3))
-                }
-
-                // Content
-                VStack(alignment: .leading, spacing: 6) {
-                    Spacer()
-
-                    Image(systemName: topic.icon)
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.5))
-
-                    Text(topic.name)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.6))
-                        .lineLimit(1)
-                }
-                .padding(14)
-
-                // Check
-                if isSelected {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            ZStack {
-                                Circle().fill(.white).frame(width: 22, height: 22)
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .black))
-                                    .foregroundStyle(gradient[0])
-                            }
-                            .padding(10)
-                        }
-                        Spacer()
-                    }
-                    .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .frame(height: 110)
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(
-                        isSelected ? .white.opacity(0.25) : .white.opacity(0.05),
-                        lineWidth: 1
-                    )
-            )
-            .shadow(
-                color: isSelected ? gradient[1].opacity(0.3) : .clear,
-                radius: 16, y: 6
-            )
-        }
-        .buttonStyle(DarkTileBounce())
-        .animation(.spring(response: 0.3, dampingFraction: 0.65), value: isSelected)
-    }
-}
-
-// MARK: - Button Style
-
-private struct DarkTileBounce: ButtonStyle {
+private struct RowPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .opacity(configuration.isPressed ? 0.5 : 1)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+private struct ChipPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.93 : 1)
             .animation(.spring(response: 0.2, dampingFraction: 0.65), value: configuration.isPressed)
     }
 }
 
-// MARK: - Slide-in Modifier
-
-private struct OnboardSlideIn: ViewModifier {
-    let delay: Double
-    @State private var visible = false
-
-    func body(content: Content) -> some View {
-        content
-            .opacity(visible ? 1 : 0)
-            .offset(y: visible ? 0 : 16)
-            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: visible)
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { visible = true }
-            }
+private struct NavBackStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1)
+            .animation(.spring(response: 0.15), value: configuration.isPressed)
     }
 }
 
-private extension View {
-    func onboardSlideIn(delay: Double) -> some View {
-        modifier(OnboardSlideIn(delay: delay))
+private struct CTAPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.15), value: configuration.isPressed)
     }
 }
 

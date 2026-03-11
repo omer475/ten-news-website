@@ -804,7 +804,34 @@ def run_complete_pipeline():
             clusters_to_process.append(cluster_id)
     
     print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)} (NEW this cycle)")
-    
+
+    # Also retry recently failed clusters (created in last 6h, not yet published, max 3 attempts)
+    try:
+        retry_cutoff = (datetime.now() - timedelta(hours=6)).isoformat()
+        retry_result = supabase.table('clusters')\
+            .select('id, attempt_count')\
+            .not_('failure_reason', 'is', 'null')\
+            .gte('created_at', retry_cutoff)\
+            .limit(20)\
+            .execute()
+
+        retry_ids = set()
+        if retry_result.data:
+            for c in retry_result.data:
+                cid = c['id']
+                attempts = c.get('attempt_count') or 0
+                if attempts >= 3 or cid in clusters_to_process:
+                    continue
+                # Check not already published
+                pub = supabase.table('published_articles').select('id').eq('cluster_id', cid).execute()
+                if not pub.data:
+                    retry_ids.add(cid)
+            if retry_ids:
+                clusters_to_process.extend(retry_ids)
+                print(f"   🔄 Retrying {len(retry_ids)} previously failed clusters: {sorted(retry_ids)}")
+    except Exception as e:
+        print(f"   ⚠️ Retry check failed: {e}")
+
     if not clusters_to_process:
         print("⚠️  No clusters ready - ending cycle")
         return
@@ -1040,12 +1067,13 @@ def run_complete_pipeline():
                     'Claude API failed to synthesize article from sources')
                 return False
             
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
-            
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
-            
+
             # ==========================================
             # STEPS 5+6: CONTEXT SEARCH + COMPONENT SELECTION (sequential, both Gemini)
             # ==========================================
@@ -1210,10 +1238,11 @@ def run_complete_pipeline():
                     f'Failed fact verification after {max_verification_attempts} attempts')
                 return False
             
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
-            
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+
             # STEP 9: Publishing to Supabase
             print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
             
@@ -1282,7 +1311,12 @@ def run_complete_pipeline():
                 tagging_future = step_executor.submit(_tagging_with_sem)
                 
                 try:
-                    article_score = score_future.result(timeout=30)
+                    score_result = score_future.result(timeout=30)
+                    # score_article_with_references returns dict with 'score', 'topic_relevance', 'country_relevance'
+                    if isinstance(score_result, dict):
+                        article_score = score_result.get('score', 0)
+                    else:
+                        article_score = int(score_result) if score_result else 0
                     print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000")
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Scoring failed: {e}")

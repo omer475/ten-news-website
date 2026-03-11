@@ -91,6 +91,14 @@ struct ArticleDetailView: View {
                             Button {
                                 if article.url != nil {
                                     showSafari = true
+                                    Task {
+                                        try? await AnalyticsService().track(
+                                            event: "source_clicked",
+                                            articleId: Int(article.id.stringValue),
+                                            category: article.category,
+                                            source: article.source
+                                        )
+                                    }
                                 }
                             } label: {
                                 Text(source)

@@ -225,6 +225,31 @@ struct SettingsView: View {
             sectionHeader("DISPLAY")
 
             VStack(spacing: 0) {
+                // Appearance Mode
+                HStack(spacing: 14) {
+                    Image(systemName: "circle.lefthalf.filled")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.purple)
+                        .frame(width: 28)
+                    Text("Appearance")
+                        .font(.system(size: 16))
+                    Spacer()
+                    Picker("", selection: Binding(
+                        get: { viewModel.appearanceMode },
+                        set: { viewModel.appearanceMode = $0; HapticManager.selection() }
+                    )) {
+                        Image(systemName: "moon.fill").tag("dark")
+                        Image(systemName: "sun.max.fill").tag("light")
+                        Image(systemName: "gearshape").tag("system")
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 150)
+                }
+                .padding(.horizontal, 16)
+                .frame(height: 48)
+
+                Divider().padding(.leading, 52)
+
                 // Text Size
                 HStack(spacing: 14) {
                     Image(systemName: "textformat.size")

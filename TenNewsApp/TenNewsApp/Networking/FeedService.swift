@@ -32,16 +32,16 @@ struct FeedService {
                 params += "&followed_topics=\(prefs.followedTopics.joined(separator: ","))"
             }
         }
-        // Session signals for server-side next-page personalization
+        // Session signals for V2 server-side personalization (up to 50 each)
         if !engagedIds.isEmpty {
             params += "&engaged_ids=\(engagedIds.joined(separator: ","))"
         }
         if !skippedIds.isEmpty {
             params += "&skipped_ids=\(skippedIds.joined(separator: ","))"
         }
-        // Client-side seen IDs for dedup (ensures no repeats even without server-side events)
+        // Seen IDs for dedup — send last 300 to prevent repeats across pages
         if !seenIds.isEmpty {
-            params += "&seen_ids=\(seenIds.prefix(200).joined(separator: ","))"
+            params += "&seen_ids=\(seenIds.suffix(300).joined(separator: ","))"
         }
         return try await client.get("\(APIEndpoints.mainFeed)\(params)")
     }

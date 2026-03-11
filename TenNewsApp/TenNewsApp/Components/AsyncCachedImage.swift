@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// AsyncImage wrapper with NSCache-based caching
+/// AsyncImage wrapper with NSCache-based caching and shimmer loading
 struct AsyncCachedImage: View {
     let url: URL?
     var aspectRatio: CGFloat?
@@ -8,8 +8,14 @@ struct AsyncCachedImage: View {
 
     @State private var image: UIImage?
     @State private var isLoading = true
+    @State private var shimmerPhase: CGFloat = -1
 
-    nonisolated(unsafe) static let cache = NSCache<NSURL, UIImage>()
+    nonisolated(unsafe) static let cache: NSCache<NSURL, UIImage> = {
+        let c = NSCache<NSURL, UIImage>()
+        c.countLimit = 50
+        c.totalCostLimit = 100 * 1024 * 1024 // 100 MB
+        return c
+    }()
 
     var body: some View {
         Group {
@@ -22,20 +28,43 @@ struct AsyncCachedImage: View {
                     .if(aspectRatio == nil) { view in
                         view.aspectRatio(contentMode: contentMode)
                     }
+                    .transition(.opacity.animation(.easeOut(duration: 0.25)))
             } else if isLoading {
                 Rectangle()
-                    .fill(Color(hex: "#e5e5ea").opacity(0.3))
+                    .fill(Color(white: 0.15))
                     .overlay {
-                        ProgressView()
-                            .tint(Theme.Colors.secondaryText)
+                        GeometryReader { geo in
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            .clear,
+                                            Color.white.opacity(0.06),
+                                            Color.white.opacity(0.1),
+                                            Color.white.opacity(0.06),
+                                            .clear
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geo.size.width * 0.6)
+                                .offset(x: shimmerPhase * (geo.size.width * 1.6) - geo.size.width * 0.3)
+                        }
+                        .clipped()
+                    }
+                    .onAppear {
+                        withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                            shimmerPhase = 1
+                        }
                     }
             } else {
                 Rectangle()
-                    .fill(Color(hex: "#e5e5ea").opacity(0.3))
+                    .fill(Color(white: 0.12))
                     .overlay {
                         Image(systemName: "photo")
                             .font(.title2)
-                            .foregroundStyle(Theme.Colors.tertiaryText)
+                            .foregroundStyle(Color(white: 0.3))
                     }
             }
         }
@@ -62,7 +91,8 @@ struct AsyncCachedImage: View {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let uiImage = UIImage(data: data) {
-                Self.cache.setObject(uiImage, forKey: url as NSURL)
+                let cost = data.count
+                Self.cache.setObject(uiImage, forKey: url as NSURL, cost: cost)
                 image = uiImage
             }
         } catch {

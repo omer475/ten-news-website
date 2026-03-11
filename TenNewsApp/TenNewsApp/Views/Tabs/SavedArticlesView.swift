@@ -2,10 +2,12 @@ import SwiftUI
 
 struct SavedArticlesView: View {
     @Environment(TabBarState.self) private var tabBarState
+    @Environment(FeedViewModel.self) private var feedViewModel
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
     private var history: ReadingHistoryManager { ReadingHistoryManager.shared }
 
     @State private var selectedTab: SavedTab = .saved
+    @State private var selectedArticle: Article?
     @Namespace private var toggleNS
 
     enum SavedTab: String, CaseIterable {
@@ -57,47 +59,67 @@ struct SavedArticlesView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Glass toggle
-                    glassToggle
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .padding(.bottom, 12)
+        ZStack {
+            NavigationStack {
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Glass toggle
+                        glassToggle
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, 12)
 
-                    // Content
-                    switch selectedTab {
-                    case .saved:
-                        if filteredArticles.isEmpty {
-                            savedEmptyState
-                        } else {
-                            savedList
-                        }
-                    case .history:
-                        if filteredHistory.isEmpty {
-                            historyEmptyState
-                        } else {
-                            historyList
-                        }
-                    }
-                }
-                .padding(.bottom, 100)
-            }
-            .navigationTitle(selectedTab == .saved ? "Saved" : "History")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if selectedTab == .history && !history.entries.isEmpty {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Clear") {
-                            withAnimation {
-                                history.clearHistory()
+                        // Content
+                        switch selectedTab {
+                        case .saved:
+                            if filteredArticles.isEmpty {
+                                savedEmptyState
+                            } else {
+                                savedList
                             }
-                            HapticManager.light()
+                        case .history:
+                            if filteredHistory.isEmpty {
+                                historyEmptyState
+                            } else {
+                                historyList
+                            }
                         }
-                        .foregroundStyle(.red)
+                    }
+                    .padding(.bottom, 100)
+                }
+                .navigationTitle(selectedTab == .saved ? "Saved" : "History")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    if selectedTab == .history && !history.entries.isEmpty {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Clear") {
+                                withAnimation {
+                                    history.clearHistory()
+                                }
+                                HapticManager.light()
+                            }
+                            .foregroundStyle(.red)
+                        }
                     }
                 }
+                .background(Theme.Colors.backgroundPrimary)
+            }
+
+            // Article sheet overlay — opens tapped article then continues with feed
+            if let article = selectedArticle {
+                ExploreArticleSheet(
+                    selectedArticle: article,
+                    allArticles: feedContinuationArticles,
+                    onDismiss: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            selectedArticle = nil
+                        }
+                    },
+                    preserveOrder: true
+                )
+                .transition(.move(edge: .bottom))
+                .ignoresSafeArea()
+                .zIndex(1)
             }
         }
     }
@@ -140,7 +162,12 @@ struct SavedArticlesView: View {
     private var savedList: some View {
         LazyVStack(spacing: 0) {
             ForEach(filteredArticles) { article in
-                articleRow(article)
+                Button {
+                    openArticle(article)
+                } label: {
+                    articleRow(article)
+                }
+                .buttonStyle(.plain)
                 if article.id != filteredArticles.last?.id {
                     Divider().padding(.leading, 88)
                 }
@@ -213,7 +240,12 @@ struct SavedArticlesView: View {
             ForEach(groupedHistory, id: \.date) { group in
                 Section {
                     ForEach(group.entries) { entry in
-                        historyRow(entry)
+                        Button {
+                            openHistoryEntry(entry)
+                        } label: {
+                            historyRow(entry)
+                        }
+                        .buttonStyle(.plain)
                         if entry.id != group.entries.last?.id {
                             Divider().padding(.leading, 88)
                         }
@@ -307,6 +339,98 @@ struct SavedArticlesView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 80)
+    }
+
+    // MARK: - Feed Continuation
+
+    /// Feed articles from the current scroll position onward
+    private var feedContinuationArticles: [Article] {
+        let feed = feedViewModel.articles
+        let idx = min(feedViewModel.currentIndex, feed.count)
+        return Array(feed.suffix(from: idx))
+    }
+
+    /// Resolve the full article: try feed first, then fetch from API, fallback to what we have
+    private func resolveFullArticle(_ article: Article) async -> Article {
+        // 1. Try the feed (has full content with bullets/details)
+        if let feedArticle = feedViewModel.allArticles.first(where: { $0.id == article.id }),
+           !feedArticle.displayBullets.isEmpty {
+            return feedArticle
+        }
+        // 2. Fetch from the correct endpoint (/api/article/{id}), returns Article directly
+        if let full: Article = try? await APIClient.shared.get("/api/article/\(article.id.stringValue)") {
+            return full
+        }
+        // 3. Fallback
+        return article
+    }
+
+    private func openArticle(_ article: Article) {
+        HapticManager.selection()
+        // Show immediately for smooth slide-up animation
+        let feedArticle = feedViewModel.allArticles.first { $0.id == article.id }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            selectedArticle = feedArticle ?? article
+        }
+        // Fetch full content in background if needed
+        if (feedArticle ?? article).displayBullets.isEmpty {
+            Task {
+                if let full: Article = try? await APIClient.shared.get("/api/article/\(article.id.stringValue)") {
+                    selectedArticle = full
+                }
+            }
+        }
+    }
+
+    private func openHistoryEntry(_ entry: ReadingHistoryManager.HistoryEntry) {
+        HapticManager.selection()
+        let entryId = FlexibleID(entry.articleId)
+        // Show immediately for smooth slide-up animation
+        if let feedArticle = feedViewModel.allArticles.first(where: { $0.id == entryId }) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                selectedArticle = feedArticle
+            }
+            // Fetch full content in background if bullets missing
+            if feedArticle.displayBullets.isEmpty {
+                Task {
+                    if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
+                        selectedArticle = full
+                    }
+                }
+            }
+        } else {
+            // Not in feed — show minimal immediately, fetch full in background
+            let minArticle = articleFromHistoryEntry(entry)
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                selectedArticle = minArticle
+            }
+            Task {
+                if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
+                    selectedArticle = full
+                }
+            }
+        }
+    }
+
+    // MARK: - History → Article Conversion
+
+    private var historyArticles: [Article] {
+        history.entries.compactMap { articleFromHistoryEntry($0) }
+    }
+
+    private func articleFromHistoryEntry(_ entry: ReadingHistoryManager.HistoryEntry) -> Article? {
+        var dict: [String: Any] = [
+            "id": entry.articleId,
+            "title": entry.title
+        ]
+        if let source = entry.source { dict["source"] = source }
+        if let category = entry.category { dict["category"] = category }
+        if let topics = entry.topics { dict["topics"] = topics }
+        if let countries = entry.countries { dict["countries"] = countries }
+        if let imageUrl = entry.imageUrl { dict["image_url"] = imageUrl }
+
+        guard let data = try? JSONSerialization.data(withJSONObject: dict) else { return nil }
+        return try? JSONDecoder().decode(Article.self, from: data)
     }
 
     // MARK: - Helpers

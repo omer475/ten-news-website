@@ -8,6 +8,7 @@ import Foundation
 final class SessionReRanker {
     private(set) var engagedIds: Set<String> = []
     private(set) var skippedIds: Set<String> = []
+    private(set) var sourceClickedIds: Set<String> = []
 
     // Tag frequency profiles built from session signals
     private var interestProfile: [String: Double] = [:]
@@ -39,6 +40,19 @@ final class SessionReRanker {
             }
         }
         // 2-5s = neutral, no signal
+    }
+
+    /// Source click = strongest engagement signal (3× weight)
+    func recordSourceClick(article: Article) {
+        sourceClickedIds.insert(article.id.stringValue)
+        engagedIds.insert(article.id.stringValue)
+        let tags = articleTags(article)
+        for tag in tags {
+            interestProfile[tag] = (interestProfile[tag] ?? 0) + 3.0
+        }
+        if let cat = article.category?.lowercased() {
+            interestProfile[cat] = (interestProfile[cat] ?? 0) + 1.5
+        }
     }
 
     // MARK: - Re-rank
@@ -75,9 +89,9 @@ final class SessionReRanker {
             // Original server rank normalized (0 = best, 1 = worst)
             let serverRank = Double(i) / max(totalUnseen - 1, 1)
 
-            // Blend: 60% server, 40% session
+            // Blend: 80% server (V2 handles MMR diversity + slot patterns), 20% session
             let clamped = max(-2.0, min(2.0, sessionScore))
-            scores[article.id.stringValue] = (1.0 - serverRank) * 0.6 + clamped * 0.4
+            scores[article.id.stringValue] = (1.0 - serverRank) * 0.8 + clamped * 0.2
         }
 
         let sorted = unseen.sorted {
@@ -89,12 +103,13 @@ final class SessionReRanker {
     // MARK: - Session Context for Server
 
     var sessionSignals: (engaged: [String], skipped: [String]) {
-        (Array(engagedIds.prefix(20)), Array(skippedIds.prefix(20)))
+        (Array(engagedIds.prefix(50)), Array(skippedIds.prefix(50)))
     }
 
     func reset() {
         engagedIds.removeAll()
         skippedIds.removeAll()
+        sourceClickedIds.removeAll()
         interestProfile.removeAll()
         skipProfile.removeAll()
     }

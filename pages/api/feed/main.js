@@ -137,6 +137,9 @@ function getRecencyDecay(createdAt, category) {
 // USER INTEREST PROFILE (entity-level tag weights from engagement history)
 // ==========================================
 
+// Module-level flag for legacy mode (set by handleV2Feed before calling)
+let _legacyMode = false;
+
 async function buildUserInterestProfile(supabase, userId) {
   // Get article IDs the user engaged with in the last 14 days
   // IMPROVEMENT 2: Also fetch view_seconds for dwell-time weighting
@@ -153,17 +156,18 @@ async function buildUserInterestProfile(supabase, userId) {
   if (!events || events.length === 0) return null;
 
   // Weight by engagement type: saved > engaged > viewed
-  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled)
+  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled) — skipped in legacy mode
   const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
   const articleWeights = {};
   for (const e of events) {
     let w = eventWeights[e.event_type] || 1;
-    // Extract dwell time from metadata
-    const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
-                         e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
-    if (dwellSeconds > 5) {
-      // 10s → 1.0x bonus, 20s → 2.0x, 60s → 3.58x
-      w *= (1 + Math.log2(dwellSeconds / 5));
+    // Extract dwell time from metadata (IMPROVEMENT 2 — disabled in legacy mode)
+    if (!_legacyMode) {
+      const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
+                           e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
+      if (dwellSeconds > 5) {
+        w *= (1 + Math.log2(dwellSeconds / 5));
+      }
     }
     articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
   }
@@ -273,7 +277,7 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   let momentumBoost = 0;
   let skipScore = 0;
 
-  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days
+  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days (disabled in legacy mode)
   const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
   const now = Date.now();
 
@@ -283,14 +287,21 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
     momentumBoost += sessionBoosts[t] || 0;
     if (skipProfile) {
       const entry = skipProfile[t];
-      if (typeof entry === 'object' && entry !== null && entry.w) {
-        // Time-stamped skip entry: { w: weight, t: timestamp }
-        const age = now - new Date(entry.t || 0).getTime();
-        const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
-        skipScore += entry.w * decay;
-      } else if (typeof entry === 'number') {
-        // Legacy flat number — apply 50% decay as default
-        skipScore += entry * 0.5;
+      if (_legacyMode) {
+        // Legacy: flat penalty, no time decay
+        if (typeof entry === 'object' && entry !== null && entry.w) {
+          skipScore += entry.w;
+        } else if (typeof entry === 'number') {
+          skipScore += entry;
+        }
+      } else {
+        if (typeof entry === 'object' && entry !== null && entry.w) {
+          const age = now - new Date(entry.t || 0).getTime();
+          const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
+          skipScore += entry.w * decay;
+        } else if (typeof entry === 'number') {
+          skipScore += entry * 0.5;
+        }
       }
     }
   }
@@ -592,6 +603,9 @@ export default async function handler(req, res) {
 
     const similarityFloor = userPrefs?.similarity_floor || 0;
 
+    // v2_legacy=1 disables all 5 improvements (for A/B comparison testing)
+    const legacyMode = req.query.v2_legacy === '1';
+
     return await handleV2Feed(req, res, supabase, {
       userId: persUserId || userId,
       userPrefs,
@@ -606,6 +620,7 @@ export default async function handler(req, res) {
       sessionSkippedIds,
       limit,
       offset,
+      legacyMode,
     });
 
   } catch (error) {
@@ -623,7 +638,9 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        sessionEngagedIds, sessionSkippedIds, limit, offset, legacyMode } = opts;
+  legacyMode = legacyMode || false;
+  _legacyMode = legacyMode; // Set module-level flag for buildUserInterestProfile
   sessionEngagedIds = sessionEngagedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
@@ -644,22 +661,60 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
-  // For cold-start users without any embedding data, skip the personal query
-  // entirely — V2 will fill the feed with trending + discovery articles.
+  // IMPROVEMENT 6: Session embedding — for cold-start users with engaged articles,
+  // build an on-the-fly taste vector by averaging engaged articles' embeddings.
+  // This gives cold-start users the SAME pgvector search as logged-in users.
+  let sessionTasteVector = null;
+  if (!tasteVector && !tasteVectorMinilm && !hasInterestClusters && sessionEngagedIds.length >= 2) {
+    // Fetch embeddings for engaged articles
+    const { data: engagedEmbs } = await supabase
+      .from('published_articles')
+      .select('embedding_minilm')
+      .in('id', sessionEngagedIds.slice(0, 20));
+
+    if (engagedEmbs && engagedEmbs.length >= 2) {
+      const validEmbs = engagedEmbs.filter(e => e.embedding_minilm && e.embedding_minilm.length === 384);
+      if (validEmbs.length >= 2) {
+        // Average the embeddings (weighted: more recent = higher weight)
+        const dim = 384;
+        sessionTasteVector = new Array(dim).fill(0);
+        let totalWeight = 0;
+        for (let i = 0; i < validEmbs.length; i++) {
+          // More recent engagements get higher weight (latest = 2x, oldest = 1x)
+          const weight = 1 + (i / validEmbs.length);
+          for (let d = 0; d < dim; d++) {
+            sessionTasteVector[d] += validEmbs[i].embedding_minilm[d] * weight;
+          }
+          totalWeight += weight;
+        }
+        // Normalize
+        for (let d = 0; d < dim; d++) {
+          sessionTasteVector[d] /= totalWeight;
+        }
+      }
+    }
+  }
+
   // IMPROVEMENT 1: Deeper pages request more candidates
-  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
-  const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
+  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters || sessionTasteVector;
+  const personalMatchCount = legacyMode ? 150 : Math.min(150 + offset, 400); // Widen pool for deeper pages
   let personalPromise;
-  if (!hasAnyPersonalization) {
+  if (!tasteVector && !tasteVectorMinilm && !hasInterestClusters && !sessionTasteVector) {
     personalPromise = Promise.resolve({ data: [], error: null });
+  } else if (sessionTasteVector && !tasteVectorMinilm && !tasteVector) {
+    // Cold-start with session embedding — use pgvector search with on-the-fly taste vector
+    personalPromise = supabase.rpc('match_articles_personal_minilm', {
+      query_embedding: sessionTasteVector, match_count: personalMatchCount, hours_window: 72,
+      exclude_ids: excludeIds, min_similarity: 0.1, // Lower floor for session vectors (noisier)
+    });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: legacyMode ? 50 : Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: legacyMode ? 50 : Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -958,7 +1013,49 @@ async function handleV2Feed(req, res, supabase, opts) {
   const eventCounts = {};
   const clusterCounts = {};
 
+  // IMPROVEMENT 7: Tag saturation / fatigue system (like TikTok)
+  // Tracks how many times each tag has appeared in selected articles.
+  // The more a tag has been shown, the harder it is for new articles with that tag to be selected.
+  const tagSaturation = {};
+  const categorySaturation = {};
+  const TAG_SATURATION_CAP = 4;       // After 4 articles with same tag, heavy penalty
+  const CATEGORY_CAP_PER_PAGE = 5;    // Max articles from same category per page of 25
+
+  function getTagFatigue(article) {
+    if (legacyMode) return 1.0; // No fatigue in legacy mode
+    const tags = safeJsonParse(article.interest_tags, []);
+    if (tags.length === 0) return 1.0;
+
+    let maxSaturation = 0;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      const count = tagSaturation[t] || 0;
+      maxSaturation = Math.max(maxSaturation, count);
+    }
+
+    // Fatigue multiplier: 1.0 → 0.7 → 0.4 → 0.2 → 0.1
+    // Each repeat makes it exponentially harder to appear
+    if (maxSaturation === 0) return 1.0;
+    if (maxSaturation === 1) return 0.7;
+    if (maxSaturation === 2) return 0.4;
+    if (maxSaturation === 3) return 0.2;
+    return 0.1; // 4+ = almost blocked
+  }
+
+  function isSaturated(article) {
+    if (legacyMode) return false;
+    const cat = article.category || 'Other';
+    if ((categorySaturation[cat] || 0) >= CATEGORY_CAP_PER_PAGE) return true;
+    // Hard block if dominant tag seen 6+ times
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      if ((tagSaturation[tag.toLowerCase()] || 0) >= 6) return true;
+    }
+    return false;
+  }
+
   function isEventCapped(article) {
+    if (legacyMode) return false;
     const eventId = article._world_event_id;
     const clusterId = article.cluster_id;
     if (eventId && (eventCounts[eventId] || 0) >= WORLD_EVENT_CAP) return true;
@@ -966,34 +1063,73 @@ async function handleV2Feed(req, res, supabase, opts) {
     return false;
   }
 
-  function recordEventSelection(article) {
+  function recordSelection(article) {
+    // Event/cluster tracking
     const eventId = article._world_event_id;
     const clusterId = article.cluster_id;
     if (eventId) eventCounts[eventId] = (eventCounts[eventId] || 0) + 1;
     if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
+    // Tag saturation tracking
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      tagSaturation[t] = (tagSaturation[t] || 0) + 1;
+    }
+    // Category saturation tracking
+    const cat = article.category || 'Other';
+    categorySaturation[cat] = (categorySaturation[cat] || 0) + 1;
   }
 
-  // IMPROVEMENT 3: MMR select with event/cluster dedup
+  // IMPROVEMENT 3: MMR select with event/cluster dedup + tag fatigue
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
-    while (attempts < 5 && pool.length > 0) {
+    while (attempts < 10 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda);
       if (!picked) return null;
-      if (!isEventCapped(picked)) return picked;
-      // Capped — skip this one and try next
-      attempts++;
+      if (isEventCapped(picked) || isSaturated(picked)) {
+        attempts++;
+        continue;
+      }
+      // Apply tag fatigue to score — low fatigue articles win ties
+      picked._score *= getTagFatigue(picked);
+      return picked;
     }
     return null;
   }
 
   // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
+  // Now with TAG-LEVEL session scoring within each category
   if (!hasAnyPersonalization) {
-    // Group all candidates by category for bandit
+    // Score each candidate using session tag momentum (not just category-level)
+    function scoreBanditArticle(article) {
+      const tags = safeJsonParse(article.interest_tags, []);
+      const n = Math.max(tags.length, 1);
+      let boost = 0;
+      let penalty = 0;
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        boost += momentum.boosts[t] || 0;
+        penalty += momentum.skipPenalties[t] || 0;
+      }
+      const sessionScore = (boost - penalty) / n;
+      // Blend: 60% base quality score, 40% session signal
+      const baseScore = article._score || 0;
+      const maxBase = Math.max(baseScore, 1);
+      return baseScore + sessionScore * maxBase * 0.4;
+    }
+
+    // Group all candidates by category for bandit, re-scored with session signals
     const categoryPools = {};
     for (const a of [...trendingScored, ...discoveryScored]) {
       const cat = a.category || 'Other';
       if (!categoryPools[cat]) categoryPools[cat] = [];
+      a._banditScore = scoreBanditArticle(a);
       categoryPools[cat].push(a);
+    }
+
+    // Sort each category pool by session-adjusted score (best matches first)
+    for (const cat of Object.keys(categoryPools)) {
+      categoryPools[cat].sort((a, b) => b._banditScore - a._banditScore);
     }
 
     // Initialize Beta priors (uniform)
@@ -1002,7 +1138,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       banditState[cat] = { alpha: 1, beta: 1 };
     }
 
-    // Update priors from session signals
+    // Update priors from session signals (category-level)
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
       if (art) {
@@ -1020,14 +1156,27 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
+    // Also compute tag-level category affinity from session signals
+    // This boosts categories whose top articles match engaged tags
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      if (pool.length === 0) continue;
+      // Average bandit score of top 3 articles in this category
+      const topAvg = pool.slice(0, 3).reduce((s, a) => s + a._banditScore, 0) / Math.min(pool.length, 3);
+      // If top articles in this category match session interests, boost the category
+      if (topAvg > 0 && momentum.boosts && Object.keys(momentum.boosts).length > 0) {
+        const topTags = safeJsonParse(pool[0].interest_tags, []).map(t => t.toLowerCase());
+        const tagMatch = topTags.filter(t => momentum.boosts[t]).length;
+        if (tagMatch >= 2) {
+          banditState[cat].alpha += tagMatch; // Strong tag match boosts category selection
+        }
+      }
+    }
+
     // Thompson Sampling: sample from Beta distribution per category
     function sampleBeta(alpha, beta) {
-      // Approximation using Jitter method for Beta(a,b)
-      // For small a,b: use uniform jitter around mean
       const mean = alpha / (alpha + beta);
       const variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1));
       const std = Math.sqrt(variance);
-      // Box-Muller for normal sample
       const u1 = Math.random();
       const u2 = Math.random();
       const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
@@ -1038,7 +1187,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     let banditAttempts = 0;
     while (selected.length < limit && banditAttempts < limit * 3) {
       banditAttempts++;
-      // Sample from each category's Beta distribution
       let bestSample = -1;
       let bestCat = null;
       for (const [cat, state] of Object.entries(banditState)) {
@@ -1057,10 +1205,12 @@ async function handleV2Feed(req, res, supabase, opts) {
         delete categoryPools[bestCat]; // Exhausted
         continue;
       }
-      if (isEventCapped(picked)) continue;
+      if (isEventCapped(picked) || isSaturated(picked)) continue;
 
+      // Apply tag fatigue to bandit articles too
+      picked._score *= getTagFatigue(picked);
       picked.bucket = 'bandit';
-      recordEventSelection(picked);
+      recordSelection(picked);
       selected.push(picked);
     }
   } else {
@@ -1098,7 +1248,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) break;
 
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
-      recordEventSelection(picked);
+      recordSelection(picked);
       selected.push(picked);
     }
   }
@@ -1135,11 +1285,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // IMPROVEMENT 1: True pagination — encode actual offset in cursor
+  // IMPROVEMENT 1: True pagination — encode actual offset in cursor (legacy: fake cursor)
   const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length;
-  const totalServed = offset + selected.length;
-  const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
-  const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
+  let nextCursor, hasMore;
+  if (legacyMode) {
+    // Legacy: always return same fake cursor (causes duplicates)
+    hasMore = totalAvailable > selected.length;
+    nextCursor = hasMore ? 'v2_fresh' : null;
+  } else {
+    const totalServed = offset + selected.length;
+    hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
+    nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
+  }
 
   return res.status(200).json({
     articles: formattedArticles,

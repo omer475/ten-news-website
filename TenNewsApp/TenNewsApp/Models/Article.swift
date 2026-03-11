@@ -162,6 +162,7 @@ struct Article: Codable, Identifiable, Hashable {
     var publishedDate: Date? {
         guard let dateString = publishedAt ?? createdAt else { return nil }
         return ISO8601DateFormatter.flexible.date(from: dateString)
+            ?? ISO8601DateFormatter.flexibleNoFraction.date(from: dateString)
     }
 
     var availableComponents: [String] { components ?? ["details"] }
@@ -389,9 +390,17 @@ struct AnyCodable: Codable, Hashable {
 // MARK: - Date Formatter Extension
 
 extension ISO8601DateFormatter {
+    /// Handles dates with fractional seconds (e.g. 2026-03-08T19:00:00.000Z)
     nonisolated(unsafe) static let flexible: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    /// Handles dates without fractional seconds (e.g. 2026-03-08T19:00:00Z)
+    nonisolated(unsafe) static let flexibleNoFraction: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
         return f
     }()
 }

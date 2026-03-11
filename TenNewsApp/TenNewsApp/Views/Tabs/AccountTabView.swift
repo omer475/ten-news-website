@@ -2,10 +2,12 @@ import SwiftUI
 
 struct AccountTabView: View {
     @Environment(AppViewModel.self) private var appViewModel
-    @State private var showSettings = false
+    @State private var settingsVM = SettingsViewModel()
     @State private var appeared = false
     @State private var showSignOutConfirm = false
     @State private var showSignUp = false
+    @State private var showClearHistoryConfirm = false
+    @State private var showClearBookmarksConfirm = false
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var prefs: UserPreferences { appViewModel.preferences }
@@ -13,69 +15,53 @@ struct AccountTabView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
+                VStack(spacing: 20) {
                     profileHeader
-                        .padding(.top, 30)
-
-                    // MARK: - Action Buttons
-                    actionButtons
                         .padding(.top, 20)
+
+                    actionButtons
                         .padding(.horizontal, 20)
 
-                    // MARK: - Followed Topics
-                    if !prefs.followedTopics.isEmpty {
-                        tagSection(
-                            title: "Followed Topics",
-                            icon: "number",
-                            items: prefs.followedTopics,
-                            tint: .blue
-                        )
-                        .padding(.top, 28)
-                    }
-
-                    // MARK: - Followed Countries
-                    if !prefs.followedCountries.isEmpty || prefs.homeCountry != nil {
-                        countrySection
-                            .padding(.top, 24)
-                    }
-
-                    // MARK: - Menu
-                    menuSection
-                        .padding(.top, 32)
+                    // Quick links
+                    quickLinksSection
                         .padding(.horizontal, 20)
 
-                    Spacer().frame(height: 120)
+                    // Content Preferences
+                    contentPreferencesSection
+                        .padding(.horizontal, 20)
+
+                    // Notifications
+                    notificationsSection
+                        .padding(.horizontal, 20)
+
+                    // Display
+                    displaySection
+                        .padding(.horizontal, 20)
+
+                    // Data & Storage
+                    dataStorageSection
+                        .padding(.horizontal, 20)
+
+                    // Support
+                    supportSection
+                        .padding(.horizontal, 20)
+
+                    // About
+                    aboutSection
+                        .padding(.horizontal, 20)
+
+                    // Account actions
+                    accountSection
+                        .padding(.horizontal, 20)
+
+                    Spacer().frame(height: 100)
                 }
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 20)
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSettings = true
-                        HapticManager.light()
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 16, weight: .medium))
-                    }
-                }
-            }
-            .background(Color(white: 0.06))
-            .toolbarColorScheme(.dark, for: .navigationBar)
-        }
-        .environment(\.colorScheme, .dark)
-        .sheet(isPresented: $showSettings) {
-            SettingsView(
-                preferences: appViewModel.preferences,
-                onSave: { prefs in
-                    appViewModel.updatePreferences(prefs)
-                },
-                onSignOut: {
-                    appViewModel.logout()
-                }
-            )
+            .background(Theme.Colors.backgroundPrimary)
         }
         .sheet(isPresented: $showSignUp) {
             NavigationStack {
@@ -108,11 +94,34 @@ struct AccountTabView: View {
         } message: {
             Text("Are you sure you want to sign out? You'll need to set up your preferences again.")
         }
+        .confirmationDialog("Clear Reading History", isPresented: $showClearHistoryConfirm) {
+            Button("Clear All", role: .destructive) {
+                settingsVM.clearReadingHistory()
+            }
+        } message: {
+            Text("This will permanently delete your reading history.")
+        }
+        .confirmationDialog("Clear Saved Articles", isPresented: $showClearBookmarksConfirm) {
+            Button("Clear All", role: .destructive) {
+                settingsVM.clearBookmarks()
+            }
+        } message: {
+            Text("This will remove all your saved articles.")
+        }
         .onAppear {
+            settingsVM.loadFromPreferences(prefs)
             withAnimation(.smooth(duration: 0.5)) {
                 appeared = true
             }
         }
+        .onChange(of: settingsVM.homeCountry) { _, _ in autoSave() }
+        .onChange(of: settingsVM.followedCountries) { _, _ in autoSave() }
+        .onChange(of: settingsVM.followedTopics) { _, _ in autoSave() }
+    }
+
+    private func autoSave() {
+        let saved = settingsVM.save()
+        appViewModel.updatePreferences(saved)
     }
 
     // MARK: - Profile Header
@@ -159,144 +168,261 @@ struct AccountTabView: View {
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: 10) {
-            Button {
-                showSettings = true
-                HapticManager.light()
-            } label: {
-                Text("Edit Preferences")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 36)
-                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
-                    .contentShape(RoundedRectangle(cornerRadius: 10))
-            }
-            .buttonStyle(AccountButtonStyle())
-
-            ShareLink(
-                item: URL(string: "https://tennews.ai")!,
-                subject: Text("Today+ News"),
-                message: Text("Check out Today+ — AI-powered news briefing")
-            ) {
-                Text("Share Profile")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 36)
-                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
-                    .contentShape(RoundedRectangle(cornerRadius: 10))
-            }
-            .buttonStyle(AccountButtonStyle())
+        ShareLink(
+            item: URL(string: "https://tennews.ai")!,
+            subject: Text("Today+ News"),
+            message: Text("Check out Today+ — AI-powered news briefing")
+        ) {
+            Text("Share Profile")
+                .font(.system(size: 14, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .frame(height: 36)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 10))
+                .contentShape(RoundedRectangle(cornerRadius: 10))
         }
+        .buttonStyle(AccountButtonStyle())
     }
 
-    // MARK: - Tag Section (Topics)
+    // MARK: - Quick Links
 
-    private func tagSection(title: String, icon: String, items: [String], tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(tint)
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-            }
-            .padding(.horizontal, 20)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(items, id: \.self) { item in
-                        Text(item)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(.fill.tertiary, in: Capsule())
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-        }
-    }
-
-    // MARK: - Countries Section
-
-    private var countrySection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 6) {
-                Image(systemName: "globe")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.green)
-                Text("Followed Countries")
-                    .font(.system(size: 15, weight: .semibold))
-            }
-            .padding(.horizontal, 20)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    if let home = prefs.homeCountry {
-                        HStack(spacing: 5) {
-                            Image(systemName: "house.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.orange)
-                            Text(home)
-                                .font(.system(size: 13, weight: .semibold))
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(.orange.opacity(0.12), in: Capsule())
-                    }
-
-                    ForEach(prefs.followedCountries, id: \.self) { country in
-                        Text(country)
-                            .font(.system(size: 13, weight: .medium))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(.fill.tertiary, in: Capsule())
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-        }
-    }
-
-    // MARK: - Menu Section
-
-    private var menuSection: some View {
+    private var quickLinksSection: some View {
         VStack(spacing: 0) {
-            // First card
+            NavigationLink {
+                SavedArticlesView()
+            } label: {
+                menuRowLabel(icon: "bookmark.fill", label: "Saved Articles", color: .orange)
+            }
+
+            Divider().padding(.leading, 52)
+
+            NavigationLink {
+                ReadingHistoryView()
+            } label: {
+                menuRowLabel(icon: "clock.fill", label: "Reading History", color: .purple)
+            }
+        }
+        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    // MARK: - Content Preferences
+
+    private var contentPreferencesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("CONTENT PREFERENCES")
+
+            VStack(spacing: 0) {
+                expandableRow(
+                    icon: "house.fill",
+                    iconColor: .orange,
+                    label: "Home Country",
+                    value: settingsVM.homeCountryName,
+                    isExpanded: settingsVM.homeCountryExpanded
+                ) {
+                    withAnimation(.spring(response: 0.3)) {
+                        settingsVM.homeCountryExpanded.toggle()
+                    }
+                    HapticManager.light()
+                }
+
+                if settingsVM.homeCountryExpanded {
+                    Divider().padding(.leading, 52)
+                    homeCountryPicker
+                }
+
+                Divider().padding(.leading, 52)
+
+                expandableRow(
+                    icon: "globe",
+                    iconColor: .green,
+                    label: "Followed Countries",
+                    value: "\(settingsVM.followedCountries.count) selected",
+                    isExpanded: settingsVM.followedCountriesExpanded
+                ) {
+                    withAnimation(.spring(response: 0.3)) {
+                        settingsVM.followedCountriesExpanded.toggle()
+                    }
+                    HapticManager.light()
+                }
+
+                if settingsVM.followedCountriesExpanded {
+                    Divider().padding(.leading, 52)
+                    followedCountriesPicker
+                }
+
+                Divider().padding(.leading, 52)
+
+                expandableRow(
+                    icon: "number",
+                    iconColor: .blue,
+                    label: "Followed Topics",
+                    value: "\(settingsVM.followedTopics.count) selected",
+                    isExpanded: settingsVM.followedTopicsExpanded
+                ) {
+                    withAnimation(.spring(response: 0.3)) {
+                        settingsVM.followedTopicsExpanded.toggle()
+                    }
+                    HapticManager.light()
+                }
+
+                if settingsVM.followedTopicsExpanded {
+                    Divider().padding(.leading, 52)
+                    followedTopicsPicker
+                }
+            }
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Notifications
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("NOTIFICATIONS")
+
+            VStack(spacing: 0) {
+                toggleRow(icon: "bolt.fill", iconColor: .red, label: "Breaking News",
+                    isOn: Binding(
+                        get: { settingsVM.breakingNewsAlerts },
+                        set: { settingsVM.breakingNewsAlerts = $0; HapticManager.light() }
+                    ))
+
+                Divider().padding(.leading, 52)
+
+                toggleRow(icon: "bell.badge.fill", iconColor: .blue, label: "Feed Updates",
+                    isOn: Binding(
+                        get: { settingsVM.eventUpdateAlerts },
+                        set: { settingsVM.eventUpdateAlerts = $0; HapticManager.light() }
+                    ))
+            }
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Display
+
+    private var displaySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("DISPLAY")
+
+            HStack(spacing: 14) {
+                Image(systemName: "circle.lefthalf.filled")
+                    .font(.system(size: 17))
+                    .foregroundStyle(.purple)
+                    .frame(width: 28)
+                Text("Appearance")
+                    .font(.system(size: 16))
+                Spacer()
+                Picker("", selection: Binding(
+                    get: { settingsVM.appearanceMode },
+                    set: { settingsVM.appearanceMode = $0; HapticManager.selection() }
+                )) {
+                    Image(systemName: "moon.fill").tag("dark")
+                    Image(systemName: "sun.max.fill").tag("light")
+                    Image(systemName: "gearshape").tag("system")
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Data & Storage
+
+    private var dataStorageSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("DATA & STORAGE")
+
+            VStack(spacing: 0) {
+                infoActionRow(icon: "clock.fill", iconColor: .purple, label: "Reading History",
+                    detail: "\(settingsVM.readingHistoryCount) articles") {
+                    showClearHistoryConfirm = true
+                    HapticManager.light()
+                }
+
+                Divider().padding(.leading, 52)
+
+                infoActionRow(icon: "bookmark.fill", iconColor: .orange, label: "Saved Articles",
+                    detail: "\(settingsVM.bookmarkCount) saved") {
+                    showClearBookmarksConfirm = true
+                    HapticManager.light()
+                }
+
+                Divider().padding(.leading, 52)
+
+                infoActionRow(icon: "internaldrive.fill", iconColor: .gray, label: "Cache",
+                    detail: settingsVM.cacheSize) {
+                    settingsVM.clearCache()
+                }
+            }
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Support
+
+    private var supportSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("SUPPORT")
+
             VStack(spacing: 0) {
                 NavigationLink {
-                    SavedArticlesView()
+                    FeedbackView()
                 } label: {
-                    menuRowLabel(icon: "bookmark.fill", label: "Saved Articles", color: .orange)
+                    menuRowLabel(icon: "envelope.fill", label: "Send Feedback", color: .blue)
                 }
 
                 Divider().padding(.leading, 52)
 
                 NavigationLink {
-                    ReadingHistoryView()
+                    PrivacyPolicyView()
                 } label: {
-                    menuRowLabel(icon: "clock.fill", label: "Reading History", color: .purple)
+                    menuRowLabel(icon: "hand.raised.fill", label: "Privacy Policy", color: .green)
+                }
+
+                Divider().padding(.leading, 52)
+
+                NavigationLink {
+                    TermsOfServiceView()
+                } label: {
+                    menuRowLabel(icon: "doc.text.fill", label: "Terms of Service", color: .teal)
                 }
             }
             .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
 
-            // Second card
-            VStack(spacing: 0) {
-                Button {
-                    showSettings = true
-                    HapticManager.light()
-                } label: {
-                    menuRowLabel(icon: "slider.horizontal.3", label: "Preferences", color: .blue)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(AccountButtonStyle())
+    // MARK: - About
+
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("ABOUT")
+
+            HStack(spacing: 14) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 17))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28)
+                Text("Version")
+                    .font(.system(size: 16))
+                Spacer()
+                Text("Today+ v1.0")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
             .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 14))
-            .padding(.top, 16)
+        }
+    }
 
+    // MARK: - Account
+
+    private var accountSection: some View {
+        VStack(spacing: 16) {
             if appViewModel.isGuest {
-                // Guest: offer to create account
                 Button {
                     showSignUp = true
                     HapticManager.light()
@@ -313,10 +439,8 @@ struct AccountTabView: View {
                     .contentShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(AccountButtonStyle())
-                .padding(.top, 16)
             }
 
-            // Sign out / Reset
             Button {
                 showSignOutConfirm = true
                 HapticManager.light()
@@ -333,14 +457,121 @@ struct AccountTabView: View {
                 .contentShape(RoundedRectangle(cornerRadius: 14))
             }
             .buttonStyle(AccountButtonStyle())
-            .padding(.top, 16)
 
-            // Version
             Text("Today+ v1.0")
                 .font(.system(size: 12))
                 .foregroundStyle(.quaternary)
-                .padding(.top, 20)
         }
+    }
+
+    // MARK: - Inline Pickers
+
+    private var homeCountryPicker: some View {
+        VStack(spacing: 0) {
+            ForEach(settingsVM.availableCountries) { country in
+                Button {
+                    settingsVM.setHomeCountry(country.id)
+                } label: {
+                    HStack(spacing: 12) {
+                        Text(country.flag)
+                            .font(.title3)
+                        Text(country.name)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        if settingsVM.homeCountry == country.id {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(AccountButtonStyle())
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var followedCountriesPicker: some View {
+        VStack(spacing: 0) {
+            ForEach(settingsVM.availableCountries) { country in
+                Button {
+                    settingsVM.toggleCountry(country.id)
+                } label: {
+                    HStack(spacing: 12) {
+                        Text(country.flag)
+                            .font(.title3)
+                        Text(country.name)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        if settingsVM.followedCountries.contains(country.id) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.blue)
+                        } else {
+                            Image(systemName: "circle")
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(AccountButtonStyle())
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var followedTopicsPicker: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+        ], spacing: 8) {
+            ForEach(settingsVM.availableTopics) { topic in
+                let selected = settingsVM.followedTopics.contains(topic.id)
+                Button {
+                    settingsVM.toggleTopic(topic.id)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: topic.icon)
+                            .font(.system(size: 14))
+                            .frame(width: 20)
+                        Text(topic.name)
+                            .font(.system(size: 13, weight: .medium))
+                            .lineLimit(1)
+                        Spacer()
+                        if selected {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                    .foregroundStyle(selected ? .blue : .primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(
+                        selected ? Color.blue.opacity(0.08) : Color.clear,
+                        in: RoundedRectangle(cornerRadius: 10)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 10))
+                }
+                .buttonStyle(AccountButtonStyle())
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    // MARK: - Reusable Components
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .tracking(1)
     }
 
     private func menuRowLabel(icon: String, label: String, color: Color) -> some View {
@@ -360,6 +591,101 @@ struct AccountTabView: View {
         .padding(.horizontal, 16)
         .frame(height: 48)
         .contentShape(Rectangle())
+    }
+
+    private func expandableRow(
+        icon: String, iconColor: Color, label: String, value: String,
+        isExpanded: Bool, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 17))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 28)
+                Text(label)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(value)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.quaternary)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AccountButtonStyle())
+    }
+
+    private func toggleRow(icon: String, iconColor: Color, label: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 17))
+                .foregroundStyle(iconColor)
+                .frame(width: 28)
+            Text(label)
+                .font(.system(size: 16))
+            Spacer()
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 48)
+    }
+
+    private func infoActionRow(
+        icon: String, iconColor: Color, label: String, detail: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 17))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 28)
+                Text(label)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(detail)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.quaternary)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AccountButtonStyle())
+    }
+
+    private func navigationRow(icon: String, iconColor: Color, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 17))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 28)
+                Text(label)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.quaternary)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AccountButtonStyle())
     }
 }
 

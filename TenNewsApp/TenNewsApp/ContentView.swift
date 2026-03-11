@@ -16,17 +16,22 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var currentPageIndex: Int = 0
     @State private var tabBarState = TabBarState()
+    @State private var feedViewModel = FeedViewModel()
     @State private var tabBarExpanded = true
     @Namespace private var tabNS
 
-    private var isDarkPage: Bool { selectedTab == 0 || selectedTab == 1 || selectedTab == 2 }
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isDark: Bool { colorScheme == .dark }
+
+    private var onFeedTab: Bool { selectedTab == 0 }
 
     private var iconActiveColor: Color {
-        isDarkPage ? Color.white.opacity(0.9) : Color(white: 0.15)
+        (isDark || onFeedTab) ? Color.white.opacity(0.9) : Color(white: 0.15)
     }
 
     private var iconInactiveColor: Color {
-        isDarkPage ? Color.white.opacity(0.4) : Color(white: 0.5)
+        (isDark || onFeedTab) ? Color.white.opacity(0.55) : Color(white: 0.5)
     }
 
     var body: some View {
@@ -46,7 +51,7 @@ struct ContentView: View {
                 case 1:
                     ExploreView()
                 case 2:
-                    EventsTabView()
+                    SavedArticlesView()
                 case 3:
                     AccountTabView()
                 case 99:
@@ -57,6 +62,7 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .environment(tabBarState)
+            .environment(feedViewModel)
 
             // Custom bottom bar
             if !tabBarState.hideBottomBar {
@@ -138,7 +144,7 @@ struct ContentView: View {
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
-                .glassEffect(.regular, in: .capsule)
+                .glassEffect(.regular.tint(Color.black.opacity(0.2)), in: .capsule)
 
                 // Explore circle
                 Button {
@@ -244,7 +250,7 @@ struct ContentView: View {
     private let tabs: [(icon: String, selectedIcon: String, label: String)] = [
         ("newspaper", "newspaper.fill", "Feed"),
         ("safari", "safari.fill", "Explore"),
-        ("globe.americas", "globe.americas.fill", "Events"),
+        ("bookmark", "bookmark.fill", "Saved"),
         ("person.crop.circle", "person.crop.circle.fill", "Profile"),
     ]
 }

@@ -44,7 +44,7 @@ struct SearchTabView: View {
                 .padding(.top, 8)
             }
             .collapsesTabBarOnScroll()
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.Colors.backgroundPrimary)
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.large)
         }

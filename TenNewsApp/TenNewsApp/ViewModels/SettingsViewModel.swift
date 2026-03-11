@@ -29,6 +29,9 @@ final class SettingsViewModel {
     var hapticFeedbackEnabled: Bool = true {
         didSet { UserDefaults.standard.set(hapticFeedbackEnabled, forKey: "settings_haptic_feedback") }
     }
+    var appearanceMode: String = "dark" {
+        didSet { UserDefaults.standard.set(appearanceMode, forKey: "settings_appearance_mode") }
+    }
 
     // MARK: - Expand/Collapse State
 
@@ -96,6 +99,9 @@ final class SettingsViewModel {
         }
         if ud.object(forKey: "settings_haptic_feedback") != nil {
             hapticFeedbackEnabled = ud.bool(forKey: "settings_haptic_feedback")
+        }
+        if let mode = ud.string(forKey: "settings_appearance_mode") {
+            appearanceMode = mode
         }
     }
 

@@ -115,6 +115,97 @@ enum Topics {
     }
 }
 
+// MARK: - Topic Category (hierarchical)
+
+struct TopicCategory: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let icon: String
+    let subtopics: [Topic]
+}
+
+enum TopicCategories {
+    static let all: [TopicCategory] = [
+        TopicCategory(id: "politics", name: "Politics", icon: "building.columns", subtopics: [
+            Topic(id: "war_conflict", name: "War & Conflict", icon: "exclamationmark.triangle.fill"),
+            Topic(id: "us_politics", name: "US Politics", icon: "flag.fill"),
+            Topic(id: "european_politics", name: "European Politics", icon: "globe.europe.africa"),
+            Topic(id: "asian_politics", name: "Asian Politics", icon: "globe.asia.australia"),
+            Topic(id: "middle_east", name: "Middle East", icon: "mappin.circle.fill"),
+            Topic(id: "latin_america", name: "Latin America", icon: "globe.americas"),
+            Topic(id: "africa_oceania", name: "Africa & Oceania", icon: "globe"),
+            Topic(id: "human_rights", name: "Human Rights", icon: "person.2.fill"),
+        ]),
+        TopicCategory(id: "sports", name: "Sports", icon: "sportscourt.fill", subtopics: [
+            Topic(id: "nfl", name: "NFL", icon: "football.fill"),
+            Topic(id: "nba", name: "NBA", icon: "basketball.fill"),
+            Topic(id: "soccer", name: "Soccer", icon: "soccerball"),
+            Topic(id: "baseball", name: "Baseball", icon: "baseball.fill"),
+            Topic(id: "cricket", name: "Cricket", icon: "figure.cricket"),
+            Topic(id: "f1_motorsport", name: "F1 & Motorsport", icon: "car.fill"),
+            Topic(id: "boxing_mma", name: "Boxing & MMA", icon: "figure.boxing"),
+            Topic(id: "olympics", name: "Olympics", icon: "medal.fill"),
+        ]),
+        TopicCategory(id: "business", name: "Business", icon: "briefcase.fill", subtopics: [
+            Topic(id: "oil_energy", name: "Oil & Energy", icon: "bolt.fill"),
+            Topic(id: "automotive", name: "Automotive", icon: "car.fill"),
+            Topic(id: "retail_consumer", name: "Retail & Consumer", icon: "cart.fill"),
+            Topic(id: "corporate_deals", name: "Corporate Deals", icon: "handshake.fill"),
+            Topic(id: "trade_tariffs", name: "Trade & Tariffs", icon: "arrow.left.arrow.right"),
+            Topic(id: "corporate_earnings", name: "Corporate Earnings", icon: "chart.bar.fill"),
+            Topic(id: "startups_vc", name: "Startups & VC", icon: "lightbulb.fill"),
+            Topic(id: "real_estate", name: "Real Estate", icon: "building.2.fill"),
+        ]),
+        TopicCategory(id: "entertainment", name: "Entertainment", icon: "film.fill", subtopics: [
+            Topic(id: "movies_film", name: "Movies & Film", icon: "film.fill"),
+            Topic(id: "tv_streaming", name: "TV & Streaming", icon: "tv.fill"),
+            Topic(id: "music", name: "Music", icon: "music.note"),
+            Topic(id: "gaming", name: "Gaming", icon: "gamecontroller.fill"),
+            Topic(id: "celebrity_news", name: "Celebrity News", icon: "star.fill"),
+            Topic(id: "kpop_kdrama", name: "K-Pop & K-Drama", icon: "music.mic"),
+        ]),
+        TopicCategory(id: "tech", name: "Tech", icon: "cpu", subtopics: [
+            Topic(id: "ai_ml", name: "AI & ML", icon: "brain"),
+            Topic(id: "smartphones_gadgets", name: "Smartphones & Gadgets", icon: "iphone"),
+            Topic(id: "social_media", name: "Social Media", icon: "bubble.left.and.bubble.right.fill"),
+            Topic(id: "cybersecurity", name: "Cybersecurity", icon: "lock.shield"),
+            Topic(id: "space_tech", name: "Space Tech", icon: "sparkles"),
+            Topic(id: "robotics_hardware", name: "Robotics & Hardware", icon: "gearshape.2.fill"),
+        ]),
+        TopicCategory(id: "science", name: "Science", icon: "atom", subtopics: [
+            Topic(id: "space_astronomy", name: "Space & Astronomy", icon: "moon.stars.fill"),
+            Topic(id: "climate_environment", name: "Climate & Environment", icon: "cloud.sun.fill"),
+            Topic(id: "biology_nature", name: "Biology & Nature", icon: "leaf.fill"),
+            Topic(id: "earth_science", name: "Earth Science", icon: "globe.americas.fill"),
+        ]),
+        TopicCategory(id: "health", name: "Health", icon: "heart.fill", subtopics: [
+            Topic(id: "medical_breakthroughs", name: "Medical Breakthroughs", icon: "cross.case.fill"),
+            Topic(id: "public_health", name: "Public Health", icon: "heart.fill"),
+            Topic(id: "mental_health", name: "Mental Health", icon: "brain.head.profile"),
+            Topic(id: "pharma_drugs", name: "Pharma & Drug Industry", icon: "pills.fill"),
+        ]),
+        TopicCategory(id: "finance", name: "Finance", icon: "chart.line.uptrend.xyaxis", subtopics: [
+            Topic(id: "stock_markets", name: "Stock Markets", icon: "chart.bar.fill"),
+            Topic(id: "banking_lending", name: "Banking & Lending", icon: "building.columns.fill"),
+            Topic(id: "commodities", name: "Commodities", icon: "dollarsign.circle.fill"),
+        ]),
+        TopicCategory(id: "crypto", name: "Crypto", icon: "bitcoinsign.circle.fill", subtopics: [
+            Topic(id: "bitcoin", name: "Bitcoin", icon: "bitcoinsign.circle.fill"),
+            Topic(id: "defi_web3", name: "DeFi & Web3", icon: "network"),
+            Topic(id: "crypto_regulation", name: "Crypto Regulation", icon: "doc.text.fill"),
+        ]),
+        TopicCategory(id: "lifestyle", name: "Lifestyle", icon: "heart.circle.fill", subtopics: [
+            Topic(id: "pets_animals", name: "Pets & Animals", icon: "pawprint.fill"),
+            Topic(id: "home_garden", name: "Home & Garden", icon: "house.fill"),
+            Topic(id: "shopping_reviews", name: "Shopping & Reviews", icon: "bag.fill"),
+        ]),
+        TopicCategory(id: "fashion", name: "Fashion", icon: "tshirt.fill", subtopics: [
+            Topic(id: "sneakers_streetwear", name: "Sneakers & Streetwear", icon: "shoe.fill"),
+            Topic(id: "celebrity_style", name: "Celebrity Style", icon: "sparkles"),
+        ]),
+    ]
+}
+
 // MARK: - Region Names
 
 enum RegionNames {

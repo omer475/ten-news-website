@@ -19,8 +19,7 @@ struct ArticleCardView: View {
     @State private var imageIsLight = false
     @State private var showSafari = false
 
-    // Engagement tracking
-    @State private var engagementTimer: Task<Void, Never>?
+    // Engagement tracking (exit event only — engagement signals sent by FeedViewModel)
     @State private var viewStartTime: Date?
     private let analytics = AnalyticsService()
 
@@ -285,6 +284,14 @@ struct ArticleCardView: View {
                 Button {
                     if article.url != nil {
                         showSafari = true
+                        Task {
+                            try? await analytics.track(
+                                event: "source_clicked",
+                                articleId: Int(article.id.stringValue),
+                                category: article.category,
+                                source: article.source
+                            )
+                        }
                     }
                 } label: {
                     HStack(spacing: 8) {
@@ -452,6 +459,22 @@ struct ArticleCardView: View {
                 }
             }
             .frame(height: availableHeight)
+        } else {
+            // Fallback: show summary or detailed text when no bullets available
+            let fallbackText = article.displaySummary.isEmpty
+                ? (article.detailedText ?? article.contentNews ?? "")
+                : article.displaySummary
+
+            if !fallbackText.isEmpty {
+                ScrollView(.vertical, showsIndicators: false) {
+                    Text(fallbackText)
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineSpacing(6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(height: availableHeight)
+            }
         }
     }
 
@@ -581,6 +604,8 @@ struct ArticleCardView: View {
                 detailsInfoBox(details)
             } else if let graph = article.graph ?? article.graphData, let points = graph.data, !points.isEmpty {
                 compactGraph(points: points, graph: graph, expandedHeight: maxExpandedHeight)
+            } else {
+                summaryInfoBox
             }
         case .graph:
             if let graph = article.graph ?? article.graphData, let points = graph.data, !points.isEmpty {
@@ -594,6 +619,43 @@ struct ArticleCardView: View {
             if let timeline = article.timeline, !timeline.isEmpty {
                 compactTimeline(entries: timeline, expandedHeight: maxExpandedHeight)
             }
+        }
+    }
+
+    /// Fallback info box when no details/graph data available
+    private var summaryInfoBox: some View {
+        GlassEffectContainer {
+            HStack(spacing: 12) {
+                Image(systemName: "newspaper.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(effectiveColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(article.source ?? "News")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.8))
+                    Text(article.category ?? "General")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+
+                Spacer()
+
+                if let score = article.finalScore?.value ?? article.baseScore?.value {
+                    VStack(spacing: 2) {
+                        Text("SCORE")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.4))
+                            .tracking(0.5)
+                        Text("\(Int(score))")
+                            .font(.system(size: 20, weight: .heavy))
+                            .foregroundStyle(effectiveColor)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 85)
+            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
         }
     }
 
@@ -1039,9 +1101,9 @@ struct ArticleCardView: View {
     }
 
     private var shareButton: some View {
-        Button {
-            HapticManager.light()
-        } label: {
+        ShareLink(item: URL(string: article.url ?? "https://tennews.ai")!,
+                  subject: Text(article.plainTitle),
+                  message: Text(article.displaySummary)) {
             Image(systemName: "arrowshape.turn.up.right.fill")
                 .font(.system(size: 14))
                 .foregroundStyle(.white)
@@ -1049,6 +1111,7 @@ struct ArticleCardView: View {
                 .background(.black.opacity(0.3))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
+        .simultaneousGesture(TapGesture().onEnded { HapticManager.light() })
     }
 
     private var saveButton: some View {
@@ -1119,18 +1182,23 @@ struct ArticleCardView: View {
         }
 
         Task.detached(priority: .background) {
-            // Use cached UIImage if available, otherwise download
-            let uiImage: UIImage
-            if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
-                uiImage = cached
-            } else {
-                do {
-                    let (data, _) = try await URLSession.shared.data(from: url)
-                    guard let downloaded = UIImage(data: data) else { return }
-                    uiImage = downloaded
-                } catch { return }
+            // Wait for AsyncCachedImage to cache the image (avoids duplicate download)
+            var uiImage: UIImage?
+            for _ in 0..<30 {
+                if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
+                    uiImage = cached
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms intervals, up to 3s
             }
-            guard let cgImage = uiImage.cgImage else { return }
+            // Last resort: download if AsyncCachedImage hasn't cached it yet
+            if uiImage == nil {
+                guard let (data, _) = try? await URLSession.shared.data(from: url),
+                      let downloaded = UIImage(data: data) else { return }
+                AsyncCachedImage.cache.setObject(downloaded, forKey: url as NSURL)
+                uiImage = downloaded
+            }
+            guard let uiImage, let cgImage = uiImage.cgImage else { return }
 
                 let sampleW = min(cgImage.width, 80)
                 let sampleH = min(cgImage.height, 80)
@@ -1349,23 +1417,15 @@ struct ArticleCardView: View {
 
     // MARK: - Engagement Tracking
 
+    /// Only tracks article_exit with total dwell time.
+    /// Engagement signals (article_engaged / article_skipped / article_view)
+    /// are sent exclusively by FeedViewModel.recordSwipeAway() to avoid duplicates.
     private func startEngagementTracking() {
         viewStartTime = Date()
-        guard let articleId = Int(article.id.stringValue) else { return }
-        engagementTimer = Task {
-            try? await Task.sleep(nanoseconds: 10_000_000_000)
-            guard !Task.isCancelled else { return }
-            try? await analytics.track(
-                event: "article_engaged",
-                articleId: articleId,
-                metadata: ["engaged_seconds": "10"]
-            )
-        }
     }
 
     private func stopEngagementTracking() {
-        engagementTimer?.cancel()
-        engagementTimer = nil
+        // No timer to cancel — engagement signals handled by FeedViewModel
         if let start = viewStartTime, let articleId = Int(article.id.stringValue) {
             let seconds = Int(Date().timeIntervalSince(start))
             if seconds >= 3 {

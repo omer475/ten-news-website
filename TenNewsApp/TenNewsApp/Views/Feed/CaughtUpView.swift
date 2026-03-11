@@ -39,14 +39,6 @@ struct CaughtUpView: View {
                 .opacity(showCheckmark ? 1 : 0)
                 .offset(y: showCheckmark ? 0 : 10)
 
-            // Explore button
-            GlassCTAButton(title: "Explore World Events") {
-                // Navigation handled by parent
-            }
-            .frame(width: 220)
-            .opacity(showCheckmark ? 1 : 0)
-            .offset(y: showCheckmark ? 0 : 20)
-
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -56,6 +48,35 @@ struct CaughtUpView: View {
             }
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true).delay(0.6)) {
                 pulseCheckmark = true
+            }
+            HapticManager.success()
+        }
+    }
+}
+
+/// Compact banner for overlaying on the last article without blocking content.
+struct CompactCaughtUpBanner: View {
+    @State private var appeared = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(.green)
+
+            Text("You're all caught up!")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .scaleEffect(appeared ? 1 : 0.8)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                appeared = true
             }
             HapticManager.success()
         }

@@ -7,6 +7,7 @@ struct ExploreArticleSheet: View {
     let selectedArticle: Article
     let allArticles: [Article]
     let onDismiss: () -> Void
+    var preserveOrder: Bool = false
 
     @State private var pagerIndex: Int = 0
     @State private var articlePages: [Article] = []
@@ -52,11 +53,27 @@ struct ExploreArticleSheet: View {
         .onAppear {
             articlePages = buildArticlePages()
         }
+        .onChange(of: selectedArticle.id) {
+            // Rebuild pages if the selected article identity changes
+            articlePages = buildArticlePages()
+        }
+        .onChange(of: selectedArticle.displayBullets) {
+            // Update first page in-place when full content arrives from API
+            if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
+                articlePages[0] = selectedArticle
+            }
+        }
     }
 
     /// Build the page list once — selected article first, then up to 15 similar articles.
+    /// When preserveOrder is true, keeps the allArticles order (used for feed continuation).
     private func buildArticlePages() -> [Article] {
         let others = allArticles.filter { $0.id != selectedArticle.id }
+
+        if preserveOrder {
+            return [selectedArticle] + others
+        }
+
         let selectedCategory = selectedArticle.category
         let selectedTopics = Set(selectedArticle.topics ?? [])
 
