@@ -208,8 +208,12 @@ function getRecencyDecay(createdAt, category, shelfLifeDays) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
   const shelfLifeHours = (shelfLifeDays || 7) * 24;
   const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
-  // Blend: 40% freshness decay, 60% baseline (so even old evergreen content keeps value)
-  return freshnessMultiplier * 0.4 + 0.6;
+  // Blend: 70% freshness decay, 30% baseline.
+  // shelf_life_days handles per-vertical tuning:
+  //   Breaking news (1-2d): dies fast after ~24h
+  //   Explainers (14-30d): gradual decline over weeks
+  //   Evergreen (60d+): stays discoverable for months
+  return freshnessMultiplier * 0.7 + 0.3;
 }
 
 // ==========================================
@@ -708,7 +712,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
-  const ninetyDaysAgo = new Date(now - 90 * 24 * 3600000).toISOString();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
   const fortyEightHoursAgo = new Date(now - 48 * 3600000).toISOString();
@@ -735,22 +739,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 2160,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 2160,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 2160,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 2160,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -774,7 +778,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', ninetyDaysAgo)
+      .gte('created_at', thirtyDaysAgo)
       .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 200 : 500),
@@ -818,7 +822,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', ninetyDaysAgo)
+        .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
         .limit(100)
@@ -1404,13 +1408,13 @@ async function handleFallbackFeed(req, res, supabase, opts) {
   // Short cache — new users' feeds should adapt fast
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
 
-  const ninetyDaysAgoCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgoCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   // Fetch a large pool of articles within max shelf life window
   const { data: articles, error } = await supabase
     .from('published_articles')
     .select(ARTICLE_COLUMNS)
-    .gte('created_at', ninetyDaysAgoCutoff)
+    .gte('created_at', thirtyDaysAgoCutoff)
     .gte('ai_final_score', 400)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
     .limit(300);
