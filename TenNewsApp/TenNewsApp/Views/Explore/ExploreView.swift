@@ -36,19 +36,6 @@ struct ExploreView: View {
         filteredTopics.filter(\.isTrending)
     }
 
-    /// Group topics by category, preserving order of first appearance
-    private func groupedByCategory(_ topics: [ExploreTopic]) -> [(category: String, topics: [ExploreTopic])] {
-        var order: [String] = []
-        var map: [String: [ExploreTopic]] = [:]
-        for topic in topics {
-            if map[topic.category] == nil {
-                order.append(topic.category)
-            }
-            map[topic.category, default: []].append(topic)
-        }
-        return order.map { (category: $0, topics: map[$0]!) }
-    }
-
     var body: some View {
         ZStack {
             Group {
@@ -114,11 +101,10 @@ struct ExploreView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 28)
 
-                let groups = groupedByCategory(filteredTopics)
-                ForEach(Array(groups.enumerated()), id: \.element.category) { gIndex, group in
-                    categoryGroup(group.category, topics: group.topics)
-                        .sectionAppear(appeared: appeared, index: gIndex)
-                        .padding(.bottom, 36)
+                ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                    entitySection(topic)
+                        .sectionAppear(appeared: appeared, index: tIndex)
+                        .padding(.bottom, 32)
                 }
 
                 Spacer(minLength: 100)
@@ -151,72 +137,49 @@ struct ExploreView: View {
         return icons[category] ?? "newspaper.fill"
     }
 
-    private func categoryGroup(_ category: String, topics: [ExploreTopic]) -> some View {
-        let catColor = categoryColor(for: category)
-        let icon = categoryIcon(for: category)
+    // MARK: - Entity Section
 
-        return VStack(alignment: .leading, spacing: 0) {
-            // Category header
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 32, height: 32)
-                    .background(catColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    private func entitySection(_ topic: ExploreTopic) -> some View {
+        let catColor = categoryColor(for: topic.category)
+        let icon = categoryIcon(for: topic.category)
 
-                Text(category)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
-
-            // Entity rows
-            ForEach(Array(topics.enumerated()), id: \.element.id) { index, topic in
-                entityRow(topic, catColor: catColor)
-                    .padding(.bottom, index < topics.count - 1 ? 6 : 0)
-            }
-        }
-    }
-
-    // MARK: - Entity Row
-
-    private func entityRow(_ topic: ExploreTopic, catColor: Color) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Entity header — tappable
+        return VStack(alignment: .leading, spacing: 12) {
+            // Entity header — SF Symbol icon + bold name + chevron
             Button {
                 openTopic(topic)
             } label: {
                 HStack(spacing: 12) {
-                    Circle()
-                        .fill(catColor.opacity(0.15))
-                        .frame(width: 8, height: 8)
+                    Image(systemName: icon)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(catColor)
+                        .frame(width: 34, height: 34)
+                        .background(catColor.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
 
-                    Text(topic.displayTitle)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(topic.displayTitle)
+                            .font(.system(size: 19, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+
+                        Text(topic.category)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
 
                     Spacer()
 
-                    Text("\(topic.articles.count) articles")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.tertiary)
                 }
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal article scroll with scroll tracking
+            // Horizontal article scroll
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 14) {
+                LazyHStack(spacing: 12) {
                     ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
                         Button {
                             trackArticleTap(article, topic: topic)
@@ -231,7 +194,6 @@ struct ExploreView: View {
                         }
                         .buttonStyle(.plain)
                         .onAppear {
-                            // When 3rd article card appears, user has scrolled enough → track
                             if index == 2 {
                                 trackScrollIfNeeded(topic)
                             }
@@ -242,6 +204,26 @@ struct ExploreView: View {
                 .padding(.horizontal, 20)
             }
             .scrollTargetBehavior(.viewAligned)
+
+            // "See all" action button
+            Button {
+                openTopic(topic)
+            } label: {
+                HStack(spacing: 6) {
+                    Text("See all \(topic.articles.count) articles")
+                        .font(.system(size: 14, weight: .semibold))
+
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(catColor)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(catColor.opacity(0.1))
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
         }
     }
 

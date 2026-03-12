@@ -1166,9 +1166,9 @@ struct ArticleCardView: View {
     }
 
     /// Cache for extracted colors so we don't recompute on every appear
-    nonisolated(unsafe) private static let colorCache = NSCache<NSURL, UIColor>()
-    nonisolated(unsafe) private static let blurColorCache = NSCache<NSURL, UIColor>()
-    nonisolated(unsafe) private static let lightnessCache = NSCache<NSURL, NSNumber>()
+    nonisolated(unsafe) static let colorCache = NSCache<NSURL, UIColor>()
+    nonisolated(unsafe) static let blurColorCache = NSCache<NSURL, UIColor>()
+    nonisolated(unsafe) static let lightnessCache = NSCache<NSURL, NSNumber>()
 
     private func extractDominantColor(from url: URL) {
         // Check color cache first
