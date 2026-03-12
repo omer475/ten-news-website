@@ -963,10 +963,16 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // Fetch per-category articles for followed interests
+  // Fetch articles for followed interests using TWO strategies:
+  // 1. Category-based: top articles from each interest category (broad)
+  // 2. Tag-based: articles matching specific interest tags (precise)
+  // This ensures niche topics (gaming in Entertainment, fashion in Lifestyle)
+  // don't get drowned by higher-scoring irrelevant articles in mega-categories.
   let interestArticles = [];
-  if (interestCategories.size > 0) {
+  if (interestCategories.size > 0 || interestTags.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
+
+    // Strategy 1: Category-based (existing approach, reduced limit)
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
@@ -975,12 +981,36 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
-        .limit(100)
+        .limit(50)
     );
-    const catResults = await Promise.all(catPromises);
+
+    // Strategy 2: Tag-based — search for articles containing specific interest tags
+    // Uses Supabase text search on the interest_tags JSONB column
+    // Fetch a large pool and filter client-side for tag overlap
+    const tagArray = [...interestTags].slice(0, 20); // top 20 tags
+    const tagPromises = tagArray.map(tag =>
+      supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+        .ilike('interest_tags', `%${tag}%`)
+        .gte('created_at', seventyTwoHoursAgo)
+        .gte('ai_final_score', 100)
+        .order('ai_final_score', { ascending: false })
+        .limit(20)
+    );
+
+    const [catResults, tagResults] = await Promise.all([
+      Promise.all(catPromises),
+      Promise.all(tagPromises),
+    ]);
+
     for (const r of catResults) {
       if (r.data) interestArticles.push(...r.data);
     }
+    for (const r of tagResults) {
+      if (r.data) interestArticles.push(...r.data);
+    }
+
     // Deduplicate
     const seen = new Set();
     interestArticles = interestArticles.filter(a => {
@@ -1311,8 +1341,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
-  // Boost articles whose interest_tags overlap with the user's subtopic tags
-  // Dynamic category affinity: use engagement RATE (not volume) to boost categories
+  // FILTER OUT zero-match articles — if you selected "Gaming" and an article
+  // has zero gaming tags, it has no business being in your feed.
+  // Strong tag boost so niche content beats high-score generic content.
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
@@ -1326,7 +1357,8 @@ async function handleV2Feed(req, res, supabase, opts) {
         const rate = categoryProfile[a.category].engaged / categoryProfile[a.category].shown;
         catBoost *= (0.7 + rate * 1.3); // rate 0% → 0.7x, rate 50% → 1.35x, rate 100% → 2.0x
       }
-      const tagBoost = 1.0 + (tagMatches * 0.25);
+      // Strong tag boost: 0 matches = 0.1x (near-elimination), 1 = 1.5x, 2 = 2.0x, 3+ = 2.5x
+      const tagBoost = tagMatches === 0 ? 0.1 : (1.0 + tagMatches * 0.5);
       return {
         ...article,
         _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
@@ -1334,6 +1366,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         _bucket: 'interest',
       };
     })
+    .filter(a => !isHoldback ? a._tagMatches > 0 : true) // Remove zero-match articles
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
