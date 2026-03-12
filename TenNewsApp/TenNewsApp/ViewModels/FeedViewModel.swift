@@ -50,10 +50,15 @@ final class FeedViewModel {
         currentUserId = userId
         reRanker.reset()
         do {
+            // Send local reading history so server excludes already-seen articles
+            let historyIds = ReadingHistoryManager.shared.entries
+                .prefix(300)
+                .map { $0.articleId }
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: preferences,
-                userId: userId
+                userId: userId,
+                seenIds: Array(historyIds)
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor
@@ -138,10 +143,14 @@ final class FeedViewModel {
         isLoading = true
         errorMessage = nil
         do {
+            let historyIds = ReadingHistoryManager.shared.entries
+                .prefix(300)
+                .map { $0.articleId }
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: currentPreferences,
-                userId: currentUserId
+                userId: currentUserId,
+                seenIds: Array(historyIds)
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor

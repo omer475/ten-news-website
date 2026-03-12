@@ -651,7 +651,7 @@ export default async function handler(req, res) {
         .select('article_id')
         .eq('user_id', userId)
         .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(500);
 
