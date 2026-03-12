@@ -68,10 +68,12 @@ const SUBTOPIC_CATEGORY_MAP = {
   'Celebrity Style & Red Carpet': ['Fashion', 'Entertainment'],
 }
 
-// When user has >= this many direct tag→entity matches,
-// we consider them "mature" and ONLY use their tag_profile.
-// No more category/country fallbacks. Like TikTok/Pinterest after ~50 interactions.
-const MATURITY_THRESHOLD = 8
+// Sliding blend: behavior_weight = min(directMatches / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
+// At 25 matches: 50/50 blend. At 50+: 85% behavior, 15% cold_start.
+// Cold_start never fully disappears — onboarding always has residual influence.
+const BLEND_FULL_AT = 50    // interactions needed to reach max behavior weight
+const MAX_BEHAVIOR_WEIGHT = 0.85  // cold_start always keeps 15% influence
+const BLEND_START_AT = 5    // minimum matches before any behavior influence
 
 const CATEGORY_EMOJIS = {
   'Soccer': '⚽', 'Basketball': '🏀', 'Football': '🏈', 'Baseball': '⚾',
@@ -157,57 +159,37 @@ export default async function handler(req, res) {
       directMatches = entities || []
     }
 
-    const isMatureUser = directMatches.length >= MATURITY_THRESHOLD
+    // ──────────────────────────────────────────────
+    // 3. BUILD PERSONALIZED TOPICS — SLIDING BLEND
+    //    behavior_weight slides from 0% to 85% as user accumulates
+    //    entity matches. Cold_start always keeps ≥15% influence.
+    // ──────────────────────────────────────────────
 
-    // ──────────────────────────────────────────────
-    // 3. BUILD PERSONALIZED TOPICS
-    // ──────────────────────────────────────────────
+    const matchCount = directMatches.length
+    const behaviorWeight = matchCount < BLEND_START_AT
+      ? 0
+      : Math.min((matchCount - BLEND_START_AT) / (BLEND_FULL_AT - BLEND_START_AT), 1.0) * MAX_BEHAVIOR_WEIGHT
+    const coldStartWeight = 1.0 - behaviorWeight
+
+    const TARGET_TOPICS = 20
+    const behaviorSlots = Math.round(TARGET_TOPICS * behaviorWeight)
+    const coldStartSlots = TARGET_TOPICS - behaviorSlots
 
     const userTopics = []
     const usedEntityNames = new Set()
 
-    if (isMatureUser) {
-      // ═══════════════════════════════════════════
-      // MODE 2: MATURE USER — pure tag_profile
-      // No category caps. No country bias. Just behavior.
-      // If user has 12 soccer entities, show all 12.
-      // ═══════════════════════════════════════════
+    // ═══════════════════════════════════════════
+    // BEHAVIOR PORTION — entities from tag_profile
+    // ═══════════════════════════════════════════
 
-      // Build lookup map
+    if (behaviorSlots > 0 && directMatches.length > 0) {
       const entityMap = {}
       for (const e of directMatches) {
         entityMap[e.entity_name] = { display_title: e.display_title, category: e.category }
       }
 
       for (const [tag, weight] of sortedTags) {
-        if (!entityMap[tag]) continue
-        if (usedEntityNames.has(tag)) continue
-
-        usedEntityNames.add(tag)
-        userTopics.push({
-          entity_name: tag,
-          display_title: entityMap[tag].display_title,
-          category: entityMap[tag].category,
-          weight,
-          type: 'personalized'
-        })
-
-        if (userTopics.length >= 20) break // higher cap for mature users
-      }
-
-    } else {
-      // ═══════════════════════════════════════════
-      // MODE 1: COLD START — onboarding + country + category
-      // Turkish soccer fan → show Turkish football entities first
-      // ═══════════════════════════════════════════
-
-      // First: add any direct tag matches we DO have
-      const entityMap = {}
-      for (const e of directMatches) {
-        entityMap[e.entity_name] = { display_title: e.display_title, category: e.category }
-      }
-
-      for (const [tag, weight] of sortedTags) {
+        if (userTopics.length >= behaviorSlots) break
         if (!entityMap[tag]) continue
         if (usedEntityNames.has(tag)) continue
 
@@ -220,16 +202,21 @@ export default async function handler(req, res) {
           type: 'personalized'
         })
       }
+    }
 
-      // Then: fill gaps using category-based lookup from onboarding topics
+    // ═══════════════════════════════════════════
+    // COLD START PORTION — onboarding + country + category
+    // Always runs (even for mature users at 15% minimum)
+    // ═══════════════════════════════════════════
+
+    if (coldStartSlots > 0) {
       const interestCategories = new Set()
       for (const topic of followedTopics) {
         const cats = SUBTOPIC_CATEGORY_MAP[topic]
         if (cats) cats.forEach(c => interestCategories.add(c))
       }
 
-      if (interestCategories.size > 0 && userTopics.length < 15) {
-        // Fetch entities from the user's interest categories
+      if (interestCategories.size > 0) {
         const { data: catEntities } = await supabase
           .from('concept_entities')
           .select('entity_name, display_title, category, popularity_score')
@@ -238,21 +225,17 @@ export default async function handler(req, res) {
           .limit(200)
 
         if (catEntities && catEntities.length > 0) {
-          // If we know the user's country, prioritize country-relevant entities
-          // by checking entity_seeds for country-specific tags
           let countryEntityNames = new Set()
           if (homeCountry) {
             const { data: countrySeeds } = await supabase
               .from('entity_seeds')
               .select('entity_tag')
               .eq('country_code', homeCountry.toUpperCase())
-
             if (countrySeeds) {
               countryEntityNames = new Set(countrySeeds.map(s => s.entity_tag.toLowerCase()))
             }
           }
 
-          // Sort: country-relevant first, then by popularity
           const sorted = catEntities.sort((a, b) => {
             const aCountry = countryEntityNames.has(a.entity_name.toLowerCase()) ? 1 : 0
             const bCountry = countryEntityNames.has(b.entity_name.toLowerCase()) ? 1 : 0
@@ -260,14 +243,13 @@ export default async function handler(req, res) {
             return (b.popularity_score || 0) - (a.popularity_score || 0)
           })
 
-          // Track per-category count to ensure diversity (max 4 per category for cold-start)
           const catCounts = {}
           for (const t of userTopics) {
             catCounts[t.category] = (catCounts[t.category] || 0) + 1
           }
 
           for (const e of sorted) {
-            if (userTopics.length >= 15) break
+            if (userTopics.length >= TARGET_TOPICS) break
             if (usedEntityNames.has(e.entity_name)) continue
             if (skipProfile[e.entity_name] && skipProfile[e.entity_name] > 0.3) continue
             if ((catCounts[e.category] || 0) >= 4) continue
@@ -288,25 +270,55 @@ export default async function handler(req, res) {
     }
 
     // ──────────────────────────────────────────────
-    // 4. TRENDING — always diverse (max 2 per category)
+    // 4. TRENDING — computed from real article volume in last 48h
+    //    An entity with 15 articles this week is objectively more
+    //    trending than one with 2. Max 1 per category for diversity.
     // ──────────────────────────────────────────────
 
-    const { data: trendingEntities } = await supabase
+    // Step 1: Count articles per entity tag in last 48h
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+    const { data: recentArticles } = await supabase
+      .from('published_articles')
+      .select('interest_tags')
+      .gte('published_at', fortyEightHoursAgo)
+      .not('interest_tags', 'is', null)
+
+    const entityArticleCount = {}
+    if (recentArticles) {
+      for (const article of recentArticles) {
+        const tags = Array.isArray(article.interest_tags)
+          ? article.interest_tags.slice(0, 6).map(t => t.toLowerCase())
+          : []
+        for (const tag of tags) {
+          entityArticleCount[tag] = (entityArticleCount[tag] || 0) + 1
+        }
+      }
+    }
+
+    // Step 2: Load all entities, rank by real article volume
+    const { data: allEntities } = await supabase
       .from('concept_entities')
-      .select('entity_name, display_title, category, popularity_score')
-      .order('popularity_score', { ascending: false })
-      .limit(100)
+      .select('entity_name, display_title, category')
 
     const trendingTopics = []
     const trendingCatCounts = {}
 
-    if (trendingEntities) {
-      for (const e of trendingEntities) {
+    if (allEntities) {
+      // Score each entity by how many recent articles mention it
+      const scored = allEntities
+        .map(e => ({
+          ...e,
+          articleCount: entityArticleCount[e.entity_name] || 0
+        }))
+        .filter(e => e.articleCount > 0) // only entities with actual recent coverage
+        .sort((a, b) => b.articleCount - a.articleCount)
+
+      for (const e of scored) {
         if (usedEntityNames.has(e.entity_name)) continue
         if (skipProfile[e.entity_name] && skipProfile[e.entity_name] > 0.3) continue
 
         const cat = e.category || 'Other'
-        if ((trendingCatCounts[cat] || 0) >= 2) continue
+        if ((trendingCatCounts[cat] || 0) >= 1) continue // max 1 per category
 
         trendingCatCounts[cat] = (trendingCatCounts[cat] || 0) + 1
         usedEntityNames.add(e.entity_name)
@@ -438,7 +450,9 @@ export default async function handler(req, res) {
       personalized_count: topics.filter(t => t.type === 'personalized').length,
       trending_count: topics.filter(t => t.type === 'trending').length,
       total: topics.length,
-      mode: isMatureUser ? 'behavior' : 'cold_start'
+      mode: behaviorWeight > 0.5 ? 'behavior' : behaviorWeight > 0 ? 'blended' : 'cold_start',
+      behavior_weight: Math.round(behaviorWeight * 100),
+      entity_matches: matchCount
     })
 
   } catch (e) {
