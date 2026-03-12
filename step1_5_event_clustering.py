@@ -719,11 +719,17 @@ class ClusteringConfig:
     # CENTROID-BASED MATCHING (v3.0)
     # Each cluster stores a centroid (average of all article embeddings).
     # New articles match if cosine similarity to centroid >= threshold.
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.90  # Fixed threshold, no dynamic adjustment
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.87  # Lowered from 0.90 to group more related articles
     # 0.95+ = Nearly identical articles
-    # 0.90-0.95 = Same event, different wording (MATCH)
-    # 0.85-0.90 = Related but possibly different events (NO MATCH)
-    # <0.85 = Different events
+    # 0.87-0.95 = Same event, different wording (MATCH)
+    # 0.80-0.87 = Related but possibly different events (NO MATCH)
+    # <0.80 = Different events
+
+    # Fallback string-based matching thresholds (used when embeddings unavailable)
+    TITLE_SIMILARITY_THRESHOLD = 0.75  # Strong match: high title similarity
+    MIN_TITLE_SIMILARITY = 0.40       # Minimum title similarity to check keywords
+    KEYWORD_MATCH_THRESHOLD = 3       # Shared keywords needed for moderate match
+    ENTITY_MATCH_THRESHOLD = 2        # Shared entities needed for entity match
     
     # Time windows
     MAX_CLUSTER_AGE_HOURS = 336  # Only match with clusters updated in last 336h (14 days)
@@ -1442,7 +1448,8 @@ class EventClusteringEngine:
             
         except Exception as e:
             print(f"❌ Error getting cluster sources: {e}")
-    
+            return []
+
     def get_all_cluster_sources_batch(self, cluster_ids: List[int]) -> Dict[int, List[Dict]]:
         """
         Get all source articles for multiple clusters in ONE query.
@@ -1570,9 +1577,14 @@ class EventClusteringEngine:
                 'cluster_id': cluster_id
             }).eq('id', source_article_id).execute()
 
-            # Update cluster's last_updated_at and centroid
+            # Update cluster's last_updated_at, centroid, and source_count
+            # Fetch current source_count to increment it accurately
+            current = self.supabase.table('clusters').select('source_count').eq('id', cluster_id).execute()
+            current_count = (current.data[0].get('source_count', 1) if current.data else 1) or 1
+
             update_data = {
-                'last_updated_at': datetime.utcnow().isoformat()
+                'last_updated_at': datetime.utcnow().isoformat(),
+                'source_count': current_count + 1
             }
             if new_centroid is not None:
                 centroid_list = new_centroid.tolist() if hasattr(new_centroid, 'tolist') else list(new_centroid)
