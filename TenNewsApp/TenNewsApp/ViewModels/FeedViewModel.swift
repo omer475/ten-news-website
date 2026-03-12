@@ -104,7 +104,8 @@ final class FeedViewModel {
 
     /// Call when user leaves a card (swiped away). Computes dwell time,
     /// feeds to re-ranker, and sends the appropriate analytics event:
-    ///  - <3s dwell → article_skipped (pushes taste vector AWAY)
+    ///  - <1.5s dwell → article_skipped (hard skip, strong negative)
+    ///  - 1.5-3s dwell → article_skipped (soft skip, moderate negative)
     ///  - 3-5s dwell → article_view (neutral, no taste vector update)
     ///  - >=5s dwell → article_engaged (pulls taste vector toward content)
     func recordSwipeAway(fromIndex: Int) {
@@ -120,10 +121,15 @@ final class FeedViewModel {
         viewStartTimes.removeValue(forKey: article.id.stringValue)
         reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
 
-        // Send dwell-based event to server
+        // Send dwell-based event to server (4-tier contextual signals)
         let event: String
-        if dwellSeconds < 3.0 {
+        var meta: [String: String] = ["dwell": String(format: "%.1f", dwellSeconds)]
+        if dwellSeconds < 1.5 {
             event = "article_skipped"
+            meta["skip_type"] = "hard"
+        } else if dwellSeconds < 3.0 {
+            event = "article_skipped"
+            meta["skip_type"] = "soft"
         } else if dwellSeconds >= 5.0 {
             event = "article_engaged"
         } else {
@@ -133,7 +139,23 @@ final class FeedViewModel {
             try? await analytics.track(
                 event: event,
                 articleId: Int(article.id.stringValue),
-                metadata: ["dwell": String(format: "%.1f", dwellSeconds)]
+                metadata: meta
+            )
+        }
+    }
+
+    /// Call when user swipes BACK to a previously seen article.
+    /// This is a very strong positive signal — they chose to return.
+    func recordRevisit(at index: Int) {
+        let arts = articles
+        guard index < arts.count else { return }
+        let article = arts[index]
+        reRanker.recordRevisit(article: article)
+        Task {
+            try? await analytics.track(
+                event: "article_revisit",
+                articleId: Int(article.id.stringValue),
+                metadata: [:]
             )
         }
     }

@@ -346,49 +346,159 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 // SCORING V3: Entity-level + session momentum + skip penalty
 // ==========================================
 
-function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
+// ==========================================
+// UNIFIED PER-USER SCORING FUNCTION
+// One coherent score: "how likely is THIS user to engage with THIS article?"
+// Used within each pool — pools provide structural diversity, this provides ranking.
+//
+// Formula: categoryAffinity * 0.25 + tagOverlap * 0.30 + tasteSimilarity * 0.25
+//          + freshness * 0.10 + globalPopularity * 0.10 - skipPenalty
+//
+// tasteSimilarity = cosine to nearest cluster vector (multi-interest) or
+// single taste_vector for users without clusters yet.
+// ==========================================
+
+function scoreUnified(article, opts) {
+  const {
+    tagProfile = {}, skipProfile = null, sessionBoosts = {},
+    similarity = 0, categoryProfile = {}, personalCategories = new Set(),
+    isDiscovery = false, isHoldback = false,
+  } = opts;
+
+  const tags = safeJsonParse(article.interest_tags, []);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+  const aiScore = Math.min((article.ai_final_score || 0) / 1000, 1.0); // normalize 0-1
+  const n = Math.max(tags.length, 1);
+  const cat = article.category || 'Other';
+
+  // 1. CATEGORY AFFINITY (0.25) — from engagement rate data
+  let categoryAffinity = 0.5; // neutral default
+  if (!isHoldback && categoryProfile[cat] && categoryProfile[cat].shown >= 5) {
+    categoryAffinity = categoryProfile[cat].engaged / categoryProfile[cat].shown;
+  }
+  // Discovery boost: unfamiliar categories score higher
+  if (isDiscovery) {
+    categoryAffinity = personalCategories.has(cat) ? 0.3 : 0.8;
+  }
+
+  // 2. TAG OVERLAP (0.30) — entity-level matching with 30% cap
+  let tagOverlap = 0;
+  let tagCap = 1.0;
+  if (!isHoldback) {
+    const totalTagWeight = Object.values(tagProfile).reduce(
+      (sum, v) => (typeof v === 'number' ? sum + v : sum), 0
+    );
+    tagCap = totalTagWeight > 0 ? totalTagWeight * 0.30 : 1.0;
+  }
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    tagOverlap += Math.min(tagProfile[t] || 0, tagCap);
+  }
+  tagOverlap /= n;
+  // Session momentum adds to tag overlap
+  let momentum = 0;
+  for (const tag of tags) {
+    momentum += sessionBoosts[tag.toLowerCase()] || 0;
+  }
+  momentum /= n;
+  tagOverlap = Math.min(tagOverlap + momentum * 0.3, 1.0);
+
+  // 3. TASTE SIMILARITY (0.25) — pgvector cosine similarity
+  // When multi-interest clusters are active, this is the similarity to the
+  // NEAREST cluster vector (max across all clusters), not the single taste_vector.
+  const tasteSimilarity = Math.max(0, Math.min(similarity, 1.0));
+
+  // 4. FRESHNESS (0.10) — recency decay with shelf life
+  const freshness = recency;
+
+  // 5. GLOBAL POPULARITY (0.10) — editorial quality score
+  const globalPopularity = aiScore;
+
+  // SKIP PENALTY — from skip_profile with 7-day half-life decay
+  let skipPenalty = 0;
+  if (!isHoldback && skipProfile) {
+    const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000;
+    const now = Date.now();
+    let skipScore = 0;
+    for (const tag of tags) {
+      const entry = skipProfile[tag.toLowerCase()];
+      if (typeof entry === 'object' && entry !== null && entry.w) {
+        const age = now - new Date(entry.t || 0).getTime();
+        skipScore += entry.w * Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
+      } else if (typeof entry === 'number') {
+        skipScore += entry * 0.5;
+      }
+    }
+    skipScore /= n;
+    const netSkip = Math.max(0, skipScore - tagOverlap * 0.5);
+    skipPenalty = Math.min(netSkip, isDiscovery ? 0.4 : 0.9);
+  }
+
+  // Interest velocity: first-seen bonus for newly discovered interests
+  // Tags appearing in _new_interests (within 48h) get a boost
+  let velocityBoost = 1.0;
+  if (!isHoldback) {
+    const newInterests = tagProfile._new_interests || [];
+    const now = Date.now();
+    let newTagMatches = 0;
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      if (newInterests.find(e => e.tag === t && (now - e.ts) < 48 * 3600000)) {
+        newTagMatches++;
+      }
+    }
+    if (newTagMatches > 0) {
+      // Confidence: boost is stronger with more matching new tags
+      const confidence = Math.min(newTagMatches / 2, 1.0);
+      velocityBoost = 1.0 + (0.30 * confidence); // up to 30% boost
+    }
+  }
+
+  // Evening heuristic: after 8pm, slightly boost entertainment/lifestyle, reduce hard news
+  const hour = new Date().getHours();
+  const isEvening = hour >= 20 || hour < 6;
+  let timeBoost = 1.0;
+  if (!isHoldback && isEvening) {
+    const lc = cat.toLowerCase();
+    if (lc === 'entertainment' || lc === 'lifestyle') timeBoost = 1.2;
+    else if (lc === 'politics' || lc === 'world') timeBoost = 0.85;
+  }
+
+  // Discovery surprise factor
+  const surprise = isDiscovery ? (1 + Math.random() * 0.4) : 1.0;
+
+  const score = (
+    categoryAffinity * 0.25 +
+    tagOverlap * 0.30 +
+    tasteSimilarity * 0.25 +
+    freshness * 0.10 +
+    globalPopularity * 0.10
+  ) * 1000 * surprise * velocityBoost * timeBoost;
+
+  return score * (1 - skipPenalty);
+}
+
+// Legacy wrappers for holdback group — preserve old scoring behavior
+function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile, isHoldback = false) {
+  if (!isHoldback) return null; // should use scoreUnified instead
   const tags = safeJsonParse(article.interest_tags, []);
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   const aiScore = article.ai_final_score || 0;
   const n = Math.max(tags.length, 1);
-
-  let tagScore = 0;
-  let momentumBoost = 0;
-  let skipScore = 0;
-
-  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days
-  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
-  const now = Date.now();
-
+  let tagScore = 0, momentumBoost = 0, skipScore = 0;
   for (const tag of tags) {
     const t = tag.toLowerCase();
     tagScore += tagProfile[t] || 0;
     momentumBoost += sessionBoosts[t] || 0;
     if (skipProfile) {
       const entry = skipProfile[t];
-      if (typeof entry === 'object' && entry !== null && entry.w) {
-        // Time-stamped skip entry: { w: weight, t: timestamp }
-        const age = now - new Date(entry.t || 0).getTime();
-        const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
-        skipScore += entry.w * decay;
-      } else if (typeof entry === 'number') {
-        // Legacy flat number — apply 50% decay as default
-        skipScore += entry * 0.5;
-      }
+      if (typeof entry === 'number') skipScore += entry * 0.5;
     }
   }
-
-  tagScore /= n;
-  momentumBoost /= n;
-  skipScore /= n;
-
-  // Skip penalty: only penalize if skip signal > interest signal
+  tagScore /= n; momentumBoost /= n; skipScore /= n;
   const netSkip = Math.max(0, skipScore - tagScore * 0.5);
-  const skipPenalty = Math.min(netSkip, 0.9);
-
-  // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
-  return base * (1 - skipPenalty);
+  const skipPen = Math.min(netSkip, 0.9);
+  return (tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency) * (1 - skipPen);
 }
 
 function scoreTrendingV3(article) {
@@ -398,9 +508,7 @@ function scoreTrendingV3(article) {
 
 function scoreDiscoveryV3(article, personalCategories) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
-  // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
-  // Random factor for variable reward (surprise element)
   const surprise = 1 + Math.random() * 0.4;
   return (article.ai_final_score || 0) * recency * categoryBoost * surprise;
 }
@@ -569,6 +677,8 @@ export default async function handler(req, res) {
     let tasteVectorMinilm = null;
     let skipProfile = null;
     let storedTagProfile = null;
+    let discoveryStats = {};
+    let categoryProfile = {};
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
 
@@ -576,7 +686,7 @@ export default async function handler(req, res) {
       // Look up profiles table (where real users live, id = auth UUID)
       let { data: userData } = await supabase
         .from('profiles')
-        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile')
+        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile, discovery_stats, category_profile')
         .eq('id', userId)
         .single();
 
@@ -605,10 +715,12 @@ export default async function handler(req, res) {
         persUserId = userData.id;
       }
 
-      // Extract MiniLM taste vector, skip profile, and stored tag profile
+      // Extract MiniLM taste vector, skip profile, stored tag profile, and category data
       tasteVectorMinilm = userData?.taste_vector_minilm || null;
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
+      discoveryStats = userData?.discovery_stats || {};
+      categoryProfile = userData?.category_profile || {};
 
       // Check if user has interest clusters (PinnerSage-lite)
       if (tasteVector && persUserId) {
@@ -685,6 +797,8 @@ export default async function handler(req, res) {
       similarityFloor,
       skipProfile,
       storedTagProfile,
+      discoveryStats,
+      categoryProfile,
       seenArticleIds,
       sessionEngagedIds,
       sessionSkippedIds,
@@ -706,10 +820,20 @@ export default async function handler(req, res) {
 
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        similarityFloor, skipProfile, storedTagProfile, discoveryStats, categoryProfile,
+        seenArticleIds, sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+  discoveryStats = discoveryStats || {};
+  categoryProfile = categoryProfile || {};
   sessionEngagedIds = sessionEngagedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
+
+  // 10% holdback: keep a control group on the pre-improvement algorithm
+  // Hash userId to deterministically assign users to holdback
+  const hashCode = (userId || '').split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
+  const isHoldback = Math.abs(hashCode) % 10 === 0;
+  if (isHoldback) {
+    console.log('[feed] User in holdback group:', userId?.substring(0, 8));
+  }
 
   const now = Date.now();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
@@ -841,6 +965,35 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // ==========================================
+  // COLD-START: Seed tag_profile from onboarding topics
+  // When a user has selected topics but has no tag_profile yet,
+  // seed it so the algorithm has something to work with immediately.
+  // Broad categories = 0.3 weight, specific sub-topics = 0.5 weight.
+  // ==========================================
+
+  if ((!storedTagProfile || Object.keys(storedTagProfile).filter(k => !k.startsWith('_')).length === 0)
+      && followedTopics.length > 0 && userId) {
+    const seededProfile = {};
+    for (const topic of followedTopics) {
+      const mapping = ONBOARDING_TOPIC_MAP[topic];
+      if (!mapping) continue;
+      // Specific sub-topics (e.g. "NBA", "AI & Machine Learning") get higher weight
+      const isSpecific = mapping.tags.length <= 8;
+      const weight = isSpecific ? 0.5 : 0.3;
+      for (const tag of mapping.tags) {
+        const t = tag.toLowerCase();
+        seededProfile[t] = Math.max(seededProfile[t] || 0, weight);
+      }
+    }
+    seededProfile._last_updated = Date.now();
+    storedTagProfile = seededProfile;
+    // Persist the seeded profile so it's available on next request
+    supabase.from('profiles').update({ tag_profile: seededProfile }).eq('id', userId)
+      .then(() => console.log('[feed] Seeded tag_profile from onboarding for:', userId?.substring(0, 8)))
+      .catch(() => {});
+  }
+
+  // ==========================================
   // PHASE 2: SESSION MOMENTUM (streak detection)
   // ==========================================
 
@@ -960,14 +1113,37 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // DISCOVERY: diverse categories, exclude personal & trending
+  // Quality-gated: only top 20% of each category (prevents bad surprise articles)
   // Cold-start: much higher caps to fill the feed
   const discoveryCatMax = hasAnyPersonalization ? 2 : 8;
   const discoveryTotalMax = hasAnyPersonalization ? 30 : 200;
+
+  // Compute per-category quality thresholds (top 20%)
+  const catScores = {};
+  for (const a of (discoveryResult.data || [])) {
+    const cat = a.category || 'Other';
+    if (!catScores[cat]) catScores[cat] = [];
+    catScores[cat].push(a.ai_final_score || 0);
+  }
+  const catDiscoveryThresholds = {};
+  for (const [cat, scores] of Object.entries(catScores)) {
+    scores.sort((a, b) => b - a);
+    const idx = Math.max(0, Math.floor(scores.length * 0.20));
+    catDiscoveryThresholds[cat] = scores[idx] || 0;
+  }
+
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
+    // Quality gate: only top 20% of each category (holdback skips this)
+    if (!isHoldback && hasAnyPersonalization && (a.ai_final_score || 0) < (catDiscoveryThresholds[cat] || 0)) continue;
+    // Discovery memory: stop exploring categories the user consistently rejects
+    if (!isHoldback && discoveryStats[cat] && discoveryStats[cat].shown >= 5) {
+      const rate = discoveryStats[cat].engaged / discoveryStats[cat].shown;
+      if (rate < 0.15) continue; // less than 15% engagement after 5+ shown = rejected
+    }
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
     discoveryArticleMeta.push(a);
@@ -1027,15 +1203,27 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // Personal bucket: entity-level tag scoring with session momentum
+  // Shared scoring options for unified function
+  const scoreOpts = {
+    tagProfile: effectiveTagProfile,
+    skipProfile: effectiveSkipProfile,
+    sessionBoosts: momentum.boosts,
+    categoryProfile,
+    isHoldback,
+  };
+
+  // Personal bucket: unified scoring with pgvector similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
+      const score = isHoldback
+        ? scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile, true)
+        : scoreUnified(article, { ...scoreOpts, similarity });
       return {
         ...article,
-        _score: scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile),
+        _score: score,
         _similarity: similarity,
         _bucket: 'personal',
       };
@@ -1045,38 +1233,47 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency
+  // Trending bucket: unified scoring (similarity=0 since no pgvector match)
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id]),
+      _score: isHoldback
+        ? scoreTrendingV3(articleMap[a.id])
+        : scoreUnified(articleMap[a.id], scoreOpts),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration
+  // Discovery bucket: unified scoring with discovery flag for surprise + unfamiliar boost
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories),
+      _score: isHoldback
+        ? scoreDiscoveryV3(articleMap[a.id], personalCategories)
+        : scoreUnified(articleMap[a.id], { ...scoreOpts, isDiscovery: true, personalCategories }),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
   // Boost articles whose interest_tags overlap with the user's subtopic tags
+  // Dynamic category affinity: use engagement RATE (not volume) to boost categories
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
-      // Count how many of the article's tags match the user's subtopic tags
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
-      // Base score + category boost + subtopic tag match boost
-      const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
-      const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
+      // Static category boost from onboarding
+      let catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
+      // Dynamic category affinity: engagement rate drives additional boost
+      if (!isHoldback && categoryProfile[a.category] && categoryProfile[a.category].shown >= 5) {
+        const rate = categoryProfile[a.category].engaged / categoryProfile[a.category].shown;
+        catBoost *= (0.7 + rate * 1.3); // rate 0% → 0.7x, rate 50% → 1.35x, rate 100% → 2.0x
+      }
+      const tagBoost = 1.0 + (tagMatches * 0.25);
       return {
         ...article,
         _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
@@ -1111,7 +1308,46 @@ async function handleV2Feed(req, res, supabase, opts) {
   //   ~60% personal, 20% trending, 20% surprise/discovery
   // ==========================================
 
-  const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
+  // Session-adaptive slot pattern
+  // Default: P P T P P S P P T S (~60% personal, 20% trending, 20% discovery)
+  let SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
+
+  if (!isHoldback) {
+    // Time since last session: affects initial composition
+    // Fetch user's last event timestamp
+    const lastSessionQuery = await supabase
+      .from('user_article_events')
+      .select('created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const lastEventTime = lastSessionQuery.data?.[0]?.created_at;
+    const hoursSinceLastSession = lastEventTime
+      ? (Date.now() - new Date(lastEventTime).getTime()) / 3600000
+      : 999;
+
+    if (hoursSinceLastSession < 4) {
+      // Recent return — user has seen fresh content, show more discovery
+      SLOTS = ['P', 'S', 'T', 'P', 'S', 'S', 'P', 'T', 'S', 'P'];
+    } else if (hoursSinceLastSession > 48) {
+      // Returning after absence — catch them up with trending + personal
+      SLOTS = ['T', 'P', 'T', 'P', 'P', 'T', 'P', 'P', 'S', 'P'];
+    }
+
+    // Mid-session adaptation: after enough session signals,
+    // adjust slots based on engagement patterns
+    const totalSignals = sessionEngagedIds.length + sessionSkippedIds.length;
+    if (totalSignals >= 5) {
+      const skipRate = sessionSkippedIds.length / totalSignals;
+      if (skipRate > 0.7) {
+        // User skipping most articles — increase discovery for variety
+        SLOTS = ['P', 'S', 'S', 'T', 'S', 'P', 'S', 'T', 'S', 'P'];
+      } else if (skipRate < 0.3) {
+        // User engaging well — double down on personal
+        SLOTS = ['P', 'P', 'P', 'T', 'P', 'P', 'S', 'P', 'T', 'P'];
+      }
+    }
+  }
 
   const selected = [];
   const pPool = [...personalScored];
@@ -1120,15 +1356,37 @@ async function handleV2Feed(req, res, supabase, opts) {
   const iPool = [...interestScored];
 
   // IMPROVEMENT 3: Track world event and cluster counts
+  // Soft impression discounting: gradual fatigue instead of hard caps
+  // 1/(1 + count * 0.15) → #1=100%, #4=62%, #7=49%, #10=40%
   const eventCounts = {};
   const clusterCounts = {};
 
   function isEventCapped(article) {
+    if (isHoldback) {
+      // Holdback: keep old hard cap behavior
+      const eventId = article._world_event_id;
+      const clusterId = article.cluster_id;
+      if (eventId && (eventCounts[eventId] || 0) >= WORLD_EVENT_CAP) return true;
+      if (clusterId && (clusterCounts[clusterId] || 0) >= CLUSTER_CAP) return true;
+      return false;
+    }
+    // Soft fatigue: never fully cap, but apply heavy discount at high counts
+    // Block only at extreme counts (>10) as a safety valve
     const eventId = article._world_event_id;
     const clusterId = article.cluster_id;
-    if (eventId && (eventCounts[eventId] || 0) >= WORLD_EVENT_CAP) return true;
-    if (clusterId && (clusterCounts[clusterId] || 0) >= CLUSTER_CAP) return true;
+    if (eventId && (eventCounts[eventId] || 0) >= 10) return true;
+    if (clusterId && (clusterCounts[clusterId] || 0) >= 10) return true;
     return false;
+  }
+
+  function getImpressionDiscount(article) {
+    if (isHoldback) return 1.0;
+    const eventId = article._world_event_id;
+    const clusterId = article.cluster_id;
+    const eventCount = eventId ? (eventCounts[eventId] || 0) : 0;
+    const clusterCount = clusterId ? (clusterCounts[clusterId] || 0) : 0;
+    const maxCount = Math.max(eventCount, clusterCount);
+    return 1.0 / (1.0 + maxCount * 0.15);
   }
 
   function recordEventSelection(article) {
@@ -1136,6 +1394,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     const clusterId = article.cluster_id;
     if (eventId) eventCounts[eventId] = (eventCounts[eventId] || 0) + 1;
     if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
+    // Soft impression discounting: reduce scores of remaining pool items
+    // from the same event/cluster so they become less likely to be picked next
+    if (!isHoldback && (eventId || clusterId)) {
+      for (const pool of [pPool, tPool, dPool, iPool]) {
+        for (const item of pool) {
+          if ((eventId && item._world_event_id === eventId) ||
+              (clusterId && item.cluster_id === clusterId)) {
+            item._score *= getImpressionDiscount(item);
+          }
+        }
+      }
+    }
   }
 
   // IMPROVEMENT 3: MMR select with event/cluster dedup
@@ -1391,6 +1661,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
+    _holdback: isHoldback,
   });
 }
 
