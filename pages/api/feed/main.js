@@ -294,12 +294,14 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
   const boosts = {};
   const skipPenalties = {};
   const streakTags = new Set();
+  const skippedCategories = {};   // Track category-level skip frequency
+  const engagedCategories = {};   // Track category-level engage frequency
 
   if (engagedIds.length > 0) {
     const { data: engagedArticles } = await supabase
       .from('published_articles')
-      .select('interest_tags')
-      .in('id', engagedIds.slice(0, 30));
+      .select('interest_tags, category')
+      .in('id', engagedIds.slice(0, 50));
 
     // Count tag frequency across session-engaged articles
     const tagFreq = {};
@@ -309,6 +311,8 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
         const t = tag.toLowerCase();
         tagFreq[t] = (tagFreq[t] || 0) + 1;
       }
+      const cat = a.category || 'Other';
+      engagedCategories[cat] = (engagedCategories[cat] || 0) + 1;
     }
 
     // Streak detection: 3+ articles with same tag = strong momentum
@@ -327,19 +331,35 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
   if (skippedIds.length > 0) {
     const { data: skippedArticles } = await supabase
       .from('published_articles')
-      .select('interest_tags')
-      .in('id', skippedIds.slice(0, 30));
+      .select('interest_tags, category')
+      .in('id', skippedIds.slice(0, 50));
 
     for (const a of (skippedArticles || [])) {
       const tags = safeJsonParse(a.interest_tags, []);
       for (const tag of tags) {
         const t = tag.toLowerCase();
-        skipPenalties[t] = (skipPenalties[t] || 0) + 0.15;
+        skipPenalties[t] = (skipPenalties[t] || 0) + 0.30;
+      }
+      // Track category-level skip counts
+      const cat = a.category || 'Other';
+      skippedCategories[cat] = (skippedCategories[cat] || 0) + 1;
+    }
+
+    // Category-level suppression: 3+ skips from same category = heavy penalty
+    // This ensures "I skipped 5 Iran/Politics articles" actually suppresses Politics
+    for (const [cat, count] of Object.entries(skippedCategories)) {
+      const catKey = `_cat_${cat.toLowerCase()}`;
+      if (count >= 5) {
+        skipPenalties[catKey] = 0.8;  // Near-total suppression
+      } else if (count >= 3) {
+        skipPenalties[catKey] = 0.5;  // Strong suppression
+      } else if (count >= 2) {
+        skipPenalties[catKey] = 0.25; // Moderate suppression
       }
     }
   }
 
-  return { boosts, skipPenalties, streakTags };
+  return { boosts, skipPenalties, streakTags, skippedCategories, engagedCategories };
 }
 
 // ==========================================
@@ -414,7 +434,7 @@ function scoreUnified(article, opts) {
   // 5. GLOBAL POPULARITY (0.10) — editorial quality score
   const globalPopularity = aiScore;
 
-  // SKIP PENALTY — from skip_profile with 7-day half-life decay
+  // SKIP PENALTY — from skip_profile + session category penalties
   let skipPenalty = 0;
   if (!isHoldback && skipProfile) {
     const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000;
@@ -430,8 +450,14 @@ function scoreUnified(article, opts) {
       }
     }
     skipScore /= n;
-    const netSkip = Math.max(0, skipScore - tagOverlap * 0.5);
-    skipPenalty = Math.min(netSkip, isDiscovery ? 0.4 : 0.9);
+
+    // Category-level session skip penalty (from _cat_* keys in skipProfile)
+    const catKey = `_cat_${cat.toLowerCase()}`;
+    const catSkipPenalty = skipProfile[catKey] || 0;
+
+    // Don't cancel skip penalty against historical engagement —
+    // if user is skipping NOW, that overrides past behavior
+    skipPenalty = Math.min(skipScore + catSkipPenalty, isDiscovery ? 0.4 : 0.9);
   }
 
   // Interest velocity: first-seen bonus for newly discovered interests
@@ -1093,12 +1119,14 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+
   // Filter out session-excluded articles
   personalIdOrder = personalIdOrder.filter(id => !sessionExcludeIds.has(id));
   const personalIds = new Set(personalIdOrder);
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
+  // Suppress categories the user is actively skipping in this session
   const trendingCatMax = hasAnyPersonalization ? 3 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
@@ -1106,8 +1134,11 @@ async function handleV2Feed(req, res, supabase, opts) {
   for (const a of (trendingResult.data || [])) {
     if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
+    // Reduce trending cap for categories being actively skipped in session
+    const catSkipCount = momentum.skippedCategories[cat] || 0;
+    const effectiveCatMax = catSkipCount >= 3 ? 1 : (catSkipCount >= 2 ? 2 : trendingCatMax);
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
-    if (trendingCategoryCounts[cat] > trendingCatMax) continue;
+    if (trendingCategoryCounts[cat] > effectiveCatMax) continue;
     trendingIds.add(a.id);
     trendingArticleMeta.push(a);
   }
@@ -1195,6 +1226,28 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const articleMap = {};
   for (const a of allArticles) articleMap[a.id] = a;
+
+  // PERSONAL POOL DIVERSITY: cap any single category at 40% of personal candidates
+  // Prevents taste vector echo chamber (e.g., 150 politics articles flooding the pool)
+  if (!isHoldback && personalIdOrder.length > 10) {
+    const catCounts = {};
+    const maxPerCat = Math.ceil(personalIdOrder.length * 0.4);
+    const diverseOrder = [];
+    const overflow = [];
+    for (const id of personalIdOrder) {
+      const art = articleMap[id];
+      if (!art) { diverseOrder.push(id); continue; }
+      const cat = art.category || 'Other';
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+      if (catCounts[cat] <= maxPerCat) {
+        diverseOrder.push(id);
+      } else {
+        overflow.push(id);
+      }
+    }
+    // Append overflow at the end (still available but deprioritized)
+    personalIdOrder = [...diverseOrder, ...overflow];
+  }
 
   // Pre-compute tag sets for MMR diversity calculations
   const tagCache = buildTagSetsCache(allArticles);
@@ -1355,6 +1408,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   const dPool = [...discoveryScored];
   const iPool = [...interestScored];
 
+  // CATEGORY DIVERSITY: hard cap per category in each batch
+  // Max 3 articles from the same category per 10 cards (30%)
+  // This prevents "10 Iran articles" even when personal pool is politics-heavy
+  const CATEGORY_CAP_PER_BATCH = 3;
+  const selectedCategoryCounts = {};
+
+  function isCategoryCapped(article) {
+    if (isHoldback) return false;
+    const cat = article.category || 'Other';
+    return (selectedCategoryCounts[cat] || 0) >= CATEGORY_CAP_PER_BATCH;
+  }
+
   // IMPROVEMENT 3: Track world event and cluster counts
   // Soft impression discounting: gradual fatigue instead of hard caps
   // 1/(1 + count * 0.15) → #1=100%, #4=62%, #7=49%, #10=40%
@@ -1370,6 +1435,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (clusterId && (clusterCounts[clusterId] || 0) >= CLUSTER_CAP) return true;
       return false;
     }
+    // Category diversity cap: max 3 per category per batch
+    if (isCategoryCapped(article)) return true;
     // Soft fatigue: never fully cap, but apply heavy discount at high counts
     // Block only at extreme counts (>10) as a safety valve
     const eventId = article._world_event_id;
@@ -1392,8 +1459,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   function recordEventSelection(article) {
     const eventId = article._world_event_id;
     const clusterId = article.cluster_id;
+    const cat = article.category || 'Other';
     if (eventId) eventCounts[eventId] = (eventCounts[eventId] || 0) + 1;
     if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
+    selectedCategoryCounts[cat] = (selectedCategoryCounts[cat] || 0) + 1;
     // Soft impression discounting: reduce scores of remaining pool items
     // from the same event/cluster so they become less likely to be picked next
     if (!isHoldback && (eventId || clusterId)) {
