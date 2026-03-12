@@ -7,7 +7,16 @@ struct ExploreView: View {
     @State private var isLoading = true
     @State private var searchText = ""
     @State private var selectedArticle: Article?
+    @State private var selectedTopic: ExploreTopic?
+    @State private var topicArticles: [Article] = []
+    @State private var loadingTopicArticles = false
     @State private var appeared = false
+
+    // Explore tracking state
+    private let analytics = AnalyticsService()
+    @State private var dwellTimers: [String: Date] = [:]           // entity_name → expand start time
+    @State private var dwellTracked: Set<String> = []              // debounce: once per topic per session
+    @State private var scrollTracked: Set<String> = []             // debounce: once per topic per session
 
     private var userId: String? { appViewModel.currentUser?.id }
 
@@ -42,25 +51,20 @@ struct ExploreView: View {
 
     var body: some View {
         ZStack {
-            NavigationStack {
-                Group {
-                    if isLoading && topics.isEmpty {
-                        loadingState
-                    } else if topics.isEmpty {
-                        emptyState
-                    } else {
-                        mainContent
-                    }
+            Group {
+                if isLoading && topics.isEmpty {
+                    loadingState
+                } else if topics.isEmpty {
+                    emptyState
+                } else {
+                    mainContent
                 }
-                .background(Theme.Colors.backgroundPrimary)
-                .navigationTitle("Explore")
-                .navigationBarTitleDisplayMode(.large)
-                .searchable(text: $searchText, prompt: "Search topics")
-                .task { await loadTopics() }
-                .refreshable { await loadTopics() }
             }
+            .background(Theme.Colors.backgroundPrimary)
+            .task { await loadTopics() }
+            .refreshable { await loadTopics() }
 
-            // Article overlay
+            // Article overlay (single article from card tap)
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
@@ -74,6 +78,27 @@ struct ExploreView: View {
                 .ignoresSafeArea()
                 .zIndex(1)
             }
+
+            // Topic overlay (entity tap — vertical pager of all entity articles)
+            if selectedTopic != nil {
+                EntityArticlesSheet(
+                    topic: selectedTopic!,
+                    articles: topicArticles,
+                    isLoading: loadingTopicArticles
+                ) {
+                    // Fire dwell event on dismiss
+                    if let topic = selectedTopic {
+                        fireDwellEvent(topic)
+                    }
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                        selectedTopic = nil
+                        topicArticles = []
+                    }
+                }
+                .transition(.move(edge: .bottom))
+                .ignoresSafeArea()
+                .zIndex(2)
+            }
         }
     }
 
@@ -81,121 +106,120 @@ struct ExploreView: View {
 
     private var mainContent: some View {
         ScrollView(showsIndicators: false) {
-            LazyVStack(alignment: .leading, spacing: 32) {
-                // For You
-                if !personalizedTopics.isEmpty {
-                    sectionHeader(
-                        title: "FOR YOU",
-                        icon: "sparkles",
-                        iconColor: Color(hex: "#AF52DE"),
-                        subtitle: "Based on your interests"
-                    )
-                    .sectionAppear(appeared: appeared, index: 0)
+            LazyVStack(alignment: .leading, spacing: 0) {
+                // Title scrolls with content
+                Text("Explore")
+                    .font(.system(size: 34, weight: .bold))
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 28)
 
-                    let groups = groupedByCategory(personalizedTopics)
-                    ForEach(Array(groups.enumerated()), id: \.element.category) { gIndex, group in
-                        categoryGroup(group.category, topics: group.topics)
-                            .sectionAppear(appeared: appeared, index: gIndex + 1)
-                    }
-                }
-
-                // Trending
-                if !trendingTopics.isEmpty {
-                    sectionHeader(
-                        title: "TRENDING",
-                        icon: "chart.line.uptrend.xyaxis",
-                        iconColor: Color(hex: "#FF9500"),
-                        subtitle: "Popular right now"
-                    )
-
-                    let groups = groupedByCategory(trendingTopics)
-                    let offset = groupedByCategory(personalizedTopics).count + 1
-                    ForEach(Array(groups.enumerated()), id: \.element.category) { gIndex, group in
-                        categoryGroup(group.category, topics: group.topics)
-                            .sectionAppear(appeared: appeared, index: offset + gIndex + 1)
-                    }
+                let groups = groupedByCategory(filteredTopics)
+                ForEach(Array(groups.enumerated()), id: \.element.category) { gIndex, group in
+                    categoryGroup(group.category, topics: group.topics)
+                        .sectionAppear(appeared: appeared, index: gIndex)
+                        .padding(.bottom, 36)
                 }
 
                 Spacer(minLength: 100)
             }
-            .padding(.top, 8)
         }
     }
 
-    // MARK: - Section Header (FOR YOU / TRENDING)
+    // MARK: - Category Group
 
-    private func sectionHeader(title: String, icon: String, iconColor: Color, subtitle: String) -> some View {
-        HStack(alignment: .bottom) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 26, height: 26)
-                    .background(iconColor.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-
-                Text(title)
-                    .font(.system(size: 13, weight: .heavy))
-                    .tracking(1.0)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Text(subtitle)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 20)
+    private func categoryIcon(for category: String) -> String {
+        let icons: [String: String] = [
+            "World": "globe.americas.fill", "Politics": "building.columns.fill",
+            "Business": "briefcase.fill", "Tech": "cpu.fill",
+            "Science": "atom", "Health": "heart.fill",
+            "Sports": "sportscourt.fill", "Soccer": "soccerball",
+            "Entertainment": "star.fill", "Finance": "chart.bar.fill",
+            "Climate": "leaf.fill", "Economy": "banknote.fill",
+            "Crypto": "bitcoinsign.circle.fill", "AI": "brain.head.profile.fill",
+            "NFL": "football.fill", "NBA": "basketball.fill",
+            "Baseball": "baseball.fill", "F1": "flag.checkered",
+            "US Politics": "building.columns.fill", "World Politics": "globe.americas.fill",
+            "AI & Tech": "cpu.fill", "K-Pop & Music": "music.note",
+            "Motorsport": "flag.checkered", "Combat Sports": "figure.boxing",
+            "Sports Events": "trophy.fill", "Automotive": "car.fill",
+            "Gaming": "gamecontroller.fill", "Fashion": "tshirt.fill",
+            "Skincare": "sparkles", "Beauty": "sparkles",
+            "Lifestyle": "sun.max.fill", "Food": "fork.knife",
+            "Music": "music.note",
+        ]
+        return icons[category] ?? "newspaper.fill"
     }
-
-    // MARK: - Category Group (e.g. "Football" with entities underneath)
 
     private func categoryGroup(_ category: String, topics: [ExploreTopic]) -> some View {
         let catColor = categoryColor(for: category)
+        let icon = categoryIcon(for: category)
 
-        return VStack(alignment: .leading, spacing: 16) {
+        return VStack(alignment: .leading, spacing: 0) {
             // Category header
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(catColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
                 Text(category)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.primary)
-
-                Text("\(topics.count) topics")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.horizontal, 20)
-
-            // Entity rows within this category
-            ForEach(topics) { topic in
-                entityRow(topic, catColor: catColor)
-            }
-        }
-    }
-
-    // MARK: - Entity Row (title + horizontal article scroll)
-
-    private func entityRow(_ topic: ExploreTopic, catColor: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Entity header — no emoji
-            HStack(spacing: 0) {
-                Text(topic.displayTitle)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                Text("  ·  \(topic.articles.count) articles")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.tertiary)
 
                 Spacer()
             }
             .padding(.horizontal, 20)
+            .padding(.bottom, 20)
 
-            // Horizontal article scroll
+            // Entity rows
+            ForEach(Array(topics.enumerated()), id: \.element.id) { index, topic in
+                entityRow(topic, catColor: catColor)
+                    .padding(.bottom, index < topics.count - 1 ? 6 : 0)
+            }
+        }
+    }
+
+    // MARK: - Entity Row
+
+    private func entityRow(_ topic: ExploreTopic, catColor: Color) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Entity header — tappable
+            Button {
+                openTopic(topic)
+            } label: {
+                HStack(spacing: 12) {
+                    Circle()
+                        .fill(catColor.opacity(0.15))
+                        .frame(width: 8, height: 8)
+
+                    Text(topic.displayTitle)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text("\(topic.articles.count) articles")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+
+            // Horizontal article scroll with scroll tracking
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 14) {
-                    ForEach(topic.articles) { article in
+                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
                         Button {
+                            trackArticleTap(article, topic: topic)
                             openArticle(article)
                         } label: {
                             ExploreArticleCard(
@@ -206,6 +230,12 @@ struct ExploreView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .onAppear {
+                            // When 3rd article card appears, user has scrolled enough → track
+                            if index == 2 {
+                                trackScrollIfNeeded(topic)
+                            }
+                        }
                     }
                 }
                 .scrollTargetLayout()
@@ -221,7 +251,7 @@ struct ExploreView: View {
         UIScreen.main.bounds.width - 40
     }
 
-    private let cardHeight: CGFloat = 280
+    private var cardHeight: CGFloat { cardWidth }
 
     // MARK: - Loading
 
@@ -247,7 +277,7 @@ struct ExploreView: View {
                                 ForEach(0..<2, id: \.self) { _ in
                                     RoundedRectangle(cornerRadius: 18)
                                         .fill(.fill.tertiary)
-                                        .frame(width: UIScreen.main.bounds.width - 40, height: 280)
+                                        .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.width - 40)
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -310,6 +340,106 @@ struct ExploreView: View {
         }
     }
 
+    // MARK: - Open Topic (entity tap)
+
+    private func openTopic(_ topic: ExploreTopic) {
+        HapticManager.selection()
+        trackTopicTap(topic)
+        startDwellTimer(topic)
+        selectedTopic = topic
+        loadingTopicArticles = true
+        topicArticles = []
+
+        Task {
+            let loaded = await withTaskGroup(of: (Int, Article?).self) { group in
+                for (index, topicArticle) in topic.articles.enumerated() {
+                    group.addTask {
+                        let article: Article? = try? await APIClient.shared.get("/api/article/\(topicArticle.id.stringValue)")
+                        return (index, article)
+                    }
+                }
+                var results: [(Int, Article)] = []
+                for await (index, article) in group {
+                    if let article { results.append((index, article)) }
+                }
+                return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
+            }
+            topicArticles = loaded
+            loadingTopicArticles = false
+        }
+    }
+
+    // MARK: - Explore Tracking
+
+    /// Track topic card tap (+0.02 to entity)
+    private func trackTopicTap(_ topic: ExploreTopic) {
+        Task {
+            try? await analytics.track(
+                event: "explore_topic_tap",
+                category: topic.category,
+                source: "explore",
+                metadata: ["entity_name": topic.entityName]
+            )
+        }
+    }
+
+    /// Start dwell timer when topic is expanded
+    private func startDwellTimer(_ topic: ExploreTopic) {
+        dwellTimers[topic.entityName] = Date()
+    }
+
+    /// Fire dwell event when topic is collapsed or user navigates away
+    private func fireDwellEvent(_ topic: ExploreTopic) {
+        guard !dwellTracked.contains(topic.entityName),
+              let startTime = dwellTimers[topic.entityName] else { return }
+
+        let dwellSeconds = Date().timeIntervalSince(startTime)
+        guard dwellSeconds >= 2.0 else { return } // ignore very short dwells
+
+        dwellTracked.insert(topic.entityName)
+        dwellTimers.removeValue(forKey: topic.entityName)
+
+        Task {
+            try? await analytics.track(
+                event: "explore_topic_dwell",
+                category: topic.category,
+                source: "explore",
+                metadata: [
+                    "entity_name": topic.entityName,
+                    "dwell_seconds": String(format: "%.1f", dwellSeconds)
+                ]
+            )
+        }
+    }
+
+    /// Track article tap from explore (+0.06 to entity + article tags)
+    private func trackArticleTap(_ topicArticle: ExploreTopicArticle, topic: ExploreTopic) {
+        Task {
+            try? await analytics.track(
+                event: "explore_article_tap",
+                articleId: Int(topicArticle.id.stringValue),
+                category: topic.category,
+                source: "explore",
+                metadata: ["entity_name": topic.entityName]
+            )
+        }
+    }
+
+    /// Track horizontal scroll (3+ articles seen) — once per topic per session
+    private func trackScrollIfNeeded(_ topic: ExploreTopic) {
+        guard !scrollTracked.contains(topic.entityName) else { return }
+        scrollTracked.insert(topic.entityName)
+
+        Task {
+            try? await analytics.track(
+                event: "explore_topic_scroll",
+                category: topic.category,
+                source: "explore",
+                metadata: ["entity_name": topic.entityName]
+            )
+        }
+    }
+
     // MARK: - Helpers
 
     private func categoryColor(for category: String) -> Color {
@@ -349,6 +479,12 @@ struct ExploreArticleCard: View {
         dominantColor ?? fallbackColor
     }
 
+    /// Darkened version of the dominant color for the glass tint
+    private var darkGlassColor: Color {
+        let base = dominantColor ?? fallbackColor
+        return base.opacity(1.0)
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Full-bleed image
@@ -369,23 +505,38 @@ struct ExploreArticleCard: View {
                     .frame(width: cardWidth, height: cardHeight)
             }
 
-            // Liquid glass — covers full card, masked to fade from 0% at top to 100% at bottom
+            // Dark gradient overlay for text readability
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0.0),
+                    .init(color: .clear, location: 0.3),
+                    .init(color: .black.opacity(0.4), location: 0.45),
+                    .init(color: .black.opacity(0.7), location: 0.6),
+                    .init(color: .black.opacity(0.85), location: 0.75),
+                    .init(color: .black.opacity(0.95), location: 1.0),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(width: cardWidth, height: cardHeight)
+            .allowsHitTesting(false)
+
+            // Liquid glass on top of dark gradient
             Color.clear
                 .frame(width: cardWidth, height: cardHeight)
                 .glassEffect(
-                    .regular.tint(glassColor.opacity(0.5)),
+                    .regular.tint(darkGlassColor),
                     in: RoundedRectangle(cornerRadius: 18, style: .continuous)
                 )
                 .mask(
                     LinearGradient(
                         stops: [
                             .init(color: .clear, location: 0.0),
-                            .init(color: .clear, location: 0.05),
-                            .init(color: .white.opacity(0.2), location: 0.2),
-                            .init(color: .white.opacity(0.5), location: 0.4),
-                            .init(color: .white.opacity(0.8), location: 0.6),
-                            .init(color: .white, location: 0.75),
-                            .init(color: .white, location: 1.0),
+                            .init(color: .clear, location: 0.4),
+                            .init(color: .white.opacity(0.2), location: 0.55),
+                            .init(color: .white.opacity(0.4), location: 0.7),
+                            .init(color: .white.opacity(0.6), location: 0.85),
+                            .init(color: .white.opacity(0.7), location: 1.0),
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -403,7 +554,6 @@ struct ExploreArticleCard: View {
                 )
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
-                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
 
                 HStack(spacing: 6) {
                     if let category = article.category {
@@ -431,8 +581,13 @@ struct ExploreArticleCard: View {
     // MARK: - Dominant Color Extraction (lightweight, from cached image)
 
     private func extractColor(from url: URL) {
+        // Use cached result if available
+        if let cached = ArticleCardView.colorCache.object(forKey: url as NSURL) {
+            dominantColor = Color(cached)
+            return
+        }
+
         Task.detached(priority: .background) {
-            // Wait briefly for AsyncCachedImage to cache
             var uiImage: UIImage?
             for _ in 0..<15 {
                 if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
@@ -448,63 +603,120 @@ struct ExploreArticleCard: View {
             }
             guard let uiImage, let cgImage = uiImage.cgImage else { return }
 
-            let size = 40
+            let sampleW = min(cgImage.width, 80)
+            let sampleH = min(cgImage.height, 80)
             let colorSpace = CGColorSpaceCreateDeviceRGB()
-            var rawData = [UInt8](repeating: 0, count: size * size * 4)
+            var rawData = [UInt8](repeating: 0, count: sampleW * sampleH * 4)
+
             guard let context = CGContext(
-                data: &rawData, width: size, height: size,
-                bitsPerComponent: 8, bytesPerRow: size * 4, space: colorSpace,
+                data: &rawData, width: sampleW, height: sampleH,
+                bitsPerComponent: 8, bytesPerRow: sampleW * 4, space: colorSpace,
                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
             ) else { return }
-            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: size, height: size))
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: sampleW, height: sampleH))
 
-            // Find most saturated, prominent color
-            var bestR: CGFloat = 0, bestG: CGFloat = 0, bestB: CGFloat = 0
-            var bestScore: CGFloat = 0
-
-            // Bucket colors
-            var buckets: [String: (r: CGFloat, g: CGFloat, b: CGFloat, count: Int)] = [:]
-            for i in stride(from: 0, to: size * size * 4, by: 8 * 4) {
-                let r = CGFloat(rawData[i]) / 255.0
-                let g = CGFloat(rawData[i + 1]) / 255.0
-                let b = CGFloat(rawData[i + 2]) / 255.0
-
-                // Skip near-white, near-black, low-alpha
-                if r > 0.92 && g > 0.92 && b > 0.92 { continue }
-                if r < 0.08 && g < 0.08 && b < 0.08 { continue }
-
-                let rK = Int(r * 10) * 10
-                let gK = Int(g * 10) * 10
-                let bK = Int(b * 10) * 10
-                let key = "\(rK),\(gK),\(bK)"
-                let prev = buckets[key] ?? (r: 0, g: 0, b: 0, count: 0)
-                buckets[key] = (r: prev.r + r, g: prev.g + g, b: prev.b + b, count: prev.count + 1)
+            // Bucket pixels into 15-unit RGB clusters (same as ArticleCardView)
+            struct ColorBucket {
+                var count: Int = 0
+                var positions: Set<String> = []
+                var rKey: Int
+                var gKey: Int
+                var bKey: Int
             }
 
-            for (_, bucket) in buckets {
-                let n = CGFloat(bucket.count)
-                let avgR = bucket.r / n, avgG = bucket.g / n, avgB = bucket.b / n
+            var buckets: [String: ColorBucket] = [:]
+            let totalPixels = sampleW * sampleH
 
-                let maxC = max(avgR, avgG, avgB)
-                let minC = min(avgR, avgG, avgB)
-                let delta = maxC - minC
-                let lightness = (maxC + minC) / 2.0
-                let saturation = delta == 0 ? 0 : delta / (1.0 - abs(2.0 * lightness - 1.0))
+            for i in stride(from: 0, to: totalPixels * 4, by: 10 * 4) {
+                let r = Int(rawData[i])
+                let g = Int(rawData[i + 1])
+                let b = Int(rawData[i + 2])
+                let a = Int(rawData[i + 3])
 
-                // Score: prefer saturated, mid-lightness, frequent colors
-                let score = saturation * 3.0 + (1.0 - abs(lightness - 0.45)) * 2.0 + log2(n + 1) * 0.5
-                if score > bestScore && saturation > 0.25 && lightness > 0.15 && lightness < 0.85 {
-                    bestScore = score
-                    bestR = avgR; bestG = avgG; bestB = avgB
+                if a < 125 { continue }
+                if r > 250 && g > 250 && b > 250 { continue }
+                if r < 10 && g < 10 && b < 10 { continue }
+
+                let rK = (r / 15) * 15
+                let gK = (g / 15) * 15
+                let bK = (b / 15) * 15
+                let key = "\(rK),\(gK),\(bK)"
+
+                let pixelIdx = i / 4
+                let px = (pixelIdx % sampleW) / 10
+                let py = (pixelIdx / sampleW) / 10
+
+                if buckets[key] == nil {
+                    buckets[key] = ColorBucket(rKey: rK, gKey: gK, bKey: bK)
+                }
+                buckets[key]!.count += 1
+                buckets[key]!.positions.insert("\(px),\(py)")
+            }
+
+            guard !buckets.isEmpty else { return }
+
+            // Convert to HSL, filter, and score (same as ArticleCardView)
+            struct ScoredColor {
+                let h: CGFloat, s: CGFloat, l: CGFloat
+                let count: Int, coverage: Int
+                var score: CGFloat = 0
+            }
+
+            let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
+            let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
+
+            var candidates: [ScoredColor] = buckets.values.compactMap { bucket in
+                let r = CGFloat(bucket.rKey) / 255.0
+                let g = CGFloat(bucket.gKey) / 255.0
+                let b = CGFloat(bucket.bKey) / 255.0
+                let hsl = ArticleCardView.rgbToHSL(r, g, b)
+                guard hsl.s >= 35 && hsl.l >= 20 && hsl.l <= 80 else { return nil }
+                return ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: bucket.count, coverage: bucket.positions.count)
+            }
+
+            if candidates.isEmpty {
+                let fallback = buckets.values.max(by: {
+                    ArticleCardView.rgbToHSL(CGFloat($0.rKey)/255, CGFloat($0.gKey)/255, CGFloat($0.bKey)/255).s <
+                    ArticleCardView.rgbToHSL(CGFloat($1.rKey)/255, CGFloat($1.gKey)/255, CGFloat($1.bKey)/255).s
+                })
+                if let fb = fallback {
+                    let hsl = ArticleCardView.rgbToHSL(CGFloat(fb.rKey)/255, CGFloat(fb.gKey)/255, CGFloat(fb.bKey)/255)
+                    candidates = [ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: fb.count, coverage: fb.positions.count)]
                 }
             }
 
-            if bestScore > 0 {
-                let extracted = Color(red: Double(bestR), green: Double(bestG), blue: Double(bestB))
-                await MainActor.run {
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        dominantColor = extracted
-                    }
+            guard !candidates.isEmpty else { return }
+
+            for i in candidates.indices {
+                let normFreq = CGFloat(candidates[i].count) / maxCount
+                let normSat = candidates[i].s / 100.0
+                let normCov = CGFloat(candidates[i].coverage) / maxCoverage
+                var score = normFreq * 0.50 + normSat * 0.30 + normCov * 0.20
+                if candidates[i].h >= 200 && candidates[i].h <= 220 && candidates[i].s < 60 { score *= 0.85 }
+                if candidates[i].h >= 15 && candidates[i].h <= 50 && candidates[i].s < 65 { score *= 0.7 }
+                candidates[i].score = score
+            }
+
+            candidates.sort { $0.score > $1.score }
+            let winner = candidates[0]
+
+            // Create accent color (same formula as ArticleCardView)
+            let accentS = min(90.0, winner.s * 1.15)
+            let accentL: CGFloat = winner.l <= 40
+                ? 55.0 + (winner.l / 40.0) * 10.0
+                : 65.0 + ((winner.l - 40.0) / 40.0) * 10.0
+            let accentCol = ArticleCardView.colorFromHSL(
+                h: winner.h,
+                s: max(65.0, accentS),
+                l: max(55.0, min(75.0, accentL))
+            )
+
+            // Cache so ArticleCardView uses the same color
+            ArticleCardView.colorCache.setObject(UIColor(accentCol), forKey: url as NSURL)
+
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    dominantColor = accentCol
                 }
             }
         }
@@ -532,5 +744,139 @@ private struct SectionAppearModifier: ViewModifier {
 extension View {
     fileprivate func sectionAppear(appeared: Bool, index: Int) -> some View {
         modifier(SectionAppearModifier(appeared: appeared, index: index))
+    }
+}
+
+// MARK: - Entity Articles Sheet (vertical pager for all articles in an entity)
+
+struct EntityArticlesSheet: View {
+    let topic: ExploreTopic
+    let articles: [Article]
+    let isLoading: Bool
+    let onDismiss: () -> Void
+
+    @State private var selectedArticle: Article?
+
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width - 40
+    private var cardHeight: CGFloat { cardWidth }
+
+    private func categoryColor() -> Color {
+        let colors: [String: String] = [
+            "World": "#3366CC", "Politics": "#CC3344", "Business": "#22AA66",
+            "Tech": "#7744BB", "Science": "#009999", "Health": "#CC6699",
+            "Sports": "#DD6622", "Entertainment": "#CC9922", "Finance": "#228866",
+            "Climate": "#339966", "Economy": "#228866",
+        ]
+        return Color(hex: colors[topic.category] ?? "#3366CC")
+    }
+
+    private static func accentColor(for article: Article) -> Color {
+        let categoryColors: [String: String] = [
+            "World": "#3366CC", "Politics": "#CC3344", "Business": "#22AA66",
+            "Tech": "#7744BB", "Science": "#009999", "Health": "#CC6699",
+            "Sports": "#DD6622", "Entertainment": "#CC9922", "Finance": "#228866",
+            "Climate": "#339966", "Economy": "#228866",
+        ]
+        let hex = categoryColors[article.category ?? ""] ?? "#3366CC"
+        return Color(hex: hex)
+    }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Theme.Colors.backgroundPrimary.ignoresSafeArea()
+
+            if isLoading && articles.isEmpty {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                // Vertical scroll of article cards with title inside
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Title scrolls with content
+                        HStack {
+                            Text(topic.displayTitle)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(.primary)
+
+                            Spacer()
+
+                            Text("\(topic.articles.count) articles")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.leading, 68)
+                        .padding(.trailing, 20)
+                        .padding(.top, 66)
+
+                        ForEach(articles) { article in
+                            Button {
+                                HapticManager.selection()
+                                selectedArticle = article
+                            } label: {
+                                ExploreArticleCard(
+                                    article: matchingTopicArticle(for: article),
+                                    fallbackColor: categoryColor(),
+                                    cardWidth: cardWidth,
+                                    cardHeight: cardHeight
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 100)
+                    }
+                }
+            }
+
+            // Fixed back button — always visible
+            Button {
+                onDismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 38, height: 38)
+                    .glassEffect(.regular, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 64)
+            .padding(.leading, 20)
+
+            // Article detail overlay
+            if let article = selectedArticle {
+                ExploreArticleSheet(
+                    selectedArticle: article,
+                    allArticles: articles,
+                    onDismiss: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            selectedArticle = nil
+                        }
+                    },
+                    preserveOrder: true
+                )
+                .transition(.move(edge: .bottom))
+                .ignoresSafeArea()
+                .zIndex(1)
+            }
+        }
+    }
+
+    /// Find the matching ExploreTopicArticle for a full Article (for the card display)
+    private func matchingTopicArticle(for article: Article) -> ExploreTopicArticle {
+        if let match = topic.articles.first(where: { $0.id.stringValue == article.id.stringValue }) {
+            return match
+        }
+        // Fallback: create one from the Article
+        return ExploreTopicArticle(
+            id: article.id,
+            title: article.title ?? "Untitled",
+            imageUrl: article.imageUrl,
+            category: article.category,
+            publishedAt: article.publishedAt
+        )
     }
 }
