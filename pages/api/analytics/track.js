@@ -177,6 +177,118 @@ export default async function handler(req, res) {
         .catch(() => {})
     }
 
+    // ============================================================
+    // EXPLORE PAGE SIGNALS → tag_profile updates
+    //
+    // Three events from Explore browsing:
+    //   explore_topic_tap    → +0.02 per entity_name (card tap)
+    //   explore_topic_dwell  → min(dwell_seconds * 0.008, 0.12) (time on expanded card)
+    //   explore_article_tap  → +0.06 per entity_name + ALL article interest_tags
+    //
+    // Daily cap: max 0.40 total Explore boost per day to prevent inflation.
+    // Debounce: explore_topic_dwell fires once per topic per session (enforced client-side).
+    // ============================================================
+
+    const EXPLORE_EVENTS = ['explore_topic_tap', 'explore_topic_dwell', 'explore_article_tap']
+    if (EXPLORE_EVENTS.includes(event_type)) {
+      const entityName = (metadata?.entity_name || '').toLowerCase().trim()
+      if (!entityName) {
+        console.log('[analytics] Explore event missing entity_name in metadata')
+      } else {
+        admin
+          .from('profiles')
+          .select('tag_profile, explore_daily_boost')
+          .eq('id', user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            const tagProfile = profileData?.tag_profile || {}
+
+            // Daily cap tracking: { date: "2026-03-12", total: 0.23 }
+            const today = new Date().toISOString().slice(0, 10)
+            let dailyBoost = profileData?.explore_daily_boost || {}
+            if (dailyBoost.date !== today) {
+              dailyBoost = { date: today, total: 0 }
+            }
+            const DAILY_CAP = 0.40
+            const remaining = Math.max(0, DAILY_CAP - (dailyBoost.total || 0))
+            if (remaining <= 0) {
+              console.log('[analytics] Explore daily cap reached for user:', user.id?.substring(0, 8))
+              return
+            }
+
+            // Calculate boost based on event type
+            let boost = 0
+            if (event_type === 'explore_topic_tap') {
+              boost = 0.02
+            } else if (event_type === 'explore_topic_dwell') {
+              const dwellSeconds = parseFloat(metadata?.dwell_seconds || '0')
+              boost = Math.min(dwellSeconds * 0.008, 0.12)
+            } else if (event_type === 'explore_article_tap') {
+              boost = 0.06
+            }
+
+            // Clamp to remaining daily budget
+            boost = Math.min(boost, remaining)
+            if (boost <= 0) return
+
+            // Update entity_name in tag_profile
+            tagProfile[entityName] = Math.min((tagProfile[entityName] || 0) + boost, 1.0)
+            dailyBoost.total = (dailyBoost.total || 0) + boost
+
+            // For explore_article_tap: ALSO boost all of the article's interest_tags
+            // This helps cold-start users build a richer profile faster
+            if (event_type === 'explore_article_tap' && article_id) {
+              admin
+                .from('published_articles')
+                .select('interest_tags')
+                .eq('id', article_id)
+                .single()
+                .then(({ data: articleData }) => {
+                  if (!articleData) {
+                    // No article found, just save the entity_name boost
+                    admin
+                      .from('profiles')
+                      .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
+                      .eq('id', user.id)
+                      .then(() => {})
+                      .catch(() => {})
+                    return
+                  }
+                  const tags = typeof articleData.interest_tags === 'string'
+                    ? JSON.parse(articleData.interest_tags || '[]')
+                    : (articleData.interest_tags || [])
+
+                  // Boost each article tag at half the entity boost (0.03)
+                  const articleTagBoost = Math.min(boost * 0.5, remaining - boost)
+                  for (const tag of tags) {
+                    const t = tag.toLowerCase()
+                    if (t === entityName) continue // already boosted above
+                    tagProfile[t] = Math.min((tagProfile[t] || 0) + articleTagBoost, 1.0)
+                  }
+                  dailyBoost.total += articleTagBoost * tags.length
+
+                  admin
+                    .from('profiles')
+                    .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
+                    .eq('id', user.id)
+                    .then(() => console.log('[analytics] Explore article_tap tag_profile updated'))
+                    .catch(() => {})
+                })
+                .catch(() => {})
+            } else {
+              // topic_tap or topic_dwell: just save the entity_name boost
+              admin
+                .from('profiles')
+                .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
+                .eq('id', user.id)
+                .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
+                .catch(() => {})
+            }
+          })
+          .catch(() => {})
+      }
+    }
+
     // Build skip_profile from skipped articles (non-blocking)
     if (event_type === 'article_skipped' && article_id) {
       admin
