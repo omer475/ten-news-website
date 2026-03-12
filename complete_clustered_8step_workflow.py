@@ -1880,7 +1880,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
             request_data = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
-                    "temperature": 0.3,
+                    "temperature": 0,
                     "maxOutputTokens": 2048,
                     "responseMimeType": "application/json"
                 }
