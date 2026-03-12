@@ -361,12 +361,16 @@ export default async function handler(req, res) {
     }
 
     // Fetch recent articles and match to topics
+    // Only articles from last 7 days — older articles lack interest_tags
     const topicArticles = {}
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
     if (allTopicNames.length > 0) {
       const { data: articles } = await supabase
         .from('published_articles')
         .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
+        .gte('published_at', sevenDaysAgo)
+        .not('interest_tags', 'is', null)
         .order('published_at', { ascending: false })
         .limit(1500)
 
