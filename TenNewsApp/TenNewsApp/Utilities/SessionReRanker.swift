@@ -100,13 +100,9 @@ final class SessionReRanker {
             // Original server rank normalized (0 = best, 1 = worst)
             let serverRank = Double(i) / max(totalUnseen - 1, 1)
 
-            // Dynamic blend: start 60% server / 40% session, flip to 40/60 after 5+ signals
-            // This lets session signals dominate faster so skips actually suppress content
-            let signalCount = Double(engagedIds.count + skippedIds.count)
-            let sessionWeight = signalCount >= 5 ? 0.6 : 0.4
-            let serverWeight = 1.0 - sessionWeight
+            // Blend: 60% server, 40% session
             let clamped = max(-2.0, min(2.0, sessionScore))
-            scores[article.id.stringValue] = (1.0 - serverRank) * serverWeight + clamped * sessionWeight
+            scores[article.id.stringValue] = (1.0 - serverRank) * 0.6 + clamped * 0.4
         }
 
         let sorted = unseen.sorted {
@@ -118,7 +114,7 @@ final class SessionReRanker {
     // MARK: - Session Context for Server
 
     var sessionSignals: (engaged: [String], skipped: [String]) {
-        (Array(engagedIds.prefix(50)), Array(skippedIds.prefix(50)))
+        (Array(engagedIds.prefix(20)), Array(skippedIds.prefix(20)))
     }
 
     func reset() {
