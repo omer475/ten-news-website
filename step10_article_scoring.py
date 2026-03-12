@@ -936,32 +936,41 @@ def score_article_with_references(
 # INTEREST TAGS GENERATION (for personalization)
 # ============================================================
 
-INTEREST_TAGS_PROMPT = """You are a news content tagger. Extract 4-8 keywords/tags from this article for personalization matching.
+INTEREST_TAGS_PROMPT = """You are a news content tagger. Extract 4-8 tags from this article for personalization.
+
+**CRITICAL: Salience rule — only tag what the article is ABOUT, not what it merely mentions.**
+- If "Manchester United" appears because the article compares them to another team, do NOT tag "manchester united" — the article is not about them.
+- If a person is quoted as a source/expert but the article is not about them, do NOT tag that person.
+- Only tag entities/topics where the article would appear in a dedicated feed for that tag.
+
+**Tag types (ordered by priority):**
+1. **Primary entities** (MOST IMPORTANT): The specific people, orgs, teams, or products the article is ABOUT.
+   Tag the full name: "manchester united" not just "united". "donald trump" not just "trump".
+2. **Core topics**: The 1-2 main themes (e.g., "electric vehicles", "climate change").
+3. **Broad category**: One broad area (e.g., "soccer", "tech", "politics").
 
 **Rules:**
-1. Include a MIX of:
-   - **Entities**: Specific people, companies, places (e.g., "elon musk", "tesla", "california")
-   - **Topics**: General themes (e.g., "electric vehicles", "artificial intelligence", "climate change")
-   - **Categories**: Broad areas (e.g., "tech", "politics", "finance", "health")
-
-2. Keywords should be:
-   - Lowercase
-   - 1-3 words each
-   - Specific enough to be useful for matching
-   - A mix of narrow (specific) and broad (general) terms
-
-3. Return ONLY a JSON array of strings, nothing else.
+- Lowercase, 1-4 words each
+- Put the MOST relevant tags first (primary subject → secondary → broad)
+- Max 8 tags. Prefer fewer precise tags over many vague ones.
+- Do NOT include tags for entities only mentioned in passing or as comparisons.
+- Return ONLY a JSON array of strings, nothing else.
 
 **Examples:**
 
 Article: "Tesla Stock Surges 15% After Record Q4 Deliveries"
-["tesla", "elon musk", "electric vehicles", "stock market", "automotive", "tech", "earnings"]
+["tesla", "elon musk", "electric vehicles", "stock market", "earnings"]
+
+Article: "Tottenham Sack Manager Igor Tudor After 4 Straight Losses"
+["tottenham hotspur", "igor tudor", "premier league", "soccer"]
+(NOT "arsenal" or "west ham" even if mentioned as upcoming opponents)
 
 Article: "WHO Declares New Vaccine 95% Effective Against Bird Flu"
-["world health organization", "bird flu", "vaccine", "pandemic", "health", "medicine", "infectious disease"]
+["world health organization", "bird flu", "vaccine", "pandemic", "health"]
 
 Article: "Apple and Google Partner on AI After Siri Struggles"
-["apple", "google", "artificial intelligence", "siri", "tech partnership", "big tech", "voice assistant"]
+["apple", "google", "artificial intelligence", "siri", "tech"]
+(NOT "samsung" or "alexa" even if mentioned for comparison)
 
 ---
 
