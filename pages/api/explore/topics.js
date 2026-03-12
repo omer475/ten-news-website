@@ -347,7 +347,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build search terms per topic (entity_name + aliases + title words)
+    // Build search terms per topic: entity_name + aliases ONLY.
+    // NO title word splitting — "Manchester United" split into ["manchester","united"]
+    // would match United Airlines, United Nations, etc.
+    // NO substring matching — "art" inside "artificial intelligence" is not a match.
     const topicSearchTerms = {}
     for (const topic of allTopics) {
       const terms = new Set()
@@ -355,8 +358,6 @@ export default async function handler(req, res) {
       if (aliasMap[topic.entity_name]) {
         aliasMap[topic.entity_name].forEach(a => terms.add(a))
       }
-      const titleWords = topic.display_title.toLowerCase().split(/[&,\s]+/).filter(w => w.length > 2)
-      titleWords.forEach(w => terms.add(w))
       topicSearchTerms[topic.entity_name] = terms
     }
 
@@ -376,22 +377,30 @@ export default async function handler(req, res) {
 
       if (articles) {
         for (const article of articles) {
-          const tags = Array.isArray(article.interest_tags)
+          const rawTags = Array.isArray(article.interest_tags)
             ? article.interest_tags.map(t => t.toLowerCase())
             : []
+
+          // Only use the first 6 primary tags — tail tags are noise
+          // (related entities mentioned in passing, not what the article is about)
+          const tags = rawTags.slice(0, 6)
+          // Also build a title set for high-confidence matching
+          const titleLower = (article.title_news || '').toLowerCase()
 
           for (const topicName of allTopicNames) {
             if (!topicArticles[topicName]) topicArticles[topicName] = []
             if (topicArticles[topicName].length >= 50) continue
 
             const searchTerms = topicSearchTerms[topicName]
+            // Two-tier matching:
+            // 1. Entity name/alias in article title = always match (high salience)
+            // 2. Entity name/alias in first 6 tags = match (primary topic)
             let matched = false
-            for (const tag of tags) {
-              if (searchTerms.has(tag)) { matched = true; break }
-              // Partial match for compound entities (e.g. "manchester united" in tag "manchester united fc")
-              if (tag.length >= 3 && (tag.includes(topicName.toLowerCase()) || topicName.toLowerCase().includes(tag))) {
-                matched = true; break
-              }
+            for (const term of searchTerms) {
+              if (titleLower.includes(term)) { matched = true; break }
+            }
+            if (!matched) {
+              matched = tags.some(tag => searchTerms.has(tag))
             }
 
             if (matched) {

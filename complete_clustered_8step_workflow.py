@@ -1359,8 +1359,10 @@ def run_complete_pipeline():
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
-            # Enrich interest_tags with subtopic names for feed matching
-            interest_tags = enrich_with_subtopics(interest_tags, title)
+            # NOTE: enrich_with_subtopics REMOVED — it was appending onboarding
+            # subtopic names ("Soccer/Football", "AI & Machine Learning", etc.)
+            # to interest_tags, causing wrong articles to appear under Explore entities.
+            # Concept entity ANN tagging (below) handles entity matching now.
 
             five_ws = synthesized.get('five_ws', {})
 
@@ -1399,8 +1401,8 @@ def run_complete_pipeline():
                     emb_str = '[' + ','.join(str(x) for x in article_embedding_minilm) + ']'
                     ann_result = supabase.rpc('match_concept_entities', {
                         'query_embedding': emb_str,
-                        'match_threshold': 0.35,
-                        'match_count': 8
+                        'match_threshold': 0.45,
+                        'match_count': 5
                     }).execute()
                     if ann_result.data:
                         concept_tags = [r['entity_name'] for r in ann_result.data]
@@ -1567,7 +1569,12 @@ ISSUES FOUND IN PREVIOUS VERSION:
 
 """
     
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     prompt = f"""You are synthesizing information from {len(limited_sources)} sources about the same event.
+
+⚠️ TODAY'S DATE: {today_str}
+Use this date as context. All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
 SOURCES:
 {sources_text}
