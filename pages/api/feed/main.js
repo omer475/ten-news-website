@@ -96,6 +96,44 @@ const ONBOARDING_TOPIC_MAP = {
 };
 
 // ==========================================
+// APP TOPIC ID → ONBOARDING_TOPIC_MAP KEYS
+// The iOS app saves short topic IDs (e.g., "ai", "sports", "f1").
+// This maps them to the full ONBOARDING_TOPIC_MAP keys so interest
+// matching actually works for real app users.
+// ==========================================
+
+const APP_TOPIC_ALIAS = {
+  'politics':       ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania'],
+  'ai':             ['AI & Machine Learning'],
+  'science':        ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
+  'sports':         ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
+  'f1':             ['F1 & Motorsport'],
+  'startups':       ['Startups & Venture Capital'],
+  'technology':     ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
+  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama'],
+  'finance':        ['Stock Markets', 'Banking & Lending', 'Commodities'],
+  'crypto':         ['Bitcoin', 'DeFi & Web3', 'Crypto Regulation & Legal'],
+  'health':         ['Medical Breakthroughs', 'Public Health', 'Mental Health', 'Pharma & Drug Industry'],
+  'business':       ['Oil & Energy', 'Automotive', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Startups & Venture Capital', 'Real Estate'],
+  'economy':        ['Corporate Earnings', 'Stock Markets', 'Banking & Lending', 'Trade & Tariffs'],
+  'defense':        ['War & Conflict'],
+  'diplomacy':      ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Human Rights & Civil Liberties'],
+  'energy':         ['Oil & Energy'],
+  'space':          ['Space & Astronomy', 'Space Tech'],
+  'cybersecurity':  ['Cybersecurity'],
+  'trade':          ['Trade & Tariffs'],
+  'climate':        ['Climate & Environment'],
+  'human_rights':   ['Human Rights & Civil Liberties'],
+  'conflict':       ['War & Conflict'],
+  'environment':    ['Climate & Environment', 'Biology & Nature'],
+  'transportation': ['Automotive', 'F1 & Motorsport'],
+  'culture':        ['K-Pop & K-Drama', 'Celebrity Style & Red Carpet'],
+  'law':            ['Crypto Regulation & Legal'],
+  'disaster':       ['Earth Science'],
+  'infrastructure': ['Real Estate'],
+};
+
+// ==========================================
 // REVERSE LOOKUP: Category → Subtopics
 // When users select broad categories (e.g., "Entertainment", "Sports")
 // instead of specific subtopics (e.g., "Gaming", "NBA"), this maps
@@ -952,19 +990,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   const interestTags = new Set(); // All subtopic tags for tag-level matching
 
   for (const topic of followedTopics) {
-    const mapping = ONBOARDING_TOPIC_MAP[topic];
-    if (mapping) {
-      // Exact subtopic match (e.g., "Gaming", "NBA")
-      mapping.categories.forEach(c => interestCategories.add(c));
-      if (mapping.altCategories) mapping.altCategories.forEach(c => interestAltCategories.add(c));
-      mapping.tags.forEach(t => interestTags.add(t.toLowerCase()));
-    } else if (CATEGORY_TO_SUBTOPICS[topic]) {
-      // Broad category match (e.g., "Entertainment" → Gaming + Movies & Film + ...)
-      interestCategories.add(topic);
-      for (const sub of CATEGORY_TO_SUBTOPICS[topic]) {
-        sub.tags.forEach(t => interestTags.add(t.toLowerCase()));
+    // Resolve topic: try exact match → app alias → category reverse lookup
+    const resolvedTopics = ONBOARDING_TOPIC_MAP[topic]
+      ? [topic]  // Exact subtopic match (e.g., "Gaming", "NBA")
+      : APP_TOPIC_ALIAS[topic.toLowerCase()]  // App shorthand (e.g., "ai" → "AI & Machine Learning")
+        || (CATEGORY_TO_SUBTOPICS[topic] ? CATEGORY_TO_SUBTOPICS[topic].map(s => s.name) : null)  // Category name
+        || null;
+
+    if (resolvedTopics) {
+      for (const resolved of resolvedTopics) {
+        const mapping = ONBOARDING_TOPIC_MAP[resolved];
+        if (mapping) {
+          mapping.categories.forEach(c => interestCategories.add(c));
+          if (mapping.altCategories) mapping.altCategories.forEach(c => interestAltCategories.add(c));
+          mapping.tags.forEach(t => interestTags.add(t.toLowerCase()));
+        }
       }
-      console.log(`[feed] Mapped broad category "${topic}" → ${CATEGORY_TO_SUBTOPICS[topic].length} subtopics`);
     } else {
       console.warn(`[feed] Unmatched onboarding topic: "${topic}"`);
     }
@@ -1035,20 +1076,21 @@ async function handleV2Feed(req, res, supabase, opts) {
       && followedTopics.length > 0 && userId) {
     const seededProfile = {};
     for (const topic of followedTopics) {
-      const mapping = ONBOARDING_TOPIC_MAP[topic];
-      if (mapping) {
-        // Exact subtopic match: seed entity-level tags (e.g., "nba", "basketball")
+      // Resolve topic: exact match → app alias → category reverse lookup
+      const resolvedTopics = ONBOARDING_TOPIC_MAP[topic]
+        ? [topic]
+        : APP_TOPIC_ALIAS[topic.toLowerCase()]
+          || (CATEGORY_TO_SUBTOPICS[topic] ? CATEGORY_TO_SUBTOPICS[topic].map(s => s.name) : null)
+          || null;
+
+      if (!resolvedTopics) continue;
+      for (const resolved of resolvedTopics) {
+        const mapping = ONBOARDING_TOPIC_MAP[resolved];
+        if (!mapping) continue;
         const isSpecific = mapping.tags.length <= 8;
         const weight = isSpecific ? 0.5 : 0.3;
         for (const tag of mapping.tags) {
           seededProfile[tag.toLowerCase()] = Math.max(seededProfile[tag.toLowerCase()] || 0, weight);
-        }
-      } else if (CATEGORY_TO_SUBTOPICS[topic]) {
-        // Broad category match: seed all subtopic tags with moderate weight
-        for (const sub of CATEGORY_TO_SUBTOPICS[topic]) {
-          for (const tag of sub.tags) {
-            seededProfile[tag.toLowerCase()] = Math.max(seededProfile[tag.toLowerCase()] || 0, 0.3);
-          }
         }
       }
     }
