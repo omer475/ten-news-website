@@ -1955,6 +1955,56 @@ class EventClusteringEngine:
                     stats['failed'] += 1
                 continue
 
+            # Soft match: check if a newly created cluster in this batch has a very similar title
+            # This catches cases like multiple "The Madison Review" articles that score 0.83-0.86
+            # on embeddings (below 0.87 threshold) but are clearly the same event
+            try:
+                clean_new = re.sub(r'[^\w\s]', '', full_title.lower()).strip()
+                soft_match_id = None
+                soft_match_sim = 0.0
+                for cid, centroid in cluster_centroids.items():
+                    cluster_obj = next((c for c in active_clusters if c['id'] == cid), None)
+                    if not cluster_obj:
+                        continue
+                    clean_existing = re.sub(r'[^\w\s]', '', (cluster_obj.get('main_title') or '').lower()).strip()
+                    if clean_new and clean_existing:
+                        title_ratio = SequenceMatcher(None, clean_new, clean_existing).ratio()
+                        if title_ratio >= 0.55:
+                            # Also verify embedding similarity is reasonable (>= 0.75)
+                            dot = np.dot(article_emb_np, centroid)
+                            norm_a = np.linalg.norm(article_emb_np)
+                            norm_b = np.linalg.norm(centroid)
+                            if norm_a > 0 and norm_b > 0:
+                                emb_sim = dot / (norm_a * norm_b)
+                                if emb_sim >= 0.75 and emb_sim > soft_match_sim:
+                                    soft_match_sim = emb_sim
+                                    soft_match_id = cid
+
+                if soft_match_id is not None:
+                    old_count = cluster_counts[soft_match_id]
+                    new_centroid = (cluster_centroids[soft_match_id] * old_count + article_emb_np) / (old_count + 1)
+                    if self.add_to_cluster(soft_match_id, source_id, new_centroid=new_centroid):
+                        cluster_centroids[soft_match_id] = new_centroid
+                        cluster_counts[soft_match_id] = old_count + 1
+                        cluster_name = next((c.get('event_name', '') for c in active_clusters if c['id'] == soft_match_id), '')
+                        print(f"      🔗 SOFT-MATCHED (title: {soft_match_sim:.2f} emb) → Cluster {soft_match_id}: {cluster_name}")
+                        with stats_lock:
+                            stats['matched_to_existing'] += 1
+                            if soft_match_id not in stats['cluster_ids']:
+                                stats['cluster_ids'].append(soft_match_id)
+                        if soft_match_id not in cluster_sources_cache:
+                            cluster_sources_cache[soft_match_id] = []
+                        cluster_sources_cache[soft_match_id].append({
+                            'title': full_title,
+                            'score': article.get('score', 0)
+                        })
+                    else:
+                        with stats_lock:
+                            stats['failed'] += 1
+                    continue
+            except Exception as e:
+                print(f"      ⚠️ Soft match check error: {e}")
+
             # Create new cluster with this article's embedding as initial centroid
             cluster_id = self.create_cluster(article, source_id, embedding=article_emb)
             if cluster_id:

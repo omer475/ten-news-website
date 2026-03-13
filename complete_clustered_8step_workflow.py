@@ -699,12 +699,20 @@ def fetch_rss_articles(max_articles_per_source=10):
     # Mark new articles as processed (batched for speed)
     if new_articles:
         try:
-            batch_records = [{
-                'article_url': a.get('url'),
-                'source': a.get('source', 'Unknown'),
-                'title': a.get('title', 'No title'),
-                'published_date': a.get('published_date')
-            } for a in new_articles]
+            # Deduplicate by URL within the batch to avoid
+            # "ON CONFLICT DO UPDATE command cannot affect row a second time"
+            seen_urls = set()
+            batch_records = []
+            for a in new_articles:
+                url = a.get('url')
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    batch_records.append({
+                        'article_url': url,
+                        'source': a.get('source', 'Unknown'),
+                        'title': a.get('title', 'No title'),
+                        'published_date': a.get('published_date')
+                    })
             # Batch upsert in chunks of 50
             for i in range(0, len(batch_records), 50):
                 chunk = batch_records[i:i+50]

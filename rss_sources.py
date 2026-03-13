@@ -171,12 +171,6 @@ RSS_FEEDS = [
     # INTERNATIONAL PREMIUM NEWS (EXPANDED)
     # ========================================
     {
-        'name': 'Al Jazeera English',
-        'url': 'https://www.aljazeera.com/xml/rss/all.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'Deutsche Welle',
         'url': 'https://rss.dw.com/xml/rss-en-all',
         'category': 'news',
@@ -615,7 +609,6 @@ RSS_FEEDS = [
     {'name': 'Futurism', 'url': 'https://futurism.com/feed', 'category': 'science', 'tier': 'premium'},
     {'name': 'ScienceAlert', 'url': 'https://www.sciencealert.com/feed', 'category': 'science', 'tier': 'premium'},
     {'name': 'Ars Technica Science', 'url': 'https://arstechnica.com/science/feed/', 'category': 'science', 'tier': 'premium'},
-    {'name': 'Interesting Engineering', 'url': 'https://interestingengineering.com/feed', 'category': 'science', 'tier': 'premium'},
     {'name': 'Aeon', 'url': 'https://aeon.co/feed.rss', 'category': 'science', 'tier': 'premium'},
     {'name': 'New Atlas', 'url': 'https://newatlas.com/index.rss', 'category': 'science', 'tier': 'premium'},
     {'name': 'Mental Floss', 'url': 'https://www.mentalfloss.com/feed', 'category': 'science', 'tier': 'premium'},
@@ -950,13 +943,6 @@ RSS_FEEDS = [
     # ========================================
     # INDIA (5 feeds)
     # ========================================
-    {
-        'name': 'Times of India',
-        'url': 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'India'
-    },
     {
         'name': 'The Hindu',
         'url': 'https://www.thehindu.com/news/feeder/default.rss',
@@ -1581,20 +1567,8 @@ RSS_FEEDS = [
     # ENTERTAINMENT & MOVIES (10 original feeds)
     # ========================================
     {
-        'name': 'Variety',
-        'url': 'https://variety.com/feed/',
-        'category': 'entertainment',
-        'tier': 'premium'
-    },
-    {
         'name': 'Deadline',
         'url': 'https://deadline.com/feed/',
-        'category': 'entertainment',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Hollywood Reporter',
-        'url': 'https://www.hollywoodreporter.com/feed/',
         'category': 'entertainment',
         'tier': 'premium'
     },
@@ -1621,12 +1595,6 @@ RSS_FEEDS = [
         'url': 'https://www.avclub.com/rss',
         'category': 'entertainment',
         'tier': 'standard'
-    },
-    {
-        'name': 'Rolling Stone',
-        'url': 'https://www.rollingstone.com/feed/',
-        'category': 'entertainment',
-        'tier': 'premium'
     },
     {
         'name': 'Pitchfork',
@@ -1659,7 +1627,6 @@ RSS_FEEDS = [
     {'name': 'Decider', 'url': 'https://decider.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
     {'name': 'Den of Geek', 'url': 'https://www.denofgeek.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
     {'name': 'SlashFilm', 'url': 'https://www.slashfilm.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
-    {'name': 'The Wrap', 'url': 'https://www.thewrap.com/feed/', 'category': 'entertainment', 'tier': 'premium'},
 
     # ========================================
     # MOVIES / COMICS / FANDOM
@@ -1882,7 +1849,6 @@ RSS_FEEDS = [
     # ========================================
     # MUSIC - ADDITIONAL
     # ========================================
-    {'name': 'Billboard', 'url': 'https://www.billboard.com/feed/', 'category': 'music', 'tier': 'premium'},
     {'name': 'BrooklynVegan', 'url': 'https://www.brooklynvegan.com/feed/', 'category': 'music', 'tier': 'standard'},
     {'name': 'The Line of Best Fit', 'url': 'https://www.thelineofbestfit.com/feed', 'category': 'music', 'tier': 'standard'},
     {'name': 'Soompi', 'url': 'https://www.soompi.com/feed', 'category': 'music', 'tier': 'premium'},
