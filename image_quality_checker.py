@@ -102,22 +102,29 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                 # Open image with PIL if available
                 if PIL_AVAILABLE:
                     img = Image.open(BytesIO(response.content))
-                    
+
                     # Convert RGBA to RGB if needed
                     if img.mode == 'RGBA':
                         img = img.convert('RGB')
-                    
+
                     print(f"      Image loaded: {img.size[0]}x{img.size[1]} pixels")
+
+                    # Downscale very large images to save memory (e.g. 11314x6366 = 216MB)
+                    max_dim = 2000
+                    if img.size[0] > max_dim or img.size[1] > max_dim:
+                        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
                     
                     # Quick dimension check - very small images are likely icons/logos
                     if img.size[0] < 100 or img.size[1] < 100:
-                        return {
+                        result = {
                             "suitable": False,
                             "confidence": 95,
                             "issues": ["too_small"],
                             "reason": f"Image too small ({img.size[0]}x{img.size[1]}px) - likely an icon or logo",
                             "error": False
                         }
+                        img.close()
+                        return result
 
                     # Quick pixel analysis to catch dark/monotone placeholder images
                     try:
@@ -140,6 +147,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                                 ) / len(pixels)
                                 if variance < 2000:
                                     print(f"      ❌ Dark/monotone placeholder detected ({dark_ratio:.0%} dark, variance: {variance:.0f})")
+                                    img.close()
                                     return {
                                         "suitable": False,
                                         "confidence": 92,
@@ -159,6 +167,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                             solid_ratio = near_avg / len(pixels)
                             if solid_ratio > 0.85:
                                 print(f"      ❌ Solid color image detected ({solid_ratio:.0%} uniform)")
+                                img.close()
                                 return {
                                     "suitable": False,
                                     "confidence": 90,
@@ -171,6 +180,9 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
 
                     # Send to Gemini with PIL image
                     result = self.model.generate_content([self.prompt, img])
+                    # Free PIL image memory immediately after Gemini call
+                    img.close()
+                    del img
                 else:
                     # Fallback: send image bytes directly
                     img_bytes = response.content
