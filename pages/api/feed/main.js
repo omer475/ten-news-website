@@ -879,7 +879,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // For cold-start users without any embedding data, skip the personal query
   // entirely — V2 will fill the feed with trending + discovery articles.
   // IMPROVEMENT 1: Deeper pages request more candidates
-  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
+  let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
   const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
   let personalPromise;
   if (!hasAnyPersonalization) {
@@ -1058,6 +1058,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('profiles').update({ tag_profile: seededProfile }).eq('id', userId)
       .then(() => console.log('[feed] Seeded tag_profile from onboarding for:', userId?.substring(0, 8)))
       .catch(() => {});
+  }
+
+  // Update personalization flag: users with onboarding topics or seeded tag_profile
+  // are NOT cold-start — they should go through slot-filling, not the random bandit.
+  // (pgvector personal pool will be empty, but interest articles fill pPool instead)
+  if (!hasAnyPersonalization && (followedTopics.length > 0 || (storedTagProfile && Object.keys(storedTagProfile).filter(k => !k.startsWith('_')).length > 0))) {
+    hasAnyPersonalization = true;
   }
 
   // ==========================================
