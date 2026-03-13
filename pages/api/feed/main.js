@@ -1605,7 +1605,13 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
-  if (!hasAnyPersonalization) {
+  // Only use bandit for truly cold-start users with NO signals at all.
+  // Guest users who selected topics during onboarding should use the
+  // personalized slot-filling path (with interest-category rotation)
+  // even without a taste vector — their followed_topics provide enough
+  // signal for interest-aware trending and discovery.
+  const hasFollowedTopics = (userPrefs?.followed_topics || []).length > 0;
+  if (!hasAnyPersonalization && !hasFollowedTopics) {
     // Group all candidates by category for bandit
     const categoryPools = {};
     for (const a of [...trendingScored, ...discoveryScored]) {

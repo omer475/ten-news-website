@@ -163,12 +163,17 @@ export default async function handler(req, res) {
 
     const tagProfile = profile?.tag_profile || {}
     const skipProfile = profile?.skip_profile || {}
-    const homeCountry = profile?.home_country || null
-    const followedTopics = Array.isArray(profile?.followed_topics)
+    // Fall back to query params for guest users (no profile row in DB)
+    const homeCountry = profile?.home_country || req.query.home_country || null
+    const profileTopics = Array.isArray(profile?.followed_topics)
       ? profile.followed_topics
       : (typeof profile?.followed_topics === 'string'
         ? JSON.parse(profile.followed_topics || '[]')
         : [])
+    // Guest users send followed_topics as query param since they have no DB profile
+    const followedTopics = profileTopics.length > 0
+      ? profileTopics
+      : (req.query.followed_topics ? req.query.followed_topics.split(',') : [])
 
     // Sort tags by weight, filter noise
     const sortedTags = Object.entries(tagProfile)
