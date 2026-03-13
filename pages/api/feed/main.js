@@ -948,15 +948,17 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24h
-    // Cold-start users need more trending articles since personal pool is empty
+    // 2. TRENDING: high editorial score, last 24-48h
+    // Larger pool (150) + lower threshold (600) so per-interest-category
+    // rotation can find articles from Tech, Sports, Science etc. —
+    // not just the dominant news cycle (Iran/war at 900+)
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
+      .gte('ai_final_score', hasAnyPersonalization ? 600 : 500)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 50 : 300),
+      .limit(hasAnyPersonalization ? 150 : 300),
 
     // 3. DISCOVERY: diverse quality content, wider pool
     // Cold-start: fetch much larger pool to compensate for empty personal
@@ -1214,8 +1216,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   const personalIds = new Set(personalIdOrder);
 
   // TRENDING: category-cap per category, exclude personal/seen
-  // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 3 : 10;
+  // Raised to 5 (from 3) so interest-category rotation has enough articles
+  // per category — with only 3, a user interested in Tech might exhaust
+  // the pool after 3 T slots and fall back to Iran/war
+  const trendingCatMax = hasAnyPersonalization ? 5 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1571,6 +1575,35 @@ async function handleV2Feed(req, res, supabase, opts) {
     return null;
   }
 
+  // ==========================================
+  // INTEREST-AWARE TRENDING & DISCOVERY
+  // Per-interest-category rotation for T slots (like Reddit per-subreddit
+  // trending, Google Discover Topic Layer, SmartNews category trending).
+  // Instead of global trending dominated by one news cycle, each T slot
+  // picks from a different user interest category.
+  // ==========================================
+
+  const interestCatList = [...interestCategories]; // e.g., ['Tech', 'Sports', 'Science']
+  let trendingCatIdx = 0; // rotation pointer for T slot category cycling
+
+  // Helper: MMR-select from pool filtered to a specific category
+  // Used for interest-category rotation (trending) and category-targeted discovery
+  function mmrSelectFromCat(pool, sel, tc, lambda, targetCat) {
+    let attempts = 0;
+    while (attempts < 5) {
+      const filtered = pool.filter(a => a.category === targetCat);
+      if (filtered.length === 0) return null;
+      const picked = mmrSelect([...filtered], sel, tc, lambda);
+      if (!picked) return null;
+      // Remove from original pool
+      const idx = pool.findIndex(a => a.id === picked.id);
+      if (idx >= 0) pool.splice(idx, 1);
+      if (!isEventCapped(picked)) return picked;
+      attempts++;
+    }
+    return null;
+  }
+
   // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
   if (!hasAnyPersonalization) {
     // Group all candidates by category for bandit
@@ -1661,20 +1694,48 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        // INTEREST-AWARE TRENDING: rotate through user's interest categories
+        // Instead of global trending (dominated by Iran/war), pick "trending in Tech",
+        // then "trending in Sports", then "trending in Science", etc.
+        if (!isHoldback && interestCatList.length > 0) {
+          for (let i = 0; i < interestCatList.length && !picked; i++) {
+            const cat = interestCatList[(trendingCatIdx + i) % interestCatList.length];
+            picked = mmrSelectFromCat(tPool, selected, tagCache, 0.85, cat);
+          }
+          trendingCatIdx = (trendingCatIdx + 1) % interestCatList.length;
+        }
+        // Fallback: global trending (for users without interests or exhausted pools)
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
-        // SURPRISE slot: variable reward
-        if (Math.random() < 0.6 && dPool.length > 0) {
-          picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        } else if (pPool.length > 3) {
-          const tailStart = Math.floor(pPool.length * 0.5);
-          const tailEnd = pPool.length;
-          if (tailStart < tailEnd) {
-            const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
-            const candidate = pPool.splice(tailIdx, 1)[0];
-            if (candidate && !isEventCapped(candidate)) picked = candidate;
+        // INTEREST-ADJACENT DISCOVERY: prefer non-interest categories for serendipity
+        // (like YouTube's "Something Completely Different" container)
+        // A user interested in [Tech, Sports] gets surprised with Health, Entertainment, etc.
+        // — NOT more Iran/war from the dominant news cycle
+        if (!isHoldback && dPool.length > 0 && interestCatList.length > 0) {
+          const nonInterestCats = [...new Set(
+            dPool.filter(a => !interestCategories.has(a.category)).map(a => a.category)
+          )];
+          if (nonInterestCats.length > 0) {
+            // Pick a random non-interest category, then best article from it
+            // This distributes surprise across Entertainment, Health, Lifestyle, etc.
+            const randomCat = nonInterestCats[Math.floor(Math.random() * nonInterestCats.length)];
+            picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, randomCat);
+          }
+        }
+        if (!picked) {
+          // Fallback: original surprise logic
+          if (Math.random() < 0.6 && dPool.length > 0) {
+            picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+          } else if (pPool.length > 3) {
+            const tailStart = Math.floor(pPool.length * 0.5);
+            const tailEnd = pPool.length;
+            if (tailStart < tailEnd) {
+              const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
+              const candidate = pPool.splice(tailIdx, 1)[0];
+              if (candidate && !isEventCapped(candidate)) picked = candidate;
+            }
           }
         }
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
