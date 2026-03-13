@@ -1704,24 +1704,31 @@ async function handleV2Feed(req, res, supabase, opts) {
           }
           trendingCatIdx = (trendingCatIdx + 1) % interestCatList.length;
         }
-        // Fallback: global trending (for users without interests or exhausted pools)
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        // When interest-rotation found nothing, prefer personal over global trending.
+        // Without this, a Sports/Entertainment user gets force-fed Iran/Business
+        // trending articles because global trending is dominated by the war cycle.
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
-        // INTEREST-ADJACENT DISCOVERY: prefer non-interest categories for serendipity
+        // UNDERREPRESENTED CATEGORY DISCOVERY: prefer categories barely shown so far
         // (like YouTube's "Something Completely Different" container)
-        // A user interested in [Tech, Sports] gets surprised with Health, Entertainment, etc.
-        // — NOT more Iran/war from the dominant news cycle
-        if (!isHoldback && dPool.length > 0 && interestCatList.length > 0) {
-          const nonInterestCats = [...new Set(
-            dPool.filter(a => !interestCategories.has(a.category)).map(a => a.category)
-          )];
-          if (nonInterestCats.length > 0) {
-            // Pick a random non-interest category, then best article from it
-            // This distributes surprise across Entertainment, Health, Lifestyle, etc.
-            const randomCat = nonInterestCats[Math.floor(Math.random() * nonInterestCats.length)];
-            picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, randomCat);
+        // Instead of just "non-interest categories" (which includes Politics/Business
+        // dominated by Iran), pick from categories with 0-1 appearances in the feed.
+        // This ensures genuine variety: Health, Entertainment, Lifestyle, etc.
+        if (!isHoldback && dPool.length > 0) {
+          const shownCatCounts = {};
+          for (const a of selected) {
+            const cat = a.category || 'Other';
+            shownCatCounts[cat] = (shownCatCounts[cat] || 0) + 1;
+          }
+          // Find categories in discovery pool that are underrepresented (shown 0-1 times)
+          const underrepCats = [...new Set(dPool.map(a => a.category))]
+            .filter(cat => (shownCatCounts[cat] || 0) <= 1)
+            .sort(() => Math.random() - 0.5); // shuffle for variety
+          for (const cat of underrepCats) {
+            picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, cat);
+            if (picked) break;
           }
         }
         if (!picked) {
