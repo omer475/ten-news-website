@@ -68,6 +68,40 @@ const SUBTOPIC_CATEGORY_MAP = {
   'Celebrity Style & Red Carpet': ['Fashion', 'Entertainment'],
 }
 
+// APP_TOPIC_ALIAS: maps iOS app short topic IDs to SUBTOPIC_CATEGORY_MAP keys
+const APP_TOPIC_ALIAS = {
+  'politics': ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania'],
+  'ai': ['AI & Machine Learning'],
+  'science': ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
+  'sports': ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
+  'f1': ['F1 & Motorsport'],
+  'startups': ['Startups & Venture Capital'],
+  'technology': ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
+  'entertainment': ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama'],
+  'health': ['Medical Breakthroughs', 'Public Health', 'Mental Health', 'Pharma & Drug Industry'],
+  'business': ['Oil & Energy', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Real Estate'],
+  'finance': ['Stock Markets', 'Banking & Lending', 'Commodities'],
+  'crypto': ['Bitcoin', 'DeFi & Web3', 'Crypto Regulation & Legal'],
+  'lifestyle': ['Pets & Animals', 'Home & Garden', 'Shopping & Product Reviews'],
+  'fashion': ['Sneakers & Streetwear', 'Celebrity Style & Red Carpet'],
+  'gaming': ['Gaming'],
+  'soccer': ['Soccer/Football'],
+  'nfl': ['NFL'],
+  'nba': ['NBA'],
+  'baseball': ['MLB/Baseball'],
+  'cricket': ['Cricket'],
+  'boxing': ['Boxing & MMA/UFC'],
+  'olympics': ['Olympics & Paralympics'],
+  'movies': ['Movies & Film'],
+  'music': ['Music'],
+  'kpop': ['K-Pop & K-Drama'],
+  'space': ['Space & Astronomy', 'Space Tech'],
+  'climate': ['Climate & Environment'],
+  'automotive': ['Automotive'],
+  'cybersecurity': ['Cybersecurity'],
+  'realestate': ['Real Estate'],
+}
+
 // Sliding blend: behavior_weight = min(directMatches / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
 // At 25 matches: 50/50 blend. At 50+: 85% behavior, 15% cold_start.
 // Cold_start never fully disappears — onboarding always has residual influence.
@@ -212,8 +246,14 @@ export default async function handler(req, res) {
     if (coldStartSlots > 0) {
       const interestCategories = new Set()
       for (const topic of followedTopics) {
-        const cats = SUBTOPIC_CATEGORY_MAP[topic]
-        if (cats) cats.forEach(c => interestCategories.add(c))
+        // Resolve topic: exact match → app alias → skip
+        const resolvedSubtopics = SUBTOPIC_CATEGORY_MAP[topic]
+          ? [topic]
+          : (APP_TOPIC_ALIAS[topic.toLowerCase()] || [])
+        for (const resolved of resolvedSubtopics) {
+          const cats = SUBTOPIC_CATEGORY_MAP[resolved]
+          if (cats) cats.forEach(c => interestCategories.add(c))
+        }
       }
 
       if (interestCategories.size > 0) {
