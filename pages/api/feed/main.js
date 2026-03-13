@@ -1365,28 +1365,40 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: unified scoring (similarity=0 since no pgvector match)
+  // Trending bucket: unified scoring with interest tag boost
+  // When user has interest tags, trending articles matching those interests get priority
+  // so T slots don't always show Iran/war for a Gaming or Soccer user
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: isHoldback
-        ? scoreTrendingV3(articleMap[a.id])
-        : scoreUnified(articleMap[a.id], scoreOpts),
-      _bucket: 'trending',
-    }))
+    .map(a => {
+      const article = articleMap[a.id];
+      let score = isHoldback
+        ? scoreTrendingV3(article)
+        : scoreUnified(article, scoreOpts);
+      if (!isHoldback && interestTags.size > 0) {
+        const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+        const matches = tags.filter(t => interestTags.has(t)).length;
+        if (matches > 0) score *= (1 + matches * 0.3);
+      }
+      return { ...article, _score: score, _bucket: 'trending' };
+    })
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: unified scoring with discovery flag for surprise + unfamiliar boost
+  // Discovery bucket: unified scoring with interest tag boost + discovery surprise
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: isHoldback
-        ? scoreDiscoveryV3(articleMap[a.id], personalCategories)
-        : scoreUnified(articleMap[a.id], { ...scoreOpts, isDiscovery: true, personalCategories }),
-      _bucket: 'discovery',
-    }))
+    .map(a => {
+      const article = articleMap[a.id];
+      let score = isHoldback
+        ? scoreDiscoveryV3(article, personalCategories)
+        : scoreUnified(article, { ...scoreOpts, isDiscovery: true, personalCategories });
+      if (!isHoldback && interestTags.size > 0) {
+        const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+        const matches = tags.filter(t => interestTags.has(t)).length;
+        if (matches > 0) score *= (1 + matches * 0.3);
+      }
+      return { ...article, _score: score, _bucket: 'discovery' };
+    })
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: scored through scoreUnified like everything else
