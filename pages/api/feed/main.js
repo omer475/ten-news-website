@@ -96,6 +96,21 @@ const ONBOARDING_TOPIC_MAP = {
 };
 
 // ==========================================
+// REVERSE LOOKUP: Category → Subtopics
+// When users select broad categories (e.g., "Entertainment", "Sports")
+// instead of specific subtopics (e.g., "Gaming", "NBA"), this maps
+// the category to all its subtopics so we can still find relevant content.
+// ==========================================
+
+const CATEGORY_TO_SUBTOPICS = {};
+for (const [topicName, mapping] of Object.entries(ONBOARDING_TOPIC_MAP)) {
+  for (const cat of mapping.categories) {
+    if (!CATEGORY_TO_SUBTOPICS[cat]) CATEGORY_TO_SUBTOPICS[cat] = [];
+    CATEGORY_TO_SUBTOPICS[cat].push({ name: topicName, tags: mapping.tags });
+  }
+}
+
+// ==========================================
 // ARTICLE FORMATTING (unchanged from before)
 // ==========================================
 
@@ -467,12 +482,20 @@ function scoreUnified(article, opts) {
   // Discovery surprise factor
   const surprise = isDiscovery ? (1 + Math.random() * 0.4) : 1.0;
 
+  // Dynamic weights: when taste similarity isn't available (trending/discovery
+  // without pgvector), redistribute its weight to tagOverlap + categoryAffinity
+  // so these articles aren't systematically disadvantaged (25% of score was always 0)
+  let wCat = 0.25, wTag = 0.30, wTaste = 0.25, wFresh = 0.10, wPop = 0.10;
+  if (tasteSimilarity === 0) {
+    wCat = 0.35; wTag = 0.40; wTaste = 0; wFresh = 0.12; wPop = 0.13;
+  }
+
   const score = (
-    categoryAffinity * 0.25 +
-    tagOverlap * 0.30 +
-    tasteSimilarity * 0.25 +
-    freshness * 0.10 +
-    globalPopularity * 0.10
+    categoryAffinity * wCat +
+    tagOverlap * wTag +
+    tasteSimilarity * wTaste +
+    freshness * wFresh +
+    globalPopularity * wPop
   ) * 1000 * surprise * velocityBoost * timeBoost;
 
   return score * (1 - skipPenalty);
@@ -931,16 +954,28 @@ async function handleV2Feed(req, res, supabase, opts) {
   for (const topic of followedTopics) {
     const mapping = ONBOARDING_TOPIC_MAP[topic];
     if (mapping) {
+      // Exact subtopic match (e.g., "Gaming", "NBA")
       mapping.categories.forEach(c => interestCategories.add(c));
       if (mapping.altCategories) mapping.altCategories.forEach(c => interestAltCategories.add(c));
       mapping.tags.forEach(t => interestTags.add(t.toLowerCase()));
+    } else if (CATEGORY_TO_SUBTOPICS[topic]) {
+      // Broad category match (e.g., "Entertainment" → Gaming + Movies & Film + ...)
+      interestCategories.add(topic);
+      for (const sub of CATEGORY_TO_SUBTOPICS[topic]) {
+        sub.tags.forEach(t => interestTags.add(t.toLowerCase()));
+      }
+      console.log(`[feed] Mapped broad category "${topic}" → ${CATEGORY_TO_SUBTOPICS[topic].length} subtopics`);
+    } else {
+      console.warn(`[feed] Unmatched onboarding topic: "${topic}"`);
     }
   }
 
-  // Fetch per-category articles for followed interests
+  // Fetch per-category articles + tag-based articles for followed interests
   let interestArticles = [];
-  if (interestCategories.size > 0) {
+  if (interestCategories.size > 0 || interestTags.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
+
+    // 1. Category-based queries (broad sweep)
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
@@ -951,8 +986,33 @@ async function handleV2Feed(req, res, supabase, opts) {
         .order('ai_final_score', { ascending: false })
         .limit(100)
     );
-    const catResults = await Promise.all(catPromises);
+
+    // 2. Tag-based queries (niche content that may be in unexpected categories)
+    // e.g., a "gaming" article categorized under "Tech" won't appear in Entertainment queries
+    const tagArray = [...interestTags].slice(0, 20); // cap to keep query count reasonable
+    const tagBatches = [];
+    for (let i = 0; i < tagArray.length; i += 5) {
+      tagBatches.push(tagArray.slice(i, i + 5));
+    }
+    const tagPromises = tagBatches.map(batch =>
+      supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+        .or(batch.map(t => `interest_tags.ilike.%${t}%`).join(','))
+        .gte('created_at', thirtyDaysAgo)
+        .gte('ai_final_score', 150)
+        .order('ai_final_score', { ascending: false })
+        .limit(50)
+    );
+
+    const [catResults, tagResults] = await Promise.all([
+      Promise.all(catPromises),
+      Promise.all(tagPromises),
+    ]);
     for (const r of catResults) {
+      if (r.data) interestArticles.push(...r.data);
+    }
+    for (const r of tagResults) {
       if (r.data) interestArticles.push(...r.data);
     }
     // Deduplicate
@@ -976,13 +1036,20 @@ async function handleV2Feed(req, res, supabase, opts) {
     const seededProfile = {};
     for (const topic of followedTopics) {
       const mapping = ONBOARDING_TOPIC_MAP[topic];
-      if (!mapping) continue;
-      // Specific sub-topics (e.g. "NBA", "AI & Machine Learning") get higher weight
-      const isSpecific = mapping.tags.length <= 8;
-      const weight = isSpecific ? 0.5 : 0.3;
-      for (const tag of mapping.tags) {
-        const t = tag.toLowerCase();
-        seededProfile[t] = Math.max(seededProfile[t] || 0, weight);
+      if (mapping) {
+        // Exact subtopic match: seed entity-level tags (e.g., "nba", "basketball")
+        const isSpecific = mapping.tags.length <= 8;
+        const weight = isSpecific ? 0.5 : 0.3;
+        for (const tag of mapping.tags) {
+          seededProfile[tag.toLowerCase()] = Math.max(seededProfile[tag.toLowerCase()] || 0, weight);
+        }
+      } else if (CATEGORY_TO_SUBTOPICS[topic]) {
+        // Broad category match: seed all subtopic tags with moderate weight
+        for (const sub of CATEGORY_TO_SUBTOPICS[topic]) {
+          for (const tag of sub.tags) {
+            seededProfile[tag.toLowerCase()] = Math.max(seededProfile[tag.toLowerCase()] || 0, 0.3);
+          }
+        }
       }
     }
     seededProfile._last_updated = Date.now();
@@ -1200,6 +1267,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tagCache = buildTagSetsCache(allArticles);
 
   // ==========================================
+  // PER-CATEGORY CAP: Personal pool diversity
+  // No single category > 35% of the personal pool. Prevents content flooding
+  // (e.g., 94% Iran/Politics articles drowning out other interests).
+  // ==========================================
+
+  if (!isHoldback && personalIdOrder.length > 5) {
+    const maxPerCat = Math.ceil(personalIdOrder.length * 0.35);
+    const catCounts = {};
+    personalIdOrder = personalIdOrder.filter(id => {
+      const cat = articleMap[id]?.category || 'Other';
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+      return catCounts[cat] <= maxPerCat;
+    });
+  }
+
+  // ==========================================
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
@@ -1257,30 +1340,32 @@ async function handleV2Feed(req, res, supabase, opts) {
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Interest bucket: articles from user's followed topic categories
-  // Boost articles whose interest_tags overlap with the user's subtopic tags
-  // Dynamic category affinity: use engagement RATE (not volume) to boost categories
+  // Interest bucket: scored through scoreUnified like everything else
+  // Interest articles are candidates from the user's onboarding topics — they get
+  // an interest tag bonus but go through the SAME scoring as personal/trending/discovery.
+  // This ensures skip penalties, session momentum, velocity boost all apply.
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
-      // Static category boost from onboarding
-      let catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
-      // Dynamic category affinity: engagement rate drives additional boost
-      if (!isHoldback && categoryProfile[a.category] && categoryProfile[a.category].shown >= 5) {
-        const rate = categoryProfile[a.category].engaged / categoryProfile[a.category].shown;
-        catBoost *= (0.7 + rate * 1.3); // rate 0% → 0.7x, rate 50% → 1.35x, rate 100% → 2.0x
-      }
-      const tagBoost = 1.0 + (tagMatches * 0.25);
+      // Filter out zero-match articles (celebrity gossip in a gaming user's feed)
+      if (!isHoldback && tagMatches === 0) return null;
+      // Score through unified function (same as personal/trending/discovery)
+      const score = isHoldback
+        ? (article.ai_final_score || 0) * (1.0 + tagMatches * 0.25) * getRecencyDecay(article.created_at, article.category, article.shelf_life_days)
+        : scoreUnified(article, { ...scoreOpts, similarity: 0 });
+      // Interest tag bonus: matched articles get a boost on top of unified score
+      const interestBoost = tagMatches >= 3 ? 1.8 : tagMatches >= 2 ? 1.5 : tagMatches >= 1 ? 1.3 : 1.0;
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
+        _score: score * interestBoost,
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
     })
+    .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
@@ -1350,10 +1435,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const selected = [];
-  const pPool = [...personalScored];
+  // Merge interest articles into personal pool — they're scored via scoreUnified
+  // with interest tag bonus, so they naturally rank alongside personal articles.
+  // Deduplicate by ID (some interest articles may overlap with personal)
+  const pPoolIds = new Set(personalScored.map(a => a.id));
+  const uniqueInterest = interestScored.filter(a => !pPoolIds.has(a.id));
+  const pPool = [...personalScored, ...uniqueInterest].sort((a, b) => b._score - a._score);
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
-  const iPool = [...interestScored];
 
   // IMPROVEMENT 3: Track world event and cluster counts
   // Soft impression discounting: gradual fatigue instead of hard caps
@@ -1397,7 +1486,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     // Soft impression discounting: reduce scores of remaining pool items
     // from the same event/cluster so they become less likely to be picked next
     if (!isHoldback && (eventId || clusterId)) {
-      for (const pool of [pPool, tPool, dPool, iPool]) {
+      for (const pool of [pPool, tPool, dPool]) {
         for (const item of pool) {
           if ((eventId && item._world_event_id === eventId) ||
               (clusterId && item.cluster_id === clusterId)) {
@@ -1498,88 +1587,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       selected.push(picked);
     }
-  } else if (interestCategories.size > 0 && iPool.length > 0) {
-    // ==========================================
-    // QUOTA-BASED PRE-FILL for users with interest selections
-    // 70% of slots guaranteed for interest categories, 30% diversity
-    // This ensures Sports/Gaming/etc. users actually see their topics.
-    // ==========================================
-
-    const interestSlots = Math.ceil(limit * 0.8);
-    const diversitySlots = limit - interestSlots;
-
-    // Pre-fill interest quota: per-category round-robin from interest pool
-    const catQueues = {};
-    for (const a of iPool) {
-      const cat = a.category || 'Other';
-      if (!catQueues[cat]) catQueues[cat] = [];
-      catQueues[cat].push(a);
-    }
-    // Also pull matching articles from personal pool
-    for (const a of pPool) {
-      const cat = a.category || 'Other';
-      if (interestCategories.has(cat) || interestAltCategories.has(cat)) {
-        if (!catQueues[cat]) catQueues[cat] = [];
-        catQueues[cat].push(a);
-      }
-    }
-
-    const catKeys = Object.keys(catQueues);
-    let catIdx = 0;
-    const usedIds = new Set();
-
-    while (selected.length < interestSlots && catKeys.length > 0) {
-      const cat = catKeys[catIdx % catKeys.length];
-      const queue = catQueues[cat];
-      let picked = null;
-
-      while (queue.length > 0) {
-        const candidate = queue.shift();
-        if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
-          picked = candidate;
-          break;
-        }
-      }
-
-      if (picked) {
-        usedIds.add(picked.id);
-        picked.bucket = 'interest';
-        recordEventSelection(picked);
-        selected.push(picked);
-      } else {
-        catKeys.splice(catIdx % catKeys.length, 1);
-        if (catKeys.length === 0) break;
-      }
-      catIdx++;
-    }
-
-    // Fill remaining slots with standard slot-filling (diversity)
-    for (let pos = 0; selected.length < limit; pos++) {
-      const slot = SLOTS[pos % SLOTS.length];
-      let picked = null;
-
-      if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
-      } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
-      } else {
-        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
-      }
-
-      if (!picked) break;
-
-      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
-      recordEventSelection(picked);
-      selected.push(picked);
-    }
   } else {
-    // Personalized user without topic selections: standard slot-filling
+    // ALL personalized users: unified slot-filling via scoreUnified
+    // Interest articles are merged into pPool and scored through the same formula,
+    // so they compete fairly alongside personal articles in the slot pattern.
     for (let pos = 0; selected.length < limit; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
