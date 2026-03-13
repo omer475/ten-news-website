@@ -1053,14 +1053,10 @@ def run_complete_pipeline():
                 print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
             
             if not selected_image:
-                # Use top rule-based candidate as fallback (dimensions already verified)
-                fallback = valid_candidates[0]
-                selected_image = {
-                    'url': fallback['url'],
-                    'source_name': fallback['source_name'],
-                    'quality_score': fallback['quality_score']
-                }
-                print(f"   ↩️  [Cluster {cluster_id}] Using rule-based fallback: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+                print(f"   ❌ [Cluster {cluster_id}] No images passed AI quality check — skipping article")
+                update_cluster_status(cluster_id, 'failed', 'no_quality_image',
+                    f'All {len(valid_candidates)} candidate images failed AI quality check')
+                return False
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
