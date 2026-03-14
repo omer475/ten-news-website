@@ -70,6 +70,7 @@ const SUBTOPIC_CATEGORY_MAP = {
 
 // APP_TOPIC_ALIAS: maps iOS app short topic IDs to SUBTOPIC_CATEGORY_MAP keys
 const APP_TOPIC_ALIAS = {
+  // ── Broad category aliases (old Topics.all IDs) ──
   'politics': ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania'],
   'ai': ['AI & Machine Learning'],
   'science': ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
@@ -100,6 +101,63 @@ const APP_TOPIC_ALIAS = {
   'automotive': ['Automotive'],
   'cybersecurity': ['Cybersecurity'],
   'realestate': ['Real Estate'],
+  // ── App subtopic IDs (TopicCategories.all subtopic .id values) ──
+  // Politics subtopics
+  'war_conflict':       ['War & Conflict'],
+  'us_politics':        ['US Politics'],
+  'european_politics':  ['European Politics'],
+  'asian_politics':     ['Asian Politics'],
+  'middle_east':        ['Middle East'],
+  'latin_america':      ['Latin America'],
+  'africa_oceania':     ['Africa & Oceania'],
+  'human_rights':       ['Human Rights & Civil Liberties'],
+  // Sports subtopics
+  'f1_motorsport':      ['F1 & Motorsport'],
+  'boxing_mma':         ['Boxing & MMA/UFC'],
+  // Business subtopics
+  'oil_energy':         ['Oil & Energy'],
+  'retail_consumer':    ['Retail & Consumer'],
+  'corporate_deals':    ['Corporate Deals'],
+  'trade_tariffs':      ['Trade & Tariffs'],
+  'corporate_earnings': ['Corporate Earnings'],
+  'startups_vc':        ['Startups & Venture Capital'],
+  'real_estate':        ['Real Estate'],
+  // Entertainment subtopics
+  'movies_film':        ['Movies & Film'],
+  'tv_streaming':       ['TV & Streaming'],
+  'celebrity_news':     ['Celebrity News'],
+  'kpop_kdrama':        ['K-Pop & K-Drama'],
+  // Tech subtopics
+  'ai_ml':              ['AI & Machine Learning'],
+  'smartphones_gadgets': ['Smartphones & Gadgets'],
+  'social_media':       ['Social Media'],
+  'space_tech':         ['Space Tech'],
+  'robotics_hardware':  ['Robotics & Hardware'],
+  // Science subtopics
+  'space_astronomy':    ['Space & Astronomy'],
+  'climate_environment': ['Climate & Environment'],
+  'biology_nature':     ['Biology & Nature'],
+  'earth_science':      ['Earth Science'],
+  // Health subtopics
+  'medical_breakthroughs': ['Medical Breakthroughs'],
+  'public_health':      ['Public Health'],
+  'mental_health':      ['Mental Health'],
+  'pharma_drugs':       ['Pharma & Drug Industry'],
+  // Finance subtopics
+  'stock_markets':      ['Stock Markets'],
+  'banking_lending':    ['Banking & Lending'],
+  'commodities':        ['Commodities'],
+  // Crypto subtopics
+  'bitcoin':            ['Bitcoin'],
+  'defi_web3':          ['DeFi & Web3'],
+  'crypto_regulation':  ['Crypto Regulation & Legal'],
+  // Lifestyle subtopics
+  'pets_animals':       ['Pets & Animals'],
+  'home_garden':        ['Home & Garden'],
+  'shopping_reviews':   ['Shopping & Product Reviews'],
+  // Fashion subtopics
+  'sneakers_streetwear': ['Sneakers & Streetwear'],
+  'celebrity_style':    ['Celebrity Style & Red Carpet'],
 }
 
 // Sliding blend: behavior_weight = min(directMatches / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
