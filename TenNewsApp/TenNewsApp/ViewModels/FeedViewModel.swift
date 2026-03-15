@@ -123,7 +123,8 @@ final class FeedViewModel {
 
         // Send dwell-based event to server (4-tier contextual signals)
         let event: String
-        var meta: [String: String] = ["dwell": String(format: "%.1f", dwellSeconds)]
+        var meta: [String: String] = ["dwell": String(format: "%.1f", dwellSeconds),
+                                       "bucket": article.bucket ?? "personal"]
         if dwellSeconds < 1.5 {
             event = "article_skipped"
             meta["skip_type"] = "hard"
@@ -155,7 +156,7 @@ final class FeedViewModel {
             try? await analytics.track(
                 event: "article_revisit",
                 articleId: Int(article.id.stringValue),
-                metadata: [:]
+                metadata: ["bucket": article.bucket ?? "personal"]
             )
         }
     }

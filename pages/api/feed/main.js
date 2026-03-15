@@ -481,6 +481,7 @@ function scoreUnified(article, opts) {
   const {
     tagProfile = {}, skipProfile = null, sessionBoosts = {},
     similarity = 0, categoryProfile = {}, personalCategories = new Set(),
+    topicSaturation = {}, discoveryStats = {},
     isDiscovery = false, isHoldback = false,
   } = opts;
 
@@ -492,15 +493,35 @@ function scoreUnified(article, opts) {
 
   // 1. CATEGORY AFFINITY (0.25) — from engagement rate data
   let categoryAffinity = 0.5; // neutral default
-  if (!isHoldback && categoryProfile[cat] && categoryProfile[cat].shown >= 5) {
+  if (!isHoldback && categoryProfile[cat] && categoryProfile[cat].shown >= 2) {
     categoryAffinity = categoryProfile[cat].engaged / categoryProfile[cat].shown;
   }
   // Discovery boost: unfamiliar categories score higher
   if (isDiscovery) {
     categoryAffinity = personalCategories.has(cat) ? 0.3 : 0.8;
+    // Change 5: Learned discovery preferences — blend surprise with tag-level affinity
+    if (!isHoldback && discoveryStats._tags) {
+      let discoveryTagAffinity = 0;
+      let discoveryTagCount = 0;
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        const tagStat = discoveryStats._tags[t];
+        if (tagStat && tagStat.shown >= 3) {
+          discoveryTagAffinity += tagStat.engaged / tagStat.shown;
+          discoveryTagCount++;
+        }
+      }
+      if (discoveryTagCount > 0) {
+        const learnedScore = discoveryTagAffinity / discoveryTagCount;
+        categoryAffinity = categoryAffinity * 0.5 + learnedScore * 0.5;
+      }
+    }
   }
 
-  // 2. TAG OVERLAP (0.30) — entity-level matching with 30% cap
+  // 2. TAG OVERLAP (0.30) — entity-level matching
+  // Use sum of matched tag weights divided by matched count (not total tags),
+  // so articles with 2/6 strong matches score high instead of being diluted by 4 non-matches.
+  // Fall back to 0 if no matches.
   let tagOverlap = 0;
   let tagCap = 1.0;
   if (!isHoldback) {
@@ -509,17 +530,25 @@ function scoreUnified(article, opts) {
     );
     tagCap = totalTagWeight > 0 ? totalTagWeight * 0.30 : 1.0;
   }
+  let matchedTagSum = 0;
+  let matchedTagCount = 0;
   for (const tag of tags) {
     const t = tag.toLowerCase();
-    tagOverlap += Math.min(tagProfile[t] || 0, tagCap);
+    const w = Math.min(tagProfile[t] || 0, tagCap);
+    if (w > 0) {
+      matchedTagSum += w;
+      matchedTagCount++;
+    }
   }
-  tagOverlap /= n;
+  tagOverlap = matchedTagCount > 0 ? matchedTagSum / matchedTagCount : 0;
   // Session momentum adds to tag overlap
   let momentum = 0;
+  let momCount = 0;
   for (const tag of tags) {
-    momentum += sessionBoosts[tag.toLowerCase()] || 0;
+    const b = sessionBoosts[tag.toLowerCase()] || 0;
+    if (b > 0) { momentum += b; momCount++; }
   }
-  momentum /= n;
+  if (momCount > 0) momentum /= momCount;
   tagOverlap = Math.min(tagOverlap + momentum * 0.3, 1.0);
 
   // 3. TASTE SIMILARITY (0.25) — pgvector cosine similarity
@@ -530,8 +559,15 @@ function scoreUnified(article, opts) {
   // 4. FRESHNESS (0.10) — recency decay with shelf life
   const freshness = recency;
 
-  // 5. GLOBAL POPULARITY (0.10) — editorial quality score
-  const globalPopularity = aiScore;
+  // 5. GLOBAL POPULARITY (0.10) — editorial quality + additive engagement boost
+  // Popularity ONLY boosts, never reduces. Articles with 0 engagement = aiScore unchanged.
+  // log2 scale: 10 signals ≈ +0.10, 30 ≈ +0.14, 100+ ≈ +0.20
+  const likeCount = article.like_count || 0;
+  const engCount = article.engagement_count || 0;
+  const popularityBoost = (likeCount + engCount) > 0
+    ? Math.min(0.20, Math.log2(1 + likeCount * 5 + engCount) / 35)
+    : 0;
+  const globalPopularity = Math.min(1.0, aiScore + popularityBoost);
 
   // SKIP PENALTY — from skip_profile with 7-day half-life decay
   let skipPenalty = 0;
@@ -551,6 +587,26 @@ function scoreUnified(article, opts) {
     skipScore /= n;
     const netSkip = Math.max(0, skipScore - tagOverlap * 0.5);
     skipPenalty = Math.min(netSkip, isDiscovery ? 0.4 : 0.9);
+  }
+
+  // Change 6: Topic saturation penalty — diminishing returns for repeated topics
+  // 3 seen=10%, 6=25%, 10+=40% (cap)
+  let saturationPenalty = 0;
+  if (!isHoldback && topicSaturation) {
+    let maxExposure = 0;
+    // Check cluster_id exposure
+    if (article.cluster_id) {
+      const cKey = `c_${article.cluster_id}`;
+      if (topicSaturation[cKey]) maxExposure = Math.max(maxExposure, topicSaturation[cKey].count || 0);
+    }
+    // Check primary tag pair exposure
+    if (tags.length >= 2) {
+      const pairKey = `t_${tags[0].toLowerCase()}+${tags[1].toLowerCase()}`;
+      if (topicSaturation[pairKey]) maxExposure = Math.max(maxExposure, topicSaturation[pairKey].count || 0);
+    }
+    if (maxExposure >= 10) saturationPenalty = 0.40;
+    else if (maxExposure >= 6) saturationPenalty = 0.25;
+    else if (maxExposure >= 3) saturationPenalty = 0.10;
   }
 
   // Interest velocity: first-seen bonus for newly discovered interests
@@ -586,12 +642,25 @@ function scoreUnified(article, opts) {
   // Discovery surprise factor
   const surprise = isDiscovery ? (1 + Math.random() * 0.4) : 1.0;
 
-  // Dynamic weights: when taste similarity isn't available (trending/discovery
-  // without pgvector), redistribute its weight to tagOverlap + categoryAffinity
-  // so these articles aren't systematically disadvantaged (25% of score was always 0)
+  // Dynamic weights based on available signals:
+  // - tagOverlap is our fastest-learning signal (updates every engagement)
+  // - tasteSimilarity is slow (EMA embedding, needs many interactions)
+  // As tag_profile grows, shift weight from taste→tag for faster learning
   let wCat = 0.25, wTag = 0.30, wTaste = 0.25, wFresh = 0.10, wPop = 0.10;
+
+  // Count real tags in profile (exclude metadata keys starting with _)
+  const realTagCount = Object.keys(tagProfile).filter(k => !k.startsWith('_') && typeof tagProfile[k] === 'number').length;
+
   if (tasteSimilarity === 0) {
+    // No pgvector signal: redistribute to tag + category
     wCat = 0.35; wTag = 0.40; wTaste = 0; wFresh = 0.12; wPop = 0.13;
+  } else if (realTagCount >= 15) {
+    // Rich tag_profile: trust tag matching more, taste less
+    // tag_profile has learned enough to be the primary signal
+    wCat = 0.20; wTag = 0.40; wTaste = 0.20; wFresh = 0.10; wPop = 0.10;
+  } else if (realTagCount >= 8) {
+    // Growing tag_profile: start shifting
+    wCat = 0.22; wTag = 0.35; wTaste = 0.23; wFresh = 0.10; wPop = 0.10;
   }
 
   const score = (
@@ -602,7 +671,7 @@ function scoreUnified(article, opts) {
     globalPopularity * wPop
   ) * 1000 * surprise * velocityBoost * timeBoost;
 
-  return score * (1 - skipPenalty);
+  return score * (1 - skipPenalty) * (1 - saturationPenalty);
 }
 
 // Legacy wrappers for holdback group — preserve old scoring behavior
@@ -760,6 +829,7 @@ const ARTICLE_COLUMNS = [
   'country_relevance', 'topic_relevance', 'interest_tags',
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
+  'like_count', 'engagement_count',
 ].join(', ');
 
 // ==========================================
@@ -806,6 +876,7 @@ export default async function handler(req, res) {
     let storedTagProfile = null;
     let discoveryStats = {};
     let categoryProfile = {};
+    let topicSaturation = {};
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
 
@@ -813,7 +884,7 @@ export default async function handler(req, res) {
       // Look up profiles table (where real users live, id = auth UUID)
       let { data: userData } = await supabase
         .from('profiles')
-        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile, discovery_stats, category_profile')
+        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile, discovery_stats, category_profile, session_momentum, topic_saturation')
         .eq('id', userId)
         .single();
 
@@ -848,6 +919,7 @@ export default async function handler(req, res) {
       storedTagProfile = userData?.tag_profile || null;
       discoveryStats = userData?.discovery_stats || {};
       categoryProfile = userData?.category_profile || {};
+      topicSaturation = userData?.topic_saturation || {};
 
       // Check if user has interest clusters (PinnerSage-lite)
       if (tasteVector && persUserId) {
@@ -926,6 +998,7 @@ export default async function handler(req, res) {
       storedTagProfile,
       discoveryStats,
       categoryProfile,
+      topicSaturation,
       seenArticleIds,
       sessionEngagedIds,
       sessionSkippedIds,
@@ -948,7 +1021,7 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, discoveryStats, categoryProfile,
-        seenArticleIds, sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        topicSaturation, seenArticleIds, sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
   discoveryStats = discoveryStats || {};
   categoryProfile = categoryProfile || {};
   sessionEngagedIds = sessionEngagedIds || [];
@@ -965,6 +1038,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const now = Date.now();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
+  const fiveDaysAgo = new Date(now - 5 * 24 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
   const fortyEightHoursAgo = new Date(now - 48 * 3600000).toISOString();
 
@@ -984,18 +1058,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   // entirely — V2 will fill the feed with trending + discovery articles.
   // IMPROVEMENT 1: Deeper pages request more candidates
   let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
-  const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
+  // Wider pool for returning users: more seen articles = need more candidates to find fresh good ones
+  const seenBoost = Math.min(seenArticleIds.length, 200); // Up to +200 extra candidates based on seen history
+  const personalMatchCount = Math.min(300 + offset + seenBoost, 600);
   let personalPromise;
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -1010,21 +1086,21 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile] = await Promise.all([
+  const [personalResult, trendingResult, discoveryResult, userInterestProfile, collabResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24-48h
-    // Larger pool (150) + lower threshold (600) so per-interest-category
-    // rotation can find articles from Tech, Sports, Science etc. —
-    // not just the dominant news cycle (Iran/war at 900+)
+    // 2. TRENDING: quality content from last 5 days
+    // Threshold lowered from 600→400 to include niche content (NBA, Gaming, K-Pop)
+    // that scores 400-600. The scoring pipeline (scoreUnified + tag_profile) will
+    // re-rank these by personalization, so low-quality irrelevant articles still rank low.
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 600 : 500)
+      .gte('created_at', fiveDaysAgo)
+      .gte('ai_final_score', hasAnyPersonalization ? 400 : 400)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 150 : 300),
+      .limit(hasAnyPersonalization ? 500 : 500),
 
     // 3. DISCOVERY: diverse quality content, wider pool
     // Cold-start: fetch much larger pool to compensate for empty personal
@@ -1038,11 +1114,29 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
+
+    // 5. COLLABORATIVE FILTERING: articles engaged by similar users (entity-based matching)
+    // "Users who like galatasaray also liked..." — finds users sharing >= 2 top tags
+    (userId && storedTagProfile && Object.keys(storedTagProfile).filter(k => !k.startsWith('_')).length >= 2)
+      ? supabase.rpc('get_collab_articles', { p_user_id: userId, p_limit: 50, p_hours: 168 })
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (personalResult.error) {
     console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
-    // Continue with empty personal results — trending + discovery will fill the feed
+  }
+  if (collabResult.error) {
+    console.log('[feed] Collab filtering error (may need migration 032):', collabResult.error.message);
+  }
+
+  // Build collaborative article map: article_id → recommender_count
+  const collabArticleMap = {};
+  for (const row of (collabResult.data || [])) {
+    collabArticleMap[row.article_id] = row.recommender_count || 1;
+  }
+  const collabArticleIds = Object.keys(collabArticleMap).map(Number);
+  if (collabArticleIds.length > 0) {
+    console.log(`[feed] Collab filtering found ${collabArticleIds.length} articles from similar users for:`, userId?.substring(0, 8));
   }
 
   // ==========================================
@@ -1098,7 +1192,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // 2. Tag-based queries (niche content that may be in unexpected categories)
     // e.g., a "gaming" article categorized under "Tech" won't appear in Entertainment queries
-    const tagArray = [...interestTags].slice(0, 20); // cap to keep query count reasonable
+    const tagArray = [...interestTags].slice(0, 50); // raised from 20 to cover broader interests
     const tagBatches = [];
     for (let i = 0; i < tagArray.length; i += 5) {
       tagBatches.push(tagArray.slice(i, i + 5));
@@ -1131,6 +1225,98 @@ async function handleV2Feed(req, res, supabase, opts) {
       seen.add(a.id);
       return true;
     });
+  }
+
+  // ==========================================
+  // TAG_PROFILE ENRICHMENT: Supplement pgvector with tag-matched articles
+  // For returning users with a learned tag_profile, query articles matching
+  // their top engaged tags. This prevents taste vector contamination from
+  // degrading the personal pool — even if pgvector drifts toward Politics,
+  // tag_profile knows the user actually loves Soccer/Gaming/K-Pop.
+  // ==========================================
+
+  if (storedTagProfile && !isHoldback) {
+    const tagEntries = Object.entries(storedTagProfile)
+      .filter(([k, v]) => !k.startsWith('_') && typeof v === 'number' && v >= 0.05)
+      .sort((a, b) => b[1] - a[1]);
+
+    if (tagEntries.length >= 3) {
+      const topTags = tagEntries.slice(0, 20).map(([k]) => k);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
+      const tagBatchSize = 5;
+      const tagProfileBatches = [];
+      for (let i = 0; i < topTags.length; i += tagBatchSize) {
+        tagProfileBatches.push(topTags.slice(i, i + tagBatchSize));
+      }
+      const tagProfilePromises = tagProfileBatches.map(batch =>
+        supabase
+          .from('published_articles')
+          .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+          .or(batch.map(t => `interest_tags.ilike.%${t}%`).join(','))
+          .gte('created_at', thirtyDaysAgo)
+          .gte('ai_final_score', 150)
+          .order('ai_final_score', { ascending: false })
+          .limit(100)
+      );
+      const tagProfileResults = await Promise.all(tagProfilePromises);
+      const existingIds = new Set(interestArticles.map(a => a.id));
+      for (const r of tagProfileResults) {
+        if (r.data) {
+          for (const a of r.data) {
+            if (!existingIds.has(a.id)) {
+              interestArticles.push(a);
+              existingIds.add(a.id);
+            }
+          }
+        }
+      }
+      console.log(`[feed] Tag-profile enrichment: added articles from top ${topTags.length} tags for:`, userId?.substring(0, 8));
+    }
+  }
+
+  // ==========================================
+  // DOMINANT CATEGORY BOOST: For users with 70%+ engagement in one category,
+  // fetch extra articles from that category directly. This ensures single-interest
+  // users (Marco = 95% Sports) always have fresh content in their personal pool,
+  // even when pgvector taste vector has drifted toward other categories.
+  // ==========================================
+
+  if (categoryProfile && !isHoldback) {
+    let totalCatEngaged = 0;
+    let dominantCat = null;
+    let dominantEngaged = 0;
+    for (const [cat, stats] of Object.entries(categoryProfile)) {
+      const engaged = stats?.engaged || 0;
+      totalCatEngaged += engaged;
+      if (engaged > dominantEngaged) {
+        dominantEngaged = engaged;
+        dominantCat = cat;
+      }
+    }
+    if (dominantCat && totalCatEngaged >= 5 && dominantEngaged / totalCatEngaged >= 0.70) {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
+      const { data: domCatArticles } = await supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+        .eq('category', dominantCat)
+        .gte('created_at', thirtyDaysAgo)
+        .gte('ai_final_score', 150)
+        .order('ai_final_score', { ascending: false })
+        .limit(200);
+
+      if (domCatArticles && domCatArticles.length > 0) {
+        const existingIds = new Set(interestArticles.map(a => a.id));
+        let added = 0;
+        for (const a of domCatArticles) {
+          if (!existingIds.has(a.id)) {
+            interestArticles.push(a);
+            existingIds.add(a.id);
+            added++;
+          }
+        }
+        console.log(`[feed] Dominant category boost: added ${added} ${dominantCat} articles for:`, userId?.substring(0, 8));
+      }
+    }
   }
 
   // ==========================================
@@ -1193,6 +1379,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   const effectiveTagProfile = { ...baseTagProfile };
   for (const [tag, boost] of Object.entries(momentum.boosts)) {
     effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.0);
+  }
+
+  // Cross-session momentum: when starting a new session (no client-side engaged IDs yet),
+  // boost the effective profile with the stored momentum from the previous session.
+  // This ensures the FIRST feed request of a new session reflects recent interests,
+  // before track.js has had a chance to fold momentum into tag_profile.
+  const storedMomentum = userPrefs?.session_momentum;
+  if (sessionEngagedIds.length === 0 && storedMomentum?.tags && Object.keys(storedMomentum.tags).length > 0) {
+    for (const [tag, weight] of Object.entries(storedMomentum.tags)) {
+      if (typeof weight !== 'number') continue;
+      effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + weight * 0.5, 1.0);
+    }
   }
 
   // Merge session skip penalties into skip profile
@@ -1285,7 +1483,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Raised to 5 (from 3) so interest-category rotation has enough articles
   // per category — with only 3, a user interested in Tech might exhaust
   // the pool after 3 T slots and fall back to Iran/war
-  const trendingCatMax = hasAnyPersonalization ? 5 : 10;
+  const trendingCatMax = hasAnyPersonalization ? 15 : 20;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1354,6 +1552,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     ...trendingIds,
     ...discoveryArticleMeta.map(a => a.id),
     ...interestIds,
+    ...collabArticleIds,
   ];
   const uniqueIds = [...new Set(allCandidateIds)];
 
@@ -1386,19 +1585,56 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tagCache = buildTagSetsCache(allArticles);
 
   // ==========================================
-  // PER-CATEGORY CAP: Personal pool diversity
-  // No single category > 35% of the personal pool. Prevents content flooding
-  // (e.g., 94% Iran/Politics articles drowning out other interests).
+  // PER-CATEGORY CAP: Adaptive personal pool diversity
+  // Each category gets a cap proportional to the user's engagement with it.
+  // Dominant categories (Sports for Marco at 90%) get high caps.
+  // Off-topic categories (Business at 2%) get tiny caps.
+  // This prevents Iran/Oil/Business from flooding a Sports user's personal pool.
   // ==========================================
 
   if (!isHoldback && personalIdOrder.length > 5) {
-    const maxPerCat = Math.ceil(personalIdOrder.length * 0.35);
-    const catCounts = {};
-    personalIdOrder = personalIdOrder.filter(id => {
-      const cat = articleMap[id]?.category || 'Other';
-      catCounts[cat] = (catCounts[cat] || 0) + 1;
-      return catCounts[cat] <= maxPerCat;
-    });
+    // Compute per-category engagement share from categoryProfile
+    const catShares = {};
+    let totalEngaged = 0;
+    for (const [cat, stats] of Object.entries(categoryProfile)) {
+      const engaged = stats?.engaged || 0;
+      catShares[cat] = engaged;
+      totalEngaged += engaged;
+    }
+
+    if (totalEngaged >= 5) {
+      // Normalize to shares and compute per-category caps
+      // Each category's cap = its engagement share * pool size, with min floor of 2
+      // and max ceiling of 50% (so even the dominant category leaves room for discovery)
+      const poolSize = personalIdOrder.length;
+      const catCaps = {};
+      for (const [cat, engaged] of Object.entries(catShares)) {
+        const share = engaged / totalEngaged;
+        // Give each engaged category at least 5% of pool, scale up proportionally
+        // Cap at 85% so there's always a little variety
+        const catCapRatio = Math.max(0.05, Math.min(share * 1.2, 0.85));
+        catCaps[cat] = Math.max(2, Math.ceil(poolSize * catCapRatio));
+      }
+      // Categories not in categoryProfile get a small default cap (5%)
+      const defaultCap = Math.max(2, Math.ceil(poolSize * 0.05));
+
+      const catCounts = {};
+      personalIdOrder = personalIdOrder.filter(id => {
+        const cat = articleMap[id]?.category || 'Other';
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+        const cap = catCaps[cat] || defaultCap;
+        return catCounts[cat] <= cap;
+      });
+    } else {
+      // Not enough data yet — use flat 35% cap
+      const maxPerCat = Math.ceil(personalIdOrder.length * 0.35);
+      const catCounts = {};
+      personalIdOrder = personalIdOrder.filter(id => {
+        const cat = articleMap[id]?.category || 'Other';
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+        return catCounts[cat] <= maxPerCat;
+      });
+    }
   }
 
   // ==========================================
@@ -1411,6 +1647,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     skipProfile: effectiveSkipProfile,
     sessionBoosts: momentum.boosts,
     categoryProfile,
+    topicSaturation: topicSaturation || {},
+    discoveryStats: discoveryStats || {},
     isHoldback,
   };
 
@@ -1499,6 +1737,29 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
+  // Collaborative bucket: articles engaged by similar users (entity-based matching)
+  // Scored through scoreUnified + recommender boost based on how many similar users engaged.
+  // This is the "users who like X also liked Y" signal.
+  const collabScored = collabArticleIds
+    .filter(id => articleMap[id] && !personalIds.has(id) && !trendingIds.has(id) && !seenArticleIds.includes(id) && !sessionExcludeIds.has(id))
+    .map(id => {
+      const article = articleMap[id];
+      const score = isHoldback
+        ? (article.ai_final_score || 0) * getRecencyDecay(article.created_at, article.category, article.shelf_life_days)
+        : scoreUnified(article, { ...scoreOpts, similarity: 0 });
+      // Recommender boost: gentle — collab is a fallback, not primary signal
+      // 1 user = 1.1x, 2 = 1.2x, 3+ = 1.3x, 5+ = 1.4x
+      const recCount = collabArticleMap[id] || 1;
+      const collabBoost = recCount >= 5 ? 1.4 : recCount >= 3 ? 1.3 : recCount >= 2 ? 1.2 : 1.1;
+      return {
+        ...article,
+        _score: score * collabBoost,
+        _recommenderCount: recCount,
+        _bucket: 'collab',
+      };
+    })
+    .sort((a, b) => b._score - a._score);
+
   // ==========================================
   // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
   // Cap articles per world_event/cluster to prevent event flooding
@@ -1543,8 +1804,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       : 999;
 
     if (hoursSinceLastSession < 4) {
-      // Recent return — user has seen fresh content, show more discovery
-      SLOTS = ['P', 'S', 'T', 'P', 'S', 'S', 'P', 'T', 'S', 'P'];
+      // Recent return — boost personal ratio since tag_profile is freshly enriched
+      // More P slots capitalizes on what we just learned from the previous session
+      SLOTS = ['P', 'P', 'P', 'T', 'P', 'P', 'P', 'S', 'P', 'T'];
     } else if (hoursSinceLastSession > 48) {
       // Returning after absence — catch them up with trending + personal
       SLOTS = ['T', 'P', 'T', 'P', 'P', 'T', 'P', 'P', 'S', 'P'];
@@ -1572,6 +1834,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   const pPoolIds = new Set(personalScored.map(a => a.id));
   const uniqueInterest = interestScored.filter(a => !pPoolIds.has(a.id));
   const pPool = [...personalScored, ...uniqueInterest].sort((a, b) => b._score - a._score);
+  // Collaborative pool: separate from pPool — used as fallback when P pool thins out
+  // Don't merge into pPool to avoid diluting with loosely-matched "similar user" content
+  const combinedMainIds = new Set([...pPoolIds, ...uniqueInterest.map(a => a.id)]);
+  const cPool = collabScored.filter(a => !combinedMainIds.has(a.id));
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
@@ -1762,7 +2028,20 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.85);
+        // Collaborative fallback: articles from similar users (before trending)
+        if (!picked && cPool.length > 0) {
+          picked = mmrSelectDeduped(cPool, selected, tagCache, 0.8);
+          if (picked) picked._bucket = 'collab';
+        }
+        // Personalized trending fallback: when personal pool is thin, try trending
+        // articles from user's interest categories before falling back to generic trending
+        if (!picked && interestCatList.length > 0) {
+          for (let i = 0; i < interestCatList.length && !picked; i++) {
+            const cat = interestCatList[(trendingCatIdx + i) % interestCatList.length];
+            picked = mmrSelectFromCat(tPool, selected, tagCache, 0.75, cat);
+          }
+        }
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
@@ -1789,18 +2068,42 @@ async function handleV2Feed(req, res, supabase, opts) {
         // dominated by Iran), pick from categories with 0-1 appearances in the feed.
         // This ensures genuine variety: Health, Entertainment, Lifestyle, etc.
         if (!isHoldback && dPool.length > 0) {
-          const shownCatCounts = {};
-          for (const a of selected) {
-            const cat = a.category || 'Other';
-            shownCatCounts[cat] = (shownCatCounts[cat] || 0) + 1;
+          // Change 5: Adjacent-interest discovery — prefer tags that co-occur
+          // with engaged tags but aren't yet strongly in the user's profile
+          const adjacentTags = new Set();
+          const dTagStats = discoveryStats?._tags || {};
+          for (const [t, stat] of Object.entries(dTagStats)) {
+            if (stat.shown >= 2 && stat.engaged > 0 && stat.engaged / stat.shown >= 0.3) {
+              if (!effectiveTagProfile[t] || effectiveTagProfile[t] < 0.15) {
+                adjacentTags.add(t);
+              }
+            }
           }
-          // Find categories in discovery pool that are underrepresented (shown 0-1 times)
-          const underrepCats = [...new Set(dPool.map(a => a.category))]
-            .filter(cat => (shownCatCounts[cat] || 0) <= 1)
-            .sort(() => Math.random() - 0.5); // shuffle for variety
-          for (const cat of underrepCats) {
-            picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, cat);
-            if (picked) break;
+          // Try adjacent-tag candidates first
+          if (adjacentTags.size > 0) {
+            for (let di = 0; di < dPool.length && !picked; di++) {
+              const candidate = dPool[di];
+              const cTags = safeJsonParse(candidate.interest_tags, []).map(t => t.toLowerCase());
+              if (cTags.some(t => adjacentTags.has(t))) {
+                const [removed] = dPool.splice(di, 1);
+                if (!isEventCapped(removed)) picked = removed;
+              }
+            }
+          }
+          // Fallback: underrepresented category discovery
+          if (!picked) {
+            const shownCatCounts = {};
+            for (const a of selected) {
+              const cat = a.category || 'Other';
+              shownCatCounts[cat] = (shownCatCounts[cat] || 0) + 1;
+            }
+            const underrepCats = [...new Set(dPool.map(a => a.category))]
+              .filter(cat => (shownCatCounts[cat] || 0) <= 1)
+              .sort(() => Math.random() - 0.5);
+            for (const cat of underrepCats) {
+              picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, cat);
+              if (picked) break;
+            }
           }
         }
         if (!picked) {
@@ -1863,7 +2166,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // IMPROVEMENT 1: True pagination — encode actual offset in cursor
-  const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length + collabScored.length;
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;

@@ -121,13 +121,33 @@ export default async function handler(req, res) {
     // NOTE: article_view is NOT included — passive views pollute the taste vector
     // toward dominant content. Only real engagement signals update the vector.
     // article_skipped pushes the vector AWAY from skipped content and builds skip_profile.
-    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_revisit']
-    if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
+    // DAMPEN: Non-personal bucket engagements use reduced EMA alpha (via downgraded
+    // event type) to prevent taste vector contamination while still allowing genuine
+    // interest discovery. Skips from non-personal are dropped entirely — a user skipping
+    // a trending article doesn't mean they dislike that topic, just that specific article.
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_revisit', 'article_liked']
+    const articleBucket = metadata?.bucket
+    const isPersonalBucket = !articleBucket || articleBucket === 'personal' || articleBucket === 'collab'
+    // For non-personal buckets: skip article_skipped entirely, downgrade positive events
+    let emaEventType = event_type
+    let skipEma = false
+    if (!isPersonalBucket && TASTE_UPDATE_EVENTS.includes(event_type)) {
+      if (event_type === 'article_skipped') {
+        skipEma = true // Don't push taste vector away from trending/discovery skips
+      } else {
+        // Downgrade to detail_view (alpha=0.05) so trending engagement has minimal impact
+        emaEventType = 'article_detail_view'
+      }
+    }
+    if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id && !skipEma) {
       // user.id IS the profiles.id (auth UUID) — update directly
+      // Change 3: Pass dwell time to EMA for dwell-weighted alpha
+      const dwellSecsForEma = view_seconds || parseFloat(metadata?.dwell || metadata?.total_active_seconds || '0')
       admin.rpc('update_taste_vector_ema_profiles', {
         p_user_id: user.id,
         p_article_id: article_id,
-        p_event_type: event_type,
+        p_event_type: emaEventType,
+        p_dwell_seconds: dwellSecsForEma,
       }).then(({ error: emaError }) => {
         if (emaError) {
           console.log('[analytics] Taste vector EMA update failed:', emaError.message)
@@ -139,7 +159,7 @@ export default async function handler(req, res) {
       // Auto-clustering trigger: re-cluster user's interest vectors at engagement milestones
       // Thresholds: 20, 50, 100, then every 50 after that
       // Non-blocking — fire-and-forget to avoid slowing the analytics response
-      if (['article_engaged', 'article_saved', 'article_revisit'].includes(event_type)) {
+      if (['article_engaged', 'article_saved', 'article_revisit', 'article_liked'].includes(event_type)) {
         admin
           .from('user_article_events')
           .select('id', { count: 'exact', head: true })
@@ -147,8 +167,8 @@ export default async function handler(req, res) {
           .in('event_type', ['article_engaged', 'article_saved', 'article_revisit'])
           .then(({ count }) => {
             const n = count || 0
-            // Trigger at 20, 50, 100, 150, 200, ...
-            const shouldCluster = n === 20 || n === 50 || (n >= 100 && n % 50 === 0)
+            // Change 4: Earlier clustering — trigger at 8, 15, 25, 50, then every 50
+            const shouldCluster = n === 8 || n === 15 || n === 25 || n === 50 || (n >= 100 && n % 50 === 0)
             if (shouldCluster) {
               console.log(`[analytics] Auto-clustering triggered for user ${user.id?.substring(0, 8)} at ${n} engagements`)
               admin.rpc('cluster_user_interests', {
@@ -171,13 +191,21 @@ export default async function handler(req, res) {
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
     // Only first 6 tags (primary topics) with position-based weighting:
     //   Tag 1 gets full weight, Tag 6 gets ~28%. Tail tags are noise.
-    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_revisit']
-    const TAG_PROFILE_WEIGHTS = { article_revisit: 0.30, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    // BUCKET GUARD: Non-personal engagement gets 30% weight to prevent contamination.
+    // A user engaging with a trending Iran article shouldn't make "iran" compete with their
+    // actual interests ("soccer" at 0.65). Full weight only for personal/collab articles.
+    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_revisit', 'article_liked']
+    const TAG_PROFILE_WEIGHTS = { article_liked: 0.08, article_revisit: 0.30, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    const tagBucketMultiplier = isPersonalBucket ? 1.0 : 0.30
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
-      const baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
+      // Dwell-time weighted signals — log-scale modulation
+      // 5s=1.0x, 10s=1.3x, 20s=1.6x, 60s=2.1x
+      const dwellSecs = view_seconds || parseFloat(metadata?.dwell || metadata?.total_active_seconds || '0')
+      const dwellMultiplier = 1 + 0.43 * Math.log(Math.max(dwellSecs / 5, 1))
+      const baseWeight = (TAG_PROFILE_WEIGHTS[event_type] || 0.05) * dwellMultiplier * tagBucketMultiplier
       admin
         .from('published_articles')
-        .select('interest_tags')
+        .select('interest_tags, cluster_id')
         .eq('id', article_id)
         .single()
         .then(({ data: articleData }) => {
@@ -185,60 +213,38 @@ export default async function handler(req, res) {
           const allTags = typeof articleData.interest_tags === 'string'
             ? JSON.parse(articleData.interest_tags || '[]')
             : (articleData.interest_tags || [])
-          // Only first 6 tags — tail tags are noise (mentioned in passing, not about)
           const tags = allTags.slice(0, 6)
           if (tags.length === 0) return
 
-          admin
-            .from('profiles')
-            .select('tag_profile')
-            .eq('id', user.id)
-            .single()
-            .then(({ data: profileData }) => {
-              const tagProfile = profileData?.tag_profile || {}
+          // Build pre-computed tag weights with position-based weighting
+          const tagWeights = {}
+          for (let i = 0; i < tags.length; i++) {
+            const t = tags[i].toLowerCase()
+            const positionMultiplier = 1.0 - (i * 0.12)
+            tagWeights[t] = baseWeight * positionMultiplier
+          }
 
-              // Time decay: 0.97^days since last update (~50% decay over 23 days)
-              // Interests that aren't reinforced fade naturally
-              const now = Date.now()
-              const lastUpdated = tagProfile._last_updated || now
-              const daysSince = (now - lastUpdated) / (1000 * 60 * 60 * 24)
-              if (daysSince > 0.04) { // skip if < ~1 hour
-                const decayFactor = Math.pow(0.97, daysSince)
-                for (const key of Object.keys(tagProfile)) {
-                  if (key.startsWith('_')) continue
-                  tagProfile[key] *= decayFactor
-                  if (tagProfile[key] < 0.02) delete tagProfile[key]
-                }
-              }
-              tagProfile._last_updated = now
+          // Build tag pair for saturation tracking
+          const tagPair = tags.length >= 2
+            ? `${tags[0].toLowerCase()}+${tags[1].toLowerCase()}`
+            : null
 
-              // Track newly discovered interests for first-seen velocity boost
-              const newInterests = (tagProfile._new_interests || [])
-                .filter(e => (now - e.ts) < 48 * 3600000) // prune entries older than 48h
-              for (let i = 0; i < tags.length; i++) {
-                const t = tags[i].toLowerCase()
-                // First-seen detection: tag is new or was pruned (below 0.02)
-                if (!tagProfile[t] || tagProfile[t] < 0.02) {
-                  if (!newInterests.find(e => e.tag === t)) {
-                    newInterests.push({ tag: t, ts: now })
-                  }
-                }
-                // Position-based weighting: tag 0 = full weight, tag 5 = ~28%
-                const positionMultiplier = 1.0 - (i * 0.12)
-                const tagWeight = baseWeight * positionMultiplier
-                tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.0)
-              }
-              tagProfile._new_interests = newInterests
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile })
-                .eq('id', user.id)
-                .then(() => {})
-                .catch(() => {})
-            })
-            .catch(() => {})
+          // ATOMIC RPC: handles row locking, session momentum fold, decay,
+          // tag merging, momentum accumulation, and saturation — all in one
+          // transaction. Eliminates race condition where concurrent events
+          // overwrite each other's tag_profile updates.
+          admin.rpc('update_tag_profile_atomic', {
+            p_user_id: user.id,
+            p_tags: tagWeights,
+            p_session_id: session_id,
+            p_cluster_id: articleData.cluster_id || null,
+            p_tag_pair: tagPair,
+          }).then(({ data, error }) => {
+            if (error) console.log('[analytics] Atomic tag_profile update failed:', error.message)
+            else console.log('[analytics] tag_profile updated atomically for:', user.id?.substring(0, 8))
+          })
         })
-        .catch(() => {})
+        .catch((e) => console.log('[analytics] Article fetch for tag_profile failed:', e?.message))
     }
 
     // Cold-start boost: article_view with dwell > 4s = weak positive signal
@@ -258,22 +264,22 @@ export default async function handler(req, res) {
               : (articleData.interest_tags || [])
             const tags = allTags.slice(0, 6)
             if (tags.length === 0) return
-            admin
-              .from('profiles')
-              .select('tag_profile')
-              .eq('id', user.id)
-              .single()
-              .then(({ data: profileData }) => {
-                const tagProfile = profileData?.tag_profile || {}
-                for (const tag of tags) {
-                  const t = tag.toLowerCase()
-                  tagProfile[t] = Math.min((tagProfile[t] || 0) + 0.01, 1.0)
-                }
-                tagProfile._last_updated = Date.now()
-                admin.from('profiles').update({ tag_profile: tagProfile }).eq('id', user.id)
-                  .then(() => {}).catch(() => {})
-              })
-              .catch(() => {})
+
+            const tagWeights = {}
+            for (const tag of tags) {
+              tagWeights[tag.toLowerCase()] = 0.01
+            }
+
+            // Use atomic RPC (no session/cluster/saturation for cold-start views)
+            admin.rpc('update_tag_profile_atomic', {
+              p_user_id: user.id,
+              p_tags: tagWeights,
+              p_session_id: null,
+              p_cluster_id: null,
+              p_tag_pair: null,
+            }).then(({ data, error }) => {
+              if (error) console.log('[analytics] Cold-start tag update failed:', error.message)
+            })
           })
           .catch(() => {})
       }
@@ -306,18 +312,19 @@ export default async function handler(req, res) {
             const tagProfile = profileData?.tag_profile || {}
 
             // Time decay (same as feed engagement path)
+            // Change 2: Fix decay bug — only update _last_updated when decay runs
             const now = Date.now()
             const lastUpdated = tagProfile._last_updated || now
             const daysSince = (now - lastUpdated) / (1000 * 60 * 60 * 24)
-            if (daysSince > 0.04) {
+            if (daysSince > 0.5) { // 12 hours (was ~1 hour)
               const decayFactor = Math.pow(0.97, daysSince)
               for (const key of Object.keys(tagProfile)) {
                 if (key.startsWith('_')) continue
                 tagProfile[key] *= decayFactor
                 if (tagProfile[key] < 0.02) delete tagProfile[key]
               }
+              tagProfile._last_updated = now
             }
-            tagProfile._last_updated = now
 
             // Daily cap tracking: { date: "2026-03-12", total: 0.23 }
             const today = new Date().toISOString().slice(0, 10)
@@ -424,34 +431,17 @@ export default async function handler(req, res) {
             : (articleData.interest_tags || [])
           if (tags.length === 0) return
 
-          // Load current skip_profile, update, and save
-          admin
-            .from('profiles')
-            .select('skip_profile')
-            .eq('id', user.id)
-            .single()
-            .then(({ data: profileData }) => {
-              const skipProfile = profileData?.skip_profile || {}
-              for (const tag of tags) {
-                const t = tag.toLowerCase()
-                skipProfile[t] = Math.min((skipProfile[t] || 0) + skipWeight, 0.9)
-              }
-              admin
-                .from('profiles')
-                .update({ skip_profile: skipProfile })
-                .eq('id', user.id)
-                .then(() => {})
-                .catch(() => {
-                  // Fallback to users table
-                  admin
-                    .from('users')
-                    .update({ skip_profile: skipProfile })
-                    .eq('id', user.id)
-                    .then(() => {})
-                    .catch(() => {})
-                })
-            })
-            .catch(() => {})
+          // Atomic skip_profile update (prevents race condition)
+          const skipTags = {}
+          for (const tag of tags) {
+            skipTags[tag.toLowerCase()] = skipWeight
+          }
+          admin.rpc('update_skip_profile_atomic', {
+            p_user_id: user.id,
+            p_tags: skipTags,
+          }).then(({ error }) => {
+            if (error) console.log('[analytics] Atomic skip_profile update failed:', error.message)
+          })
         })
         .catch(() => {})
     }
@@ -474,15 +464,48 @@ export default async function handler(req, res) {
           if (!stats[cat]) stats[cat] = { shown: 0, engaged: 0 }
           stats[cat].shown = (stats[cat].shown || 0) + 1
           if (isPositive) stats[cat].engaged = (stats[cat].engaged || 0) + 1
-          admin.from('profiles').update({ discovery_stats: stats }).eq('id', user.id)
-            .then(() => {}).catch(() => {})
+
+          // Change 5: Tag-level discovery tracking for smarter discovery scoring
+          if (!stats._tags) stats._tags = {}
+          if (article_id) {
+            admin
+              .from('published_articles')
+              .select('interest_tags')
+              .eq('id', article_id)
+              .single()
+              .then(({ data: artData }) => {
+                if (artData) {
+                  const dTags = typeof artData.interest_tags === 'string'
+                    ? JSON.parse(artData.interest_tags || '[]')
+                    : (artData.interest_tags || [])
+                  for (const tag of dTags.slice(0, 6)) {
+                    const t = tag.toLowerCase()
+                    if (!stats._tags[t]) stats._tags[t] = { shown: 0, engaged: 0 }
+                    stats._tags[t].shown += 1
+                    if (isPositive) stats._tags[t].engaged += 1
+                  }
+                }
+                admin.from('profiles').update({ discovery_stats: stats }).eq('id', user.id)
+                  .then(() => {}).catch(() => {})
+              })
+              .catch(() => {
+                admin.from('profiles').update({ discovery_stats: stats }).eq('id', user.id)
+                  .then(() => {}).catch(() => {})
+              })
+          } else {
+            admin.from('profiles').update({ discovery_stats: stats }).eq('id', user.id)
+              .then(() => {}).catch(() => {})
+          }
         })
         .catch(() => {})
     }
 
     // Dynamic category affinity: track engagement rate per category (shown vs engaged)
     // Drives category weights by what user actually likes, not what we show
-    if (articleCategory &&
+    // BUCKET GUARD: Only track category_profile for personal/collab articles.
+    // Trending/discovery engagement inflates off-topic categories (1 Iran trending
+    // article makes Politics look like a 100% engagement category).
+    if (articleCategory && isPersonalBucket &&
         ['article_skipped', 'article_engaged', 'article_revisit', 'article_saved', 'article_view'].includes(event_type)) {
       const isPositive = ['article_engaged', 'article_revisit', 'article_saved'].includes(event_type)
       admin
@@ -500,6 +523,22 @@ export default async function handler(req, res) {
             .then(() => {}).catch(() => {})
         })
         .catch(() => {})
+    }
+
+    // Article popularity signals: increment engagement/like counters on the article itself
+    // These feed into scoreUnified's globalPopularity component (blended with ai_final_score)
+    const POPULARITY_EVENTS = ['article_engaged', 'article_saved', 'article_revisit']
+    if (POPULARITY_EVENTS.includes(event_type) && article_id) {
+      admin.rpc('increment_article_engagement', { p_article_id: article_id })
+        .then(({ error }) => {
+          if (error) console.log('[analytics] increment_article_engagement failed:', error.message)
+        })
+    }
+    if (event_type === 'article_liked' && article_id) {
+      admin.rpc('increment_article_like', { p_article_id: article_id })
+        .then(({ error }) => {
+          if (error) console.log('[analytics] increment_article_like failed:', error.message)
+        })
     }
 
     return res.status(200).json({ ok: true })
