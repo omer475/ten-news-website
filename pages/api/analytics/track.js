@@ -126,7 +126,27 @@ export default async function handler(req, res) {
     // interest discovery. Skips from non-personal are dropped entirely — a user skipping
     // a trending article doesn't mean they dislike that topic, just that specific article.
     const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_revisit', 'article_liked']
-    const articleBucket = metadata?.bucket
+    // Resolve bucket: prefer client metadata, fallback to feed impressions table.
+    // ArticleCardView sends article_engaged without bucket, ArticleDetailViewModel sends
+    // article_detail_view without bucket — both update taste vector & tag profile.
+    // Without this fallback, those events bypass bucket guards entirely.
+    let articleBucket = metadata?.bucket
+    if (!articleBucket && article_id) {
+      try {
+        const { data: imp } = await admin
+          .from('user_feed_impressions')
+          .select('bucket')
+          .eq('user_id', user.id)
+          .eq('article_id', article_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (imp?.bucket) {
+          articleBucket = imp.bucket
+          console.log('[analytics] Resolved bucket from impressions:', articleBucket, 'for article:', article_id)
+        }
+      } catch (_) {}
+    }
     const isPersonalBucket = !articleBucket || articleBucket === 'personal' || articleBucket === 'collab'
     // For non-personal buckets: skip article_skipped entirely, downgrade positive events
     let emaEventType = event_type
@@ -448,9 +468,8 @@ export default async function handler(req, res) {
 
     // Discovery engagement memory: track shown/engaged per category for discovery articles
     // Used to stop exploring categories the user consistently rejects
-    const bucket = metadata?.bucket
     const articleCategory = category || metadata?.category
-    if (bucket === 'discovery' && articleCategory &&
+    if (articleBucket === 'discovery' && articleCategory &&
         ['article_skipped', 'article_engaged', 'article_revisit', 'article_saved'].includes(event_type)) {
       const isPositive = event_type !== 'article_skipped'
       admin

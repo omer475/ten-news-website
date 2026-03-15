@@ -2159,9 +2159,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     return formatted;
   });
 
-  // Log feed impressions for skip tracking (fire-and-forget)
-  if (userId && pageIds.length > 0) {
-    const impressions = pageIds.map(aid => ({ user_id: userId, article_id: aid }));
+  // Log feed impressions with bucket for skip tracking & server-side bucket resolution
+  // (ArticleCardView/ArticleDetailViewModel don't send bucket in analytics metadata,
+  //  so track.js looks it up from this table as a fallback)
+  if (userId && selected.length > 0) {
+    const impressions = selected.map(a => ({ user_id: userId, article_id: a.id, bucket: a.bucket || 'personal' }));
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 

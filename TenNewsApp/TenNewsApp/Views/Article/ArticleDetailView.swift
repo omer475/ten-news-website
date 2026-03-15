@@ -46,12 +46,12 @@ struct ArticleDetailView: View {
             if let initialArticle {
                 viewModel.article = initialArticle
             } else {
-                await viewModel.loadArticle(id: articleId.stringValue)
+                await viewModel.loadArticle(id: articleId.stringValue, bucket: initialArticle?.bucket)
             }
         }
         .onAppear {
             if let intId = Int(articleId.stringValue) {
-                viewModel.startEngagementTracking(articleId: intId)
+                viewModel.startEngagementTracking(articleId: intId, bucket: initialArticle?.bucket)
             }
         }
         .onDisappear {

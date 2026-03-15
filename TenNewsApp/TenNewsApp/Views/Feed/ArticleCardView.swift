@@ -1358,7 +1358,7 @@ struct ArticleCardView: View {
             try? await analytics.track(
                 event: "article_engaged",
                 articleId: articleId,
-                metadata: ["engaged_seconds": "10"]
+                metadata: ["engaged_seconds": "10", "bucket": article.bucket ?? "personal"]
             )
         }
     }
@@ -1373,7 +1373,7 @@ struct ArticleCardView: View {
                     try? await analytics.track(
                         event: "article_exit",
                         articleId: articleId,
-                        metadata: ["total_active_seconds": String(seconds)]
+                        metadata: ["total_active_seconds": String(seconds), "bucket": article.bucket ?? "personal"]
                     )
                 }
             }
