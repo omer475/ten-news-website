@@ -708,8 +708,9 @@ function scoreTrendingV3(article) {
 
 function scoreDiscoveryV3(article, personalCategories) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
-  const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
-  const surprise = 1 + Math.random() * 0.4;
+  // Adjacent categories get a mild boost, distant categories are neutral (not boosted)
+  const categoryBoost = personalCategories.has(article.category) ? 0.8 : 1.0;
+  const surprise = 1 + Math.random() * 0.3;
   return (article.ai_final_score || 0) * recency * categoryBoost * surprise;
 }
 
@@ -1535,10 +1536,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     const cat = a.category || 'Other';
     // Quality gate: only top 20% of each category (holdback skips this)
     if (!isHoldback && hasAnyPersonalization && (a.ai_final_score || 0) < (catDiscoveryThresholds[cat] || 0)) continue;
-    // Discovery memory: stop exploring categories the user consistently rejects
-    if (!isHoldback && discoveryStats[cat] && discoveryStats[cat].shown >= 5) {
+    // Discovery memory: deprioritize categories the user consistently rejects
+    // Faster learning: kick in after just 3 shown (was 5), but don't fully ban —
+    // reduce the category cap instead. Truly rejected categories (0% after 5+) get blocked.
+    if (!isHoldback && discoveryStats[cat] && discoveryStats[cat].shown >= 3) {
       const rate = discoveryStats[cat].engaged / discoveryStats[cat].shown;
-      if (rate < 0.15) continue; // less than 15% engagement after 5+ shown = rejected
+      if (rate < 0.10 && discoveryStats[cat].shown >= 5) continue; // hard block: 0-10% after 5+
+      if (rate < 0.20) { discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1; } // soft: count as +1 to reduce cap
     }
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
@@ -1853,6 +1857,53 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
+  // ENTITY-DRIVEN DISCOVERY TRACKING
+  // Track which primary entities (first 2 tags) have been shown in discovery this session.
+  // If a discovery article's entity was skipped in this session, suppress that entity
+  // for the rest of THIS feed request (not banned permanently — can return in future sessions
+  // especially if a high-scored article appears).
+  const discoveryShownEntities = new Set();  // entities shown in discovery slots this request
+  const discoverySkippedEntities = new Set(); // entities skipped by user this session
+
+  // Build skipped entity set from sessionSkippedIds — find their primary tags
+  for (const skippedId of sessionSkippedIds) {
+    const art = articleMap[skippedId];
+    if (art) {
+      const tags = safeJsonParse(art.interest_tags, []).map(t => t.toLowerCase());
+      // Primary entity = first 2 tags (most specific)
+      for (const t of tags.slice(0, 2)) {
+        discoverySkippedEntities.add(t);
+      }
+    }
+  }
+
+  // Helper: get primary entity key for a discovery article (first 2 tags joined)
+  function getDiscoveryEntity(article) {
+    const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+    return tags.slice(0, 2);
+  }
+
+  // Helper: check if a discovery candidate should be suppressed this session
+  function isDiscoveryEntitySuppressed(article) {
+    const entities = getDiscoveryEntity(article);
+    if (entities.length === 0) return false;
+    // If BOTH primary tags were already shown in discovery this request, suppress
+    // (allows articles that share 1 tag but differ on the other)
+    const shownCount = entities.filter(e => discoveryShownEntities.has(e)).length;
+    if (shownCount >= 2) return true;
+    // If primary entity was skipped by user this session, suppress UNLESS
+    // the article has a very high AI score (>800) — let exceptional articles break through
+    const skippedCount = entities.filter(e => discoverySkippedEntities.has(e)).length;
+    if (skippedCount >= 1 && (article.ai_final_score || 0) < 800) return true;
+    return false;
+  }
+
+  // Helper: record entity shown in discovery
+  function recordDiscoveryEntity(article) {
+    const entities = getDiscoveryEntity(article);
+    for (const e of entities) discoveryShownEntities.add(e);
+  }
+
   // IMPROVEMENT 3: Track world event and cluster counts
   // Soft impression discounting: gradual fatigue instead of hard caps
   // 1/(1 + count * 0.15) → #1=100%, #4=62%, #7=49%, #10=40%
@@ -2074,14 +2125,13 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
-        // UNDERREPRESENTED CATEGORY DISCOVERY: prefer categories barely shown so far
-        // (like YouTube's "Something Completely Different" container)
-        // Instead of just "non-interest categories" (which includes Politics/Business
-        // dominated by Iran), pick from categories with 0-1 appearances in the feed.
-        // This ensures genuine variety: Health, Entertainment, Lifestyle, etc.
+        // ENTITY-DRIVEN DISCOVERY: rotate through different entities each slot.
+        // 1. Skip articles whose entity was already shown or skipped this session
+        // 2. Prefer adjacent-interest entities (tags the user engaged with in discovery)
+        // 3. Prefer categories the user hasn't seen much yet
+        // 4. Let high-scoring articles (>800) break through even if entity was skipped
         if (!isHoldback && dPool.length > 0) {
-          // Change 5: Adjacent-interest discovery — prefer tags that co-occur
-          // with engaged tags but aren't yet strongly in the user's profile
+          // Step 1: Adjacent-interest discovery — prefer tags user engaged with before
           const adjacentTags = new Set();
           const dTagStats = discoveryStats?._tags || {};
           for (const [t, stat] of Object.entries(dTagStats)) {
@@ -2091,18 +2141,24 @@ async function handleV2Feed(req, res, supabase, opts) {
               }
             }
           }
-          // Try adjacent-tag candidates first
-          if (adjacentTags.size > 0) {
-            for (let di = 0; di < dPool.length && !picked; di++) {
-              const candidate = dPool[di];
-              const cTags = safeJsonParse(candidate.interest_tags, []).map(t => t.toLowerCase());
-              if (cTags.some(t => adjacentTags.has(t))) {
-                const [removed] = dPool.splice(di, 1);
-                if (!isEventCapped(removed)) picked = removed;
-              }
+
+          // Step 2: Find best candidate — entity-diverse, not suppressed
+          for (let di = 0; di < dPool.length && !picked; di++) {
+            const candidate = dPool[di];
+            // Skip if entity already shown or skipped this session
+            if (isDiscoveryEntitySuppressed(candidate)) continue;
+            if (isEventCapped(candidate)) continue;
+            // Prefer adjacent-tag matches (boost by trying them first)
+            const cTags = safeJsonParse(candidate.interest_tags, []).map(t => t.toLowerCase());
+            if (adjacentTags.size > 0 && cTags.some(t => adjacentTags.has(t))) {
+              const [removed] = dPool.splice(di, 1);
+              picked = removed;
+              break;
             }
           }
-          // Fallback: underrepresented category discovery
+
+          // Step 3: No adjacent match — pick from underrepresented categories
+          // but still respect entity suppression
           if (!picked) {
             const shownCatCounts = {};
             for (const a of selected) {
@@ -2113,16 +2169,29 @@ async function handleV2Feed(req, res, supabase, opts) {
               .filter(cat => (shownCatCounts[cat] || 0) <= 1)
               .sort(() => Math.random() - 0.5);
             for (const cat of underrepCats) {
-              picked = mmrSelectFromCat(dPool, selected, tagCache, 0.4, cat);
+              // Find first non-suppressed article in this category
+              for (let di = 0; di < dPool.length && !picked; di++) {
+                if (dPool[di].category !== cat) continue;
+                if (isDiscoveryEntitySuppressed(dPool[di])) continue;
+                if (isEventCapped(dPool[di])) continue;
+                picked = dPool.splice(di, 1)[0];
+              }
               if (picked) break;
             }
           }
+
+          // Step 4: Still nothing — try any non-suppressed discovery article
+          if (!picked) {
+            for (let di = 0; di < dPool.length && !picked; di++) {
+              if (isDiscoveryEntitySuppressed(dPool[di])) continue;
+              if (isEventCapped(dPool[di])) continue;
+              picked = dPool.splice(di, 1)[0];
+            }
+          }
         }
+        // Step 5: All discovery suppressed — fall back to personal tail or trending
         if (!picked) {
-          // Fallback: original surprise logic
-          if (Math.random() < 0.6 && dPool.length > 0) {
-            picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-          } else if (pPool.length > 3) {
+          if (pPool.length > 3) {
             const tailStart = Math.floor(pPool.length * 0.5);
             const tailEnd = pPool.length;
             if (tailStart < tailEnd) {
@@ -2132,14 +2201,17 @@ async function handleV2Feed(req, res, supabase, opts) {
             }
           }
         }
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       }
 
       if (!picked) break;
 
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      // Track discovery entity so next discovery slot picks a DIFFERENT entity
+      if (picked.bucket === 'discovery') {
+        recordDiscoveryEntity(picked);
+      }
       recordEventSelection(picked);
       selected.push(picked);
     }
