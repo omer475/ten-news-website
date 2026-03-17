@@ -1549,6 +1549,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
   // If no user categories (cold start), allow everything
   const hasUserCats = userCats.size > 0;
+  if (hasUserCats) {
+    console.log(`[feed] Adjacent filtering: user cats=[${[...userCats]}] → allowed=[${[...discoveryAllowedCats]}]`);
+  }
 
   // Compute per-category quality thresholds (top 20%)
   const catScores = {};
@@ -1570,8 +1573,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     // Adjacent category filter: only allow categories near the user's interests
-    // Exception: very high score articles (>850) can break through any category
-    if (!isHoldback && hasUserCats && !discoveryAllowedCats.has(cat) && (a.ai_final_score || 0) < 850) continue;
+    // No exceptions — if a category isn't adjacent to the user's interests, it shouldn't
+    // appear in discovery. A gamer doesn't want war articles regardless of quality score.
+    if (!isHoldback && hasUserCats && !discoveryAllowedCats.has(cat)) continue;
     // Quality gate: only top 20% of each category (holdback skips this)
     if (!isHoldback && hasAnyPersonalization && (a.ai_final_score || 0) < (catDiscoveryThresholds[cat] || 0)) continue;
     // Discovery memory: deprioritize categories the user consistently rejects
