@@ -230,6 +230,8 @@ function formatArticle(article, eventMap = {}) {
   const countryRelevance = safeJsonParse(article.country_relevance, null);
   const topicRelevance = safeJsonParse(article.topic_relevance, null);
   const interestTags = safeJsonParse(article.interest_tags, []);
+  const scorecard = safeJsonParse(article.scorecard, null);
+  const articleType = article.article_type || null;
 
   // Parse map data
   let map = null;
@@ -303,6 +305,8 @@ function formatArticle(article, eventMap = {}) {
     country_relevance: countryRelevance,
     topic_relevance: topicRelevance,
     interest_tags: interestTags,
+    scorecard,
+    article_type: articleType,
     num_sources: article.num_sources,
     cluster_id: article.cluster_id,
     version_number: article.version_number,
@@ -830,6 +834,7 @@ const ARTICLE_COLUMNS = [
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'like_count', 'engagement_count',
+  'scorecard', 'article_type',
 ].join(', ');
 
 // ==========================================
@@ -1036,6 +1041,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const now = Date.now();
+  const nowISO = new Date(now).toISOString(); // for published_at upper bound
   const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const fiveDaysAgo = new Date(now - 5 * 24 * 3600000).toISOString();
@@ -1098,6 +1104,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', fiveDaysAgo)
+      .lte('published_at', nowISO)
       .gte('ai_final_score', hasAnyPersonalization ? 400 : 400)
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 500 : 500),
@@ -1108,6 +1115,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', thirtyDaysAgo)
+      .lte('published_at', nowISO)
       .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 200 : 500),
@@ -1185,6 +1193,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
         .gte('created_at', thirtyDaysAgo)
+        .lte('published_at', nowISO)
         .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
         .limit(100)
@@ -1203,6 +1212,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .or(batch.map(t => `interest_tags.ilike.%${t}%`).join(','))
         .gte('created_at', thirtyDaysAgo)
+        .lte('published_at', nowISO)
         .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
         .limit(50)
@@ -1254,6 +1264,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
           .or(batch.map(t => `interest_tags.ilike.%${t}%`).join(','))
           .gte('created_at', thirtyDaysAgo)
+          .lte('published_at', nowISO)
           .gte('ai_final_score', 150)
           .order('ai_final_score', { ascending: false })
           .limit(100)
@@ -1300,6 +1311,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', dominantCat)
         .gte('created_at', thirtyDaysAgo)
+        .lte('published_at', nowISO)
         .gte('ai_final_score', 150)
         .order('ai_final_score', { ascending: false })
         .limit(200);
@@ -2203,6 +2215,7 @@ async function handleFallbackFeed(req, res, supabase, opts) {
     .from('published_articles')
     .select(ARTICLE_COLUMNS)
     .gte('created_at', thirtyDaysAgoCutoff)
+    .lte('published_at', new Date().toISOString())
     .gte('ai_final_score', 400)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
     .limit(300);
