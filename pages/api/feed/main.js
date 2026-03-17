@@ -1515,6 +1515,38 @@ async function handleV2Feed(req, res, supabase, opts) {
   const discoveryCatMax = hasAnyPersonalization ? 2 : 8;
   const discoveryTotalMax = hasAnyPersonalization ? 30 : 200;
 
+  // ADJACENT CATEGORY MAP: defines which categories are "neighbors"
+  // Discovery should only show articles from categories adjacent to the user's interests.
+  // A gamer gets Tech/Entertainment/Science discovery, NOT World/Politics/War.
+  const ADJACENT_CATEGORIES = {
+    'Tech':          ['Science', 'Business', 'Finance', 'Entertainment', 'Gaming'],
+    'Science':       ['Tech', 'Health', 'Business'],
+    'Sports':        ['Entertainment', 'Business', 'Lifestyle'],
+    'Entertainment': ['Sports', 'Lifestyle', 'Tech', 'Gaming'],
+    'Gaming':        ['Tech', 'Entertainment', 'Sports'],
+    'Business':      ['Finance', 'Tech', 'Politics'],
+    'Finance':       ['Business', 'Tech', 'Crypto'],
+    'Crypto':        ['Finance', 'Tech', 'Business'],
+    'Health':        ['Science', 'Lifestyle'],
+    'Politics':      ['World', 'Business', 'War'],
+    'World':         ['Politics', 'War', 'Business'],
+    'War':           ['Politics', 'World'],
+    'Lifestyle':     ['Entertainment', 'Health', 'Sports'],
+    'Law':           ['Politics', 'Business'],
+  };
+
+  // Build the set of categories allowed for discovery:
+  // user's own categories + their adjacent neighbors
+  const discoveryAllowedCats = new Set();
+  const userCats = new Set([...interestCategories, ...personalCategories]);
+  for (const cat of userCats) {
+    discoveryAllowedCats.add(cat);
+    const neighbors = ADJACENT_CATEGORIES[cat] || [];
+    for (const n of neighbors) discoveryAllowedCats.add(n);
+  }
+  // If no user categories (cold start), allow everything
+  const hasUserCats = userCats.size > 0;
+
   // Compute per-category quality thresholds (top 20%)
   const catScores = {};
   for (const a of (discoveryResult.data || [])) {
@@ -1534,6 +1566,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
+    // Adjacent category filter: only allow categories near the user's interests
+    // Exception: very high score articles (>850) can break through any category
+    if (!isHoldback && hasUserCats && !discoveryAllowedCats.has(cat) && (a.ai_final_score || 0) < 850) continue;
     // Quality gate: only top 20% of each category (holdback skips this)
     if (!isHoldback && hasAnyPersonalization && (a.ai_final_score || 0) < (catDiscoveryThresholds[cat] || 0)) continue;
     // Discovery memory: deprioritize categories the user consistently rejects
