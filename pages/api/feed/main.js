@@ -1538,7 +1538,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Build the set of categories allowed for discovery:
   // user's own categories + their adjacent neighbors
   const discoveryAllowedCats = new Set();
-  const userCats = new Set([...interestCategories, ...personalCategories]);
+  // Use interestCategories (from followed_topics) + interestAltCategories for adjacent filtering.
+  // personalCategories isn't available yet (built after scoring), but interestCategories
+  // captures what the user explicitly selected during onboarding — the best signal we have.
+  const userCats = new Set([...interestCategories, ...interestAltCategories]);
   for (const cat of userCats) {
     discoveryAllowedCats.add(cat);
     const neighbors = ADJACENT_CATEGORIES[cat] || [];
