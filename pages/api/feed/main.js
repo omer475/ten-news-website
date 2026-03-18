@@ -1899,13 +1899,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
-  // CATEGORY DIVERSITY: prevent any single category from dominating the feed.
-  // Without this, a user following climate+environment+biology gets 70% Science.
-  // Cap at 40% ensures at least 3 categories get meaningful representation.
-  const selectedCatCounts = {};
-  const maxPerCategory = Math.ceil(limit * 0.40); // 20 for a 50-article feed
-  let personalCatRotIdx = 0; // rotation pointer for P-slot category balancing
-
   // ENTITY-DRIVEN DISCOVERY TRACKING
   // Track which primary entities (first 2 tags) have been shown in discovery this session.
   // If a discovery article's entity was skipped in this session, suppress that entity
@@ -2007,32 +2000,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // IMPROVEMENT 3: MMR select with event/cluster dedup
-  function mmrSelectDeduped(pool, sel, tc, lambda, skipCappedCats = false) {
+  function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
-    let catRejected = []; // articles rejected only due to category cap
-    while (attempts < 10 && pool.length > 0) {
+    while (attempts < 5 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda);
-      if (!picked) break;
-      if (isEventCapped(picked)) { attempts++; continue; }
-      // Category cap: skip if this category is already over-represented
-      if (skipCappedCats) {
-        const cat = picked.category || 'Other';
-        if ((selectedCatCounts[cat] || 0) >= maxPerCategory) {
-          catRejected.push(picked);
-          attempts++;
-          continue;
-        }
-      }
-      // Put category-rejected articles back into pool (they're valid, just capped)
-      pool.push(...catRejected);
-      pool.sort((a, b) => (b._score || 0) - (a._score || 0));
-      return picked;
+      if (!picked) return null;
+      if (!isEventCapped(picked)) return picked;
+      // Capped — skip this one and try next
+      attempts++;
     }
-    // All attempts hit caps — put rejected back and return best rejected if any
-    // (never leave empty slots — a repeated category is better than nothing)
-    pool.push(...catRejected);
-    pool.sort((a, b) => (b._score || 0) - (a._score || 0));
-    if (catRejected.length > 0) return catRejected[0];
     return null;
   }
 
@@ -2157,25 +2133,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (slot === 'P') {
-        // Category-diverse P selection: when user has multiple interest categories,
-        // rotate through least-shown categories first to prevent one from dominating.
-        // e.g., a climate+environment+sports user gets balanced Science/Sports, not 70% Science.
-        if (!isHoldback && interestCatList.length > 1) {
-          // Sort interest categories by how many articles are already selected (ascending)
-          const sortedCats = [...interestCatList].sort((a, b) =>
-            (selectedCatCounts[a] || 0) - (selectedCatCounts[b] || 0)
-          );
-          for (const cat of sortedCats) {
-            if ((selectedCatCounts[cat] || 0) >= maxPerCategory) continue;
-            picked = mmrSelectFromCat(pPool, selected, tagCache, 0.85, cat);
-            if (picked) break;
-          }
-        }
-        // Fall back to unconstrained selection (with category cap awareness)
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.85, true);
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.85);
         // Collaborative fallback: articles from similar users (before trending)
         if (!picked && cPool.length > 0) {
-          picked = mmrSelectDeduped(cPool, selected, tagCache, 0.8, true);
+          picked = mmrSelectDeduped(cPool, selected, tagCache, 0.8);
           if (picked) picked._bucket = 'collab';
         }
         // Personalized trending fallback: when personal pool is thin, try trending
@@ -2183,11 +2144,10 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (!picked && interestCatList.length > 0) {
           for (let i = 0; i < interestCatList.length && !picked; i++) {
             const cat = interestCatList[(trendingCatIdx + i) % interestCatList.length];
-            if ((selectedCatCounts[cat] || 0) >= maxPerCategory) continue;
             picked = mmrSelectFromCat(tPool, selected, tagCache, 0.75, cat);
           }
         }
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8, true);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         // INTEREST-AWARE TRENDING: rotate through user's interest categories
@@ -2196,7 +2156,6 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (!isHoldback && interestCatList.length > 0) {
           for (let i = 0; i < interestCatList.length && !picked; i++) {
             const cat = interestCatList[(trendingCatIdx + i) % interestCatList.length];
-            if ((selectedCatCounts[cat] || 0) >= maxPerCategory) continue;
             picked = mmrSelectFromCat(tPool, selected, tagCache, 0.85, cat);
           }
           trendingCatIdx = (trendingCatIdx + 1) % interestCatList.length;
@@ -2204,8 +2163,8 @@ async function handleV2Feed(req, res, supabase, opts) {
         // When interest-rotation found nothing, prefer personal over global trending.
         // Without this, a Sports/Entertainment user gets force-fed Iran/Business
         // trending articles because global trending is dominated by the war cycle.
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7, true);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85, true);
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         // ENTITY-DRIVEN DISCOVERY: rotate through different entities each slot.
@@ -2295,21 +2254,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (picked.bucket === 'discovery') {
         recordDiscoveryEntity(picked);
       }
-      // Track category counts for diversity caps
-      const pickedCat = picked.category || 'Other';
-      selectedCatCounts[pickedCat] = (selectedCatCounts[pickedCat] || 0) + 1;
       recordEventSelection(picked);
       selected.push(picked);
     }
-  }
-
-  // Log category distribution for monitoring
-  if (Object.keys(selectedCatCounts).length > 0) {
-    const catPct = Object.entries(selectedCatCounts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([cat, n]) => `${cat}:${n}(${Math.round(n/selected.length*100)}%)`)
-      .join(', ');
-    console.log(`[feed] Category diversity: ${catPct} | cap=${maxPerCategory}`);
   }
 
   // ==========================================
