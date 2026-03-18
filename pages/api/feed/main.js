@@ -352,24 +352,32 @@ async function buildUserInterestProfile(supabase, userId) {
     .select('article_id, event_type, metadata')
     .eq('user_id', userId)
     .gte('created_at', twoWeeksAgo)
-    .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view'])
+    .in('event_type', ['article_liked', 'article_shared', 'article_saved', 'article_engaged', 'article_detail_view'])
     .order('created_at', { ascending: false })
     .limit(500);
 
   if (!events || events.length === 0) return null;
 
-  // Weight by engagement type: saved > engaged > viewed
-  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled)
-  const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
+  // Weight by engagement type: liked > shared > saved > engaged > viewed
+  // article_liked is the strongest signal — explicit "I want more of this"
+  const eventWeights = { article_liked: 4, article_shared: 3.5, article_saved: 3, article_engaged: 2, article_detail_view: 1 };
   const articleWeights = {};
   for (const e of events) {
     let w = eventWeights[e.event_type] || 1;
-    // Extract dwell time from metadata
+    // Professional tiered dwell weighting (TikTok/Pinterest style)
     const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
                          e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
-    if (dwellSeconds > 5) {
-      // 10s → 1.0x bonus, 20s → 2.0x, 60s → 3.58x
-      w *= (1 + Math.log2(dwellSeconds / 5));
+    const dwellTier = e.metadata?.dwell_tier || '';
+    if (dwellSeconds > 0) {
+      let dwellMultiplier;
+      if (dwellTier === 'absorbed' || dwellSeconds >= 45) dwellMultiplier = 4.0;
+      else if (dwellTier === 'deep_read' || dwellSeconds >= 25) dwellMultiplier = 3.0;
+      else if (dwellTier === 'engaged_read' || dwellSeconds >= 12) dwellMultiplier = 2.0;
+      else if (dwellTier === 'light_read' || dwellSeconds >= 6) dwellMultiplier = 1.2;
+      else if (dwellTier === 'glance' || dwellSeconds >= 3) dwellMultiplier = 0.8;
+      else if (dwellSeconds >= 1) dwellMultiplier = 0.5;
+      else dwellMultiplier = 0.3;
+      w *= dwellMultiplier;
     }
     articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
   }

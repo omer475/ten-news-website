@@ -125,7 +125,7 @@ export default async function handler(req, res) {
     // event type) to prevent taste vector contamination while still allowing genuine
     // interest discovery. Skips from non-personal are dropped entirely — a user skipping
     // a trending article doesn't mean they dislike that topic, just that specific article.
-    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_revisit', 'article_liked']
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_revisit', 'article_liked', 'article_shared']
     // Resolve bucket: prefer client metadata, fallback to feed impressions table.
     // ArticleCardView sends article_engaged without bucket, ArticleDetailViewModel sends
     // article_detail_view without bucket — both update taste vector & tag profile.
@@ -214,8 +214,8 @@ export default async function handler(req, res) {
     // BUCKET GUARD: Non-personal engagement gets 30% weight to prevent contamination.
     // A user engaging with a trending Iran article shouldn't make "iran" compete with their
     // actual interests ("soccer" at 0.65). Full weight only for personal/collab articles.
-    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_revisit', 'article_liked']
-    const TAG_PROFILE_WEIGHTS = { article_liked: 0.08, article_revisit: 0.30, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_revisit', 'article_liked', 'article_shared']
+    const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_revisit: 0.30, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
     const tagBucketMultiplier = isPersonalBucket ? 1.0 : 0.30
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
       // Dwell-time weighted signals — log-scale modulation
@@ -427,6 +427,36 @@ export default async function handler(req, res) {
                 .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
                 .catch(() => {})
             }
+          })
+          .catch(() => {})
+      }
+    }
+
+    // Search query signals → tag_profile updates
+    // When a user searches, their query terms reveal strong interest
+    if (event_type === 'search_query' && metadata?.query) {
+      const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
+      if (queryTerms.length > 0) {
+        admin
+          .from('profiles')
+          .select('tag_profile')
+          .eq('id', user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            const tagProfile = profileData?.tag_profile || {}
+            for (const term of queryTerms) {
+              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.08, 1.0)
+            }
+            if (queryTerms.length >= 2) {
+              const phrase = queryTerms.join(' ')
+              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.12, 1.0)
+            }
+            admin
+              .from('profiles')
+              .update({ tag_profile: tagProfile })
+              .eq('id', user.id)
+              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query))
+              .catch(() => {})
           })
           .catch(() => {})
       }
