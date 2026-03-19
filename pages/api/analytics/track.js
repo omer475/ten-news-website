@@ -215,7 +215,7 @@ export default async function handler(req, res) {
     // A user engaging with a trending Iran article shouldn't make "iran" compete with their
     // actual interests ("soccer" at 0.65). Full weight only for personal/collab articles.
     const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_revisit', 'article_liked', 'article_shared']
-    const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_revisit: 0.30, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    const TAG_PROFILE_WEIGHTS = { article_liked: 0.35, article_shared: 0.30, article_revisit: 0.30, article_saved: 0.25, article_engaged: 0.18, article_detail_view: 0.08 }
     const tagBucketMultiplier = isPersonalBucket ? 1.0 : 0.30
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
       // Dwell-time weighted signals — log-scale modulation
@@ -433,7 +433,9 @@ export default async function handler(req, res) {
     }
 
     // Search query signals → tag_profile updates
-    // When a user searches, their query terms reveal strong interest
+    // Searching is the STRONGEST explicit interest signal — user typed exactly what they want.
+    // Weight 0.25 per term (higher than a like at 0.35 for article tags, because search is pure intent).
+    // Also boosts multi-word phrases at 0.35 to capture specific interests like "low calorie food".
     if (event_type === 'search_query' && metadata?.query) {
       const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
       if (queryTerms.length > 0) {
@@ -445,11 +447,13 @@ export default async function handler(req, res) {
           .then(({ data: profileData }) => {
             const tagProfile = profileData?.tag_profile || {}
             for (const term of queryTerms) {
-              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.08, 1.0)
+              // Each search term gets strong boost — user explicitly typed this
+              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.25, 1.0)
             }
             if (queryTerms.length >= 2) {
+              // Multi-word phrases are even stronger ("premier league", "low calorie food")
               const phrase = queryTerms.join(' ')
-              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.12, 1.0)
+              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.35, 1.0)
             }
             admin
               .from('profiles')

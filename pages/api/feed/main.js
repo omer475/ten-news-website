@@ -1272,6 +1272,74 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // ==========================================
+  // ONBOARDING DAMPENING: If user consistently skips their onboarding topics,
+  // reduce those topics' influence. This allows the feed to pivot toward
+  // what the user ACTUALLY engages with (learned via tag_profile).
+  // ==========================================
+  if (skipProfile && storedTagProfile && Object.keys(storedTagProfile).length >= 3) {
+    const topicsToRemove = [];
+    for (const topic of [...followedTopics]) {
+      const mapping = ONBOARDING_TOPIC_MAP[topic];
+      if (!mapping) continue;
+      // Check if user skips this topic's tags more than they engage
+      let skipSignal = 0, engageSignal = 0;
+      for (const tag of mapping.tags) {
+        const t = tag.toLowerCase();
+        const skipEntry = skipProfile[t];
+        const skipVal = typeof skipEntry === 'object' ? (skipEntry.w || 0) : (typeof skipEntry === 'number' ? skipEntry : 0);
+        skipSignal += skipVal;
+        engageSignal += storedTagProfile[t] || 0;
+      }
+      // If skip signal > 2x engage signal for this topic, dampen it
+      if (skipSignal > engageSignal * 2 && skipSignal > 0.3) {
+        topicsToRemove.push(topic);
+        // Remove this topic's categories and tags from interest sets
+        mapping.categories.forEach(c => interestCategories.delete(c));
+        mapping.tags.forEach(t => interestTags.delete(t.toLowerCase()));
+        console.log(`[feed] Dampened onboarding topic "${topic}" (skip=${skipSignal.toFixed(2)} >> engage=${engageSignal.toFixed(2)}) for:`, userId?.substring(0, 8));
+      }
+    }
+    // Re-add categories from remaining (non-dampened) topics
+    // (in case a dampened topic shared a category with a non-dampened one)
+    for (const topic of followedTopics) {
+      if (topicsToRemove.includes(topic)) continue;
+      const mapping = ONBOARDING_TOPIC_MAP[topic];
+      if (mapping) mapping.categories.forEach(c => interestCategories.add(c));
+    }
+  }
+
+  // ==========================================
+  // TAG_PROFILE INTEREST PROMOTION: Promote strong tag_profile entries
+  // to first-class interests (same level as onboarding topics).
+  // If a user's tag_profile has "nba: 0.6", treat NBA as if they selected it.
+  // This is how the feed discovers and surfaces new interests.
+  // ==========================================
+  if (storedTagProfile && !isHoldback) {
+    const PROMOTION_THRESHOLD = 0.30; // tag weight needed to be promoted
+    const promotedTopics = [];
+    for (const [topicName, mapping] of Object.entries(ONBOARDING_TOPIC_MAP)) {
+      if (followedTopics.includes(topicName)) continue; // already onboarded
+      // Check if any of this topic's tags are strong in the profile
+      let topicSignal = 0;
+      for (const tag of mapping.tags) {
+        topicSignal += storedTagProfile[tag.toLowerCase()] || 0;
+      }
+      // If combined signal from this topic's tags exceeds threshold, promote it
+      if (topicSignal >= PROMOTION_THRESHOLD) {
+        promotedTopics.push({ name: topicName, signal: topicSignal });
+        mapping.categories.forEach(c => interestCategories.add(c));
+        mapping.tags.forEach(t => interestTags.add(t.toLowerCase()));
+      }
+    }
+    // Sort by signal strength, take top 5 to avoid over-expanding
+    promotedTopics.sort((a, b) => b.signal - a.signal);
+    const promoted = promotedTopics.slice(0, 5);
+    if (promoted.length > 0) {
+      console.log(`[feed] Promoted ${promoted.length} discovered interests:`, promoted.map(p => `${p.name}(${p.signal.toFixed(2)})`).join(', '), 'for:', userId?.substring(0, 8));
+    }
+  }
+
   // Adjacent topic expansion: when user's primary topics have limited content,
   // expand to related topics to prevent content exhaustion
   const adjacentTags = new Set();
