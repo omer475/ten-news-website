@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
-  const { title, bullets, category, image_url, user_id, author_name } = req.body;
+  const { title, bullets, category, tags, image_url, user_id, author_name } = req.body;
 
   if (!title || !bullets || !Array.isArray(bullets) || bullets.length === 0) {
     return res.status(400).json({ error: 'title and bullets are required' });
@@ -21,9 +21,10 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    // Build interest tags from title + category
+    // Build interest tags from user tags + title words + category
+    const userTags = Array.isArray(tags) ? tags.map(t => t.toLowerCase()) : [];
     const words = title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const interestTags = [...new Set([category.toLowerCase(), ...words.slice(0, 6)])];
+    const interestTags = [...new Set([...userTags, category.toLowerCase(), ...words.slice(0, 4)])];
 
     const articleData = {
       title_news: title,
