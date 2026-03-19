@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
-  const { title, bullets, category, tags, image_url, user_id, author_name } = req.body;
+  const { title, bullets, category, tags, image_url, user_id, author_name, details, map } = req.body;
 
   if (!title || !bullets || !Array.isArray(bullets) || bullets.length === 0) {
     return res.status(400).json({ error: 'title and bullets are required' });
@@ -40,8 +40,16 @@ export default async function handler(req, res) {
       interest_tags: JSON.stringify(interestTags),
       countries: JSON.stringify([]),
       topics: JSON.stringify([category || 'Lifestyle']),
-      components: [],
-      components_order: [],
+      details: details ? JSON.stringify(details) : null,
+      map: map ? JSON.stringify(map) : null,
+      components: [
+        ...(details ? ['details'] : []),
+        ...(map ? ['map'] : []),
+      ],
+      components_order: [
+        ...(details ? ['details'] : []),
+        ...(map ? ['map'] : []),
+      ],
       published_at: new Date().toISOString(),
       shelf_life_days: 30,
       freshness_category: 'evergreen',
