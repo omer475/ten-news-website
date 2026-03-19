@@ -96,6 +96,88 @@ const ONBOARDING_TOPIC_MAP = {
 };
 
 // ==========================================
+// ADJACENT TOPICS MAP
+// When a user's primary topics have limited content, we expand to
+// related/adjacent topics to prevent content exhaustion. Adjacent
+// content scores lower than direct-match content.
+// ==========================================
+
+const ADJACENT_TOPICS = {
+  // Sports adjacency
+  'Soccer/Football': ['F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
+  'NFL': ['NBA', 'MLB/Baseball', 'Boxing & MMA/UFC'],
+  'NBA': ['NFL', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
+  'MLB/Baseball': ['NFL', 'NBA', 'Cricket'],
+  'Cricket': ['MLB/Baseball', 'Soccer/Football', 'Olympics & Paralympics'],
+  'F1 & Motorsport': ['Soccer/Football', 'Boxing & MMA/UFC', 'Automotive'],
+  'Boxing & MMA/UFC': ['NFL', 'NBA', 'Soccer/Football'],
+  'Olympics & Paralympics': ['Soccer/Football', 'NBA', 'Cricket'],
+
+  // Tech adjacency
+  'AI & Machine Learning': ['Robotics & Hardware', 'Cybersecurity', 'Space Tech'],
+  'Robotics & Hardware': ['AI & Machine Learning', 'Smartphones & Gadgets', 'Space Tech'],
+  'Smartphones & Gadgets': ['Robotics & Hardware', 'AI & Machine Learning', 'Social Media'],
+  'Cybersecurity': ['AI & Machine Learning', 'DeFi & Web3', 'Robotics & Hardware'],
+  'Space Tech': ['Space & Astronomy', 'AI & Machine Learning', 'Robotics & Hardware'],
+  'Social Media': ['Smartphones & Gadgets', 'Celebrity News', 'K-Pop & K-Drama'],
+
+  // Science adjacency
+  'Space & Astronomy': ['Space Tech', 'Earth Science', 'Biology & Nature'],
+  'Climate & Environment': ['Oil & Energy', 'Biology & Nature', 'Earth Science', 'Public Health'],
+  'Biology & Nature': ['Climate & Environment', 'Medical Breakthroughs', 'Pets & Animals'],
+  'Earth Science': ['Climate & Environment', 'Space & Astronomy'],
+
+  // Business adjacency
+  'Stock Markets': ['Corporate Earnings', 'Corporate Deals', 'Banking & Lending'],
+  'Corporate Earnings': ['Stock Markets', 'Corporate Deals', 'Trade & Tariffs'],
+  'Corporate Deals': ['Stock Markets', 'Corporate Earnings', 'Startups & Venture Capital'],
+  'Startups & Venture Capital': ['Corporate Deals', 'AI & Machine Learning', 'DeFi & Web3'],
+  'Trade & Tariffs': ['Oil & Energy', 'Corporate Earnings', 'Asian Politics'],
+  'Oil & Energy': ['Trade & Tariffs', 'Climate & Environment', 'Commodities'],
+  'Automotive': ['Oil & Energy', 'F1 & Motorsport', 'Trade & Tariffs'],
+  'Retail & Consumer': ['Corporate Earnings', 'Shopping & Product Reviews'],
+  'Real Estate': ['Banking & Lending', 'Corporate Deals'],
+
+  // Finance adjacency
+  'Banking & Lending': ['Stock Markets', 'Real Estate', 'Commodities'],
+  'Commodities': ['Oil & Energy', 'Banking & Lending', 'Trade & Tariffs'],
+  'Bitcoin': ['DeFi & Web3', 'Crypto Regulation & Legal', 'Stock Markets'],
+  'DeFi & Web3': ['Bitcoin', 'Crypto Regulation & Legal', 'Cybersecurity'],
+  'Crypto Regulation & Legal': ['Bitcoin', 'DeFi & Web3', 'US Politics'],
+
+  // Politics adjacency
+  'US Politics': ['Human Rights & Civil Liberties', 'European Politics'],
+  'European Politics': ['US Politics', 'Human Rights & Civil Liberties', 'Trade & Tariffs'],
+  'Asian Politics': ['Trade & Tariffs', 'Middle East'],
+  'Middle East': ['War & Conflict', 'Oil & Energy', 'Asian Politics'],
+  'War & Conflict': ['Middle East', 'Cybersecurity', 'European Politics'],
+  'Human Rights & Civil Liberties': ['US Politics', 'European Politics', 'War & Conflict'],
+  'Latin America': ['US Politics', 'Trade & Tariffs'],
+  'Africa & Oceania': ['Climate & Environment', 'Oil & Energy'],
+
+  // Health adjacency
+  'Medical Breakthroughs': ['Pharma & Drug Industry', 'Biology & Nature', 'Public Health'],
+  'Public Health': ['Medical Breakthroughs', 'Mental Health', 'Climate & Environment'],
+  'Mental Health': ['Public Health', 'Celebrity News', 'Social Media'],
+  'Pharma & Drug Industry': ['Medical Breakthroughs', 'Corporate Deals', 'Stock Markets'],
+
+  // Entertainment adjacency
+  'Movies & Film': ['TV & Streaming', 'Celebrity News', 'Music'],
+  'TV & Streaming': ['Movies & Film', 'Gaming', 'K-Pop & K-Drama'],
+  'Music': ['Movies & Film', 'Celebrity News', 'Celebrity Style & Red Carpet'],
+  'Gaming': ['AI & Machine Learning', 'Smartphones & Gadgets', 'TV & Streaming'],
+  'Celebrity News': ['Celebrity Style & Red Carpet', 'Music', 'Social Media'],
+  'K-Pop & K-Drama': ['TV & Streaming', 'Celebrity News', 'Social Media'],
+
+  // Lifestyle adjacency
+  'Pets & Animals': ['Biology & Nature', 'Home & Garden'],
+  'Home & Garden': ['Pets & Animals', 'Shopping & Product Reviews', 'Real Estate'],
+  'Shopping & Product Reviews': ['Retail & Consumer', 'Smartphones & Gadgets'],
+  'Sneakers & Streetwear': ['Celebrity Style & Red Carpet', 'Shopping & Product Reviews'],
+  'Celebrity Style & Red Carpet': ['Celebrity News', 'Sneakers & Streetwear', 'Movies & Film'],
+};
+
+// ==========================================
 // APP TOPIC ID → ONBOARDING_TOPIC_MAP KEYS
 // The iOS app saves short topic IDs (e.g., "ai", "sports", "f1").
 // This maps them to the full ONBOARDING_TOPIC_MAP keys so interest
@@ -980,9 +1062,9 @@ export default async function handler(req, res) {
         .select('article_id')
         .eq('user_id', userId)
         .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
-        .gte('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(800);
 
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
@@ -1081,22 +1163,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 8760,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(80 + Math.floor(offset / 3), 150), hours_window: 8760,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 720,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 8760,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 720,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 8760,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -1190,6 +1272,32 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Adjacent topic expansion: when user's primary topics have limited content,
+  // expand to related topics to prevent content exhaustion
+  const adjacentTags = new Set();
+  const adjacentCategories = new Set();
+  for (const topic of followedTopics) {
+    // Resolve topic through the same chain as the primary loop
+    const resolvedForAdj = ONBOARDING_TOPIC_MAP[topic]
+      ? [topic]
+      : APP_TOPIC_ALIAS[topic.toLowerCase()]
+        || (CATEGORY_TO_SUBTOPICS[topic] ? CATEGORY_TO_SUBTOPICS[topic].map(s => s.name) : null)
+        || null;
+    if (!resolvedForAdj) continue;
+    for (const resolved of resolvedForAdj) {
+      const adjacent = ADJACENT_TOPICS[resolved];
+      if (adjacent) {
+        for (const adjTopic of adjacent) {
+          const mapping = ONBOARDING_TOPIC_MAP[adjTopic];
+          if (mapping) {
+            mapping.categories.forEach(c => adjacentCategories.add(c));
+            mapping.tags.forEach(t => adjacentTags.add(t.toLowerCase()));
+          }
+        }
+      }
+    }
+  }
+
   // Fetch per-category articles + tag-based articles for followed interests
   let interestArticles = [];
   if (interestCategories.size > 0 || interestTags.size > 0) {
@@ -1244,6 +1352,35 @@ async function handleV2Feed(req, res, supabase, opts) {
       seen.add(a.id);
       return true;
     });
+
+    // Fetch adjacent category articles (lower limit, used as fallback)
+    if (adjacentCategories.size > 0) {
+      const adjCats = [...adjacentCategories].filter(c => !interestCategories.has(c) && !interestAltCategories.has(c));
+      if (adjCats.length > 0) {
+        const adjPromises = adjCats.map(cat =>
+          supabase
+            .from('published_articles')
+            .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+            .eq('category', cat)
+            .gte('created_at', thirtyDaysAgo)
+            .lte('published_at', nowISO)
+            .gte('ai_final_score', 400)
+            .order('ai_final_score', { ascending: false })
+            .limit(30)
+        );
+        const adjResults = await Promise.all(adjPromises);
+        for (const r of adjResults) {
+          if (r.data) interestArticles.push(...r.data);
+        }
+        // Deduplicate again
+        const seenAdj = new Set();
+        interestArticles = interestArticles.filter(a => {
+          if (seenAdj.has(a.id)) return false;
+          seenAdj.add(a.id);
+          return true;
+        });
+      }
+    }
   }
 
   // ==========================================
@@ -1752,7 +1889,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!isHoldback && interestTags.size > 0) {
         const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
         const matches = tags.filter(t => interestTags.has(t)).length;
-        if (matches > 0) score *= (1 + matches * 0.3);
+        if (matches > 0) {
+          score *= (1 + matches * 0.3);
+        } else if (adjacentTags.size > 0) {
+          // Adjacent tag boost: 50% of primary tag boost
+          const adjMatches = tags.filter(t => adjacentTags.has(t)).length;
+          if (adjMatches > 0) score *= (1 + adjMatches * 0.15);
+        }
       }
       return { ...article, _score: score, _bucket: 'trending' };
     })
@@ -1769,7 +1912,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!isHoldback && interestTags.size > 0) {
         const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
         const matches = tags.filter(t => interestTags.has(t)).length;
-        if (matches > 0) score *= (1 + matches * 0.3);
+        if (matches > 0) {
+          score *= (1 + matches * 0.3);
+        } else if (adjacentTags.size > 0) {
+          // Adjacent tag boost: 50% of primary tag boost
+          const adjMatches = tags.filter(t => adjacentTags.has(t)).length;
+          if (adjMatches > 0) score *= (1 + adjMatches * 0.15);
+        }
       }
       return { ...article, _score: score, _bucket: 'discovery' };
     })
@@ -1785,14 +1934,22 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
-      // Filter out zero-match articles (celebrity gossip in a gaming user's feed)
-      if (!isHoldback && tagMatches === 0) return null;
+      const adjTagMatches = tagMatches === 0 ? articleTags.filter(t => adjacentTags.has(t)).length : 0;
+      // Filter out articles with no primary or adjacent tag match
+      if (!isHoldback && tagMatches === 0 && adjTagMatches === 0) return null;
       // Score through unified function (same as personal/trending/discovery)
       const score = isHoldback
         ? (article.ai_final_score || 0) * (1.0 + tagMatches * 0.25) * getRecencyDecay(article.created_at, article.category, article.shelf_life_days)
         : scoreUnified(article, { ...scoreOpts, similarity: 0 });
       // Interest tag bonus: matched articles get a boost on top of unified score
-      const interestBoost = tagMatches >= 3 ? 1.8 : tagMatches >= 2 ? 1.5 : tagMatches >= 1 ? 1.3 : 1.0;
+      // Adjacent matches get ~50% of the primary boost (ranks below direct-match, above random trending)
+      const interestBoost = tagMatches >= 3 ? 1.8
+        : tagMatches >= 2 ? 1.5
+        : tagMatches >= 1 ? 1.3
+        : adjTagMatches >= 3 ? 1.4
+        : adjTagMatches >= 2 ? 1.25
+        : adjTagMatches >= 1 ? 1.15
+        : 1.0;
       return {
         ...article,
         _score: score * interestBoost,
