@@ -321,6 +321,7 @@ export default async function handler(req, res) {
       .from('published_articles')
       .select('interest_tags')
       .gte('published_at', fortyEightHoursAgo)
+      .lte('published_at', new Date().toISOString())
       .not('interest_tags', 'is', null)
 
     const entityArticleCount = {}
@@ -423,6 +424,7 @@ export default async function handler(req, res) {
         .from('published_articles')
         .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
         .gte('published_at', sevenDaysAgo)
+        .lte('published_at', new Date().toISOString())
         .not('interest_tags', 'is', null)
         .order('published_at', { ascending: false })
         .limit(1500)

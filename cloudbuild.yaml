@@ -44,7 +44,7 @@ steps:
       - '--max-retries'
       - '1'
       - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest'
 
 # Substitutions (can be overridden)
 substitutions:

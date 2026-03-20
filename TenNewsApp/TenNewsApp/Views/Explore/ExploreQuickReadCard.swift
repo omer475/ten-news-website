@@ -101,6 +101,7 @@ struct ExploreQuickReadCard: View {
             "Tech": "#7744BB", "Science": "#009999", "Health": "#CC6699",
             "Sports": "#DD6622", "Entertainment": "#CC9922", "Finance": "#228866",
             "Climate": "#339966", "Economy": "#228866",
+            "Food": "#E07020", "Fashion": "#BB44AA", "Travel": "#2299BB", "Lifestyle": "#66AA44",
         ]
         return Color(hex: colors[category] ?? "#3366CC")
     }

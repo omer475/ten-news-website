@@ -29,6 +29,10 @@ struct CategoryBadge: View {
         case "diplomacy": return Color(hex: "#AF52DE")
         case "energy": return Color(hex: "#FF9500")
         case "ai": return Color(hex: "#764ba2")
+        case "food": return Color(hex: "#E07020")
+        case "fashion": return Color(hex: "#BB44AA")
+        case "travel": return Color(hex: "#2299BB")
+        case "lifestyle": return Color(hex: "#66AA44")
         default: return Theme.Colors.accent
         }
     }
