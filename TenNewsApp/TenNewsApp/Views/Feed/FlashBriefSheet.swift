@@ -135,12 +135,14 @@ struct FlashBriefSheet: View {
                     .offset(y: appeared ? 0 : 20)
                 }
 
-                // Surprise Me button
+                // Surprise Me button — picks a random article beyond the top 5
                 Button {
                     HapticManager.light()
-                    if !articles.isEmpty {
-                        let randomIdx = Int.random(in: 0..<articles.count)
+                    if articles.count > 5 {
+                        let randomIdx = Int.random(in: 5..<articles.count)
                         onArticleTap?(randomIdx)
+                    } else if !articles.isEmpty {
+                        onArticleTap?(0)
                     }
                 } label: {
                     HStack(spacing: 10) {

@@ -6,6 +6,7 @@ final class FeedViewModel {
     var worldEvents: [WorldEvent] = []
     var currentIndex: Int = 0
     var isLoading = false
+    var isRefreshing = false
     var errorMessage: String?
     var hasMore = true
     let reRanker = SessionReRanker()
@@ -15,13 +16,20 @@ final class FeedViewModel {
     private(set) var articles: [Article] = []
 
     private var nextCursor: String? = nil
-    private var currentPreferences: UserPreferences?
-    private var currentUserId: String?
+    private(set) var currentPreferences: UserPreferences?
+    private(set) var currentUserId: String?
     private var viewStartTimes: [String: Date] = [:]
+    private(set) var lastRefreshTime: Date?
 
     private let feedService = FeedService()
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
+
+    /// Feed is stale if last refresh was more than 5 minutes ago (or never loaded).
+    var isStale: Bool {
+        guard let lastRefresh = lastRefreshTime else { return true }
+        return Date().timeIntervalSince(lastRefresh) > 300
+    }
 
     /// Returns true if the article passes feed filters.
     /// V2 handles recency via time-decay scoring, so no client-side age filter needed.
@@ -43,16 +51,17 @@ final class FeedViewModel {
     // MARK: - Data Loading
 
     func loadInitialData(preferences: UserPreferences? = nil, userId: String? = nil) async {
-        guard !isLoading else { return }
+        guard !isLoading, !isRefreshing else { return }
         isLoading = true
         errorMessage = nil
         currentPreferences = preferences
         currentUserId = userId
         reRanker.reset()
         do {
-            // Send local reading history so server excludes already-seen articles
+            // Send limited reading history (100 max) to avoid immediate repeats.
+            // Sending all 300 over-filters and causes premature "all caught up".
             let historyIds = ReadingHistoryManager.shared.entries
-                .prefix(300)
+                .prefix(100)
                 .map { $0.articleId }
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
@@ -65,6 +74,7 @@ final class FeedViewModel {
             hasMore = feedResponse.hasMore
             rebuildArticleList()
             isLoading = false
+            lastRefreshTime = Date()
 
             // If filters removed everything but server has more, keep fetching
             if articles.isEmpty && hasMore {
@@ -84,7 +94,7 @@ final class FeedViewModel {
     }
 
     func loadMoreIfNeeded() async {
-        guard hasMore, !isLoading else { return }
+        guard hasMore, !isLoading, !isRefreshing else { return }
         await loadMoreBatch()
     }
 
@@ -134,8 +144,11 @@ final class FeedViewModel {
         }
     }
 
-    /// Pull-to-refresh: reload from scratch while preserving preferences
+    /// Pull-to-refresh: reload from scratch while preserving preferences.
+    /// Sends reading history to prevent seen articles from reappearing.
     func refresh() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
         nextCursor = nil
         hasMore = true
         reRanker.reset()
@@ -143,20 +156,25 @@ final class FeedViewModel {
         isLoading = true
         errorMessage = nil
         do {
+            // Send reading history + currently displayed IDs to avoid repeats
             let historyIds = ReadingHistoryManager.shared.entries
-                .prefix(300)
+                .prefix(100)
                 .map { $0.articleId }
+            let currentIds = allArticles.map { $0.id.stringValue }
+            let seenIds = Array(Set(historyIds + currentIds))
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: currentPreferences,
                 userId: currentUserId,
-                seenIds: Array(historyIds)
+                seenIds: seenIds
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor
             hasMore = feedResponse.hasMore
             rebuildArticleList()
             isLoading = false
+            isRefreshing = false
+            lastRefreshTime = Date()
 
             if articles.isEmpty && hasMore {
                 await loadMoreUntilVisible()
@@ -164,6 +182,22 @@ final class FeedViewModel {
         } catch {
             errorMessage = error.localizedDescription
             isLoading = false
+            isRefreshing = false
+        }
+    }
+
+    /// Refresh only if data is stale (>5 min old). Call on app foreground / tab switch.
+    func refreshIfStale(preferences: UserPreferences? = nil, userId: String? = nil) async {
+        if let prefs = preferences { currentPreferences = prefs }
+        if let uid = userId { currentUserId = uid }
+        guard isStale else { return }
+
+        if allArticles.isEmpty {
+            await loadInitialData(preferences: currentPreferences, userId: currentUserId)
+        } else {
+            await refresh()
+            currentIndex = 0
+            recordViewStart(at: 0)
         }
     }
 
@@ -194,14 +228,38 @@ final class FeedViewModel {
         viewStartTimes.removeValue(forKey: article.id.stringValue)
         reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
 
-        // Send dwell-based event to server (V2 uses dwell time for interest profile weighting)
+        // Professional-grade tiered dwell tracking (TikTok/Pinterest style)
+        // 7 tiers with continuous dwell weighting via metadata
+        //   0-1s   → article_skipped (strong negative — instant rejection)
+        //   1-3s   → article_skipped (mild negative — saw and passed)
+        //   3-6s   → article_view (neutral/curious — glanced)
+        //   6-12s  → article_engaged (mild positive — showed interest)
+        //   12-25s → article_engaged (strong positive — read it)
+        //   25-45s → article_engaged (very strong — deeply interested)
+        //   45s+   → article_engaged (maximum — absorbed)
         let event: String
-        if dwellSeconds < 3.0 {
+        let dwellTier: String
+        if dwellSeconds < 1.0 {
             event = "article_skipped"
-        } else if dwellSeconds >= 5.0 {
-            event = "article_engaged"
-        } else {
+            dwellTier = "instant_skip"
+        } else if dwellSeconds < 3.0 {
+            event = "article_skipped"
+            dwellTier = "quick_skip"
+        } else if dwellSeconds < 6.0 {
             event = "article_view"
+            dwellTier = "glance"
+        } else if dwellSeconds < 12.0 {
+            event = "article_engaged"
+            dwellTier = "light_read"
+        } else if dwellSeconds < 25.0 {
+            event = "article_engaged"
+            dwellTier = "engaged_read"
+        } else if dwellSeconds < 45.0 {
+            event = "article_engaged"
+            dwellTier = "deep_read"
+        } else {
+            event = "article_engaged"
+            dwellTier = "absorbed"
         }
         Task {
             try? await analytics.track(
@@ -211,6 +269,7 @@ final class FeedViewModel {
                 metadata: [
                     "dwell": String(format: "%.1f", dwellSeconds),
                     "total_active_seconds": String(format: "%.1f", dwellSeconds),
+                    "dwell_tier": dwellTier,
                     "bucket": article.bucket ?? "unknown"
                 ]
             )

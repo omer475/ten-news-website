@@ -3,6 +3,7 @@ import SwiftUI
 struct ExploreView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
+    @Environment(TabBarState.self) private var tabBarState
     @State private var topics: [ExploreTopic] = []
     @State private var isLoading = true
     @State private var searchText = ""
@@ -50,6 +51,12 @@ struct ExploreView: View {
             .background(Theme.Colors.backgroundPrimary)
             .task { await loadTopics() }
             .refreshable { await loadTopics() }
+            .onChange(of: tabBarState.exploreRefreshRequested) { _, requested in
+                if requested {
+                    tabBarState.exploreRefreshRequested = false
+                    Task { await loadTopics() }
+                }
+            }
 
             // Article overlay (single article from card tap)
             if let article = selectedArticle {
@@ -101,10 +108,39 @@ struct ExploreView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 28)
 
-                ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                    entitySection(topic)
-                        .sectionAppear(appeared: appeared, index: tIndex)
-                        .padding(.bottom, 32)
+                // Personalized section
+                if !personalizedTopics.isEmpty {
+                    sectionHeader("For You", icon: "sparkles")
+                        .padding(.bottom, 16)
+
+                    ForEach(Array(personalizedTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                        entitySection(topic)
+                            .sectionAppear(appeared: appeared, index: tIndex)
+                            .padding(.bottom, 32)
+                    }
+                }
+
+                // Trending section
+                if !trendingTopics.isEmpty {
+                    sectionHeader("Trending", icon: "flame.fill")
+                        .padding(.top, personalizedTopics.isEmpty ? 0 : 8)
+                        .padding(.bottom, 16)
+
+                    let offset = personalizedTopics.count
+                    ForEach(Array(trendingTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                        entitySection(topic)
+                            .sectionAppear(appeared: appeared, index: offset + tIndex)
+                            .padding(.bottom, 32)
+                    }
+                }
+
+                // Fallback: if no type distinction, show all
+                if personalizedTopics.isEmpty && trendingTopics.isEmpty {
+                    ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                        entitySection(topic)
+                            .sectionAppear(appeared: appeared, index: tIndex)
+                            .padding(.bottom, 32)
+                    }
                 }
 
                 Spacer(minLength: 100)
@@ -113,6 +149,18 @@ struct ExploreView: View {
     }
 
     // MARK: - Category Group
+
+    private func sectionHeader(_ title: String, icon: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text(title)
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, 20)
+    }
 
     private func categoryIcon(for category: String) -> String {
         let icons: [String: String] = [
@@ -139,9 +187,12 @@ struct ExploreView: View {
 
     // MARK: - Entity Section
 
+    @State private var scrolledIndices: [String: Int] = [:]
+
     private func entitySection(_ topic: ExploreTopic) -> some View {
         let catColor = categoryColor(for: topic.category)
         let icon = categoryIcon(for: topic.category)
+        let currentIndex = scrolledIndices[topic.entityName] ?? 0
 
         return VStack(alignment: .leading, spacing: 12) {
             // Entity header — SF Symbol icon + bold name + chevron
@@ -189,7 +240,8 @@ struct ExploreView: View {
                                 article: article,
                                 fallbackColor: catColor,
                                 cardWidth: cardWidth,
-                                cardHeight: cardHeight
+                                cardHeight: cardHeight,
+                                relatedEntities: relatedEntityNames(for: article, excluding: topic)
                             )
                         }
                         .buttonStyle(.plain)
@@ -204,26 +256,22 @@ struct ExploreView: View {
                 .padding(.horizontal, 20)
             }
             .scrollTargetBehavior(.viewAligned)
-
-            // "See all" action button
-            Button {
-                openTopic(topic)
-            } label: {
-                HStack(spacing: 6) {
-                    Text("See all \(topic.articles.count) articles")
-                        .font(.system(size: 14, weight: .semibold))
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 12, weight: .semibold))
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, newOffset in
+                let page = Int(round(newOffset / (cardWidth + 12)))
+                let clamped = max(0, min(page, topic.articles.count - 1))
+                if scrolledIndices[topic.entityName] != clamped {
+                    scrolledIndices[topic.entityName] = clamped
                 }
-                .foregroundStyle(catColor)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(catColor.opacity(0.1))
-                .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 20)
+
+            // Page indicator dots (max 7 visible, iOS-style scaling)
+            if topic.articles.count > 1 {
+                PageDots(count: topic.articles.count, current: currentIndex)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
+            }
         }
     }
 
@@ -295,10 +343,23 @@ struct ExploreView: View {
 
     private func loadTopics() async {
         isLoading = true
-        var endpoint = "/api/explore/topics"
+        // Clean up tracking state on refresh to prevent unbounded growth
+        dwellTimers.removeAll()
+        dwellTracked.removeAll()
+        scrollTracked.removeAll()
+        scrolledIndices.removeAll()
+        var params: [String] = []
         if let uid = userId {
-            endpoint += "?user_id=\(uid)"
+            params.append("user_id=\(uid)")
         }
+        let prefs = appViewModel.preferences
+        if let home = prefs.homeCountry {
+            params.append("home_country=\(home)")
+        }
+        if !prefs.followedTopics.isEmpty {
+            params.append("followed_topics=\(prefs.followedTopics.joined(separator: ","))")
+        }
+        let endpoint = "/api/explore/topics" + (params.isEmpty ? "" : "?\(params.joined(separator: "&"))")
         do {
             let response: ExploreTopicsResponse = try await APIClient.shared.get(endpoint)
             topics = response.topics
@@ -307,6 +368,17 @@ struct ExploreView: View {
         }
         isLoading = false
         withAnimation(.easeOut(duration: 0.4)) { appeared = true }
+    }
+
+    // MARK: - Related Entities
+
+    /// Find other topic names that also contain this article (excluding the current topic)
+    private func relatedEntityNames(for article: ExploreTopicArticle, excluding currentTopic: ExploreTopic) -> [String] {
+        topics.compactMap { topic in
+            guard topic.entityName != currentTopic.entityName else { return nil }
+            guard topic.articles.contains(where: { $0.id.stringValue == article.id.stringValue }) else { return nil }
+            return topic.displayTitle
+        }
     }
 
     // MARK: - Open Article
@@ -450,25 +522,35 @@ struct ExploreArticleCard: View {
     let fallbackColor: Color
     let cardWidth: CGFloat
     let cardHeight: CGFloat
+    var relatedEntities: [String] = []
 
     @State private var dominantColor: Color?
 
     private var highlightColor: Color {
-        (dominantColor ?? fallbackColor).vivid()
+        (dominantColor ?? Color(white: 0.7)).vivid()
     }
 
     private var glassColor: Color {
-        dominantColor ?? fallbackColor
+        dominantColor ?? Color(white: 0.15)
     }
 
-    /// Darkened version of the dominant color for the glass tint
-    private var darkGlassColor: Color {
-        let base = dominantColor ?? fallbackColor
-        return base.opacity(1.0)
+    /// Tags to show: related entities first, then bold keywords from title
+    private var displayTags: [String] {
+        if !relatedEntities.isEmpty { return relatedEntities }
+        // Extract bold **keywords** from title
+        let pattern = /\*\*(.+?)\*\*/
+        var keywords: [String] = []
+        for match in article.title.matches(of: pattern) {
+            let word = String(match.1).trimmingCharacters(in: .whitespaces)
+            if word.count >= 2 && word.count <= 18 {
+                keywords.append(word)
+            }
+        }
+        return keywords
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             // Full-bleed image
             if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
                 AsyncCachedImage(url: url, contentMode: .fill)
@@ -507,18 +589,19 @@ struct ExploreArticleCard: View {
             Color.clear
                 .frame(width: cardWidth, height: cardHeight)
                 .glassEffect(
-                    .regular.tint(darkGlassColor),
+                    .regular.tint(glassColor.opacity(0.45)),
                     in: RoundedRectangle(cornerRadius: 18, style: .continuous)
                 )
                 .mask(
                     LinearGradient(
                         stops: [
                             .init(color: .clear, location: 0.0),
-                            .init(color: .clear, location: 0.4),
-                            .init(color: .white.opacity(0.2), location: 0.55),
-                            .init(color: .white.opacity(0.4), location: 0.7),
-                            .init(color: .white.opacity(0.6), location: 0.85),
-                            .init(color: .white.opacity(0.7), location: 1.0),
+                            .init(color: .clear, location: 0.3),
+                            .init(color: .white.opacity(0.15), location: 0.42),
+                            .init(color: .white.opacity(0.35), location: 0.54),
+                            .init(color: .white.opacity(0.55), location: 0.66),
+                            .init(color: .white.opacity(0.70), location: 0.78),
+                            .init(color: .white.opacity(0.70), location: 1.0),
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -526,35 +609,49 @@ struct ExploreArticleCard: View {
                 )
                 .allowsHitTesting(false)
 
-            // Text content at the bottom
+            // Bottom: time + keywords row, then title
             VStack(alignment: .leading, spacing: 6) {
+                Spacer()
+
+                // Time (left) + keyword tags (right) — same horizontal line
+                HStack {
+                    if !article.relativeTime.isEmpty {
+                        Text(article.relativeTime)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .tracking(0.3)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 5) {
+                        ForEach(displayTags.prefix(2), id: \.self) { tag in
+                            GlassEffectContainer {
+                                Text(tag)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.85))
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .glassEffect(.regular.tint(Color.black.opacity(0.25)), in: Capsule())
+                            }
+                        }
+                    }
+                }
+
+                // Title — no line limit, show full text
                 article.title.coloredTitle(
                     size: 26,
                     weight: .bold,
                     baseColor: .white,
                     highlightColor: highlightColor
                 )
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.leading)
-
-                HStack(spacing: 6) {
-                    if let category = article.category {
-                        Text(category)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.85))
-                    }
-                    if !article.relativeTime.isEmpty {
-                        Text("·")
-                            .foregroundStyle(.white.opacity(0.5))
-                        Text(article.relativeTime)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.65))
-                    }
-                }
             }
+            .frame(width: cardWidth - 32, alignment: .bottomLeading)
             .padding(.horizontal, 16)
             .padding(.bottom, 14)
-            .frame(width: cardWidth, alignment: .bottomLeading)
         }
         .frame(width: cardWidth, height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -777,7 +874,7 @@ struct EntityArticlesSheet: View {
             } else {
                 // Vertical scroll of article cards with title inside
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
                         // Title scrolls with content
                         HStack {
                             Text(topic.displayTitle)
@@ -860,5 +957,41 @@ struct EntityArticlesSheet: View {
             category: article.category,
             publishedAt: article.publishedAt
         )
+    }
+}
+
+// MARK: - Page Indicator Dots (iOS-style, max 7 visible with scaling)
+
+private struct PageDots: View {
+    let count: Int
+    let current: Int
+
+    // Show at most 7 dots; a sliding window follows the active index
+    private let maxVisible = 7
+
+    private var windowRange: ClosedRange<Int> {
+        if count <= maxVisible { return 0...(count - 1) }
+        let half = maxVisible / 2
+        let lo = min(max(current - half, 0), count - maxVisible)
+        let hi = lo + maxVisible - 1
+        return lo...hi
+    }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(Array(windowRange), id: \.self) { i in
+                let distance = abs(i - current)
+                let isEdge = (i == windowRange.lowerBound && i != 0) ||
+                             (i == windowRange.upperBound && i != count - 1)
+
+                Circle()
+                    .fill(Color.primary.opacity(i == current ? 1.0 : max(0.15, 0.4 - Double(distance) * 0.08)))
+                    .frame(
+                        width: i == current ? 7 : (isEdge ? 4 : 5.5),
+                        height: i == current ? 7 : (isEdge ? 4 : 5.5)
+                    )
+            }
+        }
+        .animation(.snappy(duration: 0.25), value: current)
     }
 }

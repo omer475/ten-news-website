@@ -18,10 +18,10 @@ actor APIClient {
 
     private init() {
         let config = URLSessionConfiguration.default
-        config.urlCache = URLCache(
-            memoryCapacity: 10_000_000,
-            diskCapacity: 50_000_000
-        )
+        // Disable URL caching — news feed APIs must always return fresh data.
+        // Cached responses caused "pages don't refresh" and stale feed content.
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
         config.timeoutIntervalForRequest = 30
         config.httpAdditionalHeaders = ["Content-Type": "application/json"]
         session = URLSession(configuration: config)

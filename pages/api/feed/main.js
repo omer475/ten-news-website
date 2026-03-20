@@ -208,12 +208,13 @@ function getRecencyDecay(createdAt, category, shelfLifeDays) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
   const shelfLifeHours = (shelfLifeDays || 7) * 24;
   const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
-  // Blend: 70% freshness decay, 30% baseline.
+  // Blend: 90% freshness decay, 10% baseline.
+  // Aggressive decay ensures stale articles don't dominate the feed.
   // shelf_life_days handles per-vertical tuning:
-  //   Breaking news (1-2d): dies fast after ~24h
+  //   Breaking news (1-2d): dies fast after ~12h
   //   Explainers (14-30d): gradual decline over weeks
-  //   Evergreen (60d+): stays discoverable for months
-  return freshnessMultiplier * 0.7 + 0.3;
+  //   Evergreen (60d+): stays discoverable but heavily penalized after shelf life
+  return freshnessMultiplier * 0.9 + 0.1;
 }
 
 // ==========================================
@@ -229,24 +230,42 @@ async function buildUserInterestProfile(supabase, userId) {
     .select('article_id, event_type, metadata')
     .eq('user_id', userId)
     .gte('created_at', twoWeeksAgo)
-    .in('event_type', ['article_saved', 'article_engaged', 'article_detail_view'])
+    .in('event_type', ['article_liked', 'article_shared', 'article_saved', 'article_engaged', 'article_detail_view'])
     .order('created_at', { ascending: false })
     .limit(500);
 
   if (!events || events.length === 0) return null;
 
-  // Weight by engagement type: saved > engaged > viewed
-  // IMPROVEMENT 2: Dwell time amplifies weight (log-scaled)
-  const eventWeights = { article_saved: 3, article_engaged: 2, article_detail_view: 1 };
+  // Weight by engagement type: liked > shared > saved > engaged > viewed
+  // article_liked is the strongest signal — explicit "I want more of this"
+  // article_shared is second — user vouches for this content to others
+  const eventWeights = { article_liked: 4, article_shared: 3.5, article_saved: 3, article_engaged: 2, article_detail_view: 1 };
   const articleWeights = {};
   for (const e of events) {
     let w = eventWeights[e.event_type] || 1;
-    // Extract dwell time from metadata
+    // Professional tiered dwell weighting (TikTok/Pinterest style)
+    // Uses continuous multiplier with tier-based floors for precision
     const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
                          e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
-    if (dwellSeconds > 5) {
-      // 10s → 1.0x bonus, 20s → 2.0x, 60s → 3.58x
-      w *= (1 + Math.log2(dwellSeconds / 5));
+    const dwellTier = e.metadata?.dwell_tier || '';
+    if (dwellSeconds > 0) {
+      // Tiered multipliers: the longer someone reads, the stronger the signal
+      //   0-1s   instant_skip → 0.3x (strong negative handled by skip_profile)
+      //   1-3s   quick_skip   → 0.5x
+      //   3-6s   glance       → 0.8x (neutral, slight interest)
+      //   6-12s  light_read   → 1.2x (mild interest)
+      //   12-25s engaged_read → 2.0x (strong interest)
+      //   25-45s deep_read    → 3.0x (very strong interest)
+      //   45s+   absorbed     → 4.0x (maximum signal)
+      let dwellMultiplier;
+      if (dwellTier === 'absorbed' || dwellSeconds >= 45) dwellMultiplier = 4.0;
+      else if (dwellTier === 'deep_read' || dwellSeconds >= 25) dwellMultiplier = 3.0;
+      else if (dwellTier === 'engaged_read' || dwellSeconds >= 12) dwellMultiplier = 2.0;
+      else if (dwellTier === 'light_read' || dwellSeconds >= 6) dwellMultiplier = 1.2;
+      else if (dwellTier === 'glance' || dwellSeconds >= 3) dwellMultiplier = 0.8;
+      else if (dwellSeconds >= 1) dwellMultiplier = 0.5;
+      else dwellMultiplier = 0.3;
+      w *= dwellMultiplier;
     }
     articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
   }
@@ -712,13 +731,13 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
-  const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
   const fortyEightHoursAgo = new Date(now - 48 * 3600000).toISOString();
 
-  // Personalized feed — private cache, shorter TTL
-  res.setHeader('Cache-Control', 'private, s-maxage=60, stale-while-revalidate=120');
+  // Personalized feed — no shared/CDN caching, each user gets unique results
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
 
   // ==========================================
   // PHASE 1: PARALLEL DATA LOADING
@@ -739,22 +758,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 720,
+      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 720,
+      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 720,
+      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -773,12 +792,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 50 : 300),
 
-    // 3. DISCOVERY: diverse quality content, wider pool
-    // Cold-start: fetch much larger pool to compensate for empty personal
+    // 3. DISCOVERY: diverse quality content, 7-day pool
+    // Tightened from 30 days to 7 days to prevent stale articles in feed.
+    // Cold-start: fetch larger pool to compensate for empty personal
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', thirtyDaysAgo)
+      .gte('created_at', sevenDaysAgo)
       .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
       .order('ai_final_score', { ascending: false })
       .limit(hasAnyPersonalization ? 200 : 500),
@@ -822,8 +842,8 @@ async function handleV2Feed(req, res, supabase, opts) {
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', thirtyDaysAgo)
-        .gte('ai_final_score', 150)
+        .gte('created_at', sevenDaysAgo)
+        .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false })
         .limit(100)
     );
@@ -1405,16 +1425,16 @@ async function handleV2Feed(req, res, supabase, opts) {
 async function handleFallbackFeed(req, res, supabase, opts) {
   const { userPrefs, seenArticleIds, limit, offset } = opts;
 
-  // Short cache — new users' feeds should adapt fast
-  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+  // Private cache — new users' feeds should adapt fast, no CDN sharing
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
 
-  const thirtyDaysAgoCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgoCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  // Fetch a large pool of articles within max shelf life window
+  // Fetch a large pool of articles within 7-day window (tightened from 30 days)
   const { data: articles, error } = await supabase
     .from('published_articles')
     .select(ARTICLE_COLUMNS)
-    .gte('created_at', thirtyDaysAgoCutoff)
+    .gte('created_at', sevenDaysAgoCutoff)
     .gte('ai_final_score', 400)
     .order('ai_final_score', { ascending: false, nullsFirst: false })
     .limit(300);

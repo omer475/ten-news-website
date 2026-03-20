@@ -132,6 +132,39 @@ extension Color {
                      saturation: Double(max(s, 0.6)),
                      brightness: Double(max(b, 0.85)))
     }
+
+    /// Returns a deeper, darker version of this color — for use on light backgrounds
+    func darkened() -> Color {
+        let uiColor = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(hue: Double(h),
+                     saturation: Double(min(s * 1.2, 1.0)),
+                     brightness: Double(min(b * 0.45, 0.5)))
+    }
+}
+
+// MARK: - Category Colors (shared across all views)
+
+enum CategoryColors {
+    static func color(for category: String) -> Color {
+        let colors: [String: String] = [
+            "World": "#3366CC", "Politics": "#CC3344", "Business": "#22AA66",
+            "Tech": "#7744BB", "Science": "#009999", "Health": "#CC6699",
+            "Sports": "#DD6622", "Soccer": "#DD6622", "Entertainment": "#CC9922",
+            "Finance": "#228866", "Climate": "#339966", "Economy": "#228866",
+            "Crypto": "#F7931A", "AI": "#7744BB", "NFL": "#013369",
+            "NBA": "#C9082A", "Baseball": "#002D72", "F1": "#E10600",
+            "US Politics": "#CC3344", "World Politics": "#3366CC",
+            "AI & Tech": "#7744BB", "K-Pop & Music": "#CC9922",
+            "Motorsport": "#E10600", "Combat Sports": "#DD6622",
+            "Sports Events": "#DD6622", "Automotive": "#336699",
+            "Gaming": "#7744BB", "Fashion": "#CC6699", "Skincare": "#CC6699",
+            "Beauty": "#CC6699", "Lifestyle": "#CC9922", "Food": "#22AA66",
+            "Music": "#CC9922",
+        ]
+        return Color(hex: colors[category] ?? "#3366CC")
+    }
 }
 
 // MARK: - View Conditional Modifier

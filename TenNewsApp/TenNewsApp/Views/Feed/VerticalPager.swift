@@ -10,6 +10,7 @@ struct VerticalPager<Item: Identifiable, Content: View>: View {
 
     @State private var dragOffset: CGFloat = 0
     @State private var isRefreshing = false
+    @State private var didCrossRefreshThreshold = false
 
     var body: some View {
         GeometryReader { geo in
@@ -50,6 +51,13 @@ struct VerticalPager<Item: Identifiable, Content: View>: View {
                            (currentIndex == pages.count - 1 && translation < 0) {
                             // Rubber-band at boundaries (allows pull-to-refresh feel)
                             dragOffset = translation * 0.3
+                            // Haptic when crossing pull-to-refresh threshold
+                            if currentIndex == 0 && translation > 80 && !didCrossRefreshThreshold && onRefresh != nil {
+                                didCrossRefreshThreshold = true
+                                HapticManager.light()
+                            } else if currentIndex == 0 && translation <= 80 {
+                                didCrossRefreshThreshold = false
+                            }
                         } else {
                             dragOffset = translation
                         }
@@ -63,6 +71,7 @@ struct VerticalPager<Item: Identifiable, Content: View>: View {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                                 dragOffset = 0
                             }
+                            didCrossRefreshThreshold = false
                             isRefreshing = true
                             Task {
                                 await onRefresh?()

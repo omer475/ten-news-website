@@ -23,7 +23,6 @@ struct SettingsView: View {
                     contentPreferencesSection
                     notificationsSection
                     displaySection
-                    dataStorageSection
                     supportSection
                     aboutSection
                     accountSection

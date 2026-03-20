@@ -4,9 +4,10 @@ import Foundation
 
 /// FlexibleID handles both Int and String from API
 /// Article IDs come as integers (e.g., 19647), WorldEvent IDs as UUID strings
-struct FlexibleID: Codable, Hashable, CustomStringConvertible {
+struct FlexibleID: Codable, Hashable, Identifiable, CustomStringConvertible {
     let stringValue: String
 
+    var id: String { stringValue }
     var description: String { stringValue }
 
     init(_ string: String) {
@@ -105,6 +106,8 @@ struct Article: Codable, Identifiable, Hashable {
     let countryRelevance: [String: Int]?
     let topicRelevance: [String: Int]?
     let matchReasons: [String]?
+    let scorecard: Scorecard?
+    let articleType: String?
 
     enum CodingKeys: String, CodingKey {
         case id, title, summary, url, source, category, emoji, timeline, graph, map
@@ -126,7 +129,7 @@ struct Article: Codable, Identifiable, Hashable {
         case graphData = "graph_data"
         case mapData = "map_data"
         case fiveWs = "five_ws"
-        case publishedAt
+        case publishedAt = "published_at"
         case createdAt = "created_at"
         case aiFinalScore = "ai_final_score"
         case finalScore = "final_score"
@@ -137,6 +140,8 @@ struct Article: Codable, Identifiable, Hashable {
         case countryRelevance = "country_relevance"
         case topicRelevance = "topic_relevance"
         case matchReasons = "match_reasons"
+        case scorecard
+        case articleType = "article_type"
     }
 
     // MARK: - Computed Display Properties
@@ -169,6 +174,40 @@ struct Article: Codable, Identifiable, Hashable {
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: Article, rhs: Article) -> Bool { lhs.id == rhs.id }
+}
+
+// MARK: - Scorecard
+
+struct Scorecard: Codable, Hashable {
+    let homeTeam: String?
+    let awayTeam: String?
+    let homeScore: Int?
+    let awayScore: Int?
+    let competition: String?
+    let standingImpact: String?
+    let scorers: [ScorecardScorer]?
+    let stats: ScorecardStats?
+
+    enum CodingKeys: String, CodingKey {
+        case homeTeam = "home_team"
+        case awayTeam = "away_team"
+        case homeScore = "home_score"
+        case awayScore = "away_score"
+        case competition
+        case standingImpact = "standing_impact"
+        case scorers, stats
+    }
+}
+
+struct ScorecardScorer: Codable, Hashable {
+    let team: String?
+    let minute: String?
+    let player: String?
+}
+
+struct ScorecardStats: Codable, Hashable {
+    let shots: [String]?
+    let possession: [String]?
 }
 
 // MARK: - Article Sub-Models
@@ -389,6 +428,22 @@ struct AnyCodable: Codable, Hashable {
 
 // MARK: - Date Formatter Extension
 
+/// Thread-safe date parsing using Sendable-safe formatters.
+/// ISO8601DateFormatter is not thread-safe, so we create per-call instances
+/// but cache the parsing via a static actor.
+enum ISO8601DateParsing: Sendable {
+    /// Parse a date string, trying fractional seconds first, then plain.
+    static func parse(_ string: String) -> Date? {
+        let withFraction = ISO8601DateFormatter()
+        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = withFraction.date(from: string) { return date }
+
+        let noFraction = ISO8601DateFormatter()
+        noFraction.formatOptions = [.withInternetDateTime]
+        return noFraction.date(from: string)
+    }
+}
+
 extension ISO8601DateFormatter {
     /// Handles dates with fractional seconds (e.g. 2026-03-08T19:00:00.000Z)
     nonisolated(unsafe) static let flexible: ISO8601DateFormatter = {
@@ -403,4 +458,21 @@ extension ISO8601DateFormatter {
         f.formatOptions = [.withInternetDateTime]
         return f
     }()
+}
+
+// MARK: - Article → SearchArticle Conversion
+
+extension Article {
+    func toSearchArticle() -> SearchArticle {
+        SearchArticle(
+            id: id,
+            title: displayTitle,
+            imageUrl: imageUrl,
+            category: category,
+            likeCount: nil,
+            engagementCount: nil,
+            aiScore: nil,
+            publishedAt: publishedAt ?? createdAt
+        )
+    }
 }

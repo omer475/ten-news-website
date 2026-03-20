@@ -23,6 +23,12 @@ enum APIEndpoints {
     static let userProfile = "/api/user/profile"
     static let userPreferences = "/api/user/preferences"
 
+    // MARK: - Search
+    static func search(query: String, page: Int = 0, limit: Int = 40) -> String {
+        "/api/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)&page=\(page)&limit=\(limit)"
+    }
+    static let searchTrending = "/api/search/trending"
+
     // MARK: - Analytics
     static let analyticsTrack = "/api/analytics/track"
 }

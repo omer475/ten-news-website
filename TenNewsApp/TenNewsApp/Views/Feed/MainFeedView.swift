@@ -5,7 +5,7 @@ struct MainFeedView: View {
     @Binding var currentPageIndex: Int
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var viewModel
-    @State private var pagerIndex: Int = 0
+    @Environment(TabBarState.self) private var tabBarState
     @State private var showFlashBrief = false
 
     /// Articles in server-provided order (embedding-personalized).
@@ -39,7 +39,7 @@ struct MainFeedView: View {
                     showFlashBrief = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            pagerIndex = index
+                            viewModel.currentIndex = index
                         }
                     }
                 }
@@ -57,17 +57,28 @@ struct MainFeedView: View {
                 viewModel.recordViewStart(at: 0)
             }
         }
+        .onChange(of: tabBarState.feedRefreshRequested) { _, requested in
+            if requested {
+                tabBarState.feedRefreshRequested = false
+                Task {
+                    await viewModel.refresh()
+                    viewModel.currentIndex = 0
+                    viewModel.recordViewStart(at: 0)
+                }
+            }
+        }
     }
 
     // MARK: - Feed Content
 
     private var feedContent: some View {
-        VerticalPager(
-            currentIndex: $pagerIndex,
+        @Bindable var vm = viewModel
+        return VerticalPager(
+            currentIndex: $vm.currentIndex,
             pages: sortedArticles,
             onRefresh: {
                 await viewModel.refresh()
-                pagerIndex = 0
+                viewModel.currentIndex = 0
                 viewModel.recordViewStart(at: 0)
             }
         ) { article in
@@ -77,7 +88,7 @@ struct MainFeedView: View {
             )
         }
         .ignoresSafeArea()
-        .onChange(of: pagerIndex) { oldIndex, newIndex in
+        .onChange(of: viewModel.currentIndex) { oldIndex, newIndex in
             // Record signal for the card we just left — this measures dwell time
             // and sends the appropriate event (article_skipped / article_view / article_engaged)
             if oldIndex != newIndex, oldIndex < sortedArticles.count {
@@ -85,7 +96,6 @@ struct MainFeedView: View {
             }
 
             currentPageIndex = newIndex
-            viewModel.currentIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)  // reading history only, no analytics event
             if newIndex >= sortedArticles.count - 5 {
@@ -99,7 +109,7 @@ struct MainFeedView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if pagerIndex >= sortedArticles.count - 1 && !viewModel.hasMore {
+            if viewModel.currentIndex >= sortedArticles.count - 1 && !viewModel.hasMore {
                 CompactCaughtUpBanner()
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 90)

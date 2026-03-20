@@ -121,7 +121,7 @@ export default async function handler(req, res) {
     // NOTE: article_view is NOT included — passive views pollute the taste vector
     // toward dominant content. Only real engagement signals update the vector.
     // article_skipped pushes the vector AWAY from skipped content and builds skip_profile.
-    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped']
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_liked', 'article_shared']
     if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
       // user.id IS the profiles.id (auth UUID) — update directly
       admin.rpc('update_taste_vector_ema_profiles', {
@@ -140,10 +140,22 @@ export default async function handler(req, res) {
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
     // Only first 6 tags (primary topics) with position-based weighting:
     //   Tag 1 gets full weight, Tag 6 gets ~28%. Tail tags are noise.
-    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view']
-    const TAG_PROFILE_WEIGHTS = { article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
+    const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
-      const baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
+      let baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
+
+      // Tiered dwell amplifier for engaged events — longer reads = stronger learning
+      const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
+                           metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
+      if (event_type === 'article_engaged' && dwellSeconds > 0) {
+        // Tiers: 6-12s → 1.0x, 12-25s → 1.5x, 25-45s → 2.0x, 45s+ → 2.5x
+        if (dwellSeconds >= 45) baseWeight *= 2.5
+        else if (dwellSeconds >= 25) baseWeight *= 2.0
+        else if (dwellSeconds >= 12) baseWeight *= 1.5
+        // 6-12s = default 1.0x (no change)
+      }
+
       admin
         .from('published_articles')
         .select('interest_tags')
@@ -291,6 +303,41 @@ export default async function handler(req, res) {
                 .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
                 .catch(() => {})
             }
+          })
+          .catch(() => {})
+      }
+    }
+
+    // ============================================================
+    // SEARCH QUERY SIGNALS → tag_profile updates
+    // When a user searches, their query terms reveal strong interest.
+    // Boost matching tags in tag_profile.
+    // ============================================================
+    if (event_type === 'search_query' && metadata?.query) {
+      const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
+      if (queryTerms.length > 0) {
+        admin
+          .from('profiles')
+          .select('tag_profile')
+          .eq('id', user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            const tagProfile = profileData?.tag_profile || {}
+            for (const term of queryTerms) {
+              // Search terms get moderate boost — explicit intent signal
+              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.08, 1.0)
+            }
+            // Also boost the full query as a phrase if multi-word
+            if (queryTerms.length >= 2) {
+              const phrase = queryTerms.join(' ')
+              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.12, 1.0)
+            }
+            admin
+              .from('profiles')
+              .update({ tag_profile: tagProfile })
+              .eq('id', user.id)
+              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query))
+              .catch(() => {})
           })
           .catch(() => {})
       }

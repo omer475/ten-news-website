@@ -38,6 +38,17 @@ struct ArticleDetailView: View {
                         ShareLink(item: url) {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            if let numericId = Int(article.id.stringValue) {
+                                Task {
+                                    try? await AnalyticsService().track(
+                                        event: "article_shared",
+                                        articleId: numericId,
+                                        category: article.category
+                                    )
+                                }
+                            }
+                        })
                     }
                 }
             }

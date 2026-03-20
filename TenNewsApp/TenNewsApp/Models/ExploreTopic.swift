@@ -62,9 +62,10 @@ struct ExploreTopicArticle: Identifiable, Decodable {
     }
 
     var relativeTime: String {
-        guard let publishedAt, let date = ISO8601DateFormatter().date(from: publishedAt) else {
-            return ""
-        }
+        guard let publishedAt else { return "" }
+        let date: Date? = ISO8601DateFormatter.flexible.date(from: publishedAt)
+            ?? ISO8601DateFormatter.flexibleNoFraction.date(from: publishedAt)
+        guard let date else { return "" }
         let interval = Date().timeIntervalSince(date)
         if interval < 3600 { return "\(max(1, Int(interval / 60)))m ago" }
         if interval < 86400 { return "\(Int(interval / 3600))h ago" }

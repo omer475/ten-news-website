@@ -5,6 +5,7 @@ struct AsyncCachedImage: View {
     let url: URL?
     var aspectRatio: CGFloat?
     var contentMode: ContentMode = .fill
+    var onLoaded: ((UIImage) -> Void)?
 
     @State private var image: UIImage?
     @State private var isLoading = true
@@ -83,6 +84,7 @@ struct AsyncCachedImage: View {
         if let cached = Self.cache.object(forKey: url as NSURL) {
             image = cached
             isLoading = false
+            onLoaded?(cached)
             return
         }
 
@@ -94,6 +96,7 @@ struct AsyncCachedImage: View {
                 let cost = data.count
                 Self.cache.setObject(uiImage, forKey: url as NSURL, cost: cost)
                 image = uiImage
+                onLoaded?(uiImage)
             }
         } catch {
             // Silently fail - show placeholder

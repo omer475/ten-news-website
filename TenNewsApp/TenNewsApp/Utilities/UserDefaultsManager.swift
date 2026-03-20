@@ -98,7 +98,7 @@ final class UserDefaultsManager: @unchecked Sendable {
             homeCountry: prefs.homeCountry,
             followedCountries: prefs.followedCountries,
             followedTopics: prefs.followedTopics,
-            notificationsEnabled: false
+            notificationsEnabled: defaults.bool(forKey: Keys.notificationsEnabled)
         )
         hasCompletedOnboarding = prefs.onboardingCompleted
     }

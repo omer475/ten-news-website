@@ -9,10 +9,13 @@ final class TabBarState {
     var lastRevealedAt: Date = .distantPast
     var searchText = ""
     var hideBottomBar = false
+    var feedRefreshRequested = false
+    var exploreRefreshRequested = false
 }
 
 struct ContentView: View {
     @Environment(AppViewModel.self) private var appViewModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab = 0
     @State private var currentPageIndex: Int = 0
     @State private var tabBarState = TabBarState()
@@ -51,7 +54,7 @@ struct ContentView: View {
                 case 1:
                     ExploreView()
                 case 2:
-                    SavedArticlesView()
+                    ChatListView()
                 case 3:
                     AccountTabView()
                 case 99:
@@ -86,7 +89,7 @@ struct ContentView: View {
                 tabBarState.collapseRequested = false
             }
         }
-        .onChange(of: selectedTab) { _, newTab in
+        .onChange(of: selectedTab) { oldTab, newTab in
             tabBarState.searchText = ""
             // Always show expanded bar on main tabs
             if newTab != 99 && !tabBarExpanded {
@@ -94,6 +97,26 @@ struct ContentView: View {
                     tabBarExpanded = true
                     tabBarState.isVisible = true
                     tabBarState.lastRevealedAt = Date()
+                }
+            }
+            // Auto-refresh feed when switching back to Feed tab (if stale)
+            if newTab == 0 && oldTab != 0 {
+                Task {
+                    await feedViewModel.refreshIfStale(
+                        preferences: appViewModel.preferences,
+                        userId: appViewModel.currentUser?.id
+                    )
+                }
+            }
+        }
+        // Auto-refresh when app returns to foreground after being backgrounded
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active && selectedTab == 0 {
+                Task {
+                    await feedViewModel.refreshIfStale(
+                        preferences: appViewModel.preferences,
+                        userId: appViewModel.currentUser?.id
+                    )
                 }
             }
         }
@@ -122,6 +145,12 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
                         Button {
+                            if selectedTab == index && index == 0 {
+                                tabBarState.feedRefreshRequested = true
+                            }
+                            if selectedTab == index && index == 1 {
+                                tabBarState.exploreRefreshRequested = true
+                            }
                             withAnimation(.bouncy) {
                                 selectedTab = index
                             }
@@ -250,7 +279,7 @@ struct ContentView: View {
     private let tabs: [(icon: String, selectedIcon: String, label: String)] = [
         ("newspaper", "newspaper.fill", "Feed"),
         ("safari", "safari.fill", "Explore"),
-        ("bookmark", "bookmark.fill", "Saved"),
+        ("text.bubble", "text.bubble.fill", "Chat"),
         ("person.crop.circle", "person.crop.circle.fill", "Profile"),
     ]
 }

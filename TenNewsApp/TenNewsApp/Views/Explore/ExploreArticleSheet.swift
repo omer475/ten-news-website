@@ -13,39 +13,37 @@ struct ExploreArticleSheet: View {
     @State private var articlePages: [Article] = []
 
     var body: some View {
-        Group {
-            if !articlePages.isEmpty {
-                VerticalPager(
-                    currentIndex: $pagerIndex,
-                    pages: articlePages
-                ) { article in
-                    // Wrap each card with the back button INSIDE the scroll content.
-                    // Buttons inside ScrollView content receive touches correctly
-                    // (same reason share/bookmark buttons in ArticleCardView work).
-                    ZStack(alignment: .topLeading) {
+        ZStack(alignment: .topLeading) {
+            Group {
+                if !articlePages.isEmpty {
+                    VerticalPager(
+                        currentIndex: $pagerIndex,
+                        pages: articlePages
+                    ) { article in
                         ArticleCardView(
                             article: article,
                             accentColor: Self.accentColor(for: article)
                         )
-
-                        // Back button — Liquid Glass, same height as share/bookmark
-                        Button {
-                            onDismiss()
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 38, height: 38)
-                                .glassEffect(.regular, in: Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.top, 56)
-                        .padding(.leading, 20)
                     }
+                } else {
+                    Color.black
                 }
-            } else {
-                Color.black
             }
+
+            // Back button — floating, fades in separately so it doesn't slide up
+            Button {
+                onDismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .glassEffect(.regular, in: Circle())
+            }
+            .padding(.top, 56)
+            .padding(.leading, 20)
+            .zIndex(10)
+            .transition(.opacity)
         }
         .ignoresSafeArea()
         .background(Color.black)

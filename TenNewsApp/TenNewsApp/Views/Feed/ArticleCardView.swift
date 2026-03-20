@@ -19,6 +19,9 @@ struct ArticleCardView: View {
     @State private var imageIsLight = false
     @State private var showSafari = false
 
+    // Double-tap like animation
+    @State private var showHeartAnimation = false
+
     // Engagement tracking (exit event only — engagement signals sent by FeedViewModel)
     @State private var viewStartTime: Date?
     private let analytics = AnalyticsService()
@@ -26,6 +29,8 @@ struct ArticleCardView: View {
     private var effectiveColor: Color { dominantColor ?? accentColor }
     private var overlayIconColor: Color { imageIsLight ? Color(white: 0.15) : .white }
     private var effectiveBlurColor: Color { dominantBlurColor ?? accentColor.opacity(0.9) }
+
+    private var glassTint: Color { .black.opacity(0.15) }
 
     private let padding: CGFloat = 20
     private let imageRatio: CGFloat = 0.42
@@ -37,13 +42,14 @@ struct ArticleCardView: View {
 
     enum ContentMode: String, CaseIterable { case bullets, fiveW }
     enum InfoMode: String, CaseIterable, Hashable {
-        case details, graph, map, timeline
+        case details, graph, map, timeline, scorecard
         var label: String {
             switch self {
             case .details: "Detail"
             case .graph: "Stats"
             case .map: "Map"
             case .timeline: "Time"
+            case .scorecard: "Score"
             }
         }
         var icon: String {
@@ -52,6 +58,7 @@ struct ArticleCardView: View {
             case .graph: "chart.bar.fill"
             case .map: "map.fill"
             case .timeline: "clock.fill"
+            case .scorecard: "sportscourt.fill"
             }
         }
     }
@@ -59,44 +66,152 @@ struct ArticleCardView: View {
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
-            let h = geo.size.height
-            let imgH = h * imageRatio
 
-            ZStack(alignment: .top) {
-                // Background — tinted with dominant color from image
+            ZStack {
+                // Background
                 effectiveBlurColor.ignoresSafeArea()
 
-                // 1) Hero image — fixed at top
-                heroImage(width: w, height: imgH)
+                // Main flow layout
+                VStack(alignment: .leading, spacing: 0) {
+                    // IMAGE — flexible height, shrinks when content is long
+                    GeometryReader { imgGeo in
+                        if let imageUrl = article.displayImage {
+                            AsyncCachedImage(url: imageUrl, contentMode: .fill, onLoaded: { img in
+                                extractDominantColor(from: imageUrl, loadedImage: img)
+                            })
+                                .frame(width: imgGeo.size.width, height: imgGeo.size.height)
+                                .clipped()
+                        } else {
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            accentColor.opacity(0.4),
+                                            accentColor.opacity(0.15),
+                                            Color(white: 0.08)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .overlay(alignment: .topLeading) {
+                                    Text((article.category ?? "News").uppercased())
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(.white.opacity(0.25))
+                                        .tracking(3)
+                                        .padding(.top, imgGeo.size.height * 0.45)
+                                        .padding(.leading, 20)
+                                }
+                                .onAppear {
+                                    dominantColor = accentColor
+                                    dominantBlurColor = Color(white: 0.08)
+                                    imageIsLight = false
+                                }
+                        }
+                    }
+                    .overlay(alignment: .bottom) {
+                        // Blur gradient at bottom of image — overlay so it doesn't inflate layout
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: effectiveBlurColor.opacity(0.0), location: 0.0),
+                                        .init(color: effectiveBlurColor.opacity(0.15), location: 0.10),
+                                        .init(color: effectiveBlurColor.opacity(0.40), location: 0.25),
+                                        .init(color: effectiveBlurColor.opacity(0.65), location: 0.40),
+                                        .init(color: effectiveBlurColor.opacity(0.85), location: 0.55),
+                                        .init(color: effectiveBlurColor.opacity(0.95), location: 0.70),
+                                        .init(color: effectiveBlurColor, location: 0.85),
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(height: 200)
+                            .allowsHitTesting(false)
+                    }
+                    .frame(minHeight: geo.size.height * 0.08)
 
-                // 2) Dominant-color blur bridge between image and content
-                blurBridge(width: w, imageHeight: imgH)
+                    // TITLE — flows naturally, overlaps into blur gradient
+                    VStack(alignment: .leading, spacing: 4) {
+                        TimeAgoText(article.publishedAt ?? article.createdAt, color: .white.opacity(0.5))
+                        highlightedTitle(article.displayTitle)
+                            .padding(.trailing, 36)
+                    }
+                    .padding(.horizontal, padding)
+                    .padding(.top, -80)
 
-                // 3) Title overlaid on image bottom
-                titleOverlay(width: w, imageHeight: imgH)
+                    // FIXED GAP title → bullets (always constant)
+                    Spacer().frame(height: 22)
 
-                // 4) Content area below image
-                contentArea(width: w, height: h, imageHeight: imgH)
+                    // BULLETS — natural height, fixed spacing
+                    let bullets = article.displayBullets
+                    let hasInfoBox = !article.availableInfoModes.isEmpty
+                    let maxBullets = hasInfoBox ? 3 : 4
+                    if !bullets.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ForEach(Array(bullets.prefix(maxBullets).enumerated()), id: \.offset) { _, bullet in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Circle()
+                                        .fill(effectiveColor)
+                                        .frame(width: 5, height: 5)
+                                        .padding(.top, 9)
+                                    highlightedBullet(bullet)
+                                        .font(.system(size: 17, weight: .regular, design: .default))
+                                        .foregroundStyle(.white.opacity(0.75))
+                                        .lineSpacing(5)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                        .padding(.leading, padding)
+                        .padding(.trailing, 55)
+                        .layoutPriority(1)
+                    }
 
-                // 5) Info box pinned to bottom
-                VStack {
-                    Spacer()
-                    infoBox(maxExpandedHeight: h - imgH - 34 - 36 - 80)
-                        .environment(\.colorScheme, .dark)
-                        .padding(.horizontal, padding)
-                        .padding(.bottom, 80)
+                    // BOTTOM PADDING — match title→bullet gap (22pt) above tab bar when no info box
+                    Spacer().frame(height: hasInfoBox ? (85 + 16 + 80) : 93)
                 }
 
-                // 6) Floating badges on image
+                // Floating badges on image (top-right)
                 floatingOverlays
+
+                // INFO BOX — only show if article has data
+                if !article.availableInfoModes.isEmpty {
+                    VStack {
+                        Spacer()
+                        infoBoxWithModeSwitcher(maxExpandedHeight: w - padding * 2)
+                            .environment(\.colorScheme, .dark)
+                            .padding(.horizontal, padding)
+                            .padding(.bottom, 80)
+                    }
+                }
             }
-        }
-        .overlay {
-            if article.isImportant {
-                // Match the device's screen corner radius
-                RoundedRectangle(cornerRadius: screenCornerRadius)
-                    .stroke(effectiveColor.opacity(0.7), lineWidth: 1.5)
-                    .padding(4)
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
+            .overlay {
+                // Double-tap heart animation
+                if showHeartAnimation {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 80, weight: .bold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 10, y: 4)
+                        .transition(.scale(scale: 0.3).combined(with: .opacity))
+                }
+            }
+            .onTapGesture(count: 2) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    LikeManager.shared.like(article)
+                    showHeartAnimation = true
+                }
+                HapticManager.medium()
+                // Dismiss after delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showHeartAnimation = false
+                    }
+                }
             }
         }
         .ignoresSafeArea()
@@ -220,13 +335,59 @@ struct ArticleCardView: View {
     // MARK: - Title Overlay (white text on image, stays above toolbar)
 
     private func titleOverlay(width: CGFloat, imageHeight: CGFloat) -> some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             Spacer()
+            sourcePill
             highlightedTitle(article.displayTitle)
         }
         .padding(.horizontal, padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: imageHeight + 24)
+        .frame(height: imageHeight + 34)
+    }
+
+    // MARK: - Source Pill
+
+    private var sourcePill: some View {
+        Button {
+            if article.url != nil {
+                showSafari = true
+                Task {
+                    try? await analytics.track(
+                        event: "source_clicked",
+                        articleId: Int(article.id.stringValue),
+                        category: article.category,
+                        source: article.source
+                    )
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if let source = article.source {
+                    Text(String(source.prefix(1)).uppercased())
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .frame(width: 18, height: 18)
+                        .background(effectiveColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
+
+                    Text(source)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
+                }
+
+                Circle()
+                    .fill(.white.opacity(0.25))
+                    .frame(width: 3, height: 3)
+
+                TimeAgoText(article.publishedAt ?? article.createdAt, color: .white.opacity(0.45))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.white.opacity(0.06))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func highlightedTitle(_ text: String) -> some View {
@@ -234,7 +395,7 @@ struct ArticleCardView: View {
             size: 28,
             weight: .bold,
             baseColor: .white,
-            highlightColor: effectiveBlurColor.vivid()
+            highlightColor: effectiveColor
         )
         .lineSpacing(2)
         .tracking(-0.8)
@@ -244,28 +405,18 @@ struct ArticleCardView: View {
     // MARK: - Content Area (below image — clean background)
 
     private func contentArea(width: CGFloat, height: CGFloat, imageHeight: CGFloat) -> some View {
-        let contentTop = imageHeight + 34
-        let infoBoxBottom: CGFloat = 80 + 85 // padding + info box height
-        let availableForBullets = height - contentTop - 36 - 8 - infoBoxBottom - 8
+        let contentTop = imageHeight + 38
+        let infoBoxBottom: CGFloat = 80 + 85
+        let availableForBullets = height - contentTop - 8 - infoBoxBottom - 8
 
         return VStack(alignment: .leading, spacing: 0) {
             Spacer().frame(height: contentTop)
 
-            // Glass control bar — always right under the title
-            controlBar
-                .padding(.horizontal, padding)
-
-            // Content — bullets or 5W, fills space between tool box and info box
-            Group {
-                switch contentMode {
-                case .bullets:
-                    bulletsList(availableHeight: availableForBullets)
-                case .fiveW:
-                    fiveWsList(availableHeight: availableForBullets)
-                }
-            }
-            .padding(.top, 8)
-            .padding(.horizontal, padding)
+            // Content — bullets
+            bulletsList(availableHeight: availableForBullets)
+                .padding(.top, 0)
+                .padding(.leading, padding)
+                .padding(.trailing, 50)
 
             Spacer(minLength: 0)
         }
@@ -309,7 +460,7 @@ struct ArticleCardView: View {
                                 .lineLimit(1)
                         }
 
-                        TimeAgoText(article.publishedAt, color: .white)
+                        TimeAgoText(article.publishedAt ?? article.createdAt, color: .white)
                     }
                 }
                 .buttonStyle(.plain)
@@ -455,10 +606,9 @@ struct ArticleCardView: View {
                             .lineSpacing(5)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxHeight: .infinity)
                 }
             }
-            .frame(height: availableHeight)
+            .frame(maxHeight: availableHeight, alignment: .top)
         } else {
             // Fallback: show summary or detailed text when no bullets available
             let fallbackText = article.displaySummary.isEmpty
@@ -479,12 +629,13 @@ struct ArticleCardView: View {
     }
 
     private func highlightedBullet(_ text: String) -> some View {
+        let boldColor = Color.white.opacity(0.95)
         let parts = text.components(separatedBy: "**")
         var views: [Text] = []
         for (i, part) in parts.enumerated() {
             if part.isEmpty { continue }
             if i % 2 == 1 {
-                views.append(Text(part).fontWeight(.semibold).foregroundColor(.white.opacity(0.95)))
+                views.append(Text(part).fontWeight(.semibold).foregroundColor(boldColor))
             } else {
                 views.append(Text(part))
             }
@@ -594,7 +745,55 @@ struct ArticleCardView: View {
         return views.reduce(Text("")) { $0 + $1 }
     }
 
-    // MARK: - Info Box (controlled by infoMode toggle)
+    // MARK: - Info Box with Mode Switcher
+
+    @ViewBuilder
+    private func infoBoxWithModeSwitcher(maxExpandedHeight: CGFloat) -> some View {
+        let modes = article.availableInfoModes
+
+        HStack(spacing: 8) {
+            infoBox(maxExpandedHeight: maxExpandedHeight)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard modes.count > 1 else { return }
+                    let currentIdx = modes.firstIndex(of: infoMode) ?? 0
+                    let nextIdx = (currentIdx + 1) % modes.count
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        infoMode = modes[nextIdx]
+                        if modes[nextIdx] != .map { mapExpanded = false }
+                        if modes[nextIdx] != .timeline { timelineExpanded = false }
+                        if modes[nextIdx] != .graph { graphExpanded = false; graphAnimated = false }
+                    }
+                    HapticManager.selection()
+                }
+
+            if modes.count > 1 {
+                GlassEffectContainer {
+                    VStack(spacing: 0) {
+                        ForEach(modes, id: \.self) { mode in
+                            Button {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                    infoMode = mode
+                                    if mode != .map { mapExpanded = false }
+                                    if mode != .timeline { timelineExpanded = false }
+                                    if mode != .graph { graphExpanded = false; graphAnimated = false }
+                                }
+                                HapticManager.selection()
+                            } label: {
+                                Image(systemName: mode.icon)
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(infoMode == mode ? effectiveColor : .white.opacity(0.35))
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                    .glassEffect(.regular.tint(glassTint), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+            }
+        }
+    }
 
     @ViewBuilder
     private func infoBox(maxExpandedHeight: CGFloat) -> some View {
@@ -618,6 +817,10 @@ struct ArticleCardView: View {
         case .timeline:
             if let timeline = article.timeline, !timeline.isEmpty {
                 compactTimeline(entries: timeline, expandedHeight: maxExpandedHeight)
+            }
+        case .scorecard:
+            if let sc = article.scorecard {
+                scorecardView(sc, expandedHeight: maxExpandedHeight)
             }
         }
     }
@@ -655,7 +858,7 @@ struct ArticleCardView: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 85)
-            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(glassTint).interactive(), in: RoundedRectangle(cornerRadius: 22))
         }
     }
 
@@ -720,108 +923,157 @@ struct ArticleCardView: View {
             }
             .padding(.horizontal, 14)
             .frame(height: 85)
-            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(glassTint).interactive(), in: RoundedRectangle(cornerRadius: 22))
         }
     }
 
     private func compactGraph(points: [GraphPoint], graph: GraphData, expandedHeight: CGFloat) -> some View {
         let maxVal = points.map(\.displayValue).max() ?? 1
+        let minVal = points.map(\.displayValue).min() ?? 0
+        let maxIdx = points.enumerated().max(by: { $0.element.displayValue < $1.element.displayValue })?.offset ?? 0
 
         return GlassEffectContainer {
             VStack(spacing: 0) {
                 if graphExpanded {
-                    // Expanded: full glass bar chart
+                    // EXPANDED: full chart with grid lines, values, and highlighted max
                     VStack(alignment: .leading, spacing: 0) {
-                        if let title = graph.title, !title.isEmpty {
-                            Text(title.uppercased())
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.4))
-                                .tracking(0.8)
-                                .padding(.top, 14)
-                                .padding(.horizontal, 16)
-                        }
-
-                        // Bar chart area
-                        HStack(alignment: .bottom, spacing: points.count > 8 ? 3 : 6) {
-                            ForEach(Array(points.enumerated()), id: \.offset) { _, point in
-                                let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
-
-                                VStack(spacing: 5) {
-                                    Spacer(minLength: 0)
-
-                                    Text(formatStatValue(point.displayValue))
+                        // Header: title + max value callout
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                if let title = graph.title, !title.isEmpty {
+                                    Text(title.uppercased())
                                         .font(.system(size: 9, weight: .bold))
-                                        .foregroundStyle(.white.opacity(0.7))
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.5)
-
-                                    RoundedRectangle(cornerRadius: 5)
-                                        .fill(.clear)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: graphAnimated ? max(ratio * (max(expandedHeight, 200) - 90), 6) : 6)
-                                        .glassEffect(
-                                            .regular.tint(effectiveColor.opacity(0.4 + ratio * 0.3)).interactive(),
-                                            in: RoundedRectangle(cornerRadius: 5)
-                                        )
-
-                                    Text(point.displayLabel)
-                                        .font(.system(size: 8, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.45))
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.5)
-                                        .frame(maxWidth: .infinity)
+                                        .foregroundStyle(.white.opacity(0.4))
+                                        .tracking(0.8)
                                 }
+                                if let yLabel = graph.yLabel, !yLabel.isEmpty {
+                                    Text(yLabel)
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.3))
+                                }
+                            }
+
+                            Spacer()
+
+                            // Max value highlight
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(formatStatValue(maxVal))
+                                    .font(.system(size: 22, weight: .heavy))
+                                    .foregroundStyle(effectiveColor)
+                                Text("peak")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.35))
                             }
                         }
                         .padding(.horizontal, 16)
-                        .padding(.top, 10)
+                        .padding(.top, 14)
+
+                        // Chart area with horizontal grid lines
+                        ZStack(alignment: .bottom) {
+                            // Grid lines
+                            VStack(spacing: 0) {
+                                ForEach(0..<4, id: \.self) { _ in
+                                    Rectangle()
+                                        .fill(.white.opacity(0.05))
+                                        .frame(height: 1)
+                                        .frame(maxWidth: .infinity)
+                                    Spacer(minLength: 0)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+
+                            // Bars
+                            HStack(alignment: .bottom, spacing: points.count > 8 ? 3 : 5) {
+                                ForEach(Array(points.enumerated()), id: \.offset) { idx, point in
+                                    let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
+                                    let isMax = idx == maxIdx
+                                    let barH = max(expandedHeight, 200) - 100
+
+                                    VStack(spacing: 4) {
+                                        Spacer(minLength: 0)
+
+                                        // Value above bar
+                                        Text(formatStatValue(point.displayValue))
+                                            .font(.system(size: 8, weight: .bold))
+                                            .foregroundStyle(isMax ? effectiveColor : .white.opacity(0.5))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.5)
+
+                                        // Bar
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: isMax
+                                                        ? [effectiveColor, effectiveColor.opacity(0.6)]
+                                                        : [effectiveColor.opacity(0.35), effectiveColor.opacity(0.15)],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
+                                            )
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: graphAnimated ? max(ratio * barH, 4) : 4)
+
+                                        // Label
+                                        Text(point.displayLabel)
+                                            .font(.system(size: 7, weight: isMax ? .bold : .medium))
+                                            .foregroundStyle(isMax ? effectiveColor.opacity(0.8) : .white.opacity(0.4))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.5)
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                        .padding(.top, 8)
                         .padding(.bottom, 14)
                     }
                     .frame(height: max(expandedHeight, 200))
                 } else {
-                    // Collapsed: mini glass bar chart preview with title
-                    VStack(alignment: .leading, spacing: 0) {
-                        if let title = graph.title, !title.isEmpty {
-                            Text(title.uppercased())
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.4))
-                                .tracking(0.8)
-                                .padding(.top, 10)
-                                .padding(.leading, 14)
-                        }
-
-                        HStack(alignment: .bottom, spacing: points.count > 8 ? 2 : 4) {
-                            ForEach(Array(points.enumerated()), id: \.offset) { _, point in
-                                let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
-
-                                VStack(spacing: 3) {
-                                    Spacer(minLength: 0)
-
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(.clear)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: max(ratio * 38, 5))
-                                        .glassEffect(
-                                            .regular.tint(effectiveColor.opacity(0.3 + ratio * 0.35)).interactive(),
-                                            in: RoundedRectangle(cornerRadius: 4)
-                                        )
-
-                                    Text(point.displayLabel)
-                                        .font(.system(size: 7, weight: .medium))
-                                        .foregroundStyle(.white.opacity(0.35))
-                                        .lineLimit(1)
-                                        .minimumScaleFactor(0.4)
-                                        .frame(maxWidth: .infinity)
-                                }
+                    // COLLAPSED: sparkline-style preview with title and value
+                    HStack(spacing: 0) {
+                        // Left: title + max value
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let title = graph.title, !title.isEmpty {
+                                Text(title.uppercased())
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.4))
+                                    .tracking(0.8)
+                                    .lineLimit(1)
+                            }
+                            Text(formatStatValue(maxVal))
+                                .font(.system(size: 24, weight: .heavy))
+                                .foregroundStyle(effectiveColor)
+                            if let yLabel = graph.yLabel, !yLabel.isEmpty {
+                                Text(yLabel)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.3))
                             }
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 8)
+                        .frame(width: 80, alignment: .leading)
+                        .padding(.leading, 16)
+
+                        // Right: mini bar chart
+                        HStack(alignment: .bottom, spacing: points.count > 8 ? 2 : 3) {
+                            ForEach(Array(points.enumerated()), id: \.offset) { idx, point in
+                                let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
+                                let isMax = idx == maxIdx
+
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(
+                                        isMax ? effectiveColor : effectiveColor.opacity(0.2 + ratio * 0.3)
+                                    )
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: max(ratio * 45, 3))
+                            }
+                        }
+                        .padding(.trailing, 16)
+                        .padding(.vertical, 16)
                     }
                     .frame(height: 85)
                 }
             }
-            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(glassTint).interactive(), in: RoundedRectangle(cornerRadius: 22))
             .overlay(alignment: .topTrailing) {
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -840,7 +1092,7 @@ struct ArticleCardView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: Circle())
+                        .glassEffect(.regular.tint(glassTint).interactive(), in: Circle())
                 }
                 .padding(8)
             }
@@ -1039,7 +1291,7 @@ struct ArticleCardView: View {
                     .frame(height: 85)
                 }
             }
-            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(glassTint).interactive(), in: RoundedRectangle(cornerRadius: 22))
             .overlay(alignment: .topTrailing) {
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -1051,7 +1303,7 @@ struct ArticleCardView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: Circle())
+                        .glassEffect(.regular.tint(glassTint).interactive(), in: Circle())
                 }
                 .padding(8)
             }
@@ -1059,27 +1311,283 @@ struct ArticleCardView: View {
         }
     }
 
+    // MARK: - Scorecard View
+
+    @State private var scorecardExpanded = false
+
+    private func scorecardView(_ sc: Scorecard, expandedHeight: CGFloat) -> some View {
+        let home = sc.homeTeam ?? "Home"
+        let away = sc.awayTeam ?? "Away"
+        let homeScore = sc.homeScore ?? 0
+        let awayScore = sc.awayScore ?? 0
+        let comp = sc.competition ?? ""
+        let homeWins = homeScore > awayScore
+        let awayWins = awayScore > homeScore
+
+        return GlassEffectContainer {
+            VStack(spacing: 0) {
+                if scorecardExpanded {
+                    // EXPANDED: full match card
+                    VStack(spacing: 0) {
+                        // Competition header
+                        if !comp.isEmpty {
+                            Text(comp.uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.4))
+                                .tracking(1.2)
+                                .padding(.top, 14)
+                        }
+
+                        // Score line
+                        HStack(spacing: 0) {
+                            // Home
+                            VStack(spacing: 6) {
+                                Text(String(home.prefix(3)).uppercased())
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .tracking(0.8)
+                                Text("\(homeScore)")
+                                    .font(.system(size: 40, weight: .heavy))
+                                    .foregroundStyle(homeWins ? effectiveColor : .white)
+                                Text(home)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            // Divider
+                            VStack(spacing: 4) {
+                                Text("VS")
+                                    .font(.system(size: 10, weight: .heavy))
+                                    .foregroundStyle(.white.opacity(0.2))
+                                    .tracking(1)
+                                Rectangle()
+                                    .fill(.white.opacity(0.08))
+                                    .frame(width: 1, height: 30)
+                            }
+
+                            // Away
+                            VStack(spacing: 6) {
+                                Text(String(away.prefix(3)).uppercased())
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .tracking(0.8)
+                                Text("\(awayScore)")
+                                    .font(.system(size: 40, weight: .heavy))
+                                    .foregroundStyle(awayWins ? effectiveColor : .white)
+                                Text(away)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
+
+                        // Scorers
+                        if let scorers = sc.scorers, !scorers.isEmpty {
+                            let validScorers = scorers.filter { $0.player != nil && $0.player != "Unknown" }
+                            if !validScorers.isEmpty {
+                                Rectangle()
+                                    .fill(.white.opacity(0.06))
+                                    .frame(height: 1)
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 10)
+
+                                VStack(spacing: 6) {
+                                    ForEach(Array(validScorers.prefix(4).enumerated()), id: \.offset) { _, scorer in
+                                        HStack(spacing: 8) {
+                                            Circle()
+                                                .fill(scorer.team == "home" ? effectiveColor : .white.opacity(0.3))
+                                                .frame(width: 5, height: 5)
+                                            Text(scorer.player ?? "")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundStyle(.white.opacity(0.8))
+                                            if let min = scorer.minute, min != "N/A", min != "Unknown" {
+                                                Text(min)
+                                                    .font(.system(size: 10, weight: .medium))
+                                                    .foregroundStyle(.white.opacity(0.4))
+                                            }
+                                            Spacer()
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.top, 8)
+                            }
+                        }
+
+                        // Standing impact
+                        if let impact = sc.standingImpact, !impact.isEmpty {
+                            Text(impact)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.4))
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 8)
+                        }
+
+                        Spacer(minLength: 10)
+                    }
+                    .frame(height: min(expandedHeight, 280))
+                } else {
+                    // COLLAPSED: compact score display
+                    HStack(spacing: 0) {
+                        // Home team + score
+                        HStack(spacing: 10) {
+                            Text(home)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                            Text("\(homeScore)")
+                                .font(.system(size: 28, weight: .heavy))
+                                .foregroundStyle(homeWins ? effectiveColor : .white)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Separator
+                        VStack(spacing: 2) {
+                            Text(comp.isEmpty ? "–" : comp)
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.3))
+                                .tracking(0.5)
+                                .lineLimit(1)
+                            Text(":")
+                                .font(.system(size: 20, weight: .heavy))
+                                .foregroundStyle(.white.opacity(0.2))
+                        }
+                        .frame(width: 60)
+
+                        // Away team + score
+                        HStack(spacing: 10) {
+                            Text("\(awayScore)")
+                                .font(.system(size: 28, weight: .heavy))
+                                .foregroundStyle(awayWins ? effectiveColor : .white)
+                            Text(away)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(height: 85)
+                }
+            }
+            .glassEffect(.regular.tint(glassTint).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        scorecardExpanded.toggle()
+                    }
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: scorecardExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .glassEffect(.regular.tint(glassTint).interactive(), in: Circle())
+                }
+                .padding(8)
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: scorecardExpanded)
+        }
+    }
+
     // MARK: - Floating Overlays
 
     private var floatingOverlays: some View {
         VStack {
-            HStack(alignment: .top) {
-                Spacer()
-
-                HStack(alignment: .top, spacing: 10) {
-                    if let event = article.worldEvent {
-                        eventBadge(event)
-                    }
-                    VStack(spacing: 8) {
-                        shareButton
-                        saveButton
-                    }
-                }
-            }
-            .padding(.horizontal, padding)
-            .padding(.top, 56)
-
             Spacer()
+            HStack {
+                Spacer()
+                VStack(spacing: 28) {
+                    // Source logo circle
+                    Button {
+                        if article.url != nil { showSafari = true }
+                        HapticManager.light()
+                    } label: {
+                        let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
+                        let logoColor = logoColors[abs((article.source ?? "").hashValue) % logoColors.count]
+                        Text(String((article.source ?? "N").prefix(1)).uppercased())
+                            .font(.system(size: 14, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(logoColor)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(.white.opacity(0.15), lineWidth: 1)
+                            )
+                    }
+
+                    // Like
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            LikeManager.shared.toggle(article)
+                        }
+                        HapticManager.medium()
+                    } label: {
+                        VStack(spacing: 2) {
+                            Image(systemName: LikeManager.shared.isLiked(article.id) ? "heart.fill" : "heart")
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundStyle(LikeManager.shared.isLiked(article.id) ? .red : .white.opacity(0.8))
+                            Text("0")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                    }
+
+                    // Comment (placeholder)
+                    VStack(spacing: 2) {
+                        Image(systemName: "bubble.right")
+                            .font(.system(size: 24, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.8))
+                        Text("0")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+
+                    // Bookmark
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            BookmarkManager.shared.toggle(article)
+                        }
+                        HapticManager.light()
+                    } label: {
+                        VStack(spacing: 2) {
+                            Image(systemName: BookmarkManager.shared.isBookmarked(article.id) ? "bookmark.fill" : "bookmark")
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.8))
+                            Text("0")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                    }
+
+                    // Share
+                    ShareLink(item: URL(string: article.url ?? "https://tennews.ai")!,
+                              subject: Text(article.plainTitle),
+                              message: Text(article.displaySummary)) {
+                        VStack(spacing: 2) {
+                            Image(systemName: "arrowshape.turn.up.right")
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.8))
+                            Text("0")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                    }
+                    .simultaneousGesture(TapGesture().onEnded { HapticManager.light() })
+                }
+                .padding(.trailing, 18)
+            }
+            .padding(.bottom, 200)
         }
     }
 
@@ -1097,36 +1605,6 @@ struct ArticleCardView: View {
                 .frame(height: 34)
                 .frame(maxWidth: 160)
                 .glassEffect(.regular.tint(effectiveColor.opacity(0.4)).interactive(), in: RoundedRectangle(cornerRadius: 12))
-        }
-    }
-
-    private var shareButton: some View {
-        ShareLink(item: URL(string: article.url ?? "https://tennews.ai")!,
-                  subject: Text(article.plainTitle),
-                  message: Text(article.displaySummary)) {
-            Image(systemName: "arrowshape.turn.up.right.fill")
-                .font(.system(size: 14))
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(.black.opacity(0.3))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .simultaneousGesture(TapGesture().onEnded { HapticManager.light() })
-    }
-
-    private var saveButton: some View {
-        Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                BookmarkManager.shared.toggle(article)
-            }
-            HapticManager.light()
-        } label: {
-            Image(systemName: BookmarkManager.shared.isBookmarked(article.id) ? "bookmark.fill" : "bookmark")
-                .font(.system(size: 14))
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(.black.opacity(0.3))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -1170,7 +1648,7 @@ struct ArticleCardView: View {
     nonisolated(unsafe) static let blurColorCache = NSCache<NSURL, UIColor>()
     nonisolated(unsafe) static let lightnessCache = NSCache<NSURL, NSNumber>()
 
-    private func extractDominantColor(from url: URL) {
+    private func extractDominantColor(from url: URL, loadedImage: UIImage? = nil) {
         // Check color cache first
         if let cachedAccent = Self.colorCache.object(forKey: url as NSURL),
            let cachedBlur = Self.blurColorCache.object(forKey: url as NSURL),
@@ -1181,24 +1659,20 @@ struct ArticleCardView: View {
             return
         }
 
-        Task.detached(priority: .background) {
-            // Wait for AsyncCachedImage to cache the image (avoids duplicate download)
-            var uiImage: UIImage?
-            for _ in 0..<30 {
-                if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
-                    uiImage = cached
-                    break
-                }
-                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms intervals, up to 3s
-            }
-            // Last resort: download if AsyncCachedImage hasn't cached it yet
-            if uiImage == nil {
+        Task.detached(priority: .userInitiated) {
+            // Use provided image, check cache, or download directly (no polling)
+            let uiImage: UIImage
+            if let provided = loadedImage {
+                uiImage = provided
+            } else if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
+                uiImage = cached
+            } else {
                 guard let (data, _) = try? await URLSession.shared.data(from: url),
                       let downloaded = UIImage(data: data) else { return }
                 AsyncCachedImage.cache.setObject(downloaded, forKey: url as NSURL)
                 uiImage = downloaded
             }
-            guard let uiImage, let cgImage = uiImage.cgImage else { return }
+            guard let cgImage = uiImage.cgImage else { return }
 
                 let sampleW = min(cgImage.width, 80)
                 let sampleH = min(cgImage.height, 80)
@@ -1214,8 +1688,10 @@ struct ArticleCardView: View {
                 context.draw(cgImage, in: CGRect(x: 0, y: 0, width: sampleW, height: sampleH))
 
                 // --- Step 1: Bucket pixels into 15-unit RGB clusters ---
+                // Track ALL pixels and BOTTOM-HALF pixels separately
                 struct ColorBucket {
                     var count: Int = 0
+                    var bottomCount: Int = 0  // pixels in bottom 50% of image
                     var positions: Set<String> = []
                     var rKey: Int
                     var gKey: Int
@@ -1224,6 +1700,7 @@ struct ArticleCardView: View {
 
                 var buckets: [String: ColorBucket] = [:]
                 let totalPixels = sampleW * sampleH
+                let bottomStart = sampleH / 2
 
                 for i in stride(from: 0, to: totalPixels * 4, by: 10 * 4) {
                     let r = Int(rawData[i])
@@ -1244,17 +1721,19 @@ struct ArticleCardView: View {
                     let pixelIdx = i / 4
                     let px = (pixelIdx % sampleW) / 10
                     let py = (pixelIdx / sampleW) / 10
+                    let isBottom = (pixelIdx / sampleW) >= bottomStart
 
                     if buckets[key] == nil {
                         buckets[key] = ColorBucket(rKey: rK, gKey: gK, bKey: bK)
                     }
                     buckets[key]!.count += 1
+                    if isBottom { buckets[key]!.bottomCount += 1 }
                     buckets[key]!.positions.insert("\(px),\(py)")
                 }
 
                 guard !buckets.isEmpty else { return }
 
-                // --- Step 2: Convert to HSL and filter ---
+                // --- Step 2: Find ACCENT color (most saturated/colorful — for title highlights) ---
                 struct ScoredColor {
                     let h: CGFloat
                     let s: CGFloat
@@ -1267,13 +1746,12 @@ struct ArticleCardView: View {
                 let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
                 let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
 
-                var candidates: [ScoredColor] = buckets.values.compactMap { bucket in
+                var accentCandidates: [ScoredColor] = buckets.values.compactMap { bucket in
                     let r = CGFloat(bucket.rKey) / 255.0
                     let g = CGFloat(bucket.gKey) / 255.0
                     let b = CGFloat(bucket.bKey) / 255.0
                     let hsl = ArticleCardView.rgbToHSL(r, g, b)
 
-                    // Filter: sat >= 35%, lightness 20-80%
                     guard hsl.s >= 35 && hsl.l >= 20 && hsl.l <= 80 else { return nil }
 
                     return ScoredColor(
@@ -1282,71 +1760,94 @@ struct ArticleCardView: View {
                     )
                 }
 
-                // Fallback: if no colorful candidates, use most saturated bucket
-                if candidates.isEmpty {
+                if accentCandidates.isEmpty {
                     let fallback = buckets.values.max(by: {
-                        let hsl0 = ArticleCardView.rgbToHSL(CGFloat($0.rKey)/255, CGFloat($0.gKey)/255, CGFloat($0.bKey)/255)
-                        let hsl1 = ArticleCardView.rgbToHSL(CGFloat($1.rKey)/255, CGFloat($1.gKey)/255, CGFloat($1.bKey)/255)
-                        return hsl0.s < hsl1.s
+                        ArticleCardView.rgbToHSL(CGFloat($0.rKey)/255, CGFloat($0.gKey)/255, CGFloat($0.bKey)/255).s <
+                        ArticleCardView.rgbToHSL(CGFloat($1.rKey)/255, CGFloat($1.gKey)/255, CGFloat($1.bKey)/255).s
                     })
                     if let fb = fallback {
                         let hsl = ArticleCardView.rgbToHSL(CGFloat(fb.rKey)/255, CGFloat(fb.gKey)/255, CGFloat(fb.bKey)/255)
-                        candidates = [ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: fb.count, coverage: fb.positions.count)]
+                        accentCandidates = [ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: fb.count, coverage: fb.positions.count)]
                     }
                 }
 
-                guard !candidates.isEmpty else { return }
+                guard !accentCandidates.isEmpty else { return }
 
-                // --- Step 3: Composite scoring ---
-                // Frequency 50%, Saturation 30%, Coverage 20%
-                for i in candidates.indices {
-                    let normFreq = CGFloat(candidates[i].count) / maxCount
-                    let normSat = candidates[i].s / 100.0
-                    let normCov = CGFloat(candidates[i].coverage) / maxCoverage
-
+                for i in accentCandidates.indices {
+                    let normFreq = CGFloat(accentCandidates[i].count) / maxCount
+                    let normSat = accentCandidates[i].s / 100.0
+                    let normCov = CGFloat(accentCandidates[i].coverage) / maxCoverage
                     var score = normFreq * 0.50 + normSat * 0.30 + normCov * 0.20
-
-                    // Penalize dull sky-blue (hue 200-220, sat < 60)
-                    if candidates[i].h >= 200 && candidates[i].h <= 220 && candidates[i].s < 60 {
-                        score *= 0.85
-                    }
-
-                    // Penalize brown/olive (hue 15-50, sat < 65) — too common in news photos
-                    if candidates[i].h >= 15 && candidates[i].h <= 50 && candidates[i].s < 65 {
-                        score *= 0.7
-                    }
-
-                    candidates[i].score = score
+                    if accentCandidates[i].h >= 200 && accentCandidates[i].h <= 220 && accentCandidates[i].s < 60 { score *= 0.85 }
+                    if accentCandidates[i].h >= 15 && accentCandidates[i].h <= 50 && accentCandidates[i].s < 65 { score *= 0.7 }
+                    accentCandidates[i].score = score
                 }
 
-                candidates.sort { $0.score > $1.score }
-                let winner = candidates[0]
+                accentCandidates.sort { $0.score > $1.score }
+                let accentWinner = accentCandidates[0]
 
-                // --- Step 4: Create color variants ---
-                let hue = winner.h
-                let winSat = winner.s
-
-                // Blur color: same hue, very dark — compensate for perceptually bright hues
-                var blurL = max(12.0, min(20.0, winner.l * 0.28))
-                var blurS = max(30.0, min(50.0, winSat * 0.55))
-
-                // Yellow/green/orange hues appear brighter — push even darker
-                if hue >= 30 && hue <= 180 {
-                    blurL = max(10.0, blurL * 0.7)
-                    blurS = min(40.0, blurS * 0.7)
-                }
-                let blurCol = ArticleCardView.colorFromHSL(h: hue, s: blurS, l: blurL)
-
-                // Accent color: same hue, sat boosted 15% (cap 90%), lightness 55-75%
-                let accentS = min(90.0, winSat * 1.15)
-                let accentL: CGFloat = winner.l <= 40
-                    ? 55.0 + (winner.l / 40.0) * 10.0
-                    : 65.0 + ((winner.l - 40.0) / 40.0) * 10.0
+                // Accent color: vivid version of the most interesting color
+                let accentS = min(90.0, accentWinner.s * 1.15)
+                let accentL: CGFloat = accentWinner.l <= 40
+                    ? 55.0 + (accentWinner.l / 40.0) * 10.0
+                    : 65.0 + ((accentWinner.l - 40.0) / 40.0) * 10.0
                 let accentCol = ArticleCardView.colorFromHSL(
-                    h: hue,
+                    h: accentWinner.h,
                     s: max(65.0, accentS),
                     l: max(55.0, min(75.0, accentL))
                 )
+
+                // --- Step 3: Find BLUR color — prefer vibrant hues, avoid muddy brown ---
+                // Find the most saturated color bucket in the bottom half
+                let bottomBuckets = buckets.values
+                    .filter { $0.bottomCount > 0 }
+                    .sorted { $0.bottomCount > $1.bottomCount }
+
+                // Score bottom buckets: prefer saturated + frequent
+                var bestBlurBucket = bottomBuckets.first ?? buckets.values.max(by: { $0.count < $1.count })!
+                var bestBlurScore: CGFloat = -1
+                let maxBottomCount = CGFloat(bottomBuckets.first?.bottomCount ?? 1)
+
+                for bucket in bottomBuckets {
+                    let hsl = ArticleCardView.rgbToHSL(
+                        CGFloat(bucket.rKey) / 255, CGFloat(bucket.gKey) / 255, CGFloat(bucket.bKey) / 255
+                    )
+                    let freq = CGFloat(bucket.bottomCount) / maxBottomCount
+                    var score = freq * 0.4 + (hsl.s / 100) * 0.45 + (CGFloat(bucket.positions.count) / maxCoverage) * 0.15
+
+                    // Penalize muddy brown/olive (hue 20-55, sat < 50) unless very dominant
+                    let isBrownish = hsl.h >= 20 && hsl.h <= 55 && hsl.s < 50
+                    if isBrownish && freq < 0.7 { score *= 0.3 }
+
+                    // Penalize very dark desaturated (gray/black)
+                    if hsl.s < 15 && hsl.l < 30 { score *= 0.4 }
+
+                    // Boost vibrant colors (blues, purples, reds, greens, teals)
+                    if hsl.s >= 40 {
+                        if (hsl.h >= 180 && hsl.h <= 300) { score *= 1.3 } // blue-purple range
+                        if (hsl.h >= 330 || hsl.h <= 15) { score *= 1.2 }  // red range
+                        if (hsl.h >= 100 && hsl.h <= 170) { score *= 1.15 } // green-teal range
+                    }
+
+                    if score > bestBlurScore {
+                        bestBlurScore = score
+                        bestBlurBucket = bucket
+                    }
+                }
+
+                let blurHSL = ArticleCardView.rgbToHSL(
+                    CGFloat(bestBlurBucket.rKey) / 255, CGFloat(bestBlurBucket.gKey) / 255, CGFloat(bestBlurBucket.bKey) / 255
+                )
+
+                // If the best blur color is still muddy/desaturated, use the accent color hue instead
+                let isMuddy = blurHSL.s < 25 || (blurHSL.h >= 20 && blurHSL.h <= 55 && blurHSL.s < 45)
+                let finalH = isMuddy ? accentWinner.h : blurHSL.h
+                let finalS = isMuddy
+                    ? max(30.0, min(50.0, accentWinner.s * 0.5))
+                    : max(25.0, min(55.0, blurHSL.s * 0.55))
+                let finalL: CGFloat = max(8.0, min(16.0, blurHSL.l * 0.22))
+
+                let blurCol = ArticleCardView.colorFromHSL(h: finalH, s: finalS, l: finalL)
 
                 // Compute average brightness of top-right region (where icons sit)
                 let isLight: Bool = {
@@ -1356,10 +1857,10 @@ struct ArticleCardView: View {
                     let endY = sampleH / 3
                     for y in 0..<endY {
                         for x in startX..<sampleW {
-                            let i = (y * sampleW + x) * 4
-                            let r = CGFloat(rawData[i]) / 255.0
-                            let g = CGFloat(rawData[i + 1]) / 255.0
-                            let b = CGFloat(rawData[i + 2]) / 255.0
+                            let idx = (y * sampleW + x) * 4
+                            let r = CGFloat(rawData[idx]) / 255.0
+                            let g = CGFloat(rawData[idx + 1]) / 255.0
+                            let b = CGFloat(rawData[idx + 2]) / 255.0
                             totalLum += 0.299 * r + 0.587 * g + 0.114 * b
                             count += 1
                         }
@@ -1463,7 +1964,10 @@ private extension Article {
                 break
             }
         }
-        if modes.isEmpty { modes.append(.details) }
+        // Always add scorecard if data exists (not dependent on components order)
+        if let sc = scorecard, sc.homeTeam != nil, !modes.contains(.scorecard) {
+            modes.insert(.scorecard, at: 0)
+        }
         return modes
     }
 }
