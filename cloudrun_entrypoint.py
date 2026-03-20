@@ -2,7 +2,7 @@
 Cloud Run Entrypoint for Ten News
 ==================================
 Runs a SINGLE iteration of the news workflow.
-Cloud Scheduler triggers this as a Cloud Run Job every 10 minutes.
+Cloud Scheduler triggers this as a Cloud Run Job every 20 minutes.
 Includes run lock to prevent overlapping executions.
 """
 

@@ -319,14 +319,21 @@ Only output topics with relevance >= 30. Only output countries with relevance >=
 
 ## FRESHNESS CLASSIFICATION
 
-Classify each article's shelf life — how long it stays relevant:
+IMPORTANT: Most news expires FAST. Default to 1 day unless there's a clear reason for longer.
 
 | Category | freshness_category | shelf_life_days | Examples |
 |----------|-------------------|-----------------|----------|
-| Breaking | "breaking" | 1-2 | Wars, shootings, elections, major disasters, terrorist attacks |
-| Short | "short" | 3-7 | Sports results, transfers, match recaps, tech launches, album releases, stock crashes |
-| Medium | "medium" | 7-14 | Reviews, explainers, interviews, music videos, policy analysis |
-| Evergreen | "evergreen" | 30-90 | Recipes, health tips, how-tos, lifestyle, workout guides, travel guides |
+| Breaking | "breaking" | 1 | Wars, attacks, election results, disasters, major deaths, arrests, Oscar winners, game scores |
+| Short | "short" | 1-2 | Sports results, transfers, stock moves, product launches, album releases, political statements, crypto prices, weather events |
+| Medium | "medium" | 3-5 | In-depth investigations, feature interviews, policy analysis, deep explainers, documentary releases |
+| Evergreen | "evergreen" | 14-30 | Recipes, health guides, how-tos, workout routines, travel guides, educational content |
+
+CRITICAL RULES:
+- If the headline contains TODAY's date, a score, "wins", "loses", "signs", "announces", "launches", "crashes" → shelf_life = 1
+- Sports scores, transfer news, earnings reports, stock movements → ALWAYS 1 day
+- Oscar results, award shows, election results → ALWAYS 1 day
+- Default should be 1, not 5. Only increase if the article has lasting analytical value.
+- Ask yourself: "Will anyone care about this specific article in 3 days?" If no → shelf_life = 1
 
 ---
 
@@ -335,7 +342,7 @@ Classify each article's shelf life — how long it stays relevant:
 Return ONLY a JSON object with the score, relevance, and freshness:
 
 ```json
-{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}, "freshness_category": "short", "shelf_life_days": 5}
+{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}, "freshness_category": "short", "shelf_life_days": 1}
 ```
 
 - `topic_relevance`: only include topics with relevance >= 30
@@ -860,11 +867,11 @@ Both deserve visibility. Score accordingly.
                             country_relevance = {}
 
                         # Extract freshness fields
-                        freshness_category = parsed.get('freshness_category', 'medium') if isinstance(parsed, dict) else 'medium'
-                        shelf_life_days = parsed.get('shelf_life_days', 7) if isinstance(parsed, dict) else 7
+                        freshness_category = parsed.get('freshness_category', 'short') if isinstance(parsed, dict) else 'short'
+                        shelf_life_days = parsed.get('shelf_life_days', 1) if isinstance(parsed, dict) else 1
                         if freshness_category not in ('breaking', 'short', 'medium', 'evergreen'):
-                            freshness_category = 'medium'
-                        shelf_life_days = max(1, min(90, int(shelf_life_days))) if shelf_life_days else 7
+                            freshness_category = 'short'
+                        shelf_life_days = max(1, min(30, int(shelf_life_days))) if shelf_life_days else 1
 
                         return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance, 'freshness_category': freshness_category, 'shelf_life_days': shelf_life_days}
 

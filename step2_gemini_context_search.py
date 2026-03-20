@@ -1,69 +1,23 @@
 import requests
 import json
 import os
-from typing import Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
-def search_gemini_context(title: str, summary: str, full_text: str = "") -> Dict[str, str]:
-    """
-    Search Gemini for contextual facts using Google Search grounding
 
-    Args:
-        title: str, article title from Step 4 synthesis
-        summary: str, bullet summary from Step 4 synthesis
-        full_text: str, full article text (optional)
+# ==========================================
+# COMPONENT-SPECIFIC SEARCH PROMPTS
+# ==========================================
+# Each prompt section is only included when that component was selected.
+# This avoids wasting tokens and grounding queries on components the article doesn't need.
 
-    Returns:
-        dict with 'results' and 'citations'
-    """
-
-    # Get API key from environment
-    api_key = os.getenv('GEMINI_API_KEY')
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set")
-
-    # Use Gemini 2.0 Flash with Google Search grounding
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-
-    # Use full_text if provided, otherwise use summary
-    article_text = full_text if full_text else summary
-
-    prompt = f"""You are gathering data for news article components.
-
-ARTICLE TITLE: {title}
-BULLET SUMMARY: {summary}
-FULL ARTICLE TEXT: {article_text[:3000]}
-
-Gather information for these FOUR categories:
-
+TIMELINE_SEARCH_PROMPT = """
 ═══════════════════════════════════════════════════════════════
-1. TIMELINE DATA
+TIMELINE DATA
 ═══════════════════════════════════════════════════════════════
 
-TIMELINE IS RARELY NEEDED - only about 10% of news stories.
+Find 2-4 KEY EVENTS that led to this story. Help the reader understand "how we got here."
 
-ASK: "Would readers be confused without knowing what happened before?"
-- YES → Gather timeline
-- NO → Write "TIMELINE NOT NEEDED"
-
-STORIES THAT NEED TIMELINE:
-- Ongoing wars/conflicts (Ukraine, Gaza, Syria)
-- Multi-year legal cases or investigations (Epstein case)
-- Political crises with multiple developments over time
-- Complex diplomatic situations
-
-STORIES THAT DON'T NEED TIMELINE (most news):
-- Single announcements or statements
-- Product launches or tech news
-- Entertainment news
-- Speeches or remarks
-- Policy proposals
-- Accidents or incidents (unless part of ongoing pattern)
-- Business deals
-- Sports news
-
-IF TIMELINE IS NEEDED:
-
-Find 2-4 events that are:
+Requirements:
 ✓ From recent past (last 1-5 years)
 ✓ Directly relevant to THIS specific story
 ✓ Help readers understand "how we got here"
@@ -84,9 +38,11 @@ BAD EXAMPLES:
 ✗ "Ancient Greece | Philosophers create aphorisms" - IRRELEVANT padding
 ✗ "Late 1970s | North Korea begins missile program" - TOO OLD
 ✗ "2004 | Facebook launches" - IRRELEVANT to most stories
+"""
 
+DETAILS_SEARCH_PROMPT = """
 ═══════════════════════════════════════════════════════════════
-2. DETAILS DATA
+DETAILS DATA
 ═══════════════════════════════════════════════════════════════
 
 Find interesting facts that are NOT in the bullet summary.
@@ -121,9 +77,11 @@ BAD DETAILS:
 ✗ Vague information
 
 If bullets already contain all key facts, write: "NO ADDITIONAL DETAILS"
+"""
 
+GRAPH_SEARCH_PROMPT = """
 ═══════════════════════════════════════════════════════════════
-3. GRAPH DATA
+GRAPH DATA
 ═══════════════════════════════════════════════════════════════
 
 CRITICAL: Graph data must be REAL from verified sources.
@@ -162,9 +120,11 @@ BAD EXAMPLES:
 ✗ Made-up statistics
 
 If no verified data exists, write: "NO VERIFIED GRAPH DATA"
+"""
 
+MAP_SEARCH_PROMPT = """
 ═══════════════════════════════════════════════════════════════
-4. MAP LOCATION DATA
+MAP LOCATION DATA
 ═══════════════════════════════════════════════════════════════
 
 Find the location WHERE THE NEWS ACTUALLY HAPPENED.
@@ -178,7 +138,7 @@ ALWAYS FIND LOCATION FOR:
    - Car accident → Find the accident location
    - Shooting → Find where it happened
    - Attack → Find the exact venue
-   
+
 2. NATURAL DISASTERS:
    - Earthquake → Find epicenter or most affected area
    - Hurricane → Find landfall location
@@ -215,28 +175,6 @@ NEVER BOTHER WITH:
   - "Lithuania" is useless - find the specific crash site
   - "Moscow" is useless - find the specific venue
 
-EXAMPLES:
-
-"UPS Plane Crash Death Toll Climbs to 15"
-→ FIND: Vilnius International Airport crash site
-→ Users want to see WHERE the plane crashed
-
-"Earthquake Kills Thousands in Turkey"
-→ FIND: Epicenter location or Gaziantep
-→ Users want to see WHERE the earthquake hit
-
-"Terrorist Attack at Moscow Concert Hall"
-→ FIND: Crocus City Hall exact location
-→ Users want to see WHERE the attack happened
-
-"Putin Announces New Policy"
-→ DON'T BOTHER: Everyone knows where Kremlin is
-→ Write "NO INTERESTING LOCATION"
-
-"Congress Passes New Bill"
-→ DON'T BOTHER: Everyone knows where Capitol is
-→ Write "NO INTERESTING LOCATION"
-
 FORMAT:
 [EXACT LOCATION NAME] | [CITY] | [COUNTRY] | [WHY USERS WANT TO SEE] | [COORDINATES]
 
@@ -245,6 +183,85 @@ Example:
 
 If only boring/famous locations available, write: "NO INTERESTING LOCATION"
 """
+
+# Components that do NOT need Google Search grounding
+# Scorecard and recipe are generated from the article itself, no web search needed
+COMPONENTS_NOT_NEEDING_SEARCH = {'scorecard', 'recipe'}
+
+# Components that need Google Search grounding
+COMPONENT_PROMPT_MAP = {
+    'timeline': TIMELINE_SEARCH_PROMPT,
+    'details': DETAILS_SEARCH_PROMPT,
+    'graph': GRAPH_SEARCH_PROMPT,
+    'map': MAP_SEARCH_PROMPT,
+}
+
+
+def search_gemini_context(title: str, summary: str, full_text: str = "",
+                          selected_components: Optional[List[str]] = None) -> Dict[str, str]:
+    """
+    Search Gemini for contextual facts using Google Search grounding.
+    Only searches for the specific components that were selected in Step 6.
+
+    Args:
+        title: Article title from Step 4 synthesis
+        summary: Bullet summary from Step 4 synthesis
+        full_text: Full article text (optional)
+        selected_components: List of components selected by Step 6 (e.g., ['details', 'timeline']).
+                            If None, searches for all components (legacy behavior).
+
+    Returns:
+        dict with 'results' and 'citations'
+    """
+
+    # Get API key from environment
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable not set")
+
+    # Determine which components need search
+    if selected_components is not None:
+        # Filter out components that don't need Google Search
+        components_needing_search = [c for c in selected_components
+                                      if c in COMPONENT_PROMPT_MAP]
+    else:
+        # Legacy fallback: search all
+        components_needing_search = list(COMPONENT_PROMPT_MAP.keys())
+
+    # If no components need search, return empty result (saves a grounding query)
+    if not components_needing_search:
+        print(f"   ⏭️  Skipping context search — no components need web search")
+        return {
+            'results': '',
+            'citations': []
+        }
+
+    # Use Gemini 2.0 Flash with Google Search grounding
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+
+    # Use full_text if provided, otherwise use summary
+    article_text = full_text if full_text else summary
+
+    # Build prompt with ONLY the sections needed
+    component_sections = '\n'.join(
+        COMPONENT_PROMPT_MAP[comp] for comp in components_needing_search
+    )
+
+    component_names = ', '.join(c.upper() for c in components_needing_search)
+
+    prompt = f"""You are gathering data for specific news article components.
+
+ARTICLE TITLE: {title}
+BULLET SUMMARY: {summary}
+FULL ARTICLE TEXT: {article_text[:3000]}
+
+Gather information for ONLY these components: {component_names}
+{component_sections}"""
+
+    # Scale maxOutputTokens based on how many components we're searching for
+    # Fewer components = fewer tokens needed = cheaper
+    tokens_per_component = 1024
+    max_tokens = min(4096, len(components_needing_search) * tokens_per_component)
 
     request_data = {
         "contents": [
@@ -257,24 +274,24 @@ If only boring/famous locations available, write: "NO INTERESTING LOCATION"
             "temperature": 0.3,
             "topK": 40,
             "topP": 0.95,
-            "maxOutputTokens": 4096
+            "maxOutputTokens": max_tokens
         },
         "tools": [{
             "google_search": {}
         }]
     }
-    
+
     try:
         response = requests.post(url, json=request_data, timeout=60)
         response.raise_for_status()
         result = response.json()
-        
+
         # Extract text from response
         if 'candidates' in result and len(result['candidates']) > 0:
             candidate = result['candidates'][0]
             if 'content' in candidate and 'parts' in candidate['content']:
                 response_text = candidate['content']['parts'][0]['text']
-                
+
                 # Extract citations from grounding metadata if available
                 citations = []
                 if 'groundingMetadata' in candidate:
@@ -284,38 +301,34 @@ If only boring/famous locations available, write: "NO INTERESTING LOCATION"
                             if 'web' in chunk:
                                 citations.append(chunk['web'].get('uri', ''))
                     elif 'webSearchQueries' in grounding:
-                        # Fallback - just note that search was used
                         citations = ['Google Search']
-                
+
                 if not citations:
                     citations = ['Google Search via Gemini']
-                
-                print(f"   ✅ Gemini context search completed ({len(response_text)} chars)")
+
+                print(f"   ✅ Gemini context search completed ({len(response_text)} chars, searched: {component_names})")
                 return {
                     'results': response_text,
                     'citations': citations
                 }
-        
+
         print("   ⚠️ Empty response from Gemini, using fallback")
-        return _get_fallback_context(claude_title, claude_summary)
-        
+        return _get_fallback_context(title, summary)
+
     except Exception as e:
         print(f"   ⚠️ Gemini search error: {e}, using fallback")
-        return _get_fallback_context(claude_title, claude_summary)
+        return _get_fallback_context(title, summary)
 
 
 def _get_fallback_context(title: str, summary: str) -> Dict[str, str]:
     """Provide minimal fallback context when search fails"""
-    fallback_results = f"""TIMELINE CONTEXT:
-This is a developing story. Please check official sources for the latest updates.
-
-CONTEXTUAL DATA POINTS:
+    fallback_results = f"""CONTEXTUAL DATA POINTS:
 - Story topic: {title[:100]}
 - Additional details should be verified from primary sources
 
 ADDITIONAL CONTEXT:
 This article covers significant current events. For complete context, readers should consult multiple news sources."""
-    
+
     return {
         'results': fallback_results,
         'citations': ['Fallback - primary sources recommended']
@@ -325,45 +338,41 @@ This article covers significant current events. For complete context, readers sh
 def validate_gemini_response(response: Dict[str, str]) -> Tuple[bool, list]:
     """
     Validate Gemini's contextual search response
-    
+
     Returns: (is_valid, errors)
     """
     errors = []
-    
+
     if 'results' not in response:
         errors.append("Missing results in response")
         return False, errors
-    
+
     results = response['results']
-    
+
     # Basic validation
-    if len(results.strip()) < 100:
+    if len(results.strip()) < 50:
         errors.append("Results too short - may not contain sufficient context")
-    
-    # Check for key sections
-    if 'TIMELINE' not in results.upper() and 'EVENT' not in results.upper() and 'CONTEXT' not in results.upper():
-        errors.append("Missing timeline/event information")
-    
-    if 'DATA' not in results.upper() and 'STATISTIC' not in results.upper() and 'NUMBER' not in results.upper():
-        errors.append("Missing data/statistics information")
-    
+
     is_valid = len(errors) == 0
     return is_valid, errors
 
 
 # Example usage and testing
 if __name__ == "__main__":
-    # Test with sample article
+    # Test with sample article — only searching for graph + details
     test_title = "European Central Bank raises interest rates to 4.5 percent"
     test_summary = "The quarter-point increase marks the tenth consecutive rate hike since July 2023, aimed at bringing inflation down from its current 5.3 percent."
-    
+
     try:
-        context_results = search_gemini_context(test_title, test_summary)
-        
+        context_results = search_gemini_context(
+            test_title, test_summary,
+            selected_components=['graph', 'details']
+        )
+
         print("=== GEMINI CONTEXT SEARCH RESULTS ===")
         print("Results:", context_results['results'][:500], "...")
         print("\nCitations:", context_results['citations'])
-        
+
         # Validate the result
         is_valid, errors = validate_gemini_response(context_results)
         if is_valid:
@@ -372,8 +381,6 @@ if __name__ == "__main__":
             print("❌ Validation failed:")
             for error in errors:
                 print(f"  - {error}")
-                
+
     except Exception as e:
         print(f"Error: {e}")
-
-

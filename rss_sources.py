@@ -1054,13 +1054,6 @@ RSS_FEEDS = [
         'country': 'Russia'
     },
     {
-        'name': 'RIA Novosti',
-        'url': 'https://ria.ru/export/rss2/index.xml',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Russia'
-    },
-    {
         'name': 'The Moscow Times',
         'url': 'https://www.themoscowtimes.com/rss/news',
         'category': 'news',

@@ -7,10 +7,10 @@ Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
 Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
-Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
-Step 5: Gemini Context Search (Google Search grounding for component data)
-Step 6: Gemini Component Selection (decides which components based on search data)
-Step 7: Claude Component Generation (timeline, details, graph, map)
+Step 4: Multi-Source Synthesis with Gemini Flash (generates article from all sources)
+Step 6: Gemini Component Selection (decides which components article needs — cheap, no grounding)
+Step 5: Gemini Context Search (Google Search grounding — ONLY if components need it, skipped otherwise)
+Step 7: Gemini Component Generation (timeline, details, graph, map)
 Step 8: Fact Verification (catches hallucinations, regenerates if needed)
 Step 9: Publishing to Supabase
 Step 10: Article Scoring (AI importance scoring 700-950)
@@ -38,7 +38,7 @@ from step1_5_event_clustering import EventClusteringEngine
 from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
 from step3_image_selection import select_best_image_for_cluster, ImageSelector
 from image_quality_checker import ImageQualityChecker, check_and_select_best_image
-from step4_multi_source_synthesis import MultiSourceSynthesizer
+# step4_multi_source_synthesis no longer used (was Claude-based, now using inline Gemini synthesis)
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import GeminiComponentWriter
@@ -1099,58 +1099,70 @@ def run_complete_pipeline():
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
             
             # ==========================================
-            # STEPS 5+6: CONTEXT SEARCH + COMPONENT SELECTION (sequential, both Gemini)
+            # STEP 6 FIRST: COMPONENT SELECTION (cheap, no grounding)
+            # Then STEP 5: CONTEXT SEARCH (expensive grounding, only if needed)
             # ==========================================
-            print(f"\n🔍 [Cluster {cluster_id}] STEP 5: GEMINI CONTEXT SEARCH")
-            
+
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
-            
-            full_article_text = ""
-            for source in cluster_sources:
-                if source.get('full_text') and len(source.get('full_text', '')) > 100:
-                    full_article_text = source['full_text'][:3000]
-                    break
-            
-            gemini_result = None
-            search_context_text = ""
-            if gemini_key:
-                try:
-                    with gemini_semaphore:
-                        gemini_result = search_gemini_context(
-                            synthesized['title_news'], 
-                            bullets_text,
-                            full_article_text
-                        )
-                    search_context_text = gemini_result.get('results', '') if gemini_result else ""
-                    print(f"   ✅ [Cluster {cluster_id}] Step 5 Complete: ({len(search_context_text)} chars)")
-                except Exception as search_error:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Step 5 Failed: {search_error}")
-                    search_context_text = ""
-            
+
+            # --- STEP 6: Decide which components this article needs ---
             print(f"\n📋 [Cluster {cluster_id}] STEP 6: GEMINI COMPONENT SELECTION")
-            
+
             article_for_selection = {
                 'title': synthesized['title_news'],
                 'text': bullets_text,
                 'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
             }
-            
+
             selected = []
             component_result = {}
             try:
                 with gemini_semaphore:
-                    component_result = component_selector.select_components(article_for_selection, search_context_text)
+                    component_result = component_selector.select_components(article_for_selection)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
                 print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
                 print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                selected = ['timeline', 'details']
+                selected = ['details']
                 component_result = {'components': selected, 'emoji': '📰'}
-            
+
+            # --- STEP 5: Context search ONLY if components need it ---
+            # Components that need Google Search grounding: timeline, details, graph, map
+            # Components that DON'T need search: scorecard, recipe, or empty []
+            components_needing_search = [c for c in selected if c in ('timeline', 'details', 'graph', 'map')]
+
+            gemini_result = None
             context_data = {}
-            if selected and gemini_result:
-                for component in selected:
-                    context_data[component] = gemini_result
+
+            if components_needing_search and gemini_key:
+                print(f"\n🔍 [Cluster {cluster_id}] STEP 5: GEMINI CONTEXT SEARCH (for: {', '.join(components_needing_search)})")
+
+                full_article_text = ""
+                for source in cluster_sources:
+                    if source.get('full_text') and len(source.get('full_text', '')) > 100:
+                        full_article_text = source['full_text'][:3000]
+                        break
+
+                try:
+                    with gemini_semaphore:
+                        gemini_result = search_gemini_context(
+                            synthesized['title_news'],
+                            bullets_text,
+                            full_article_text,
+                            selected_components=components_needing_search
+                        )
+                    search_context_text = gemini_result.get('results', '') if gemini_result else ""
+                    print(f"   ✅ [Cluster {cluster_id}] Step 5 Complete: ({len(search_context_text)} chars)")
+                except Exception as search_error:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Step 5 Failed: {search_error}")
+
+                if gemini_result:
+                    for component in selected:
+                        context_data[component] = gemini_result
+            elif not components_needing_search and selected:
+                print(f"\n⏭️  [Cluster {cluster_id}] STEP 5: SKIPPED (components [{', '.join(selected)}] don't need web search)")
+            elif not selected:
+                print(f"\n⏭️  [Cluster {cluster_id}] STEP 5: SKIPPED (no components selected)")
             
             # ==========================================
             # STEP 7: COMPONENT GENERATION (with retry)
@@ -1160,7 +1172,7 @@ def run_complete_pipeline():
             components = {}
             map_locations = component_result.get('map_locations', []) if isinstance(component_result, dict) else []
             
-            if selected and context_data:
+            if selected:
                 max_component_retries = 3
                 for comp_attempt in range(max_component_retries):
                     try:
@@ -1179,7 +1191,9 @@ def run_complete_pipeline():
                                 'timeline': generation_result.get('timeline'),
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
-                                'map': generation_result.get('map')
+                                'map': generation_result.get('map'),
+                                'scorecard': generation_result.get('scorecard'),
+                                'recipe': generation_result.get('recipe')
                             }
                             components = {k: v for k, v in components.items() if v is not None}
 
@@ -1312,8 +1326,8 @@ def run_complete_pipeline():
             article_category = synthesized.get('category', 'Other')
             
             article_score = 750  # default
-            shelf_life_days = 7
-            freshness_category = 'medium'
+            shelf_life_days = 1
+            freshness_category = 'short'
             interest_tags = []
             article_countries = []
             article_topics = []
@@ -1340,7 +1354,7 @@ def run_complete_pipeline():
                     # score_article_with_references returns {'score': int, 'topic_relevance': {}, 'country_relevance': {}, 'freshness_category': str, 'shelf_life_days': int}
                     if isinstance(score_result, dict):
                         article_score = score_result.get('score', 750)
-                        shelf_life_days = score_result.get('shelf_life_days', 7)
+                        shelf_life_days = score_result.get('shelf_life_days', 1)
                         freshness_category = score_result.get('freshness_category', 'medium')
                     else:
                         article_score = int(score_result) if score_result else 750
@@ -1405,7 +1419,7 @@ def run_complete_pipeline():
                     emb_str = '[' + ','.join(str(x) for x in article_embedding_minilm) + ']'
                     ann_result = supabase.rpc('match_concept_entities', {
                         'query_embedding': emb_str,
-                        'match_threshold': 0.45,
+                        'match_threshold': 0.50,
                         'match_count': 5
                     }).execute()
                     if ann_result.data:
@@ -1421,6 +1435,31 @@ def run_complete_pipeline():
                     # Non-blocking: concept tagging is optional
                     print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
 
+            # If article has info box components, trim bullets to 450 max
+            # Articles without components keep up to 550 chars
+            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
+            if has_components and isinstance(bullets, list):
+                total_bullet_chars = sum(len(b) for b in bullets)
+                if total_bullet_chars > 450:
+                    trimmed = []
+                    running = 0
+                    for b in bullets:
+                        if running + len(b) <= 450:
+                            trimmed.append(b)
+                            running += len(b)
+                        else:
+                            remaining = 450 - running
+                            if remaining > 30:
+                                truncated = b[:remaining]
+                                cut_at = max(truncated.rfind('.'), truncated.rfind(','))
+                                if cut_at > 30:
+                                    trimmed.append(b[:cut_at + 1].rstrip(','))
+                                else:
+                                    trimmed.append(truncated.rsplit(' ', 1)[0])
+                            break
+                    bullets = trimmed
+                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (has components)")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1433,6 +1472,10 @@ def run_complete_pipeline():
                 'details': components.get('details'),
                 'graph': components.get('graph'),
                 'map': components.get('map'),
+                'scorecard': components.get('scorecard'),
+                'recipe': components.get('recipe'),
+                'article_type': component_result.get('article_type', 'standard') if isinstance(component_result, dict) else 'standard',
+                'emoji': component_result.get('emoji') if isinstance(component_result, dict) else None,
                 'components_order': successful_components,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
@@ -1593,8 +1636,7 @@ You are a professional news editor for Ten News, synthesizing multiple source ar
 
 You will produce:
   • TITLE: Punchy headline (40-60 chars)
-  • BULLETS: 3 narrative bullets for reading (80-100 chars each)
-  • 5 W's: Structured quick-reference factsheet (WHO/WHAT/WHEN/WHERE/WHY)
+  • BULLETS: Narrative bullets for reading (250-450 chars total, as many as the story needs)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ CORE WRITING PRINCIPLES
@@ -1681,96 +1723,35 @@ EXAMPLES:
   ✓ "**Bitcoin** Crashes **15%** as Mt. Gox Repayments Begin" (48 chars)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 SUMMARY BULLETS (Exactly 3 bullets)
+🔹 SUMMARY BULLETS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PURPOSE: Narrative summary for readers who want context and flow.
 
-LENGTH: 80-100 characters per bullet (15-20 words)
-
-STRUCTURE (Inverted Pyramid):
-  • Bullet 1: WHAT happened (the core news fact not already in title)
-  • Bullet 2: WHO/HOW (key players, names, method, cause)
-  • Bullet 3: WHY IT MATTERS (significance, impact, what's next)
+TOTAL LENGTH: Minimum 250 characters, maximum 550 characters across ALL bullets combined.
+HARD LIMIT: Do NOT exceed 550 characters total. Count your characters. If you have 3 bullets at 180 chars each, that's 540 — close to the max.
+NUMBER OF BULLETS: Write 2-3 bullets (minimum 2, maximum 3).
+  - Simple story (sports score, death announcement): 2 bullets with context
+  - Medium story: 2-3 bullets
+  - Complex story (geopolitics, policy): 3 shorter bullets
+  - IMPORTANT: Every article MUST reach 250 chars total. Add context, numbers, or background details.
+  - IMPORTANT: Keep each bullet under 190 characters. 3 bullets × 180 chars = 540 max.
 
 WRITING RULES:
   ✓ Each bullet provides NEW information not in the title
-  ✓ Include specific numbers in at least 2 bullets
-  ✓ Use parallel structure (all bullets start with same part of speech)
+  ✓ Include specific numbers where possible
   ✓ Active voice, present tense
   ✓ Front-load important words
-  ✓ All bullets approximately equal length
   ✓ 2-3 **bold** highlights per bullet
 
-PARALLEL STRUCTURE EXAMPLE:
-  ✓ GOOD (all start with subject + verb):
-    • Fed raises rates to 5.5%, highest level since 2007
-    • Markets drop 2% following the announcement
-    • Economists predict two more increases this year
+EXAMPLES:
+  1 bullet (simple story):
+  • "**PSG** dominated with goals from **Dembélé**, **Barcola**, and **Doué** to eliminate Chelsea from the Champions League"
 
-  ✗ BAD (inconsistent structure):
-    • The Fed raised rates to 5.5%
-    • A 2% market drop followed
-    • Economists are predicting more increases
-
-EXAMPLES (80-100 chars):
-  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**" (95 chars)
-  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 loss" (93 chars)
-  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week" (89 chars)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 5 W's QUICK REFERENCE (Exactly 5 fields)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PURPOSE: Structured factsheet for quick scanning and at-a-glance reference.
-
-STRUCTURE:
-  • WHO: Key people and organizations involved (20-50 chars)
-  • WHAT: The core action or event (30-60 chars)
-  • WHEN: Specific timing (15-40 chars)
-  • WHERE: Location(s) affected (20-50 chars)
-  • WHY: Cause or reason (30-60 chars)
-
-WRITING RULES:
-  ✓ Short, punchy phrases (not full sentences)
-  ✓ Most important entity/fact first in each field
-  ✓ Include specific numbers where relevant
-  ✓ 1-2 **bold** highlights per field
-  ✓ No repetition across fields
-  ✓ Can omit articles and verbs for brevity
-
-EXAMPLE:
-
-  five_ws: {{
-    "who": "**Tesla**, CEO **Elon Musk**",
-    "what": "Cutting **14,000** jobs (**10%** of workforce)",
-    "when": "Announced **Wednesday**, effective **Q2 2024**",
-    "where": "**US**, **Europe**, and **Asia** factories",
-    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
-  }}
-
-MORE EXAMPLES BY CATEGORY:
-
-  FINANCE:
-    "who": "**Federal Reserve**, Chair **Jerome Powell**",
-    "what": "Holds interest rates at **5.5%**",
-    "when": "**Wednesday**, sixth consecutive meeting",
-    "where": "**US** economy, global markets",
-    "why": "Inflation remains above **2%** target"
-
-  TECH:
-    "who": "**Apple**, CEO **Tim Cook**",
-    "what": "Launches **iPhone 16** with **AI** features",
-    "when": "**September 12**, available **September 20**",
-    "where": "**29 countries** at launch",
-    "why": "Competing with **Samsung** Galaxy AI push"
-
-  CRYPTO:
-    "who": "**Mt. Gox** creditors, **Bitcoin** holders",
-    "what": "**$9B** in Bitcoin repayments begin",
-    "when": "Starting **July 2024**, over 90 days",
-    "where": "Global, primarily **Japan** and **US**",
-    "why": "Court-ordered distribution after 2014 hack"
+  3 bullets (complex story):
+  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**"
+  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD**"
+  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
@@ -1793,8 +1774,7 @@ WHAT NOT TO HIGHLIGHT:
 
 HIGHLIGHT COUNTS:
   • Title: 2-3 highlights
-  • Bullets: 2-3 highlights per bullet (6-9 total)
-  • 5 W's: 1-2 highlights per field (5-10 total)
+  • Bullets: 2-3 highlights per bullet
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
@@ -1803,18 +1783,10 @@ HIGHLIGHT COUNTS:
 {{
   "title": "40-60 char title with **2-3 bold** terms",
   "summary_bullets": [
-    "WHAT: 80-100 chars, **2-3 highlights**",
-    "WHO/HOW: 80-100 chars, **2-3 highlights**",
-    "WHY IT MATTERS: 80-100 chars, **2-3 highlights**"
+    "Bullet with **2-3 highlights** — as many bullets as the story needs",
+    "Min 250, max 550 chars total across all bullets"
   ],
-  "five_ws": {{
-    "who": "Key people/orgs, 20-50 chars, **1-2 highlights**",
-    "what": "Core action, 30-60 chars, **1-2 highlights**",
-    "when": "Timing, 15-40 chars, **1-2 highlights**",
-    "where": "Location(s), 20-50 chars, **1-2 highlights**",
-    "why": "Cause/reason, 30-60 chars, **1-2 highlights**"
-  }},
-  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Food|Fashion|Travel|Lifestyle"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1825,18 +1797,10 @@ HIGHLIGHT COUNTS:
   "title": "**Tesla** Cuts **14,000** Jobs Amid Global EV Sales Slump",
 
   "summary_bullets": [
-    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia** factories",
-    "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 sales loss",
-    "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week alone"
+    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**",
+    "CEO **Elon Musk** blames overcapacity and price war with Chinese rival **BYD** after Q4 loss",
+    "Stock tumbles **8%** to **$165**, erasing **$50B** in market value"
   ],
-
-  "five_ws": {{
-    "who": "**Tesla**, CEO **Elon Musk**",
-    "what": "Cutting **14,000** jobs (**10%** of workforce)",
-    "when": "Announced **Wednesday**, effective **Q2 2024**",
-    "where": "**US**, **Europe**, and **Asia** factories",
-    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
-  }},
 
   "category": "Business"
 }}
@@ -1853,20 +1817,12 @@ TITLE:
   □ 2-3 highlights
 
 BULLETS:
-  □ Exactly 3 bullets
-  □ Each 80-100 characters
-  □ Bullet 1 = What happened
-  □ Bullet 2 = Who/How
-  □ Bullet 3 = Why it matters
-  □ Parallel structure
+  □ At least 1 bullet
+  □ Minimum 250 characters total across all bullets
+  □ Maximum 450 characters total across all bullets
+  □ Each bullet adds NEW info not in the title
   □ 2-3 highlights per bullet
 
-5 W's:
-  □ All 5 fields completed (WHO/WHAT/WHEN/WHERE/WHY)
-  □ Short phrases, not full sentences
-  □ Specific facts in each field
-  □ 1-2 highlights per field
-  □ No repetition across fields
 
 CRITICAL RULES:
 1. ALWAYS output valid JSON - never explanations or commentary
@@ -1952,9 +1908,44 @@ Return ONLY valid JSON, no markdown, no explanations."""
             # Parse JSON
             result = json.loads(response_text)
 
-            # Validate required fields (new format with 5W's - no content field)
-            required = ['title', 'summary_bullets', 'five_ws', 'category']
+            # Validate required fields
+            required = ['title', 'summary_bullets', 'category']
             if all(k in result for k in required):
+                # Check bullet length (250-550 chars total; will be trimmed to 450 later if article has components)
+                bullets = result.get('summary_bullets', [])
+                total_bullet_chars = sum(len(b) for b in bullets) if bullets else 0
+                if total_bullet_chars < 250:
+                    print(f"   ⚠️  Bullets too short: {total_bullet_chars} chars (min 250) (attempt {attempt + 1}/5)")
+                    if attempt < 4:
+                        time.sleep(3)
+                        continue
+                    # On last attempt, accept what we have rather than failing
+                elif total_bullet_chars > 550:
+                    print(f"   ⚠️  Bullets too long: {total_bullet_chars} chars (max 550) (attempt {attempt + 1}/5)")
+                    if attempt < 4:
+                        time.sleep(3)
+                        continue
+                    # On last attempt, trim bullets to fit under 550
+                    trimmed = []
+                    running = 0
+                    for b in bullets:
+                        if running + len(b) <= 550:
+                            trimmed.append(b)
+                            running += len(b)
+                        else:
+                            remaining = 550 - running
+                            if remaining > 30:
+                                truncated = b[:remaining]
+                                last_period = truncated.rfind('.')
+                                last_comma = truncated.rfind(',')
+                                cut_at = max(last_period, last_comma)
+                                if cut_at > 30:
+                                    trimmed.append(b[:cut_at + 1].rstrip(','))
+                                else:
+                                    trimmed.append(truncated.rsplit(' ', 1)[0])
+                            break
+                    result['summary_bullets'] = trimmed
+                    print(f"   ✂️  Trimmed to {sum(len(b) for b in trimmed)} chars ({len(trimmed)} bullets)")
                 # Map to old field names for backward compatibility
                 result['title_news'] = result['title']
                 result['summary_bullets_news'] = result['summary_bullets']
@@ -2038,9 +2029,9 @@ def main():
     print("  🔗 Cluster similar events")
     print("  📡 Fetch full article text")
     print("  ✍️  Synthesize multi-source articles")
-    print("  🔍 Step 5: Search for context (Gemini)")
     print("  📋 Step 6: Select components (Gemini)")
-    print("  📊 Step 7: Generate components (Claude)")
+    print("  🔍 Step 5: Search for context (Gemini, only if needed)")
+    print("  📊 Step 7: Generate components (Gemini)")
     print("  🔬 Verify facts (catch hallucinations)")
     print("  💾 Publish to Supabase")
     print("\nPress Ctrl+C to stop")

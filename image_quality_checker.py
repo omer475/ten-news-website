@@ -321,9 +321,20 @@ def check_and_select_best_image(candidates: List[Dict], min_confidence: int = 70
         url = candidate.get('url', '')
         if not url:
             continue
-            
+
         print(f"      🔍 Quality check {i+1}/{max_checks}: {candidate.get('source_name', 'Unknown')}")
-        
+
+        # Hotlink protection check: fetch without Referer to simulate how the app loads images
+        try:
+            head_resp = requests.head(url, timeout=5, allow_redirects=True, headers={
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'
+            })
+            if head_resp.status_code in (403, 410, 451):
+                print(f"      ❌ Image blocked by hotlink protection (HTTP {head_resp.status_code})")
+                continue
+        except requests.exceptions.RequestException:
+            pass  # If HEAD fails, still try the full check
+
         result = checker.check_image(url)
         
         # If error, skip this candidate but don't reject it outright
