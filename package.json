@@ -13,6 +13,7 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.98.0",
     "d3": "^7.9.0",
+    "formidable": "^3.5.4",
     "lucide-react": "^0.544.0",
     "mapbox-gl": "^3.17.0",
     "next": "^14.0.0",
@@ -21,6 +22,7 @@
     "recharts": "^3.3.0",
     "resend": "^6.1.0",
     "topojson-client": "^3.1.0",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "engines": {
