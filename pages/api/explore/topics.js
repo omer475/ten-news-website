@@ -68,15 +68,16 @@ const SUBTOPIC_CATEGORY_MAP = {
   'Celebrity Style & Red Carpet': ['Fashion', 'Entertainment'],
 }
 
-// APP_TOPIC_ALIAS: maps iOS app short topic IDs to SUBTOPIC_CATEGORY_MAP keys
+// APP_TOPIC_ALIAS: maps iOS app topic IDs to SUBTOPIC_CATEGORY_MAP keys
+// Includes both parent category IDs and underscore-format subtopic IDs from onboarding
 const APP_TOPIC_ALIAS = {
+  // Parent category IDs (broad)
   'politics': ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania'],
   'ai': ['AI & Machine Learning'],
   'science': ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
   'sports': ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
-  'f1': ['F1 & Motorsport'],
-  'startups': ['Startups & Venture Capital'],
   'technology': ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
+  'tech': ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
   'entertainment': ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama'],
   'health': ['Medical Breakthroughs', 'Public Health', 'Mental Health', 'Pharma & Drug Industry'],
   'business': ['Oil & Energy', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Real Estate'],
@@ -84,6 +85,7 @@ const APP_TOPIC_ALIAS = {
   'crypto': ['Bitcoin', 'DeFi & Web3', 'Crypto Regulation & Legal'],
   'lifestyle': ['Pets & Animals', 'Home & Garden', 'Shopping & Product Reviews'],
   'fashion': ['Sneakers & Streetwear', 'Celebrity Style & Red Carpet'],
+  // Subtopic IDs (specific) — short form
   'gaming': ['Gaming'],
   'soccer': ['Soccer/Football'],
   'nfl': ['NFL'],
@@ -100,6 +102,54 @@ const APP_TOPIC_ALIAS = {
   'automotive': ['Automotive'],
   'cybersecurity': ['Cybersecurity'],
   'realestate': ['Real Estate'],
+  'bitcoin': ['Bitcoin'],
+  'startups': ['Startups & Venture Capital'],
+  // Subtopic IDs (specific) — underscore format from onboarding
+  'war_conflict': ['War & Conflict'],
+  'us_politics': ['US Politics'],
+  'european_politics': ['European Politics'],
+  'asian_politics': ['Asian Politics'],
+  'middle_east': ['Middle East'],
+  'latin_america': ['Latin America'],
+  'africa_oceania': ['Africa & Oceania'],
+  'human_rights': ['Human Rights & Civil Liberties'],
+  'f1': ['F1 & Motorsport'],
+  'f1_motorsport': ['F1 & Motorsport'],
+  'boxing_mma': ['Boxing & MMA/UFC'],
+  'oil_energy': ['Oil & Energy'],
+  'retail_consumer': ['Retail & Consumer'],
+  'corporate_deals': ['Corporate Deals'],
+  'trade_tariffs': ['Trade & Tariffs'],
+  'corporate_earnings': ['Corporate Earnings'],
+  'startups_vc': ['Startups & Venture Capital'],
+  'real_estate': ['Real Estate'],
+  'movies_film': ['Movies & Film'],
+  'tv_streaming': ['TV & Streaming'],
+  'celebrity_news': ['Celebrity News'],
+  'kpop_kdrama': ['K-Pop & K-Drama'],
+  'ai_ml': ['AI & Machine Learning'],
+  'smartphones_gadgets': ['Smartphones & Gadgets'],
+  'social_media': ['Social Media'],
+  'space_tech': ['Space Tech'],
+  'robotics_hardware': ['Robotics & Hardware'],
+  'space_astronomy': ['Space & Astronomy'],
+  'climate_environment': ['Climate & Environment'],
+  'biology_nature': ['Biology & Nature'],
+  'earth_science': ['Earth Science'],
+  'medical_breakthroughs': ['Medical Breakthroughs'],
+  'public_health': ['Public Health'],
+  'mental_health': ['Mental Health'],
+  'pharma_drugs': ['Pharma & Drug Industry'],
+  'stock_markets': ['Stock Markets'],
+  'banking_lending': ['Banking & Lending'],
+  'commodities': ['Commodities'],
+  'defi_web3': ['DeFi & Web3'],
+  'crypto_regulation': ['Crypto Regulation & Legal'],
+  'pets_animals': ['Pets & Animals'],
+  'home_garden': ['Home & Garden'],
+  'shopping_reviews': ['Shopping & Product Reviews'],
+  'sneakers_streetwear': ['Sneakers & Streetwear'],
+  'celebrity_style': ['Celebrity Style & Red Carpet'],
 }
 
 // Sliding blend: behavior_weight = min(directMatches / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
@@ -143,7 +193,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { user_id } = req.query
+  const { user_id, followed_topics: qFollowed, home_country: qHome } = req.query
   if (!user_id) {
     return res.status(400).json({ error: 'Missing user_id' })
   }
@@ -163,12 +213,17 @@ export default async function handler(req, res) {
 
     const tagProfile = profile?.tag_profile || {}
     const skipProfile = profile?.skip_profile || {}
-    const homeCountry = profile?.home_country || null
-    const followedTopics = Array.isArray(profile?.followed_topics)
+
+    // Fall back to query params when DB profile is missing (guest users)
+    const dbFollowed = Array.isArray(profile?.followed_topics)
       ? profile.followed_topics
       : (typeof profile?.followed_topics === 'string'
         ? JSON.parse(profile.followed_topics || '[]')
         : [])
+    const followedTopics = dbFollowed.length > 0
+      ? dbFollowed
+      : (qFollowed ? qFollowed.split(',').map(t => t.trim()).filter(Boolean) : [])
+    const homeCountry = profile?.home_country || qHome || null
 
     // Sort tags by weight, filter noise
     const sortedTags = Object.entries(tagProfile)
