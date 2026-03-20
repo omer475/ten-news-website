@@ -1778,7 +1778,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v8',  // deployment version marker
+    _v: 'v10',  // deployment version marker
   });
 }
 
