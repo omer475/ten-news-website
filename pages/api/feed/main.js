@@ -751,8 +751,9 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!userPrefs && homeCountry) {
-      userPrefs = { home_country: homeCountry, followed_countries: followedCountries, followed_topics: followedTopics };
+    if (!userPrefs) {
+      // Fallback: use query params for users not in DB (guest/anonymous)
+      userPrefs = { home_country: homeCountry || '', followed_countries: followedCountries, followed_topics: followedTopics };
     }
 
     // ==========================================
