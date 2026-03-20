@@ -550,6 +550,27 @@ function buildTagSetsCache(articles) {
   return cache;
 }
 
+// Extract significant words from a title for dedup comparison
+function getTitleWords(title) {
+  if (!title) return new Set();
+  const stopWords = new Set(['the','a','an','in','on','at','to','for','of','is','are','was','were','and','or','but','with','by','from','as','its','it','has','had','have','this','that','be','been','after','new','says','could','may','will','would','about','than','more','into','over','out','up','just','also','amid','per']);
+  return new Set(
+    title.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w))
+  );
+}
+
+// Calculate title similarity (Jaccard on significant words)
+function titleSimilarity(titleA, titleB) {
+  const wordsA = getTitleWords(titleA);
+  const wordsB = getTitleWords(titleB);
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+  let intersection = 0;
+  for (const w of wordsA) { if (wordsB.has(w)) intersection++; }
+  const union = new Set([...wordsA, ...wordsB]).size;
+  return union > 0 ? intersection / union : 0;
+}
+
 function mmrSelect(candidates, selected, tagCache, lambda) {
   if (candidates.length === 0) return null;
   if (selected.length === 0) return candidates.shift();
@@ -558,8 +579,8 @@ function mmrSelect(candidates, selected, tagCache, lambda) {
   let bestIdx = 0;
   let bestMMR = -Infinity;
 
-  // Check diversity against last 5 selected (recent context matters most)
-  const recent = selected.slice(-5);
+  // Check diversity against last 8 selected (expanded from 5 for better dedup)
+  const recent = selected.slice(-8);
 
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
@@ -567,6 +588,7 @@ function mmrSelect(candidates, selected, tagCache, lambda) {
 
     let maxSim = 0;
     const cTags = tagCache.get(c.id) || new Set();
+    const cTitle = c.title_news || '';
 
     for (const s of recent) {
       const sTags = tagCache.get(s.id) || new Set();
@@ -578,6 +600,10 @@ function mmrSelect(candidates, selected, tagCache, lambda) {
       let sim = unionSize > 0 ? intersection / unionSize : 0;
       // Same category carries a minimum similarity penalty
       if (c.category === s.category) sim = Math.max(sim, 0.4);
+      // Title-based dedup: if titles share 40%+ significant words, high penalty
+      const titleSim = titleSimilarity(cTitle, s.title_news || '');
+      if (titleSim >= 0.4) sim = Math.max(sim, 0.85); // near-duplicate story
+      else if (titleSim >= 0.25) sim = Math.max(sim, 0.6); // related story
       maxSim = Math.max(maxSim, sim);
     }
 
@@ -1202,7 +1228,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
-  // Boost articles whose interest_tags overlap with the user's subtopic tags
+  // CRITICAL: Only include articles with at least 1 tag match to prevent
+  // category-only matches (e.g. Science articles leaking into Tech/AI feeds
+  // because Space Tech maps to both Tech and Science categories).
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
@@ -1212,7 +1240,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
       // Base score + category boost + subtopic tag match boost
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
-      const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
+      const tagBoost = 1.0 + (tagMatches * 0.25);
       return {
         ...article,
         _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
@@ -1220,6 +1248,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         _bucket: 'interest',
       };
     })
+    .filter(a => a._tagMatches > 0) // FILTER: require at least 1 tag overlap (prevents Science leak)
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
