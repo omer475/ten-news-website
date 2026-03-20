@@ -1316,6 +1316,93 @@ async function handleV2Feed(req, res, supabase, opts) {
     return null;
   }
 
+  // ==========================================
+  // SESSION-LEVEL LEARNING: Adapt categories in real-time based on
+  // what the user engaged/skipped in the CURRENT session.
+  // This is the key to breaking the onboarding lock-in problem.
+  // ==========================================
+
+  let sessionInterestRatio = 0.8; // Default: 80% interest slots. Will reduce if user is skipping.
+
+  if (sessionEngagedIds.length + sessionSkippedIds.length >= 5) {
+    // We have enough session data to learn from (at least 5 articles seen)
+    const engagedArticles = sessionEngagedIds.map(id => articleMap[id]).filter(Boolean);
+    const skippedArticles = sessionSkippedIds.map(id => articleMap[id]).filter(Boolean);
+
+    // Build session-level category preferences
+    const sessionCatEngaged = {};
+    const sessionCatSkipped = {};
+    const sessionTagEngaged = {};
+
+    for (const a of engagedArticles) {
+      const cat = a.category || 'Other';
+      sessionCatEngaged[cat] = (sessionCatEngaged[cat] || 0) + 1;
+      // Also track engaged tags for discovery
+      const tags = safeJsonParse(a.interest_tags, []);
+      for (const t of tags.slice(0, 6)) {
+        const tl = t.toLowerCase();
+        sessionTagEngaged[tl] = (sessionTagEngaged[tl] || 0) + 1;
+      }
+    }
+    for (const a of skippedArticles) {
+      const cat = a.category || 'Other';
+      sessionCatSkipped[cat] = (sessionCatSkipped[cat] || 0) + 1;
+    }
+
+    // Calculate session skip rate for interest categories
+    let interestEngaged = 0, interestSkipped = 0;
+    for (const cat of interestCategories) {
+      interestEngaged += sessionCatEngaged[cat] || 0;
+      interestSkipped += sessionCatSkipped[cat] || 0;
+    }
+    const interestTotal = interestEngaged + interestSkipped;
+    const interestSkipRate = interestTotal > 0 ? interestSkipped / interestTotal : 0;
+
+    // If user is heavily skipping their onboarding categories, reduce interest slots
+    // and let discovery/trending fill the gap with diverse content
+    if (interestSkipRate > 0.7 && interestTotal >= 5) {
+      // User skips >70% of onboarding content — cut interest slots to 30%
+      sessionInterestRatio = 0.30;
+      console.log(`[feed] SESSION LEARNING: interestSkipRate=${(interestSkipRate*100).toFixed(0)}% — reducing interest slots to 30% for ${userId?.substring(0,8)}`);
+    } else if (interestSkipRate > 0.5 && interestTotal >= 5) {
+      // User skips >50% — reduce to 50%
+      sessionInterestRatio = 0.50;
+      console.log(`[feed] SESSION LEARNING: interestSkipRate=${(interestSkipRate*100).toFixed(0)}% — reducing interest slots to 50% for ${userId?.substring(0,8)}`);
+    }
+
+    // SESSION CATEGORY DISCOVERY: If user consistently engages with categories
+    // NOT in their onboarding, add those categories to the interest pool
+    for (const [cat, count] of Object.entries(sessionCatEngaged)) {
+      if (!interestCategories.has(cat) && count >= 2) {
+        // User engaged with 2+ articles from a non-onboarding category — promote it
+        interestCategories.add(cat);
+        console.log(`[feed] SESSION DISCOVERY: promoting category "${cat}" (${count} engagements) for ${userId?.substring(0,8)}`);
+      }
+    }
+
+    // SESSION TAG DISCOVERY: Strong engaged tags get added to interestTags
+    // so the interest scoring picks up articles with those tags
+    for (const [tag, count] of Object.entries(sessionTagEngaged)) {
+      if (!interestTags.has(tag) && count >= 2) {
+        interestTags.add(tag);
+      }
+    }
+
+    // SESSION DAMPENING: If a specific category is being heavily skipped,
+    // remove it from interestCategories for THIS request
+    for (const [cat, skipCount] of Object.entries(sessionCatSkipped)) {
+      const engCount = sessionCatEngaged[cat] || 0;
+      if (skipCount >= 4 && skipCount > engCount * 3) {
+        // User skipped 4+ articles in this category and engages < 1/3 of the time
+        if (interestCategories.has(cat)) {
+          interestCategories.delete(cat);
+          console.log(`[feed] SESSION DAMPENING: removing category "${cat}" (${skipCount} skips vs ${engCount} engages) for ${userId?.substring(0,8)}`);
+        }
+      }
+    }
+  }
+
+  // ==========================================
   // IMPROVEMENT 5: Mode selection priority:
   // 1. Interest Topic Mode — user has followed_topics that resolved to categories + articles
   // 2. Personalized Mode — user has taste vector / interest clusters
@@ -1323,14 +1410,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   //
   // CRITICAL FIX: Interest Topic Mode must be checked FIRST, even for cold-start users
   // with no taste vector. If they selected topics during onboarding, use them.
-  console.log(`[feed] MODE CHECK: hasPerso=${hasAnyPersonalization}, interestCats=${interestCategories.size}, iPool=${iPool.length}, tPool=${tPool.length}, dPool=${dPool.length} for ${userId?.substring(0,8)}`);
+  console.log(`[feed] MODE CHECK: hasPerso=${hasAnyPersonalization}, interestCats=${interestCategories.size}, iPool=${iPool.length}, tPool=${tPool.length}, dPool=${dPool.length}, sessionRatio=${sessionInterestRatio} for ${userId?.substring(0,8)}`);
   if (!hasAnyPersonalization && interestCategories.size > 0 && iPool.length > 0) {
     // ==========================================
     // INTEREST TOPIC MODE for cold-start users with topic selections
     // Same quota-based pre-fill as the personalized interest path below,
     // but fires even when hasAnyPersonalization is false.
+    // sessionInterestRatio adapts based on skip behavior (default 0.8, can drop to 0.3)
     // ==========================================
-    const interestSlots = Math.ceil(limit * 0.8);
+    const interestSlots = Math.ceil(limit * sessionInterestRatio);
     const diversitySlots = limit - interestSlots;
 
     const catQueues = {};
@@ -1466,11 +1554,11 @@ async function handleV2Feed(req, res, supabase, opts) {
   } else if (interestCategories.size > 0 && iPool.length > 0) {
     // ==========================================
     // QUOTA-BASED PRE-FILL for users with interest selections
-    // 70% of slots guaranteed for interest categories, 30% diversity
-    // This ensures Sports/Gaming/etc. users actually see their topics.
+    // sessionInterestRatio adapts based on skip behavior (default 0.8, can drop to 0.3)
+    // This ensures users see their topics but pivots when behavior diverges.
     // ==========================================
 
-    const interestSlots = Math.ceil(limit * 0.8);
+    const interestSlots = Math.ceil(limit * sessionInterestRatio);
     const diversitySlots = limit - interestSlots;
 
     // Pre-fill interest quota: per-category round-robin from interest pool

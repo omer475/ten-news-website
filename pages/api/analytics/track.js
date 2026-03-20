@@ -324,19 +324,20 @@ export default async function handler(req, res) {
           .then(({ data: profileData }) => {
             const tagProfile = profileData?.tag_profile || {}
             for (const term of queryTerms) {
-              // Search terms get moderate boost — explicit intent signal
-              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.08, 1.0)
+              // Search is the STRONGEST explicit intent signal — user typed this
+              // Weight: 0.40 per term (2x a like, 4x an engage)
+              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.40, 1.0)
             }
-            // Also boost the full query as a phrase if multi-word
+            // Multi-word phrase gets even stronger boost (0.50)
             if (queryTerms.length >= 2) {
               const phrase = queryTerms.join(' ')
-              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.12, 1.0)
+              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.50, 1.0)
             }
             admin
               .from('profiles')
               .update({ tag_profile: tagProfile })
               .eq('id', user.id)
-              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query))
+              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query, 'terms:', queryTerms.length))
               .catch(() => {})
           })
           .catch(() => {})
