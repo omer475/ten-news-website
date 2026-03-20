@@ -1,0 +1,2144 @@
+==============================================================================================================
+  20-PERSONA FULL EXPERIENCE TEST V3 — NEW ALGORITHM
+  ALL 20 personas start FRESH (zero history) — testing new unified scoring
+  Phase 1: Check Explore BEFORE  |  Phase 2: Read feed until bored
+  Phase 3: Check Explore AFTER   |  Phase 4: Persona feedback
+  Time: 2026-03-13T15:19:43.550Z
+==============================================================================================================
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [1/20] LENA, 32 — San Francisco, CA [FRESH]
+  AI research lead at a robotics startup. Follows OpenAI/Anthropic race closely. Plays Baldur's Gate 3 on weekends. Watches every SpaceX launch live.
+  Subtopics: AI & Machine Learning, Space Tech, Gaming, Robotics & Hardware
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+(node:45986) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v3.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/omersogancioglu/Ten News Website/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 17 topics | 8 relevant | 47.1% overall | 85.7% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 7 articles | Engaged: 5 | Glanced: 0 | Skipped: 1 | Relevant: 5
+    Exit: NATURAL | Final mood: 68/100 | Saved: 0 | Events: 12
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     SCAN            1.7s     53   -0.08        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     DEEP_READ      21.7s     58    0.62        Science          Space Tech                     **US** to Return to **Moon**, Plans Lunar Base by **202
+    3     SKIP            0.9s     54   -0.17        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    4     ENGAGE         11.0s     57    0.39        Business         AI & Machine Learning          **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    5     DEEP_READ      21.7s     62    0.62        Entertainment    Gaming                         **Elden Ring** Returns: **Switch 2** Previewed at Gamin
+    6     DEEP_READ      23.2s     65    0.70        Entertainment    Gaming                         **Pokémon Pokopia** Launches on **Switch 2**; Price at 
+    7     ENGAGE          8.0s     68    0.36        Business         AI & Machine Learning          **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   3 | Avg:  22.2s | Min:  21.7s | Max:  23.2s | Total:    67s
+    ENGAGE       Count:   2 | Avg:   9.5s | Min:   8.0s | Max:  11.0s | Total:    19s
+    SCAN         Count:   1 | Avg:   1.7s | Min:   1.7s | Max:   1.7s | Total:     2s
+    SKIP         Count:   1 | Avg:   0.9s | Min:   0.9s | Max:   0.9s | Total:     1s
+    TOTAL        Count:   7 | Avg:  12.6s | Total session: 88s (1.5 min)
+
+    CATEGORY BREAKDOWN FOR LENA:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                3     2      0     2      6.9s     67%        no
+    Entertainment           2     2      0     2     22.4s    100%       YES
+    Science                 1     1      0     1     21.7s    100%       YES
+    Politics                1     0      1     0      0.9s      0%        no
+
+    UNWANTED CONTENT — Categories Lena doesn't follow but kept seeing:
+    - Politics: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-7)            7      71%      71%      12.6s     68        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  18 topics | 9 relevant | 50.0% overall | 87.5% personalized | mode: blended
+    Tapped 4 explore topics
+    Explore change: 47.1% -> 50.0% (+2.9%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science+kw:nasa+st:Space Tech
+    Personal       YES        AI & Tech        Nintendo                                  10    kw:nintendo+st:Gaming
+    Personal       YES        AI & Tech        Xbox & Microsoft Gaming                    2    kw:gaming+st:Gaming
+    Personal       YES        AI & Tech        Steam & PC Gaming                          7    kw:gaming+st:Gaming
+    Personal       YES        AI & Tech        Nvidia & AI Chips                          3    kw:ai+st:AI & Machine Learning
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Science          Climate Change                             5    cat:Science
+    Personal       NO         Gaming           GTA 6 & Grand Theft Auto VI                4    none
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       YES        Entertainment    Netflix Originals                         11    cat:Entertainment
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 9/10 | Satisfied
+    Total time in feed: 88s (1.5 min) | Avg dwell: 12.6s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Lena didn't like):
+      - I don't follow Business but was shown 1 article from it — waste of my time
+      - I don't follow Politics but was shown 1 article from it — waste of my time
+      - Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.17, spent only 0.9s on it
+      - 3 out of 7 articles were Business — too much of one category, felt repetitive
+      - I follow Robotics & Hardware but saw ZERO articles matching this topic
+    MISSING CONTENT: Robotics & Hardware — followed but never shown
+    ARTICLES THEY LIKED: "**US** to Return to **Moon**, Plans Lunar Base by **2028**" (21.7s) | "**Elden Ring** Returns: **Switch 2** Previewed at Gaming Fes" (21.7s) | "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (23.2s)
+    WORST ARTICLE: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score: -0.17, dwell: 0.9s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a ai research lead at a robotics startup, I found plenty of AI & Machine Learning content. Spent 88s total, engaged with 5 articles. I'd come back daily."
+    Feature request: Need more Robotics & Hardware content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [2/20] NADIA, 48 — Berlin, Germany [FRESH]
+  International relations professor at Humboldt University. Specializes in NATO and Middle East policy. Published 3 books on post-Cold War Europe.
+  Subtopics: War & Conflict, Middle East, European Politics, Human Rights & Civil Liberties
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 13 topics | 4 relevant | 30.8% overall | 33.3% personalized | mode: cold_start
+    Tapped 4 explore topics
+    Phase 2: Reading feed until bored...
+    Read 4 articles | Engaged: 4 | Glanced: 0 | Skipped: 0 | Relevant: 4
+    Exit: NATURAL | Final mood: 75/100 | Saved: 0 | Events: 8
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      14.8s     60    0.90        Politics         War & Conflict, Middle East,   **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    2     DEEP_READ      17.8s     65    0.98        Politics         War & Conflict, Middle East,   **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    3     DEEP_READ      23.0s     70    0.89        Business         War & Conflict, Middle East    **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    4     DEEP_READ      26.8s     75    0.89        Business         War & Conflict, Middle East    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   4 | Avg:  20.6s | Min:  14.8s | Max:  26.8s | Total:    82s
+    TOTAL        Count:   4 | Avg:  20.6s | Total session: 82s (1.4 min)
+
+    CATEGORY BREAKDOWN FOR NADIA:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Politics                2     2      0     2     16.3s    100%       YES
+    Business                2     2      0     2     24.9s    100%        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-4)            4     100%     100%      20.6s     75        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  14 topics | 5 relevant | 35.7% overall | 75.0% personalized | mode: blended
+    Tapped 2 explore topics
+    Explore change: 30.8% -> 35.7% (+4.9%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        World Politics   Iran & Middle East                        50    kw:middle east+st:Middle East
+    Personal       YES        World Politics   Israel                                    28    kw:israel+st:Middle East
+    Personal       NO         World Politics   Erdogan & Turkey Politics                  2    none
+    Personal       YES        World Politics   Emmanuel Macron                            4    kw:macron+st:European Politics
+    Trending       NO         World Politics   Turkey                                    23    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Business         Trade Wars & Tariffs                       7    kw:war+st:War & Conflict
+    Trending       YES        US Politics      Pentagon & US Military                    12    kw:military+st:War & Conflict
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 82s (1.4 min) | Avg dwell: 20.6s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Nadia didn't like):
+      - 2 out of 4 articles were Politics — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (14.8s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (17.8s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (23.0s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Mediocre (Same)
+    Quote: "As a international relations professor at humboldt university, I found plenty of War & Conflict content. Spent 82s total, engaged with 4 articles. I'd come back daily."
+    Feature request: More granular topic control in settings
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [3/20] RYAN, 38 — New York, NY [FRESH]
+  Quant fund portfolio manager at a mid-size hedge fund. Trades S&P futures and tech stocks. Obsessed with NVIDIA, Apple, and TSMC earnings.
+  Subtopics: Stock Markets, Corporate Earnings, Startups & Venture Capital, AI & Machine Learning
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 10 relevant | 52.6% overall | 100.0% personalized | mode: cold_start
+    Tapped 3 explore topics
+    Phase 2: Reading feed until bored...
+    Read 9 articles | Engaged: 7 | Glanced: 1 | Skipped: 0 | Relevant: 7
+    Exit: NATURAL | Final mood: 85/100 | Saved: 0 | Events: 17
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      17.4s     60    0.90        Business         Stock Markets, Corporate Ear   **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    2     DEEP_READ      14.8s     65    0.86        Business         Stock Markets, Corporate Ear   **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    3     DEEP_READ      12.8s     70    1.11        Finance          Stock Markets, Startups & Ve   **S&P 500** Plunges to Lowest Level Since **November**
+    4     DEEP_READ      13.1s     75    1.05        Business         Stock Markets, Corporate Ear   **Oil** Giants' Stock **Surges** Amid Iran War, Fuel Co
+    5     DEEP_READ       8.1s     80    0.89        Business         Stock Markets, Corporate Ear   **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    6     DEEP_READ       9.4s     84    0.90        Business         Stock Markets, Corporate Ear   **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    7     GLANCE          3.2s     83    0.13        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    8     DEEP_READ      11.9s     88    1.13        Finance          Stock Markets, Startups & Ve   **US Stocks** Plunge as **Oil** Surges Over **8%**
+    9     SCAN            1.9s     85   -0.05        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   7 | Avg:  12.5s | Min:   8.1s | Max:  17.4s | Total:    88s
+    GLANCE       Count:   1 | Avg:   3.2s | Min:   3.2s | Max:   3.2s | Total:     3s
+    SCAN         Count:   1 | Avg:   1.9s | Min:   1.9s | Max:   1.9s | Total:     2s
+    TOTAL        Count:   9 | Avg:  10.3s | Total session: 93s (1.5 min)
+
+    CATEGORY BREAKDOWN FOR RYAN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                5     5      0     5     12.6s    100%       YES
+    Finance                 2     2      0     2     12.4s    100%       YES
+    Politics                2     0      0     0      2.5s      0%        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-9)            9      78%      78%      10.3s     85        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  20 topics | 10 relevant | 50.0% overall | 90.0% personalized | mode: blended
+    Tapped 4 explore topics
+    Explore change: 52.6% -> 50.0% (-2.6%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance+kw:oil price
+    Personal       NO         World Politics   Iran & Middle East                        50    none
+    Personal       YES        AI & Tech        OpenAI & ChatGPT                           3    kw:ai+st:AI & Machine Learning
+    Personal       YES        AI & Tech        Anthropic & Claude                         7    kw:claude+st:AI & Machine Learning
+    Personal       YES        AI & Tech        Meta AI & Llama                            1    kw:ai+st:AI & Machine Learning
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         World Politics   Israel                                    28    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Finance          Inflation & Cost of Living                 7    cat:Finance
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 93s (1.5 min) | Avg dwell: 10.3s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Ryan didn't like):
+      - I don't follow Politics but was shown 2 articles from it — waste of my time
+      - 5 out of 9 articles were Business — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (17.4s) | "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (14.8s) | "**S&P 500** Plunges to Lowest Level Since **November**" (12.8s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a quant fund portfolio manager at a mid-size hedge fund, I found plenty of Stock Markets content. Spent 93s total, engaged with 7 articles. I'd come back daily."
+    Feature request: Real-time price tickers alongside relevant articles
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [4/20] ELIF, 29 — Istanbul, Turkey [FRESH]
+  Product designer at a fintech startup. Passionate Galatasaray fan. Follows Turkish tech scene and EU-Turkey trade dynamics.
+  Subtopics: Soccer/Football, Startups & Venture Capital, Trade & Tariffs, Middle East
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 22 topics | 12 relevant | 54.5% overall | 66.7% personalized | mode: cold_start
+    Tapped 3 explore topics
+    Phase 2: Reading feed until bored...
+    Read 9 articles | Engaged: 9 | Glanced: 0 | Skipped: 0 | Relevant: 9
+    Exit: NATURAL | Final mood: 100/100 | Saved: 2 | Events: 20
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      13.9s     60    0.90        Business         Startups & Venture Capital,    **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    2     DEEP_READ      13.8s     65    0.76        Politics         Middle East                    **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    3     DEEP_READ       9.6s     70    0.81        Politics         Middle East                    **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    4     DEEP_READ      16.4s     77    0.96    YES Business         Startups & Venture Capital,    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    5     DEEP_READ      14.3s     82    0.91        Finance          Startups & Venture Capital,    **Oil Prices** Surge Amid **US**, **Israel**, **Iran** 
+    6     DEEP_READ      15.7s     86    0.88        Business         Startups & Venture Capital,    **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    7     DEEP_READ       8.8s     91    0.92        Business         Startups & Venture Capital,    **Asia** Shares Fall Amid **Iran** War Worries; Oil Sta
+    8     DEEP_READ      16.1s     98    0.97    YES Business         Startups & Venture Capital,    **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    9     ENGAGE          6.0s    100    0.56        Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   8 | Avg:  13.6s | Min:   8.8s | Max:  16.4s | Total:   109s
+    ENGAGE       Count:   1 | Avg:   6.0s | Min:   6.0s | Max:   6.0s | Total:     6s
+    TOTAL        Count:   9 | Avg:  12.8s | Total session: 115s (1.9 min)
+
+    CATEGORY BREAKDOWN FOR ELIF:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                5     5      0     5     14.2s    100%       YES
+    Politics                2     2      0     2     11.7s    100%       YES
+    Finance                 1     1      0     1     14.3s    100%       YES
+    Sports                  1     1      0     1      6.0s    100%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-9)            9     100%     100%      12.8s    100        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  23 topics | 14 relevant | 60.9% overall | 76.9% personalized | mode: blended
+    Tapped 5 explore topics
+    Explore change: 54.5% -> 60.9% (+6.3%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        World Politics   Iran & Middle East                        50    kw:middle east+st:Middle East
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance
+    Personal       YES        World Politics   Israel                                    28    kw:israel+st:Middle East
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business+kw:trade+st:Trade & Tariffs
+    Personal       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Personal       NO         Soccer           Manchester United                          3    none
+    Personal       NO         Soccer           Liverpool FC                               3    none
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Personal       YES        World Politics   Erdogan & Turkey Politics                  2    kw:turkey
+    Personal       NO         World Politics   Emmanuel Macron                            4    none
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Trending       YES        World Politics   Turkey                                    23    kw:turkey
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       YES        Soccer           Serie A                                    7    kw:serie a+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Finance          Inflation & Cost of Living                 7    cat:Finance
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 115s (1.9 min) | Avg dwell: 12.8s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Elif didn't like):
+      - 5 out of 9 articles were Business — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Iran** Blockade Threatens **Oil** Market Amid Rising Price" (13.9s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (13.8s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (9.6s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a product designer at a fintech startup, I found plenty of Soccer/Football content. Spent 115s total, engaged with 9 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [5/20] MIKE, 58 — Dallas, TX [FRESH]
+  Retired Army colonel, now a military analyst on cable news. Dallas Cowboys fan for 40+ years. Follows every F1 race.
+  Subtopics: NFL, US Politics, War & Conflict, F1 & Motorsport
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 21 topics | 8 relevant | 38.1% overall | 54.5% personalized | mode: cold_start
+    Tapped 5 explore topics
+    Phase 2: Reading feed until bored...
+    Read 5 articles | Engaged: 5 | Glanced: 0 | Skipped: 0 | Relevant: 5
+    Exit: NATURAL | Final mood: 80/100 | Saved: 1 | Events: 11
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      19.8s     60    0.82        Sports           NFL, War & Conflict, F1 & Mo   **Iran War** Threatens to Halt **Formula 1** Races
+    2     DEEP_READ       9.1s     65    0.87        Business         NFL, War & Conflict            **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    3     DEEP_READ      10.4s     70    1.07        Sports           NFL, War & Conflict, F1 & Mo   **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    4     DEEP_READ      10.6s     77    0.79    YES Sports           NFL, F1 & Motorsport           **Tomlin** Steps Down After **19 Seasons** with Steeler
+    5     ENGAGE          8.6s     80    0.44        Business         War & Conflict                 **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   4 | Avg:  12.5s | Min:   9.1s | Max:  19.8s | Total:    50s
+    ENGAGE       Count:   1 | Avg:   8.6s | Min:   8.6s | Max:   8.6s | Total:     9s
+    TOTAL        Count:   5 | Avg:  11.7s | Total session: 58s (1.0 min)
+
+    CATEGORY BREAKDOWN FOR MIKE:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Sports                  3     3      0     3     13.6s    100%       YES
+    Business                2     2      0     2      8.8s    100%        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-5)            5     100%     100%      11.7s     80        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  20 topics | 8 relevant | 40.0% overall | 60.0% personalized | mode: blended
+    Tapped 3 explore topics
+    Explore change: 38.1% -> 40.0% (+1.9%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Football         NFL Football                              31    kw:nfl+st:NFL
+    Personal       YES        Motorsport       Formula 1 Racing                          20    kw:f1+st:F1 & Motorsport
+    Personal       YES        Motorsport       Max Verstappen                             3    kw:verstappen
+    Personal       NO         Motorsport       Lewis Hamilton                             2    none
+    Personal       YES        US Politics      Donald Trump                              36    kw:trump+st:US Politics
+    Personal       YES        US Politics      US Supreme Court                           2    kw:supreme court+st:US Politics
+    Personal       YES        US Politics      US Congress                                5    kw:congress+st:US Politics
+    Personal       NO         World Politics   Erdogan & Turkey Politics                  2    none
+    Personal       NO         World Politics   Emmanuel Macron                            4    none
+    Personal       NO         World Politics   Narendra Modi                              1    none
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Business         Trade Wars & Tariffs                       7    kw:war+st:War & Conflict
+    Trending       YES        US Politics      Pentagon & US Military                    12    kw:military+st:War & Conflict
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 58s (1.0 min) | Avg dwell: 11.7s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Mike didn't like):
+      - 3 out of 5 articles were Sports — too much of one category, felt repetitive
+      - I follow US Politics but saw ZERO articles matching this topic
+    MISSING CONTENT: US Politics — followed but never shown
+    ARTICLES THEY LIKED: "**Iran War** Threatens to Halt **Formula 1** Races" (19.8s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (9.1s) | "**Formula 1** Cancels **Bahrain**, Saudi Races Amid Iran War" (10.4s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a retired army colonel, now a military analyst on cable news, I found plenty of NFL content. Spent 58s total, engaged with 5 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Need more US Politics content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [6/20] AYSE, 34 — Ankara, Turkey [FRESH]
+  SaaS startup founder, just closed Series A. Follows AI tooling space and Turkish-EU trade relations. Besiktas fan.
+  Subtopics: Startups & Venture Capital, AI & Machine Learning, Trade & Tariffs, Middle East
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 22 topics | 12 relevant | 54.5% overall | 83.3% personalized | mode: cold_start
+    Tapped 5 explore topics
+    Phase 2: Reading feed until bored...
+    Read 10 articles | Engaged: 10 | Glanced: 0 | Skipped: 0 | Relevant: 10
+    Exit: NATURAL | Final mood: 100/100 | Saved: 2 | Events: 22
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      10.3s     60    0.89        Business         Startups & Venture Capital,    **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    2     DEEP_READ      16.9s     65    0.78        Politics         Middle East                    **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    3     DEEP_READ       9.8s     70    0.73        Politics         Middle East                    **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    4     DEEP_READ      11.1s     75    0.97        Business         Startups & Venture Capital,    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    5     DEEP_READ       9.6s     82    0.95    YES Finance          Startups & Venture Capital,    **Oil Prices** Surge Amid **US**, **Israel**, **Iran** 
+    6     DEEP_READ      14.1s     86    1.05        Business         Startups & Venture Capital,    **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    7     DEEP_READ      11.8s     93    1.01    YES Business         Startups & Venture Capital,    **Asia** Shares Fall Amid **Iran** War Worries; Oil Sta
+    8     DEEP_READ       7.8s     98    0.93        Business         Startups & Venture Capital,    **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    9     DEEP_READ      17.6s    100    0.91        Business         Startups & Venture Capital,    **Oil** Giants' Stock **Surges** Amid Iran War, Fuel Co
+    10    DEEP_READ       9.8s    100    0.83        Business         Startups & Venture Capital,    **War** in Iran **Spikes** Oil, Food Prices May Follow
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:  10 | Avg:  11.9s | Min:   7.8s | Max:  17.6s | Total:   119s
+    TOTAL        Count:  10 | Avg:  11.9s | Total session: 119s (2.0 min)
+
+    CATEGORY BREAKDOWN FOR AYSE:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                7     7      0     7     11.8s    100%       YES
+    Politics                2     2      0     2     13.3s    100%       YES
+    Finance                 1     1      0     1      9.6s    100%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10     100%     100%      11.9s    100        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  23 topics | 13 relevant | 56.5% overall | 84.6% personalized | mode: blended
+    Tapped 6 explore topics
+    Explore change: 54.5% -> 56.5% (+2.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        World Politics   Iran & Middle East                        50    kw:middle east+st:Middle East
+    Personal       YES        AI & Tech        OpenAI & ChatGPT                           3    kw:ai+st:AI & Machine Learning
+    Personal       YES        AI & Tech        Anthropic & Claude                         7    kw:claude+st:AI & Machine Learning
+    Personal       YES        AI & Tech        Meta AI & Llama                            1    kw:ai+st:AI & Machine Learning
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Personal       YES        Finance          XRP & Ripple                               1    cat:Finance
+    Personal       YES        World Politics   Erdogan & Turkey Politics                  2    kw:turkey
+    Personal       NO         World Politics   Emmanuel Macron                            4    none
+    Personal       NO         World Politics   Narendra Modi                              1    none
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business+kw:trade+st:Trade & Tariffs
+    Trending       YES        World Politics   Israel                                    28    kw:israel+st:Middle East
+    Trending       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 119s (2.0 min) | Avg dwell: 11.9s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Ayse didn't like):
+      - 7 out of 10 articles were Business — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Iran** Blockade Threatens **Oil** Market Amid Rising Price" (10.3s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (16.9s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (9.8s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a saas startup founder, just closed series a, I found plenty of Startups & Venture Capital content. Spent 119s total, engaged with 10 articles. I'd come back daily."
+    Feature request: More granular topic control in settings
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [7/20] FATIMA, 24 — Washington DC [FRESH]
+  Georgetown law student focused on civil rights. Interns at the ACLU. Follows Supreme Court cases obsessively. Manchester City fan.
+  Subtopics: US Politics, Human Rights & Civil Liberties, Middle East, Public Health
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 7 relevant | 36.8% overall | 66.7% personalized | mode: cold_start
+    Tapped 4 explore topics
+    Phase 2: Reading feed until bored...
+    Read 4 articles | Engaged: 4 | Glanced: 0 | Skipped: 0 | Relevant: 4
+    Exit: NATURAL | Final mood: 73/100 | Saved: 0 | Events: 8
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     ENGAGE          7.8s     58    0.53        Business         Middle East                    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     DEEP_READ      20.0s     63    0.64        Business         Middle East                    **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    3     DEEP_READ      14.7s     68    1.01        Politics         US Politics, Human Rights &    **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    4     DEEP_READ      23.0s     73    1.05        Politics         US Politics, Human Rights &    **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   3 | Avg:  19.2s | Min:  14.7s | Max:  23.0s | Total:    58s
+    ENGAGE       Count:   1 | Avg:   7.8s | Min:   7.8s | Max:   7.8s | Total:     8s
+    TOTAL        Count:   4 | Avg:  16.4s | Total session: 65s (1.1 min)
+
+    CATEGORY BREAKDOWN FOR FATIMA:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                2     2      0     2     13.9s    100%        no
+    Politics                2     2      0     2     18.8s    100%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-4)            4     100%     100%      16.4s     73        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  20 topics | 8 relevant | 40.0% overall | 80.0% personalized | mode: blended
+    Tapped 3 explore topics
+    Explore change: 36.8% -> 40.0% (+3.2%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        World Politics   Iran & Middle East                        50    kw:middle east+st:Middle East
+    Personal       YES        World Politics   Israel                                    28    kw:israel+st:Middle East
+    Personal       YES        Health           World Health Organization                  3    cat:Health+kw:who+st:Public Health
+    Personal       YES        US Politics      Donald Trump                              36    kw:trump+st:US Politics
+    Personal       YES        US Politics      US Supreme Court                           2    kw:supreme court+st:US Politics
+    Personal       YES        US Politics      US Congress                                5    kw:congress+st:US Politics
+    Personal       NO         World Politics   Erdogan & Turkey Politics                  2    none
+    Personal       NO         World Politics   Emmanuel Macron                            4    none
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health+kw:vaccine+st:Public Health
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health
+    Trending       NO         World Politics   Turkey                                    23    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 65s (1.1 min) | Avg dwell: 16.4s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Fatima didn't like):
+      - 2 out of 4 articles were Business — too much of one category, felt repetitive
+      - I follow Public Health but saw ZERO articles matching this topic
+    MISSING CONTENT: Public Health — followed but never shown
+    ARTICLES THEY LIKED: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (20.0s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (14.7s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (23.0s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a georgetown law student focused on civil rights, I found plenty of US Politics content. Spent 65s total, engaged with 4 articles. I'd come back daily."
+    Feature request: Need more Public Health content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [8/20] LARS, 23 — Stockholm, Sweden [FRESH]
+  Semi-pro Counter-Strike player. Streams on Twitch (8K followers). Follows every gaming hardware launch. Into AI art tools.
+  Subtopics: Gaming, AI & Machine Learning, Smartphones & Gadgets, Robotics & Hardware
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 14 topics | 5 relevant | 35.7% overall | 75.0% personalized | mode: cold_start
+    Tapped 3 explore topics
+    Phase 2: Reading feed until bored...
+    Read 8 articles | Engaged: 7 | Glanced: 0 | Skipped: 1 | Relevant: 7
+    Exit: NATURAL | Final mood: 79/100 | Saved: 0 | Events: 15
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     SKIP            0.8s     51   -0.11        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     ENGAGE          4.7s     54    0.59        Entertainment    Gaming                         **Elden Ring** Returns: **Switch 2** Previewed at Gamin
+    3     ENGAGE          4.3s     57    0.44        Business         AI & Machine Learning          **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    4     DEEP_READ       4.7s     62    0.61        Entertainment    Gaming                         **Pokémon Pokopia** Launches on **Switch 2**; Price at 
+    5     ENGAGE          2.9s     65    0.33        Business         AI & Machine Learning          **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    6     DEEP_READ      11.5s     69    0.97        Entertainment    Gaming, AI & Machine Learnin   **Overwatch** Director Quits After **Blizzard** Ultimat
+    7     DEEP_READ       5.9s     74    0.65        Entertainment    Gaming                         **Crimson Desert** Launches **March 19** for PC and Con
+    8     DEEP_READ       4.1s     79    0.64        Entertainment    Gaming                         **Super Mario Galaxy Movie** Eyes **$160M+** Opening
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   4 | Avg:   6.6s | Min:   4.1s | Max:  11.5s | Total:    26s
+    ENGAGE       Count:   3 | Avg:   4.0s | Min:   2.9s | Max:   4.7s | Total:    12s
+    SKIP         Count:   1 | Avg:   0.8s | Min:   0.8s | Max:   0.8s | Total:     1s
+    TOTAL        Count:   8 | Avg:   4.9s | Total session: 39s (0.6 min)
+
+    CATEGORY BREAKDOWN FOR LARS:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Entertainment           5     5      0     5      6.2s    100%       YES
+    Business                3     2      1     2      2.7s     67%        no
+
+    UNWANTED CONTENT — Categories Lars doesn't follow but kept seeing:
+    - Business: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-8)            8      88%      88%       4.9s     79        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  16 topics | 6 relevant | 37.5% overall | 83.3% personalized | mode: blended
+    Tapped 3 explore topics
+    Explore change: 35.7% -> 37.5% (+1.8%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        AI & Tech        Nintendo                                  10    kw:nintendo+st:Gaming
+    Personal       YES        AI & Tech        Xbox & Microsoft Gaming                    2    kw:gaming+st:Gaming
+    Personal       YES        AI & Tech        Apple                                     13    kw:apple+st:Smartphones & Gadgets
+    Personal       YES        AI & Tech        Steam & PC Gaming                          7    kw:gaming+st:Gaming
+    Personal       YES        AI & Tech        iPhone & iOS                               1    kw:iphone+st:Smartphones & Gadgets
+    Personal       NO         Gaming           GTA 6 & Grand Theft Auto VI                4    none
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       YES        Entertainment    Netflix Originals                         11    cat:Entertainment
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         AI & Tech        Amazon                                     9    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       BAD        Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 39s (0.6 min) | Avg dwell: 4.9s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Explore suggested topics I actively dislike
+    DETAILED COMPLAINTS (what Lars didn't like):
+      - I don't follow Business but was shown 1 article from it — waste of my time
+      - Worst article for me: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (Business) — score -0.11, spent only 0.8s on it
+      - 5 out of 8 articles were Entertainment — too much of one category, felt repetitive
+      - I follow Smartphones & Gadgets, Robotics & Hardware but saw ZERO articles matching these topics
+    MISSING CONTENT: Smartphones & Gadgets, Robotics & Hardware — followed but never shown
+    ARTICLES THEY LIKED: "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (4.7s) | "**Overwatch** Director Quits After **Blizzard** Ultimatum" (11.5s) | "**Crimson Desert** Launches **March 19** for PC and Consoles" (5.9s)
+    WORST ARTICLE: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (Business) — score: -0.11, dwell: 0.8s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Mediocre (Same)
+    Quote: "As a semi-pro counter-strike player, I found plenty of Gaming content. Spent 39s total, engaged with 7 articles. I'd come back daily."
+    Feature request: Need more Smartphones & Gadgets content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [9/20] ANTONIO, 43 — Barcelona, Spain [FRESH]
+  Restaurant chain owner (3 tapas restaurants). Lifelong FC Barcelona soci. Camp Nou season ticket since 2005.
+  Subtopics: Soccer/Football, Startups & Venture Capital, Retail & Consumer, Real Estate
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 10 relevant | 52.6% overall | 77.8% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 8 articles | Engaged: 6 | Glanced: 0 | Skipped: 1 | Relevant: 6
+    Exit: NATURAL | Final mood: 73/100 | Saved: 0 | Events: 14
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       9.1s     60    0.78        Business         Startups & Venture Capital,    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     ENGAGE          5.1s     63    0.49        Sports           Soccer/Football                **Tomlin** Steps Down After **19 Seasons** with Steeler
+    3     DEEP_READ      12.6s     68    0.72        Business         Startups & Venture Capital,    **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    4     DEEP_READ      13.5s     73    0.69        Sports           Soccer/Football                **Bayern Munich** Beat Atalanta **6-1** in Champions Le
+    5     SKIP            0.6s     69   -0.15        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    6     DEEP_READ      12.8s     73    0.72        Business         Startups & Venture Capital,    **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    7     ENGAGE          4.5s     76    0.56        Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    8     SCAN            2.5s     73    0.03        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   4 | Avg:  12.0s | Min:   9.1s | Max:  13.5s | Total:    48s
+    ENGAGE       Count:   2 | Avg:   4.8s | Min:   4.5s | Max:   5.1s | Total:    10s
+    SKIP         Count:   1 | Avg:   0.6s | Min:   0.6s | Max:   0.6s | Total:     1s
+    SCAN         Count:   1 | Avg:   2.5s | Min:   2.5s | Max:   2.5s | Total:     2s
+    TOTAL        Count:   8 | Avg:   7.6s | Total session: 61s (1.0 min)
+
+    CATEGORY BREAKDOWN FOR ANTONIO:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                3     3      0     3     11.5s    100%       YES
+    Sports                  3     3      0     3      7.7s    100%       YES
+    Politics                2     0      1     0      1.6s      0%        no
+
+    UNWANTED CONTENT — Categories Antonio doesn't follow but kept seeing:
+    - Politics: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-8)            8      75%      75%       7.6s     73        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  22 topics | 14 relevant | 63.6% overall | 91.7% personalized | mode: blended
+    Tapped 4 explore topics
+    Explore change: 52.6% -> 63.6% (+11.0%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Soccer           UEFA Champions League                     15    kw:champions league+st:Soccer/Football
+    Personal       YES        AI & Tech        Amazon                                     9    kw:amazon+st:Retail & Consumer
+    Personal       YES        Business         Walmart                                    1    cat:Business+kw:walmart+st:Retail & Cons
+    Personal       YES        Finance          Real Estate & Housing                      1    cat:Finance+kw:real estate+st:Real Estat
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance+kw:oil price
+    Personal       YES        Soccer           Major League Soccer                        1    kw:soccer+st:Soccer/Football
+    Personal       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Personal       NO         Soccer           Manchester United                          3    none
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       YES        Soccer           Serie A                                    7    kw:serie a+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Finance          Inflation & Cost of Living                 7    cat:Finance+kw:inflation
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 61s (1.0 min) | Avg dwell: 7.6s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Antonio didn't like):
+      - I don't follow Politics but was shown 2 articles from it — waste of my time
+      - Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.15, spent only 0.6s on it
+    ARTICLES THEY LIKED: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (9.1s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (12.6s) | "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (13.5s)
+    WORST ARTICLE: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score: -0.15, dwell: 0.6s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a restaurant chain owner (3 tapas restaurants), I found plenty of Soccer/Football content. Spent 61s total, engaged with 6 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [10/20] HENRIK, 52 — Geneva, Switzerland [FRESH]
+  Former Swedish diplomat, now director at the Geneva Centre for Security Policy. Reads The Economist cover to cover.
+  Subtopics: European Politics, Human Rights & Civil Liberties, Trade & Tariffs, Banking & Lending
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 8 relevant | 42.1% overall | 77.8% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 14 articles | Engaged: 14 | Glanced: 0 | Skipped: 0 | Relevant: 14
+    Exit: NATURAL | Final mood: 100/100 | Saved: 2 | Events: 30
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      17.9s     60    0.64        Finance          Banking & Lending              **Iran War** Surges **Petrol Prices**, Cuts Rate-Cut Be
+    2     DEEP_READ      25.3s     65    0.75        Politics         European Politics, Human Rig   **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    3     DEEP_READ      15.0s     70    0.78        Politics         European Politics, Human Rig   **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    4     DEEP_READ      13.6s     75    0.74        Business         Trade & Tariffs, Banking & L   **War** in Iran **Spikes** Oil, Food Prices May Follow
+    5     DEEP_READ      16.8s     80    0.84        Business         Trade & Tariffs, Banking & L   **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    6     DEEP_READ      19.9s     84    0.64        Finance          Banking & Lending              **S&P 500** Plunges to Lowest Level Since **November**
+    7     ENGAGE          6.4s     87    0.55    YES Business         Trade & Tariffs                **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    8     ENGAGE         11.0s     90    0.59        Business         Trade & Tariffs                **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    9     DEEP_READ      21.0s     95    0.89        Business         Trade & Tariffs, Banking & L   **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    10    DEEP_READ      22.9s    100    0.71        Finance          Banking & Lending              **Inflation** Gauge Hits Nearly **4-Year** High Amid Wa
+    11    ENGAGE         11.4s     99    0.45        Business         Trade & Tariffs                **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    12    DEEP_READ      12.8s    100    0.70        Politics         European Politics, Human Rig   **White House**: Iran War Burns Half of **US Bitcoin**
+    13    DEEP_READ      11.7s    100    0.87        Politics         European Politics, Human Rig   **Trump** Threatens to Assassinate **Iran's** New Leade
+    14    DEEP_READ       9.9s    100    1.01    YES Politics         European Politics, Human Rig   **Trump** Removes **Russia** Sanctions Amid Iran Confli
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:  11 | Avg:  17.0s | Min:   9.9s | Max:  25.3s | Total:   187s
+    ENGAGE       Count:   3 | Avg:   9.6s | Min:   6.4s | Max:  11.4s | Total:    29s
+    TOTAL        Count:  14 | Avg:  15.4s | Total session: 216s (3.6 min)
+
+    CATEGORY BREAKDOWN FOR HENRIK:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                6     6      0     6     13.4s    100%       YES
+    Politics                5     5      0     5     14.9s    100%       YES
+    Finance                 3     3      0     3     20.2s    100%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10     100%     100%      17.0s    100        —
+    #2 (11-14)          4     100%     100%      11.4s    100     FLAT
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  20 topics | 8 relevant | 40.0% overall | 70.0% personalized | mode: blended
+    Tapped 2 explore topics
+    Explore change: 42.1% -> 40.0% (-2.1%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO         World Politics   Iran & Middle East                        50    none
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance+kw:eu+st:European Politics
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Personal       NO         World Politics   Erdogan & Turkey Politics                  2    none
+    Personal       YES        World Politics   Emmanuel Macron                            4    kw:macron+st:European Politics
+    Personal       NO         World Politics   Narendra Modi                              1    none
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business+kw:trade+st:Trade & Tariffs
+    Trending       NO         World Politics   Israel                                    28    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Finance          Inflation & Cost of Living                 7    cat:Finance+kw:inflation+st:Banking & Le
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 216s (3.6 min) | Avg dwell: 15.4s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Henrik didn't like):
+      - 6 out of 14 articles were Business — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Iran War** Surges **Petrol Prices**, Cuts Rate-Cut Bets" (17.9s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (25.3s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (15.0s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a former swedish diplomat, now director at the geneva centre for security policy, I found plenty of European Politics content. Spent 216s total, engaged with 14 articles. I'd come back daily."
+    Feature request: More granular topic control in settings
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [11/20] MARCO, 35 — Milan, Italy [FRESH]
+  Sports editor at Gazzetta dello Sport. Die-hard AC Milan fan since childhood. Watches every Serie A and Champions League match. Follows F1 and UFC.
+  Subtopics: Soccer/Football, F1 & Motorsport, Boxing & MMA/UFC
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 6 relevant | 31.6% overall | 44.4% personalized | mode: cold_start
+    Tapped 5 explore topics
+    Phase 2: Reading feed until bored...
+    Read 10 articles | Engaged: 5 | Glanced: 0 | Skipped: 2 | Relevant: 5
+    Exit: NATURAL | Final mood: 63/100 | Saved: 0 | Events: 15
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       8.5s     60    1.04        Sports           Soccer/Football, F1 & Motors   **Bayern Munich** Beat Atalanta **6-1** in Champions Le
+    2     SKIP            1.0s     56   -0.28        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    3     DEEP_READ       5.1s     61    0.79        Sports           Soccer/Football, F1 & Motors   **Iran War** Threatens to Halt **Formula 1** Races
+    4     SCAN            1.6s     59   -0.08        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    5     DEEP_READ      13.3s     64    1.06        Sports           Soccer/Football, F1 & Motors   **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    6     SCAN            1.7s     60   -0.08        Business         (none)                         **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    7     SCAN            1.6s     57   -0.07        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    8     DEEP_READ       8.1s     62    1.08        Sports           Soccer/Football, F1 & Motors   **PSG** Defeats **Chelsea** 5-2 in Champions League
+    9     SKIP            0.5s     58   -0.19        Business         (none)                         **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    10    DEEP_READ      10.3s     63    0.81        Sports           Soccer/Football, F1 & Motors   **Tomlin** Steps Down After **19 Seasons** with Steeler
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   5 | Avg:   9.0s | Min:   5.1s | Max:  13.3s | Total:    45s
+    SCAN         Count:   3 | Avg:   1.6s | Min:   1.6s | Max:   1.7s | Total:     5s
+    SKIP         Count:   2 | Avg:   0.7s | Min:   0.5s | Max:   1.0s | Total:     1s
+    TOTAL        Count:  10 | Avg:   5.2s | Total session: 52s (0.9 min)
+
+    CATEGORY BREAKDOWN FOR MARCO:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Sports                  5     5      0     5      9.0s    100%       YES
+    Business                3     0      1     0      1.3s      0%        no
+    Politics                2     0      1     0      1.3s      0%        no
+
+    UNWANTED CONTENT — Categories Marco doesn't follow but kept seeing:
+    - Politics: 1 irrelevant article shown
+    - Business: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10      50%      50%       5.2s     63        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  19 topics | 8 relevant | 42.1% overall | 66.7% personalized | mode: blended
+    Tapped 4 explore topics
+    Explore change: 31.6% -> 42.1% (+10.5%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Soccer           UEFA Champions League                     15    kw:champions league+st:Soccer/Football
+    Personal       YES        Motorsport       Formula 1 Racing                          20    kw:f1+st:F1 & Motorsport
+    Personal       YES        Combat Sports    UFC & MMA                                 10    kw:mma+st:Boxing & MMA/UFC
+    Personal       YES        Combat Sports    Boxing                                     3    kw:boxing+st:Boxing & MMA/UFC
+    Personal       YES        Soccer           Major League Soccer                        1    kw:soccer+st:Soccer/Football
+    Personal       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Personal       NO         Soccer           Manchester United                          3    none
+    Personal       NO         Motorsport       Max Verstappen                             3    none
+    Personal       NO         Motorsport       Lewis Hamilton                             2    none
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       YES        Soccer           Serie A                                    7    kw:serie a+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 9/10 | Satisfied
+    Total time in feed: 52s (0.9 min) | Avg dwell: 5.2s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Marco didn't like):
+      - I don't follow Business but was shown 3 articles from it — waste of my time
+      - I don't follow Politics but was shown 2 articles from it — waste of my time
+      - Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.28, spent only 1.0s on it
+      - 5 out of 10 articles were Sports — too much of one category, felt repetitive
+    ARTICLES THEY LIKED: "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (8.5s) | "**Iran War** Threatens to Halt **Formula 1** Races" (5.1s) | "**Formula 1** Cancels **Bahrain**, Saudi Races Amid Iran War" (13.3s)
+    WORST ARTICLE: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score: -0.28, dwell: 1.0s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a sports editor at gazzetta dello sport, I found plenty of Soccer/Football content. Spent 52s total, engaged with 5 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [12/20] SOPHIE, 27 — Lyon, France [FRESH]
+  Medical resident specializing in oncology. Follows biotech breakthroughs. Olympique Lyonnais season ticket holder.
+  Subtopics: Medical Breakthroughs, Pharma & Drug Industry, Biology & Nature, Soccer/Football
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 21 topics | 12 relevant | 57.1% overall | 81.8% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 11 articles | Engaged: 7 | Glanced: 0 | Skipped: 3 | Relevant: 7
+    Exit: NATURAL | Final mood: 65/100 | Saved: 2 | Events: 20
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      14.0s     62    0.64    YES Sports           Soccer/Football                **Bayern Munich** Beat Atalanta **6-1** in Champions Le
+    2     SKIP            0.6s     58   -0.11        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    3     ENGAGE          5.4s     61    0.52        Business         Pharma & Drug Industry         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    4     ENGAGE          7.7s     64    0.55        Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    5     DEEP_READ      13.9s     69    0.84        Science          Medical Breakthroughs, Biolo   Medical **Powder** Stops **Fatal** Bleeding in Seconds
+    6     SCAN            2.0s     65   -0.08        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    7     ENGAGE          2.8s     68    0.50    YES Sports           Soccer/Football                **Tomlin** Steps Down After **19 Seasons** with Steeler
+    8     SKIP            0.4s     64   -0.14        Politics         (none)                         **White House**: Iran War Burns Half of **US Bitcoin**
+    9     ENGAGE          3.3s     67    0.52        Business         Pharma & Drug Industry         **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    10    ENGAGE          8.1s     70    0.51        Politics         Biology & Nature               **Trump** Threatens to Assassinate **Iran's** New Leade
+    11    SKIP            0.7s     65   -0.17        Politics         (none)                         **Trump** Removes **Russia** Sanctions Amid Iran Confli
+
+    DWELL TIME SUMMARY BY ACTION:
+    ENGAGE       Count:   5 | Avg:   5.5s | Min:   2.8s | Max:   8.1s | Total:    27s
+    SKIP         Count:   3 | Avg:   0.6s | Min:   0.4s | Max:   0.7s | Total:     2s
+    DEEP_READ    Count:   2 | Avg:  14.0s | Min:  13.9s | Max:  14.0s | Total:    28s
+    SCAN         Count:   1 | Avg:   2.0s | Min:   2.0s | Max:   2.0s | Total:     2s
+    TOTAL        Count:  11 | Avg:   5.4s | Total session: 59s (1.0 min)
+
+    CATEGORY BREAKDOWN FOR SOPHIE:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Politics                5     1      3     1      2.4s     20%        no
+    Sports                  3     3      0     3      8.2s    100%       YES
+    Business                2     2      0     2      4.4s    100%       YES
+    Science                 1     1      0     1     13.9s    100%       YES
+
+    UNWANTED CONTENT — Categories Sophie doesn't follow but kept seeing:
+    - Politics: 3 irrelevant articles shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10      70%      70%       5.8s     70        —
+    #2 (11-11)          1       0%       0%       0.7s     65     DOWN
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  22 topics | 14 relevant | 63.6% overall | 91.7% personalized | mode: blended
+    Tapped 2 explore topics
+    Explore change: 57.1% -> 63.6% (+6.5%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Soccer           UEFA Champions League                     15    kw:champions league+st:Soccer/Football
+    Personal       YES        Health           FDA & Drug Approvals                       1    cat:Health+kw:drug+st:Medical Breakthrou
+    Personal       NO         Soccer           Bayern Munich                              3    none
+    Personal       YES        Soccer           Major League Soccer                        1    kw:soccer+st:Soccer/Football
+    Personal       YES        Soccer           La Liga                                    2    kw:la liga+st:Soccer/Football
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Science          Climate Change                             5    cat:Science
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science
+    Trending       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 9/10 | Satisfied
+    Total time in feed: 59s (1.0 min) | Avg dwell: 5.4s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Sophie didn't like):
+      - I don't follow Politics but was shown 4 articles from it — waste of my time
+      - Worst article for me: "**Trump** Removes **Russia** Sanctions Amid Iran Conflict" (Politics) — score -0.17, spent only 0.7s on it
+      - 5 out of 11 articles were Politics — too much of one category, felt repetitive
+      - Feed got WORSE as I scrolled — engagement went from 70% to 0%, my mood dropped from 70 to 65
+    ARTICLES THEY LIKED: "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (14.0s) | "Medical **Powder** Stops **Fatal** Bleeding in Seconds" (13.9s) | "**Tomlin** Steps Down After **19 Seasons** with Steelers" (2.8s)
+    WORST ARTICLE: "**Trump** Removes **Russia** Sanctions Amid Iran Conflict" (Politics) — score: -0.17, dwell: 0.7s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a medical resident specializing in oncology, I found plenty of Medical Breakthroughs content. Spent 59s total, engaged with 7 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [13/20] THOMAS, 40 — Amsterdam, Netherlands [FRESH]
+  Climate journalist at NRC Handelsblad. Covers COP summits and EU Green Deal. Ajax fan who follows Eredivisie casually.
+  Subtopics: Climate & Environment, European Politics, Oil & Energy
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 22 topics | 9 relevant | 40.9% overall | 58.3% personalized | mode: cold_start
+    Tapped 3 explore topics
+    Phase 2: Reading feed until bored...
+    Read 13 articles | Engaged: 12 | Glanced: 1 | Skipped: 0 | Relevant: 13
+    Exit: NATURAL | Final mood: 100/100 | Saved: 0 | Events: 26
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       8.3s     60    0.63        Business         Oil & Energy                   **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     DEEP_READ      15.9s     65    0.69        Business         Oil & Energy                   **Oil** Giants' Stock **Surges** Amid Iran War, Fuel Co
+    3     DEEP_READ      14.9s     70    0.72        Business         Oil & Energy                   **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    4     DEEP_READ      16.6s     75    1.00        Politics         European Politics, Oil & Ene   **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    5     DEEP_READ       7.2s     80    0.76        Business         Oil & Energy                   **US** Allows Sale of **Russian** Oil for **30 Days**
+    6     DEEP_READ      11.1s     84    0.69        Business         Oil & Energy                   **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    7     DEEP_READ      14.9s     89    0.70        Business         Oil & Energy                   **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    8     DEEP_READ      10.1s     94    0.99        Business         European Politics, Oil & Ene   **Trump** Taps Oil Reserve Amid Middle East **Conflict*
+    9     DEEP_READ       9.0s     99    0.69        Politics         European Politics              **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    10    ENGAGE          6.0s    100    0.53        Business         Oil & Energy                   **Asia** Shares Fall Amid **Iran** War Worries; Oil Sta
+    11    DEEP_READ      11.7s     99    0.73        Business         Oil & Energy                   **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    12    GLANCE          2.1s     98    0.30        Politics         European Politics              **White House**: Iran War Burns Half of **US Bitcoin**
+    13    ENGAGE          4.6s    100    0.58        Business         Oil & Energy                   **War** in Iran **Spikes** Oil, Food Prices May Follow
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:  10 | Avg:  12.0s | Min:   7.2s | Max:  16.6s | Total:   120s
+    ENGAGE       Count:   2 | Avg:   5.3s | Min:   4.6s | Max:   6.0s | Total:    11s
+    GLANCE       Count:   1 | Avg:   2.1s | Min:   2.1s | Max:   2.1s | Total:     2s
+    TOTAL        Count:  13 | Avg:  10.2s | Total session: 133s (2.2 min)
+
+    CATEGORY BREAKDOWN FOR THOMAS:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business               10    10      0    10     10.5s    100%       YES
+    Politics                3     2      0     3      9.2s     67%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10     100%     100%      11.4s    100        —
+    #2 (11-13)          3      67%     100%       6.1s    100     DOWN
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  23 topics | 9 relevant | 39.1% overall | 61.5% personalized | mode: blended
+    Tapped 5 explore topics
+    Explore change: 40.9% -> 39.1% (-1.8%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    kw:oil+st:Oil & Energy
+    Personal       NO         World Politics   Iran & Middle East                        50    none
+    Personal       YES        Science          Climate Change                             5    cat:Science+kw:climate+st:Climate & Envi
+    Personal       BAD        Finance          Bitcoin & Crypto                           4    none
+    Personal       YES        Finance          Ethereum                                   7    kw:eu+st:European Politics
+    Personal       NO         Finance          Solana                                    15    none
+    Personal       NO         World Politics   Erdogan & Turkey Politics                  2    none
+    Personal       YES        World Politics   Emmanuel Macron                            4    kw:macron+st:European Politics
+    Personal       NO         World Politics   Narendra Modi                              1    none
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business+kw:electric
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         World Politics   Israel                                    28    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science+kw:ev
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         Finance          Inflation & Cost of Living                 7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 133s (2.2 min) | Avg dwell: 10.2s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Explore suggested topics I actively dislike
+    DETAILED COMPLAINTS (what Thomas didn't like):
+      - 10 out of 13 articles were Business — too much of one category, felt repetitive
+      - I follow Climate & Environment but saw ZERO articles matching this topic
+    MISSING CONTENT: Climate & Environment — followed but never shown
+    ARTICLES THEY LIKED: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (8.3s) | "**Oil** Giants' Stock **Surges** Amid Iran War, Fuel Costs R" (15.9s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (14.9s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Mediocre (Same)
+    Quote: "As a climate journalist at nrc handelsblad, I found plenty of Climate & Environment content. Spent 133s total, engaged with 12 articles. I'd come back daily."
+    Feature request: Need more Climate & Environment content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [14/20] ZARA, 20 — London, UK [FRESH]
+  UCL sociology student and TikTok creator (45K followers). Into sustainable fashion and mental health advocacy. Arsenal fan through her dad.
+  Subtopics: Climate & Environment, Mental Health, Soccer/Football, Celebrity Style & Red Carpet
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 20 topics | 11 relevant | 55.0% overall | 70.0% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 0 articles | Engaged: 0 | Glanced: 0 | Skipped: 0 | Relevant: 0
+    Exit: NATURAL | Final mood: 55/100 | Saved: 0 | Events: 0
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+    DWELL TIME SUMMARY BY ACTION:
+    TOTAL        Count:   0 | Avg:   0.0s | Total session: 0s (0.0 min)
+
+    CATEGORY BREAKDOWN FOR ZARA:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  20 topics | 11 relevant | 55.0% overall | 70.0% personalized | mode: blended
+    Tapped 4 explore topics
+    Explore change: 55.0% -> 55.0% (+0.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health+kw:mental health+st:Mental He
+    Personal       YES        Science          Climate Change                             5    cat:Science+kw:climate+st:Climate & Envi
+    Personal       NO         Soccer           Manchester United                          3    none
+    Personal       NO         Soccer           Liverpool FC                               3    none
+    Personal       NO         Soccer           Manchester City                            2    none
+    Personal       YES        Entertainment    Taylor Swift                               1    cat:Entertainment
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health
+    Personal       YES        Health           Alzheimer's & Dementia                     1    cat:Health
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       YES        Entertainment    Netflix Originals                         11    cat:Entertainment
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science
+    Trending       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       BAD        Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 1/10 | Satisfied
+    Total time in feed: 0s (0.0 min) | Avg dwell: 0.0s/article
+    Best feature: Explore page topic discovery
+    Top complaint: Too many articles I don't care about
+    DETAILED COMPLAINTS (what Zara didn't like):
+      - My average dwell was only 0.0s per article — nothing grabbed my attention long enough
+      - I follow Climate & Environment, Mental Health, Soccer/Football, Celebrity Style & Red Carpet but saw ZERO articles matching these topics
+    MISSING CONTENT: Climate & Environment, Mental Health, Soccer/Football, Celebrity Style & Red Carpet — followed but never shown
+    Would recommend: Not yet — needs significant improvement for my use case
+    Explore verdict: Good (Same)
+    Quote: "It's okay — 0/0 articles were worth reading, but 0 didn't match my interests (Climate & Environment, Mental Health). 0.0s avg dwell tells the story."
+    Feature request: Better topic matching — I want to see MY interests, not generic news
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Need more Climate & Environment content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [15/20] ROBERT, 68 — Tampa, FL [FRESH]
+  Retired school principal. Tampa Bay Buccaneers and Rays fan. Follows gold prices — has physical gold in a safe.
+  Subtopics: US Politics, Public Health, Commodities, NFL
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 21 topics | 12 relevant | 57.1% overall | 90.9% personalized | mode: cold_start
+    Tapped 2 explore topics
+    Phase 2: Reading feed until bored...
+    Read 3 articles | Engaged: 3 | Glanced: 0 | Skipped: 0 | Relevant: 3
+    Exit: NATURAL | Final mood: 70/100 | Saved: 0 | Events: 6
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      17.4s     60    0.64        Business         Commodities                    **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    2     DEEP_READ      21.0s     65    0.92        Business         Commodities, NFL               **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    3     DEEP_READ      17.8s     70    0.62        Sports           NFL                            **Tomlin** Steps Down After **19 Seasons** with Steeler
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   3 | Avg:  18.7s | Min:  17.4s | Max:  21.0s | Total:    56s
+    TOTAL        Count:   3 | Avg:  18.7s | Total session: 56s (0.9 min)
+
+    CATEGORY BREAKDOWN FOR ROBERT:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                2     2      0     2     19.2s    100%       YES
+    Sports                  1     1      0     1     17.8s    100%       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-3)            3     100%     100%      18.7s     70        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  21 topics | 12 relevant | 57.1% overall | 90.9% personalized | mode: blended
+    Tapped 2 explore topics
+    Explore change: 57.1% -> 57.1% (+0.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Football         NFL Football                              31    kw:nfl+st:NFL
+    Personal       YES        Health           World Health Organization                  3    cat:Health+kw:who+st:Public Health
+    Personal       YES        Finance          Gold & Precious Metals                    10    cat:Finance+kw:gold+st:Commodities
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health+kw:vaccine+st:Public Health
+    Personal       BAD        Finance          Bitcoin & Crypto                           4    cat:Finance
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Personal       YES        US Politics      Donald Trump                              36    kw:trump+st:US Politics
+    Personal       YES        US Politics      US Supreme Court                           2    kw:supreme court+st:US Politics
+    Personal       YES        US Politics      US Congress                                5    kw:congress+st:US Politics
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance+kw:oil price+st:Commodities
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 56s (0.9 min) | Avg dwell: 18.7s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Explore suggested topics I actively dislike
+    DETAILED COMPLAINTS (what Robert didn't like):
+      - 2 out of 3 articles were Business — too much of one category, felt repetitive
+      - I follow US Politics, Public Health but saw ZERO articles matching these topics
+    MISSING CONTENT: US Politics, Public Health — followed but never shown
+    ARTICLES THEY LIKED: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (17.4s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (21.0s) | "**Tomlin** Steps Down After **19 Seasons** with Steelers" (17.8s)
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a retired school principal, I found plenty of US Politics content. Spent 56s total, engaged with 3 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Real-time price tickers alongside relevant articles
+    Feature request: Need more US Politics content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [16/20] DEVON, 21 — Austin, TX [FRESH]
+  UT Austin senior, huge sports fan. Lives for the NFL Draft and NBA playoffs. Philadelphia Eagles fan. Plays Call of Duty competitively.
+  Subtopics: NFL, NBA, Boxing & MMA/UFC, Gaming, Sneakers & Streetwear
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 16 topics | 6 relevant | 37.5% overall | 83.3% personalized | mode: cold_start
+    Tapped 3 explore topics
+    Phase 2: Reading feed until bored...
+    Read 10 articles | Engaged: 8 | Glanced: 0 | Skipped: 1 | Relevant: 8
+    Exit: NATURAL | Final mood: 83/100 | Saved: 1 | Events: 19
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     ENGAGE          1.8s     58    0.58        Entertainment    Gaming                         **Elden Ring** Returns: **Switch 2** Previewed at Gamin
+    2     DEEP_READ       5.8s     63    0.67        Entertainment    Gaming                         **Pokémon Pokopia** Launches on **Switch 2**; Price at 
+    3     ENGAGE          1.6s     66    0.30        Politics         NFL                            **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    4     DEEP_READ       4.9s     71    0.62        Entertainment    Gaming                         **Overwatch** Director Quits After **Blizzard** Ultimat
+    5     DEEP_READ       7.0s     78    0.66    YES Entertainment    Gaming                         **Crimson Desert** Launches **March 19** for PC and Con
+    6     DEEP_READ       9.0s     82    0.66        Entertainment    Gaming                         **Super Mario Galaxy Movie** Eyes **$160M+** Opening
+    7     DEEP_READ       4.6s     87    0.75        Sports           NFL, NBA, Boxing & MMA/UFC     **Tomlin** Steps Down After **19 Seasons** with Steeler
+    8     SKIP            0.8s     83   -0.16        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    9     SCAN            2.1s     80   -0.07        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    ENGAGE          1.5s     83    0.45        Business         NFL                            **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   5 | Avg:   6.2s | Min:   4.6s | Max:   9.0s | Total:    31s
+    ENGAGE       Count:   3 | Avg:   1.7s | Min:   1.5s | Max:   1.8s | Total:     5s
+    SKIP         Count:   1 | Avg:   0.8s | Min:   0.8s | Max:   0.8s | Total:     1s
+    SCAN         Count:   1 | Avg:   2.1s | Min:   2.1s | Max:   2.1s | Total:     2s
+    TOTAL        Count:  10 | Avg:   3.9s | Total session: 39s (0.7 min)
+
+    CATEGORY BREAKDOWN FOR DEVON:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Entertainment           5     5      0     5      5.7s    100%       YES
+    Politics                2     1      1     1      1.2s     50%        no
+    Business                2     1      0     1      1.8s     50%        no
+    Sports                  1     1      0     1      4.6s    100%       YES
+
+    UNWANTED CONTENT — Categories Devon doesn't follow but kept seeing:
+    - Politics: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10      80%      80%       3.9s     83        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  18 topics | 9 relevant | 50.0% overall | 100.0% personalized | mode: blended
+    Tapped 6 explore topics
+    Explore change: 37.5% -> 50.0% (+12.5%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        AI & Tech        Nintendo                                  10    kw:nintendo+st:Gaming
+    Personal       YES        Football         NFL Football                              31    kw:nfl+st:NFL
+    Personal       YES        Basketball       NBA Basketball                             7    kw:nba+st:NBA
+    Personal       YES        Combat Sports    UFC & MMA                                 10    kw:mma+st:Boxing & MMA/UFC
+    Personal       YES        Fashion          Nike & Sportswear                          1    kw:nike+st:Sneakers & Streetwear
+    Personal       YES        AI & Tech        Xbox & Microsoft Gaming                    2    kw:gaming+st:Gaming
+    Personal       YES        Combat Sports    Boxing                                     3    kw:boxing+st:Boxing & MMA/UFC
+    Personal       YES        Lifestyle        Sneakers & Streetwear                      1    cat:Lifestyle+kw:sneakers+st:Sneakers & 
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       YES        Entertainment    Netflix Originals                         11    cat:Entertainment
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+    Trending       NO         Motorsport       Red Bull Racing                            4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 39s (0.7 min) | Avg dwell: 3.9s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Devon didn't like):
+      - I don't follow Politics but was shown 1 article from it — waste of my time
+      - I don't follow Business but was shown 1 article from it — waste of my time
+      - Worst article for me: "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (Politics) — score -0.16, spent only 0.8s on it
+      - 5 out of 10 articles were Entertainment — too much of one category, felt repetitive
+      - I follow Sneakers & Streetwear but saw ZERO articles matching this topic
+    MISSING CONTENT: Sneakers & Streetwear — followed but never shown
+    ARTICLES THEY LIKED: "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (5.8s) | "**Overwatch** Director Quits After **Blizzard** Ultimatum" (4.9s) | "**Crimson Desert** Launches **March 19** for PC and Consoles" (7.0s)
+    WORST ARTICLE: "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (Politics) — score: -0.16, dwell: 0.8s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a ut austin senior, huge sports fan, I found plenty of NFL content. Spent 39s total, engaged with 8 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Need more Sneakers & Streetwear content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [17/20] CAMILLE, 33 — Paris, France [FRESH]
+  Creative director at Balenciaga. Lives for fashion week and red carpet moments. Watches every A24 film on release. PSG fan.
+  Subtopics: Celebrity Style & Red Carpet, Movies & Film, Shopping & Product Reviews, Soccer/Football
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 15 topics | 6 relevant | 40.0% overall | 60.0% personalized | mode: cold_start
+    Tapped 1 explore topics
+    Phase 2: Reading feed until bored...
+    Read 12 articles | Engaged: 7 | Glanced: 0 | Skipped: 1 | Relevant: 7
+    Exit: NATURAL | Final mood: 73/100 | Saved: 0 | Events: 19
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      13.7s     60    0.66        Sports           Soccer/Football                **Bayern Munich** Beat Atalanta **6-1** in Champions Le
+    2     SCAN            1.7s     58   -0.09        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    3     DEEP_READ      12.6s     63    0.89        Entertainment    Celebrity Style & Red Carpet   **Sinners** Leads With **16** Oscar Nominations Sunday
+    4     SCAN            1.0s     60   -0.06        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    5     SCAN            2.3s     58   -0.03        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    6     DEEP_READ      11.1s     61    0.86        Entertainment    Celebrity Style & Red Carpet   **Sinners**, **One Battle** Vie for Oscar's Top Prize
+    7     SKIP            0.7s     57   -0.31        Politics         (none)                         **White House**: Iran War Burns Half of **US Bitcoin**
+    8     DEEP_READ       8.6s     62    0.78        Entertainment    Celebrity Style & Red Carpet   **Oscars** to Honor **Rob Reiner** After Tragic Death
+    9     SCAN            1.4s     60   -0.07        Business         (none)                         **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    10    DEEP_READ      12.9s     65    0.75        Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    11    DEEP_READ      14.2s     68    0.72        Entertainment    Celebrity Style & Red Carpet   **Lost** Georges Méliès Film **Unearthed** After Centur
+    12    DEEP_READ       9.7s     73    0.73        Entertainment    Celebrity Style & Red Carpet   **Super Mario Galaxy Movie** Eyes **$160M+** Opening
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   7 | Avg:  11.8s | Min:   8.6s | Max:  14.2s | Total:    83s
+    SCAN         Count:   4 | Avg:   1.6s | Min:   1.0s | Max:   2.3s | Total:     6s
+    SKIP         Count:   1 | Avg:   0.7s | Min:   0.7s | Max:   0.7s | Total:     1s
+    TOTAL        Count:  12 | Avg:   7.5s | Total session: 90s (1.5 min)
+
+    CATEGORY BREAKDOWN FOR CAMILLE:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Entertainment           5     5      0     5     11.3s    100%       YES
+    Politics                3     0      1     0      1.3s      0%        no
+    Sports                  2     2      0     2     13.3s    100%       YES
+    Business                2     0      0     0      1.5s      0%        no
+
+    UNWANTED CONTENT — Categories Camille doesn't follow but kept seeing:
+    - Politics: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10      50%      50%       6.6s     65        —
+    #2 (11-12)          2     100%     100%      12.0s     73       UP
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  17 topics | 10 relevant | 58.8% overall | 100.0% personalized | mode: blended
+    Tapped 5 explore topics
+    Explore change: 40.0% -> 58.8% (+18.8%) IMPROVED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Soccer           UEFA Champions League                     15    kw:champions league+st:Soccer/Football
+    Personal       YES        Entertainment    Academy Awards & Oscars                    8    cat:Entertainment+kw:oscar+st:Movies & F
+    Personal       YES        Soccer           Major League Soccer                        1    kw:soccer+st:Soccer/Football
+    Personal       YES        Soccer           La Liga                                    2    kw:la liga+st:Soccer/Football
+    Personal       YES        Soccer           Premier League                            18    kw:premier league+st:Soccer/Football
+    Personal       YES        Entertainment    Taylor Swift                               1    cat:Entertainment
+    Personal       YES        Lifestyle        Sneakers & Streetwear                      1    cat:Lifestyle
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       YES        Football         NFL Football                              31    kw:football+st:Soccer/Football
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       YES        Entertainment    Netflix Originals                         11    cat:Entertainment
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       YES        Soccer           Serie A                                    7    kw:serie a+st:Soccer/Football
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 9/10 | Satisfied
+    Total time in feed: 90s (1.5 min) | Avg dwell: 7.5s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Camille didn't like):
+      - I don't follow Politics but was shown 3 articles from it — waste of my time
+      - I don't follow Business but was shown 2 articles from it — waste of my time
+      - Worst article for me: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score -0.31, spent only 0.7s on it
+      - 5 out of 12 articles were Entertainment — too much of one category, felt repetitive
+      - I follow Shopping & Product Reviews but saw ZERO articles matching this topic
+    MISSING CONTENT: Shopping & Product Reviews — followed but never shown
+    ARTICLES THEY LIKED: "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (13.7s) | "**Sinners** Leads With **16** Oscar Nominations Sunday" (12.6s) | "**Sinners**, **One Battle** Vie for Oscar's Top Prize" (11.1s)
+    WORST ARTICLE: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score: -0.31, dwell: 0.7s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Yes)
+    Quote: "As a creative director at balenciaga, I found plenty of Celebrity Style & Red Carpet content. Spent 90s total, engaged with 7 articles. I'd come back daily."
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Need more Shopping & Product Reviews content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [18/20] DIEGO, 26 — Miami, FL [FRESH]
+  Crypto analyst at a DeFi fund. On-chain detective. Tracks whale wallets and protocol TVL daily. Real Madrid fan.
+  Subtopics: Bitcoin, DeFi & Web3, Stock Markets, Cybersecurity
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 17 topics | 6 relevant | 35.3% overall | 57.1% personalized | mode: cold_start
+    Tapped 1 explore topics
+    Phase 2: Reading feed until bored...
+    Read 10 articles | Engaged: 8 | Glanced: 0 | Skipped: 2 | Relevant: 8
+    Exit: NATURAL | Final mood: 80/100 | Saved: 0 | Events: 18
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       9.4s     60    0.65        Business         Stock Markets                  **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    2     DEEP_READ       5.6s     65    0.86        Finance          Bitcoin, DeFi & Web3, Stock    **S&P 500** Plunges to Lowest Level Since **November**
+    3     ENGAGE          4.0s     68    0.58        Business         Stock Markets                  **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    4     DEEP_READ       7.7s     73    0.61        Business         Stock Markets                  **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    5     DEEP_READ      13.7s     78    0.66        Business         Stock Markets                  **Oil** Giants' Stock **Surges** Amid Iran War, Fuel Co
+    6     DEEP_READ       7.8s     82    0.97        Finance          Bitcoin, DeFi & Web3, Stock    **US Stocks** Plunge as **Oil** Surges Over **8%**
+    7     SKIP            0.6s     78   -0.15        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    8     ENGAGE          2.4s     81    0.45        Business         Stock Markets                  **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    9     SKIP            0.6s     77   -0.12        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    10    ENGAGE          2.5s     80    0.48        Politics         Bitcoin                        **White House**: Iran War Burns Half of **US Bitcoin**
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   5 | Avg:   8.8s | Min:   5.6s | Max:  13.7s | Total:    44s
+    ENGAGE       Count:   3 | Avg:   3.0s | Min:   2.4s | Max:   4.0s | Total:     9s
+    SKIP         Count:   2 | Avg:   0.6s | Min:   0.6s | Max:   0.6s | Total:     1s
+    TOTAL        Count:  10 | Avg:   5.4s | Total session: 54s (0.9 min)
+
+    CATEGORY BREAKDOWN FOR DIEGO:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                5     5      0     5      7.4s    100%       YES
+    Politics                3     1      2     1      1.2s     33%        no
+    Finance                 2     2      0     2      6.7s    100%       YES
+
+    UNWANTED CONTENT — Categories Diego doesn't follow but kept seeing:
+    - Politics: 2 irrelevant articles shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-10)          10      80%      80%       5.4s     80        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  17 topics | 6 relevant | 35.3% overall | 57.1% personalized | mode: blended
+    Tapped 2 explore topics
+    Explore change: 35.3% -> 35.3% (+0.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Finance          Oil Prices & Energy Markets               19    cat:Finance
+    Personal       YES        Finance          Bitcoin & Crypto                           4    cat:Finance+kw:bitcoin+st:Bitcoin
+    Personal       NO         AI & Tech        OpenAI & ChatGPT                           3    none
+    Personal       NO         AI & Tech        Anthropic & Claude                         7    none
+    Personal       NO         AI & Tech        Meta AI & Llama                            1    none
+    Personal       YES        Finance          Ethereum                                   7    cat:Finance+kw:ethereum+st:DeFi & Web3
+    Personal       YES        Finance          Solana                                    15    cat:Finance
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       NO         Science          Electric Vehicles & EVs                   50    none
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       YES        Finance          Inflation & Cost of Living                 7    cat:Finance
+    Trending       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 10/10 | Satisfied
+    Total time in feed: 54s (0.9 min) | Avg dwell: 5.4s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Diego didn't like):
+      - I don't follow Politics but was shown 2 articles from it — waste of my time
+      - Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.15, spent only 0.6s on it
+      - 5 out of 10 articles were Business — too much of one category, felt repetitive
+      - I follow Cybersecurity but saw ZERO articles matching this topic
+    MISSING CONTENT: Cybersecurity — followed but never shown
+    ARTICLES THEY LIKED: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (9.4s) | "**S&P 500** Plunges to Lowest Level Since **November**" (5.6s) | "**Oil** Jumps to **$100** as Iran War Fears Grip Markets" (7.7s)
+    WORST ARTICLE: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score: -0.15, dwell: 0.6s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Mediocre (Same)
+    Quote: "As a crypto analyst at a defi fund, I found plenty of Bitcoin content. Spent 54s total, engaged with 8 articles. I'd come back daily."
+    Feature request: Real-time price tickers alongside relevant articles
+    Feature request: Need more Cybersecurity content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [19/20] JENNIFER, 39 — Toronto, Canada [FRESH]
+  High school science teacher and mom of two. Toronto Raptors fan. Follows climate science and nature documentaries.
+  Subtopics: Public Health, Climate & Environment, Biology & Nature, NBA
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 17 topics | 9 relevant | 52.9% overall | 100.0% personalized | mode: cold_start
+    Tapped 4 explore topics
+    Phase 2: Reading feed until bored...
+    Read 5 articles | Engaged: 1 | Glanced: 0 | Skipped: 3 | Relevant: 1
+    Exit: NATURAL | Final mood: 46/100 | Saved: 0 | Events: 6
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     SKIP            0.7s     51   -0.15        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    2     SCAN            1.9s     49   -0.06        Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    3     DEEP_READ      11.2s     54    0.61        Health           Public Health                  **US** Drug Overdose Deaths **Plummet** by **26%**
+    4     SKIP            0.3s     50   -0.17        Business         (none)                         **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    5     SKIP            0.9s     46   -0.12        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+
+    DWELL TIME SUMMARY BY ACTION:
+    SKIP         Count:   3 | Avg:   0.6s | Min:   0.3s | Max:   0.9s | Total:     2s
+    SCAN         Count:   1 | Avg:   1.9s | Min:   1.9s | Max:   1.9s | Total:     2s
+    DEEP_READ    Count:   1 | Avg:  11.2s | Min:  11.2s | Max:  11.2s | Total:    11s
+    TOTAL        Count:   5 | Avg:   3.0s | Total session: 15s (0.2 min)
+
+    CATEGORY BREAKDOWN FOR JENNIFER:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Politics                2     0      2     0      0.8s      0%        no
+    Business                2     0      1     0      1.1s      0%        no
+    Health                  1     1      0     1     11.2s    100%       YES
+
+    UNWANTED CONTENT — Categories Jennifer doesn't follow but kept seeing:
+    - Politics: 2 irrelevant articles shown
+    - Business: 1 irrelevant article shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-5)            5      20%      20%       3.0s     46        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  17 topics | 9 relevant | 52.9% overall | 100.0% personalized | mode: blended
+    Tapped 3 explore topics
+    Explore change: 52.9% -> 52.9% (+0.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Basketball       NBA Basketball                             7    kw:nba+st:NBA
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Science          Climate Change                             5    cat:Science+kw:climate+st:Climate & Envi
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health+kw:vaccine+st:Public Health
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health
+    Personal       YES        Health           Alzheimer's & Dementia                     1    cat:Health
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       YES        AI & Tech        Apple                                     13    kw:apple
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Business         Trade Wars & Tariffs                       7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 3/10 | Neutral
+    Total time in feed: 15s (0.2 min) | Avg dwell: 3.0s/article
+    Best feature: Explore page topic discovery
+    Top complaint: Too many articles I don't care about
+    DETAILED COMPLAINTS (what Jennifer didn't like):
+      - I don't follow Politics but was shown 2 articles from it — waste of my time
+      - I don't follow Business but was shown 2 articles from it — waste of my time
+      - Worst article for me: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (Business) — score -0.17, spent only 0.3s on it
+      - 2 out of 5 articles were Politics — too much of one category, felt repetitive
+      - My average dwell was only 3.0s per article — nothing grabbed my attention long enough
+      - I follow Climate & Environment, Biology & Nature, NBA but saw ZERO articles matching these topics
+    MISSING CONTENT: Climate & Environment, Biology & Nature, NBA — followed but never shown
+    ARTICLES THEY LIKED: "**US** Drug Overdose Deaths **Plummet** by **26%**" (11.2s)
+    WORST ARTICLE: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (Business) — score: -0.17, dwell: 0.3s
+    Would recommend: Not yet — needs significant improvement for my use case
+    Explore verdict: Good (Same)
+    Quote: "It's okay — 1/5 articles were worth reading, but 4 didn't match my interests (Public Health, Climate & Environment). 3.0s avg dwell tells the story."
+    Feature request: Better topic matching — I want to see MY interests, not generic news
+    Feature request: Live scores or match alerts integrated into the feed
+    Feature request: Need more Climate & Environment content — I saw zero articles for this topic
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [20/20] AMARA, 34 — Montreal, Canada [FRESH]
+  ER nurse at McGill University Health Centre. Reads medical journals on break. Montreal Canadiens fan. Follows pharma industry.
+  Subtopics: Medical Breakthroughs, Biology & Nature, Mental Health, Pharma & Drug Industry
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping history — fresh start)...
+    Phase 1: Checking explore page BEFORE reading...
+    Explore BEFORE: 18 topics | 9 relevant | 50.0% overall | 100.0% personalized | mode: cold_start
+    Tapped 0 explore topics
+    Phase 2: Reading feed until bored...
+    Read 7 articles | Engaged: 4 | Glanced: 0 | Skipped: 2 | Relevant: 4
+    Exit: NATURAL | Final mood: 61/100 | Saved: 1 | Events: 12
+
+    DETAILED ARTICLE-BY-ARTICLE VIEW:
+    #     Action         Dwell   Mood   Score   Save Category         Matched Subtopics              Title
+    ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      17.8s     60    0.78        Science          Medical Breakthroughs, Biolo   Medical **Powder** Stops **Fatal** Bleeding in Seconds
+    2     DEEP_READ      17.8s     67    0.60    YES Business         Pharma & Drug Industry         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    3     ENGAGE          8.3s     70    0.44        Business         Pharma & Drug Industry         **Oil** Hits **$100** as Iran War Blocks Strait of Horm
+    4     SKIP            0.6s     66   -0.16        Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    5     ENGAGE          6.5s     69    0.50        Business         Pharma & Drug Industry         **Iran War** Fuels Oil Shock, **Asia** Hit Hardest
+    6     SCAN            1.1s     65   -0.08        Politics         (none)                         **Trump** Bombing Iran **Spikes** Oil Above **$100**
+    7     SKIP            0.8s     61   -0.31        Politics         (none)                         **White House**: Iran War Burns Half of **US Bitcoin**
+
+    DWELL TIME SUMMARY BY ACTION:
+    DEEP_READ    Count:   2 | Avg:  17.8s | Min:  17.8s | Max:  17.8s | Total:    36s
+    ENGAGE       Count:   2 | Avg:   7.4s | Min:   6.5s | Max:   8.3s | Total:    15s
+    SKIP         Count:   2 | Avg:   0.7s | Min:   0.6s | Max:   0.8s | Total:     1s
+    SCAN         Count:   1 | Avg:   1.1s | Min:   1.1s | Max:   1.1s | Total:     1s
+    TOTAL        Count:   7 | Avg:   7.6s | Total session: 53s (0.9 min)
+
+    CATEGORY BREAKDOWN FOR AMARA:
+    Category            Shown   Eng   Skip   Rel  AvgDwell    Eng%   Wanted?
+    ──────────────────────────────────────────────────────────────────────
+    Business                3     3      0     3     10.9s    100%       YES
+    Politics                3     0      2     0      0.8s      0%        no
+    Science                 1     1      0     1     17.8s    100%       YES
+
+    UNWANTED CONTENT — Categories Amara doesn't follow but kept seeing:
+    - Politics: 2 irrelevant articles shown
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window       Articles     Eng%   Relev%   AvgDwell   Mood    Trend
+    ─────────────────────────────────────────────────────────────────
+    #1 (1-7)            7      57%      57%       7.6s     61        —
+    Waiting 4s for backend profile processing...
+    Phase 3: Checking explore page AFTER reading...
+    Explore AFTER:  18 topics | 9 relevant | 50.0% overall | 100.0% personalized | mode: cold_start
+    Tapped 0 explore topics
+    Explore change: 50.0% -> 50.0% (+0.0%) UNCHANGED
+
+    EXPLORE TOPICS (AFTER):
+    Type           Match      Category         Topic                                  Articles  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES        Business         BYD Electric Vehicles                      1    cat:Business
+    Personal       YES        Science          NASA & Space Exploration                   4    cat:Science
+    Personal       YES        Science          Mars Exploration                           1    cat:Science
+    Personal       YES        Science          Climate Change                             5    cat:Science
+    Personal       YES        Health           Vaccines & Immunization                    1    cat:Health
+    Personal       YES        Health           Mental Health & Wellness                   2    cat:Health+kw:mental health+st:Mental He
+    Personal       YES        Health           Alzheimer's & Dementia                     1    cat:Health
+    Personal       YES        Business         Trade Wars & Tariffs                       7    cat:Business
+    Trending       NO         World Politics   Iran & Middle East                        50    none
+    Trending       NO         Finance          Oil Prices & Energy Markets               19    none
+    Trending       NO         Football         NFL Football                              31    none
+    Trending       NO         AI & Tech        Apple                                     13    none
+    Trending       NO         Entertainment    Netflix Originals                         11    none
+    Trending       YES        Science          Electric Vehicles & EVs                   50    cat:Science
+    Trending       NO         Soccer           Premier League                            18    none
+    Trending       NO         Basketball       NBA Basketball                             7    none
+    Trending       NO         US Politics      Pentagon & US Military                    12    none
+    Trending       NO         Baseball         MLB Baseball                               4    none
+
+    PERSONA FEEDBACK:
+    Overall rating: 9/10 | Satisfied
+    Total time in feed: 53s (0.9 min) | Avg dwell: 7.6s/article
+    Best feature: Article relevance to my interests
+    Top complaint: Nothing major
+    DETAILED COMPLAINTS (what Amara didn't like):
+      - I don't follow Politics but was shown 3 articles from it — waste of my time
+      - Worst article for me: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score -0.31, spent only 0.8s on it
+      - 3 out of 7 articles were Business — too much of one category, felt repetitive
+      - I follow Mental Health but saw ZERO articles matching this topic
+    MISSING CONTENT: Mental Health — followed but never shown
+    ARTICLES THEY LIKED: "Medical **Powder** Stops **Fatal** Bleeding in Seconds" (17.8s) | "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (17.8s)
+    WORST ARTICLE: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score: -0.31, dwell: 0.8s
+    Would recommend: Definitely — this app gets me
+    Explore verdict: Good (Same)
+    Quote: "As a er nurse at mcgill university health centre, I found plenty of Medical Breakthroughs content. Spent 53s total, engaged with 4 articles. I'd come back daily."
+    Feature request: Need more Mental Health content — I saw zero articles for this topic
+
+
+==================================================================================================================================
+  GRAND REPORT — 20-PERSONA FULL EXPERIENCE TEST V3 (NEW ALGORITHM)
+==================================================================================================================================
+
+  TABLE 1: FEED READING PERFORMANCE
+  #    Name         Type        Articles   Engaged   Glanced   Skipped   Relevant    Eng%    Rel%   Saved          Exit   Mood
+  ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  1.   Lena         fresh              7         5         0         1          5   71.4%   71.4%       0       natural     68
+  2.   Nadia        fresh              4         4         0         0          4  100.0%  100.0%       0       natural     75
+  3.   Ryan         fresh              9         7         1         0          7   77.8%   77.8%       0       natural     85
+  4.   Elif         fresh              9         9         0         0          9  100.0%  100.0%       2       natural    100
+  5.   Mike         fresh              5         5         0         0          5  100.0%  100.0%       1       natural     80
+  6.   Ayse         fresh             10        10         0         0         10  100.0%  100.0%       2       natural    100
+  7.   Fatima       fresh              4         4         0         0          4  100.0%  100.0%       0       natural     73
+  8.   Lars         fresh              8         7         0         1          7   87.5%   87.5%       0       natural     79
+  9.   Antonio      fresh              8         6         0         1          6   75.0%   75.0%       0       natural     73
+  10.  Henrik       fresh             14        14         0         0         14  100.0%  100.0%       2       natural    100
+  11.  Marco        fresh             10         5         0         2          5   50.0%   50.0%       0       natural     63
+  12.  Sophie       fresh             11         7         0         3          7   63.6%   63.6%       2       natural     65
+  13.  Thomas       fresh             13        12         1         0         13   92.3%  100.0%       0       natural    100
+  14.  Zara         fresh              0         0         0         0          0    0.0%    0.0%       0       natural     55
+  15.  Robert       fresh              3         3         0         0          3  100.0%  100.0%       0       natural     70
+  16.  Devon        fresh             10         8         0         1          8   80.0%   80.0%       1       natural     83
+  17.  Camille      fresh             12         7         0         1          7   58.3%   58.3%       0       natural     73
+  18.  Diego        fresh             10         8         0         2          8   80.0%   80.0%       0       natural     80
+  19.  Jennifer     fresh              5         1         0         3          1   20.0%   20.0%       0       natural     46
+  20.  Amara        fresh              7         4         0         2          4   57.1%   57.1%       1       natural     61
+
+  TABLE 2: ENGAGEMENT OVER SCROLL DEPTH (averaged across all personas)
+  Window       Personas   Avg Eng%   Avg Rel%  Avg Dwell   Avg Mood    Trend
+  ─────────────────────────────────────────────────────────────────
+  #1                 19      79.9%      79.9%      10.2s         77        —
+  #2                  4      66.7%      75.0%       7.6s         85     DOWN
+
+  TABLE 3: EXPLORE PAGE — BEFORE vs AFTER
+  Name         Type        B:Total  B:Relev     B:%       B:Mode  A:Total  A:Relev     A:%       A:Mode    Delta    Verdict
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena         fresh            17        8     47%   cold_start       18        9     50%      blended      +3%       SAME
+  Nadia        fresh            13        4     31%   cold_start       14        5     36%      blended      +5%       SAME
+  Ryan         fresh            19       10     53%   cold_start       20       10     50%      blended      -3%       SAME
+  Elif         fresh            22       12     55%   cold_start       23       14     61%      blended      +6%   IMPROVED
+  Mike         fresh            21        8     38%   cold_start       20        8     40%      blended      +2%       SAME
+  Ayse         fresh            22       12     55%   cold_start       23       13     57%      blended      +2%       SAME
+  Fatima       fresh            19        7     37%   cold_start       20        8     40%      blended      +3%       SAME
+  Lars         fresh            14        5     36%   cold_start       16        6     38%      blended      +2%       SAME
+  Antonio      fresh            19       10     53%   cold_start       22       14     64%      blended     +11%   IMPROVED
+  Henrik       fresh            19        8     42%   cold_start       20        8     40%      blended      -2%       SAME
+  Marco        fresh            19        6     32%   cold_start       19        8     42%      blended     +11%   IMPROVED
+  Sophie       fresh            21       12     57%   cold_start       22       14     64%      blended      +6%   IMPROVED
+  Thomas       fresh            22        9     41%   cold_start       23        9     39%      blended      -2%       SAME
+  Zara         fresh            20       11     55%   cold_start       20       11     55%      blended      +0%       SAME
+  Robert       fresh            21       12     57%   cold_start       21       12     57%      blended      +0%       SAME
+  Devon        fresh            16        6     38%   cold_start       18        9     50%      blended     +13%   IMPROVED
+  Camille      fresh            15        6     40%   cold_start       17       10     59%      blended     +19%   IMPROVED
+  Diego        fresh            17        6     35%   cold_start       17        6     35%      blended      +0%       SAME
+  Jennifer     fresh            17        9     53%   cold_start       17        9     53%      blended      +0%       SAME
+  Amara        fresh            18        9     50%   cold_start       18        9     50%   cold_start      +0%       SAME
+
+  TABLE 4: PERFORMANCE BY INTEREST CATEGORY
+  Category                         Personas   Avg Eng%   Avg Mood   Avg Rating  Explore After
+  ──────────────────────────────────────────────────────────────────────────────────────────
+  Soccer/Football                         6      57.8%         72       8.0/10          57.3%
+  AI & Machine Learning                   4      84.2%         83       9.8/10          48.5%
+  Middle East                             4     100.0%         87      10.0/10          48.3%
+  Startups & Venture Capital              4      88.2%         90      10.0/10          57.8%
+  Gaming                                  3      79.6%         77       9.7/10          45.8%
+  European Politics                       3      97.4%         92      10.0/10          38.3%
+  Human Rights & Civil Liberties          3     100.0%         83      10.0/10          38.6%
+  Trade & Tariffs                         3     100.0%        100      10.0/10          52.5%
+  NFL                                     3      93.3%         78      10.0/10          49.0%
+  US Politics                             3     100.0%         74      10.0/10          45.7%
+  Public Health                           3      73.3%         63       7.7/10          50.0%
+  Biology & Nature                        3      46.9%         57       7.0/10          55.5%
+  Climate & Environment                   3      37.4%         67       4.7/10          49.0%
+  Robotics & Hardware                     2      79.5%         74       9.5/10          43.8%
+  War & Conflict                          2     100.0%         78      10.0/10          37.9%
+  Stock Markets                           2      78.9%         83      10.0/10          42.6%
+  F1 & Motorsport                         2      75.0%         72       9.5/10          41.1%
+  Boxing & MMA/UFC                        2      65.0%         73       9.5/10          46.1%
+  Medical Breakthroughs                   2      60.4%         63       9.0/10          56.8%
+  Pharma & Drug Industry                  2      60.4%         63       9.0/10          56.8%
+  Mental Health                           2      28.6%         58       5.0/10          52.5%
+  Celebrity Style & Red Carpet            2      29.2%         64       5.0/10          56.9%
+  NBA                                     2      50.0%         65       6.5/10          51.5%
+  Space Tech                              1      71.4%         68       9.0/10          50.0%
+  Corporate Earnings                      1      77.8%         85      10.0/10          50.0%
+  Smartphones & Gadgets                   1      87.5%         79      10.0/10          37.5%
+  Retail & Consumer                       1      75.0%         73      10.0/10          63.6%
+  Real Estate                             1      75.0%         73      10.0/10          63.6%
+  Banking & Lending                       1     100.0%        100      10.0/10          40.0%
+  Oil & Energy                            1      92.3%        100      10.0/10          39.1%
+  Commodities                             1     100.0%         70      10.0/10          57.1%
+  Sneakers & Streetwear                   1      80.0%         83      10.0/10          50.0%
+  Movies & Film                           1      58.3%         73       9.0/10          58.8%
+  Shopping & Product Reviews              1      58.3%         73       9.0/10          58.8%
+  Bitcoin                                 1      80.0%         80      10.0/10          35.3%
+  DeFi & Web3                             1      80.0%         80      10.0/10          35.3%
+  Cybersecurity                           1      80.0%         80      10.0/10          35.3%
+
+  TABLE 5: DWELL TIME & SESSION DEPTH
+  Name          Articles  TotalDwell  SessionMin  AvgDwell  DeepReads   DeepAvg   SkipAvg   Missing
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena                 7         88s        1.5m     12.6s          3     22.2s      0.9s         1
+  Nadia                4         82s        1.4m     20.6s          4     20.6s      0.0s         0
+  Ryan                 9         93s        1.5m     10.3s          7     12.5s      0.0s         0
+  Elif                 9        115s        1.9m     12.8s          8     13.6s      0.0s         0
+  Mike                 5         58s        1.0m     11.7s          4     12.5s      0.0s         1
+  Ayse                10        119s        2.0m     11.9s         10     11.9s      0.0s         0
+  Fatima               4         65s        1.1m     16.4s          3     19.2s      0.0s         1
+  Lars                 8         39s        0.6m      4.9s          4      6.6s      0.8s         2
+  Antonio              8         61s        1.0m      7.6s          4     12.0s      0.6s         0
+  Henrik              14        216s        3.6m     15.4s         11     17.0s      0.0s         0
+  Marco               10         52s        0.9m      5.2s          5      9.0s      0.7s         0
+  Sophie              11         59s        1.0m      5.4s          2     14.0s      0.6s         0
+  Thomas              13        133s        2.2m     10.2s         10     12.0s      0.0s         1
+  Zara                 0          0s        0.0m      0.0s          0      0.0s      0.0s         4
+  Robert               3         56s        0.9m     18.7s          3     18.7s      0.0s         2
+  Devon               10         39s        0.7m      3.9s          5      6.2s      0.8s         1
+  Camille             12         90s        1.5m      7.5s          7     11.8s      0.7s         1
+  Diego               10         54s        0.9m      5.4s          5      8.8s      0.6s         1
+  Jennifer             5         15s        0.2m      3.0s          1     11.2s      0.6s         3
+  Amara                7         53s        0.9m      7.6s          2     17.8s      0.7s         1
+
+  TABLE 6: PERSONA FEEDBACK SUMMARY
+  Name           Rating   Satisfaction    Explore   Improved    Recommend Best Feature
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena             9/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Nadia           10/10      Satisfied   Mediocre       Same   Definitely Article relevance to my interests
+  Ryan            10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Elif            10/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Mike            10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Ayse            10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Fatima          10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Lars            10/10      Satisfied   Mediocre       Same   Definitely Article relevance to my interests
+  Antonio         10/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Henrik          10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Marco            9/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Sophie           9/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Thomas          10/10      Satisfied   Mediocre       Same   Definitely Article relevance to my interests
+  Zara             1/10      Satisfied       Good       Same      Not yet Explore page topic discovery
+  Robert          10/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+  Devon           10/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Camille          9/10      Satisfied       Good        Yes   Definitely Article relevance to my interests
+  Diego           10/10      Satisfied   Mediocre       Same   Definitely Article relevance to my interests
+  Jennifer         3/10        Neutral       Good       Same      Not yet Explore page topic discovery
+  Amara            9/10      Satisfied       Good       Same   Definitely Article relevance to my interests
+
+  TABLE 7: WHAT EACH PERSONA DIDN'T LIKE (DETAILED)
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  LENA (9/10, Satisfied):
+    [Specific] I don't follow Business but was shown 1 article from it — waste of my time
+    [Specific] I don't follow Politics but was shown 1 article from it — waste of my time
+    [Specific] Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.17, spent only 0.9s on it
+    [Specific] 3 out of 7 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow Robotics & Hardware but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Robotics & Hardware
+
+  NADIA (10/10, Satisfied):
+    [Specific] 2 out of 4 articles were Politics — too much of one category, felt repetitive
+
+  RYAN (10/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 2 articles from it — waste of my time
+    [Specific] 5 out of 9 articles were Business — too much of one category, felt repetitive
+
+  ELIF (10/10, Satisfied):
+    [Specific] 5 out of 9 articles were Business — too much of one category, felt repetitive
+
+  MIKE (10/10, Satisfied):
+    [Specific] 3 out of 5 articles were Sports — too much of one category, felt repetitive
+    [Specific] I follow US Politics but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: US Politics
+
+  AYSE (10/10, Satisfied):
+    [Specific] 7 out of 10 articles were Business — too much of one category, felt repetitive
+
+  FATIMA (10/10, Satisfied):
+    [Specific] 2 out of 4 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow Public Health but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Public Health
+
+  LARS (10/10, Satisfied):
+    [General] Explore suggested topics I actively dislike
+    [Specific] I don't follow Business but was shown 1 article from it — waste of my time
+    [Specific] Worst article for me: "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (Business) — score -0.11, spent only 0.8s on it
+    [Specific] 5 out of 8 articles were Entertainment — too much of one category, felt repetitive
+    [Specific] I follow Smartphones & Gadgets, Robotics & Hardware but saw ZERO articles matching these topics
+    [Missing] Followed but never shown: Smartphones & Gadgets, Robotics & Hardware
+
+  ANTONIO (10/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 2 articles from it — waste of my time
+    [Specific] Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.15, spent only 0.6s on it
+
+  HENRIK (10/10, Satisfied):
+    [Specific] 6 out of 14 articles were Business — too much of one category, felt repetitive
+
+  MARCO (9/10, Satisfied):
+    [Specific] I don't follow Business but was shown 3 articles from it — waste of my time
+    [Specific] I don't follow Politics but was shown 2 articles from it — waste of my time
+    [Specific] Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.28, spent only 1.0s on it
+    [Specific] 5 out of 10 articles were Sports — too much of one category, felt repetitive
+
+  SOPHIE (9/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 4 articles from it — waste of my time
+    [Specific] Worst article for me: "**Trump** Removes **Russia** Sanctions Amid Iran Conflict" (Politics) — score -0.17, spent only 0.7s on it
+    [Specific] 5 out of 11 articles were Politics — too much of one category, felt repetitive
+    [Specific] Feed got WORSE as I scrolled — engagement went from 70% to 0%, my mood dropped from 70 to 65
+
+  THOMAS (10/10, Satisfied):
+    [General] Explore suggested topics I actively dislike
+    [Specific] 10 out of 13 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow Climate & Environment but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Climate & Environment
+
+  ZARA (1/10, Satisfied):
+    [General] Too many articles I don't care about
+    [General] Explore suggested topics I actively dislike
+    [Specific] My average dwell was only 0.0s per article — nothing grabbed my attention long enough
+    [Specific] I follow Climate & Environment, Mental Health, Soccer/Football, Celebrity Style & Red Carpet but saw ZERO articles matching these topics
+    [Missing] Followed but never shown: Climate & Environment, Mental Health, Soccer/Football, Celebrity Style & Red Carpet
+
+  ROBERT (10/10, Satisfied):
+    [General] Explore suggested topics I actively dislike
+    [Specific] 2 out of 3 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow US Politics, Public Health but saw ZERO articles matching these topics
+    [Missing] Followed but never shown: US Politics, Public Health
+
+  DEVON (10/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 1 article from it — waste of my time
+    [Specific] I don't follow Business but was shown 1 article from it — waste of my time
+    [Specific] Worst article for me: "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (Politics) — score -0.16, spent only 0.8s on it
+    [Specific] 5 out of 10 articles were Entertainment — too much of one category, felt repetitive
+    [Specific] I follow Sneakers & Streetwear but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Sneakers & Streetwear
+
+  CAMILLE (9/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 3 articles from it — waste of my time
+    [Specific] I don't follow Business but was shown 2 articles from it — waste of my time
+    [Specific] Worst article for me: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score -0.31, spent only 0.7s on it
+    [Specific] 5 out of 12 articles were Entertainment — too much of one category, felt repetitive
+    [Specific] I follow Shopping & Product Reviews but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Shopping & Product Reviews
+
+  DIEGO (10/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 2 articles from it — waste of my time
+    [Specific] Worst article for me: "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (Politics) — score -0.15, spent only 0.6s on it
+    [Specific] 5 out of 10 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow Cybersecurity but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Cybersecurity
+
+  JENNIFER (3/10, Neutral):
+    [General] Too many articles I don't care about
+    [Specific] I don't follow Politics but was shown 2 articles from it — waste of my time
+    [Specific] I don't follow Business but was shown 2 articles from it — waste of my time
+    [Specific] Worst article for me: "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (Business) — score -0.17, spent only 0.3s on it
+    [Specific] 2 out of 5 articles were Politics — too much of one category, felt repetitive
+    [Specific] My average dwell was only 3.0s per article — nothing grabbed my attention long enough
+    [Specific] I follow Climate & Environment, Biology & Nature, NBA but saw ZERO articles matching these topics
+    [Missing] Followed but never shown: Climate & Environment, Biology & Nature, NBA
+
+  AMARA (9/10, Satisfied):
+    [Specific] I don't follow Politics but was shown 3 articles from it — waste of my time
+    [Specific] Worst article for me: "**White House**: Iran War Burns Half of **US Bitcoin**" (Politics) — score -0.31, spent only 0.8s on it
+    [Specific] 3 out of 7 articles were Business — too much of one category, felt repetitive
+    [Specific] I follow Mental Health but saw ZERO articles matching this topic
+    [Missing] Followed but never shown: Mental Health
+
+
+  TABLE 8: FEATURE REQUESTS
+  Name         Feature Requests
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena         Need more Robotics & Hardware content — I saw zero articles for this topic
+  Nadia        More granular topic control in settings
+  Ryan         Real-time price tickers alongside relevant articles
+  Elif         Live scores or match alerts integrated into the feed
+  Mike         Live scores or match alerts integrated into the feed | Need more US Politics content — I saw zero articles for this topic
+  Ayse         More granular topic control in settings
+  Fatima       Need more Public Health content — I saw zero articles for this topic
+  Lars         Need more Smartphones & Gadgets content — I saw zero articles for this topic
+  Antonio      Live scores or match alerts integrated into the feed
+  Henrik       More granular topic control in settings
+  Marco        Live scores or match alerts integrated into the feed
+  Sophie       Live scores or match alerts integrated into the feed
+  Thomas       Need more Climate & Environment content — I saw zero articles for this topic
+  Zara         Better topic matching — I want to see MY interests, not generic news | Live scores or match alerts integrated into the feed | Need more Climate & Environment content — I saw zero articles for this topic
+  Robert       Live scores or match alerts integrated into the feed | Real-time price tickers alongside relevant articles | Need more US Politics content — I saw zero articles for this topic
+  Devon        Live scores or match alerts integrated into the feed | Need more Sneakers & Streetwear content — I saw zero articles for this topic
+  Camille      Live scores or match alerts integrated into the feed | Need more Shopping & Product Reviews content — I saw zero articles for this topic
+  Diego        Real-time price tickers alongside relevant articles | Need more Cybersecurity content — I saw zero articles for this topic
+  Jennifer     Better topic matching — I want to see MY interests, not generic news | Live scores or match alerts integrated into the feed | Need more Climate & Environment content — I saw zero articles for this topic
+  Amara        Need more Mental Health content — I saw zero articles for this topic
+
+  TABLE 9: WHAT USERS SAY
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena       (9/10): "As a ai research lead at a robotics startup, I found plenty of AI & Machine Learning content. Spent 88s total, engaged with 5 articles. I'd come back daily."
+  Nadia      (10/10): "As a international relations professor at humboldt university, I found plenty of War & Conflict content. Spent 82s total, engaged with 4 articles. I'd come back daily."
+  Ryan       (10/10): "As a quant fund portfolio manager at a mid-size hedge fund, I found plenty of Stock Markets content. Spent 93s total, engaged with 7 articles. I'd come back daily."
+  Elif       (10/10): "As a product designer at a fintech startup, I found plenty of Soccer/Football content. Spent 115s total, engaged with 9 articles. I'd come back daily."
+  Mike       (10/10): "As a retired army colonel, now a military analyst on cable news, I found plenty of NFL content. Spent 58s total, engaged with 5 articles. I'd come back daily."
+  Ayse       (10/10): "As a saas startup founder, just closed series a, I found plenty of Startups & Venture Capital content. Spent 119s total, engaged with 10 articles. I'd come back daily."
+  Fatima     (10/10): "As a georgetown law student focused on civil rights, I found plenty of US Politics content. Spent 65s total, engaged with 4 articles. I'd come back daily."
+  Lars       (10/10): "As a semi-pro counter-strike player, I found plenty of Gaming content. Spent 39s total, engaged with 7 articles. I'd come back daily."
+  Antonio    (10/10): "As a restaurant chain owner (3 tapas restaurants), I found plenty of Soccer/Football content. Spent 61s total, engaged with 6 articles. I'd come back daily."
+  Henrik     (10/10): "As a former swedish diplomat, now director at the geneva centre for security policy, I found plenty of European Politics content. Spent 216s total, engaged with 14 articles. I'd come back daily."
+  Marco      (9/10): "As a sports editor at gazzetta dello sport, I found plenty of Soccer/Football content. Spent 52s total, engaged with 5 articles. I'd come back daily."
+  Sophie     (9/10): "As a medical resident specializing in oncology, I found plenty of Medical Breakthroughs content. Spent 59s total, engaged with 7 articles. I'd come back daily."
+  Thomas     (10/10): "As a climate journalist at nrc handelsblad, I found plenty of Climate & Environment content. Spent 133s total, engaged with 12 articles. I'd come back daily."
+  Zara       (1/10): "It's okay — 0/0 articles were worth reading, but 0 didn't match my interests (Climate & Environment, Mental Health). 0.0s avg dwell tells the story."
+  Robert     (10/10): "As a retired school principal, I found plenty of US Politics content. Spent 56s total, engaged with 3 articles. I'd come back daily."
+  Devon      (10/10): "As a ut austin senior, huge sports fan, I found plenty of NFL content. Spent 39s total, engaged with 8 articles. I'd come back daily."
+  Camille    (9/10): "As a creative director at balenciaga, I found plenty of Celebrity Style & Red Carpet content. Spent 90s total, engaged with 7 articles. I'd come back daily."
+  Diego      (10/10): "As a crypto analyst at a defi fund, I found plenty of Bitcoin content. Spent 54s total, engaged with 8 articles. I'd come back daily."
+  Jennifer   (3/10): "It's okay — 1/5 articles were worth reading, but 4 didn't match my interests (Public Health, Climate & Environment). 3.0s avg dwell tells the story."
+  Amara      (9/10): "As a er nurse at mcgill university health centre, I found plenty of Medical Breakthroughs content. Spent 53s total, engaged with 4 articles. I'd come back daily."
+
+  TABLE 10: ARTICLES EACH PERSONA LIKED MOST
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Lena       "**US** to Return to **Moon**, Plans Lunar Base by **2028**" (21.7s) | "**Elden Ring** Returns: **Switch 2** Previewed at Gaming Fes" (21.7s) | "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (23.2s)
+  Nadia      "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (14.8s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (17.8s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (23.0s)
+  Ryan       "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (17.4s) | "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (14.8s) | "**S&P 500** Plunges to Lowest Level Since **November**" (12.8s)
+  Elif       "**Iran** Blockade Threatens **Oil** Market Amid Rising Price" (13.9s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (13.8s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (9.6s)
+  Mike       "**Iran War** Threatens to Halt **Formula 1** Races" (19.8s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (9.1s) | "**Formula 1** Cancels **Bahrain**, Saudi Races Amid Iran War" (10.4s)
+  Ayse       "**Iran** Blockade Threatens **Oil** Market Amid Rising Price" (10.3s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (16.9s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (9.8s)
+  Fatima     "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (20.0s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (14.7s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (23.0s)
+  Lars       "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (4.7s) | "**Overwatch** Director Quits After **Blizzard** Ultimatum" (11.5s) | "**Crimson Desert** Launches **March 19** for PC and Consoles" (5.9s)
+  Antonio    "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (9.1s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (12.6s) | "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (13.5s)
+  Henrik     "**Iran War** Surges **Petrol Prices**, Cuts Rate-Cut Bets" (17.9s) | "**US** Bombs **Tehran**, Iranian-American Rep Feels Conflict" (25.3s) | "**Trump** Bombing Iran **Spikes** Oil Above **$100**" (15.0s)
+  Marco      "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (8.5s) | "**Iran War** Threatens to Halt **Formula 1** Races" (5.1s) | "**Formula 1** Cancels **Bahrain**, Saudi Races Amid Iran War" (13.3s)
+  Sophie     "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (14.0s) | "Medical **Powder** Stops **Fatal** Bleeding in Seconds" (13.9s) | "**Tomlin** Steps Down After **19 Seasons** with Steelers" (2.8s)
+  Thomas     "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (8.3s) | "**Oil** Giants' Stock **Surges** Amid Iran War, Fuel Costs R" (15.9s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (14.9s)
+  Zara       (no deep reads or saves)
+  Robert     "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (17.4s) | "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (21.0s) | "**Tomlin** Steps Down After **19 Seasons** with Steelers" (17.8s)
+  Devon      "**Pokémon Pokopia** Launches on **Switch 2**; Price at **$69" (5.8s) | "**Overwatch** Director Quits After **Blizzard** Ultimatum" (4.9s) | "**Crimson Desert** Launches **March 19** for PC and Consoles" (7.0s)
+  Camille    "**Bayern Munich** Beat Atalanta **6-1** in Champions League" (13.7s) | "**Sinners** Leads With **16** Oscar Nominations Sunday" (12.6s) | "**Sinners**, **One Battle** Vie for Oscar's Top Prize" (11.1s)
+  Diego      "**Oil** Hits **$100** as Iran War Blocks Strait of Hormuz" (9.4s) | "**S&P 500** Plunges to Lowest Level Since **November**" (5.6s) | "**Oil** Jumps to **$100** as Iran War Fears Grip Markets" (7.7s)
+  Jennifer   "**US** Drug Overdose Deaths **Plummet** by **26%**" (11.2s)
+  Amara      "Medical **Powder** Stops **Fatal** Bleeding in Seconds" (17.8s) | "**Oil Prices** Surge Amid **Israel**, **US** Strike on Iran" (17.8s)
+
+  ======================================================================
+  FINAL VERDICT
+  ======================================================================
+  Average rating:              8.9/10
+  Average engagement rate:     75.7%
+  Average explore relevance:   48.9%
+  Exit types:                  Natural: 20 | Bored: 0 | Frustrated: 0
+  Would recommend:             18/20 (90%)
+  Avg articles before exit:    8.0
+  Avg session duration:        74s (1.2 min)
+  Avg dwell per article:       9.5s
+  Missing subtopics:           19 across 12 personas
+  Personas with complaints:    20/20
+  Explore BEFORE relevance:    45.1%
+  Explore AFTER relevance:     48.9%
+  App quality:                 EXCELLENT
+
+  Done at 2026-03-13T15:37:17.970Z

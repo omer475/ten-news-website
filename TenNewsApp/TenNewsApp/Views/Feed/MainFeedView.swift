@@ -4,8 +4,8 @@ import SwiftUI
 struct MainFeedView: View {
     @Binding var currentPageIndex: Int
     @Environment(AppViewModel.self) private var appViewModel
-    @State private var viewModel = FeedViewModel()
-    @State private var pagerIndex: Int = 0
+    @Environment(FeedViewModel.self) private var viewModel
+    @Environment(TabBarState.self) private var tabBarState
     @State private var showFlashBrief = false
 
     /// Articles in server-provided order (embedding-personalized).
@@ -15,17 +15,17 @@ struct MainFeedView: View {
 
     var body: some View {
         ZStack {
-            if viewModel.isLoading && viewModel.allArticles.isEmpty {
+            if viewModel.isLoading && sortedArticles.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.opacity)
-            } else if let error = viewModel.errorMessage, viewModel.allArticles.isEmpty {
+            } else if let error = viewModel.errorMessage, sortedArticles.isEmpty {
                 errorView(error)
                     .transition(.opacity)
             } else if !sortedArticles.isEmpty {
                 feedContent
                     .transition(.opacity)
-            } else if !viewModel.hasMore && viewModel.allArticles.isEmpty {
+            } else if !viewModel.hasMore {
                 CaughtUpView()
             }
         }
@@ -39,7 +39,7 @@ struct MainFeedView: View {
                     showFlashBrief = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            pagerIndex = index + 1
+                            viewModel.currentIndex = index
                         }
                     }
                 }
@@ -57,14 +57,30 @@ struct MainFeedView: View {
                 viewModel.recordViewStart(at: 0)
             }
         }
+        .onChange(of: tabBarState.feedRefreshRequested) { _, requested in
+            if requested {
+                tabBarState.feedRefreshRequested = false
+                Task {
+                    await viewModel.refresh()
+                    viewModel.currentIndex = 0
+                    viewModel.recordViewStart(at: 0)
+                }
+            }
+        }
     }
 
     // MARK: - Feed Content
 
     private var feedContent: some View {
-        VerticalPager(
-            currentIndex: $pagerIndex,
-            pages: sortedArticles
+        @Bindable var vm = viewModel
+        return VerticalPager(
+            currentIndex: $vm.currentIndex,
+            pages: sortedArticles,
+            onRefresh: {
+                await viewModel.refresh()
+                viewModel.currentIndex = 0
+                viewModel.recordViewStart(at: 0)
+            }
         ) { article in
             ArticleCardView(
                 article: article,
@@ -72,7 +88,7 @@ struct MainFeedView: View {
             )
         }
         .ignoresSafeArea()
-        .onChange(of: pagerIndex) { oldIndex, newIndex in
+        .onChange(of: viewModel.currentIndex) { oldIndex, newIndex in
             // Record signal for the card we just left — this measures dwell time
             // and sends the appropriate event (article_skipped / article_view / article_engaged)
             if oldIndex != newIndex, oldIndex < sortedArticles.count {
@@ -85,18 +101,23 @@ struct MainFeedView: View {
             }
 
             currentPageIndex = newIndex
-            viewModel.currentIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)  // reading history only, no analytics event
             if newIndex >= sortedArticles.count - 5 {
-                Task { await viewModel.loadMoreIfNeeded() }
+                Task {
+                    await viewModel.loadMoreIfNeeded()
+                    // If filters removed everything and server has more, keep fetching
+                    if newIndex >= sortedArticles.count - 2 && viewModel.hasMore {
+                        await viewModel.loadMoreIfNeeded()
+                    }
+                }
             }
         }
         .overlay(alignment: .bottom) {
-            if pagerIndex >= sortedArticles.count - 1 && !viewModel.hasMore {
-                CaughtUpView()
+            if viewModel.currentIndex >= sortedArticles.count - 1 && !viewModel.hasMore {
+                CompactCaughtUpBanner()
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 90)
             }
         }
     }
@@ -137,4 +158,5 @@ struct MainFeedView: View {
 #Preview {
     MainFeedView(currentPageIndex: .constant(0))
         .environment(AppViewModel())
+        .environment(FeedViewModel())
 }

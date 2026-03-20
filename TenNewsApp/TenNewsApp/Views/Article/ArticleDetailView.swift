@@ -38,6 +38,17 @@ struct ArticleDetailView: View {
                         ShareLink(item: url) {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            if let numericId = Int(article.id.stringValue) {
+                                Task {
+                                    try? await AnalyticsService().track(
+                                        event: "article_shared",
+                                        articleId: numericId,
+                                        category: article.category
+                                    )
+                                }
+                            }
+                        })
                     }
                 }
             }
@@ -91,6 +102,14 @@ struct ArticleDetailView: View {
                             Button {
                                 if article.url != nil {
                                     showSafari = true
+                                    Task {
+                                        try? await AnalyticsService().track(
+                                            event: "source_clicked",
+                                            articleId: Int(article.id.stringValue),
+                                            category: article.category,
+                                            source: article.source
+                                        )
+                                    }
                                 }
                             } label: {
                                 Text(source)

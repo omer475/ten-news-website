@@ -1,0 +1,297 @@
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 398.7 seconds
+================================================================================
+   Articles published: 0
+   Clusters processed: 8
+   Approved (Step 1): 9
+   Articles fetched: 18
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+      Skipping cluster 25076
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25076
+================================================================================
+      Skipping cluster 25075
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25075
+================================================================================
+      Skipping cluster 25074
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='mashable.com', port=443): Max retries exceeded with ur
+❌ Proxy error: HTTPSConnectionPool(host='mashable.com', port=443): Max retries exceeded with ur
+❌ Proxy error: HTTPSConnectionPool(host='mashable.com', port=443): Max retries exceeded with ur
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25074
+================================================================================
+      Skipping cluster 25073
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.japantimes.co.jp', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.japantimes.co.jp', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.japantimes.co.jp', port=443): Max retries exceeded
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25073
+================================================================================
+      Skipping cluster 25072
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25072
+================================================================================
+      Skipping cluster 25071
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.smh.com.au', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.smh.com.au', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.smh.com.au', port=443): Max retries exceeded with 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25071
+================================================================================
+      Skipping cluster 25070
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25070
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ⚠️  Claude API error 400 (attempt 5/5): You have reached your specified API usage limits. You will regain access on 2026-02-01 at 00:00 UTC.
+   ⚠️  Claude API error 400 (attempt 4/5): You have reached your specified API usage limits. You will regain access on 2026-02-01 at 00:00 UTC.
+   ⚠️  Claude API error 400 (attempt 3/5): You have reached your specified API usage limits. You will regain access on 2026-02-01 at 00:00 UTC.
+   ⚠️  Claude API error 400 (attempt 2/5): You have reached your specified API usage limits. You will regain access on 2026-02-01 at 00:00 UTC.
+   ⚠️  Claude API error 400 (attempt 1/5): You have reached your specified API usage limits. You will regain access on 2026-02-01 at 00:00 UTC.
+   Synthesizing article from 4 sources...
+      ✅ All 4 sources validated - same event
+   🔍 VALIDATING 4 sources for cluster: Trump Threatens Tariffs On Any Nation Supplying...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: PBS NewsHour Politics (score: 85.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image is a high-quality photograph of a politician, making it suitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x683 pixels, mode: RGB
+   📥 Downloading image: https://d3i6fh83elv35t.cloudfront.net/static/2026/01/2026-01-15T020911Z_91029822...
+      [2/3] Checking: PBS NewsHour Politics
+         ❌ AI REJECTED (95%): Image too small (240x145px) - likely a thumbnail or icon
+   ⚠️ Image too small: 240x145
+   📐 Image loaded: 240x145 pixels, mode: RGB
+   📥 Downloading image: https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/1c8b/live/c0c812a0-fd6f-11f0...
+      [1/3] Checking: BBC News Business
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 3
+      Total candidates: 3
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://i.dailymail.co.uk/1s/2026/01/29/23/1059498...
+   🔍 DEBUG Source 1: image_url = NONE...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 4 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 3/4
+Fetched 3/4 articles
+✅ Jina fallback: https://www.bbc.com/news/articles/c74vyr44xn3o?at_... (22847 chars)
+✅ Jina fallback: https://www.pbs.org/newshour/politics/trump-threat... (38720 chars)
+✅ Jina fallback: https://www.straitstimes.com/world/trump-threatens... (35785 chars)
+   🔄 Trying Jina fallback for 4 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 4 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 4
+================================================================================
+📰 PROCESSING CLUSTER 25038
+================================================================================
+   🎯 Clusters ready for processing: 8 (NEW this cycle)
+   🔗 Matched existing: 2
+   📊 New clusters: 7
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1007
+⏭️ Already clustered: 0
+✨ New clusters created: 7
+✅ Matched to existing: 2 (embedding: 2, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #25076
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [9/9] Dems provide Republicans key votes to advance Trump-backed f...
+         Cluster: 4 people shot, 2 killed in Mount Airy, North Carol...
+      ✅ EMBEDDING MATCH: Cluster #25075 (similarity: 1.00)
+   [8/9] 4 people shot, 2 killed in Mount Airy, North Carolina...
+      ✨ Created cluster #25075
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [7/9] 4 people shot, 2 killed in Mount Airy, North Carolina...
+      ✨ Created cluster #25074
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [6/9] FBI says its investigating Signal. Should users worry?...
+      ✨ Created cluster #25073
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [5/9] What are the key challenges awaiting the new U.S. Fed chair?...
+      ✨ Created cluster #25072
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [4/9] A Sobering Week For Health Care...
+      ✨ Created cluster #25071
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [3/9] Ley gives Littleproud one-week ultimatum to reform Coalition...
+      ✨ Created cluster #25070
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [2/9] Trump team now working to save Native American mascots from ...
+         Cluster: Trump Threatens Tariffs On Any Nation Supplying...
+      ✅ EMBEDDING MATCH: Cluster #25038 (similarity: 0.88)
+   [1/9] Trump threatens tariffs on any country that sells oil to Cub...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 9 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 9
+   ⏭️ Already clustered: 0
+   ✅ Saved: 9
+📝 Step 1: Saving articles to database...
+Articles to cluster: 9
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 9 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 9 filtered articles to Supabase
+✅ Step 1 Complete: 9 approved, 9 filtered
+   ✅ Filtering 18 total articles
+   📷 5 articles without images (Bright Data will fetch later)
+Scoring 18 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 18 NEW articles (after deduplication)
+✅ The Sydney Morning Herald: 5 new
+✅ The New York Times US: 1 new
+✅ The Japan Times: 1 new
+✅ The Independent: 1 new
+✅ PBS NewsHour Politics: 1 new
+✅ Newsweek: 1 new
+✅ Mashable Tech: 1 new
+✅ Luxury Daily: 2 new
+✅ Fox News Politics: 1 new
+✅ Daily Mail Home: 1 new
+✅ CBS News US: 1 new
+✅ CBS News Main: 1 new
+✅ CBC Top Stories: 1 new
+   ✅ After database check: 18 NEW articles
+   ⏰ After time filter (1440min): 1095 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2032 articles
+📊 Fetched 2032 articles from 205 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-30 00:51:52
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-30T00:51:43.072560
+🚀 TEN NEWS - Cloud Run Execution
+============================================================

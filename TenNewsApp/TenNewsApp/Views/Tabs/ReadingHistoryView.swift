@@ -2,28 +2,49 @@ import SwiftUI
 
 struct ReadingHistoryView: View {
     private var history: ReadingHistoryManager { ReadingHistoryManager.shared }
+    @Environment(FeedViewModel.self) private var feedViewModel
+    @State private var selectedArticle: Article?
 
     var body: some View {
-        Group {
-            if history.entries.isEmpty {
-                emptyState
-            } else {
-                historyList
-            }
-        }
-        .navigationTitle("Reading History")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            if !history.entries.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Clear") {
-                        withAnimation {
-                            history.clearHistory()
-                        }
-                        HapticManager.light()
-                    }
-                    .foregroundStyle(.red)
+        ZStack {
+            Group {
+                if history.entries.isEmpty {
+                    emptyState
+                } else {
+                    historyList
                 }
+            }
+            .navigationTitle("Reading History")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if !history.entries.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Clear") {
+                            withAnimation {
+                                history.clearHistory()
+                            }
+                            HapticManager.light()
+                        }
+                        .foregroundStyle(.red)
+                    }
+                }
+            }
+
+            // Article sheet overlay — opens tapped article then continues with feed
+            if let article = selectedArticle {
+                ExploreArticleSheet(
+                    selectedArticle: article,
+                    allArticles: feedContinuationArticles,
+                    onDismiss: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            selectedArticle = nil
+                        }
+                    },
+                    preserveOrder: true
+                )
+                .transition(.move(edge: .bottom))
+                .ignoresSafeArea()
+                .zIndex(1)
             }
         }
     }
@@ -34,7 +55,12 @@ struct ReadingHistoryView: View {
                 ForEach(groupedEntries, id: \.date) { group in
                     Section {
                         ForEach(group.entries) { entry in
-                            entryRow(entry)
+                            Button {
+                                openHistoryEntry(entry)
+                            } label: {
+                                entryRow(entry)
+                            }
+                            .buttonStyle(.plain)
                             if entry.id != group.entries.last?.id {
                                 Divider().padding(.leading, 88)
                             }
@@ -130,6 +156,88 @@ struct ReadingHistoryView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    // MARK: - Feed Continuation
+
+    private var feedContinuationArticles: [Article] {
+        let feed = feedViewModel.articles
+        let idx = min(feedViewModel.currentIndex, feed.count)
+        return Array(feed.suffix(from: idx))
+    }
+
+    private func resolveFullArticle(_ article: Article) async -> Article {
+        if let feedArticle = feedViewModel.allArticles.first(where: { $0.id == article.id }),
+           !feedArticle.displayBullets.isEmpty {
+            return feedArticle
+        }
+        if let full: Article = try? await APIClient.shared.get("/api/article/\(article.id.stringValue)") {
+            return full
+        }
+        return article
+    }
+
+    private func openArticle(_ article: Article) {
+        HapticManager.selection()
+        let feedArticle = feedViewModel.allArticles.first { $0.id == article.id }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            selectedArticle = feedArticle ?? article
+        }
+        if (feedArticle ?? article).displayBullets.isEmpty {
+            Task {
+                if let full: Article = try? await APIClient.shared.get("/api/article/\(article.id.stringValue)") {
+                    selectedArticle = full
+                }
+            }
+        }
+    }
+
+    private func openHistoryEntry(_ entry: ReadingHistoryManager.HistoryEntry) {
+        HapticManager.selection()
+        let entryId = FlexibleID(entry.articleId)
+        if let feedArticle = feedViewModel.allArticles.first(where: { $0.id == entryId }) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                selectedArticle = feedArticle
+            }
+            if feedArticle.displayBullets.isEmpty {
+                Task {
+                    if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
+                        selectedArticle = full
+                    }
+                }
+            }
+        } else {
+            let minArticle = articleFromHistoryEntry(entry)
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                selectedArticle = minArticle
+            }
+            Task {
+                if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
+                    selectedArticle = full
+                }
+            }
+        }
+    }
+
+    // MARK: - History → Article Conversion
+
+    private var historyArticles: [Article] {
+        history.entries.compactMap { articleFromHistoryEntry($0) }
+    }
+
+    private func articleFromHistoryEntry(_ entry: ReadingHistoryManager.HistoryEntry) -> Article? {
+        var dict: [String: Any] = [
+            "id": entry.articleId,
+            "title": entry.title
+        ]
+        if let source = entry.source { dict["source"] = source }
+        if let category = entry.category { dict["category"] = category }
+        if let topics = entry.topics { dict["topics"] = topics }
+        if let countries = entry.countries { dict["countries"] = countries }
+        if let imageUrl = entry.imageUrl { dict["image_url"] = imageUrl }
+
+        guard let data = try? JSONSerialization.data(withJSONObject: dict) else { return nil }
+        return try? JSONDecoder().decode(Article.self, from: data)
     }
 
     private func timeAgoString(from date: Date) -> String {

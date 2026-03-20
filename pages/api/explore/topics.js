@@ -70,7 +70,6 @@ const SUBTOPIC_CATEGORY_MAP = {
 
 // APP_TOPIC_ALIAS: maps iOS app short topic IDs to SUBTOPIC_CATEGORY_MAP keys
 const APP_TOPIC_ALIAS = {
-  // ── Broad category aliases (old Topics.all IDs) ──
   'politics': ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania'],
   'ai': ['AI & Machine Learning'],
   'science': ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
@@ -101,63 +100,6 @@ const APP_TOPIC_ALIAS = {
   'automotive': ['Automotive'],
   'cybersecurity': ['Cybersecurity'],
   'realestate': ['Real Estate'],
-  // ── App subtopic IDs (TopicCategories.all subtopic .id values) ──
-  // Politics subtopics
-  'war_conflict':       ['War & Conflict'],
-  'us_politics':        ['US Politics'],
-  'european_politics':  ['European Politics'],
-  'asian_politics':     ['Asian Politics'],
-  'middle_east':        ['Middle East'],
-  'latin_america':      ['Latin America'],
-  'africa_oceania':     ['Africa & Oceania'],
-  'human_rights':       ['Human Rights & Civil Liberties'],
-  // Sports subtopics
-  'f1_motorsport':      ['F1 & Motorsport'],
-  'boxing_mma':         ['Boxing & MMA/UFC'],
-  // Business subtopics
-  'oil_energy':         ['Oil & Energy'],
-  'retail_consumer':    ['Retail & Consumer'],
-  'corporate_deals':    ['Corporate Deals'],
-  'trade_tariffs':      ['Trade & Tariffs'],
-  'corporate_earnings': ['Corporate Earnings'],
-  'startups_vc':        ['Startups & Venture Capital'],
-  'real_estate':        ['Real Estate'],
-  // Entertainment subtopics
-  'movies_film':        ['Movies & Film'],
-  'tv_streaming':       ['TV & Streaming'],
-  'celebrity_news':     ['Celebrity News'],
-  'kpop_kdrama':        ['K-Pop & K-Drama'],
-  // Tech subtopics
-  'ai_ml':              ['AI & Machine Learning'],
-  'smartphones_gadgets': ['Smartphones & Gadgets'],
-  'social_media':       ['Social Media'],
-  'space_tech':         ['Space Tech'],
-  'robotics_hardware':  ['Robotics & Hardware'],
-  // Science subtopics
-  'space_astronomy':    ['Space & Astronomy'],
-  'climate_environment': ['Climate & Environment'],
-  'biology_nature':     ['Biology & Nature'],
-  'earth_science':      ['Earth Science'],
-  // Health subtopics
-  'medical_breakthroughs': ['Medical Breakthroughs'],
-  'public_health':      ['Public Health'],
-  'mental_health':      ['Mental Health'],
-  'pharma_drugs':       ['Pharma & Drug Industry'],
-  // Finance subtopics
-  'stock_markets':      ['Stock Markets'],
-  'banking_lending':    ['Banking & Lending'],
-  'commodities':        ['Commodities'],
-  // Crypto subtopics
-  'bitcoin':            ['Bitcoin'],
-  'defi_web3':          ['DeFi & Web3'],
-  'crypto_regulation':  ['Crypto Regulation & Legal'],
-  // Lifestyle subtopics
-  'pets_animals':       ['Pets & Animals'],
-  'home_garden':        ['Home & Garden'],
-  'shopping_reviews':   ['Shopping & Product Reviews'],
-  // Fashion subtopics
-  'sneakers_streetwear': ['Sneakers & Streetwear'],
-  'celebrity_style':    ['Celebrity Style & Red Carpet'],
 }
 
 // Sliding blend: behavior_weight = min(directMatches / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
@@ -206,9 +148,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing user_id' })
   }
 
-  // Debug: log what params the API actually received
-  console.log(`[explore] user_id=${user_id}, followed_topics=${req.query.followed_topics || 'NONE'}, home_country=${req.query.home_country || 'NONE'}`)
-
   const supabase = createClient(supabaseUrl, supabaseKey)
 
   try {
@@ -224,17 +163,12 @@ export default async function handler(req, res) {
 
     const tagProfile = profile?.tag_profile || {}
     const skipProfile = profile?.skip_profile || {}
-    // Fall back to query params for guest users (no profile row in DB)
-    const homeCountry = profile?.home_country || req.query.home_country || null
-    const profileTopics = Array.isArray(profile?.followed_topics)
+    const homeCountry = profile?.home_country || null
+    const followedTopics = Array.isArray(profile?.followed_topics)
       ? profile.followed_topics
       : (typeof profile?.followed_topics === 'string'
         ? JSON.parse(profile.followed_topics || '[]')
         : [])
-    // Guest users send followed_topics as query param since they have no DB profile
-    const followedTopics = profileTopics.length > 0
-      ? profileTopics
-      : (req.query.followed_topics ? req.query.followed_topics.split(',') : [])
 
     // Sort tags by weight, filter noise
     const sortedTags = Object.entries(tagProfile)
@@ -342,80 +276,34 @@ export default async function handler(req, res) {
             }
           }
 
-          // Group entities by category for round-robin distribution
-          const catBuckets = {}
-          for (const e of catEntities) {
-            if (!catBuckets[e.category]) catBuckets[e.category] = []
-            catBuckets[e.category].push(e)
-          }
+          const sorted = catEntities.sort((a, b) => {
+            const aCountry = countryEntityNames.has(a.entity_name.toLowerCase()) ? 1 : 0
+            const bCountry = countryEntityNames.has(b.entity_name.toLowerCase()) ? 1 : 0
+            if (aCountry !== bCountry) return bCountry - aCountry
+            return (b.popularity_score || 0) - (a.popularity_score || 0)
+          })
 
-          // Within each category: country entities first, then shuffle the rest
-          // (adds variety on each visit instead of always showing top-popularity)
-          for (const cat of Object.keys(catBuckets)) {
-            const bucket = catBuckets[cat]
-            const countryEntities = bucket.filter(e => countryEntityNames.has(e.entity_name.toLowerCase()))
-            const otherEntities = bucket.filter(e => !countryEntityNames.has(e.entity_name.toLowerCase()))
-            // Weighted shuffle: higher popularity = more likely to appear near top
-            // but not deterministic like a pure sort
-            for (let i = otherEntities.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1))
-              ;[otherEntities[i], otherEntities[j]] = [otherEntities[j], otherEntities[i]]
-            }
-            // Keep top 50% by popularity, shuffle the rest for variety
-            const topHalf = Math.ceil(otherEntities.length * 0.5)
-            const topEntities = bucket
-              .filter(e => !countryEntityNames.has(e.entity_name.toLowerCase()))
-              .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
-              .slice(0, topHalf)
-            const topSet = new Set(topEntities.map(e => e.entity_name))
-            const bottomEntities = otherEntities.filter(e => !topSet.has(e.entity_name))
-            catBuckets[cat] = [...countryEntities, ...topEntities, ...bottomEntities]
-          }
-
-          // Round-robin across categories so each interest gets fair representation
-          const catKeys = Object.keys(catBuckets)
-          const catIndices = {}
-          for (const cat of catKeys) catIndices[cat] = 0
-
-          const maxPerCat = Math.max(6, Math.ceil(coldStartSlots / Math.max(catKeys.length, 1)))
           const catCounts = {}
           for (const t of userTopics) {
             catCounts[t.category] = (catCounts[t.category] || 0) + 1
           }
 
-          let roundRobinIdx = 0
-          let staleRounds = 0
-          while (userTopics.length < TARGET_TOPICS && staleRounds < catKeys.length) {
-            const cat = catKeys[roundRobinIdx % catKeys.length]
-            roundRobinIdx++
+          for (const e of sorted) {
+            if (userTopics.length >= TARGET_TOPICS) break
+            if (usedEntityNames.has(e.entity_name)) continue
+            if (skipProfile[e.entity_name] && skipProfile[e.entity_name] > 0.3) continue
+            if ((catCounts[e.category] || 0) >= 4) continue
 
-            if ((catCounts[cat] || 0) >= maxPerCat) {
-              staleRounds++
-              continue
-            }
+            usedEntityNames.add(e.entity_name)
+            catCounts[e.category] = (catCounts[e.category] || 0) + 1
 
-            const bucket = catBuckets[cat]
-            let found = false
-            while (catIndices[cat] < bucket.length) {
-              const e = bucket[catIndices[cat]]
-              catIndices[cat]++
-              if (usedEntityNames.has(e.entity_name)) continue
-              if (skipProfile[e.entity_name] && skipProfile[e.entity_name] > 0.3) continue
-
-              usedEntityNames.add(e.entity_name)
-              catCounts[cat] = (catCounts[cat] || 0) + 1
-              userTopics.push({
-                entity_name: e.entity_name,
-                display_title: e.display_title,
-                category: e.category,
-                weight: 0.1,
-                type: 'personalized'
-              })
-              found = true
-              break
-            }
-            if (found) staleRounds = 0
-            else staleRounds++
+            userTopics.push({
+              entity_name: e.entity_name,
+              display_title: e.display_title,
+              category: e.category,
+              weight: 0.1,
+              type: 'personalized'
+            })
           }
         }
       }
@@ -491,12 +379,6 @@ export default async function handler(req, res) {
     // 5. FETCH ARTICLES PER TOPIC
     // ──────────────────────────────────────────────
 
-    // Interleave personalized and trending for a mixed feel
-    // Shuffle trending so it's not always the same order
-    for (let i = trendingTopics.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[trendingTopics[i], trendingTopics[j]] = [trendingTopics[j], trendingTopics[i]]
-    }
     const allTopics = [...userTopics, ...trendingTopics]
     const allTopicNames = allTopics.map(t => t.entity_name)
 
@@ -603,22 +485,6 @@ export default async function handler(req, res) {
         articles: topicArticles[t.entity_name] || []
       }))
 
-    // Log what the API resolved for debugging
-    const resolvedCats = []
-    for (const topic of followedTopics) {
-      const resolved = SUBTOPIC_CATEGORY_MAP[topic]
-        ? [topic]
-        : (APP_TOPIC_ALIAS[topic.toLowerCase()] || [])
-      const cats = []
-      for (const r of resolved) {
-        const c = SUBTOPIC_CATEGORY_MAP[r]
-        if (c) cats.push(...c)
-      }
-      resolvedCats.push({ topic, resolved_to: cats })
-    }
-    console.log(`[explore] Resolved topics:`, JSON.stringify(resolvedCats))
-    console.log(`[explore] Personalized: ${userTopics.length}, Trending: ${trendingTopics.length}, Total with articles: ${topics.length}`)
-
     return res.status(200).json({
       topics,
       personalized_count: topics.filter(t => t.type === 'personalized').length,
@@ -626,12 +492,7 @@ export default async function handler(req, res) {
       total: topics.length,
       mode: behaviorWeight > 0.5 ? 'behavior' : behaviorWeight > 0 ? 'blended' : 'cold_start',
       behavior_weight: Math.round(behaviorWeight * 100),
-      entity_matches: matchCount,
-      _debug: {
-        received_followed_topics: req.query.followed_topics || null,
-        resolved_categories: resolvedCats,
-        has_profile: !!profile,
-      }
+      entity_matches: matchCount
     })
 
   } catch (e) {

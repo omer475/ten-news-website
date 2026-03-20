@@ -5,20 +5,21 @@ final class OnboardingViewModel {
     enum Step: Int, CaseIterable {
         case welcome = 0
         case country = 1
-        case countries = 2
-        case topics = 3
+        case topics = 2
 
         var stepNumber: Int { rawValue }
-        var totalSelectionSteps: Int { 3 }
+        var totalSelectionSteps: Int { 2 }
     }
 
     var currentStep: Step = .welcome
     var selectedCountry: String?
     var selectedCountries: Set<String> = []
     var selectedTopics: Set<String> = []
+    var expandedCategory: String?
 
     var availableCountries: [Country] { Countries.all }
     var availableTopics: [Topic] { Topics.all }
+    var availableCategories: [TopicCategory] { TopicCategories.all }
 
     var canProceed: Bool {
         switch currentStep {
@@ -26,8 +27,6 @@ final class OnboardingViewModel {
             return true
         case .country:
             return selectedCountry != nil
-        case .countries:
-            return !selectedCountries.isEmpty
         case .topics:
             return selectedTopics.count >= 3
         }
@@ -37,7 +36,7 @@ final class OnboardingViewModel {
 
     var selectionProgress: Double {
         guard currentStep != .welcome else { return 0 }
-        return Double(currentStep.rawValue) / 3.0
+        return Double(currentStep.rawValue) / 2.0
     }
 
     // MARK: - Actions
@@ -61,8 +60,13 @@ final class OnboardingViewModel {
     }
 
     func selectCountry(_ countryId: String) {
-        selectedCountry = countryId
-        selectedCountries.insert(countryId)
+        if selectedCountry == countryId {
+            selectedCountry = nil
+            selectedCountries.remove(countryId)
+        } else {
+            selectedCountry = countryId
+            selectedCountries.insert(countryId)
+        }
         HapticManager.selection()
     }
 
@@ -85,11 +89,32 @@ final class OnboardingViewModel {
         HapticManager.light()
     }
 
+    func toggleCategoryExpansion(_ categoryId: String) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            expandedCategory = expandedCategory == categoryId ? nil : categoryId
+        }
+        HapticManager.light()
+    }
+
+    func selectAllInCategory(_ category: TopicCategory) {
+        let allIds = Set(category.subtopics.map(\.id))
+        if allIds.isSubset(of: selectedTopics) {
+            selectedTopics.subtract(allIds)
+        } else {
+            selectedTopics.formUnion(allIds)
+        }
+        HapticManager.medium()
+    }
+
+    func selectedCountInCategory(_ category: TopicCategory) -> Int {
+        category.subtopics.filter { selectedTopics.contains($0.id) }.count
+    }
+
     /// Debug: jump to a specific step with mock data
     func debugJumpTo(_ step: Step) {
         selectedCountry = "US"
         selectedCountries = ["US", "GB", "JP"]
-        selectedTopics = ["technology", "ai", "science", "space", "politics"]
+        selectedTopics = ["ai", "tech_industry", "science", "space", "politics"]
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
             currentStep = step
         }

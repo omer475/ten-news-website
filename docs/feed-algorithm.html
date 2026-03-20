@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ten News — V2 Feed Algorithm</title>
+<style>
+  :root {
+    --entry: #6366f1;
+    --entry-bg: #eef2ff;
+    --entry-border: #c7d2fe;
+    --p1: #0891b2;
+    --p1-bg: #ecfeff;
+    --p1-border: #a5f3fc;
+    --p2: #d97706;
+    --p2-bg: #fffbeb;
+    --p2-border: #fde68a;
+    --p3: #7c3aed;
+    --p3-bg: #f5f3ff;
+    --p3-border: #ddd6fe;
+    --p4: #059669;
+    --p4-bg: #ecfdf5;
+    --p4-border: #a7f3d0;
+    --p5: #dc2626;
+    --p5-bg: #fef2f2;
+    --p5-border: #fecaca;
+    --p6: #2563eb;
+    --p6-bg: #eff6ff;
+    --p6-border: #bfdbfe;
+    --p7: #be185d;
+    --p7-bg: #fdf2f8;
+    --p7-border: #fbcfe8;
+    --p8: #4b5563;
+    --p8-bg: #f9fafb;
+    --p8-border: #d1d5db;
+    --fallback: #78716c;
+    --fallback-bg: #fafaf9;
+    --fallback-border: #d6d3d1;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  header h1 span { color: #818cf8; }
+  header p {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 0.35rem;
+    font-weight: 400;
+  }
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .controls button {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .controls button:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Flow connector lines */
+  .flow-connector {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+  .flow-connector .arrow {
+    width: 2px;
+    height: 32px;
+    background: #cbd5e1;
+    position: relative;
+  }
+  .flow-connector .arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid #cbd5e1;
+  }
+
+  /* Decision diamond connector */
+  .decision-split {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+    padding: 0.5rem 0 1rem;
+  }
+  .decision-split .branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 300px;
+  }
+  .decision-split .branch-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.75rem;
+    border-radius: 100px;
+    margin-bottom: 0.5rem;
+  }
+  .decision-split .branch-yes .branch-label { background: #dcfce7; color: #166534; }
+  .decision-split .branch-no .branch-label { background: #fee2e2; color: #991b1b; }
+  .decision-split .branch-box {
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .decision-split .branch-yes .branch-box {
+    background: #dcfce7;
+    color: #166534;
+    border: 1.5px solid #86efac;
+  }
+  .decision-split .branch-no .branch-box {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1.5px solid #fca5a5;
+  }
+  .decision-split::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: calc(50% - 150px);
+    right: calc(50% - 150px);
+    height: 2px;
+    background: #cbd5e1;
+  }
+  .decision-split .branch::before {
+    content: '';
+    width: 2px;
+    height: 16px;
+    background: #cbd5e1;
+  }
+
+  /* Phase card */
+  .phase {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.25s;
+  }
+  .phase:hover { box-shadow: var(--shadow-lg); }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .phase-header:hover { filter: brightness(0.97); }
+
+  .phase-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: white;
+    flex-shrink: 0;
+  }
+  .phase-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    flex: 1;
+  }
+  .phase-chevron {
+    font-size: 1.1rem;
+    transition: transform 0.25s;
+    color: inherit;
+    opacity: 0.5;
+  }
+  .phase.collapsed .phase-chevron { transform: rotate(-90deg); }
+
+  .phase-body {
+    padding: 0 1.25rem 1.25rem;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+  }
+  .phase.collapsed .phase-body {
+    max-height: 0 !important;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* Themed phases */
+  .phase-entry { background: var(--entry-bg); border: 1.5px solid var(--entry-border); }
+  .phase-entry .phase-header { color: var(--entry); }
+  .phase-entry .phase-badge { background: var(--entry); }
+
+  .phase-1 { background: var(--p1-bg); border: 1.5px solid var(--p1-border); }
+  .phase-1 .phase-header { color: var(--p1); }
+  .phase-1 .phase-badge { background: var(--p1); }
+
+  .phase-2 { background: var(--p2-bg); border: 1.5px solid var(--p2-border); }
+  .phase-2 .phase-header { color: var(--p2); }
+  .phase-2 .phase-badge { background: var(--p2); }
+
+  .phase-3 { background: var(--p3-bg); border: 1.5px solid var(--p3-border); }
+  .phase-3 .phase-header { color: var(--p3); }
+  .phase-3 .phase-badge { background: var(--p3); }
+
+  .phase-4 { background: var(--p4-bg); border: 1.5px solid var(--p4-border); }
+  .phase-4 .phase-header { color: var(--p4); }
+  .phase-4 .phase-badge { background: var(--p4); }
+
+  .phase-5 { background: var(--p5-bg); border: 1.5px solid var(--p5-border); }
+  .phase-5 .phase-header { color: var(--p5); }
+  .phase-5 .phase-badge { background: var(--p5); }
+
+  .phase-6 { background: var(--p6-bg); border: 1.5px solid var(--p6-border); }
+  .phase-6 .phase-header { color: var(--p6); }
+  .phase-6 .phase-badge { background: var(--p6); }
+
+  .phase-7 { background: var(--p7-bg); border: 1.5px solid var(--p7-border); }
+  .phase-7 .phase-header { color: var(--p7); }
+  .phase-7 .phase-badge { background: var(--p7); }
+
+  .phase-8 { background: var(--p8-bg); border: 1.5px solid var(--p8-border); }
+  .phase-8 .phase-header { color: var(--p8); }
+  .phase-8 .phase-badge { background: var(--p8); }
+
+  .phase-fallback { background: var(--fallback-bg); border: 1.5px solid var(--fallback-border); }
+  .phase-fallback .phase-header { color: var(--fallback); }
+  .phase-fallback .phase-badge { background: var(--fallback); }
+
+  /* Inner content */
+  .detail-text {
+    font-size: 0.88rem;
+    color: #475569;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Param pills */
+  .params {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.75rem 0;
+  }
+  .param {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: 'SF Mono', Menlo, monospace;
+    background: rgba(0,0,0,0.06);
+    color: #334155;
+  }
+
+  /* Query cards */
+  .query-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  @media (max-width: 700px) { .query-grid { grid-template-columns: 1fr; } }
+  .query-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .query-card-title {
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .query-card-title .icon {
+    font-size: 1rem;
+  }
+  .query-card p {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+  .query-card .num {
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  /* Boost table */
+  .boost-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.82rem;
+  }
+  .boost-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    font-weight: 700;
+    border-bottom: 2px solid rgba(0,0,0,0.08);
+    color: #475569;
+  }
+  .boost-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .boost-table tr:last-child td { border-bottom: none; }
+  .boost-val-pos { color: #16a34a; font-weight: 700; font-family: 'SF Mono', Menlo, monospace; }
+  .boost-val-neg { color: #dc2626; font-weight: 700; font-family: 'SF Mono', Menlo, monospace; }
+
+  /* Formula */
+  .formula-block {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .formula-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+  }
+  .formula {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    line-height: 1.8;
+    word-break: break-word;
+  }
+  .formula .v-tag    { color: #d97706; font-weight: 700; }
+  .formula .v-mom    { color: #ea580c; font-weight: 700; }
+  .formula .v-sim    { color: #2563eb; font-weight: 700; }
+  .formula .v-ai     { color: #7c3aed; font-weight: 700; }
+  .formula .v-rec    { color: #059669; font-weight: 700; }
+  .formula .v-skip   { color: #dc2626; font-weight: 700; }
+  .formula .v-cat    { color: #be185d; font-weight: 700; }
+  .formula .v-rand   { color: #0891b2; font-weight: 700; }
+  .formula .v-lam    { color: #6366f1; font-weight: 700; }
+  .formula .op       { color: #64748b; }
+  .formula .weight   { color: #0f172a; font-weight: 800; }
+
+  .formula-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .formula-legend span {
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* Recency decay */
+  .decay-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  @media (max-width: 700px) { .decay-grid { grid-template-columns: 1fr; } }
+  .decay-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .decay-card h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .decay-card .cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.35rem;
+  }
+  .decay-card .cat-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 100px;
+  }
+  .decay-hard .cat-tag { background: #fee2e2; color: #991b1b; }
+  .decay-soft .cat-tag { background: #dbeafe; color: #1e40af; }
+  .decay-card .decay-desc {
+    font-size: 0.76rem;
+    color: #64748b;
+  }
+
+  /* Slot pattern */
+  .slot-pattern {
+    display: flex;
+    gap: 4px;
+    margin: 0.75rem 0 0.5rem;
+    flex-wrap: wrap;
+  }
+  .slot {
+    width: 56px;
+    height: 44px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: white;
+    position: relative;
+    transition: transform 0.15s;
+  }
+  .slot:hover { transform: scale(1.1); z-index: 2; }
+  .slot-num {
+    font-size: 0.55rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+  .slot-P { background: linear-gradient(135deg, #6366f1, #818cf8); }
+  .slot-T { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+  .slot-S { background: linear-gradient(135deg, #10b981, #34d399); }
+
+  .slot-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0.5rem 0 0.75rem;
+    flex-wrap: wrap;
+  }
+  .slot-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #475569;
+  }
+  .slot-legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+
+  /* MMR detail */
+  .mmr-params {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin: 0.75rem 0;
+  }
+  @media (max-width: 600px) { .mmr-params { grid-template-columns: 1fr; } }
+  .mmr-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .mmr-card .mmr-type {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .mmr-card .mmr-lambda {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+  .mmr-card .mmr-desc {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+  }
+
+  /* Cluster visual */
+  .cluster-bar {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0.75rem 0 0.5rem;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .cluster-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: white;
+    transition: flex 0.3s;
+    min-width: 40px;
+  }
+
+  /* Surprise breakdown */
+  .surprise-bar {
+    display: flex;
+    height: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0.25rem 0 0.5rem;
+    max-width: 250px;
+  }
+  .surprise-bar div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Decision diamond */
+  .diamond-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 0.75rem 0;
+  }
+  .diamond {
+    background: white;
+    border: 2px solid var(--entry-border);
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--entry);
+    position: relative;
+    box-shadow: var(--shadow);
+  }
+  .diamond code {
+    background: rgba(99,102,241,0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  /* Engagement weights */
+  .engagement-weights {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    flex-wrap: wrap;
+  }
+  .ew-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+  }
+  .ew-bar {
+    height: 10px;
+    border-radius: 100px;
+    display: inline-block;
+  }
+  .ew-label { font-weight: 600; color: #475569; }
+  .ew-val { font-weight: 800; font-family: 'SF Mono', Menlo, monospace; color: #0f172a; }
+
+  /* Utility */
+  .sep { height: 1px; background: rgba(0,0,0,0.06); margin: 0.75rem 0; }
+  .note {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    font-style: italic;
+  }
+  .inline-code {
+    font-family: 'SF Mono', Menlo, monospace;
+    background: rgba(0,0,0,0.06);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82em;
+    font-weight: 600;
+  }
+
+  /* Scroll animation */
+  .phase, .decision-split, .diamond-wrapper, .flow-connector {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .phase.visible, .decision-split.visible, .diamond-wrapper.visible, .flow-connector.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ten News <span>&mdash;</span> V2 Feed Algorithm</h1>
+  <p>Last updated: March 8, 2026</p>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ======== ENTRY POINT ======== -->
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <div class="phase phase-entry" data-phase="entry">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">IN</div>
+      <div class="phase-title">Entry Point &mdash; API Request</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">The feed API receives a request and resolves the user's personalization state.</p>
+      <div class="params">
+        <span class="param">user_id</span>
+        <span class="param">limit</span>
+        <span class="param">cursor</span>
+        <span class="param">session_engaged_ids</span>
+        <span class="param">session_skipped_ids</span>
+      </div>
+      <p class="detail-text" style="margin-top:0.5rem">User lookup: <span class="inline-code">profiles</span> table first, fallback to <span class="inline-code">users</span> table.</p>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- Decision -->
+  <div class="diamond-wrapper">
+    <div class="diamond">
+      Has <code>taste_vector</code> OR <code>taste_vector_minilm</code> OR <code>interest_clusters</code>?
+    </div>
+  </div>
+
+  <div class="decision-split">
+    <div class="branch branch-yes">
+      <div class="branch-label">YES</div>
+      <div class="branch-box">V2 Personalized Feed</div>
+    </div>
+    <div class="branch branch-no">
+      <div class="branch-label">NO</div>
+      <div class="branch-box">Fallback: Score-Based Feed</div>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 1 ======== -->
+  <div class="phase phase-1" data-phase="1">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">1</div>
+      <div class="phase-title">Parallel Data Loading</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Four queries execute concurrently to minimize latency.</p>
+      <div class="query-grid">
+        <div class="query-card">
+          <div class="query-card-title" style="color:var(--entry)"><span class="icon">&#9733;</span> Personal Candidates</div>
+          <p>pgvector ANN similarity search<br><span class="num">150 articles</span> &middot; 72-hour window</p>
+        </div>
+        <div class="query-card">
+          <div class="query-card-title" style="color:#f59e0b"><span class="icon">&#9650;</span> Trending</div>
+          <p>Top articles by engagement score<br><span class="num">50 articles</span> &middot; 24h &middot; score &ge; 750</p>
+        </div>
+        <div class="query-card">
+          <div class="query-card-title" style="color:#10b981"><span class="icon">&#9673;</span> Discovery</div>
+          <p>Broad pool for serendipity<br><span class="num">200 articles</span> &middot; 48h &middot; score &ge; 400</p>
+        </div>
+        <div class="query-card">
+          <div class="query-card-title" style="color:#8b5cf6"><span class="icon">&#9830;</span> User Interest Profile</div>
+          <p>Entity-level tag weights from <span class="num">14-day</span> engagement history</p>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <p class="detail-text" style="font-weight:600; margin-bottom:0.35rem">Engagement Weight Multipliers:</p>
+      <div class="engagement-weights">
+        <div class="ew-item">
+          <span class="ew-bar" style="width:60px; background:linear-gradient(90deg,#6366f1,#818cf8)"></span>
+          <span class="ew-label">Saved</span>
+          <span class="ew-val">3x</span>
+        </div>
+        <div class="ew-item">
+          <span class="ew-bar" style="width:40px; background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></span>
+          <span class="ew-label">Engaged</span>
+          <span class="ew-val">2x</span>
+        </div>
+        <div class="ew-item">
+          <span class="ew-bar" style="width:20px; background:linear-gradient(90deg,#a5b4fc,#c7d2fe)"></span>
+          <span class="ew-label">Viewed</span>
+          <span class="ew-val">1x</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 2 ======== -->
+  <div class="phase phase-2" data-phase="2">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">2</div>
+      <div class="phase-title">Session Momentum</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Recent in-session behavior adjusts tag affinities in real-time.</p>
+      <table class="boost-table">
+        <thead>
+          <tr><th>Condition</th><th>Boost / Penalty</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>3+ articles with same tag (streak)</td><td class="boost-val-pos">+0.50</td></tr>
+          <tr><td>2 articles with same tag</td><td class="boost-val-pos">+0.30</td></tr>
+          <tr><td>1 article with same tag</td><td class="boost-val-pos">+0.15</td></tr>
+          <tr><td>Each skipped tag</td><td class="boost-val-neg">&minus;0.15</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 3 ======== -->
+  <div class="phase phase-3" data-phase="3">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">3</div>
+      <div class="phase-title">Proportional Cluster Allocation</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Interest clusters are allocated proportionally based on engagement count, with a max 50% cap per cluster.</p>
+
+      <p class="detail-text" style="font-weight:600; font-size:0.78rem; margin-bottom:0.25rem">Example allocation with 3 clusters:</p>
+      <div class="cluster-bar">
+        <div class="cluster-segment" style="flex:5; background:linear-gradient(135deg,#6366f1,#818cf8)">Tech 50%</div>
+        <div class="cluster-segment" style="flex:3; background:linear-gradient(135deg,#0891b2,#22d3ee)">Science 30%</div>
+        <div class="cluster-segment" style="flex:2; background:linear-gradient(135deg,#f59e0b,#fbbf24)">Sports 20%</div>
+      </div>
+      <p class="note">If no clusters exist, falls back to simple similarity sort.</p>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 4 ======== -->
+  <div class="phase phase-4" data-phase="4">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">4</div>
+      <div class="phase-title">Fetch Full Article Data</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Batch fetch all candidate articles (<span class="inline-code">300 per batch</span>) and pre-compute tag sets for MMR diversity calculations.</p>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 5 ======== -->
+  <div class="phase phase-5" data-phase="5">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">5</div>
+      <div class="phase-title">Score Candidates</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+
+      <!-- Personal scoring -->
+      <div class="formula-block">
+        <div class="formula-label">Personal Score</div>
+        <div class="formula">
+          <span class="v-tag">tagScore</span> <span class="op">&times;</span> <span class="weight">350</span>
+          <span class="op"> + </span>
+          <span class="v-mom">momentum</span> <span class="op">&times;</span> <span class="weight">150</span>
+          <span class="op"> + </span>
+          <span class="v-sim">similarity</span> <span class="op">&times;</span> <span class="weight">250</span>
+          <span class="op"> + </span>
+          <span class="op">(</span><span class="v-ai">aiScore</span> <span class="op">/ 1000)</span> <span class="op">&times;</span> <span class="weight">250</span> <span class="op">&times;</span> <span class="v-rec">recency</span>
+        </div>
+        <div class="formula" style="margin-top:0.35rem">
+          <span class="op">then &times; (1 &minus;</span> <span class="v-skip">skipPenalty</span><span class="op">)</span>
+        </div>
+        <div class="formula-legend">
+          <span><span class="legend-dot" style="background:#d97706"></span> tagScore</span>
+          <span><span class="legend-dot" style="background:#ea580c"></span> momentum</span>
+          <span><span class="legend-dot" style="background:#2563eb"></span> similarity</span>
+          <span><span class="legend-dot" style="background:#7c3aed"></span> aiScore</span>
+          <span><span class="legend-dot" style="background:#059669"></span> recency</span>
+          <span><span class="legend-dot" style="background:#dc2626"></span> skipPenalty</span>
+        </div>
+      </div>
+
+      <!-- Trending scoring -->
+      <div class="formula-block">
+        <div class="formula-label">Trending Score</div>
+        <div class="formula">
+          <span class="v-ai">aiScore</span> <span class="op">&times;</span> <span class="v-rec">recencyDecay</span>
+        </div>
+      </div>
+
+      <!-- Discovery scoring -->
+      <div class="formula-block">
+        <div class="formula-label">Discovery Score</div>
+        <div class="formula">
+          <span class="v-ai">aiScore</span>
+          <span class="op"> &times; </span>
+          <span class="v-rec">recencyDecay</span>
+          <span class="op"> &times; </span>
+          <span class="v-cat">categoryBoost</span>
+          <span class="op"> &times; </span>
+          <span class="v-rand">random(1.0&ndash;1.4)</span>
+        </div>
+        <div class="formula-legend">
+          <span><span class="legend-dot" style="background:#be185d"></span> unfamiliar = 1.5x</span>
+          <span><span class="legend-dot" style="background:#94a3b8"></span> familiar = 0.6x</span>
+          <span><span class="legend-dot" style="background:#0891b2"></span> random jitter</span>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- Recency decay -->
+      <p class="detail-text" style="font-weight:600">Recency Decay Rules:</p>
+      <div class="decay-grid">
+        <div class="decay-card decay-hard">
+          <h4 style="color:#dc2626">Hard News &mdash; Aggressive</h4>
+          <div class="cats">
+            <span class="cat-tag">World</span>
+            <span class="cat-tag">Politics</span>
+            <span class="cat-tag">Business</span>
+            <span class="cat-tag">Finance</span>
+          </div>
+          <p class="decay-desc">Rapid decay after 24 hours &mdash; stale quickly.</p>
+        </div>
+        <div class="decay-card decay-soft">
+          <h4 style="color:#2563eb">Soft News &mdash; Gentle</h4>
+          <div class="cats">
+            <span class="cat-tag">Tech</span>
+            <span class="cat-tag">Health</span>
+            <span class="cat-tag">Science</span>
+            <span class="cat-tag">Entertainment</span>
+            <span class="cat-tag">Sports</span>
+          </div>
+          <p class="decay-desc">Gradual decay over 72 hours &mdash; stays relevant longer.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 6 ======== -->
+  <div class="phase phase-6" data-phase="6">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">6</div>
+      <div class="phase-title">MMR Slot Filling</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text" style="font-weight:600; margin-bottom:0.35rem">Pattern per 10 cards:</p>
+      <div class="slot-pattern">
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#1</span></div>
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#2</span></div>
+        <div class="slot slot-T"><span>T</span><span class="slot-num">#3</span></div>
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#4</span></div>
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#5</span></div>
+        <div class="slot slot-S"><span>S</span><span class="slot-num">#6</span></div>
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#7</span></div>
+        <div class="slot slot-P"><span>P</span><span class="slot-num">#8</span></div>
+        <div class="slot slot-T"><span>T</span><span class="slot-num">#9</span></div>
+        <div class="slot slot-S"><span>S</span><span class="slot-num">#10</span></div>
+      </div>
+      <div class="slot-legend">
+        <div class="slot-legend-item">
+          <div class="slot-legend-dot" style="background:linear-gradient(135deg,#6366f1,#818cf8)"></div>
+          <strong>P</strong>&ensp;Personal (60%)
+        </div>
+        <div class="slot-legend-item">
+          <div class="slot-legend-dot" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"></div>
+          <strong>T</strong>&ensp;Trending (20%)
+        </div>
+        <div class="slot-legend-item">
+          <div class="slot-legend-dot" style="background:linear-gradient(135deg,#10b981,#34d399)"></div>
+          <strong>S</strong>&ensp;Surprise (20%)
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <p class="detail-text" style="font-weight:600; margin-bottom:0.35rem">Surprise Slot Composition:</p>
+      <div class="surprise-bar">
+        <div style="flex:6; background:linear-gradient(90deg,#10b981,#34d399)">60% Discovery</div>
+        <div style="flex:4; background:linear-gradient(90deg,#818cf8,#a5b4fc)">40% Personal Tail</div>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- Lambda values -->
+      <p class="detail-text" style="font-weight:600; margin-bottom:0.35rem">MMR Diversity Parameter (<span class="inline-code">&lambda;</span>) per Type:</p>
+      <div class="mmr-params">
+        <div class="mmr-card">
+          <div class="mmr-type" style="color:var(--entry)">Personal</div>
+          <div class="mmr-lambda" style="color:var(--entry)">&lambda; = 0.7</div>
+          <div class="mmr-desc">Balanced</div>
+        </div>
+        <div class="mmr-card">
+          <div class="mmr-type" style="color:#f59e0b">Trending</div>
+          <div class="mmr-lambda" style="color:#f59e0b">&lambda; = 0.85</div>
+          <div class="mmr-desc">Relevance-heavy</div>
+        </div>
+        <div class="mmr-card">
+          <div class="mmr-type" style="color:#10b981">Discovery</div>
+          <div class="mmr-lambda" style="color:#10b981">&lambda; = 0.4</div>
+          <div class="mmr-desc">Diversity-heavy</div>
+        </div>
+      </div>
+
+      <!-- MMR Formula -->
+      <div class="formula-block">
+        <div class="formula-label">MMR Formula</div>
+        <div class="formula">
+          <span class="v-lam">&lambda;</span> <span class="op">&times;</span> <span class="v-ai">normScore</span>
+          <span class="op"> &minus; (1 &minus; </span><span class="v-lam">&lambda;</span><span class="op">) &times; </span>
+          <span class="v-sim">maxSimilarityToLast5</span>
+        </div>
+        <div class="formula" style="margin-top:0.35rem; font-size:0.76rem; color:#94a3b8">
+          Same category = minimum <span class="weight" style="color:#dc2626">0.4</span> similarity penalty
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 7 ======== -->
+  <div class="phase phase-7" data-phase="7">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">7</div>
+      <div class="phase-title">Category Dedup Guard</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Final pass enforces <strong>max 2 consecutive articles</strong> from the same category. If a third consecutive same-category article is encountered, it swaps with the next different-category article in the queue.</p>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- ======== PHASE 8 ======== -->
+  <div class="phase phase-8" data-phase="8">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge">8</div>
+      <div class="phase-title">Format & Respond</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">Assemble the final feed response with a <span class="inline-code">cursor</span> token for pagination. The cursor encodes the IDs of returned articles so the next request can exclude them and fetch fresh candidates.</p>
+    </div>
+  </div>
+
+  <div class="flow-connector"><div class="arrow"></div></div>
+
+  <!-- Fallback -->
+  <div class="phase phase-fallback" data-phase="fallback">
+    <div class="phase-header" onclick="toggle(this)">
+      <div class="phase-badge" style="font-size:0.65rem">FB</div>
+      <div class="phase-title">Fallback Feed (No Personalization)</div>
+      <div class="phase-chevron">&#9660;</div>
+    </div>
+    <div class="phase-body">
+      <p class="detail-text">When no taste vector or interest clusters exist, serve articles sorted by <span class="inline-code">ai_score</span> descending &mdash; a simple, engagement-weighted ranking with no personalization signals.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>Ten News &mdash; Feed Algorithm Documentation</footer>
+
+<script>
+  // Toggle collapse
+  function toggle(header) {
+    header.closest('.phase').classList.toggle('collapsed');
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('collapsed'));
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('.phase').forEach(p => p.classList.add('collapsed'));
+  }
+
+  // Intersection observer for scroll animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.phase, .decision-split, .diamond-wrapper, .flow-connector').forEach(el => {
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

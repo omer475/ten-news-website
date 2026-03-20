@@ -1,0 +1,1882 @@
+============================================================
+🚀 TEN NEWS - Cloud Run Execution
+⏰ Started at: 2026-02-06T15:02:03.947379
+============================================================
+/app/step1_5_event_clustering.py:26: FutureWarning: 
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  import google.generativeai as genai
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✓ Initialized Gemini component selector
+  Model: gemini-2.0-flash
+  Components per article: 1-3
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+Started: 2026-02-06 15:02:21
+================================================================================
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+Fetching from 257 premium sources...
+📊 Fetched 2013 articles from 204 sources
+🔍 Deduplication: Starting with 2013 articles
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+   ⏰ After time filter (1440min): 1075 articles
+   ✅ After database check: 52 NEW articles
+✅ Al Jazeera English: 1 new
+✅ Astronomy Magazine: 1 new
+✅ Business Insider: 1 new
+✅ CBS News Main: 5 new
+✅ CBS News US: 2 new
+✅ CBS News World: 1 new
+✅ Daily Mail Home: 3 new
+✅ Engadget: 1 new
+✅ Mashable Tech: 1 new
+✅ NPR News: 1 new
+✅ Nature: 1 new
+✅ Newsweek: 5 new
+✅ Nikkei Asia: 1 new
+✅ Oilprice.com: 1 new
+✅ PBS NewsHour Headlines: 1 new
+✅ PBS NewsHour Politics: 1 new
+✅ Popular Science: 1 new
+✅ Quanta Magazine: 1 new
+✅ Seeking Alpha: 4 new
+✅ South China Morning Post: 1 new
+✅ Space.com: 1 new
+✅ The Guardian UK Culture: 1 new
+✅ The Guardian UK Sport: 1 new
+✅ The Independent: 7 new
+✅ The New York Times Homepage: 1 new
+✅ The New York Times Science: 1 new
+✅ The New Yorker: 1 new
+✅ The Straits Times: 3 new
+✅ The Sydney Morning Herald: 1 new
+✅ The Verge: 1 new
+✅ Step 0 Complete: 52 NEW articles (after deduplication)
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+Scoring 52 articles...
+   📷 25 articles without images (Bright Data will fetch later)
+   ✅ Filtering 52 total articles
+📦 Processing 52 articles in batches of 30...
+  Processing batch 1/2 (30 articles)...
+  Processing batch 2/2 (22 articles)...
+✅ Step 1 Complete: 23 approved, 29 filtered
+   📊 Saved 29 filtered articles to Supabase
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+Clustering 23 articles...
+============================================================
+STEP 1.5: EVENT CLUSTERING (PARALLEL MODE)
+============================================================
+Total articles to cluster: 23
+⚡ Using 3 parallel workers, batch size 8
+📊 Found 1000 active clusters
+📦 Pre-caching cluster sources (batch mode)...
+✅ Cached 158 clusters with sources (1 query)
+📝 Phase 1: Saving articles to database...
+✅ Saved 23/23 articles
+🧠 Phase 2: Generating embeddings (Gemini text-embedding-004)...
+   📰 Embedding 23 article titles...
+  ⚠️ Embedding error for text 1: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 2: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 0: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 3: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 4: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 5: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 6: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 8: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 7: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 9: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 11: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 10: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 12: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 14: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 13: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 15: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 17: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 16: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 18: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 20: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 19: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 21: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 22: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+   ✓ Embedded 23/23 articles
+   📁 Loading cached cluster embeddings...
+   📁 All 1000 cluster embeddings loaded from cache!
+✅ Embeddings ready (1000 cached, 0 generated)
+================================================================================
+📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (EMBEDDING-BASED)
+================================================================================
+   Similarity threshold: 0.82
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 29859
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #29859
+         Cluster: Trump Officials Propose Testing A Citizenship Question
+         Reason: SAME STORY - CITIZENSHIP QUESTION ON CENSUS
+   🔍 VALIDATING CLUSTER MATCH [1/23]
+      📰 Article: Census Bureau plans to use survey with a citizenship question in its test for 2030, alarming experts
+      📁 Checking cluster: Trump Officials Propose Testing A Citizenship Question
+      ✅ VALIDATED & ADDED to cluster: 29859
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by list index: 11 → DB ID 30147
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30147
+         Cluster: New Vaccine Platform Promotes Rare Protective B
+         Reason: SAME STORY - VACCINE UPDATES
+   🔍 VALIDATING CLUSTER MATCH [2/23]
+      📰 Article: Federal Vaccine Advisers Take Aim at Covid Shots
+      📁 Checking cluster: New Vaccine Platform Promotes Rare Protective B
+      ✅ VALIDATED & ADDED to cluster: 30147
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 29859
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #29859
+         Cluster: Trump Officials Propose Testing A Citizenship Question
+         Reason: SAME STORY - CITIZENSHIP QUESTION ON CENSUS
+   🔍 VALIDATING CLUSTER MATCH [3/23]
+      📰 Article: Census Bureau plans to use survey with a citizenship question in its test for 2030, alarming experts
+      📁 Checking cluster: Trump Officials Propose Testing A Citizenship Question
+      ✅ VALIDATED & ADDED to cluster: 29859
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 27332
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #27332
+         Cluster: Man Charged With Murder Over Death Of
+         Reason: SAME STORY - MURDER CASE DEVELOPMENTS
+   🔍 VALIDATING CLUSTER MATCH [4/23]
+      📰 Article: British serial killer 'Suffolk Strangler' gets another life sentence for 1999 murder
+      📁 Checking cluster: Man Charged With Murder Over Death Of
+      ✅ VALIDATED & ADDED to cluster: 27332
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30198
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30198
+         Cluster: Gen Z Are Rebelling Against Tiktok Usa
+         Reason: SAME STORY - TIKTOK AND REGULATION/ADDICTIVE FEATURES
+   🔍 VALIDATING CLUSTER MATCH [5/23]
+      📰 Article: TikTok charged for breaching EU rules with app’s addictive features
+      📁 Checking cluster: Gen Z Are Rebelling Against Tiktok Usa
+      ✅ VALIDATED & ADDED to cluster: 30198
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 28988
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #28988
+         Cluster: Europe In The Epstein Files: How Far
+         Reason: SAME STORY - EUROPEAN FIGURES IN EPSTEIN TIES.
+   🔍 VALIDATING CLUSTER MATCH [6/23]
+      📰 Article: European figures caught in web of Epstein ties
+      📁 Checking cluster: Europe In The Epstein Files: How Far
+      ✅ VALIDATED & ADDED to cluster: 28988
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 30181
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30181
+         Cluster: New York'S Incoming Archbishop Will Focus On
+         Reason: SAME STORY - RELATED TO THE INCOMING ARCHBISHOP IN NEW YORK
+   🔍 VALIDATING CLUSTER MATCH [7/23]
+      📰 Article: The Pope’s Man Arrives in New York
+      📁 Checking cluster: New York'S Incoming Archbishop Will Focus On
+      ✅ VALIDATED & ADDED to cluster: 30181
+      📊 Keyword pre-filter: 1 matches (0 strong) - AI will decide
+      📎 Matched by database ID: 30398
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30398
+         Cluster: Trump Signals Willingness To Defend Diego Garcia
+         Reason: SAME STORY - REACTION TO TRUMP RELATED TO GREENLAND
+   🔍 VALIDATING CLUSTER MATCH [8/23]
+      📰 Article: Canada and France Open Greenland Consulates in Counter to Trump Threat
+      📁 Checking cluster: Trump Signals Willingness To Defend Diego Garcia
+      ✅ VALIDATED & ADDED to cluster: 30398
+      📊 Keyword pre-filter: 2 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 27032
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #27032
+         Cluster: Pope Leo Urges Us And Cuba To
+         Reason: CHINA-CUBA RELATIONSHIP AND PANAMA, POTENTIALLY RELATING TO US INFLUENCE IN THE REGION.
+   🔍 VALIDATING CLUSTER MATCH [9/23]
+      📰 Article: China keeps Cuba and Uruguay in the fold, puts Panama out in the cold
+      📁 Checking cluster: Pope Leo Urges Us And Cuba To
+      ✅ VALIDATED & ADDED to cluster: 27032
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - SEXUAL ASSAULT CASE NOT RELATED TO UBER'S FINANCIAL ISSUES.
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [10/23]
+      📰 Article: In potentially groundbreaking ruling, Uber ordered to pay $8.5M to sexual assault victim
+      📁 Checking cluster: Billionaire Businessman Frank Stronach'S Sexual Assault Trial
+      ✅ VALIDATED & ADDED to cluster: 27767
+      📊 Keyword pre-filter: 2 matches (1 strong) - AI will decide
+      📎 Matched by list index: 35 → DB ID 27201
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #27201
+         Cluster: Epstein Scandal Deals New Blow To Norway
+         Reason: SAME STORY - EPSTEIN LINKS
+   🔍 VALIDATING CLUSTER MATCH [11/23]
+      📰 Article: Norwegian police investigate ex-prime minister over Epstein links
+      📁 Checking cluster: Epstein Scandal Deals New Blow To Norway
+      ✅ VALIDATED & ADDED to cluster: 27201
+      📊 Keyword pre-filter: 1 matches (0 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - INVESTMENT GAINS NOT RELATED TO EXISTING CLUSTERS
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [12/23]
+      📰 Article: Japan pension whale GPIF logs $103bn investment gain in Oct-Dec
+      📁 Checking cluster: Takaichi Taps Japan’S Anxiety Over Foreigners
+      ✅ VALIDATED & ADDED to cluster: 30420
+      📊 Keyword pre-filter: 1 matches (0 strong) - AI will decide
+      📎 Matched by database ID: 30148
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30148
+         Cluster: Chevron Rewires Trading And Strategy At A
+         Reason: SAME STORY - CHEVRON AND LUKOIL ARE RELATED TO OIL/GAS BUSINESS STRATEGIES.
+   🔍 VALIDATING CLUSTER MATCH [13/23]
+      📰 Article: Chevron Stays in the Hunt for Lukoil’s International Assets
+      📁 Checking cluster: Chevron Rewires Trading And Strategy At A
+      ✅ VALIDATED & ADDED to cluster: 30148
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - SEXUAL ASSAULT ON PLANE
+   🆕 NO MATCHING CLUSTER [14/23]
+      📰 Article: Man who tried to rape woman on easyJet flight between Italy and Britain is jailed for six years
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30421
+         📁 Cluster name: Man Who Tried To Rape Woman On
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - HEALTH RELATED BUT DISTINCT FROM EXISTING CLUSTERS
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [15/23]
+      📰 Article: Damage to the liver caused by alcohol and takeaways causes brittle bone disease osteopenia in men, new study finds
+      📁 Checking cluster: Gum Disease Bacteria Can Promote Cancer Growth
+      ✅ VALIDATED & ADDED to cluster: 29150
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - MEDICAL PROCEDURE
+   🆕 NO MATCHING CLUSTER [16/23]
+      📰 Article: Briefing Chat: 'External lungs' keep man alive for 48 hours until transplant
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30422
+         📁 Cluster name: Briefing Chat: 'External Lungs' Keep Man Alive
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - MATHEMATICAL RESEARCH
+   🆕 NO MATCHING CLUSTER [17/23]
+      📰 Article: Long-Sought Proof Tames Some of Math’s Unruliest Equations
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30423
+         📁 Cluster name: Long-Sought Proof Tames Some Of Math’S Unruliest
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 25595
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #25595
+         Cluster: Here'S What A Potential Spacex Mega-Merger Could
+         Reason: SAME STORY - SPACEX ROCKET ISSUES
+   🔍 VALIDATING CLUSTER MATCH [18/23]
+      📰 Article: 4 upper-stage issues in 19 months: When will SpaceX's Falcon 9 rocket return to flight?
+      📁 Checking cluster: Here'S What A Potential Spacex Mega-Merger Could
+      ❌ REJECTED by cluster (attempt 1/3)
+         Reason: AI determined article is about a different event
+         Trying to find another cluster...
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30131
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30131
+         Cluster: Nasa’S Spacex Crew-12 To Study Adaptation To
+         Reason: SAME STORY - SPACEX AND ROCKETS
+   🔍 VALIDATING CLUSTER MATCH [18/23]
+      📰 Article: 4 upper-stage issues in 19 months: When will SpaceX's Falcon 9 rocket return to flight?
+      📁 Checking cluster: Nasa’S Spacex Crew-12 To Study Adaptation To
+      ✅ VALIDATED & ADDED to cluster: 30131
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - ARTICLE ABOUT THE SUN
+   🆕 NO MATCHING CLUSTER [19/23]
+      📰 Article: Michael’s Miscellany: 10 More Cool Things About the Sun
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30424
+         📁 Cluster name: Michael’S Miscellany: 10 More Cool Things About
+      📊 Keyword match: 4 total, 4 strong → AUTO-ADDING (high confidence)
+         Cluster: Bad Bunny Speaks About His Super Bowl
+   🔍 VALIDATING CLUSTER MATCH [20/23]
+      📰 Article: Bad Bunny hints at Super Bowl halftime show surprises
+      📁 Checking cluster: Bad Bunny Speaks About His Super Bowl
+      ✅ VALIDATED & ADDED to cluster: 30205
+      📊 Keyword pre-filter: 2 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 26008
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #26008
+         Cluster: Confusion Grows Over State Of Us-Iran Negotiations
+         Reason: SAME STORY - US-IRAN NEGOTIATIONS
+   🔍 VALIDATING CLUSTER MATCH [21/23]
+      📰 Article: What are U.S. and Iran looking to achieve during high-stakes talks in Oman?
+      📁 Checking cluster: Confusion Grows Over State Of Us-Iran Negotiations
+      ✅ VALIDATED & ADDED to cluster: 26008
+      📊 Keyword pre-filter: 3 matches (3 strong) - AI will decide
+      ⚠️ AI returned CLUSTER_ID 2542 but no matching cluster found (list has 50 clusters)
+         Available DB IDs: [25424, 28631, 30227, 30189, 30122, 29334, 26916, 28220, 28724, 26889]...
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: SAME STORY - LINDSEY VONN SKIING
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [22/23]
+      📰 Article: Lindsey Vonn, skiing with ruptured ACL, takes crucial step in downhill medal bid
+      📁 Checking cluster: Lindsey Vonn Crashes In Final Downhill Before
+      ❌ REJECTED by cluster (attempt 1/3)
+         Reason: AI determined article is about a different event
+         Trying to find another cluster...
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - SPORTS NEWS NOT COVERED IN EXISTING CLUSTERS
+   ⚠️ ARTICLE REJECTED BY 1 CLUSTERS [22/23]
+      📰 Article: Lindsey Vonn, skiing with ruptured ACL, takes crucial step in downhill medal bid
+      Creating new cluster (no valid match found)
+      ✨ NEW CLUSTER (REJECTED BY 1 CLUSTERS): 30425
+         📁 Cluster name: Lindsey Vonn, Skiing With Ruptured Acl, Takes
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - TRUMP'S PLANS FOR AMERICA'S 250TH ANNIVERSARY ARE A NEW TOPIC.
+   🆕 NO MATCHING CLUSTER [23/23]
+      📰 Article: A gigantic arch! Cage fights at the White House! Trump’s gaudy plans for America’s 250th anniversary
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30426
+         📁 Cluster name: A Gigantic Arch! Cage Fights At The
+============================================================
+CLUSTERING COMPLETE (EMBEDDING-BASED v2.0)
+============================================================
+✓ Articles saved: 23/23
+✓ Matched to existing clusters: 17
+✓ New clusters created: 6
+✓ Total active clusters: 1006
+✓ Embedding threshold: 0.82
+✅ Step 1.5 Complete:
+   📊 New clusters: 6
+   🔗 Matched existing: 17
+   🎯 Clusters ready for processing: 10 (NEW this cycle)
+================================================================================
+📰 PROCESSING CLUSTER 30181
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.independent.co.uk/news/new-york-people... (2709 chars)
+⚠️ Insufficient content for https://www.newyorker.com/news/the-lede/the-popes-...
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 1/2 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 1/2
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 2 sources...
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2026/02/05/20/New...
+   🔍 DEBUG Source 2: image_url = https://media.newyorker.com/photos/6983cbb4372f84b...
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid candidates: 2
+      ✅ Selected: The Independent (score: 50.0)
+      Runner-up: The New Yorker (score: 50.0)
+   ✅ Selected: The Independent (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Archbishop Hicks** Takes Charge of **New York** Archdioces...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1080 chars)
+   ✅ Step 5 Complete: Search context fetched (1080 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Archbishop Hicks** Takes Charge of **New York** Archdiocese...
+      Content length sent: 333 chars
+      Gemini returned: {
+  "components": [
+    "details",
+    "timeline"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details",
+    "timeline"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details', 'timeline']
+   ✅ Step 6 Complete: Selected [details, timeline]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details, timeline
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details', 'timeline']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (13565 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Compensation Fund",
+      "value": "$300 million"
+    },
+    {
+      "label": "Catholics Served",
+      "value": "2.5 million"
+    },
+    {
+      "label": "Years in El Salvador",
+      "value": "5"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "February 2025",...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Compensation Fund",
+      "value": "$300 million"
+    },
+    {
+      "label": "Catholics Served",
+      "value": "2.5 million"
+    },
+    {
+      "label": "Years...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: The Independent - content: 2709 chars
+      Source 2: The New Yorker - content: 116 chars
+      Generated title: **Archbishop Hicks** Takes Charge of **New York** ...
+      Verification result: ❌ FAILED
+      Discrepancies found: 2
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Summary: The AI-generated content contains errors regarding the Pope's name and incorrectly states that the Pope is challenging Trump policies.
+      Discrepancies: 2
+         1. The Pope's name is incorrect....
+         2. Trump is no longer in office....
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+      Re-synthesizing with verification feedback...
+      ✅ New article: **Ronald Hicks** Takes Helm of **New York** Archdi...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: The Independent - content: 2709 chars
+      Source 2: The New Yorker - content: 116 chars
+      Generated title: **Ronald Hicks** Takes Helm of **New York** Archdi...
+      Verification result: ❌ FAILED
+      Discrepancies found: 1
+   ⚠️  Verification FAILED (Attempt 2/3)
+      Summary: The article is mostly accurate, but it hallucinates the Pope's name.
+      Discrepancies: 1
+         1. The Pope's name is incorrect....
+   🔄 REGENERATING ARTICLE (Attempt 3/3)
+      Re-synthesizing with verification feedback...
+      ✅ New article: **Archbishop Hicks** Takes Charge of **New York** ...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: The Independent - content: 2709 chars
+      Source 2: The New Yorker - content: 116 chars
+      Generated title: **Archbishop Hicks** Takes Charge of **New York** ...
+      Verification result: ❌ FAILED
+      Discrepancies found: 1
+   ⚠️  Verification FAILED (Attempt 3/3)
+      Summary: The AI article is mostly accurate, but it hallucinates the Pope's name.
+      Discrepancies: 1
+         1. The Pope's name is incorrect....
+   ❌ ELIMINATED: Failed verification after 3 attempts
+      Cluster 30181 will not be published
+================================================================================
+📰 PROCESSING CLUSTER 27767
+================================================================================
+   Sources in cluster: 3
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 3 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.cbc.ca/news/frank-stronach-sexual-assa...
+✅ Fetched: https://www.independent.co.uk/news/world/americas/... (4609 chars)
+⚠️ Insufficient content for https://www.cbc.ca/news/canada/toronto/frank-stron...
+   🔄 Trying Jina fallback for 2 URLs...
+✅ Jina fallback: https://www.cbc.ca/news/frank-stronach-sexual-assa... (36582 chars)
+✅ Jina fallback: https://www.cbc.ca/news/canada/toronto/frank-stron... (34962 chars)
+Fetched 3/3 articles
+   ✅ Fetched full text: 3/3
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 3 sources...
+   🔍 DEBUG Source 1: image_url = https://i.cbc.ca/ais/53c913f0-6a48-4dc1-9ca4-73495...
+   🔍 DEBUG Source 2: image_url = https://i.cbc.ca/ais/58a96b4c-f3be-4126-98d1-23862...
+   📸 IMAGE SELECTION:
+      Total candidates: 3
+      Valid candidates: 3
+      ✅ Selected: CBC Top Stories (score: 50.0)
+      Runner-up: CBC Top Stories (score: 50.0)
+   ✅ Selected: CBC Top Stories (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🔍 VALIDATING 3 sources for cluster: Billionaire Businessman Frank Stronach'S Sexual As...
+      ⚠️ REMOVED 1 unrelated sources:
+         ❌ [The Independent] In potentially groundbreaking ruling, Uber ordered to pay $8...
+      ✅ Keeping 2 validated sources
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Frank Stronach** Sex Assault Trial Delayed Over Coaching C...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (73 chars)
+   ✅ Step 5 Complete: Search context fetched (73 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Frank Stronach** Sex Assault Trial Delayed Over Coaching Claims...
+      Content length sent: 314 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11451 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Age of Stronach",
+      "value": "91 years"
+    },
+    {
+      "label": "Assaults alleged",
+      "value": "3 assaults"
+    },
+    {
+      "label": "Next court date",
+      "value": "June 27th"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "September 2023",
+  ...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Age of Stronach",
+      "value": "91 years"
+    },
+    {
+      "label": "Assaults alleged",
+      "value": "3 assaults"
+    },
+    {
+      "label": "Next court d...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: CBC Top Stories - content: 15000 chars
+      Source 2: CBC Top Stories - content: 15000 chars
+      Generated title: **Frank Stronach** Sex Assault Trial Delayed Over ...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles regarding Frank Stronach's sexual assault trial being delayed due to coaching allegations.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 780/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['frank stronach', 'sexual assault', 'toronto']...
+   🏷️ Tags: ['frank stronach', 'sexual assault', 'toronto', 'canada', 'legal', 'crime', 'magna', 'trial']
+   ✅ Published article ID: 15597
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [CBC Top Stories] Start of Frank Stronach's sex assault trial in Toronto stalls as lawye...
+      • [CBC Top Stories] Billionaire businessman Frank Stronach's sexual assault trial in Toron...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Frank Stronach** Sex Assault Trial Delayed Over ...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30420
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.ft.com/content/7f314584-4865-4237-ac06... (793 chars)
+✅ Fetched: https://asia.nikkei.com/business/finance/japan-pen... (330 chars)
+Fetched 2/2 articles
+   📸 Fetched image for Financial Times Asia: https://images.ft.com/v3/image/raw/https%3A%2F%2Fd1e00ek4eba...
+   📸 Fetched image for Nikkei Asia: https://images.ft.com/v3/image/raw/https%3A%2F%2Fcms-image-b...
+   ✅ Fetched full text: 2/2
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 2 sources...
+   🔍 DEBUG Source 1: image_url = https://images.ft.com/v3/image/raw/https%3A%2F%2Fd...
+   🔍 DEBUG Source 2: image_url = https://images.ft.com/v3/image/raw/https%3A%2F%2Fc...
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid candidates: 2
+      ✅ Selected: Financial Times Asia (score: 80.0)
+      Runner-up: Nikkei Asia (score: 50.0)
+   ✅ Selected: Financial Times Asia (score: 80.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Japan GPIF** Logs **$103B** Investment Gain in Q4...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (125 chars)
+   ✅ Step 5 Complete: Search context fetched (125 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Japan GPIF** Logs **$103B** Investment Gain in Q4...
+      Content length sent: 289 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "📈",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "📈",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11464 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Total AUM",
+      "value": "225 trillion yen"
+    },
+    {
+      "label": "Equity portion",
+      "value": "50 percent"
+    },
+    {
+      "label": "Bond allocation",
+      "value": "38 percent"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "January 2014",
+   ...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Total AUM",
+      "value": "225 trillion yen"
+    },
+    {
+      "label": "Equity portion",
+      "value": "50 percent"
+    },
+    {
+      "label": "Bond allocat...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: Financial Times Asia - content: 793 chars
+      Source 2: Nikkei Asia - content: 330 chars
+      Generated title: **Japan GPIF** Logs **$103B** Investment Gain in Q...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, specifically regarding the Japan GPIF's investment gain in the October-December quarter of 2025.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 875/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['japan gpif', 'government pension investment fund', 'pension fund']...
+   🏷️ Tags: ['japan gpif', 'government pension investment fund', 'pension fund', 'investment', 'global markets', 'finance', 'japan', 'earnings']
+   ✅ Published article ID: 15598
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [Financial Times Asia] Takaichi taps Japan’s anxiety over foreigners...
+      • [Nikkei Asia] Japan pension whale GPIF logs $103bn investment gain in Oct-Dec...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Japan GPIF** Logs **$103B** Investment Gain in Q...
+  Tagged article 15598 to event 9f19d370-7513-40ae-b0a1-5de59c90d94b
+  ❌ Failed to update latest development: {'message': "Could not find the 'significance' column of 'world_event_timeline' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  → Matched existing event: Euro Area Economy
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 1
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30148
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://oilprice.com/Latest-Energy-News/World-News...
+⚠️ Insufficient content for https://oilprice.com/Energy/Energy-General/Chevron...
+   🔄 Trying Jina fallback for 2 URLs...
+Fetched 0/2 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 0/2
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+      Reason: Cannot write accurate article without source content
+      Skipping cluster 30148
+================================================================================
+📰 PROCESSING CLUSTER 30421
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15535465/...
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 0/1 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 0/1
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+      Reason: Cannot write accurate article without source content
+      Skipping cluster 30421
+================================================================================
+📰 PROCESSING CLUSTER 30422
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.nature.com/articles/d41586-026-00397-z...
+   🔄 Trying Jina fallback for 1 URLs...
+✅ Jina fallback: https://www.nature.com/articles/d41586-026-00397-z... (35895 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = NONE...
+   ⚠️  No images found in any source
+   ❌ ELIMINATED: No image found for this article
+      Reason: Bright Data could not fetch an image from the article page
+      Skipping cluster 30422
+================================================================================
+📰 PROCESSING CLUSTER 30423
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.quantamagazine.org/long-sought-proof-t... (9941 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = https://www.quantamagazine.org/wp-content/uploads/...
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid candidates: 1
+      ✅ Selected: Quanta Magazine (score: 50.0)
+   ✅ Selected: Quanta Magazine (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Italian Mathematicians** Crack **Century-Old** PDE Puzzle...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (123 chars)
+   ✅ Step 5 Complete: Search context fetched (123 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Italian Mathematicians** Crack **Century-Old** PDE Puzzle...
+      Content length sent: 376 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🔬",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🔬",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11557 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Equation order",
+      "value": "2nd order"
+    },
+    {
+      "label": "Research duration",
+      "value": "7 years"
+    },
+    {
+      "label": "PDEs solved",
+      "value": "Over 100"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "January 2015",
+      "even...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Equation order",
+      "value": "2nd order"
+    },
+    {
+      "label": "Research duration",
+      "value": "7 years"
+    },
+    {
+      "label": "PDEs solved",
+...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Quanta Magazine - content: 9941 chars
+      Generated title: **Italian Mathematicians** Crack **Century-Old** P...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 890/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['mathematics', 'partial differential equations', 'italian mathematicians']...
+   🏷️ Tags: ['mathematics', 'partial differential equations', 'italian mathematicians', 'research', 'airflow modeling', 'engineering', 'science', 'mathematical modeling']
+   ✅ Published article ID: 15599
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Italian Mathematicians** Crack **Century-Old** P...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30424
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.astronomy.com/science/michaels-miscell...
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 0/1 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 0/1
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+      Reason: Cannot write accurate article without source content
+      Skipping cluster 30424
+================================================================================
+📰 PROCESSING CLUSTER 30425
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.theguardian.com/sport/2026/feb/06/lind... (3876 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = https://i.guim.co.uk/img/media/7e281ac5c33f0480625...
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid candidates: 1
+      ✅ Selected: The Guardian UK Sport (score: 80.0)
+   ✅ Selected: The Guardian UK Sport (score: 80.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Lindsey Vonn** Completes Practice Run with **Torn ACL**...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (100 chars)
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Lindsey Vonn** Completes Practice Run with **Torn ACL**...
+      Content length sent: 334 chars
+      Gemini returned: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "⚽",
+  "graph_type": null,
+  "map_locations": [
+    "Cortina's Olimpia delle Tofane course"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "⚽",
+  "graph_type": null,
+  "map_locations": [
+    "Cortina's Olimpia delle Tofane course"
+  ]
+}
+      Validated components: ['details', 'map']
+   ✅ Step 6 Complete: Selected [details, map]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details, map
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details', 'map']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11694 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Career victories",
+      "value": "82 World Cup"
+    },
+    {
+      "label": "Olympic medals",
+      "value": "3 total"
+    },
+    {
+      "label": "World titles",
+      "value": "2 championships"
+    }
+  ],
+  "map": [
+    {
+      "name": "Olimpia delle Tofane"...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Career victories",
+      "value": "82 World Cup"
+    },
+    {
+      "label": "Olympic medals",
+      "value": "3 total"
+    },
+    {
+      "label": "World titles...
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: The Guardian UK Sport - content: 3876 chars
+      Generated title: **Lindsey Vonn** Completes Practice Run with **Tor...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Lindsey Vonn's practice run and injury.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 6 reference articles for calibration
+   📊 Article score: 730/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['lindsey vonn', 'skiing', 'acl injury']...
+   🏷️ Tags: ['lindsey vonn', 'skiing', 'acl injury', 'sports medicine', 'cortina', 'olympics', 'downhill skiing', 'winter sports']
+   ✅ Published article ID: 15600
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Lindsey Vonn** Completes Practice Run with **Tor...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30426
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.theguardian.com/artanddesign/2026/feb/... (5746 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = https://i.guim.co.uk/img/media/a8634946561a91a2462...
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid candidates: 1
+      ✅ Selected: The Guardian UK Culture (score: 80.0)
+   ✅ Selected: The Guardian UK Culture (score: 80.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Trump** Unveils **Triumphal Arch** Plans for America's 250...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1085 chars)
+   ✅ Step 5 Complete: Search context fetched (1085 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Trump** Unveils **Triumphal Arch** Plans for America's 250th...
+      Content length sent: 323 chars
+      Gemini returned: {
+  "components": [
+    "timeline",
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Lincoln Memorial, Washington, D.C., USA"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "timeline",
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Lincoln Memorial, Washington, D.C., USA"
+  ]
+}
+      Validated components: ['timeline', 'map', 'details']
+   ✅ Step 6 Complete: Selected [timeline, map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: timeline, map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (14757 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   ⚠️ Rate limited, waiting 15s...
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "January 20, 2017",
+      "event": "Donald Trump's inauguration as the 45th President of the United States marked the beginning of his administration's focus on nationalistic and historical themes in public projects."
+    },
+    {
+      "date": "October 2025",
+ ...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "January 20, 2017",
+      "event": "Donald Trump's inauguration as the 45th President of the United States marked the beginning of his administration's focus on n...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: The Guardian UK Culture - content: 5746 chars
+      Generated title: **Trump** Unveils **Triumphal Arch** Plans for Ame...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the source article regarding Trump's proposal for a triumphal arch and other plans for America's 250th anniversary.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 740/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['donald trump', 'triumphal arch', 'lincoln memorial']...
+   🏷️ Tags: ['donald trump', 'triumphal arch', 'lincoln memorial', 'potomac river', 'historical monuments', 'american history', 'politics', 'bicentennial']
+   ✅ Published article ID: 15601
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Trump** Unveils **Triumphal Arch** Plans for Ame...
+  Tagged article 15601 to event 1270cb68-64b8-4c73-a995-0ff208cc8f48
+  ❌ Failed to update latest development: {'message': "Could not find the 'significance' column of 'world_event_timeline' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  → Matched existing event: US Presidential Campaigns
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 1
+============================================================
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   Articles fetched: 52
+   Approved (Step 1): 23
+   Clusters processed: 10
+   Articles published: 5
+================================================================================
+✅ Workflow completed in 561.7 seconds
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+Container called exit(0).
+
+============================================================
+🚀 TEN NEWS - Cloud Run Execution
+⏰ Started at: 2026-02-06T15:12:26.410547
+============================================================
+/app/step1_5_event_clustering.py:26: FutureWarning: 
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  import google.generativeai as genai
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✓ Initialized Gemini component selector
+  Model: gemini-2.0-flash
+  Components per article: 1-3
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+Started: 2026-02-06 15:12:35
+================================================================================
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+Fetching from 257 premium sources...
+📊 Fetched 2013 articles from 204 sources
+🔍 Deduplication: Starting with 2013 articles
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+   ⏰ After time filter (1440min): 1073 articles
+   ✅ After database check: 30 NEW articles
+✅ Business Insider: 1 new
+✅ CBS News Main: 3 new
+✅ CBS News World: 1 new
+✅ Daily Mail Home: 1 new
+✅ Euronews: 2 new
+✅ Fox News Latest: 3 new
+✅ NPR News: 1 new
+✅ Newsweek: 3 new
+✅ Seeking Alpha: 2 new
+✅ South China Morning Post: 2 new
+✅ The Guardian UK Sport: 1 new
+✅ The Independent: 7 new
+✅ The Straits Times: 2 new
+✅ Wired: 1 new
+✅ Step 0 Complete: 30 NEW articles (after deduplication)
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+Scoring 30 articles...
+   📷 13 articles without images (Bright Data will fetch later)
+   ✅ Filtering 30 total articles
+✅ Step 1 Complete: 13 approved, 17 filtered
+   📊 Saved 17 filtered articles to Supabase
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+Clustering 13 articles...
+============================================================
+STEP 1.5: EVENT CLUSTERING (PARALLEL MODE)
+============================================================
+Total articles to cluster: 13
+⚡ Using 3 parallel workers, batch size 8
+📊 Found 1000 active clusters
+📦 Pre-caching cluster sources (batch mode)...
+✅ Cached 156 clusters with sources (1 query)
+📝 Phase 1: Saving articles to database...
+✅ Saved 13/13 articles
+🧠 Phase 2: Generating embeddings (Gemini text-embedding-004)...
+   📰 Embedding 13 article titles...
+  ⚠️ Embedding error for text 0: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 2: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 1: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 5: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 4: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 3: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 6: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 8: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 7: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 9: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 11: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 10: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 12: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+   ✓ Embedded 13/13 articles
+   📁 Loading cached cluster embeddings...
+   📁 Generating 6 new embeddings (994 cached)...
+  ⚠️ Embedding error for text 2: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 1: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 0: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 3: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 5: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+  ⚠️ Embedding error for text 4: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=AIzaSyDGTu7JWyRD3LgEF24CTv1w5qZIWrusryc
+✅ Embeddings ready (994 cached, 6 generated)
+================================================================================
+📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (EMBEDDING-BASED)
+================================================================================
+   Similarity threshold: 0.82
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - DRUG PRICING POLICY NOT DIRECTLY RELATED TO OTHER CLUSTERS.
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [1/13]
+      📰 Article: Donald Trump unveils website in US to buy drugs at reduced prices
+      📁 Checking cluster: 5 Key Moments From Donald Trump&#039;S Interview
+      ✅ VALIDATED & ADDED to cluster: 29387
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30057
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30057
+         Cluster: Trump Blames Bondi After Outcry Over Spy
+         Reason: SAME STORY - RELATED TO BONDI AND US ARRESTS, LIKELY RELATED TO THE SPY/INTERFERENCE CONTEXT.
+   🔍 VALIDATING CLUSTER MATCH [2/13]
+      📰 Article: US arrests Benghazi suspect, Bondi says
+      📁 Checking cluster: Trump Blames Bondi After Outcry Over Spy
+      ✅ VALIDATED & ADDED to cluster: 30057
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 27360
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #27360
+         Cluster: Epstein Links To Putin Stoke Fears He
+         Reason: SAME STORY - EPSTEIN LINKS AND RELATED DISINFORMATION.
+   🔍 VALIDATING CLUSTER MATCH [3/13]
+      📰 Article: Pro-Russia disinformation falsely links Macron to Epstein, French government source says
+      📁 Checking cluster: Epstein Links To Putin Stoke Fears He
+      ✅ VALIDATED & ADDED to cluster: 27360
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30057
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30057
+         Cluster: Trump Blames Bondi After Outcry Over Spy
+         Reason: SAME STORY - PAM BONDI INVOLVED IN BOTH THE BENGHAZI ATTACK SUSPECT AND THE SPY OUTCRY.
+   🔍 VALIDATING CLUSTER MATCH [4/13]
+      📰 Article: Benghazi Attack 2012 Suspect: Pam Bondi, Kash Patel Announce Arrest
+      📁 Checking cluster: Trump Blames Bondi After Outcry Over Spy
+      ✅ VALIDATED & ADDED to cluster: 30057
+      📊 Keyword pre-filter: 2 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 27201
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #27201
+         Cluster: Epstein Scandal Deals New Blow To Norway
+         Reason: SAME STORY - NORWAY EPSTEIN TIES
+   🔍 VALIDATING CLUSTER MATCH [5/13]
+      📰 Article: Norway’s crown princess apologises over Epstein ties amid royal embarrassment
+      📁 Checking cluster: Epstein Scandal Deals New Blow To Norway
+      ✅ VALIDATED & ADDED to cluster: 27201
+      📊 Keyword pre-filter: 2 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - TESLA'S AI TRAINING CENTER IS A NEW TOPIC.
+   🆕 NO MATCHING CLUSTER [6/13]
+      📰 Article: Tesla launches China AI training centre as self-driving race accelerates
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30427
+         📁 Cluster name: Tesla Launches China Ai Training Centre As
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30421
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30421
+         Cluster: Man Who Tried To Rape Woman On
+         Reason: SAME STORY - SPIKING WOMAN'S DRINK
+   🔍 VALIDATING CLUSTER MATCH [7/13]
+      📰 Article: Michelin-star restaurant boss guilty of spiking woman’s drink in Mayfair club
+      📁 Checking cluster: Man Who Tried To Rape Woman On
+      ✅ VALIDATED & ADDED to cluster: 30421
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - BENGHAZI ATTACK IS A DISTINCT EVENT.
+   🆕 NO MATCHING CLUSTER [8/13]
+      📰 Article: ‘Key participant’ in Benghazi attack that killed 4 Americans arrested
+      ✨ NEW CLUSTER (NO MATCH FOUND): 30428
+         📁 Cluster name: ‘Key Participant’ In Benghazi Attack That Killed
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 28925
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #28925
+         Cluster: Trump Lists Democrat-Led Cities As He Doubles
+         Reason: SAME STORY - TRUMP AND CITIES.
+   🔍 VALIDATING CLUSTER MATCH [9/13]
+      📰 Article: Trump wants cities to put his name on transportation hubs in exchange for federal funding: report
+      📁 Checking cluster: Trump Lists Democrat-Led Cities As He Doubles
+      ✅ VALIDATED & ADDED to cluster: 28925
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - RACIST VIDEO IS A NEW DEVELOPMENT NOT RELATED TO ANY EXISTING CLUSTERS
+      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!
+   🔍 VALIDATING CLUSTER MATCH [10/13]
+      📰 Article: Trump shares racist video depicting Obamas as apes
+      📁 Checking cluster: Trump Signals Willingness To Defend Diego Garcia
+      ✅ VALIDATED & ADDED to cluster: 30398
+      📊 Keyword pre-filter: 3 matches (3 strong) - AI will decide
+      📎 Matched by database ID: 29524
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #29524
+         Cluster: Several Toronto Officers Arrested As Police Plan
+         Reason: SAME STORY - TORONTO POLICE OFFICERS ARRESTED.
+   🔍 VALIDATING CLUSTER MATCH [11/13]
+      📰 Article: Mob-linked murder plot leads to arrest of Toronto police officers
+      📁 Checking cluster: Several Toronto Officers Arrested As Police Plan
+      ✅ VALIDATED & ADDED to cluster: 29524
+      📊 Keyword pre-filter: 3 matches (3 strong) - AI will decide
+      📎 Matched by database ID: 29524
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #29524
+         Cluster: Several Toronto Officers Arrested As Police Plan
+         Reason: SAME STORY - ARREST OF TORONTO POLICE OFFICERS
+   🔍 VALIDATING CLUSTER MATCH [12/13]
+      📰 Article: Mob-linked murder plot leads to arrest of Toronto police officers
+      📁 Checking cluster: Several Toronto Officers Arrested As Police Plan
+      ✅ VALIDATED & ADDED to cluster: 29524
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 30428
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30428
+         Cluster: ‘Key Participant’ In Benghazi Attack That Killed
+         Reason: SAME STORY - BENGHAZI ATTACK FOLLOW-UP
+   🔍 VALIDATING CLUSTER MATCH [13/13]
+      📰 Article: Benghazi terror suspect extradited to face US charges
+      📁 Checking cluster: ‘Key Participant’ In Benghazi Attack That Killed
+      ✅ VALIDATED & ADDED to cluster: 30428
+============================================================
+CLUSTERING COMPLETE (EMBEDDING-BASED v2.0)
+============================================================
+✓ Articles saved: 13/13
+✓ Matched to existing clusters: 11
+✓ New clusters created: 2
+✓ Total active clusters: 1002
+✓ Embedding threshold: 0.82
+✅ Step 1.5 Complete:
+   📊 New clusters: 2
+   🔗 Matched existing: 11
+   🎯 Clusters ready for processing: 3 (NEW this cycle)
+================================================================================
+📰 PROCESSING CLUSTER 30427
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.scmp.com/business/china-business/artic... (1279 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = https://cdn.i-scmp.com/sites/default/files/styles/...
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid candidates: 1
+      ✅ Selected: South China Morning Post (score: 50.0)
+   ✅ Selected: South China Morning Post (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Tesla** Launches **China AI** Training Centre for Self-Dri...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (940 chars)
+   ✅ Step 5 Complete: Search context fetched (940 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Tesla** Launches **China AI** Training Centre for Self-Driving...
+      Content length sent: 317 chars
+      Gemini returned: {
+  "components": [
+    "timeline",
+    "details"
+  ],
+  "emoji": "💻",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "timeline",
+    "details"
+  ],
+  "emoji": "💻",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['timeline', 'details']
+   ✅ Step 6 Complete: Selected [timeline, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: timeline, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (13272 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 1): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 2): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 3): ['Only 1 details have numbers (need at least 3)']
+   ⚠️ No components generated - retrying (2/3)...
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (13272 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 1): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 2): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 3): ['Only 1 details have numbers (need at least 3)']
+   ⚠️ No components generated - retrying (3/3)...
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (13272 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 1): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 2): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a manufacturing base in the region."
+    },
+    {
+      "date": "2021",
+      "event": "Regulations in...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2019",
+      "event": "Tesla began producing vehicles at its Shanghai Gigafactory, marking its entry into the Chinese electric vehicle market and establishing a ...
+  ⚠ Validation issues (attempt 3): ['Only 1 details have numbers (need at least 3)']
+   ⚠️ Step 7 Failed: No components generated after 3 attempts
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: South China Morning Post - content: 1279 chars
+      Generated title: **Tesla** Launches **China AI** Training Centre fo...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 875/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['tesla', 'china', 'artificial intelligence']...
+   🏷️ Tags: ['tesla', 'china', 'artificial intelligence', 'self-driving cars', 'electric vehicles', 'autonomous vehicles', 'automotive', 'tech']
+   ⚠️ Some components failed: ['timeline', 'details']
+   ✅ Publishing with: []
+   ✅ Published article ID: 15602
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Tesla** Launches **China AI** Training Centre fo...
+  Tagged article 15602 to event 1c7d79c4-16ad-4593-b9ab-7da53581f1a4
+  ❌ Failed to update latest development: {'message': "Could not find the 'significance' column of 'world_event_timeline' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  → Matched existing event: US-China Space
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 1
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30421
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.independent.co.uk/news/uk/crime/vikas-... (4847 chars)
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15535465/...
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 1/2 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 1/2
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 2 sources...
+   🔍 DEBUG Source 1: image_url = https://i.dailymail.co.uk/1s/2026/02/06/14/1061659...
+   🔍 DEBUG Source 2: image_url = https://static.independent.co.uk/2023/08/25/15/3_2...
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid candidates: 2
+      ✅ Selected: Daily Mail Home (score: 50.0)
+      Runner-up: The Independent (score: 48.0)
+   ✅ Selected: Daily Mail Home (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Michelin-Star Chef** Guilty of Spiking Woman's Drink...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (558 chars)
+   ✅ Step 5 Complete: Search context fetched (558 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Michelin-Star Chef** Guilty of Spiking Woman's Drink...
+      Content length sent: 322 chars
+      Gemini returned: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🔪",
+  "graph_type": null,
+  "map_locations": [
+    "Annabel's, London, United Kingdom"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🔪",
+  "graph_type": null,
+  "map_locations": [
+    "Annabel's, London, United Kingdom"
+  ]
+}
+      Validated components: ['map', 'details']
+   ✅ Step 6 Complete: Selected [map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (12591 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "map": [
+    {
+      "name": "Annabel's",
+      "type": "venue",
+      "city": "London",
+      "country": "United Kingdom",
+      "coordinates": {
+        "lat": 51.5081,
+        "lng": -0.1485
+      },
+      "description": "Location where Vikas Nath spiked a woman's drink with GBL."
+    }
+  ],
+...
+   📝 Cleaned JSON: {
+  "map": [
+    {
+      "name": "Annabel's",
+      "type": "venue",
+      "city": "London",
+      "country": "United Kingdom",
+      "coordinates": {
+        "lat": 51.5081,
+        "lng": -0.1485
+  ...
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: Daily Mail Home - content: 168 chars
+      Source 2: The Independent - content: 4847 chars
+      Generated title: **Michelin-Star Chef** Guilty of Spiking Woman's D...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Vikas Nath's conviction for spiking a woman's drink.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 780/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['vikas nath', "annabel's", 'benares']...
+   🏷️ Tags: ['vikas nath', "annabel's", 'benares', 'food', 'crime', 'gbl', 'chef', 'spiking']
+   ✅ Published article ID: 15603
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [Daily Mail Home] Man who tried to rape woman on easyJet flight between Italy and Britai...
+      • [The Independent] Michelin-star restaurant boss guilty of spiking woman’s drink in Mayfa...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **Michelin-Star Chef** Guilty of Spiking Woman's D...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 30428
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.foxnews.com/us/benghazi-terror-suspect... (460 chars)
+⚠️ Insufficient content for https://www.independent.co.uk/bulletin/news/bengha...
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 1/2 articles
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+   ✅ Fetched full text: 1/2
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 2 sources...
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2026/02/06/15/45/...
+   🔍 DEBUG Source 2: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid candidates: 2
+      ✅ Selected: The Independent (score: 50.0)
+      Runner-up: Fox News Latest (score: 50.0)
+   ✅ Selected: The Independent (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **US** Arrests **Benghazi** Attack Leader After 12 Years...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (101 chars)
+   ✅ Step 5 Complete: Search context fetched (101 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **US** Arrests **Benghazi** Attack Leader After 12 Years...
+      Content length sent: 337 chars
+      Gemini returned: {
+  "components": [
+    "details",
+    "timeline"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details",
+    "timeline"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details', 'timeline']
+   ✅ Step 6 Complete: Selected [details, timeline]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details, timeline
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details', 'timeline']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11606 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Americans killed",
+      "value": "4 total"
+    },
+    {
+      "label": "Investigation length",
+      "value": "12 years"
+    },
+    {
+      "label": "Attack year",
+      "value": "2012"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "September 11, 2012",
+     ...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Americans killed",
+      "value": "4 total"
+    },
+    {
+      "label": "Investigation length",
+      "value": "12 years"
+    },
+    {
+      "label": "Attack yea...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: The Independent - content: 0 chars
+      Source 2: Fox News Latest - content: 460 chars
+      Generated title: **US** Arrests **Benghazi** Attack Leader After 12...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information provided in the source articles regarding the arrest of Zubayr Al-Bakoush in connection to the 2012 Benghazi attack.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 855/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['zubayr al-bakoush', 'benghazi attack', 'libya']...
+   🏷️ Tags: ['zubayr al-bakoush', 'benghazi attack', 'libya', 'terrorism', 'us department of justice', 'pam bondi', 'kash patel', 'jeanine pirro']
+   ✅ Published article ID: 15604
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [The Independent] ‘Key participant’ in Benghazi attack that killed 4 Americans arrested...
+      • [Fox News Latest] Benghazi terror suspect extradited to face US charges...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 40 existing world events
+[1/1] Processing: **US** Arrests **Benghazi** Attack Leader After 12...
+  Tagged article 15604 to event 407dd41c-72c7-4e6d-a572-00d4e4419e96
+  ❌ Failed to update latest development: {'message': "Could not find the 'significance' column of 'world_event_timeline' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  → Matched existing event: USS Cole Bombing
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 1
+============================================================
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   Articles fetched: 30
+   Approved (Step 1): 13
+   Clusters processed: 3
+   Articles published: 3
+================================================================================
+✅ Workflow completed in 397.6 seconds
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+Container called exit(0).
+

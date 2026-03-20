@@ -1,0 +1,629 @@
+============================================================
+🚀 TEN NEWS - Cloud Run Execution
+⏰ Started at: 2026-01-31T16:31:14.864435
+============================================================
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  import google.generativeai as genai
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✓ Initialized Gemini component selector
+  Model: gemini-2.0-flash
+  Components per article: 1-3
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+Started: 2026-01-31 16:31:24
+================================================================================
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+Fetching from 257 premium sources...
+📊 Fetched 2052 articles from 207 sources
+🔍 Deduplication: Starting with 2052 articles
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+   ⏰ After time filter (1440min): 926 articles
+   ✅ After database check: 17 NEW articles
+✅ Al Jazeera English: 1 new
+✅ BBC News Technology: 1 new
+✅ Fortune: 6 new
+✅ Fox News Latest: 1 new
+✅ Nikkei Asia: 1 new
+✅ The Guardian UK Sport: 1 new
+✅ The Independent: 2 new
+✅ The New York Times Homepage: 1 new
+✅ The New York Times US: 2 new
+✅ Vanity Fair: 1 new
+✅ Step 0 Complete: 17 NEW articles (after deduplication)
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+Scoring 17 articles...
+   📷 2 articles without images (Bright Data will fetch later)
+   ✅ Filtering 17 total articles
+✅ Step 1 Complete: 7 approved, 10 filtered
+   📊 Saved 10 filtered articles to Supabase
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+Clustering 7 articles...
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Articles to cluster: 7
+📝 Step 1: Saving articles to database...
+   ✅ Saved: 7
+   ⏭️ Already clustered: 0
+   📋 To cluster: 7
+📂 Step 2: Getting active clusters...
+   Found 1000 active clusters
+🧠 Step 3: Generating embeddings...
+   Embedding 7 article titles...
+   ✅ Embeddings ready
+🔍 Step 4: Matching articles to clusters...
+   [1/7] Bovino Is Said to Have Mocked Prosecutor’s Jewish Faith on C...
+      ✅ EMBEDDING MATCH: Cluster #26661 (similarity: 1.00)
+         Cluster: Bovino Is Said To Have Mocked Prosecutor’S...
+   [2/7] Bovino Is Said to Have Mocked Prosecutor’s Jewish Faith on C...
+      ✅ EMBEDDING MATCH: Cluster #26661 (similarity: 1.00)
+         Cluster: Bovino Is Said To Have Mocked Prosecutor’S...
+   [3/7] Musk's SpaceX applies to launch 1m satellites into orbit...
+      🔑 Top keyword matches: [('Elon Musk’S Spacex And Xai Explore Merge', 2)]
+      🤖 Sending to AI (1 clusters with 2+ keyword matches)...
+      🤖 AI: NEW CLUSTER
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26663
+   [4/7] Bill Gates, Elon Musk, Howard Lutnick face new scrutiny over...
+      ✅ EMBEDDING MATCH: Cluster #26270 (similarity: 0.76)
+         Cluster: Trump, Bill Gates And More Referenced In...
+   [5/7] Ford CEO has 5,000 open mechanic jobs with up to 6-figure sa...
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 2+)
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26664
+   [6/7] Native Americans, literally the furthest thing from immigran...
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 2+)
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26665
+   [7/7] Japan's Takaichi touts benefits of weaker yen, citing foreig...
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 2+)
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26666
+============================================================
+CLUSTERING COMPLETE
+============================================================
+✅ Matched to existing: 3 (embedding: 3, AI: 0)
+✨ New clusters created: 4
+⏭️ Already clustered: 0
+📊 Total active clusters: 1004
+✅ Step 1.5 Complete:
+   📊 New clusters: 4
+   🔗 Matched existing: 3
+   🎯 Clusters ready for processing: 5 (NEW this cycle)
+================================================================================
+📰 PROCESSING CLUSTER 26663
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.bbc.com/news/articles/cyv5l24mrjmo?at_... (2456 chars)
+Fetched 1/1 articles
+   📸 Upgraded image for BBC News Technology: https://ichef.bbci.co.uk/news/1024/branded_news/647e/live/2e...
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://ichef.bbci.co.uk/news/1024/branded_news/64...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: BBC News Technology
+   📥 Downloading image: https://ichef.bbci.co.uk/news/1024/branded_news/647e/live/2eac0410-febb-11f0-997...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ❌ Unsuitable (90% confidence): The image contains a BBC News logo, indicating it's potentially from a TV broadcast.
+         ❌ AI REJECTED (90%): The image contains a BBC News logo, indicating it's potentially from a TV broadcast.
+      ❌ All 1 images rejected by AI quality check
+         → Article needs AI-generated image
+   🎨 GENERATING AI IMAGE
+      Topic: Musk'S Spacex Applies To Launch 1M Satellites...
+   📦 Supabase storage initialized
+   🎨 Generating image for: Musk'S Spacex Applies To Launch 1M Satellites...
+   🎨 Background color: deep red
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   ✅ Image generated successfully (1896894 bytes)
+   📤 Uploading to Supabase: generated/20260131_163512_20260131_163512.png
+Storage endpoint URL should have a trailing slash.
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+   ✅ AI image generated successfully
+   🎨 AI Generated: editorial illustration (background: deep red)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **SpaceX** Seeks **1M** Satellites for AI Data Centers...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1203 chars)
+   ✅ Step 5 Complete: Search context fetched (1203 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **SpaceX** Seeks **1M** Satellites for AI Data Centers...
+      Content length sent: 344 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🚀",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🚀",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (12600 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Orbit height min",
+      "value": "500 km"
+    },
+    {
+      "label": "Orbit height max",
+      "value": "2,000 km"
+    },
+    {
+      "label": "Kardashev scale year",
+      "value": "1960s"
+    }
+  ]
+}...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Orbit height min",
+      "value": "500 km"
+    },
+    {
+      "label": "Orbit height max",
+      "value": "2,000 km"
+    },
+    {
+      "label": "Kardashev scale...
+   ✅ Step 7 Complete: Generated [details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: BBC News Technology - content: 2456 chars
+      Generated title: **SpaceX** Seeks **1M** Satellites for AI Data Cen...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, with no major factual errors or inconsistencies.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 905/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['spacex', 'elon musk', 'artificial intelligence']...
+   🏷️ Tags: ['spacex', 'elon musk', 'artificial intelligence', 'satellites', 'data centers', 'space', 'technology', 'solar power']
+   ❌ Error processing cluster 26663: {'message': 'index row requires 2529232 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+================================================================================
+📰 PROCESSING CLUSTER 26270
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.aljazeera.com/news/2026/1/31/bill-gate...
+⚠️ Insufficient content for https://www.cbsnews.com/video/trump-bill-gates-and...
+   🔄 Trying Jina fallback for 2 URLs...
+Fetched 0/2 articles
+   ✅ Fetched full text: 0/2
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+      Reason: Cannot write accurate article without source content
+      Skipping cluster 26270
+================================================================================
+📰 PROCESSING CLUSTER 26664
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://fortune.com/article/ford-ceo-jim-farley-au... (2992 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://fortune.com/img-assets/wp-content/uploads/...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: Fortune
+   📥 Downloading image: https://fortune.com/img-assets/wp-content/uploads/2025/11/GettyImages-2237973140...
+   📐 Image loaded: 2048x1365 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image is a high-quality photograph of a man speaking, likely at a press conference or event, and doesn't contain any elements that would make it unsuitable for publication on a professional news website.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Fortune (score: 84.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Ford** Struggles to Fill **5,000** Mechanic Jobs...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (793 chars)
+   ✅ Step 5 Complete: Search context fetched (793 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Ford** Struggles to Fill **5,000** Mechanic Jobs...
+      Content length sent: 297 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "💰",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "💰",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (12139 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Salary increase",
+      "value": "25% bump"
+    },
+    {
+      "label": "Vocational jump",
+      "value": "16% increase"
+    },
+    {
+      "label": "Median salary",
+      "value": "$120,000"
+    }
+  ]
+}...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Salary increase",
+      "value": "25% bump"
+    },
+    {
+      "label": "Vocational jump",
+      "value": "16% increase"
+    },
+    {
+      "label": "Median sala...
+   ✅ Step 7 Complete: Generated [details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fortune - content: 2992 chars
+      Generated title: **Ford** Struggles to Fill **5,000** Mechanic Jobs...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Ford's struggle to fill mechanic positions and the broader skilled worker shortage in the US.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 865/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['ford', 'jim farley', 'mechanic']...
+   🏷️ Tags: ['ford', 'jim farley', 'mechanic', 'skilled worker shortage', 'manufacturing', 'labor market', 'us economy', 'automotive']
+   ✅ Published article ID: 12309
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 4 existing world events
+[1/1] Processing: **Ford** Struggles to Fill **5,000** Mechanic Jobs...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26665
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://fortune.com/2026/01/31/native-americans-fe... (6578 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://fortune.com/img-assets/wp-content/uploads/...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: Fortune
+   📥 Downloading image: https://fortune.com/img-assets/wp-content/uploads/2026/01/AP26028719362777-e1769...
+   📐 Image loaded: 2048x1365 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image shows a clear photo of a person who could potentially be involved in a news story, and does not violate any of the rejection criteria.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Fortune (score: 84.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Native Americans** Carry **Tribal IDs** Amid ICE Raids...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1371 chars)
+   ✅ Step 5 Complete: Search context fetched (1371 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Native Americans** Carry **Tribal IDs** Amid ICE Raids...
+      Content length sent: 329 chars
+      Gemini returned: {
+  "components": [
+    "timeline",
+    "details",
+    "map"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Minneapolis, Minneapolis, USA"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "timeline",
+    "details",
+    "map"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Minneapolis, Minneapolis, USA"
+  ]
+}
+      Validated components: ['timeline', 'details', 'map']
+   ✅ Step 6 Complete: Selected [timeline, details, map]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: timeline, details, map
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'details', 'map']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (15605 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "Late 1960s",
+      "event": "Many tribal nations began issuing their own forms of identification, marking a shift towards self-determination and recognition of tribal sovereignty."
+    },
+    {
+      "date": "Mid- to late 1800s",
+      "event": "The U.S. govern...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "Late 1960s",
+      "event": "Many tribal nations began issuing their own forms of identification, marking a shift towards self-determination and recognition of t...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fortune - content: 6578 chars
+      Generated title: **Native Americans** Carry **Tribal IDs** Amid ICE...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Native Americans carrying tribal IDs as protection from ICE raids.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 875/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 7 interest tags: ['native americans', 'tribal id', 'ice']...
+   🏷️ Tags: ['native americans', 'tribal id', 'ice', 'us citizenship', 'immigration', 'indigenous peoples', 'politics']
+   ✅ Published article ID: 12310
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 4 existing world events
+[1/1] Processing: **Native Americans** Carry **Tribal IDs** Amid ICE...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26666
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://asia.nikkei.com/business/markets/currencie... (365 chars)
+Fetched 1/1 articles
+   📸 Fetched image for Nikkei Asia: https://images.ft.com/v3/image/raw/https%3A%2F%2Fcms-image-b...
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://images.ft.com/v3/image/raw/https%3A%2F%2Fc...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: Nikkei Asia
+   📥 Downloading image: https://images.ft.com/v3/image/raw/https%3A%2F%2Fcms-image-bucket-productionv3-a...
+   📐 Image loaded: 2520x1260 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image shows a politician waving, which is appropriate for a news article.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Nikkei Asia (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Japan PM Takaichi** Touts **Weak Yen** Benefits...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (106 chars)
+   ✅ Step 5 Complete: Search context fetched (106 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Japan PM Takaichi** Touts **Weak Yen** Benefits...
+      Content length sent: 326 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11480 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Yen per dollar",
+      "value": "155 ¥/$"
+    },
+    {
+      "label": "Election cycle",
+      "value": "4 years"
+    },
+    {
+      "label": "Government debt",
+      "value": "260% of GDP"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "March 2023",
+      "even...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Yen per dollar",
+      "value": "155 ¥/$"
+    },
+    {
+      "label": "Election cycle",
+      "value": "4 years"
+    },
+    {
+      "label": "Government debt",
+ ...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Nikkei Asia - content: 365 chars
+      Generated title: **Japan PM Takaichi** Touts **Weak Yen** Benefits...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 7 reference articles for calibration
+   📊 Article score: 830/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['japan', 'prime minister takaichi', 'weak yen']...
+   🏷️ Tags: ['japan', 'prime minister takaichi', 'weak yen', 'foreign reserves', 'kawasaki', 'lower house election', 'imports', 'finance']
+   ✅ Published article ID: 12311
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 4 existing world events
+[1/1] Processing: **Japan PM Takaichi** Touts **Weak Yen** Benefits...
+  ✅ AI image generated for: Political debate over the impa...
+✅ Created new world event: Yen Weakness Debate
+  ✅ Created initial latest development
+  📅 Generating timeline for: Yen Weakness Debate
+    ✅ Generated 10 timeline entries for Yen Weakness Debate
+  🧩 Generating smart components...
+  🧩 Generating components for: Yen Weakness Debate
+    Component relevance: This event will have perspectives, geographic impact, what to watch, and historical comparison components because it is a multifaceted issue with diverse viewpoints, international implications, potential future events, and historical precedents.
+    Generating perspectives...
+    ✅ Added 4 perspectives
+    Generating what to watch...
+    ✅ Added 4 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 6 countries
+    Generating historical comparison...
+    ✅ Added 2 historical comparisons
+  ✅ Generated 4 components for Yen Weakness Debate
+  ⚠️ Component generation failed (non-critical): {'message': "Could not find the 'components' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "12311"', 'code': '22P02', 'hint': None, 'details': None}
+    ❌ Failed to add timeline entry: {'message': 'invalid input syntax for type uuid: "12311"', 'code': '22P02', 'hint': None, 'details': None}
+  → Created NEW world event: Yen Weakness Debate
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 1
+  Articles tagged: 1
+============================================================
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   Articles fetched: 17
+   Approved (Step 1): 7
+   Clusters processed: 5
+   Articles published: 3
+================================================================================
+✅ Workflow completed in 374.6 seconds
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+Container called exit(0).
+

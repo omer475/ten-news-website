@@ -11,7 +11,7 @@
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.58.0",
+    "@supabase/supabase-js": "^2.98.0",
     "d3": "^7.9.0",
     "lucide-react": "^0.544.0",
     "mapbox-gl": "^3.17.0",

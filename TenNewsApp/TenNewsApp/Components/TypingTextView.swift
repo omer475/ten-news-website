@@ -1,44 +1,31 @@
 import SwiftUI
 
-/// Typewriter effect text animation for splash greeting
+/// Typewriter effect text animation for splash greeting.
+/// Uses Task-based scheduling with proper cancellation on disappear.
 struct TypingTextView: View {
     let fullText: String
     var typingSpeed: Double = 0.05
     var startDelay: Double = 0.3
 
     @State private var displayedText = ""
-    @State private var currentIndex = 0
-    @State private var isComplete = false
+    @State private var typingTask: Task<Void, Never>?
 
     var body: some View {
         Text(displayedText)
-            .onAppear {
-                startTyping()
-            }
+            .onAppear { startTyping() }
+            .onDisappear { typingTask?.cancel() }
     }
 
     private func startTyping() {
         displayedText = ""
-        currentIndex = 0
-        isComplete = false
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + startDelay) {
-            typeNextCharacter()
-        }
-    }
-
-    private func typeNextCharacter() {
-        guard currentIndex < fullText.count else {
-            isComplete = true
-            return
-        }
-
-        let index = fullText.index(fullText.startIndex, offsetBy: currentIndex)
-        displayedText += String(fullText[index])
-        currentIndex += 1
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + typingSpeed) {
-            typeNextCharacter()
+        typingTask?.cancel()
+        typingTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(startDelay * 1_000_000_000))
+            for char in fullText {
+                guard !Task.isCancelled else { return }
+                displayedText.append(char)
+                try? await Task.sleep(nanoseconds: UInt64(typingSpeed * 1_000_000_000))
+            }
         }
     }
 }

@@ -1,0 +1,1128 @@
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 727.8 seconds
+================================================================================
+   Articles published: 1
+   Clusters processed: 13
+   Approved (Step 1): 22
+   Articles fetched: 43
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+      Skipping cluster 24666
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24666
+================================================================================
+      Skipping cluster 24665
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.foxnews.com', port=443): Max retries exceeded with
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24665
+================================================================================
+      Skipping cluster 24664
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.visualcapitalist.com', port=443): Max retries exce
+❌ Proxy error: HTTPSConnectionPool(host='www.visualcapitalist.com', port=443): Max retries exce
+❌ Proxy error: HTTPSConnectionPool(host='www.visualcapitalist.com', port=443): Max retries exce
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24664
+================================================================================
+      Skipping cluster 24663
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24663
+================================================================================
+   ❌ Error processing cluster 24662: {'message': 'index row requires 1760488 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['arabidopsis thaliana', 'stinkweed', 'seed oil', 'biofuel', 'genetics', 'nature journal', 'biotechnology']
+   🏷️ Generated 7 interest tags: ['arabidopsis thaliana', 'stinkweed', 'seed oil']...
+   🏷️ Generating interest tags...
+   📊 Article score: 860/1000
+   📊 Using 5 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, with no major factual errors or hallucinations.
+      Verification result: ✅ PASSED
+      Generated title: Scientists Engineer **Stinkweed** to Produce **See...
+      Source 1: Nature - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "Genes...
+    {
+    },
+      "value": "20 percent"
+      "label": "Oil content boost",
+    {
+    },
+      "value": "65 percent"
+      "label": "Fatty acid increase",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "3 genes"
+      "label": "Genes modified",
+    {
+    },
+      "value": "20 percent"
+      "label": "Oil content boost",
+    {
+    },
+      "value": "65 percent"
+      "label": "Fatty acid increase",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11620 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🌱",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🌱",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 284 chars
+      Title: Scientists Engineer **Stinkweed** to Produce **Seed Oil**...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (280 chars)
+   ✅ Gemini context search completed (280 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: Scientists Engineer **Stinkweed** to Produce **Seed Oil**...
+      Preview: I cannot synthesize information from the provided source as it only contains website navigation elem...
+   ⚠️  Claude returned text instead of JSON (attempt 2/5)
+      Preview: I cannot synthesize information from the provided source as it only contains a website's privacy pol...
+   ⚠️  Claude returned text instead of JSON (attempt 1/5)
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: forest green)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_180301_20260129_180301.png
+   ✅ Image generated successfully (1320336 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: forest green
+   🎨 Generating image for: Genetically Engineered ‘Stinkweed’ Comes Up Roses For...
+   📦 Supabase storage initialized
+      Topic: Genetically Engineered ‘Stinkweed’ Comes Up Roses For...
+   🎨 GENERATING AI IMAGE
+   ⚠️  No images found in any source
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = NONE...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.nature.com/articles/d41586-026-00277-6... (32861 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24662
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+      Preview: I cannot synthesize information from the provided source as it only contains a cookie consent notice...
+   ⚠️  Claude returned text instead of JSON (attempt 5/5)
+      Preview: I cannot synthesize information from the provided source because it only contains a cookie consent n...
+   ⚠️  Claude returned text instead of JSON (attempt 4/5)
+      Preview: I cannot synthesize information from the provided source as it only contains a cookie consent notice...
+   ⚠️  Claude returned text instead of JSON (attempt 3/5)
+      Preview: I cannot synthesize this information because the provided source contains only website privacy polic...
+   ⚠️  Claude returned text instead of JSON (attempt 2/5)
+      Preview: I cannot synthesize meaningful news content from the provided source. The Nature article appears to ...
+   ⚠️  Claude returned text instead of JSON (attempt 1/5)
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: forest green)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_180206_20260129_180206.png
+   ✅ Image generated successfully (1549568 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: forest green
+   🎨 Generating image for: Author Correction: Hunter-Gatherer Sea Voyages Extended To...
+   📦 Supabase storage initialized
+      Topic: Author Correction: Hunter-Gatherer Sea Voyages Extended To...
+   🎨 GENERATING AI IMAGE
+   ⚠️  No images found in any source
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = NONE...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.nature.com/articles/s41586-025-10024-y... (52639 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+❌ Proxy error: HTTPSConnectionPool(host='www.nature.com', port=443): Max retries exceeded with 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24661
+================================================================================
+   ❌ Error processing cluster 24148: {'message': 'index row requires 1857496 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['israel', 'saudi arabia', 'iran', 'middle east', 'us foreign policy', 'washington dc', 'nuclear program', 'international relations']
+   🏷️ Generated 8 interest tags: ['israel', 'saudi arabia', 'iran']...
+   🏷️ Generating interest tags...
+   📊 Article score: 865/1000
+   📊 Using 5 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information provided in the source articles.
+      Verification result: ✅ PASSED
+      Generated title: **Israeli**, **Saudi** Officials Visit DC on Iran ...
+      Source 3: The Straits Times - content: 15000 chars
+      Source 2: The Straits Times - content: 277 chars
+      Source 1: The Straits Times - content: 77 chars
+      Sources provided: 3
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "Budget discus...
+    {
+    },
+      "value": "Over 20"
+      "label": "Officials attending",
+    {
+    },
+      "value": "3 days"
+      "label": "Meeting duration",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "$50 million"
+      "label": "Budget discussed",
+    {
+    },
+      "value": "Over 20"
+      "label": "Officials attending",
+    {
+    },
+      "value": "3 days"
+      "label": "Meeting duration",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   ⚠️ Rate limited, waiting 15s...
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11970 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   ⚠️ No components generated - retrying (2/3)...
+  ⚠ Validation issues (attempt 3): ['Only 0 details have numbers (need at least 3)']
+      "value": "Senior defense and intelligence officials"...
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "Senior defense and intelligence officials"
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Only 0 details have numbers (need at least 3)']
+      "value": "Senior defense and intelligence officials"...
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "Senior defense and intelligence officials"
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 0 details have numbers (need at least 3)']
+      "value": "Senior defense and intelligence officials"...
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "Senior defense and intelligence officials"
+      "label": "Participant level",
+    {
+    },
+      "value": "Washington, D.C."
+      "label": "Meetings location",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11970 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 327 chars
+      Title: **Israeli**, **Saudi** Officials Visit DC on Iran Strikes...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (587 chars)
+   ✅ Gemini context search completed (587 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Israeli**, **Saudi** Officials Visit DC on Iran Strikes...
+   Synthesizing article from 3 sources...
+      ✅ All 3 sources validated - same event
+   🔍 VALIDATING 3 sources for cluster: Saudi And Israeli Officials Visit Washington To...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: deep red)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_180101_20260129_180101.png
+   ✅ Image generated successfully (1393091 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: deep red
+   🎨 Generating image for: Saudi And Israeli Officials Visit Washington To...
+   📦 Supabase storage initialized
+      Topic: Saudi And Israeli Officials Visit Washington To...
+   🎨 GENERATING AI IMAGE
+   ⚠️  No images found in any source
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = NONE...
+   🔍 DEBUG Source 1: image_url = NONE...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/3
+Fetched 1/3 articles
+✅ Jina fallback: https://www.straitstimes.com/world/europe/israeli-... (39713 chars)
+   🔄 Trying Jina fallback for 3 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 24148
+================================================================================
+      Cluster 24595 will not be published
+   ❌ ELIMINATED: Failed verification after 3 attempts
+         1. The AI states the designation happened in January 2026, but the source articles ...
+      Discrepancies: 1
+      Summary: The AI-generated content is mostly accurate, but it hallucinates the date of the designation as January 2026 when the source articles are dated January 2024.
+   ⚠️  Verification FAILED (Attempt 3/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **EU** Designates Iran's **IRGC** as Terrorist Gro...
+      Source 5: France 24 Middle East - content: 15000 chars
+      Source 4: France 24 - content: 15000 chars
+      Source 3: France 24 Europe - content: 15000 chars
+      Source 2: France 24 Europe - content: 15000 chars
+      Source 1: France 24 Europe - content: 15000 chars
+      Sources provided: 5
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **EU** Designates Iran's **IRGC** as Terrorist Gro...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 3/3)
+         1. The AI states the designation happened in January 2029, but the source articles ...
+      Discrepancies: 1
+      Summary: The article contains a wrong date, stating the designation happened in January 2029 when the source articles are dated January 2026.
+   ⚠️  Verification FAILED (Attempt 2/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **EU** Designates **IRGC** as Terrorist Organizati...
+      Source 5: France 24 Middle East - content: 15000 chars
+      Source 4: France 24 - content: 15000 chars
+      Source 3: France 24 Europe - content: 15000 chars
+      Source 2: France 24 Europe - content: 15000 chars
+      Source 1: France 24 Europe - content: 15000 chars
+      Sources provided: 5
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **EU** Designates **IRGC** as Terrorist Organizati...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The AI states the designation occurred in January 2026, but the source articles ...
+      Discrepancies: 1
+      Summary: The AI article contains a wrong date, claiming the designation occurred in January 2026 when the source articles are dated January 2029.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **EU** Designates Iran's **IRGC** as Terrorist Gro...
+      Source 5: France 24 Middle East - content: 15000 chars
+      Source 4: France 24 - content: 15000 chars
+      Source 3: France 24 Europe - content: 15000 chars
+      Source 2: France 24 Europe - content: 15000 chars
+      Source 1: France 24 Europe - content: 15000 chars
+      Sources provided: 5
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "Cyber com...
+    {
+    },
+      "value": "250,000 total"
+      "label": "Active personnel",
+    {
+    },
+      "value": "May 5, 1979"
+      "label": "IRGC founded",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "Apri...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "1,000+ people"
+      "label": "Cyber command personnel",
+    {
+    },
+      "value": "250,000 total"
+      "label": "Active personnel",
+    {
+    },
+      "value": "May 5, 1979"
+      "label": "IRGC founded",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11498 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 354 chars
+      Title: **EU** Designates Iran's **IRGC** as Terrorist Group...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (93 chars)
+   ✅ Gemini context search completed (93 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **EU** Designates Iran's **IRGC** as Terrorist Group...
+   Synthesizing article from 5 sources...
+      ✅ All 5 sources validated - same event
+   🔍 VALIDATING 5 sources for cluster: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: deep red)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_175939_20260129_175939.png
+   ✅ Image generated successfully (1378323 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: deep red
+   🎨 Generating image for: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+   📦 Supabase storage initialized
+      Topic: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 5 images rejected by AI quality check
+   ❌ Unsuitable (95% confidence): The image contains a channel logo (France 24), indicating it's a screenshot from a TV news broadcast.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/a0f55096-fd33-11f0-b359-005056bf30b7/w:1024...
+   ❌ Unsuitable (100% confidence): The image contains a channel logo, specifically the 'France 24' logo, indicating it's a screenshot from a TV broadcast.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/a0f55096-fd33-11f0-b359-005056bf30b7/w:1024...
+      📋 Top 3 rejected by AI, checking remaining...
+         ❌ AI REJECTED (100%): The image contains a TV broadcast logo (France 24) in the lower right corner.
+   ❌ Unsuitable (100% confidence): The image contains a TV broadcast logo (France 24) in the lower right corner.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/a0f55096-fd33-11f0-b359-005056bf30b7/w:1024...
+      [3/3] Checking: France 24 Europe
+         ❌ AI REJECTED (95%): The image contains a TV broadcast graphic (France 24 logo), making it unsuitable for a professional news website.
+   ❌ Unsuitable (95% confidence): The image contains a TV broadcast graphic (France 24 logo), making it unsuitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/a0f55096-fd33-11f0-b359-005056bf30b7/w:1024...
+      [2/3] Checking: France 24 Europe
+         ❌ AI REJECTED (100%): The image contains the France 24 logo, indicating it is a screenshot from a TV broadcast.
+   ❌ Unsuitable (100% confidence): The image contains the France 24 logo, indicating it is a screenshot from a TV broadcast.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/a0f55096-fd33-11f0-b359-005056bf30b7/w:1024...
+      [1/3] Checking: France 24 Europe
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 5
+      Total candidates: 5
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://s.france24.com/media/display/a0f55096-fd33...
+   🔍 DEBUG Source 1: image_url = https://s.france24.com/media/display/a0f55096-fd33...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 5 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 5/5
+Fetched 5/5 articles
+✅ Jina fallback: https://www.france24.com/en/video/20260129-irgc-te... (25479 chars)
+✅ Jina fallback: https://www.france24.com/en/video/20260129-irgc-te... (25523 chars)
+✅ Jina fallback: https://www.france24.com/en/video/20260129-irgc-te... (25523 chars)
+✅ Jina fallback: https://www.france24.com/en/video/20260129-irgc-te... (25013 chars)
+✅ Jina fallback: https://www.france24.com/en/mimicking-us-policy-eu... (24981 chars)
+   🔄 Trying Jina fallback for 5 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 5 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 5
+================================================================================
+📰 PROCESSING CLUSTER 24595
+================================================================================
+   ❌ Error processing cluster 24525: {'message': 'index row requires 1420856 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['european union', 'iran', 'iranian revolutionary guard corps', 'terrorism', 'sanctions', 'diplomacy', 'politics']
+   🏷️ Generated 7 interest tags: ['european union', 'iran', 'iranian revolutionary guard corps']...
+   🏷️ Generating interest tags...
+   📊 Article score: 905/1000
+   📊 Using 5 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles regarding the EU's designation of the Iran Guards as a terrorist organization.
+      Verification result: ✅ PASSED
+      Generated title: **EU** Designates **Iran Guards** as Terrorist Org...
+      Source 2: France 24 Middle East - content: 15000 chars
+      Source 1: France 24 Middle East - content: 15000 chars
+      Sources provided: 2
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "Naval ...
+    {
+    },
+      "value": "250,000 members"
+      "label": "Troop size",
+    {
+    },
+      "value": "May 5, 1979"
+      "label": "Guards active since",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "January 202...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "1500+ vessels"
+      "label": "Naval vessels",
+    {
+    },
+      "value": "250,000 members"
+      "label": "Troop size",
+    {
+    },
+      "value": "May 5, 1979"
+      "label": "Guards active since",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11490 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 328 chars
+      Title: **EU** Designates **Iran Guards** as Terrorist Organization...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (104 chars)
+   ✅ Gemini context search completed (104 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **EU** Designates **Iran Guards** as Terrorist Organization...
+   Synthesizing article from 2 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: olive green)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_175845_20260129_175845.png
+   ✅ Image generated successfully (1065614 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: olive green
+   🎨 Generating image for: Replay: Iran Guard Joins Eu "Terrorist List"...
+   📦 Supabase storage initialized
+      Topic: Replay: Iran Guard Joins Eu "Terrorist List"...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 2 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image contains TV broadcast graphics in the form of a chyron.
+   ❌ Unsuitable (100% confidence): The image contains TV broadcast graphics in the form of a chyron.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/3ce855d4-fd39-11f0-bf9b-005056bfb2b6/w:1024...
+      [2/2] Checking: France 24 Middle East
+         ❌ AI REJECTED (100%): The image includes a TV broadcast graphic and the France 24 logo, indicating it is a screenshot from a TV news program.
+   ❌ Unsuitable (100% confidence): The image includes a TV broadcast graphic and the France 24 logo, indicating it is a screenshot from a TV news program.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/ed6d5928-fd2e-11f0-9588-005056bfb2b6/w:1024...
+      [1/2] Checking: France 24 Middle East
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 2
+      Total candidates: 2
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://s.france24.com/media/display/ed6d5928-fd2e...
+   🔍 DEBUG Source 1: image_url = https://s.france24.com/media/display/3ce855d4-fd39...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 2 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 2/2
+Fetched 2/2 articles
+✅ Jina fallback: https://www.france24.com/en/video/20260129-the-eur... (24441 chars)
+✅ Jina fallback: https://www.france24.com/en/replay-iran-guard-join... (22307 chars)
+   🔄 Trying Jina fallback for 2 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 24525
+================================================================================
+      Skipping cluster 24660
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24660
+================================================================================
+      Skipping cluster 24659
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24659
+================================================================================
+      Skipping cluster 24658
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/2
+Fetched 0/2 articles
+   🔄 Trying Jina fallback for 2 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.dailymail.co.uk', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 24658
+================================================================================
+============================================================
+  Articles tagged: 1
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Matched existing event: Ukraine Shadow Fleet
+  ✅ Updated latest development for Ukraine Shadow Fleet
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "11572"', 'code': '22P02', 'hint': None, 'details': None}
+[1/1] Processing: **Trump** Claims He Asked **Putin** Not to Attack ...
+Found 49 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11572
+   🏷️ Tags: ['donald trump', 'vladimir putin', 'ukraine', 'russia', 'kyiv', 'russia-ukraine conflict', 'politics', 'international relations']
+   🏷️ Generated 8 interest tags: ['donald trump', 'vladimir putin', 'ukraine']...
+   🏷️ Generating interest tags...
+   📊 Article score: 870/1000
+   📊 Using 6 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Trump** Claims He Asked **Putin** Not to Attack ...
+      Source 1: PBS NewsHour Headlines - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "labe...
+    {
+    },
+      "value": "18% by Russia"
+      "label": "Ukraine land controlled",
+    {
+    },
+      "value": "40,000 Russian"
+      "label": "Troops near Kyiv",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "dat...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "February 24, 2022"
+      "label": "Invasion start",
+    {
+    },
+      "value": "18% by Russia"
+      "label": "Ukraine land controlled",
+    {
+    },
+      "value": "40,000 Russian"
+      "label": "Troops near Kyiv",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11475 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 318 chars
+      Title: **Trump** Claims He Asked **Putin** Not to Attack Kyiv...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (104 chars)
+   ✅ Gemini context search completed (104 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Trump** Claims He Asked **Putin** Not to Attack Kyiv...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: PBS NewsHour Headlines (score: 85.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image shows a clear photograph of a politician, Donald Trump, potentially speaking at an event, making it suitable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x683 pixels, mode: RGB
+   📥 Downloading image: https://d3i6fh83elv35t.cloudfront.net/static/2026/01/2026-01-29T173641Z_11924554...
+      [1/1] Checking: PBS NewsHour Headlines
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://d3i6fh83elv35t.cloudfront.net/static/2026/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.pbs.org/newshour/world/watch-trump-say... (43585 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24657
+================================================================================
+   🎯 Clusters ready for processing: 13 (NEW this cycle)
+   🔗 Matched existing: 12
+   📊 New clusters: 10
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1010
+⏭️ Already clustered: 0
+✨ New clusters created: 10
+✅ Matched to existing: 12 (embedding: 12, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+         Cluster: FBI's Fulton County warrant sought election record...
+      ✅ EMBEDDING MATCH: Cluster #24665 (similarity: 1.00)
+   [22/22] FBI's Fulton County warrant sought election records, voter r...
+      ✨ Created cluster #24666
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [21/22] Officer clings to life after homicide suspect allegedly unlo...
+      ✨ Created cluster #24665
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [20/22] FBI's Fulton County warrant sought election records, voter r...
+      ✨ Created cluster #24664
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [19/22] Ranked: The 10 Most Traded Currencies with the U.S. Dollar...
+      ✨ Created cluster #24663
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [18/22] Still conscious? Brain marker signals when anaesthesia takes...
+      ✨ Created cluster #24662
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [17/22] Genetically engineered ‘stinkweed’ comes up roses for making...
+      ✨ Created cluster #24661
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: No keyword matches found
+   [16/22] Author Correction: Hunter-gatherer sea voyages extended to r...
+         Cluster: Putin ‘agrees to partial ceasefire’ after request ...
+      ✅ EMBEDDING MATCH: Cluster #24658 (similarity: 0.84)
+   [15/22] Putin agrees one-week ceasefire in Ukraine, Trump says after...
+         Cluster: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+      ✅ EMBEDDING MATCH: Cluster #24595 (similarity: 0.98)
+   [14/22] IRGC terrorist designation: Mirroring US policy, EU crosses ...
+         Cluster: France’S Capgemini Says Us Ice Migrant Tracking...
+      ✅ EMBEDDING MATCH: Cluster #24372 (similarity: 0.93)
+   [13/22] French IT group Capgemini under fire over ICE migrant tracki...
+         Cluster: Saudi And Israeli Officials Visit Washington To...
+      ✅ EMBEDDING MATCH: Cluster #24148 (similarity: 0.93)
+   [12/22] Israeli, Saudi officials visit Washington to discuss possibl...
+         Cluster: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+      ✅ EMBEDDING MATCH: Cluster #24595 (similarity: 0.98)
+   [11/22] IRGC terrorist designation: Mirroring US policy, EU crosses ...
+         Cluster: France’S Capgemini Says Us Ice Migrant Tracking...
+      ✅ EMBEDDING MATCH: Cluster #24372 (similarity: 0.93)
+   [10/22] French IT group Capgemini under fire over ICE migrant tracki...
+         Cluster: Replay: Iran Guard Joins Eu "Terrorist List"...
+      ✅ EMBEDDING MATCH: Cluster #24525 (similarity: 0.83)
+   [9/22] The European Union designates Iran Guards as 'terrorist orga...
+         Cluster: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+      ✅ EMBEDDING MATCH: Cluster #24595 (similarity: 0.98)
+   [8/22] IRGC terrorist designation: Mirroring US policy, EU crosses ...
+         Cluster: Mimicking Us Policy, Eu Crosses Islamic Regime'S...
+      ✅ EMBEDDING MATCH: Cluster #24595 (similarity: 0.98)
+   [7/22] IRGC terrorist designation: Mirroring US policy, EU crosses ...
+         Cluster: Replay: Iran Guard Joins Eu "Terrorist List"...
+      ✅ EMBEDDING MATCH: Cluster #24525 (similarity: 0.83)
+   [6/22] The European Union designates Iran Guards as 'terrorist orga...
+      ✨ Created cluster #24660
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [5/22] Cop gets max prison sentence for shooting dead woman who cal...
+      ✨ Created cluster #24659
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [4/22] Petrol prices drop to lowest level in almost five years...
+      ✨ Created cluster #24658
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [3/22] Putin ‘agrees to partial ceasefire’ after request from Trump...
+         Cluster: WATCH: Trump says he personally asked Putin not to...
+      ✅ EMBEDDING MATCH: Cluster #24657 (similarity: 1.00)
+   [2/22] WATCH: Trump says he personally asked Putin not to attack Ky...
+      ✨ Created cluster #24657
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [1/22] WATCH: Trump says he personally asked Putin not to attack Ky...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 22 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 22
+   ⏭️ Already clustered: 0
+   ✅ Saved: 22
+📝 Step 1: Saving articles to database...
+Articles to cluster: 22
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 22 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 21 filtered articles to Supabase
+✅ Step 1 Complete: 22 approved, 21 filtered
+  Processing batch 2/2 (13 articles)...
+  Processing batch 1/2 (30 articles)...
+📦 Processing 43 articles in batches of 30...
+   ✅ Filtering 43 total articles
+   📷 15 articles without images (Bright Data will fetch later)
+Scoring 43 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 43 NEW articles (after deduplication)
+✅ ZDNet: 2 new
+✅ WWD (Luxury Fashion): 1 new
+✅ Visual Capitalist: 1 new
+✅ The Straits Times: 1 new
+✅ The Independent: 4 new
+✅ The Guardian UK Sport: 1 new
+✅ Seeking Alpha: 7 new
+✅ PBS NewsHour Politics: 1 new
+✅ PBS NewsHour Headlines: 1 new
+✅ Newsweek: 1 new
+✅ Nature: 3 new
+✅ Mashable Tech: 2 new
+✅ Inc. Magazine: 1 new
+✅ France 24 Middle East: 2 new
+✅ France 24 Europe: 1 new
+✅ France 24 Americas: 2 new
+✅ France 24: 3 new
+✅ Fox News Sports: 1 new
+✅ Fox News Politics: 1 new
+✅ Fox News Latest: 3 new
+✅ Daily Mail Home: 4 new
+   ✅ After database check: 43 NEW articles
+   ⏰ After time filter (1440min): 1058 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2053 articles
+📊 Fetched 2053 articles from 207 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-29 17:52:35
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-29T17:52:27.889536
+🚀 TEN NEWS - Cloud Run Execution
+============================================================

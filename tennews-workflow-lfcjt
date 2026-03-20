@@ -1,0 +1,333 @@
+============================================================
+🚀 TEN NEWS - Cloud Run Execution
+⏰ Started at: 2026-02-08T15:31:53.709860
+============================================================
+/app/step1_5_event_clustering.py:26: FutureWarning: 
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  import google.generativeai as genai
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✓ Initialized Gemini component selector
+  Model: gemini-2.0-flash
+  Components per article: 1-3
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+Started: 2026-02-08 15:31:59
+================================================================================
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+Fetching from 257 premium sources...
+📊 Fetched 2013 articles from 205 sources
+🔍 Deduplication: Starting with 2013 articles
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+   ⏰ After time filter (1440min): 747 articles
+   ✅ After database check: 29 NEW articles
+✅ Al Jazeera English: 1 new
+✅ Business Insider: 1 new
+✅ CBS News Main: 3 new
+✅ Daily Mail Home: 7 new
+✅ Fox News Latest: 3 new
+✅ Fox News Sports: 3 new
+✅ France 24: 1 new
+✅ Newsweek: 2 new
+✅ Seeking Alpha: 2 new
+✅ The Guardian UK: 4 new
+✅ The Independent: 1 new
+✅ The Verge: 1 new
+✅ Step 0 Complete: 29 NEW articles (after deduplication)
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+Scoring 29 articles...
+   📷 8 articles without images (Bright Data will fetch later)
+   ✅ Filtering 29 total articles
+✅ Step 1 Complete: 6 approved, 23 filtered
+   📊 Saved 23 filtered articles to Supabase
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+Clustering 6 articles...
+============================================================
+STEP 1.5: EVENT CLUSTERING (PARALLEL MODE)
+============================================================
+Total articles to cluster: 6
+⚡ Using 3 parallel workers, batch size 8
+📊 Found 1000 active clusters
+📦 Pre-caching cluster sources (batch mode)...
+✅ Cached 98 clusters with sources (1 query)
+📝 Phase 1: Saving articles to database...
+✅ Saved 6/6 articles
+🧠 Phase 2: Generating embeddings (Gemini gemini-embedding-001)...
+   📰 Embedding 6 article titles...
+   ✓ Embedded 6/6 articles
+   📁 Loading cached cluster embeddings...
+   ⚠️ Found 444 stale embeddings (wrong dimension) - regenerating
+   📁 Generating 444 new embeddings (556 cached)...
+✅ Embeddings ready (556 cached, 444 generated)
+================================================================================
+📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (EMBEDDING-BASED)
+================================================================================
+   Similarity threshold: 0.82
+   🔍 VALIDATING CLUSTER MATCH [1/6] (similarity: 0.830)
+      📰 Article: PM Sanae Takaichi’s party set for majority in Japan parliamentary elections
+      📁 Checking cluster: Japan’S Sanae Takaichi Is Proving A Surprisingly
+      ✅ VALIDATED & ADDED to cluster: 24062
+      📊 Keyword pre-filter: 2 matches (2 strong) - AI will decide
+      📎 Matched by database ID: 26067
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #26067
+         Cluster: What To Expect From Latest Epstein Files
+         Reason: SAME STORY - MORE INFO ON EPSTEIN FILES
+   🔍 VALIDATING CLUSTER MATCH [2/6]
+      📰 Article: Latest Epstein files reveal disgraced financier's Silicon Valley connections
+      📁 Checking cluster: What To Expect From Latest Epstein Files
+      ✅ VALIDATED & ADDED to cluster: 26067
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30901
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30901
+         Cluster: This Usb-C Accessory Gave My Iphone And
+         Reason: SAME STORY - NEW IPHONE MODEL
+   🔍 VALIDATING CLUSTER MATCH [3/6]
+      📰 Article: The iPhone 17e could launch soon with MagSafe and an A19 chip
+      📁 Checking cluster: This Usb-C Accessory Gave My Iphone And
+      ✅ VALIDATED & ADDED to cluster: 30901
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)
+         Reason: COMPLETELY DIFFERENT - DOMESTIC INCIDENT AND POLICE CHASE
+   🆕 NO MATCHING CLUSTER [4/6]
+      📰 Article: Falcons rookie faces multiple charges after leading officers on chase following domestic incident, police say
+      ✨ NEW CLUSTER (NO MATCH FOUND): 31009
+         📁 Cluster name: Falcons Rookie Faces Multiple Charges After Leading
+      📊 Keyword pre-filter: 1 matches (1 strong) - AI will decide
+      📎 Matched by database ID: 30256
+      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #30256
+         Cluster: Dhs Issues Warning About Trend Of Domestic
+         Reason: SAME STORY - DOMESTIC SECURITY AND FRAUD CONCERNS
+   🔍 VALIDATING CLUSTER MATCH [5/6]
+      📰 Article: Minnesota DHS whistleblower details 'smear campaign' after reporting fraud concerns to state
+      📁 Checking cluster: Dhs Issues Warning About Trend Of Domestic
+      ✅ VALIDATED & ADDED to cluster: 30256
+   🔍 VALIDATING CLUSTER MATCH [6/6] (similarity: 1.000)
+      📰 Article: Falcons rookie faces multiple charges after leading officers on chase following domestic incident, police say
+      📁 Checking cluster: Falcons Rookie Faces Multiple Charges After Leading
+      ✅ VALIDATED & ADDED to cluster: 31009
+============================================================
+CLUSTERING COMPLETE (EMBEDDING-BASED v2.0)
+============================================================
+✓ Articles saved: 6/6
+✓ Matched to existing clusters: 5
+✓ New clusters created: 1
+✓ Total active clusters: 1001
+✓ Embedding threshold: 0.82
+✅ Step 1.5 Complete:
+   📊 New clusters: 1
+   🔗 Matched existing: 5
+   🎯 Clusters ready for processing: 1 (NEW this cycle)
+================================================================================
+📰 PROCESSING CLUSTER 31009
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.foxnews.com/sports/falcons-rookie-face... (2231 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION
+   Selecting best image from 1 sources...
+   🔍 DEBUG Source 1: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+🔍 STEP 3.1: AI IMAGE QUALITY CHECK
+   Checking 1 top candidates with Gemini...
+      🔍 Quality check 1/1: Fox News Latest
+      Image loaded: 931x523 pixels
+      ❌ Image rejected (100% confidence): The image shows a football player being interviewed by a rep
+         Issues: news broadcaster
+      ❌ No suitable image found after checking 1 candidates
+   ⚠️  No images passed AI quality check
+   ↩️  Using rule-based best: Fox News Latest (score: 50.0)
+   ✅ Final selection: Fox News Latest (score: 50.0)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Falcons Rookie** Faces **4 Charges** After Police Chase...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (93 chars)
+   ✅ Step 5 Complete: Search context fetched (93 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Falcons Rookie** Faces **4 Charges** After Police Chase...
+      Content length sent: 292 chars
+      Gemini returned: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "🔪",
+  "graph_type": null,
+  "map_locations": [
+    "Miami, Florida"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "🔪",
+  "graph_type": null,
+  "map_locations": [
+    "Miami, Florida"
+  ]
+}
+      Validated components: ['details', 'map']
+   ✅ Step 6 Complete: Selected [details, map]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details, map
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details', 'map']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11615 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Bond amount",
+      "value": "$16,500"
+    },
+    {
+      "label": "Vehicle speed",
+      "value": "100 mph"
+    },
+    {
+      "label": "Age of girlfriend",
+      "value": "21 years"
+    }
+  ],
+  "map": [
+    {
+      "name": "Miami-Dade County Jail",
+      "ty...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Bond amount",
+      "value": "$16,500"
+    },
+    {
+      "label": "Vehicle speed",
+      "value": "100 mph"
+    },
+    {
+      "label": "Age of girlfriend",
+   ...
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fox News Latest - content: 2231 chars
+      Generated title: **Falcons Rookie** Faces **4 Charges** After Polic...
+      Verification result: ❌ FAILED
+      Discrepancies found: 2
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Summary: The AI article contains a factual error regarding the number of charges James Pearce Jr. is facing.
+      Discrepancies: 2
+         1. Incorrect number of charges....
+         2. Incorrect number of charges....
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+      Re-synthesizing with verification feedback...
+      ✅ New article: **Falcons Rookie** Arrested After Police Chase in ...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fox News Latest - content: 2231 chars
+      Generated title: **Falcons Rookie** Arrested After Police Chase in ...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately summarizes the source article about James Pearce Jr.'s arrest.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 6 reference articles for calibration
+   📊 Article score: 750/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['james pearce jr', 'atlanta falcons', 'miami']...
+   🏷️ Tags: ['james pearce jr', 'atlanta falcons', 'miami', 'nfl', 'arrest', 'aggravated battery', 'domestic dispute', 'sports']
+   ✅ Published article ID: 16112
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 70 existing world events
+[1/1] Processing: **Falcons Rookie** Arrested After Police Chase in ...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+  ✅ No stale events to archive (all updated within 7 days)
+  🖼️ IMAGE BACKFILL: 1 events need images (processing up to 3)
+    [1/1] Nazi Content Debate
+      🎨 Generating hero (21:9)...
+    ❌ No image in Gemini response (21:9)
+      🎨 Generating cover (4:5)...
+    ❌ No image in Gemini response (4:5)
+  ✅ Backfill complete: 0/1 events updated
+🧩 COMPONENT REFRESH: 30 events need refresh (processing 3)
+  🔄 Refreshing: Thwaites Ice Melt (missing)
+  🧩 Generating components for: Thwaites Ice Melt
+    Component relevance: This event will have What to Watch, Geographic Impact, and Historical Comparison components enabled because the glacier melt has future implications, will affect multiple regions globally, and has historical parallels.
+    Generating what to watch...
+    📅 Generated 5 What to Watch items
+    ✅ Added 5 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 7 countries
+    Generating historical comparison...
+    ✅ Added 1 historical comparisons
+  ✅ Generated 3 components for Thwaites Ice Melt
+  ✅ Refreshed components for Thwaites Ice Melt
+  🔄 Refreshing: Ethiopia-Eritrea Conflict (missing)
+  🧩 Generating components for: Ethiopia-Eritrea Conflict
+    Component relevance: This Ethiopia-Eritrea conflict will have perspectives, what-to-watch, geographic impact, and historical comparison components because it involves multiple sides, has potential future developments, affects specific regions, and has historical precedents.
+    Generating perspectives...
+    ✅ Added 3 perspectives
+    Generating what to watch...
+    📅 Generated 5 What to Watch items
+    ✅ Added 5 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 6 countries
+    Generating historical comparison...
+    ✅ Added 2 historical comparisons
+  ✅ Generated 4 components for Ethiopia-Eritrea Conflict
+  ✅ Refreshed components for Ethiopia-Eritrea Conflict
+  🔄 Refreshing: Carbon Removal Market (missing)
+  🧩 Generating components for: Carbon Removal Market
+    Component relevance: This event will have Perspectives, What to Watch, Geographic Impact, and Historical Comparison components because it's a multi-faceted issue with diverse stakeholders, ongoing developments, global implications, and relevant historical precedents.
+    Generating perspectives...
+    ✅ Added 4 perspectives
+    Generating what to watch...
+    📅 Generated 5 What to Watch items
+    ✅ Added 5 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 7 countries
+    Generating historical comparison...
+    ✅ Added 1 historical comparisons
+  ✅ Generated 4 components for Carbon Removal Market
+  ✅ Refreshed components for Carbon Removal Market
+  ✅ Refreshed 3/3 events
+     (27 remaining, will process in next run)
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   Articles fetched: 29
+   Approved (Step 1): 6
+   Clusters processed: 1
+   Articles published: 1
+================================================================================
+✅ Workflow completed in 410.4 seconds
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+Container called exit(0).
+
+

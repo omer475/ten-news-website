@@ -1,52 +1,105 @@
 import SwiftUI
 
-/// Vertical pager using ScrollView with paging behavior.
-/// Uses native scroll so system features (tab bar minimize) work automatically.
+/// Custom vertical pager using DragGesture for TikTok-style swiping.
+/// Implements snap-to-page with smooth spring animation.
 struct VerticalPager<Item: Identifiable, Content: View>: View {
     @Binding var currentIndex: Int
     let pages: [Item]
+    var onRefresh: (() async -> Void)?
     @ViewBuilder let content: (Item) -> Content
 
-    @State private var scrolledID: Item.ID?
-    @State private var lastHapticIndex: Int = 0
+    @State private var dragOffset: CGFloat = 0
+    @State private var isRefreshing = false
+    @State private var didCrossRefreshThreshold = false
 
     var body: some View {
         GeometryReader { geo in
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    ForEach(pages) { page in
-                        content(page)
-                            .frame(width: geo.size.width, height: geo.size.height)
+            let height = geo.size.height
+
+            ZStack {
+                ForEach(Array(visibleRange.enumerated()), id: \.element) { _, index in
+                    if index >= 0 && index < pages.count {
+                        content(pages[index])
+                            .frame(width: geo.size.width, height: height)
+                            .offset(y: CGFloat(index - currentIndex) * height + dragOffset)
                     }
                 }
-                .scrollTargetLayout()
-            }
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $scrolledID)
-            .onChange(of: scrolledID) { _, newID in
-                guard let newID,
-                      let index = pages.firstIndex(where: { $0.id == newID }) else { return }
-                if index != lastHapticIndex {
-                    HapticManager.light()
-                    lastHapticIndex = index
-                }
-                currentIndex = index
-            }
-            .onChange(of: currentIndex) { _, newIndex in
-                if newIndex < pages.count {
-                    let targetID = pages[newIndex].id
-                    if scrolledID != targetID {
-                        scrolledID = targetID
+
+                // Pull-to-refresh indicator
+                if currentIndex == 0 && dragOffset > 40 && onRefresh != nil {
+                    VStack {
+                        if isRefreshing {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: "arrow.down")
+                                .font(.title3.weight(.semibold))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .rotationEffect(.degrees(dragOffset > 80 ? 180 : 0))
+                                .animation(.easeInOut(duration: 0.2), value: dragOffset > 80)
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .offset(y: -height / 2 + dragOffset / 2)
                 }
             }
-            .onAppear {
-                if currentIndex < pages.count {
-                    scrolledID = pages[currentIndex].id
-                    lastHapticIndex = currentIndex
-                }
-            }
+            .gesture(
+                DragGesture(minimumDistance: 20)
+                    .onChanged { value in
+                        let translation = value.translation.height
+                        if (currentIndex == 0 && translation > 0) ||
+                           (currentIndex == pages.count - 1 && translation < 0) {
+                            // Rubber-band at boundaries (allows pull-to-refresh feel)
+                            dragOffset = translation * 0.3
+                            // Haptic when crossing pull-to-refresh threshold
+                            if currentIndex == 0 && translation > 80 && !didCrossRefreshThreshold && onRefresh != nil {
+                                didCrossRefreshThreshold = true
+                                HapticManager.light()
+                            } else if currentIndex == 0 && translation <= 80 {
+                                didCrossRefreshThreshold = false
+                            }
+                        } else {
+                            dragOffset = translation
+                        }
+                    }
+                    .onEnded { value in
+                        let threshold = height * 0.2
+                        let predicted = value.predictedEndTranslation.height
+
+                        // Pull-to-refresh: at top, pulled down past threshold
+                        if currentIndex == 0 && value.translation.height > 80 && onRefresh != nil {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                dragOffset = 0
+                            }
+                            didCrossRefreshThreshold = false
+                            isRefreshing = true
+                            Task {
+                                await onRefresh?()
+                                isRefreshing = false
+                            }
+                            return
+                        }
+
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            if predicted < -threshold && currentIndex < pages.count - 1 {
+                                currentIndex += 1
+                                HapticManager.light()
+                            } else if predicted > threshold && currentIndex > 0 {
+                                currentIndex -= 1
+                                HapticManager.light()
+                            }
+                            dragOffset = 0
+                        }
+                    }
+            )
         }
+    }
+
+    /// Only render nearby items for performance (current +/- 1)
+    private var visibleRange: Range<Int> {
+        let start = max(0, currentIndex - 1)
+        let end = min(pages.count, currentIndex + 2)
+        return start..<end
     }
 }
 

@@ -1,0 +1,1722 @@
+# TodayPlus Personalization System - Complete Implementation Guide for Cursor
+
+## Overview
+
+This document contains EVERYTHING needed to implement the TodayPlus personalization system. It includes the full article pipeline, database schema, API endpoints, complete AI prompts (not shortened), and frontend components.
+
+---
+
+# PART 1: SYSTEM ARCHITECTURE
+
+## How The System Works
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           ARTICLE PIPELINE                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. RSS FEEDS (news sources)                                                │
+│         ↓                                                                    │
+│  2. APPROVAL PROMPT (AI decides: APPROVED or ELIMINATED)                    │
+│         ↓                                                                    │
+│  3. SCORING PROMPT (AI assigns base_score 700-950)                          │
+│         ↓                                                                    │
+│  4. TAGGING PROMPT (AI assigns countries + topics)                          │
+│         ↓                                                                    │
+│  5. DATABASE (store article with score + tags)                              │
+│         ↓                                                                    │
+│  6. PERSONALIZATION ENGINE (calculate final_score per user)                 │
+│         ↓                                                                    │
+│  7. USER FEEDS ("Today" feed + "For You" feed)                              │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Two Feeds Explained
+
+| Feed | Description | Sorting | Content |
+|------|-------------|---------|---------|
+| **"Today"** | Global top stories that everyone should know | `base_score` only (no personalization) | Top 10-15 articles with base_score ≥ 880, same for all users |
+| **"For You"** | Personalized feed based on user's interests | `final_score` (base_score + boosts) | Unlimited articles, different for each user based on their preferences |
+
+**Why Two Feeds?**
+- "Today" ensures users don't miss globally important news (wars, major events, etc.)
+- "For You" makes users feel the app understands their interests
+- Users can switch between them based on what they want
+
+---
+
+# PART 2: DATABASE SCHEMA
+
+## Table 1: `articles`
+
+Stores all approved articles with their scores and tags.
+
+```sql
+CREATE TABLE articles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  url TEXT NOT NULL UNIQUE,
+  source TEXT NOT NULL,
+  category TEXT NOT NULL,
+  base_score INTEGER NOT NULL CHECK (base_score >= 700 AND base_score <= 950),
+  countries TEXT[] DEFAULT '{}',
+  topics TEXT[] DEFAULT '{}',
+  image_url TEXT,
+  description TEXT,
+  published_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for fast queries
+CREATE INDEX idx_articles_base_score ON articles(base_score DESC);
+CREATE INDEX idx_articles_countries ON articles USING GIN(countries);
+CREATE INDEX idx_articles_topics ON articles USING GIN(topics);
+CREATE INDEX idx_articles_created_at ON articles(created_at DESC);
+CREATE INDEX idx_articles_category ON articles(category);
+```
+
+**Column Explanations:**
+- `base_score`: Global importance score (700-950) assigned by AI
+- `countries`: Array of country codes this article is about (e.g., `["usa", "china"]`)
+- `topics`: Array of topic codes this article covers (e.g., `["economics", "geopolitics"]`)
+- `category`: Display category (World, Politics, Business, Tech, Sports, etc.)
+
+## Table 2: `users`
+
+Stores user preferences for personalization.
+
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE,
+  home_country TEXT NOT NULL,
+  followed_countries TEXT[] DEFAULT '{}',
+  followed_topics TEXT[] NOT NULL,
+  onboarding_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Validation constraints
+  CONSTRAINT valid_home_country CHECK (home_country = ANY(ARRAY[
+    'usa', 'uk', 'china', 'russia', 'germany', 'france', 'italy', 'spain', 
+    'ukraine', 'turkiye', 'japan', 'south_korea', 'india', 'taiwan', 
+    'israel', 'saudi_arabia', 'iran', 'uae', 'canada', 'brazil', 'mexico', 'australia'
+  ])),
+  CONSTRAINT min_topics CHECK (array_length(followed_topics, 1) >= 3),
+  CONSTRAINT max_topics CHECK (array_length(followed_topics, 1) <= 10),
+  CONSTRAINT max_followed_countries CHECK (array_length(followed_countries, 1) <= 5)
+);
+
+CREATE INDEX idx_users_home_country ON users(home_country);
+```
+
+**Column Explanations:**
+- `home_country`: User's primary country (gets highest boost, +150)
+- `followed_countries`: Additional countries user wants to follow (max 5, gets +75/+100 boost)
+- `followed_topics`: Topics user is interested in (min 3, max 10, gets +50/+80/+100 boost)
+- `onboarding_completed`: Whether user has completed the initial setup
+
+## Table 3: `reading_history` (For Future Use)
+
+Track what users read for implicit personalization later.
+
+```sql
+CREATE TABLE reading_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  read_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  time_spent_seconds INTEGER,
+  
+  UNIQUE(user_id, article_id)
+);
+
+CREATE INDEX idx_reading_history_user ON reading_history(user_id);
+CREATE INDEX idx_reading_history_article ON reading_history(article_id);
+```
+
+---
+
+# PART 3: CONSTANTS & CONFIGURATION
+
+## Countries List (22 Total)
+
+```typescript
+export const COUNTRIES = [
+  // Major Powers
+  { code: 'usa', name: 'United States', flag: '🇺🇸', region: 'major' },
+  { code: 'uk', name: 'United Kingdom', flag: '🇬🇧', region: 'major' },
+  { code: 'china', name: 'China', flag: '🇨🇳', region: 'major' },
+  { code: 'russia', name: 'Russia', flag: '🇷🇺', region: 'major' },
+  
+  // Europe
+  { code: 'germany', name: 'Germany', flag: '🇩🇪', region: 'europe' },
+  { code: 'france', name: 'France', flag: '🇫🇷', region: 'europe' },
+  { code: 'italy', name: 'Italy', flag: '🇮🇹', region: 'europe' },
+  { code: 'spain', name: 'Spain', flag: '🇪🇸', region: 'europe' },
+  { code: 'ukraine', name: 'Ukraine', flag: '🇺🇦', region: 'europe' },
+  { code: 'turkiye', name: 'Türkiye', flag: '🇹🇷', region: 'europe' },
+  
+  // Asia
+  { code: 'japan', name: 'Japan', flag: '🇯🇵', region: 'asia' },
+  { code: 'south_korea', name: 'South Korea', flag: '🇰🇷', region: 'asia' },
+  { code: 'india', name: 'India', flag: '🇮🇳', region: 'asia' },
+  { code: 'taiwan', name: 'Taiwan', flag: '🇹🇼', region: 'asia' },
+  
+  // Middle East
+  { code: 'israel', name: 'Israel', flag: '🇮🇱', region: 'middle_east' },
+  { code: 'saudi_arabia', name: 'Saudi Arabia', flag: '🇸🇦', region: 'middle_east' },
+  { code: 'iran', name: 'Iran', flag: '🇮🇷', region: 'middle_east' },
+  { code: 'uae', name: 'UAE', flag: '🇦🇪', region: 'middle_east' },
+  
+  // Americas
+  { code: 'canada', name: 'Canada', flag: '🇨🇦', region: 'americas' },
+  { code: 'brazil', name: 'Brazil', flag: '🇧🇷', region: 'americas' },
+  { code: 'mexico', name: 'Mexico', flag: '🇲🇽', region: 'americas' },
+  
+  // Oceania
+  { code: 'australia', name: 'Australia', flag: '🇦🇺', region: 'oceania' },
+] as const;
+
+export type CountryCode = typeof COUNTRIES[number]['code'];
+```
+
+## Topics List (25 Total)
+
+```typescript
+export const TOPICS = [
+  // Business & Finance (4)
+  { code: 'economics', name: 'Economics', icon: '💰', category: 'business' },
+  { code: 'stock_markets', name: 'Stock Markets', icon: '📈', category: 'business' },
+  { code: 'banking', name: 'Banking & Finance', icon: '🏦', category: 'business' },
+  { code: 'startups', name: 'Startups', icon: '🏢', category: 'business' },
+  
+  // Technology (5)
+  { code: 'ai', name: 'Artificial Intelligence', icon: '🤖', category: 'tech' },
+  { code: 'tech_industry', name: 'Tech Industry', icon: '💻', category: 'tech' },
+  { code: 'consumer_tech', name: 'Consumer Tech', icon: '📱', category: 'tech' },
+  { code: 'cybersecurity', name: 'Cybersecurity', icon: '🔐', category: 'tech' },
+  { code: 'space', name: 'Space & Aerospace', icon: '🚀', category: 'tech' },
+  
+  // Science & Health (4)
+  { code: 'science', name: 'Science', icon: '🔬', category: 'science' },
+  { code: 'climate', name: 'Climate & Environment', icon: '🌍', category: 'science' },
+  { code: 'health', name: 'Health & Medicine', icon: '⚕️', category: 'science' },
+  { code: 'biotech', name: 'Biotech', icon: '🧬', category: 'science' },
+  
+  // Politics & World (4)
+  { code: 'politics', name: 'Politics', icon: '🏛️', category: 'politics' },
+  { code: 'geopolitics', name: 'Geopolitics', icon: '🌐', category: 'politics' },
+  { code: 'conflicts', name: 'Conflicts & Wars', icon: '⚔️', category: 'politics' },
+  { code: 'human_rights', name: 'Human Rights', icon: '📜', category: 'politics' },
+  
+  // Sports (8)
+  { code: 'football', name: 'Football (Soccer)', icon: '⚽', category: 'sports' },
+  { code: 'american_football', name: 'American Football', icon: '🏈', category: 'sports' },
+  { code: 'basketball', name: 'Basketball', icon: '🏀', category: 'sports' },
+  { code: 'tennis', name: 'Tennis', icon: '🎾', category: 'sports' },
+  { code: 'f1', name: 'Formula 1', icon: '🏎️', category: 'sports' },
+  { code: 'cricket', name: 'Cricket', icon: '🏏', category: 'sports' },
+  { code: 'combat_sports', name: 'Combat Sports', icon: '🥊', category: 'sports' },
+  { code: 'olympics', name: 'Olympics', icon: '🏅', category: 'sports' },
+  
+  // Lifestyle (4)
+  { code: 'entertainment', name: 'Entertainment', icon: '🎬', category: 'lifestyle' },
+  { code: 'music', name: 'Music', icon: '🎵', category: 'lifestyle' },
+  { code: 'gaming', name: 'Gaming', icon: '🎮', category: 'lifestyle' },
+  { code: 'travel', name: 'Travel', icon: '✈️', category: 'lifestyle' },
+] as const;
+
+export type TopicCode = typeof TOPICS[number]['code'];
+```
+
+## Personalization Configuration
+
+```typescript
+export const PERSONALIZATION_CONFIG = {
+  // Country boosts
+  HOME_COUNTRY_BOOST: 150,           // User's primary country
+  FOLLOWED_COUNTRY_SINGLE_BOOST: 75, // 1 followed country matches
+  FOLLOWED_COUNTRY_MULTIPLE_BOOST: 100, // 2+ followed countries match
+  
+  // Topic boosts
+  TOPIC_SINGLE_BOOST: 50,            // 1 topic matches
+  TOPIC_DOUBLE_BOOST: 80,            // 2 topics match
+  TOPIC_TRIPLE_PLUS_BOOST: 100,      // 3+ topics match
+  
+  // Feed thresholds
+  TODAY_FEED_MIN_SCORE: 880,         // Minimum base_score for "Today" feed
+  TODAY_FEED_MAX_ARTICLES: 15,       // Max articles in "Today" feed
+  
+  // User constraints
+  MIN_TOPICS_REQUIRED: 3,            // User must select at least 3 topics
+  MAX_TOPICS_ALLOWED: 10,            // User can select max 10 topics
+  MAX_FOLLOWED_COUNTRIES: 5,         // User can follow max 5 additional countries
+} as const;
+```
+
+---
+
+# PART 4: PERSONALIZATION ENGINE
+
+## Core Algorithm (TypeScript)
+
+```typescript
+// Types
+interface Article {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  category: string;
+  base_score: number;
+  countries: string[];
+  topics: string[];
+  image_url?: string;
+  published_at: string;
+  created_at: string;
+}
+
+interface User {
+  id: string;
+  home_country: string;
+  followed_countries: string[];
+  followed_topics: string[];
+}
+
+interface ScoredArticle extends Article {
+  final_score: number;
+  match_reasons: string[]; // For debugging/display: why this article was boosted
+}
+
+/**
+ * Calculate personalized score for an article based on user preferences
+ */
+function calculateFinalScore(article: Article, user: User): ScoredArticle {
+  let score = article.base_score;
+  const matchReasons: string[] = [];
+  
+  // 1. HOME COUNTRY BOOST (+150)
+  // The user's home country gets the highest boost
+  if (article.countries.includes(user.home_country)) {
+    score += PERSONALIZATION_CONFIG.HOME_COUNTRY_BOOST;
+    matchReasons.push(`Home country: ${user.home_country}`);
+  }
+  
+  // 2. FOLLOWED COUNTRIES BOOST (+75 for 1, +100 for 2+)
+  // Additional countries the user follows
+  const followedCountryMatches = article.countries.filter(
+    country => user.followed_countries.includes(country)
+  );
+  if (followedCountryMatches.length >= 2) {
+    score += PERSONALIZATION_CONFIG.FOLLOWED_COUNTRY_MULTIPLE_BOOST;
+    matchReasons.push(`Followed countries: ${followedCountryMatches.join(', ')}`);
+  } else if (followedCountryMatches.length === 1) {
+    score += PERSONALIZATION_CONFIG.FOLLOWED_COUNTRY_SINGLE_BOOST;
+    matchReasons.push(`Followed country: ${followedCountryMatches[0]}`);
+  }
+  
+  // 3. TOPIC BOOST (+50 for 1, +80 for 2, +100 for 3+)
+  // Topics the user is interested in
+  const topicMatches = article.topics.filter(
+    topic => user.followed_topics.includes(topic)
+  );
+  if (topicMatches.length >= 3) {
+    score += PERSONALIZATION_CONFIG.TOPIC_TRIPLE_PLUS_BOOST;
+    matchReasons.push(`Topics: ${topicMatches.join(', ')}`);
+  } else if (topicMatches.length === 2) {
+    score += PERSONALIZATION_CONFIG.TOPIC_DOUBLE_BOOST;
+    matchReasons.push(`Topics: ${topicMatches.join(', ')}`);
+  } else if (topicMatches.length === 1) {
+    score += PERSONALIZATION_CONFIG.TOPIC_SINGLE_BOOST;
+    matchReasons.push(`Topic: ${topicMatches[0]}`);
+  }
+  
+  return {
+    ...article,
+    final_score: score,
+    match_reasons: matchReasons,
+  };
+}
+
+/**
+ * Get personalized "For You" feed for a user
+ */
+function getForYouFeed(articles: Article[], user: User, limit?: number): ScoredArticle[] {
+  // Calculate personalized scores for all articles
+  const scoredArticles = articles.map(article => 
+    calculateFinalScore(article, user)
+  );
+  
+  // Sort by final_score descending (highest first)
+  scoredArticles.sort((a, b) => b.final_score - a.final_score);
+  
+  // Apply limit if specified
+  if (limit) {
+    return scoredArticles.slice(0, limit);
+  }
+  
+  return scoredArticles;
+}
+
+/**
+ * Get global "Today" feed (same for all users)
+ */
+function getTodayFeed(articles: Article[]): Article[] {
+  // Filter to only high base_score articles (no personalization)
+  const topArticles = articles.filter(
+    article => article.base_score >= PERSONALIZATION_CONFIG.TODAY_FEED_MIN_SCORE
+  );
+  
+  // Sort by base_score descending
+  topArticles.sort((a, b) => b.base_score - a.base_score);
+  
+  // Return top N articles
+  return topArticles.slice(0, PERSONALIZATION_CONFIG.TODAY_FEED_MAX_ARTICLES);
+}
+```
+
+## Example Calculations
+
+### Example 1: Perfect Match for Turkish User
+
+**Article:** "Türkiye Central Bank Raises Rates to 45%"
+```json
+{
+  "base_score": 830,
+  "countries": ["turkiye"],
+  "topics": ["economics", "banking"]
+}
+```
+
+**User Profile:**
+```json
+{
+  "home_country": "turkiye",
+  "followed_countries": ["usa", "uk"],
+  "followed_topics": ["economics", "ai", "football", "startups"]
+}
+```
+
+**Calculation:**
+```
+base_score:                    830
++ home_country (turkiye):     +150
++ topic match (economics):     +50
+────────────────────────────────
+final_score:                  1030
+```
+
+**Result:** This article appears at the TOP of the user's "For You" feed!
+
+---
+
+### Example 2: No Match
+
+**Article:** "Australian Wildfires Force Evacuations"
+```json
+{
+  "base_score": 860,
+  "countries": ["australia"],
+  "topics": ["climate"]
+}
+```
+
+**Same Turkish User**
+
+**Calculation:**
+```
+base_score:                    860
++ home_country:                 +0  (no match)
++ followed_countries:           +0  (no match)
++ topics:                       +0  (no match)
+────────────────────────────────
+final_score:                   860
+```
+
+**Result:** Article still appears but lower in feed (only based on global importance).
+
+---
+
+### Example 3: Followed Country + Topic Match
+
+**Article:** "OpenAI Releases GPT-5"
+```json
+{
+  "base_score": 890,
+  "countries": ["usa"],
+  "topics": ["ai", "tech_industry"]
+}
+```
+
+**Same Turkish User**
+
+**Calculation:**
+```
+base_score:                    890
++ home_country:                 +0  (turkiye ≠ usa)
++ followed_country (usa):      +75
++ topic match (ai):            +50
+────────────────────────────────
+final_score:                  1015
+```
+
+**Result:** High in feed due to both country and topic match.
+
+---
+
+# PART 5: API ENDPOINTS
+
+## Feed Endpoints
+
+### GET `/api/feed/today`
+
+Returns global top stories (same for all users, no authentication required).
+
+**Response:**
+```json
+{
+  "articles": [
+    {
+      "id": "uuid-123",
+      "title": "Russia Launches Major Offensive in Ukraine",
+      "url": "https://...",
+      "source": "Reuters",
+      "category": "World",
+      "base_score": 940,
+      "countries": ["russia", "ukraine"],
+      "topics": ["conflicts", "geopolitics"],
+      "image_url": "https://...",
+      "published_at": "2026-02-09T12:00:00Z"
+    },
+    {
+      "id": "uuid-456",
+      "title": "Trump Slams Bad Bunny's Super Bowl Halftime Show",
+      "url": "https://...",
+      "source": "Euronews",
+      "category": "Entertainment",
+      "base_score": 915,
+      "countries": ["usa"],
+      "topics": ["entertainment", "politics"],
+      "image_url": "https://...",
+      "published_at": "2026-02-09T10:00:00Z"
+    }
+  ],
+  "count": 15
+}
+```
+
+### GET `/api/feed/for-you`
+
+Returns personalized feed for authenticated user.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+- `limit` (optional): Number of articles to return (default: 50)
+- `cursor` (optional): Pagination cursor
+
+**Response:**
+```json
+{
+  "articles": [
+    {
+      "id": "uuid-789",
+      "title": "Türkiye Central Bank Raises Rates to 45%",
+      "url": "https://...",
+      "source": "Reuters",
+      "category": "Finance",
+      "base_score": 830,
+      "final_score": 1030,
+      "countries": ["turkiye"],
+      "topics": ["economics", "banking"],
+      "image_url": "https://...",
+      "published_at": "2026-02-09T11:00:00Z",
+      "match_reasons": ["Home country: turkiye", "Topic: economics"]
+    }
+  ],
+  "count": 50,
+  "has_more": true,
+  "next_cursor": "eyJzY29yZSI6ODUwLCJpZCI6InV1aWQtMTIzIn0="
+}
+```
+
+## User Endpoints
+
+### POST `/api/user/onboarding`
+
+Complete user onboarding with initial preferences.
+
+**Request:**
+```json
+{
+  "home_country": "turkiye",
+  "followed_countries": ["usa", "uk"],
+  "followed_topics": ["economics", "ai", "football", "startups"]
+}
+```
+
+**Validation:**
+- `home_country`: Required, must be one of 22 valid country codes
+- `followed_countries`: Optional, max 5, must not include home_country
+- `followed_topics`: Required, min 3, max 10
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "uuid-user-123",
+    "home_country": "turkiye",
+    "followed_countries": ["usa", "uk"],
+    "followed_topics": ["economics", "ai", "football", "startups"],
+    "onboarding_completed": true
+  }
+}
+```
+
+### PATCH `/api/user/preferences`
+
+Update user preferences after onboarding.
+
+**Request:** (all fields optional)
+```json
+{
+  "home_country": "germany",
+  "followed_countries": ["usa", "france"],
+  "followed_topics": ["economics", "ai", "football"]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "uuid-user-123",
+    "home_country": "germany",
+    "followed_countries": ["usa", "france"],
+    "followed_topics": ["economics", "ai", "football"],
+    "onboarding_completed": true
+  }
+}
+```
+
+### GET `/api/user/preferences`
+
+Get current user preferences.
+
+**Response:**
+```json
+{
+  "home_country": "turkiye",
+  "followed_countries": ["usa", "uk"],
+  "followed_topics": ["economics", "ai", "football", "startups"]
+}
+```
+
+---
+
+# PART 6: AI PROMPTS (COMPLETE - DO NOT SHORTEN)
+
+## PROMPT 1: ARTICLE APPROVAL (APPROVAL_PROMPT_V4)
+
+This is the COMPLETE prompt for deciding whether to approve or eliminate articles.
+
+```
+# TodayPlus Article Approval System V4
+
+## YOUR ROLE
+
+You are the **Chief Editor of TodayPlus**, a personalized global news platform. 
+
+Your job: Decide **APPROVED** or **ELIMINATED** for each article.
+
+**Important Change:** We now have personalization. Articles don't need to be globally important to be approved - they just need to be **real news** that SOMEONE would care about.
+
+---
+
+## THE NEW PHILOSOPHY
+
+**Old thinking:** "Is this important enough for everyone?"
+**New thinking:** "Is this real news that our users might care about?"
+
+We have users from 22 countries with 25 different interests. An article about Turkish local elections isn't globally important, but it's very important to users who follow Türkiye.
+
+**Approve more. Let personalization do the filtering.**
+
+---
+
+## DECISION FRAMEWORK
+
+### APPROVE if:
+✅ Something actually happened (not opinion, not speculation)
+✅ It's real news (facts, events, announcements, results)
+✅ SOMEONE would care (even if only people from one country or interest)
+
+### ELIMINATE if:
+❌ Nothing actually happened (opinion, analysis, advice)
+❌ It's not news (listicles, guides, reviews, how-tos)
+❌ It's promotional (betting odds, promo codes, "how to watch")
+❌ It's individual stories with no broader significance ("Man, 42, says...")
+❌ It's duplicate/repetitive content
+
+---
+
+## WHAT TO APPROVE NOW (More Flexible)
+
+### ✅ GLOBAL NEWS (Obviously approve)
+- Wars, treaties, disasters
+- Major elections, political changes
+- Big business deals, market crashes
+- Scientific breakthroughs
+
+### ✅ COUNTRY-SPECIFIC NEWS (Now approve these!)
+- **National elections** in any of our 22 countries
+- **Economic news** (central bank, GDP, inflation) for any country
+- **Political developments** for any country
+- **Major incidents** in any country (even if small globally)
+
+**Examples to APPROVE now:**
+- "Türkiye Central Bank raises rates" → Approve (Turkish users care)
+- "German coalition talks collapse" → Approve (German users care)
+- "Australian housing market update" → Approve (Australian users care)
+- "Brazilian Supreme Court ruling" → Approve (Brazilian users care)
+- "South Korea president impeached" → Approve (Korean + global users care)
+
+### ✅ TOPIC-SPECIFIC NEWS (Now approve these!)
+- **AI developments** (even minor ones - AI users want everything)
+- **Sports results** for major leagues (Premier League, La Liga, NBA, NFL, F1, etc.)
+- **Gaming news** (new releases, industry news)
+- **Entertainment** (major releases, celebrity news with substance)
+- **Startup news** (funding rounds, launches)
+
+**Examples to APPROVE now:**
+- "Chelsea beats Wolves 3-1" → Approve (football fans care)
+- "New AI model released by Anthropic" → Approve (AI followers care)
+- "Netflix announces new series" → Approve (entertainment followers care)
+- "Startup raises $50M Series B" → Approve (startup followers care)
+
+### ✅ VIRAL/CULTURAL MOMENTS
+- President vs pop culture clashes
+- Major celebrity news with real events
+- Sports championships and results
+- Cultural controversies
+
+---
+
+## WHAT TO STILL ELIMINATE
+
+### ❌ NOT NEWS (Still eliminate)
+| Type | Example | Why |
+|------|---------|-----|
+| Listicles | "15 Best Headphones for 2026" | Not news, it's a guide |
+| How-tos | "How to Watch Super Bowl" | Not news, it's instructions |
+| Reviews | "iPhone 16 Review" | Not news, it's opinion |
+| Advice | "5 Ways to Save Money" | Not news, it's tips |
+| Opinion | "Why Trump Will Win" | Not news, it's speculation |
+
+### ❌ PROMOTIONAL CONTENT (Still eliminate)
+| Type | Example | Why |
+|------|---------|-----|
+| Betting | "Super Bowl Betting Odds" | Promotional |
+| Promo codes | "DraftKings Promo Code" | Promotional |
+| Shopping | "Best Deals on Amazon" | Promotional |
+| Investment advice | "Buy This Stock Now" | Financial advice |
+
+### ❌ INDIVIDUAL STORIES (Still eliminate)
+| Type | Example | Why |
+|------|---------|-----|
+| Personal | "Mom of 3 shares journey" | No broader significance |
+| Human interest | "Man drives 5000 miles for..." | Quirky but not news |
+| Celebrity fluff | "Katie Price in Dubai" | Minor celebrity, no event |
+
+### ❌ LOW-QUALITY SOURCES (Still eliminate)
+| Type | Example | Why |
+|------|---------|-----|
+| Seeking Alpha | Any article | Investment analysis |
+| Earnings transcripts | "Q4 Earnings Call" | Raw data, not news |
+| Press releases | Unedited PR content | Not journalism |
+
+---
+
+## COUNTRY-SPECIFIC APPROVAL GUIDE
+
+For each of our 22 countries, approve news about:
+
+| Always Approve | Sometimes Approve | Still Eliminate |
+|----------------|-------------------|-----------------|
+| Elections | Local politics (if significant) | City council minutiae |
+| Economic policy | Regional business | Individual business openings |
+| Major incidents | Notable crime | Minor local crime |
+| Government actions | Cultural events | Personal stories |
+| International relations | Sports results | Gossip/tabloid |
+
+---
+
+## SPORTS APPROVAL GUIDE
+
+| League/Event | Decision |
+|--------------|----------|
+| Super Bowl, World Cup Final | ✅ APPROVE (global event) |
+| Premier League matches | ✅ APPROVE (football fans) |
+| La Liga, Serie A, Bundesliga | ✅ APPROVE (football fans) |
+| Champions League | ✅ APPROVE (football fans) |
+| NBA games | ✅ APPROVE (basketball fans) |
+| NFL games | ✅ APPROVE (american football fans) |
+| F1 races | ✅ APPROVE (F1 fans) |
+| Tennis Grand Slams | ✅ APPROVE (tennis fans) |
+| Olympics events | ✅ APPROVE (Olympics followers) |
+| Cricket internationals | ✅ APPROVE (cricket fans) |
+| UFC/Boxing main events | ✅ APPROVE (combat sports fans) |
+| Minor league/college | ❌ ELIMINATE (too niche) |
+| Player rumors/gossip | ❌ ELIMINATE (not news) |
+| Betting content | ❌ ELIMINATE (promotional) |
+
+---
+
+## TECH/AI APPROVAL GUIDE
+
+| Type | Decision |
+|------|----------|
+| New AI model release | ✅ APPROVE |
+| AI company news | ✅ APPROVE |
+| AI regulation/policy | ✅ APPROVE |
+| Tech product launch | ✅ APPROVE |
+| Startup funding $10M+ | ✅ APPROVE |
+| Cybersecurity breach | ✅ APPROVE |
+| Tech layoffs | ✅ APPROVE |
+| Product reviews | ❌ ELIMINATE |
+| How-to guides | ❌ ELIMINATE |
+| Buying guides | ❌ ELIMINATE |
+
+---
+
+## QUICK DECISION CHECKLIST
+
+Before deciding, ask:
+
+1. **Did something happen?** (If no → ELIMINATE)
+2. **Is it real news or noise?** (If noise → ELIMINATE)
+3. **Would ANY of our users care?** (If yes → APPROVE)
+4. **Is it promotional/advisory?** (If yes → ELIMINATE)
+
+---
+
+## EXAMPLES
+
+### APPROVE ✅
+
+| Article | Why |
+|---------|-----|
+| "Trump slams Bad Bunny halftime show" | President + culture clash, viral |
+| "Seahawks win Super Bowl 29-13" | Championship result |
+| "Chelsea 3-1 Wolves" | Football fans care |
+| "Türkiye raises interest rates to 45%" | Turkish users + economics followers |
+| "OpenAI releases new model" | AI followers care |
+| "Netflix subscriber numbers drop" | Entertainment + business news |
+| "German coalition talks fail" | German users + politics followers |
+| "Australian wildfires spread" | Australian users + climate followers |
+| "F1 Monaco GP: Verstappen wins" | F1 fans care |
+| "Startup raises $100M for AI chip" | Startups + AI followers |
+
+### ELIMINATE ❌
+
+| Article | Why |
+|---------|-----|
+| "How to Watch Super Bowl 2026" | Guide, not news |
+| "15 Best AI Tools for 2026" | Listicle |
+| "Super Bowl Betting Odds" | Promotional |
+| "Katie Price reunites with husband" | Minor celebrity fluff |
+| "Man drives 5000 miles for dream" | Individual story |
+| "Why AI Will Change Everything" | Opinion/analysis |
+| "DraftKings Promo Code" | Promotional |
+| "Seeking Alpha: Buy AAPL" | Investment advice |
+| "Helen Flanagan health journey" | Individual story |
+
+---
+
+## CATEGORY ASSIGNMENT
+
+When approving, assign category:
+
+| Category | For |
+|----------|-----|
+| World | International affairs, diplomacy, conflicts |
+| Politics | Government, elections, policy |
+| Business | Companies, economy, trade |
+| Tech | Technology, AI, startups |
+| Science | Research, discoveries, climate |
+| Health | Medicine, public health |
+| Finance | Markets, currencies, banking |
+| Sports | All sports results and news |
+| Entertainment | Celebrity news, cultural events |
+
+---
+
+## OUTPUT FORMAT
+
+{
+  "results": [
+    {"id": 1, "decision": "APPROVED", "category": "Sports"},
+    {"id": 2, "decision": "ELIMINATED"},
+    {"id": 3, "decision": "APPROVED", "category": "Tech"}
+  ]
+}
+
+---
+
+## REMEMBER
+
+**We have personalization now.** 
+
+You don't need to decide if something is "important enough" for everyone. You just need to decide if it's **real news** that **someone** would want to know.
+
+Approve more. Let the personalization system show the right articles to the right users.
+
+---
+
+*TodayPlus Article Approval System V4*
+*"Real news for everyone's interests"*
+```
+
+---
+
+## PROMPT 2: ARTICLE SCORING (SCORING_PROMPT_V17)
+
+This is the COMPLETE prompt for assigning base_score (700-950) to approved articles.
+
+```
+# NEWS SCORING SYSTEM V17
+
+You are a news editor scoring articles for a global news app serving readers in the US, Europe, and East Asia. Score each article from 700-950.
+
+---
+
+## SCORING PHILOSOPHY
+
+Score based on: **"How many people will talk about this tomorrow?"**
+
+- Super Bowl result? 100M+ people watched. Everyone discusses it. → **900+**
+- President attacks performer? Political news that goes viral. → **900+**
+- Regular Premier League match? Only fans of those teams care. → **700**
+
+---
+
+## SCORE TIERS
+
+| Score | Tier | Description |
+|-------|------|-------------|
+| 920-950 | **MUST KNOW** | Wars, treaties, mass casualties 50+, trillion-dollar events |
+| 900-919 | **GLOBAL CONVERSATION** | Super Bowl/World Cup results, President vs culture, mass casualties 20+ |
+| 870-899 | **IMPORTANT** | Major policy, big business deals, significant events |
+| 840-869 | **NOTABLE** | Solid news, regional significance |
+| 800-839 | **GENERAL** | Standard news, Olympics medals, notable celebrity news |
+| 750-799 | **LOWER** | Minor news, entertainment fluff |
+| 700-749 | **MINIMAL** | Regular sports, local crime, celebrity gossip |
+
+---
+
+## CATEGORY SCORING
+
+### 🏆 SPORTS
+
+| Type | Score | Reason |
+|------|-------|--------|
+| **Super Bowl result** | **900-915** | 100M+ viewers, global conversation |
+| **World Cup Final result** | **905-920** | Billions watch, biggest sporting event |
+| **Olympics Opening/Closing Ceremony** | **870-890** | Major global event |
+| **Olympics gold medal (major country)** | **800-830** | Notable achievement |
+| **Olympics gold medal (minor country)** | **780-810** | Feel-good story |
+| **Grand Slam tennis final** | **820-850** | Major but niche audience |
+| **Champions League Final** | **850-880** | Huge European audience |
+| **NBA/NFL Championship** | **850-880** | Major US sports |
+| **Regular season match (any league)** | **700-720** | Only team fans care |
+| **Player transfer/signing** | **720-750** | Sports business |
+| **Player injury** | **710-740** | Only fans care |
+
+**Examples:**
+- "Seahawks crush Patriots to win Super Bowl" → **910**
+- "Argentina wins World Cup Final" → **915**
+- "US wins Olympic figure skating gold" → **815**
+- "Chelsea beats Wolves 3-1" → **700**
+- "Haaland scores hat-trick in league match" → **710**
+
+---
+
+### 🔴 GEOPOLITICS & WAR
+
+| Type | Score |
+|------|-------|
+| Nuclear treaty/talks | 900-940 |
+| War declaration/major escalation | 920-950 |
+| Mass casualties 50+ | 910-940 |
+| Mass casualties 20-50 | 890-920 |
+| Mass casualties 10-20 | 870-900 |
+| Superpower summit/deal | 890-920 |
+| Major sanctions/tariffs | 875-905 |
+| Political prisoner (high-profile) | 880-910 |
+| War crimes trial | 870-900 |
+| Military action/strikes | 850-880 |
+| Diplomatic statements | 830-860 |
+
+---
+
+### 🟠 POLITICS & ELECTIONS
+
+| Type | Score |
+|------|-------|
+| **President attacks cultural figure** | **900-920** |
+| National election result | 880-910 |
+| Major leadership change | 880-910 |
+| Supreme Court landmark ruling | 875-905 |
+| Senator breaks with party | 860-885 |
+| Major policy shift | 860-890 |
+| Nobel laureate imprisoned | 880-910 |
+| Polling major swing | 850-875 |
+| Political endorsement | 810-840 |
+| Local/state politics | 800-830 |
+
+**Examples:**
+- "Trump slams Bad Bunny's Super Bowl halftime show" → **910**
+- "Trump calls halftime 'affront to America'" → **905**
+- "Japan PM calls snap election" → **895**
+
+---
+
+### 🟡 BUSINESS & TECH
+
+| Type | Score |
+|------|-------|
+| Trillion-dollar market move | 900-930 |
+| Historic market milestone (Dow 50,000) | 900-915 |
+| Major acquisition $5B+ | 870-900 |
+| Major acquisition $1-5B | 855-880 |
+| Big tech regulatory action | 860-890 |
+| Major product launch (Apple, etc.) | 860-885 |
+| CEO change (Fortune 500) | 855-880 |
+| Mass layoffs 1000+ | 855-880 |
+| Startup funding $100M+ | 845-870 |
+| Earnings (major company) | 840-870 |
+| Startup funding $10-100M | 820-850 |
+| Minor business news | 800-830 |
+
+---
+
+### 🟢 SCIENCE & DISCOVERY
+
+| Type | Score |
+|------|-------|
+| World-changing breakthrough | 890-920 |
+| "World's first" major tech | 870-900 |
+| Medical breakthrough | 860-890 |
+| Space discovery | 840-875 |
+| Major archaeological find | 840-870 |
+| Research finding | 830-860 |
+| Interesting discovery | 820-850 |
+| Quirky/niche research | 780-820 |
+
+---
+
+### 🔵 HEALTH & MEDICAL
+
+| Type | Score |
+|------|-------|
+| Pandemic/major outbreak | 890-930 |
+| Mass poisoning/deaths | 880-910 |
+| New treatment breakthrough | 860-890 |
+| Disease outbreak (regional) | 850-875 |
+| Medical research finding | 830-860 |
+| Health statistic | 810-845 |
+
+---
+
+### ⚫ INCIDENTS & DISASTERS
+
+| Type | Score |
+|------|-------|
+| Mass casualties 50+ | 910-940 |
+| Mass casualties 30-50 | 890-915 |
+| Mass casualties 10-30 | 865-895 |
+| Deaths 5-10 | 845-870 |
+| Deaths 2-5 | 825-855 |
+| Building collapse with deaths | 850-880 |
+| Single death incident | 800-830 |
+
+---
+
+### 🎭 ENTERTAINMENT & CELEBRITIES
+
+| Type | Score |
+|------|-------|
+| Major cultural figure death | 860-900 |
+| Celebrity controversy with political angle | 840-870 |
+| A-list celebrity relationship news | **800** |
+| Celebrity at major event | **750-780** |
+| Celebrity surprise appearance | **750** |
+| Minor celebrity gossip | 700-740 |
+
+**Examples:**
+- "Kim Kardashian and Lewis Hamilton go public" → **800**
+- "Lady Gaga surprise appearance at halftime" → **750**
+- "Kendall Jenner at Super Bowl" → **730**
+- "Katie Price in Dubai" → **700**
+
+---
+
+## MINIMUM FLOORS
+
+| Category | Minimum Score |
+|----------|---------------|
+| Super Bowl / World Cup Final result | **900** |
+| President attacks entertainer | **900** |
+| Death toll 10+ | 865 |
+| Political prisoner (named) | 870 |
+| Nobel laureate news | 875 |
+| Nuclear/treaty news | 880 |
+| $5B+ business deal | 865 |
+| National election result | 865 |
+
+---
+
+## MAXIMUM CAPS
+
+| Category | Maximum Score |
+|----------|---------------|
+| A-list celebrity relationship | **830** |
+| Celebrity appearance/sighting | **780** |
+| Regular sports match | **730** |
+| Entertainment fluff | **780** |
+| Minor celebrity gossip | **750** |
+
+---
+
+## SCORING PENALTIES
+
+| Trigger | Penalty |
+|---------|---------|
+| "Warns" without action | -15 |
+| "Faces" future possibility | -15 |
+| "Seeks/Eyes/Considers" | -15 |
+| "May/Could/Might" | -20 |
+| Vague academic headline | -25 |
+
+---
+
+## SCORING BOOSTS
+
+| Trigger | Boost |
+|---------|-------|
+| President/head of state involved | +30 |
+| 100M+ audience event | +25 |
+| "World's first" (verified) | +25 |
+| Multiple superpowers involved | +20 |
+| Trillion-dollar impact | +30 |
+
+---
+
+## QUICK REFERENCE
+
+ALWAYS 900+:
+✓ Super Bowl result
+✓ World Cup Final result
+✓ President attacks/criticizes cultural figure
+✓ Nuclear/treaty news
+✓ Mass casualties 20+
+✓ Trillion-dollar market events
+
+ALWAYS 850-899:
+✓ Champions League Final
+✓ NBA/NFL Championship
+✓ Mass casualties 10-20
+✓ Major business deals $5B+
+✓ National elections
+
+ALWAYS 800-850:
+✓ Olympics gold medals
+✓ A-list celebrity news (capped at 830)
+✓ Grand Slam finals
+✓ Notable policy changes
+
+ALWAYS 700-780:
+✓ Regular league matches (Premier League, La Liga, etc.)
+✓ Celebrity appearances/fluff
+✓ Player transfers/injuries
+✓ Minor celebrity gossip
+✓ Local crime
+
+---
+
+## EXAMPLES
+
+| Article | Score | Reason |
+|---------|-------|--------|
+| "Seahawks crush Patriots to win Super Bowl" | **910** | Championship, 100M+ viewers |
+| "Trump slams Bad Bunny halftime show" | **910** | President political statement |
+| "Argentina wins World Cup Final" | **915** | Biggest global sporting event |
+| "US wins Olympic figure skating gold" | **815** | Notable but not must-know |
+| "Kim Kardashian and Lewis Hamilton go public" | **800** | A-list celebrity, capped |
+| "Lady Gaga surprise appearance at halftime" | **750** | Entertainment fluff |
+| "Chelsea beats Wolves 3-1" | **700** | Regular match |
+| "Jimmy Lai sentenced to 20 years" | **895** | Political prisoner |
+| "Truck crash kills 30 in Nigeria" | **890** | Mass casualties |
+
+---
+
+## DISTRIBUTION TARGET
+
+| Range | Target % |
+|-------|----------|
+| 900+ | 5-8% |
+| 850-899 | 15-20% |
+| 800-849 | 30-35% |
+| 750-799 | 20-25% |
+| 700-749 | 15-20% |
+
+---
+
+## OUTPUT FORMAT
+
+[
+  {
+    "title": "Article title",
+    "score": 865,
+    "category": "Category",
+    "reasoning": "Brief explanation"
+  }
+]
+```
+
+---
+
+## PROMPT 3: ARTICLE TAGGING (TAGGING_PROMPT_V1)
+
+This is the COMPLETE prompt for assigning countries and topics to articles.
+
+```
+# ARTICLE TAGGING SYSTEM V1
+
+You are a news tagger. Your job is to tag each article with relevant **countries** and **topics** so we can personalize news feeds for users.
+
+---
+
+## YOUR TASK
+
+For each article, assign:
+1. **Countries** (0-3) - Which countries is this article primarily about?
+2. **Topics** (1-3) - What topics does this article cover?
+
+Be precise. Only tag what's directly relevant, not tangentially mentioned.
+
+---
+
+## AVAILABLE COUNTRIES
+
+usa, uk, china, russia,
+germany, france, italy, spain, ukraine, turkiye,
+japan, south_korea, india, taiwan,
+israel, saudi_arabia, iran, uae,
+canada, brazil, mexico,
+australia
+
+**Tagging Rules:**
+- Tag the country the article is ABOUT, not just mentioned
+- "Trump announces tariffs on China" → usa, china
+- "French election results" → france
+- "Global climate summit" → No country tag (it's global)
+- "EU announces new regulations" → Tag specific countries affected, or none if general EU
+
+---
+
+## AVAILABLE TOPICS
+
+**Business & Finance:**
+economics, stock_markets, banking, startups
+
+**Technology:**
+ai, tech_industry, consumer_tech, cybersecurity, space
+
+**Science & Health:**
+science, climate, health, biotech
+
+**Politics & World:**
+politics, geopolitics, conflicts, human_rights
+
+**Sports:**
+football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics
+
+**Lifestyle:**
+entertainment, music, gaming, travel
+
+---
+
+## TAGGING EXAMPLES
+
+| Article | Countries | Topics |
+|---------|-----------|--------|
+| "Trump slams Bad Bunny's Super Bowl halftime show" | usa | entertainment, politics |
+| "Türkiye Central Bank raises interest rates" | turkiye | economics, banking |
+| "Seahawks crush Patriots to win Super Bowl" | usa | american_football |
+| "China launches new AI chip to rival Nvidia" | china | ai, tech_industry |
+| "Germany and France clash over EU budget" | germany, france | politics, economics |
+| "Israeli forces conduct raid in West Bank" | israel | conflicts |
+| "Tesla stock plunges 15% after earnings miss" | usa | stock_markets, tech_industry |
+| "Scientists discover new species in Amazon" | brazil | science |
+| "WHO warns of new disease outbreak" | (none) | health |
+| "Champions League Final: Real Madrid vs Manchester City" | spain, uk | football |
+| "Kim Kardashian and Lewis Hamilton go public" | usa, uk | entertainment |
+| "OpenAI releases GPT-5" | usa | ai, tech_industry |
+| "India-Pakistan tensions rise over Kashmir" | india | conflicts, geopolitics |
+| "Australian wildfires force evacuations" | australia | climate |
+| "Japan's economy enters recession" | japan | economics |
+| "UFC 300: Main event results" | (none) | combat_sports |
+| "Elon Musk announces Mars mission timeline" | usa | space, tech_industry |
+| "Russian drone strikes kill 3 in Ukraine" | russia, ukraine | conflicts |
+| "Saudi Arabia announces $100B tech investment" | saudi_arabia | tech_industry, economics |
+| "F1 Monaco Grand Prix results" | (none) | f1 |
+| "NBA Finals: Lakers beat Celtics" | usa | basketball |
+| "Premier League: Chelsea 3-1 Wolves" | uk | football |
+
+---
+
+## EDGE CASES
+
+### Multinational Companies
+- "Apple announces new iPhone" → usa, consumer_tech (Apple is US company)
+- "Samsung releases new phone" → south_korea, consumer_tech
+- "BMW recalls vehicles" → germany, tech_industry
+
+### International Organizations
+- "UN Security Council meets on Syria" → Tag countries directly involved, + geopolitics
+- "NATO expands presence in Eastern Europe" → Tag specific countries if mentioned, + geopolitics
+- "IMF warns of global recession" → No country tag, economics
+
+### Sports
+- "Premier League results" → uk, football
+- "La Liga: Barcelona vs Real Madrid" → spain, football
+- "World Cup Final" → Tag the competing countries, football
+- "Wimbledon Final" → uk, tennis
+- "Super Bowl" → usa, american_football
+
+### Wars/Conflicts
+- Always tag BOTH countries involved if applicable
+- "Russia-Ukraine war update" → russia, ukraine, conflicts
+- "Israel-Hamas conflict" → israel, conflicts
+
+---
+
+## OUTPUT FORMAT
+
+[
+  {
+    "id": 1,
+    "title": "Article title here",
+    "countries": ["usa", "china"],
+    "topics": ["economics", "geopolitics"]
+  },
+  {
+    "id": 2,
+    "title": "Another article",
+    "countries": [],
+    "topics": ["health"]
+  }
+]
+
+---
+
+## RULES
+
+1. **Be conservative** - Only tag what's clearly relevant
+2. **Max 3 countries** - If more than 3, pick the most important
+3. **Max 3 topics** - Pick the most relevant
+4. **Min 1 topic** - Every article must have at least 1 topic
+5. **Countries can be empty** - Global/general stories may have no country
+6. **Use exact tag names** - Use the lowercase versions provided above
+
+---
+
+## QUICK REFERENCE
+
+**Countries (22):**
+usa, uk, china, russia, germany, france, italy, spain, ukraine, turkiye, japan, south_korea, india, taiwan, israel, saudi_arabia, iran, uae, canada, brazil, mexico, australia
+
+**Topics (25):**
+economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, entertainment, music, gaming, travel
+```
+
+---
+
+# PART 7: FRONTEND COMPONENTS
+
+## Onboarding Flow
+
+The onboarding flow consists of 5 screens that collect user preferences.
+
+### Screen 1: Welcome
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│         [TodayPlus Logo]            │
+│                                     │
+│      Welcome to TodayPlus           │
+│                                     │
+│     Get news personalized to        │
+│         your interests              │
+│                                     │
+│                                     │
+│         [Get Started]               │
+│                                     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Screen 2: Select Home Country (Required)
+
+```
+┌─────────────────────────────────────┐
+│  ←                                  │
+│                                     │
+│    Where are you from?              │
+│                                     │
+│    You'll see more news about       │
+│    your home country                │
+│                                     │
+│    ┌─────┬─────┬─────┬─────┐       │
+│    │ 🇺🇸  │ 🇬🇧  │ 🇨🇳  │ 🇷🇺  │       │
+│    │ USA │ UK  │China│Russia│       │
+│    ├─────┼─────┼─────┼─────┤       │
+│    │ 🇩🇪  │ 🇫🇷  │ 🇮🇹  │ 🇪🇸  │       │
+│    │ DE  │ FR  │ IT  │ ES  │       │
+│    ├─────┼─────┼─────┼─────┤       │
+│    │ 🇺🇦  │ 🇹🇷  │ 🇯🇵  │ 🇰🇷  │       │
+│    │ UA  │ TR ✓│ JP  │ KR  │       │
+│    ├─────┼─────┼─────┼─────┤       │
+│    │ 🇮🇳  │ 🇹🇼  │ 🇮🇱  │ 🇸🇦  │       │
+│    │ IN  │ TW  │ IL  │ SA  │       │
+│    ├─────┼─────┼─────┼─────┤       │
+│    │ 🇮🇷  │ 🇦🇪  │ 🇨🇦  │ 🇧🇷  │       │
+│    │ IR  │ AE  │ CA  │ BR  │       │
+│    ├─────┼─────┼─────┼─────┤       │
+│    │ 🇲🇽  │ 🇦🇺  │     │     │       │
+│    │ MX  │ AU  │     │     │       │
+│    └─────┴─────┴─────┴─────┘       │
+│                                     │
+│    Selected: 🇹🇷 Türkiye            │
+│                                     │
+│           [Continue]                │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Screen 3: Select Other Countries (Optional)
+
+```
+┌─────────────────────────────────────┐
+│  ←                                  │
+│                                     │
+│    Any other countries you          │
+│    want to follow?                  │
+│                                     │
+│    Select up to 5 (optional)        │
+│                                     │
+│    [Same grid as above]             │
+│    [Home country greyed out]        │
+│    [Selected: USA ✓, UK ✓]          │
+│                                     │
+│    Selected: 🇺🇸 USA, 🇬🇧 UK         │
+│                                     │
+│      [Skip]       [Continue]        │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Screen 4: Select Topics (Required, min 3)
+
+```
+┌─────────────────────────────────────┐
+│  ←                                  │
+│                                     │
+│    What are you interested in?      │
+│                                     │
+│    Select at least 3 topics         │
+│                                     │
+│    BUSINESS & FINANCE               │
+│    ┌──────────┬──────────┐          │
+│    │ 💰       │ 📈       │          │
+│    │Economics✓│ Markets  │          │
+│    ├──────────┼──────────┤          │
+│    │ 🏦       │ 🏢       │          │
+│    │ Banking  │ Startups │          │
+│    └──────────┴──────────┘          │
+│                                     │
+│    TECHNOLOGY                       │
+│    ┌──────────┬──────────┐          │
+│    │ 🤖       │ 💻       │          │
+│    │ AI ✓     │ Tech     │          │
+│    ├──────────┼──────────┤          │
+│    │ 📱       │ 🔐       │          │
+│    │Consumer  │ Cyber    │          │
+│    ├──────────┼──────────┤          │
+│    │ 🚀       │          │          │
+│    │ Space    │          │          │
+│    └──────────┴──────────┘          │
+│                                     │
+│    SPORTS                           │
+│    ┌──────────┬──────────┐          │
+│    │ ⚽       │ 🏈       │          │
+│    │Football✓ │ Am.Ftbl  │          │
+│    ├──────────┼──────────┤          │
+│    │ 🏀       │ 🎾       │          │
+│    │Basketball│ Tennis   │          │
+│    └──────────┴──────────┘          │
+│    ... (more categories)            │
+│                                     │
+│    Selected: 3 topics ✓             │
+│                                     │
+│           [Continue]                │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### Screen 5: Complete
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│            ✅                       │
+│                                     │
+│      You're all set!                │
+│                                     │
+│    Your personalized feed is        │
+│    ready                            │
+│                                     │
+│    ┌───────────────────────────┐    │
+│    │ Home: 🇹🇷 Türkiye          │    │
+│    │ Following: 🇺🇸 🇬🇧          │    │
+│    │ Topics:                    │    │
+│    │   💰 Economics             │    │
+│    │   🤖 AI                    │    │
+│    │   ⚽ Football              │    │
+│    └───────────────────────────┘    │
+│                                     │
+│    You can change these anytime     │
+│    in Settings                      │
+│                                     │
+│         [Start Reading]             │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+## Main App Layout
+
+```
+┌─────────────────────────────────────┐
+│  TodayPlus              ⚙️ Settings │
+├─────────────────────────────────────┤
+│                                     │
+│   ┌─────────┐  ┌─────────┐          │
+│   │  Today  │  │ For You │          │
+│   └────┬────┘  └─────────┘          │
+│        │                            │
+│   ─────┴────────────────────        │
+│                                     │
+│   ┌─────────────────────────────┐   │
+│   │ [Image]                     │   │
+│   │                             │   │
+│   │ WORLD • Reuters • 2h        │   │
+│   │                             │   │
+│   │ Russia Launches Major       │   │
+│   │ Offensive in Ukraine        │   │
+│   └─────────────────────────────┘   │
+│                                     │
+│   ┌─────────────────────────────┐   │
+│   │ [Image]                     │   │
+│   │                             │   │
+│   │ ENTERTAINMENT • 3h          │   │
+│   │                             │   │
+│   │ Trump Slams Bad Bunny's     │   │
+│   │ Super Bowl Halftime Show    │   │
+│   └─────────────────────────────┘   │
+│                                     │
+│   ... (more articles)               │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+## Article Card Component
+
+```
+┌─────────────────────────────────────┐
+│ ┌─────────────────────────────────┐ │
+│ │                                 │ │
+│ │        [Article Image]          │ │
+│ │         (16:9 ratio)            │ │
+│ │                                 │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ CATEGORY • Source • Time ago        │
+│                                     │
+│ Article Title Goes Here and Can     │
+│ Span Up To Two or Three Lines       │
+│                                     │
+│ ┌───────────────────────────────┐   │
+│ │ 🇹🇷 Türkiye  💰 Economics      │   │
+│ └───────────────────────────────┘   │
+│ (Only show tags if they match       │
+│  user's preferences - optional)     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+## Settings / Preferences Screen
+
+```
+┌─────────────────────────────────────┐
+│  ←  Preferences                     │
+├─────────────────────────────────────┤
+│                                     │
+│  HOME COUNTRY                       │
+│  ┌─────────────────────────────┐    │
+│  │ 🇹🇷 Türkiye              ▼  │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  FOLLOWING COUNTRIES                │
+│  ┌─────────────────────────────┐    │
+│  │ 🇺🇸 USA               [x]   │    │
+│  │ 🇬🇧 UK                [x]   │    │
+│  │                             │    │
+│  │ [+ Add Country]             │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  TOPICS                             │
+│  ┌─────────────────────────────┐    │
+│  │ 💰 Economics          [x]   │    │
+│  │ 🤖 AI                 [x]   │    │
+│  │ ⚽ Football           [x]   │    │
+│  │                             │    │
+│  │ [+ Add Topic]               │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│                                     │
+│          [Save Changes]             │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+---
+
+# PART 8: IMPLEMENTATION CHECKLIST
+
+## Phase 1: Database & Backend
+
+- [ ] Create `articles` table with new columns (countries[], topics[])
+- [ ] Create `users` table with preferences columns
+- [ ] Create `reading_history` table (for future)
+- [ ] Implement `calculateFinalScore()` function
+- [ ] Implement `getForYouFeed()` function
+- [ ] Implement `getTodayFeed()` function
+- [ ] Create `GET /api/feed/today` endpoint
+- [ ] Create `GET /api/feed/for-you` endpoint
+- [ ] Create `POST /api/user/onboarding` endpoint
+- [ ] Create `PATCH /api/user/preferences` endpoint
+- [ ] Create `GET /api/user/preferences` endpoint
+
+## Phase 2: Article Pipeline Updates
+
+- [ ] Update approval pipeline to use APPROVAL_PROMPT_V4
+- [ ] Update scoring pipeline to use SCORING_PROMPT_V17
+- [ ] Add new tagging step using TAGGING_PROMPT_V1
+- [ ] Store countries[] and topics[] in database for each article
+- [ ] Test full pipeline with sample articles
+
+## Phase 3: Frontend - Onboarding
+
+- [ ] Create welcome screen
+- [ ] Create home country selection screen
+- [ ] Create followed countries selection screen
+- [ ] Create topics selection screen
+- [ ] Create completion screen
+- [ ] Implement navigation between screens
+- [ ] Save preferences to database via API
+- [ ] Redirect to main app after completion
+- [ ] Handle validation (min 3 topics, etc.)
+
+## Phase 4: Frontend - Main App
+
+- [ ] Create "Today" feed view (base_score sorting)
+- [ ] Create "For You" feed view (final_score sorting)
+- [ ] Implement tab switching between feeds
+- [ ] Create article card component
+- [ ] Implement infinite scroll / pagination
+- [ ] Show personalization tags on articles (optional feature)
+- [ ] Create settings/preferences screen
+- [ ] Implement preference editing
+
+## Phase 5: Testing & Polish
+
+- [ ] Test personalization with multiple user profiles
+- [ ] Verify boost calculations are correct
+- [ ] Test onboarding flow end-to-end
+- [ ] Test feed sorting is correct
+- [ ] Performance optimization for large feeds
+- [ ] Error handling for API failures
+- [ ] Loading states
+
+---
+
+# PART 9: QUICK REFERENCE
+
+## All Countries (22)
+
+```
+usa, uk, china, russia, germany, france, italy, spain, ukraine, turkiye,
+japan, south_korea, india, taiwan, israel, saudi_arabia, iran, uae,
+canada, brazil, mexico, australia
+```
+
+## All Topics (25)
+
+```
+economics, stock_markets, banking, startups,
+ai, tech_industry, consumer_tech, cybersecurity, space,
+science, climate, health, biotech,
+politics, geopolitics, conflicts, human_rights,
+football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics,
+entertainment, music, gaming, travel
+```
+
+## Boost Values
+
+```
+HOME_COUNTRY_BOOST:              +150
+FOLLOWED_COUNTRY_SINGLE_BOOST:   +75
+FOLLOWED_COUNTRY_MULTIPLE_BOOST: +100
+TOPIC_SINGLE_BOOST:              +50
+TOPIC_DOUBLE_BOOST:              +80
+TOPIC_TRIPLE_PLUS_BOOST:         +100
+```
+
+## Feed Thresholds
+
+```
+TODAY_FEED_MIN_SCORE:     880
+TODAY_FEED_MAX_ARTICLES:  15
+```
+
+## User Constraints
+
+```
+MIN_TOPICS_REQUIRED:      3
+MAX_TOPICS_ALLOWED:       10
+MAX_FOLLOWED_COUNTRIES:   5
+```
+
+---
+
+# END OF IMPLEMENTATION GUIDE

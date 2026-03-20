@@ -24,21 +24,23 @@ struct WorldEventFull: Codable, Identifiable, Hashable {
     let totalArticles: Int?
     let countries: [String]?
     let topics: [String]?
+    let newUpdates: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, name, slug, importance, status, background, timeline
         case components, countries, topics
-        case imageUrl = "imageUrl"
-        case coverImageUrl = "coverImageUrl"
-        case thumbnailUrl = "thumbnailUrl"
-        case blurColor = "blurColor"
-        case lastArticleAt = "lastArticleAt"
-        case createdAt = "createdAt"
-        case keyFacts = "keyFacts"
-        case latestDevelopment = "latestDevelopment"
-        case liveUpdates = "liveUpdates"
-        case dayCounter = "dayCounter"
-        case totalArticles = "totalArticles"
+        case imageUrl = "image_url"
+        case coverImageUrl = "cover_image_url"
+        case thumbnailUrl = "thumbnail_url"
+        case blurColor = "blur_color"
+        case lastArticleAt = "last_article_at"
+        case createdAt = "created_at"
+        case keyFacts = "key_facts"
+        case latestDevelopment = "latest_development"
+        case liveUpdates = "live_updates"
+        case dayCounter = "day_counter"
+        case totalArticles = "total_articles"
+        case newUpdates = "new_updates"
     }
 
     var displayImage: URL? {
