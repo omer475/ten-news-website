@@ -96,6 +96,118 @@ const ONBOARDING_TOPIC_MAP = {
 };
 
 // ==========================================
+// APP TOPIC ALIAS — maps short IDs (from iOS app / DB) to full topic names
+// The app stores short IDs like 'sports', 'ai', 'economy' in followed_topics,
+// but ONBOARDING_TOPIC_MAP uses full names like 'Soccer/Football'.
+// This alias map resolves short IDs to arrays of full topic names.
+// ==========================================
+
+const APP_TOPIC_ALIAS = {
+  // Parent categories → multiple subtopics
+  'politics':       ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania', 'Human Rights & Civil Liberties'],
+  'sports':         ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
+  'business':       ['Oil & Energy', 'Automotive', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Startups & Venture Capital', 'Real Estate'],
+  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama'],
+  'technology':     ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
+  'tech':           ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
+  'science':        ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
+  'health':         ['Medical Breakthroughs', 'Public Health', 'Mental Health', 'Pharma & Drug Industry'],
+  'finance':        ['Stock Markets', 'Banking & Lending', 'Commodities'],
+  'crypto':         ['Bitcoin', 'DeFi & Web3', 'Crypto Regulation & Legal'],
+  'lifestyle':      ['Pets & Animals', 'Home & Garden', 'Shopping & Product Reviews'],
+  'fashion':        ['Sneakers & Streetwear', 'Celebrity Style & Red Carpet'],
+  // Specific subtopic short IDs → single topic
+  'ai':             ['AI & Machine Learning'],
+  'f1':             ['F1 & Motorsport'],
+  'nfl':            ['NFL'],
+  'nba':            ['NBA'],
+  'soccer':         ['Soccer/Football'],
+  'baseball':       ['MLB/Baseball'],
+  'cricket':        ['Cricket'],
+  'boxing':         ['Boxing & MMA/UFC'],
+  'gaming':         ['Gaming'],
+  'kpop':           ['K-Pop & K-Drama'],
+  'startups':       ['Startups & Venture Capital'],
+  'cybersecurity':  ['Cybersecurity'],
+  'space':          ['Space & Astronomy', 'Space Tech'],
+  'climate':        ['Climate & Environment'],
+  'environment':    ['Climate & Environment', 'Biology & Nature'],
+  'energy':         ['Oil & Energy'],
+  'trade':          ['Trade & Tariffs'],
+  'defense':        ['War & Conflict'],
+  'conflict':       ['War & Conflict'],
+  'diplomacy':      ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Human Rights & Civil Liberties'],
+  'economy':        ['Stock Markets', 'Banking & Lending', 'Corporate Earnings', 'Trade & Tariffs'],
+  'culture':        ['K-Pop & K-Drama', 'Celebrity Style & Red Carpet', 'Movies & Film'],
+  'human_rights':   ['Human Rights & Civil Liberties'],
+  'transportation': ['Automotive', 'F1 & Motorsport'],
+  'law':            ['Crypto Regulation & Legal'],
+  'disaster':       ['Earth Science'],
+  'infrastructure': ['Real Estate'],
+  // Underscore format (from iOS)
+  'war_conflict':           ['War & Conflict'],
+  'us_politics':            ['US Politics'],
+  'european_politics':      ['European Politics'],
+  'asian_politics':         ['Asian Politics'],
+  'middle_east':            ['Middle East'],
+  'latin_america':          ['Latin America'],
+  'africa_oceania':         ['Africa & Oceania'],
+  'human_rights_civil':     ['Human Rights & Civil Liberties'],
+  'oil_energy':             ['Oil & Energy'],
+  'trade_tariffs':          ['Trade & Tariffs'],
+  'corporate_deals':        ['Corporate Deals'],
+  'corporate_earnings':     ['Corporate Earnings'],
+  'startups_vc':            ['Startups & Venture Capital'],
+  'real_estate':            ['Real Estate'],
+  'retail_consumer':        ['Retail & Consumer'],
+  'movies_film':            ['Movies & Film'],
+  'tv_streaming':           ['TV & Streaming'],
+  'celebrity_news':         ['Celebrity News'],
+  'kpop_kdrama':            ['K-Pop & K-Drama'],
+  'ai_ml':                  ['AI & Machine Learning'],
+  'smartphones_gadgets':    ['Smartphones & Gadgets'],
+  'social_media':           ['Social Media'],
+  'space_tech':             ['Space Tech'],
+  'space_astronomy':        ['Space & Astronomy'],
+  'robotics_hardware':      ['Robotics & Hardware'],
+  'climate_environment':    ['Climate & Environment'],
+  'biology_nature':         ['Biology & Nature'],
+  'earth_science':          ['Earth Science'],
+  'medical_breakthroughs':  ['Medical Breakthroughs'],
+  'public_health':          ['Public Health'],
+  'mental_health':          ['Mental Health'],
+  'pharma_drug':            ['Pharma & Drug Industry'],
+  'stock_markets':          ['Stock Markets'],
+  'banking_lending':        ['Banking & Lending'],
+  'bitcoin':                ['Bitcoin'],
+  'defi_web3':              ['DeFi & Web3'],
+  'crypto_regulation':      ['Crypto Regulation & Legal'],
+  'boxing_mma':             ['Boxing & MMA/UFC'],
+  'sneakers_streetwear':    ['Sneakers & Streetwear'],
+  'celebrity_style':        ['Celebrity Style & Red Carpet'],
+  'pets_animals':           ['Pets & Animals'],
+};
+
+// Resolve a short topic ID to full ONBOARDING_TOPIC_MAP names
+function resolveTopicAliases(topics) {
+  const resolved = new Set();
+  for (const t of topics) {
+    const lower = t.toLowerCase().trim();
+    // Direct match in ONBOARDING_TOPIC_MAP (full name)
+    if (ONBOARDING_TOPIC_MAP[t]) {
+      resolved.add(t);
+      continue;
+    }
+    // Alias lookup
+    const aliases = APP_TOPIC_ALIAS[lower];
+    if (aliases) {
+      for (const a of aliases) resolved.add(a);
+    }
+  }
+  return [...resolved];
+}
+
+// ==========================================
 // ARTICLE FORMATTING (unchanged from before)
 // ==========================================
 
@@ -819,7 +931,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // always see relevant content even without a taste vector.
   // ==========================================
 
-  const followedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
+  const rawFollowedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
+  // Resolve short IDs (e.g. 'sports', 'ai') to full topic names (e.g. 'Soccer/Football', 'AI & Machine Learning')
+  const followedTopics = resolveTopicAliases(rawFollowedTopics);
   const interestCategories = new Set();
   const interestAltCategories = new Set();
   const interestTags = new Set(); // All subtopic tags for tag-level matching
@@ -1112,8 +1226,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   // (e.g., 15 Iran war articles won't all appear in the feed)
   // ==========================================
 
-  const WORLD_EVENT_CAP = 4;   // max articles per world event (was 3)
-  const CLUSTER_CAP = 4;       // max articles per article cluster (was 3)
+  const WORLD_EVENT_CAP = 2;   // max articles per world event (was 4, reduced to prevent flooding)
+  const CLUSTER_CAP = 2;       // max articles per article cluster (was 4, reduced for story dedup)
 
   // Pre-fetch world event associations for all candidates
   const candidateEventMap = await fetchWorldEvents(supabase, uniqueIds);
@@ -1171,8 +1285,77 @@ async function handleV2Feed(req, res, supabase, opts) {
     return null;
   }
 
-  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
-  if (!hasAnyPersonalization) {
+  // IMPROVEMENT 5: Mode selection priority:
+  // 1. Interest Topic Mode — user has followed_topics that resolved to categories + articles
+  // 2. Personalized Mode — user has taste vector / interest clusters
+  // 3. Cold-start Bandit — no personalization at all (truly anonymous)
+  //
+  // CRITICAL FIX: Interest Topic Mode must be checked FIRST, even for cold-start users
+  // with no taste vector. If they selected topics during onboarding, use them.
+  if (!hasAnyPersonalization && interestCategories.size > 0 && iPool.length > 0) {
+    // ==========================================
+    // INTEREST TOPIC MODE for cold-start users with topic selections
+    // Same quota-based pre-fill as the personalized interest path below,
+    // but fires even when hasAnyPersonalization is false.
+    // ==========================================
+    const interestSlots = Math.ceil(limit * 0.8);
+    const diversitySlots = limit - interestSlots;
+
+    const catQueues = {};
+    for (const a of iPool) {
+      const cat = a.category || 'Other';
+      if (!catQueues[cat]) catQueues[cat] = [];
+      catQueues[cat].push(a);
+    }
+
+    const catKeys = Object.keys(catQueues);
+    let catIdx = 0;
+    const usedIds = new Set();
+
+    while (selected.length < interestSlots && catKeys.length > 0) {
+      const cat = catKeys[catIdx % catKeys.length];
+      const queue = catQueues[cat];
+      let picked = null;
+
+      while (queue.length > 0) {
+        const candidate = queue.shift();
+        if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
+          picked = candidate;
+          break;
+        }
+      }
+
+      if (picked) {
+        usedIds.add(picked.id);
+        picked.bucket = 'interest';
+        recordEventSelection(picked);
+        selected.push(picked);
+      } else {
+        catKeys.splice(catIdx % catKeys.length, 1);
+        if (catKeys.length === 0) break;
+      }
+      catIdx++;
+    }
+
+    // Fill remaining slots with trending + discovery for diversity
+    for (let pos = 0; selected.length < limit; pos++) {
+      const slot = SLOTS[pos % SLOTS.length];
+      let picked = null;
+      if (slot === 'T') {
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+      } else {
+        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+      }
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      if (!picked) break;
+
+      picked.bucket = slot === 'T' ? 'trending' : 'discovery';
+      recordEventSelection(picked);
+      selected.push(picked);
+    }
+  } else if (!hasAnyPersonalization) {
     // Group all candidates by category for bandit
     const categoryPools = {};
     for (const a of [...trendingScored, ...discoveryScored]) {
@@ -1374,6 +1557,70 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   enforceConsecutiveLimit(selected, 2);
+
+  // ==========================================
+  // PHASE 7.5: GLOBAL CATEGORY CAP (max 40% per category)
+  // Prevents any single category from dominating the feed.
+  // If Tech has 15/25 articles, demote extras to make room for diversity.
+  // ==========================================
+  const MAX_CATEGORY_RATIO = 0.40; // no category gets more than 40% of page
+  const maxPerCategory = Math.ceil(limit * MAX_CATEGORY_RATIO);
+  const categoryCounts = {};
+  const capped = [];
+  const overflow = [];
+
+  for (const article of selected) {
+    const cat = article.category || 'Other';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    if (categoryCounts[cat] <= maxPerCategory) {
+      capped.push(article);
+    } else {
+      overflow.push(article);
+    }
+  }
+
+  // If we removed articles due to cap, try to backfill from remaining pools
+  if (overflow.length > 0 && capped.length < limit) {
+    // Build set of categories that are NOT capped (still have room)
+    const availableCats = new Set();
+    for (const cat of Object.keys(categoryCounts)) {
+      if ((categoryCounts[cat] || 0) <= maxPerCategory) availableCats.add(cat);
+    }
+    // Pull from trending/discovery pools, preferring uncapped categories
+    const backfillPools = [...tPool, ...dPool, ...iPool];
+    const usedIds = new Set(capped.map(a => a.id));
+    for (const candidate of backfillPools) {
+      if (capped.length >= limit) break;
+      if (usedIds.has(candidate.id)) continue;
+      const cat = candidate.category || 'Other';
+      const catCount = categoryCounts[cat] || 0;
+      if (catCount < maxPerCategory) {
+        candidate.bucket = candidate.bucket || 'discovery';
+        capped.push(candidate);
+        usedIds.add(candidate.id);
+        categoryCounts[cat] = catCount + 1;
+      }
+    }
+    selected.length = 0;
+    selected.push(...capped);
+  }
+
+  // ==========================================
+  // PHASE 7.6: TRENDING CATEGORY CAP (max 3 trending per category)
+  // Prevents e.g. 5 trending "World" articles about the same event
+  // ==========================================
+  const MAX_TRENDING_PER_CAT = 3;
+  const trendingCatCounts = {};
+  for (let i = selected.length - 1; i >= 0; i--) {
+    const a = selected[i];
+    if (a.bucket === 'trending' || a.bucket === 'bandit') {
+      const cat = a.category || 'Other';
+      trendingCatCounts[cat] = (trendingCatCounts[cat] || 0) + 1;
+      if (trendingCatCounts[cat] > MAX_TRENDING_PER_CAT) {
+        selected.splice(i, 1); // Remove excess trending from same category
+      }
+    }
+  }
 
   // ==========================================
   // PHASE 8: FORMAT & RESPOND
