@@ -934,6 +934,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const rawFollowedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
   // Resolve short IDs (e.g. 'sports', 'ai') to full topic names (e.g. 'Soccer/Football', 'AI & Machine Learning')
   const followedTopics = resolveTopicAliases(rawFollowedTopics);
+  console.log(`[feed] raw=${JSON.stringify(rawFollowedTopics)} → resolved=${JSON.stringify(followedTopics)} for ${userId?.substring(0,8)}`);
   const interestCategories = new Set();
   const interestAltCategories = new Set();
   const interestTags = new Set(); // All subtopic tags for tag-level matching
@@ -1292,6 +1293,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   //
   // CRITICAL FIX: Interest Topic Mode must be checked FIRST, even for cold-start users
   // with no taste vector. If they selected topics during onboarding, use them.
+  console.log(`[feed] MODE CHECK: hasPerso=${hasAnyPersonalization}, interestCats=${interestCategories.size}, iPool=${iPool.length}, tPool=${tPool.length}, dPool=${dPool.length} for ${userId?.substring(0,8)}`);
   if (!hasAnyPersonalization && interestCategories.size > 0 && iPool.length > 0) {
     // ==========================================
     // INTEREST TOPIC MODE for cold-start users with topic selections
