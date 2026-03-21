@@ -1194,27 +1194,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     const nowMs = Date.now();
 
     // Fetch per-category with high limit (Supabase caps single query at 1000)
+    // Use 7-day window — shelf life is used for recency scoring, NOT hard filtering.
+    // Hard shelf life filtering kills the pool (most articles shelf_life=1 day → only ~128 active).
+    // The recency decay function already penalizes stale articles in scoring.
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', fourteenDaysAgo)
+        .gte('created_at', sevenDaysAgo)
         .gte('ai_final_score', 200)
-        .order('created_at', { ascending: false })
-        .limit(2000)
+        .order('ai_final_score', { ascending: false })
+        .limit(1000)
     );
     const catResults = await Promise.all(catPromises);
 
-    // Merge and filter by shelf life
     const allRaw = [];
     for (const r of catResults) { if (r.data) allRaw.push(...r.data); }
-
-    interestArticles = allRaw.filter(a => {
-      const ageDays = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
-      const shelf = a.shelf_life_days || 7;
-      return ageDays <= shelf;
-    });
+    interestArticles = allRaw;
 
     // Deduplicate
     const seen = new Set();
@@ -1342,9 +1339,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   const nowMs = Date.now();
   for (const a of (trendingResult.data || [])) {
     if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
-    // Shelf life filter: skip expired articles
-    const ageDays = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
-    if (ageDays > (a.shelf_life_days || 7)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
     if (trendingCategoryCounts[cat] > trendingCatMax) continue;
@@ -1360,9 +1354,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
-    // Shelf life filter
-    const ageDaysD = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
-    if (ageDaysD > (a.shelf_life_days || 7)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
@@ -2282,7 +2273,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v17',  // deployment version marker
+    _v: 'v18',  // deployment version marker
   });
 }
 
