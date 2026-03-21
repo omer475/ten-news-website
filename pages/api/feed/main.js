@@ -1571,41 +1571,49 @@ async function handleV2Feed(req, res, supabase, opts) {
     const interestSlots = Math.ceil(limit * sessionInterestRatio);
     const diversitySlots = limit - interestSlots;
 
-    const catQueues = {};
-    for (const a of iPool) {
-      const cat = a.category || 'Other';
-      if (!catQueues[cat]) catQueues[cat] = [];
-      catQueues[cat].push(a);
-    }
+    // Score every interest article by tag_profile relevance instead of blind round-robin
+    const hasTP = effectiveTagProfile && Object.keys(effectiveTagProfile).length > 0;
+    const hasSP = effectiveSkipProfile && Object.keys(effectiveSkipProfile).length > 0;
 
-    const catKeys = Object.keys(catQueues);
-    let catIdx = 0;
-    const usedIds = new Set();
-
-    while (selected.length < interestSlots && catKeys.length > 0) {
-      const cat = catKeys[catIdx % catKeys.length];
-      const queue = catQueues[cat];
-      let picked = null;
-
-      while (queue.length > 0) {
-        const candidate = queue.shift();
-        if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
-          picked = candidate;
-          break;
+    const scoredInterest = iPool.map(a => {
+      const tags = safeJsonParse(a.interest_tags, []);
+      let tagScore = 0, skipPen = 0;
+      const n = Math.max(tags.length, 1);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        tagScore += effectiveTagProfile[t] || 0;
+        if (hasSP) {
+          const se = effectiveSkipProfile[t];
+          skipPen += typeof se === 'object' ? (se.w || 0) : (typeof se === 'number' ? se : 0);
         }
       }
+      tagScore /= n;
+      skipPen /= n;
+      const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
+      const quality = ((a.ai_final_score || 0) / 1000) * recency;
+      const score = hasTP ? tagScore * 500 - skipPen * 300 + quality * 100 : quality * 250;
+      return { ...a, _pScore: score };
+    });
 
-      if (picked) {
-        usedIds.add(picked.id);
-        picked.bucket = 'interest';
-        recordEventSelection(picked);
-        selected.push(picked);
-      } else {
-        catKeys.splice(catIdx % catKeys.length, 1);
-        if (catKeys.length === 0) break;
-      }
-      catIdx++;
+    scoredInterest.sort((a, b) => b._pScore - a._pScore);
+
+    const usedIds = new Set();
+    const catCounts = {};
+    const maxPerCat = Math.ceil(interestSlots * 0.4);
+
+    for (const a of scoredInterest) {
+      if (selected.length >= interestSlots) break;
+      if (usedIds.has(a.id) || isEventCapped(a)) continue;
+      const cat = a.category || 'Other';
+      if ((catCounts[cat] || 0) >= maxPerCat) continue;
+      usedIds.add(a.id);
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+      a.bucket = 'interest';
+      recordEventSelection(a);
+      selected.push(a);
     }
+
+    if (hasTP) console.log(`[feed] TAG_RANKED: ${selected.length}/${interestSlots} interest slots by tag_profile for ${userId?.substring(0,8)}`);
 
     // Fill remaining slots with trending + discovery for diversity
     for (let pos = 0; selected.length < limit; pos++) {
@@ -1711,50 +1719,56 @@ async function handleV2Feed(req, res, supabase, opts) {
     const interestSlots = Math.ceil(limit * sessionInterestRatio);
     const diversitySlots = limit - interestSlots;
 
-    // Pre-fill interest quota: per-category round-robin from interest pool
-    const catQueues = {};
-    for (const a of iPool) {
-      const cat = a.category || 'Other';
-      if (!catQueues[cat]) catQueues[cat] = [];
-      catQueues[cat].push(a);
-    }
-    // Also pull matching articles from personal pool
+    // Merge interest + personal pools for scoring
+    const allInterest = [...iPool];
     for (const a of pPool) {
       const cat = a.category || 'Other';
-      if (interestCategories.has(cat) || interestAltCategories.has(cat)) {
-        if (!catQueues[cat]) catQueues[cat] = [];
-        catQueues[cat].push(a);
-      }
+      if (interestCategories.has(cat) || interestAltCategories.has(cat)) allInterest.push(a);
     }
 
-    const catKeys = Object.keys(catQueues);
-    let catIdx = 0;
-    const usedIds = new Set();
+    // Score by tag_profile relevance instead of blind round-robin
+    const hasTP2 = effectiveTagProfile && Object.keys(effectiveTagProfile).length > 0;
+    const hasSP2 = effectiveSkipProfile && Object.keys(effectiveSkipProfile).length > 0;
 
-    while (selected.length < interestSlots && catKeys.length > 0) {
-      const cat = catKeys[catIdx % catKeys.length];
-      const queue = catQueues[cat];
-      let picked = null;
-
-      while (queue.length > 0) {
-        const candidate = queue.shift();
-        if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
-          picked = candidate;
-          break;
+    const scoredInterest2 = allInterest.map(a => {
+      const tags = safeJsonParse(a.interest_tags, []);
+      let tagScore = 0, skipPen = 0;
+      const n = Math.max(tags.length, 1);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        tagScore += effectiveTagProfile[t] || 0;
+        if (hasSP2) {
+          const se = effectiveSkipProfile[t];
+          skipPen += typeof se === 'object' ? (se.w || 0) : (typeof se === 'number' ? se : 0);
         }
       }
+      tagScore /= n;
+      skipPen /= n;
+      const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
+      const quality = ((a.ai_final_score || 0) / 1000) * recency;
+      const score = hasTP2 ? tagScore * 500 - skipPen * 300 + quality * 100 : quality * 250;
+      return { ...a, _pScore: score };
+    });
 
-      if (picked) {
-        usedIds.add(picked.id);
-        picked.bucket = 'interest';
-        recordEventSelection(picked);
-        selected.push(picked);
-      } else {
-        catKeys.splice(catIdx % catKeys.length, 1);
-        if (catKeys.length === 0) break;
-      }
-      catIdx++;
+    scoredInterest2.sort((a, b) => b._pScore - a._pScore);
+
+    const usedIds = new Set();
+    const catCounts2 = {};
+    const maxPerCat2 = Math.ceil(interestSlots * 0.4);
+
+    for (const a of scoredInterest2) {
+      if (selected.length >= interestSlots) break;
+      if (usedIds.has(a.id) || isEventCapped(a)) continue;
+      const cat = a.category || 'Other';
+      if ((catCounts2[cat] || 0) >= maxPerCat2) continue;
+      usedIds.add(a.id);
+      catCounts2[cat] = (catCounts2[cat] || 0) + 1;
+      a.bucket = 'interest';
+      recordEventSelection(a);
+      selected.push(a);
     }
+
+    if (hasTP2) console.log(`[feed] TAG_RANKED_PERSO: ${selected.length}/${interestSlots} interest slots by tag_profile for ${userId?.substring(0,8)}`);
 
     // Fill remaining slots with standard slot-filling (diversity)
     for (let pos = 0; selected.length < limit; pos++) {
@@ -1928,7 +1942,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v12',  // deployment version marker
+    _v: 'v13',  // deployment version marker
   });
 }
 
