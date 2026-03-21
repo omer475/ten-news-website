@@ -10,17 +10,28 @@ function getAdminSupabase() {
 
 // Helper: load a field from profiles, fall back to users table (for guest users)
 async function loadUserField(admin, userId, field) {
-  const { data: profileData } = await admin.from('profiles').select(field).eq('id', userId).maybeSingle()
+  const { data: profileData, error: profileError } = await admin.from('profiles').select(field).eq('id', userId).maybeSingle()
   if (profileData) return { data: profileData, table: 'profiles' }
-  const { data: userData } = await admin.from('users').select(field).eq('id', userId).maybeSingle()
-  if (userData) return { data: userData, table: 'users' }
+  // Try users table — use try/catch because some columns (tag_profile) may not exist
+  try {
+    const { data: userData } = await admin.from('users').select(field).eq('id', userId).maybeSingle()
+    if (userData) return { data: userData, table: 'users' }
+  } catch (_) {}
+  // If specific fields fail, try with just 'skip_profile' (always exists in users)
+  try {
+    const { data: fallback } = await admin.from('users').select('skip_profile').eq('id', userId).maybeSingle()
+    if (fallback) return { data: fallback, table: 'users' }
+  } catch (_) {}
   return { data: null, table: null }
 }
 
 // Helper: update a field in the correct table for this user
 function updateUserField(admin, userId, table, updates) {
   if (!table) return Promise.resolve()
-  return admin.from(table).update(updates).eq('id', userId).then(() => {}).catch(() => {})
+  return admin.from(table).update(updates).eq('id', userId).then(() => {}).catch((err) => {
+    // If tag_profile column doesn't exist in users table, just skip it
+    console.log('[analytics] updateUserField error:', err?.message?.substring(0, 80))
+  })
 }
 
 export default async function handler(req, res) {

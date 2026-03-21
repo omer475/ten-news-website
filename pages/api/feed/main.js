@@ -782,6 +782,44 @@ export default async function handler(req, res) {
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
 
+      // For guest users without tag_profile column: compute from recent events
+      if (!storedTagProfile && userId) {
+        const { data: recentEvents } = await supabase
+          .from('user_article_events')
+          .select('event_type, article_id')
+          .eq('user_id', userId)
+          .in('event_type', ['article_engaged', 'article_liked', 'article_saved', 'article_detail_view'])
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (recentEvents && recentEvents.length > 0) {
+          const articleIds = [...new Set(recentEvents.map(e => e.article_id).filter(Boolean))];
+          if (articleIds.length > 0) {
+            const { data: articles } = await supabase
+              .from('published_articles')
+              .select('id, interest_tags')
+              .in('id', articleIds.slice(0, 50));
+            if (articles) {
+              const weights = { article_liked: 0.20, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 };
+              const computed = {};
+              for (const event of recentEvents) {
+                const art = articles.find(a => a.id === event.article_id);
+                if (!art) continue;
+                const tags = safeJsonParse(art.interest_tags, []);
+                const w = weights[event.event_type] || 0.05;
+                for (const tag of tags.slice(0, 6)) {
+                  const t = tag.toLowerCase();
+                  computed[t] = Math.min((computed[t] || 0) + w, 1.0);
+                }
+              }
+              if (Object.keys(computed).length > 0) {
+                storedTagProfile = computed;
+                console.log(`[feed] Computed tag_profile from ${recentEvents.length} events (${Object.keys(computed).length} tags) for ${userId?.substring(0, 8)}`);
+              }
+            }
+          }
+        }
+      }
+
       // Check if user has interest clusters (PinnerSage-lite)
       if (tasteVector && persUserId) {
         const { count } = await supabase
