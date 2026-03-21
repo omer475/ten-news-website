@@ -200,30 +200,26 @@ export default async function handler(req, res) {
       const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
                            metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
       if (event_type === 'article_engaged' && dwellSeconds > 0) {
-        // Tiers: 6-12s → 1.0x, 12-25s → 1.5x, 25-45s → 2.0x, 45s+ → 2.5x
         if (dwellSeconds >= 45) baseWeight *= 2.5
         else if (dwellSeconds >= 25) baseWeight *= 2.0
         else if (dwellSeconds >= 12) baseWeight *= 1.5
-        // 6-12s = default 1.0x (no change)
       }
 
-      admin
-        .from('published_articles')
-        .select('interest_tags')
-        .eq('id', article_id)
-        .single()
-        .then(({ data: articleData }) => {
-          if (!articleData) return
+      // AWAITED: tag_profile update must complete before function exits
+      try {
+        const { data: articleData } = await admin
+          .from('published_articles')
+          .select('interest_tags')
+          .eq('id', article_id)
+          .single()
+        if (articleData) {
           const allTags = typeof articleData.interest_tags === 'string'
             ? JSON.parse(articleData.interest_tags || '[]')
             : (articleData.interest_tags || [])
-          // Only first 6 tags — tail tags are noise (mentioned in passing, not about)
           const tags = allTags.slice(0, 6)
-          if (tags.length === 0) return
-
-          loadUserField(admin, user.id, 'tag_profile')
-            .then(({ data: profileData, table }) => {
-              if (!table) return
+          if (tags.length > 0) {
+            const { data: profileData, table } = await loadUserField(admin, user.id, 'tag_profile')
+            if (table) {
               const tagProfile = profileData?.tag_profile || {}
               for (let i = 0; i < tags.length; i++) {
                 const t = tags[i].toLowerCase()
@@ -231,11 +227,14 @@ export default async function handler(req, res) {
                 const tagWeight = baseWeight * positionMultiplier
                 tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.0)
               }
-              updateUserField(admin, user.id, table, { tag_profile: tagProfile })
-            })
-            .catch(() => {})
-        })
-        .catch(() => {})
+              await updateUserField(admin, user.id, table, { tag_profile: tagProfile })
+              console.log('[analytics] tag_profile updated from', event_type, ':', tags.length, 'tags for', user.id?.substring(0, 8))
+            }
+          }
+        }
+      } catch (e) {
+        console.log('[analytics] tag_profile update error:', e.message?.substring(0, 80))
+      }
     }
 
     // ============================================================
