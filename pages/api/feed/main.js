@@ -1062,26 +1062,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24h
-    // Cold-start users need more trending articles since personal pool is empty
+    // 2. TRENDING: high editorial score — fetch more, filter by shelf life client-side
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
+      .gte('created_at', fortyEightHoursAgo)
+      .gte('ai_final_score', 600)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 50 : 300),
+      .limit(200),
 
-    // 3. DISCOVERY: diverse quality content, 7-day pool
-    // Tightened from 30 days to 7 days to prevent stale articles in feed.
-    // Cold-start: fetch larger pool to compensate for empty personal
+    // 3. DISCOVERY: quality content from all active articles
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
+      .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 200 : 500),
+      .limit(500),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -1187,24 +1184,33 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // Fetch per-category articles for followed interests
+  // Fetch ALL active articles (within shelf life) for interest categories
+  // No per-category limit — let the scoring system pick the best ones.
+  // An article is "active" if its age < shelf_life_days.
+  // Two-stage: first get basic fields for scoring, then load embeddings for top candidates.
   let interestArticles = [];
   if (interestCategories.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
-    const catPromises = allInterestCats.map(cat =>
-      supabase
-        .from('published_articles')
-        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days, embedding_minilm')
-        .eq('category', cat)
-        .gte('created_at', sevenDaysAgo)
-        .gte('ai_final_score', 300)
-        .order('ai_final_score', { ascending: false })
-        .limit(100)
-    );
-    const catResults = await Promise.all(catPromises);
-    for (const r of catResults) {
-      if (r.data) interestArticles.push(...r.data);
-    }
+
+    // Fetch all articles from interest categories in the last 14 days
+    // (shelf_life filtering happens client-side since Supabase can't do computed column filters)
+    const fourteenDaysAgo = new Date(now - 14 * 24 * 3600000).toISOString();
+    const { data: rawArticles } = await supabase
+      .from('published_articles')
+      .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+      .in('category', allInterestCats)
+      .gte('created_at', fourteenDaysAgo)
+      .gte('ai_final_score', 200)
+      .order('created_at', { ascending: false });
+
+    // Filter by shelf life: only keep articles still within their shelf life
+    const nowMs = Date.now();
+    interestArticles = (rawArticles || []).filter(a => {
+      const ageDays = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
+      const shelf = a.shelf_life_days || 7;
+      return ageDays <= shelf;
+    });
+
     // Deduplicate
     const seen = new Set();
     interestArticles = interestArticles.filter(a => {
@@ -1212,6 +1218,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       seen.add(a.id);
       return true;
     });
+
+    console.log(`[feed] Interest pool: ${interestArticles.length} active articles from ${allInterestCats.length} categories (was limited to ${allInterestCats.length * 100}) for ${userId?.substring(0,8)}`);
   }
 
   // ==========================================
@@ -1326,8 +1334,12 @@ async function handleV2Feed(req, res, supabase, opts) {
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
+  const nowMs = Date.now();
   for (const a of (trendingResult.data || [])) {
     if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    // Shelf life filter: skip expired articles
+    const ageDays = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
+    if (ageDays > (a.shelf_life_days || 7)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
     if (trendingCategoryCounts[cat] > trendingCatMax) continue;
@@ -1343,6 +1355,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
     if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    // Shelf life filter
+    const ageDaysD = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
+    if (ageDaysD > (a.shelf_life_days || 7)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
@@ -1511,6 +1526,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     })
     .filter(a => a._tagMatches > 0) // FILTER: require at least 1 tag overlap (prevents Science leak)
     .sort((a, b) => b._score - a._score);
+
+  // Load embeddings for top interest candidates (two-stage for performance)
+  // Only fetch for top 200 to avoid loading embeddings for thousands of articles
+  if (userEmbedding && interestScored.length > 0) {
+    const topIds = interestScored.slice(0, 200).map(a => a.id);
+    const { data: embData } = await supabase
+      .from('published_articles')
+      .select('id, embedding_minilm')
+      .in('id', topIds);
+    if (embData) {
+      const embMap = {};
+      for (const e of embData) embMap[e.id] = e.embedding_minilm;
+      for (const a of interestScored) {
+        if (embMap[a.id]) a.embedding_minilm = embMap[a.id];
+      }
+    }
+  }
 
   // ==========================================
   // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -2245,7 +2277,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v15',  // deployment version marker
+    _v: 'v16',  // deployment version marker
   });
 }
 
