@@ -311,6 +311,52 @@ export default async function handler(req, res) {
         }
       }
 
+      // ── SKIP-BASED DAMPENING ──
+      // If skip_profile shows heavy skipping of an onboarding category's entities,
+      // remove that category from the cold-start pool
+      if (Object.keys(skipProfile).length > 0) {
+        for (const topic of followedTopics) {
+          const resolvedSubtopics = SUBTOPIC_CATEGORY_MAP[topic]
+            ? [topic]
+            : (APP_TOPIC_ALIAS[topic.toLowerCase()] || [])
+          for (const resolved of resolvedSubtopics) {
+            const cats = SUBTOPIC_CATEGORY_MAP[resolved]
+            if (!cats) continue
+            // Check skip signals for this topic's entities
+            let skipSignal = 0
+            for (const [entity, val] of Object.entries(skipProfile)) {
+              const w = typeof val === 'object' ? (val.w || 0) : (typeof val === 'number' ? val : 0)
+              if (w > 0.15) skipSignal += w
+            }
+            // If significant skip signals exist, dampen categories
+            if (skipSignal > 0.5) {
+              cats.forEach(c => interestCategories.delete(c))
+              console.log(`[explore] Dampened category from topic "${resolved}" (skipSignal=${skipSignal.toFixed(2)}) for user ${user_id?.substring(0,8)}`)
+            }
+          }
+        }
+      }
+
+      // ── TAG_PROFILE CATEGORY PROMOTION ──
+      // If tag_profile shows strong signal for categories not in onboarding, add them
+      if (Object.keys(tagProfile).length > 0) {
+        const PROMO_THRESHOLD = 0.25
+        for (const [subtopic, cats] of Object.entries(SUBTOPIC_CATEGORY_MAP)) {
+          if (cats.every(c => interestCategories.has(c))) continue // already included
+          // Check if any tag_profile entries match this subtopic's expected entities
+          // Use the subtopic name words as signals
+          const words = subtopic.toLowerCase().split(/[\s&/]+/).filter(w => w.length >= 2)
+          let signal = 0
+          for (const word of words) {
+            signal += tagProfile[word] || 0
+          }
+          if (signal >= PROMO_THRESHOLD) {
+            cats.forEach(c => interestCategories.add(c))
+            console.log(`[explore] Promoted categories [${cats}] from tag_profile (signal=${signal.toFixed(2)}) for user ${user_id?.substring(0,8)}`)
+          }
+        }
+      }
+
       if (interestCategories.size > 0) {
         const { data: catEntities } = await supabase
           .from('concept_entities')
@@ -346,7 +392,9 @@ export default async function handler(req, res) {
           for (const e of sorted) {
             if (userTopics.length >= TARGET_TOPICS) break
             if (usedEntityNames.has(e.entity_name)) continue
-            if (skipProfile[e.entity_name] && skipProfile[e.entity_name] > 0.3) continue
+            const skipEntry = skipProfile[e.entity_name]
+            const skipVal = typeof skipEntry === 'object' ? (skipEntry.w || 0) : (typeof skipEntry === 'number' ? skipEntry : 0)
+            if (skipVal > 0.3) continue
             if ((catCounts[e.category] || 0) >= 4) continue
 
             usedEntityNames.add(e.entity_name)
