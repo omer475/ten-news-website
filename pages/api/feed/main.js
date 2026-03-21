@@ -1018,14 +1018,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   // If user consistently skips their onboarding topics, reduce those topics'
   // influence. Uses skip_profile vs tag_profile to detect divergence.
   // ==========================================
-  if (effectiveSkipProfile && storedTagProfile && Object.keys(storedTagProfile).length >= 2) {
+  if (skipProfile && storedTagProfile && Object.keys(storedTagProfile).length >= 2) {
     for (const topic of [...followedTopics]) {
       const mapping = ONBOARDING_TOPIC_MAP[topic];
       if (!mapping) continue;
       let skipSignal = 0, engageSignal = 0;
       for (const tag of mapping.tags) {
         const t = tag.toLowerCase();
-        const skipEntry = effectiveSkipProfile[t];
+        const skipEntry = skipProfile[t];
         const skipVal = typeof skipEntry === 'object' ? (skipEntry.w || 0) : (typeof skipEntry === 'number' ? skipEntry : 0);
         skipSignal += skipVal;
         engageSignal += storedTagProfile[t] || 0;
