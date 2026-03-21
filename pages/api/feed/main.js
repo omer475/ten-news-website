@@ -54,6 +54,10 @@ const ONBOARDING_TOPIC_MAP = {
   'Gaming':                      { categories: ['Entertainment', 'Tech'], tags: ['gaming', 'video games', 'playstation', 'xbox', 'nintendo', 'esports', 'steam'] },
   'Celebrity News':              { categories: ['Entertainment'], tags: ['celebrity', 'famous', 'scandal', 'gossip', 'paparazzi', 'star', 'billionaire'] },
   'K-Pop & K-Drama':             { categories: ['Entertainment'], tags: ['k-pop', 'k-drama', 'korean', 'bts', 'blackpink', 'kdrama', 'hallyu'] },
+  'Bollywood & Indian Cinema':    { categories: ['Entertainment'], tags: ['bollywood', 'indian cinema', 'shah rukh khan', 'alia bhatt', 'salman khan', 'tollywood', 'indian film'] },
+  'Anime & Manga':                { categories: ['Entertainment'], tags: ['anime', 'manga', 'one piece', 'naruto', 'dragon ball', 'studio ghibli', 'crunchyroll', 'shonen'] },
+  'Hip-Hop & Rap':                { categories: ['Entertainment'], tags: ['hip-hop', 'rap', 'rapper', 'hip hop', 'drake', 'kendrick', 'travis scott', 'kanye'] },
+  'Afrobeats & African Music':    { categories: ['Entertainment'], tags: ['afrobeats', 'afro beats', 'burna boy', 'wizkid', 'davido', 'rema', 'asake', 'amapiano'] },
 
   // ── Tech (6) ──
   'AI & Machine Learning':       { categories: ['Tech'], tags: ['ai', 'artificial intelligence', 'machine learning', 'chatgpt', 'openai', 'deep learning', 'llm'] },
@@ -85,8 +89,9 @@ const ONBOARDING_TOPIC_MAP = {
   'DeFi & Web3':                 { categories: ['Finance', 'Tech'], tags: ['defi', 'web3', 'blockchain', 'smart contract', 'dao', 'decentralized'] },
   'Crypto Regulation & Legal':   { categories: ['Finance', 'Tech'], tags: ['crypto regulation', 'sec', 'crypto law', 'crypto ban', 'crypto tax', 'cryptocurrency'] },
 
-  // ── Lifestyle (3) ──
+  // ── Lifestyle (4) ──
   'Pets & Animals':              { categories: ['Lifestyle'], tags: ['pets', 'animals', 'dog', 'cat', 'veterinary', 'adoption', 'wildlife'] },
+  'Food & Cooking':              { categories: ['Lifestyle', 'Entertainment'], tags: ['food', 'cooking', 'restaurant', 'recipe', 'chef', 'cuisine', 'dining', 'michelin'] },
   'Home & Garden':               { categories: ['Lifestyle'], tags: ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'] },
   'Shopping & Product Reviews':  { categories: ['Lifestyle'], tags: ['shopping', 'product review', 'best buy', 'deal', 'discount', 'gadget review'] },
 
@@ -107,7 +112,7 @@ const APP_TOPIC_ALIAS = {
   'politics':       ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania', 'Human Rights & Civil Liberties'],
   'sports':         ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Olympics & Paralympics'],
   'business':       ['Oil & Energy', 'Automotive', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Startups & Venture Capital', 'Real Estate'],
-  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama'],
+  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama', 'Bollywood & Indian Cinema', 'Anime & Manga', 'Hip-Hop & Rap', 'Afrobeats & African Music'],
   'technology':     ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
   'tech':           ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
   'science':        ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
@@ -186,6 +191,14 @@ const APP_TOPIC_ALIAS = {
   'sneakers_streetwear':    ['Sneakers & Streetwear'],
   'celebrity_style':        ['Celebrity Style & Red Carpet'],
   'pets_animals':           ['Pets & Animals'],
+  'bollywood':              ['Bollywood & Indian Cinema'],
+  'anime':                  ['Anime & Manga'],
+  'anime_manga':            ['Anime & Manga'],
+  'hiphop':                 ['Hip-Hop & Rap'],
+  'hip_hop':                ['Hip-Hop & Rap'],
+  'afrobeats':              ['Afrobeats & African Music'],
+  'food':                   ['Food & Cooking'],
+  'food_cooking':           ['Food & Cooking'],
 };
 
 // Resolve a short topic ID to full ONBOARDING_TOPIC_MAP names
@@ -503,8 +516,8 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
         const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
         skipScore += entry.w * decay;
       } else if (typeof entry === 'number') {
-        // Legacy flat number — apply 50% decay as default
-        skipScore += entry * 0.5;
+        // Legacy flat number — apply full weight (old data without timestamp)
+        skipScore += entry;
       }
     }
   }
@@ -513,8 +526,10 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   momentumBoost /= n;
   skipScore /= n;
 
-  // Skip penalty: only penalize if skip signal > interest signal
-  const netSkip = Math.max(0, skipScore - tagScore * 0.5);
+  // Skip penalty: apply directly — skips should have immediate impact
+  // Old formula required skip > 50% of interest, making skips nearly useless
+  // New: skip penalty applies fully, offset only slightly by interest (20%)
+  const netSkip = Math.max(0, skipScore - tagScore * 0.15);
   const skipPenalty = Math.min(netSkip, 0.9);
 
   // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
@@ -1849,7 +1864,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v11',  // deployment version marker
+    _v: 'v12',  // deployment version marker
   });
 }
 

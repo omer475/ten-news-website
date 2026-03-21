@@ -366,9 +366,14 @@ export default async function handler(req, res) {
             .single()
             .then(({ data: profileData }) => {
               const skipProfile = profileData?.skip_profile || {}
+              const now = new Date().toISOString()
               for (const tag of tags) {
                 const t = tag.toLowerCase()
-                skipProfile[t] = Math.min((skipProfile[t] || 0) + 0.05, 0.9)
+                // Store as timestamped objects for proper time decay in feed scoring
+                // Weight: 0.20 per skip (same as a like) — skips are clear negative signals
+                const existing = skipProfile[t]
+                const currentW = typeof existing === 'object' ? (existing.w || 0) : (typeof existing === 'number' ? existing : 0)
+                skipProfile[t] = { w: Math.min(currentW + 0.20, 1.5), t: now }
               }
               admin
                 .from('profiles')
