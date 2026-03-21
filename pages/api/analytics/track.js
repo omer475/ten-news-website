@@ -58,13 +58,7 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!user) {
-      console.log('[analytics] No user found after auth attempts')
-      return res.status(401).json({ error: 'Not authenticated' })
-    }
-    
-    console.log('[analytics] Auth success via', authMethod, 'user:', user.id?.substring(0, 8))
-
+    // Also accept guest device ID from request body for unauthenticated users
     const {
       event_type,
       session_id = null,
@@ -74,8 +68,37 @@ export default async function handler(req, res) {
       source = null,
       referrer = null,
       page = null,
-      metadata = {}
+      metadata = {},
+      guest_device_id = null
     } = req.body || {}
+
+    // Fallback: accept guest_device_id OR user_id from request body
+    // This handles: (1) guest users, (2) authenticated users with expired tokens
+    const fallbackId = guest_device_id || req.body?.user_id
+    if (!user && fallbackId) {
+      // Validate this ID exists in profiles (prevents spoofing random IDs)
+      const { data: fallbackProfile } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('id', fallbackId)
+        .maybeSingle()
+      if (fallbackProfile) {
+        user = { id: fallbackId }
+        authMethod = 'fallback_id'
+      } else if (guest_device_id) {
+        // Guest — create profile so events can be stored
+        await admin.from('profiles').upsert({ id: guest_device_id }, { onConflict: 'id' }).then(() => {}).catch(() => {})
+        user = { id: guest_device_id }
+        authMethod = 'guest_device_new'
+      }
+    }
+
+    if (!user) {
+      console.log('[analytics] No user found after auth attempts')
+      return res.status(401).json({ error: 'Not authenticated' })
+    }
+
+    console.log('[analytics] Auth success via', authMethod, 'user:', user.id?.substring(0, 8))
 
     if (!event_type || typeof event_type !== 'string') {
       return res.status(400).json({ error: 'event_type is required' })
