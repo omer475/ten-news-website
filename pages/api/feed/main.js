@@ -61,7 +61,6 @@ const ONBOARDING_TOPIC_MAP = {
   'Hip-Hop & Rap':                { categories: ['Entertainment'], tags: ['hip-hop', 'rap', 'rapper', 'hip hop', 'drake', 'kendrick', 'travis scott', 'kanye'] },
   'Afrobeats & African Music':    { categories: ['Entertainment'], tags: ['afrobeats', 'afro beats', 'burna boy', 'wizkid', 'davido', 'rema', 'asake', 'amapiano'] },
   'Latin Music & Reggaeton':      { categories: ['Entertainment'], tags: ['reggaeton', 'latin music', 'bad bunny', 'latin pop', 'bachata', 'salsa', 'shakira'] },
-  'True Crime':                   { categories: ['Entertainment'], tags: ['true crime', 'murder', 'serial killer', 'investigation', 'cold case', 'crime documentary', 'forensic'] },
   'Comedy & Humor':               { categories: ['Entertainment'], tags: ['comedy', 'humor', 'standup', 'comedian', 'funny', 'memes', 'satire'] },
 
   // ── Tech (6) ──
@@ -104,6 +103,9 @@ const ONBOARDING_TOPIC_MAP = {
   'Home & Garden':               { categories: ['Lifestyle'], tags: ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'] },
   'Shopping & Product Reviews':  { categories: ['Lifestyle'], tags: ['shopping', 'product review', 'best buy', 'deal', 'discount', 'gadget review'] },
 
+  // ── News (1) ──
+  'Breaking News & World Affairs': { categories: ['Politics', 'Business', 'Science', 'Health'], tags: ['breaking news', 'world news', 'headline', 'current events', 'global affairs', 'news', 'latest news'] },
+
   // ── Fashion (2) ──
   'Sneakers & Streetwear':       { categories: ['Lifestyle'], tags: ['sneakers', 'streetwear', 'nike', 'adidas', 'jordan', 'yeezy', 'drop'] },
   'Celebrity Style & Red Carpet': { categories: ['Lifestyle', 'Entertainment'], tags: ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'] },
@@ -121,7 +123,7 @@ const APP_TOPIC_ALIAS = {
   'politics':       ['US Politics', 'European Politics', 'Asian Politics', 'Middle East', 'Latin America', 'Africa & Oceania', 'Human Rights & Civil Liberties'],
   'sports':         ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Tennis', 'Golf', 'Olympics & Paralympics'],
   'business':       ['Oil & Energy', 'Automotive', 'Retail & Consumer', 'Corporate Deals', 'Trade & Tariffs', 'Corporate Earnings', 'Startups & Venture Capital', 'Real Estate'],
-  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama', 'Bollywood & Indian Cinema', 'Anime & Manga', 'Hip-Hop & Rap', 'Afrobeats & African Music', 'Latin Music & Reggaeton', 'True Crime', 'Comedy & Humor'],
+  'entertainment':  ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News', 'K-Pop & K-Drama', 'Bollywood & Indian Cinema', 'Anime & Manga', 'Hip-Hop & Rap', 'Afrobeats & African Music', 'Latin Music & Reggaeton', 'Comedy & Humor'],
   'technology':     ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
   'tech':           ['AI & Machine Learning', 'Smartphones & Gadgets', 'Social Media', 'Cybersecurity', 'Space Tech', 'Robotics & Hardware'],
   'science':        ['Space & Astronomy', 'Climate & Environment', 'Biology & Nature', 'Earth Science'],
@@ -212,8 +214,8 @@ const APP_TOPIC_ALIAS = {
   'golf':                   ['Golf'],
   'latin_music':            ['Latin Music & Reggaeton'],
   'reggaeton':              ['Latin Music & Reggaeton'],
-  'true_crime':             ['True Crime'],
   'comedy':                 ['Comedy & Humor'],
+  'news':                   ['Breaking News & World Affairs'],
   'travel':                 ['Travel & Adventure'],
   'travel_adventure':       ['Travel & Adventure'],
   'fitness':                ['Fitness & Workout'],
