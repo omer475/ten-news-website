@@ -10,18 +10,20 @@ function getAdminSupabase() {
 
 // Helper: load a field from profiles, fall back to users table (for guest users)
 async function loadUserField(admin, userId, field) {
-  const { data: profileData, error: profileError } = await admin.from('profiles').select(field).eq('id', userId).maybeSingle()
+  const { data: profileData } = await admin.from('profiles').select(field).eq('id', userId).maybeSingle()
   if (profileData) return { data: profileData, table: 'profiles' }
-  // Try users table — use try/catch because some columns (tag_profile) may not exist
-  try {
-    const { data: userData } = await admin.from('users').select(field).eq('id', userId).maybeSingle()
-    if (userData) return { data: userData, table: 'users' }
-  } catch (_) {}
-  // If specific fields fail, try with just 'skip_profile' (always exists in users)
-  try {
-    const { data: fallback } = await admin.from('users').select('skip_profile').eq('id', userId).maybeSingle()
+  // Try users table with the requested fields
+  const { data: userData, error: userError } = await admin.from('users').select(field).eq('id', userId).maybeSingle()
+  if (userError) {
+    console.log('[analytics] loadUserField users error:', userError.message?.substring(0, 80), 'field:', field)
+    // Fallback: try selecting all common profile fields
+    const { data: fallback } = await admin.from('users').select('skip_profile, tag_profile').eq('id', userId).maybeSingle()
     if (fallback) return { data: fallback, table: 'users' }
-  } catch (_) {}
+    // Last resort: just skip_profile
+    const { data: last } = await admin.from('users').select('skip_profile').eq('id', userId).maybeSingle()
+    if (last) return { data: last, table: 'users' }
+  }
+  if (userData) return { data: userData, table: 'users' }
   return { data: null, table: null }
 }
 
