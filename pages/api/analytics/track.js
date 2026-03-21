@@ -8,6 +8,21 @@ function getAdminSupabase() {
   return createAdminClient(url, serviceKey, { auth: { persistSession: false } })
 }
 
+// Helper: load a field from profiles, fall back to users table (for guest users)
+async function loadUserField(admin, userId, field) {
+  const { data: profileData } = await admin.from('profiles').select(field).eq('id', userId).maybeSingle()
+  if (profileData) return { data: profileData, table: 'profiles' }
+  const { data: userData } = await admin.from('users').select(field).eq('id', userId).maybeSingle()
+  if (userData) return { data: userData, table: 'users' }
+  return { data: null, table: null }
+}
+
+// Helper: update a field in the correct table for this user
+function updateUserField(admin, userId, table, updates) {
+  if (!table) return Promise.resolve()
+  return admin.from(table).update(updates).eq('id', userId).then(() => {}).catch(() => {})
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -193,26 +208,17 @@ export default async function handler(req, res) {
           const tags = allTags.slice(0, 6)
           if (tags.length === 0) return
 
-          admin
-            .from('profiles')
-            .select('tag_profile')
-            .eq('id', user.id)
-            .single()
-            .then(({ data: profileData }) => {
+          loadUserField(admin, user.id, 'tag_profile')
+            .then(({ data: profileData, table }) => {
+              if (!table) return
               const tagProfile = profileData?.tag_profile || {}
               for (let i = 0; i < tags.length; i++) {
                 const t = tags[i].toLowerCase()
-                // Position-based weighting: tag 0 = full weight, tag 5 = ~28%
                 const positionMultiplier = 1.0 - (i * 0.12)
                 const tagWeight = baseWeight * positionMultiplier
                 tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.0)
               }
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile })
-                .eq('id', user.id)
-                .then(() => {})
-                .catch(() => {})
+              updateUserField(admin, user.id, table, { tag_profile: tagProfile })
             })
             .catch(() => {})
         })
@@ -237,94 +243,41 @@ export default async function handler(req, res) {
       if (!entityName) {
         console.log('[analytics] Explore event missing entity_name in metadata')
       } else {
-        admin
-          .from('profiles')
-          .select('tag_profile, explore_daily_boost')
-          .eq('id', user.id)
-          .single()
-          .then(({ data: profileData }) => {
+        loadUserField(admin, user.id, 'tag_profile, explore_daily_boost')
+          .then(({ data: profileData, table }) => {
+            if (!table) return
             const tagProfile = profileData?.tag_profile || {}
 
-            // Daily cap tracking: { date: "2026-03-12", total: 0.23 }
             const today = new Date().toISOString().slice(0, 10)
             let dailyBoost = profileData?.explore_daily_boost || {}
-            if (dailyBoost.date !== today) {
-              dailyBoost = { date: today, total: 0 }
-            }
+            if (dailyBoost.date !== today) dailyBoost = { date: today, total: 0 }
             const DAILY_CAP = 0.40
             const remaining = Math.max(0, DAILY_CAP - (dailyBoost.total || 0))
-            if (remaining <= 0) {
-              console.log('[analytics] Explore daily cap reached for user:', user.id?.substring(0, 8))
-              return
-            }
+            if (remaining <= 0) return
 
-            // Calculate boost based on event type
             let boost = 0
-            if (event_type === 'explore_topic_tap') {
-              boost = 0.02
-            } else if (event_type === 'explore_topic_dwell') {
-              const dwellSeconds = parseFloat(metadata?.dwell_seconds || '0')
-              boost = Math.min(dwellSeconds * 0.008, 0.12)
-            } else if (event_type === 'explore_article_tap') {
-              boost = 0.06
-            }
-
-            // Clamp to remaining daily budget
+            if (event_type === 'explore_topic_tap') boost = 0.02
+            else if (event_type === 'explore_topic_dwell') boost = Math.min(parseFloat(metadata?.dwell_seconds || '0') * 0.008, 0.12)
+            else if (event_type === 'explore_article_tap') boost = 0.06
             boost = Math.min(boost, remaining)
             if (boost <= 0) return
 
-            // Update entity_name in tag_profile
             tagProfile[entityName] = Math.min((tagProfile[entityName] || 0) + boost, 1.0)
             dailyBoost.total = (dailyBoost.total || 0) + boost
 
-            // For explore_article_tap: ALSO boost all of the article's interest_tags
-            // This helps cold-start users build a richer profile faster
             if (event_type === 'explore_article_tap' && article_id) {
-              admin
-                .from('published_articles')
-                .select('interest_tags')
-                .eq('id', article_id)
-                .single()
+              admin.from('published_articles').select('interest_tags').eq('id', article_id).single()
                 .then(({ data: articleData }) => {
-                  if (!articleData) {
-                    // No article found, just save the entity_name boost
-                    admin
-                      .from('profiles')
-                      .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                      .eq('id', user.id)
-                      .then(() => {})
-                      .catch(() => {})
-                    return
+                  if (articleData) {
+                    const tags = typeof articleData.interest_tags === 'string' ? JSON.parse(articleData.interest_tags || '[]') : (articleData.interest_tags || [])
+                    const articleTagBoost = Math.min(boost * 0.5, remaining - boost)
+                    for (const tag of tags) { const t = tag.toLowerCase(); if (t !== entityName) tagProfile[t] = Math.min((tagProfile[t] || 0) + articleTagBoost, 1.0) }
+                    dailyBoost.total += articleTagBoost * tags.length
                   }
-                  const tags = typeof articleData.interest_tags === 'string'
-                    ? JSON.parse(articleData.interest_tags || '[]')
-                    : (articleData.interest_tags || [])
-
-                  // Boost each article tag at half the entity boost (0.03)
-                  const articleTagBoost = Math.min(boost * 0.5, remaining - boost)
-                  for (const tag of tags) {
-                    const t = tag.toLowerCase()
-                    if (t === entityName) continue // already boosted above
-                    tagProfile[t] = Math.min((tagProfile[t] || 0) + articleTagBoost, 1.0)
-                  }
-                  dailyBoost.total += articleTagBoost * tags.length
-
-                  admin
-                    .from('profiles')
-                    .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                    .eq('id', user.id)
-                    .then(() => console.log('[analytics] Explore article_tap tag_profile updated'))
-                    .catch(() => {})
-                })
-                .catch(() => {})
+                  updateUserField(admin, user.id, table, { tag_profile: tagProfile, explore_daily_boost: dailyBoost })
+                }).catch(() => updateUserField(admin, user.id, table, { tag_profile: tagProfile, explore_daily_boost: dailyBoost }))
             } else {
-              // topic_tap or topic_dwell: just save the entity_name boost
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                .eq('id', user.id)
-                .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
-                .catch(() => {})
+              updateUserField(admin, user.id, table, { tag_profile: tagProfile, explore_daily_boost: dailyBoost })
             }
           })
           .catch(() => {})
@@ -339,29 +292,19 @@ export default async function handler(req, res) {
     if (event_type === 'search_query' && metadata?.query) {
       const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
       if (queryTerms.length > 0) {
-        admin
-          .from('profiles')
-          .select('tag_profile')
-          .eq('id', user.id)
-          .single()
-          .then(({ data: profileData }) => {
+        loadUserField(admin, user.id, 'tag_profile')
+          .then(({ data: profileData, table }) => {
+            if (!table) return
             const tagProfile = profileData?.tag_profile || {}
             for (const term of queryTerms) {
-              // Search is the STRONGEST explicit intent signal — user typed this
-              // Weight: 0.40 per term (2x a like, 4x an engage)
               tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.40, 1.0)
             }
-            // Multi-word phrase gets even stronger boost (0.50)
             if (queryTerms.length >= 2) {
               const phrase = queryTerms.join(' ')
               tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.50, 1.0)
             }
-            admin
-              .from('profiles')
-              .update({ tag_profile: tagProfile })
-              .eq('id', user.id)
-              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query, 'terms:', queryTerms.length))
-              .catch(() => {})
+            updateUserField(admin, user.id, table, { tag_profile: tagProfile })
+              .then(() => console.log('[analytics] Search query boosted tag_profile in', table, ':', metadata.query))
           })
           .catch(() => {})
       }
@@ -382,36 +325,38 @@ export default async function handler(req, res) {
           if (tags.length === 0) return
 
           // Load current skip_profile, update, and save
+          // Try profiles first, then users table (for guest users)
           admin
             .from('profiles')
             .select('skip_profile')
             .eq('id', user.id)
-            .single()
+            .maybeSingle()
             .then(({ data: profileData }) => {
-              const skipProfile = profileData?.skip_profile || {}
               const now = new Date().toISOString()
-              for (const tag of tags) {
-                const t = tag.toLowerCase()
-                // Store as timestamped objects for proper time decay in feed scoring
-                // Weight: 0.20 per skip (same as a like) — skips are clear negative signals
-                const existing = skipProfile[t]
-                const currentW = typeof existing === 'object' ? (existing.w || 0) : (typeof existing === 'number' ? existing : 0)
-                skipProfile[t] = { w: Math.min(currentW + 0.20, 1.5), t: now }
+              const updateSkipProfile = (existing) => {
+                const skipProfile = existing || {}
+                for (const tag of tags) {
+                  const t = tag.toLowerCase()
+                  const entry = skipProfile[t]
+                  const currentW = typeof entry === 'object' ? (entry.w || 0) : (typeof entry === 'number' ? entry : 0)
+                  skipProfile[t] = { w: Math.min(currentW + 0.20, 1.5), t: now }
+                }
+                return skipProfile
               }
-              admin
-                .from('profiles')
-                .update({ skip_profile: skipProfile })
-                .eq('id', user.id)
-                .then(() => {})
-                .catch(() => {
-                  // Fallback to users table
-                  admin
-                    .from('users')
-                    .update({ skip_profile: skipProfile })
-                    .eq('id', user.id)
-                    .then(() => {})
-                    .catch(() => {})
-                })
+
+              if (profileData) {
+                // Profile exists — update it
+                const skipProfile = updateSkipProfile(profileData.skip_profile)
+                admin.from('profiles').update({ skip_profile: skipProfile }).eq('id', user.id).then(() => {}).catch(() => {})
+              } else {
+                // No profile row — try users table
+                admin.from('users').select('skip_profile').eq('id', user.id).maybeSingle().then(({ data: userData }) => {
+                  const skipProfile = updateSkipProfile(userData?.skip_profile)
+                  admin.from('users').update({ skip_profile: skipProfile }).eq('id', user.id).then(() => {
+                    console.log('[analytics] Updated skip_profile in users table for', user.id?.substring(0, 8))
+                  }).catch(() => {})
+                }).catch(() => {})
+              }
             })
             .catch(() => {})
         })
