@@ -1062,23 +1062,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score — fetch more, filter by shelf life client-side
+    // 2. TRENDING: high quality recent articles, filtered by shelf life client-side
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 600)
+      .gte('ai_final_score', 500)
       .order('ai_final_score', { ascending: false })
-      .limit(200),
+      .limit(500),
 
-    // 3. DISCOVERY: quality content from all active articles
+    // 3. DISCOVERY: broad quality content from active articles
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', 300)
-      .order('ai_final_score', { ascending: false })
-      .limit(500),
+      .gte('ai_final_score', 250)
+      .order('created_at', { ascending: false })
+      .limit(1000),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -1185,27 +1185,32 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // Fetch ALL active articles (within shelf life) for interest categories
-  // No per-category limit — let the scoring system pick the best ones.
-  // An article is "active" if its age < shelf_life_days.
-  // Two-stage: first get basic fields for scoring, then load embeddings for top candidates.
+  // Per-category fetch with limit(2000) to avoid Supabase's 1000-row default cap.
+  // Two-stage: basic fields first, embeddings for top candidates after scoring.
   let interestArticles = [];
   if (interestCategories.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
-
-    // Fetch all articles from interest categories in the last 14 days
-    // (shelf_life filtering happens client-side since Supabase can't do computed column filters)
     const fourteenDaysAgo = new Date(now - 14 * 24 * 3600000).toISOString();
-    const { data: rawArticles } = await supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
-      .in('category', allInterestCats)
-      .gte('created_at', fourteenDaysAgo)
-      .gte('ai_final_score', 200)
-      .order('created_at', { ascending: false });
-
-    // Filter by shelf life: only keep articles still within their shelf life
     const nowMs = Date.now();
-    interestArticles = (rawArticles || []).filter(a => {
+
+    // Fetch per-category with high limit (Supabase caps single query at 1000)
+    const catPromises = allInterestCats.map(cat =>
+      supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+        .eq('category', cat)
+        .gte('created_at', fourteenDaysAgo)
+        .gte('ai_final_score', 200)
+        .order('created_at', { ascending: false })
+        .limit(2000)
+    );
+    const catResults = await Promise.all(catPromises);
+
+    // Merge and filter by shelf life
+    const allRaw = [];
+    for (const r of catResults) { if (r.data) allRaw.push(...r.data); }
+
+    interestArticles = allRaw.filter(a => {
       const ageDays = (nowMs - new Date(a.created_at).getTime()) / (24 * 3600000);
       const shelf = a.shelf_life_days || 7;
       return ageDays <= shelf;
@@ -1219,7 +1224,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       return true;
     });
 
-    console.log(`[feed] Interest pool: ${interestArticles.length} active articles from ${allInterestCats.length} categories (was limited to ${allInterestCats.length * 100}) for ${userId?.substring(0,8)}`);
+    console.log(`[feed] Interest pool: ${interestArticles.length} active articles from ${allInterestCats.length} categories for ${userId?.substring(0,8)}`);
   }
 
   // ==========================================
@@ -2277,7 +2282,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v16',  // deployment version marker
+    _v: 'v17',  // deployment version marker
   });
 }
 
