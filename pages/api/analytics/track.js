@@ -191,8 +191,11 @@ export default async function handler(req, res) {
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
     // Only first 6 tags (primary topics) with position-based weighting:
     //   Tag 1 gets full weight, Tag 6 gets ~28%. Tail tags are noise.
+    // Fix 2: Signal weights aligned with TikTok/Instagram research
+    // Read time (via dwell amplifier) is the strongest signal, not likes
+    // Share/save are high-intent actions, likes are weak
     const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
-    const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
+    const TAG_PROFILE_WEIGHTS = { article_shared: 0.30, article_saved: 0.25, article_engaged: 0.20, article_liked: 0.12, article_detail_view: 0.05 }
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
       let baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
 
@@ -351,7 +354,8 @@ export default async function handler(req, res) {
                   const t = tag.toLowerCase()
                   const entry = skipProfile[t]
                   const currentW = typeof entry === 'object' ? (entry.w || 0) : (typeof entry === 'number' ? entry : 0)
-                  skipProfile[t] = { w: Math.min(currentW + 0.20, 1.5), t: now }
+                  // Fix 2: Skip weight reduced 0.20→0.08 (TikTok: skips are statistically weak, p=0.14)
+                skipProfile[t] = { w: Math.min(currentW + 0.08, 0.8), t: now }
                 }
                 return skipProfile
               }

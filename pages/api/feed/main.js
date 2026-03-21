@@ -11,6 +11,61 @@ const safeJsonParse = (value, fallback = null) => {
 };
 
 // ==========================================
+// COSINE SIMILARITY for embedding-based matching
+// ==========================================
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB);
+  return denom > 0 ? dot / denom : 0;
+}
+
+// ==========================================
+// BUILD USER INTEREST EMBEDDING from tag_profile + engaged articles
+// Creates a weighted average embedding representing the user's interests.
+// Used for semantic matching (Fix 1: embedding-based matching)
+// ==========================================
+async function buildUserInterestEmbedding(supabase, userId, tagProfile, engagedArticleIds) {
+  // Get embeddings from recently engaged articles
+  const articleIds = engagedArticleIds.slice(0, 30);
+  if (articleIds.length === 0) return null;
+
+  const { data: articles } = await supabase
+    .from('published_articles')
+    .select('id, embedding_minilm, interest_tags')
+    .in('id', articleIds);
+
+  if (!articles || articles.length === 0) return null;
+
+  // Weighted average: articles with tags matching tag_profile get higher weight
+  const dim = 384;
+  const result = new Array(dim).fill(0);
+  let totalWeight = 0;
+
+  for (const article of articles) {
+    if (!article.embedding_minilm || !Array.isArray(article.embedding_minilm)) continue;
+    const tags = safeJsonParse(article.interest_tags, []);
+    let weight = 1.0;
+    for (const tag of tags) {
+      weight += (tagProfile[tag.toLowerCase()] || 0) * 2;
+    }
+    for (let i = 0; i < dim; i++) {
+      result[i] += article.embedding_minilm[i] * weight;
+    }
+    totalWeight += weight;
+  }
+
+  if (totalWeight === 0) return null;
+  for (let i = 0; i < dim; i++) result[i] /= totalWeight;
+  return result;
+}
+
+// ==========================================
 // ONBOARDING TOPIC → CATEGORY MAPPING
 // Maps user-selected onboarding topics to DB categories + interest_tags.
 // altCategories provides fallback categories for niche topics.
@@ -516,7 +571,7 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 // SCORING V3: Entity-level + session momentum + skip penalty
 // ==========================================
 
-function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
+function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile, userEmbedding) {
   const tags = safeJsonParse(article.interest_tags, []);
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   const aiScore = article.ai_final_score || 0;
@@ -526,8 +581,8 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   let momentumBoost = 0;
   let skipScore = 0;
 
-  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days
-  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
+  // Skip profile time decay — penalties fade over 7 days
+  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000;
   const now = Date.now();
 
   for (const tag of tags) {
@@ -537,12 +592,10 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
     if (skipProfile) {
       const entry = skipProfile[t];
       if (typeof entry === 'object' && entry !== null && entry.w) {
-        // Time-stamped skip entry: { w: weight, t: timestamp }
         const age = now - new Date(entry.t || 0).getTime();
         const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
         skipScore += entry.w * decay;
       } else if (typeof entry === 'number') {
-        // Legacy flat number — apply full weight (old data without timestamp)
         skipScore += entry;
       }
     }
@@ -552,14 +605,23 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   momentumBoost /= n;
   skipScore /= n;
 
-  // Skip penalty: apply directly — skips should have immediate impact
-  // Old formula required skip > 50% of interest, making skips nearly useless
-  // New: skip penalty applies fully, offset only slightly by interest (20%)
-  const netSkip = Math.max(0, skipScore - tagScore * 0.15);
-  const skipPenalty = Math.min(netSkip, 0.9);
+  // Fix 2: Skip penalty much lighter (TikTok research: skips are weak signals, p=0.14)
+  const netSkip = Math.max(0, skipScore * 0.3 - tagScore * 0.2);
+  const skipPenalty = Math.min(netSkip, 0.5);
 
-  // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
+  // Fix 1: Embedding similarity — semantic match beyond exact tags
+  let embeddingSim = 0;
+  if (userEmbedding && article.embedding_minilm && Array.isArray(article.embedding_minilm)) {
+    embeddingSim = Math.max(0, cosineSim(userEmbedding, article.embedding_minilm));
+  }
+
+  // Fix 2 + Fix 8: Scoring weights aligned with TikTok/Instagram research
+  // Embedding similarity (300) — semantic relevance, the biggest lever
+  // Tag match (200) — explicit interest signals
+  // Session momentum (200) — real-time behavior within session
+  // pgvector similarity (150) — taste vector match
+  // Quality*Recency (150) — baseline content quality
+  const base = embeddingSim * 300 + tagScore * 200 + momentumBoost * 200 + similarity * 150 + (aiScore / 1000) * 150 * recency;
   return base * (1 - skipPenalty);
 }
 
@@ -1132,7 +1194,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
-        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
+        .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days, embedding_minilm')
         .eq('category', cat)
         .gte('created_at', sevenDaysAgo)
         .gte('ai_final_score', 300)
@@ -1164,10 +1226,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     ? storedTagProfile
     : (userInterestProfile || {});
 
-  // Merge session boosts into tag profile (temporary, this request only)
+  // Fix 8: Temporal weighting — session signals get 3x boost over stored profile
+  // This makes the feed respond to what user is doing RIGHT NOW, not last week
   const effectiveTagProfile = { ...baseTagProfile };
   for (const [tag, boost] of Object.entries(momentum.boosts)) {
-    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.0);
+    // Session momentum gets 3x weight (recent signals dominate, like Spotify's 1-week window)
+    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost * 3, 1.5);
   }
 
   // Merge session skip penalties into skip profile
@@ -1336,10 +1400,57 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tagCache = buildTagSetsCache(allArticles);
 
   // ==========================================
+  // PHASE 4.5: BUILD USER INTEREST EMBEDDING (Fix 1)
+  // Semantic matching: find articles similar to what user engaged with,
+  // even if they don't share exact tags.
+  // ==========================================
+  let userEmbedding = null;
+  if (userId && Object.keys(effectiveTagProfile).length > 0) {
+    // Get recently engaged article IDs from events
+    const { data: recentEngaged } = await supabase
+      .from('user_article_events')
+      .select('article_id')
+      .eq('user_id', userId)
+      .in('event_type', ['article_liked', 'article_saved', 'article_engaged'])
+      .order('created_at', { ascending: false })
+      .limit(30);
+    const engagedIds = (recentEngaged || []).map(e => e.article_id).filter(Boolean);
+    if (engagedIds.length >= 3) {
+      userEmbedding = await buildUserInterestEmbedding(supabase, userId, effectiveTagProfile, engagedIds);
+      if (userEmbedding) console.log(`[feed] Built user interest embedding from ${engagedIds.length} articles for ${userId?.substring(0,8)}`);
+    }
+  }
+
+  // ==========================================
+  // PHASE 4.6: COMPUTE INTERACTION COUNT (Fix 3: adaptive exploration)
+  // New users get more exploration, experienced users get more personalization.
+  // ==========================================
+  let interactionCount = 0;
+  if (userId) {
+    const { count } = await supabase
+      .from('user_article_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('event_type', ['article_liked', 'article_saved', 'article_engaged', 'article_skipped']);
+    interactionCount = count || 0;
+  }
+  // Fix 3: Adaptive exploration rate
+  // <20 interactions: 50% explore, 50% interest
+  // 20-50: 65% interest, 35% explore
+  // 50-100: 75% interest, 25% explore
+  // 100+: 85% interest, 15% explore
+  let explorationRate;
+  if (interactionCount < 20) explorationRate = 0.50;
+  else if (interactionCount < 50) explorationRate = 0.35;
+  else if (interactionCount < 100) explorationRate = 0.25;
+  else explorationRate = 0.15;
+  console.log(`[feed] Interactions: ${interactionCount}, explorationRate: ${(explorationRate*100).toFixed(0)}% for ${userId?.substring(0,8)}`);
+
+  // ==========================================
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // Personal bucket: entity-level tag scoring with session momentum
+  // Personal bucket: entity-level tag scoring with session momentum + embedding similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
@@ -1347,7 +1458,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const similarity = personalSimilarityMap[id] || 0;
       return {
         ...article,
-        _score: scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile),
+        _score: scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile, userEmbedding),
         _similarity: similarity,
         _bucket: 'personal',
       };
@@ -1433,6 +1544,62 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
   const iPool = [...interestScored];
+
+  // Fix 5: Simple collaborative filtering
+  // "Users who liked what you liked also liked X"
+  if (userId && interactionCount >= 5) {
+    try {
+      // Get this user's liked article IDs
+      const { data: myLikes } = await supabase
+        .from('user_article_events')
+        .select('article_id')
+        .eq('user_id', userId)
+        .eq('event_type', 'article_liked')
+        .limit(20);
+      const myLikedIds = (myLikes || []).map(e => e.article_id).filter(Boolean);
+
+      if (myLikedIds.length >= 2) {
+        // Find other users who liked the same articles
+        const { data: similarUsers } = await supabase
+          .from('user_article_events')
+          .select('user_id')
+          .in('article_id', myLikedIds.slice(0, 10))
+          .eq('event_type', 'article_liked')
+          .neq('user_id', userId)
+          .limit(50);
+
+        const otherUserIds = [...new Set((similarUsers || []).map(e => e.user_id))].slice(0, 10);
+
+        if (otherUserIds.length > 0) {
+          // Get articles THOSE users liked that I haven't seen
+          const { data: collabArticles } = await supabase
+            .from('user_article_events')
+            .select('article_id')
+            .in('user_id', otherUserIds)
+            .eq('event_type', 'article_liked')
+            .not('article_id', 'in', `(${myLikedIds.join(',')})`)
+            .limit(30);
+
+          const collabIds = [...new Set((collabArticles || []).map(e => e.article_id))];
+          if (collabIds.length > 0) {
+            const existingIds = new Set([...dPool, ...iPool, ...tPool, ...pPool].map(a => a.id));
+            const newCollabIds = collabIds.filter(id => !existingIds.has(id) && articleMap[id]);
+            for (const id of newCollabIds.slice(0, 5)) {
+              const a = articleMap[id];
+              if (a) {
+                a._score = 500; // High score for collab-filtered articles
+                a._bucket = 'collaborative';
+                dPool.push(a); // Add to discovery pool
+              }
+            }
+            if (newCollabIds.length > 0) console.log(`[feed] COLLAB: injected ${Math.min(newCollabIds.length, 5)} articles from ${otherUserIds.length} similar users for ${userId?.substring(0,8)}`);
+          }
+        }
+      }
+    } catch (e) {
+      // Non-critical, don't break the feed
+    }
+  }
 
   // IMPROVEMENT 3: Track world event and cluster counts
   const eventCounts = {};
@@ -1568,7 +1735,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     // but fires even when hasAnyPersonalization is false.
     // sessionInterestRatio adapts based on skip behavior (default 0.8, can drop to 0.3)
     // ==========================================
-    const interestSlots = Math.ceil(limit * sessionInterestRatio);
+    // Fix 3: Use adaptive exploration rate (based on interaction count)
+    // sessionInterestRatio can reduce further based on session skip behavior
+    const effectiveInterestRatio = Math.min(sessionInterestRatio, 1 - explorationRate);
+    const interestSlots = Math.ceil(limit * effectiveInterestRatio);
     const diversitySlots = limit - interestSlots;
 
     // ═══════════════════════════════════════════════════════
@@ -1586,7 +1756,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     const hasTP = effectiveTagProfile && Object.keys(effectiveTagProfile).length > 0;
     const hasSP = effectiveSkipProfile && Object.keys(effectiveSkipProfile).length > 0;
 
-    // Score each article and find its BEST matching interest tag
+    // Score each article: tag match + embedding similarity + skip penalty
     const scoredInterest = iPool.map(a => {
       const tags = safeJsonParse(a.interest_tags, []);
       let totalTagScore = 0, skipPen = 0, bestTag = '', bestTagScore = 0;
@@ -1603,28 +1773,64 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
       totalTagScore /= n;
       skipPen /= n;
+
+      // Fix 1: Embedding similarity — find semantically similar articles
+      let embSim = 0;
+      if (userEmbedding && a.embedding_minilm && Array.isArray(a.embedding_minilm)) {
+        embSim = Math.max(0, cosineSim(userEmbedding, a.embedding_minilm));
+      }
+
       const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
       const quality = ((a.ai_final_score || 0) / 1000) * recency;
-      const score = hasTP ? totalTagScore * 500 - skipPen * 300 + quality * 100 : quality * 250;
-      // Group key: best matching tag, or category if no tag match
+      // Fix 2: Skip penalty reduced (0.3x) — skips are weak signals per TikTok research
+      const netSkip = skipPen * 0.3;
+      const score = hasTP
+        ? embSim * 300 + totalTagScore * 200 - netSkip * 150 + quality * 100
+        : quality * 250;
       const group = bestTag || (a.category || 'Other').toLowerCase();
       return { ...a, _pScore: score, _group: group, _bestTagScore: bestTagScore };
     });
 
-    // Build interest groups: each group = articles matching one interest
-    const interestGroups = {};
+    // Fix 4: Build interest clusters (simplified PinnerSage)
+    // Instead of one group per exact tag, merge similar tags into clusters
+    // Max 8 clusters: merge small groups into nearest larger group
+    const rawGroups = {};
     for (const a of scoredInterest) {
-      if (!interestGroups[a._group]) interestGroups[a._group] = [];
-      interestGroups[a._group].push(a);
+      if (!rawGroups[a._group]) rawGroups[a._group] = [];
+      rawGroups[a._group].push(a);
     }
-    // Sort each group by score (best first)
-    for (const g of Object.values(interestGroups)) {
-      g.sort((a, b) => b._pScore - a._pScore);
+    // Sort each group by score
+    for (const g of Object.values(rawGroups)) g.sort((a, b) => b._pScore - a._pScore);
+
+    // Merge tiny groups (< 3 articles) into the closest larger group by category
+    const interestGroups = {};
+    const largeGroups = Object.entries(rawGroups).filter(([, v]) => v.length >= 3);
+    const smallGroups = Object.entries(rawGroups).filter(([, v]) => v.length < 3);
+    for (const [k, v] of largeGroups) interestGroups[k] = v;
+    for (const [k, articles] of smallGroups) {
+      // Find best merge target by category match
+      const cat = articles[0]?.category || 'Other';
+      let merged = false;
+      for (const [gk, gv] of Object.entries(interestGroups)) {
+        if (gv[0]?.category === cat) { gv.push(...articles); merged = true; break; }
+      }
+      if (!merged) {
+        // No category match — create its own group or merge into biggest
+        if (Object.keys(interestGroups).length < 8) {
+          interestGroups[k] = articles;
+        } else {
+          const biggest = Object.entries(interestGroups).sort((a, b) => b[1].length - a[1].length)[0];
+          if (biggest) biggest[1].push(...articles);
+        }
+      }
     }
-    // Sort groups by their top article's score (strongest interest first)
+    // Re-sort merged groups
+    for (const g of Object.values(interestGroups)) g.sort((a, b) => b._pScore - a._pScore);
+    // Keep max 8 clusters (like PinnerSage light users)
     const groupKeys = Object.keys(interestGroups)
       .filter(k => interestGroups[k].length > 0)
-      .sort((a, b) => (interestGroups[b][0]?._pScore || 0) - (interestGroups[a][0]?._pScore || 0));
+      .sort((a, b) => (interestGroups[b][0]?._pScore || 0) - (interestGroups[a][0]?._pScore || 0))
+      .slice(0, 8);
 
     const usedIds = new Set();
     let lastGroup = '', consecutiveCount = 0;
@@ -1689,7 +1895,28 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       if (!picked) {
-        // All interest groups exhausted — fill with discovery/trending
+        // Fix 6: Content exhaustion recovery
+        // Instead of random discovery, try to find semantically similar articles
+        // from trending/discovery pools using embedding similarity
+        if (userEmbedding) {
+          // Score remaining trending/discovery by embedding similarity
+          const candidates = [...tPool, ...dPool]
+            .filter(a => !usedIds.has(a.id) && a.embedding_minilm)
+            .map(a => ({ ...a, _embSim: cosineSim(userEmbedding, a.embedding_minilm) }))
+            .filter(a => a._embSim > 0.3) // Only reasonably similar
+            .sort((a, b) => b._embSim - a._embSim);
+          if (candidates.length > 0) {
+            picked = candidates[0];
+            usedIds.add(picked.id);
+            picked.bucket = 'bridge'; // bridging adjacent interest
+            recordEventSelection(picked);
+            selected.push(picked);
+            lastGroup = '__bridge__';
+            consecutiveCount = 1;
+            continue;
+          }
+        }
+        // Fallback: generic discovery/trending
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
         if (!picked) break;
@@ -2018,7 +2245,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v14',  // deployment version marker
+    _v: 'v15',  // deployment version marker
   });
 }
 
