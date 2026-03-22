@@ -1062,23 +1062,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high quality recent articles, filtered by shelf life client-side
+    // 2. TRENDING: high editorial score, recent
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 500)
+      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
+      .gte('ai_final_score', hasAnyPersonalization ? 700 : 500)
       .order('ai_final_score', { ascending: false })
-      .limit(500),
+      .limit(hasAnyPersonalization ? 100 : 300),
 
-    // 3. DISCOVERY: broad quality content from active articles
+    // 3. DISCOVERY: diverse quality content
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', 250)
-      .order('created_at', { ascending: false })
-      .limit(1000),
+      .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
+      .order('ai_final_score', { ascending: false })
+      .limit(hasAnyPersonalization ? 200 : 500),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -1193,19 +1193,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     const fourteenDaysAgo = new Date(now - 14 * 24 * 3600000).toISOString();
     const nowMs = Date.now();
 
-    // Fetch per-category with high limit (Supabase caps single query at 1000)
-    // Use 7-day window — shelf life is used for recency scoring, NOT hard filtering.
-    // Hard shelf life filtering kills the pool (most articles shelf_life=1 day → only ~128 active).
-    // The recency decay function already penalizes stale articles in scoring.
+    // Fetch per-category — limit(300) is the sweet spot.
+    // Too low (100): misses niche entities. Too high (1000+): dilutes scoring signal.
+    // v15 scored Grade B with this approach.
     const catPromises = allInterestCats.map(cat =>
       supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
         .gte('created_at', sevenDaysAgo)
-        .gte('ai_final_score', 200)
+        .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false })
-        .limit(1000)
+        .limit(300)
     );
     const catResults = await Promise.all(catPromises);
 
@@ -2273,7 +2272,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v18',  // deployment version marker
+    _v: 'v19',  // deployment version marker
   });
 }
 
