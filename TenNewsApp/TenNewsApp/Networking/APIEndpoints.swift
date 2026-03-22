@@ -1,6 +1,8 @@
 import Foundation
 
 enum APIEndpoints {
+    static let baseURL = "https://www.tennews.ai"
+
     // MARK: - News Feed
     static let newsFeed = "/api/news"
     static let mainFeed = "/api/feed/main"
@@ -28,6 +30,10 @@ enum APIEndpoints {
         "/api/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)&page=\(page)&limit=\(limit)"
     }
     static let searchTrending = "/api/search/trending"
+
+    // MARK: - Content Creation
+    static let contentCreate = "/api/content/create"
+    static let contentUploadImage = "/api/content/upload-image"
 
     // MARK: - Analytics
     static let analyticsTrack = "/api/analytics/track"

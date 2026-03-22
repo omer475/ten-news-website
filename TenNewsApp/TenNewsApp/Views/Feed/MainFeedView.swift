@@ -25,7 +25,7 @@ struct MainFeedView: View {
             } else if !sortedArticles.isEmpty {
                 feedContent
                     .transition(.opacity)
-            } else if !viewModel.hasMore {
+            } else {
                 CaughtUpView()
             }
         }

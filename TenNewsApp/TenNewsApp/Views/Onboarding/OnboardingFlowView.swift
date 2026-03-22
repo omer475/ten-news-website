@@ -11,7 +11,7 @@ struct OnboardingFlowView: View {
 
     var body: some View {
         ZStack {
-            Color.white
+            Color.black
                 .ignoresSafeArea()
 
             switch viewModel.currentStep {
@@ -26,11 +26,10 @@ struct OnboardingFlowView: View {
                     .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
             }
         }
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
         .sheet(isPresented: $showSignIn) { signInSheet }
         .sheet(isPresented: $showSignUp) { signUpSheet }
         .onChange(of: viewModel.currentStep) {
-            // Reset reveal for new page, trigger after typing finishes
             contentRevealed = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
@@ -63,56 +62,59 @@ struct OnboardingFlowView: View {
             ctaLabel: "Continue",
             showSkip: true
         ) {
-            ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 6) {
-                    ForEach(viewModel.availableCountries) { country in
-                        let isSelected = viewModel.selectedCountry == country.id
+            LazyVStack(spacing: 6) {
+                ForEach(viewModel.availableCountries) { country in
+                    let isSelected = viewModel.selectedCountry == country.id
 
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                viewModel.selectCountry(country.id)
-                            }
-                        } label: {
-                            HStack(spacing: 14) {
-                                Text(country.flag)
-                                    .font(.system(size: 32))
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(country.name)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(isSelected ? .white : Color.black.opacity(0.85))
-                                    Text(country.region)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(isSelected ? .white.opacity(0.7) : Color.black.opacity(0.3))
-                                }
-
-                                Spacer()
-
-                                if isSelected {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 22))
-                                        .foregroundStyle(.white)
-                                        .transition(.scale.combined(with: .opacity))
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(isSelected ? Color.blue.opacity(0.15) : Color.black.opacity(0.04))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .strokeBorder(isSelected ? Color.blue.opacity(0.3) : .clear, lineWidth: 1.5)
-                            )
-                            .contentShape(RoundedRectangle(cornerRadius: 14))
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            viewModel.selectCountry(country.id)
                         }
-                        .buttonStyle(RowPressStyle())
+                    } label: {
+                        HStack(spacing: 14) {
+                            Text(country.flag)
+                                .font(.system(size: 32))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(country.name)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                Text(country.region)
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.35))
+                            }
+
+                            Spacer()
+
+                            if isSelected {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundStyle(accent)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background {
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(accent.opacity(0.15))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .strokeBorder(accent.opacity(0.3), lineWidth: 1.5)
+                                    )
+                            } else {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(.white.opacity(0.06))
+                            }
+                        }
+                        .contentShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(RowPressStyle())
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 120)
             }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 120)
             .opacity(contentRevealed ? 1 : 0)
             .offset(y: contentRevealed ? 0 : 20)
             .animation(.spring(response: 0.5, dampingFraction: 0.85), value: contentRevealed)
@@ -134,16 +136,14 @@ struct OnboardingFlowView: View {
             showSkip: false,
             isLastStep: true
         ) {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    ForEach(Array(TopicCategories.all.enumerated()), id: \.element.id) { index, category in
-                        categorySection(category, index: index)
-                    }
+            VStack(spacing: 24) {
+                ForEach(Array(TopicCategories.all.enumerated()), id: \.element.id) { index, category in
+                    categorySection(category, index: index)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 4)
-                .padding(.bottom, 160)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .padding(.bottom, 160)
             .opacity(contentRevealed ? 1 : 0)
             .offset(y: contentRevealed ? 0 : 20)
             .animation(.spring(response: 0.5, dampingFraction: 0.85), value: contentRevealed)
@@ -158,7 +158,6 @@ struct OnboardingFlowView: View {
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                // Colored icon badge
                 Image(systemName: category.icon)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
@@ -175,7 +174,7 @@ struct OnboardingFlowView: View {
                         .foregroundStyle(tint.opacity(0.7))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(tint.opacity(0.1), in: Capsule())
+                        .background(tint.opacity(0.15), in: Capsule())
                         .transition(.scale.combined(with: .opacity))
                 }
 
@@ -183,13 +182,13 @@ struct OnboardingFlowView: View {
             }
             .animation(.spring(response: 0.3), value: count)
 
-            GlassEffectContainer {
-                FlowLayoutView(spacing: 8) {
-                    ForEach(category.subtopics) { topic in
-                        topicChip(topic, tint: tint)
-                    }
+            FlowLayoutView(spacing: 8) {
+                ForEach(category.subtopics) { topic in
+                    topicChip(topic, tint: tint)
                 }
             }
+            .padding(14)
+            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
@@ -205,12 +204,15 @@ struct OnboardingFlowView: View {
                 Text(topic.name)
                     .font(.system(size: 13, weight: .medium))
             }
-            .foregroundStyle(isOn ? .white : tint.opacity(0.8))
+            .foregroundStyle(isOn ? .white : .white.opacity(0.6))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .glassEffect(
-                isOn ? .regular.tint(tint) : .regular,
+            .background(
+                isOn ? tint.opacity(0.5) : .white.opacity(0.08),
                 in: Capsule()
+            )
+            .overlay(
+                Capsule().strokeBorder(isOn ? tint.opacity(0.6) : .white.opacity(0.1), lineWidth: 1)
             )
         }
         .buttonStyle(ChipPressStyle())
@@ -230,99 +232,97 @@ struct OnboardingFlowView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                // Nav bar
-                HStack {
-                    Button {
-                        viewModel.previousStep()
-                        HapticManager.light()
-                    } label: {
-                        GlassEffectContainer {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color.black.opacity(0.7))
-                                .frame(width: 36, height: 36)
-                                .glassEffect(.regular, in: Circle())
-                        }
-                    }
-                    .buttonStyle(NavBackStyle())
-
-                    Spacer()
-
-                    HStack(spacing: 5) {
-                        ForEach(1...2, id: \.self) { i in
-                            Capsule()
-                                .fill(i == step ? accent : Color.black.opacity(0.12))
-                                .frame(width: i == step ? 20 : 6, height: 6)
-                        }
-                    }
-                    .animation(.spring(response: 0.4), value: step)
-
-                    Spacer()
-
-                    if showSkip {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Nav bar
+                    HStack {
                         Button {
-                            viewModel.nextStep()
+                            viewModel.previousStep()
                             HapticManager.light()
                         } label: {
-                            Text("Skip")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(Color.black.opacity(0.35))
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .frame(width: 36, height: 36)
+                                .background(.white.opacity(0.1), in: Circle())
                         }
-                        .frame(width: 36)
-                    } else {
-                        Color.clear.frame(width: 36, height: 36)
+                        .buttonStyle(NavBackStyle())
+
+                        Spacer()
+
+                        HStack(spacing: 5) {
+                            ForEach(1...2, id: \.self) { i in
+                                Capsule()
+                                    .fill(i == step ? accent : .white.opacity(0.15))
+                                    .frame(width: i == step ? 20 : 6, height: 6)
+                            }
+                        }
+                        .animation(.spring(response: 0.4), value: step)
+
+                        Spacer()
+
+                        if showSkip {
+                            Button {
+                                viewModel.nextStep()
+                                HapticManager.light()
+                            } label: {
+                                Text("Skip")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.35))
+                            }
+                            .frame(width: 36)
+                        } else {
+                            Color.clear.frame(width: 36, height: 36)
+                        }
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 4)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 4)
 
-                // Title
-                VStack(alignment: .leading, spacing: 6) {
-                    TypingTextView(fullText: title, typingSpeed: 0.055, startDelay: 0.2)
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(Color.black)
-                        .tracking(-0.5)
+                    // Title
+                    VStack(alignment: .leading, spacing: 6) {
+                        TypingTextView(fullText: title, typingSpeed: 0.055, startDelay: 0.2)
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundStyle(.white)
+                            .tracking(-0.5)
 
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.system(size: 15, weight: .regular))
-                            .foregroundStyle(Color.black.opacity(0.4))
-                            .opacity(contentRevealed ? 1 : 0)
+                        if let subtitle {
+                            Text(subtitle)
+                                .font(.system(size: 15, weight: .regular))
+                                .foregroundStyle(.white.opacity(0.4))
+                                .opacity(contentRevealed ? 1 : 0)
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.top, 10)
-                .padding(.bottom, 14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 10)
+                    .padding(.bottom, 14)
 
-                // Content (revealed after typing)
-                content()
+                    // Content
+                    content()
+                }
             }
 
-            // CTA — Apple Liquid Glass button
+            // CTA button
             VStack(spacing: 8) {
-                GlassEffectContainer {
-                    Button {
-                        if isLastStep { showSignUp = true }
-                        else { goNext() }
-                        HapticManager.medium()
-                    } label: {
-                        Text(ctaLabel)
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(canProceed ? .white : Color.black)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 52)
-                            .glassEffect(
-                                canProceed ? .regular.tint(.blue.opacity(0.5)) : .regular,
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            )
-                    }
-                    .disabled(!canProceed)
-                    .buttonStyle(CTAPressStyle())
-                    .animation(.spring(response: 0.22), value: canProceed)
+                Button {
+                    if isLastStep { showSignUp = true }
+                    else { goNext() }
+                    HapticManager.medium()
+                } label: {
+                    Text(ctaLabel)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(canProceed ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
+                        }
                 }
+                .disabled(!canProceed)
+                .buttonStyle(CTAPressStyle())
+                .animation(.spring(response: 0.22), value: canProceed)
 
                 if isLastStep {
                     Button {
@@ -332,7 +332,7 @@ struct OnboardingFlowView: View {
                     } label: {
                         Text("Continue as Guest")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(Color.black.opacity(0.4))
+                            .foregroundStyle(.white.opacity(0.4))
                     }
                     .frame(height: 24)
                 }
@@ -354,6 +354,7 @@ struct OnboardingFlowView: View {
     private func categoryTint(for id: String) -> Color {
         switch id {
         case "politics":       return Color(hex: "#5856D6")
+        case "news_politics":  return Color(hex: "#5856D6")
         case "sports":         return Color(hex: "#FF9500")
         case "business":       return Color(hex: "#34C759")
         case "entertainment":  return Color(hex: "#FF2D55")
@@ -364,6 +365,7 @@ struct OnboardingFlowView: View {
         case "crypto":         return Color(hex: "#F7931A")
         case "lifestyle":      return Color(hex: "#A2845E")
         case "fashion":        return Color(hex: "#E91E8C")
+        case "news":           return Color(hex: "#007AFF")
         default:               return .gray
         }
     }
@@ -444,121 +446,104 @@ private struct WelcomeScene: View {
     @State private var phase = 0
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                stops: [
-                    .init(color: Color(hex: "#0a0a1a"), location: 0),
-                    .init(color: Color(hex: "#111128"), location: 0.4),
-                    .init(color: Color(hex: "#1a1035"), location: 0.7),
-                    .init(color: Color(hex: "#0d0d20"), location: 1),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 0) {
+            Spacer()
 
-            VStack(spacing: 0) {
-                Spacer()
-
-                VStack(spacing: 12) {
-                    HStack(alignment: .firstTextBaseline, spacing: 0) {
-                        if phase >= 1 {
-                            TypingTextView(fullText: "Today", typingSpeed: 0.07, startDelay: 0)
-                                .font(.system(size: 58, weight: .heavy, design: .serif))
-                                .foregroundStyle(.white)
-                                .tracking(-2)
-                        }
-                        if phase >= 2 {
-                            Text("+")
-                                .font(.system(size: 58, weight: .heavy, design: .serif))
-                                .foregroundStyle(accent)
-                                .tracking(-2)
-                        }
+            VStack(spacing: 12) {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    if phase >= 1 {
+                        TypingTextView(fullText: "Today", typingSpeed: 0.07, startDelay: 0)
+                            .font(.system(size: 58, weight: .heavy, design: .serif))
+                            .foregroundStyle(.white)
+                            .tracking(-2)
                     }
-
-                    if phase >= 3 {
-                        TypingTextView(fullText: "News, reimagined.", typingSpeed: 0.04, startDelay: 0.1)
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .tracking(1)
+                    if phase >= 2 {
+                        Text("+")
+                            .font(.system(size: 58, weight: .heavy, design: .serif))
+                            .foregroundStyle(accent)
+                            .tracking(-2)
                     }
                 }
 
-                Spacer()
-
-                if phase >= 4 {
-                    VStack(spacing: 14) {
-                        HStack(spacing: 8) {
-                            welcomeBadge(icon: "brain", text: "AI-Powered")
-                            welcomeBadge(icon: "person.fill", text: "Personalized")
-                            welcomeBadge(icon: "bolt.fill", text: "Real-time")
-                        }
-                        .padding(.bottom, 6)
-
-                        Button {
-                            HapticManager.medium()
-                            onContinue()
-                        } label: {
-                            Text("Get Started")
-                                .font(.system(size: 17, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 54)
-                                .background(accent.gradient, in: Capsule())
-                        }
-
-                        Button {
-                            HapticManager.light()
-                            onGuest?()
-                        } label: {
-                            GlassEffectContainer {
-                                Text("Continue as Guest")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.6))
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 48)
-                                    .glassEffect(.regular, in: Capsule())
-                            }
-                        }
-
-                        Button {
-                            HapticManager.light()
-                            onSignIn()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text("Already have an account?")
-                                    .foregroundStyle(.white.opacity(0.3))
-                                Text("Sign In")
-                                    .foregroundStyle(.white.opacity(0.65))
-                                    .fontWeight(.semibold)
-                            }
-                            .font(.system(size: 14))
-                            .frame(height: 40)
-                        }
-                    }
-                    .padding(.horizontal, 28)
-                    .padding(.bottom, 44)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                if phase >= 3 {
+                    TypingTextView(fullText: "News, reimagined.", typingSpeed: 0.04, startDelay: 0.1)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .tracking(1)
                 }
             }
+
+            Spacer()
+
+            if phase >= 4 {
+                VStack(spacing: 14) {
+                    HStack(spacing: 8) {
+                        welcomeBadge(icon: "brain", text: "AI-Powered")
+                        welcomeBadge(icon: "person.fill", text: "Personalized")
+                        welcomeBadge(icon: "bolt.fill", text: "Real-time")
+                    }
+                    .padding(.bottom, 6)
+
+                    Button {
+                        HapticManager.medium()
+                        onContinue()
+                    } label: {
+                        Text("Get Started")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(accent.gradient, in: Capsule())
+                    }
+
+                    Button {
+                        HapticManager.light()
+                        onGuest?()
+                    } label: {
+                        Text("Continue as Guest")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(.white.opacity(0.08), in: Capsule())
+                            .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 1))
+                    }
+
+                    Button {
+                        HapticManager.light()
+                        onSignIn()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Already have an account?")
+                                .foregroundStyle(.white.opacity(0.3))
+                            Text("Sign In")
+                                .foregroundStyle(.white.opacity(0.65))
+                                .fontWeight(.semibold)
+                        }
+                        .font(.system(size: 14))
+                        .frame(height: 40)
+                    }
+                }
+                .padding(.horizontal, 28)
+                .padding(.bottom, 44)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
-        .preferredColorScheme(.dark)
         .onAppear { run() }
     }
 
     private func welcomeBadge(icon: String, text: String) -> some View {
-        GlassEffectContainer {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 9, weight: .bold))
-                Text(text)
-                    .font(.system(size: 11, weight: .semibold))
-            }
-            .foregroundStyle(.white.opacity(0.45))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .glassEffect(.regular, in: Capsule())
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .bold))
+            Text(text)
+                .font(.system(size: 11, weight: .semibold))
         }
+        .foregroundStyle(.white.opacity(0.45))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.white.opacity(0.08), in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 1))
     }
 
     private func run() {

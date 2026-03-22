@@ -75,20 +75,4 @@ struct UpdatePreferencesRequest: Encodable {
     }
 }
 
-// MARK: - Analytics Event
-
-struct AnalyticsEvent: Encodable {
-    let eventType: String
-    let articleId: Int?
-    let sessionId: String?
-    let category: String?
-    let source: String?
-    let metadata: [String: String]?
-
-    enum CodingKeys: String, CodingKey {
-        case eventType = "event_type"
-        case articleId = "article_id"
-        case sessionId = "session_id"
-        case category, source, metadata
-    }
-}
+// MARK: - Analytics Event (moved to AnalyticsService.swift as AnalyticsEventFull)

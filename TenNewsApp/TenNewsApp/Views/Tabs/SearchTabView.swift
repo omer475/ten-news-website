@@ -222,8 +222,10 @@ struct SearchTabView: View {
 
     @ViewBuilder
     private var resultsContent: some View {
-        if viewModel.isLoading && viewModel.articles.isEmpty {
+        if viewModel.isLoading && viewModel.articles.isEmpty && viewModel.errorMessage == nil {
             loadingState
+        } else if let error = viewModel.errorMessage, viewModel.articles.isEmpty {
+            searchErrorState(error)
         } else if viewModel.articles.isEmpty && viewModel.entities.isEmpty {
             noResultsState
         } else {
@@ -771,6 +773,37 @@ struct SearchTabView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Error State
+
+    private func searchErrorState(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 44))
+                .foregroundStyle(.quaternary)
+                .padding(.top, 40)
+
+            Text("Something went wrong")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                Task { await viewModel.search(query: viewModel.searchText) }
+            } label: {
+                Text("Try Again")
+                    .font(.system(size: 15, weight: .semibold))
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(.fill.tertiary, in: Capsule())
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     // MARK: - Helpers
 
     private func categoryColor(for category: String) -> Color {
@@ -848,7 +881,7 @@ struct SearchResultCard: View {
             Color.clear
                 .frame(width: cardWidth, height: cardHeight)
                 .glassEffect(
-                    .regular.tint(Color(white: 0.1).opacity(0.5)),
+                    .regular.tint((dominantColor ?? fallbackColor).opacity(0.5)),
                     in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                 )
                 .mask(

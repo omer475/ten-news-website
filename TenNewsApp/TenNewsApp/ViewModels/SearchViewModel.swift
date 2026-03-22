@@ -111,6 +111,7 @@ final class SearchViewModel {
     var isLoading = false
     var isLoadingTrending = false
     var hasSearched = false
+    var errorMessage: String?
     var hasMore = false
     var currentPage = 0
 
@@ -146,6 +147,7 @@ final class SearchViewModel {
     func search(query: String) async {
         isLoading = true
         hasSearched = true
+        errorMessage = nil
         currentPage = 0
 
         do {
@@ -157,7 +159,10 @@ final class SearchViewModel {
             entities = response.entities
             hasMore = response.hasMore ?? false
             addRecentSearch(query)
+        } catch is CancellationError {
+            // Ignore cancellation
         } catch {
+            errorMessage = "Search failed. Check your connection and try again."
             print("[Search] Error: \(error)")
         }
 

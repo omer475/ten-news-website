@@ -460,6 +460,22 @@ extension ISO8601DateFormatter {
     }()
 }
 
+// MARK: - Article from ExploreTopicArticle
+
+extension Article {
+    static func from(exploreArticle: ExploreTopicArticle) -> Article {
+        let json: [String: Any] = [
+            "id": Int(exploreArticle.id.stringValue) ?? 0,
+            "title": exploreArticle.title,
+            "image_url": exploreArticle.imageUrl ?? "",
+            "category": exploreArticle.category ?? "",
+            "published_at": exploreArticle.publishedAt ?? "",
+        ]
+        let data = try! JSONSerialization.data(withJSONObject: json)
+        return try! JSONDecoder().decode(Article.self, from: data)
+    }
+}
+
 // MARK: - Article → SearchArticle Conversion
 
 extension Article {

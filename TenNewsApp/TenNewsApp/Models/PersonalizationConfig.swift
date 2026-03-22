@@ -108,6 +108,21 @@ enum Topics {
         Topic(id: "transportation", name: "Transportation", icon: "car.fill"),
         Topic(id: "agriculture", name: "Agriculture", icon: "leaf.arrow.circlepath"),
         Topic(id: "infrastructure", name: "Infrastructure", icon: "building.2.fill"),
+        // New topics
+        Topic(id: "tennis", name: "Tennis", icon: "tennisball.fill"),
+        Topic(id: "golf", name: "Golf", icon: "figure.golf"),
+        Topic(id: "bollywood", name: "Bollywood & Indian Cinema", icon: "film.fill"),
+        Topic(id: "anime_manga", name: "Anime & Manga", icon: "sparkles"),
+        Topic(id: "hip_hop", name: "Hip-Hop & Rap", icon: "music.mic"),
+        Topic(id: "afrobeats", name: "Afrobeats & African Music", icon: "music.note"),
+        Topic(id: "latin_music", name: "Latin Music & Reggaeton", icon: "guitars.fill"),
+        Topic(id: "comedy", name: "Comedy & Humor", icon: "theatermasks.fill"),
+        Topic(id: "food_cooking", name: "Food & Cooking", icon: "fork.knife"),
+        Topic(id: "travel_adventure", name: "Travel & Adventure", icon: "airplane"),
+        Topic(id: "fitness_workout", name: "Fitness & Workout", icon: "figure.run"),
+        Topic(id: "beauty_skincare", name: "Beauty & Skincare", icon: "sparkle"),
+        Topic(id: "parenting_family", name: "Parenting & Family", icon: "figure.2.and.child.holdinghands"),
+        Topic(id: "news", name: "Breaking News & World Affairs", icon: "newspaper.fill"),
     ]
 
     static func find(byId id: String) -> Topic? {
@@ -126,7 +141,8 @@ struct TopicCategory: Identifiable, Hashable {
 
 enum TopicCategories {
     static let all: [TopicCategory] = [
-        TopicCategory(id: "politics", name: "Politics", icon: "building.columns", subtopics: [
+        TopicCategory(id: "news_politics", name: "News & Politics", icon: "newspaper.fill", subtopics: [
+            Topic(id: "news", name: "Breaking News & World Affairs", icon: "newspaper.fill"),
             Topic(id: "war_conflict", name: "War & Conflict", icon: "exclamationmark.triangle.fill"),
             Topic(id: "us_politics", name: "US Politics", icon: "flag.fill"),
             Topic(id: "european_politics", name: "European Politics", icon: "globe.europe.africa"),
@@ -145,6 +161,8 @@ enum TopicCategories {
             Topic(id: "f1_motorsport", name: "F1 & Motorsport", icon: "car.fill"),
             Topic(id: "boxing_mma", name: "Boxing & MMA", icon: "figure.boxing"),
             Topic(id: "olympics", name: "Olympics", icon: "medal.fill"),
+            Topic(id: "tennis", name: "Tennis", icon: "tennisball.fill"),
+            Topic(id: "golf", name: "Golf", icon: "figure.golf"),
         ]),
         TopicCategory(id: "business", name: "Business", icon: "briefcase.fill", subtopics: [
             Topic(id: "oil_energy", name: "Oil & Energy", icon: "bolt.fill"),
@@ -163,6 +181,12 @@ enum TopicCategories {
             Topic(id: "gaming", name: "Gaming", icon: "gamecontroller.fill"),
             Topic(id: "celebrity_news", name: "Celebrity News", icon: "star.fill"),
             Topic(id: "kpop_kdrama", name: "K-Pop & K-Drama", icon: "music.mic"),
+            Topic(id: "bollywood", name: "Bollywood & Indian Cinema", icon: "film.fill"),
+            Topic(id: "anime_manga", name: "Anime & Manga", icon: "sparkles"),
+            Topic(id: "hip_hop", name: "Hip-Hop & Rap", icon: "music.mic"),
+            Topic(id: "afrobeats", name: "Afrobeats & African Music", icon: "music.note"),
+            Topic(id: "latin_music", name: "Latin Music & Reggaeton", icon: "guitars.fill"),
+            Topic(id: "comedy", name: "Comedy & Humor", icon: "theatermasks.fill"),
         ]),
         TopicCategory(id: "tech", name: "Tech", icon: "cpu", subtopics: [
             Topic(id: "ai_ml", name: "AI & ML", icon: "brain"),
@@ -198,6 +222,11 @@ enum TopicCategories {
             Topic(id: "pets_animals", name: "Pets & Animals", icon: "pawprint.fill"),
             Topic(id: "home_garden", name: "Home & Garden", icon: "house.fill"),
             Topic(id: "shopping_reviews", name: "Shopping & Reviews", icon: "bag.fill"),
+            Topic(id: "food_cooking", name: "Food & Cooking", icon: "fork.knife"),
+            Topic(id: "travel_adventure", name: "Travel & Adventure", icon: "airplane"),
+            Topic(id: "fitness_workout", name: "Fitness & Workout", icon: "figure.run"),
+            Topic(id: "beauty_skincare", name: "Beauty & Skincare", icon: "sparkle"),
+            Topic(id: "parenting_family", name: "Parenting & Family", icon: "figure.2.and.child.holdinghands"),
         ]),
         TopicCategory(id: "fashion", name: "Fashion", icon: "tshirt.fill", subtopics: [
             Topic(id: "sneakers_streetwear", name: "Sneakers & Streetwear", icon: "shoe.fill"),
