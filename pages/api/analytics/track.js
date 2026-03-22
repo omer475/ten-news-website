@@ -189,80 +189,31 @@ export default async function handler(req, res) {
     }
 
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
-    // Only first 6 tags (primary topics) with position-based weighting:
-    //   Tag 1 gets full weight, Tag 6 gets ~28%. Tail tags are noise.
-    // ══════════════════════════════════════════════════════════════
-    // TAG_PROFILE UPDATE — Based on MEGA_RAPOR platform research:
-    //
-    // Signal weights (TikTok Algo 101 + Twitter/X open source):
-    //   Completion/Dwell is KING (TikTok: 8pts, Twitter: 20x a like)
-    //   Save = very high (all platforms agree)
-    //   Share = high (TikTok: 6pts, Instagram: #1 signal)
-    //   Like = WEAK (TikTok: 2pts, Twitter: 1x baseline)
-    //
-    // Dwell time tiers (exponential, not flat):
-    //   <5s  = minimal (0.03) — barely glanced
-    //   5-15s = light (0.10) — scanned headline
-    //   15-30s = moderate (0.20) — read some content
-    //   30-60s = strong (0.40) — read most of article
-    //   60s+ = maximum (0.60) — deep read, completion signal
-    //
-    // Fix 3: First 10 interactions get 5x weight for fast cold-start
-    // ══════════════════════════════════════════════════════════════
+    // TAG_PROFILE UPDATE — lightweight metadata for search/explore only
+    // The real learning happens via EMA taste_vector (above).
+    // Tags are no longer used for feed scoring (embedding-first v22).
     const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
     if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
-      const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
-                           metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
-
-      // Base weight from dwell time (the KING signal)
-      let baseWeight
-      if (dwellSeconds >= 60) baseWeight = 0.60       // deep read / completion
-      else if (dwellSeconds >= 30) baseWeight = 0.40   // strong read
-      else if (dwellSeconds >= 15) baseWeight = 0.20   // moderate read
-      else if (dwellSeconds >= 5) baseWeight = 0.10    // light scan
-      else baseWeight = 0.03                            // barely glanced
-
-      // Action multipliers ON TOP of dwell (these stack)
-      if (event_type === 'article_saved') baseWeight = Math.max(baseWeight, 0.40) // save = at least strong
-      else if (event_type === 'article_shared') baseWeight = Math.max(baseWeight, 0.35)
-      else if (event_type === 'article_liked') baseWeight = Math.max(baseWeight, 0.15) // like = weak per research
-      else if (event_type === 'article_detail_view') baseWeight = Math.max(baseWeight, 0.05)
-
-      // AWAITED: tag_profile update must complete before function exits
       try {
-        const { data: articleData } = await admin
-          .from('published_articles')
-          .select('interest_tags')
-          .eq('id', article_id)
-          .single()
+        const { data: articleData } = await admin.from('published_articles').select('interest_tags').eq('id', article_id).single()
         if (articleData) {
-          const allTags = typeof articleData.interest_tags === 'string'
-            ? JSON.parse(articleData.interest_tags || '[]')
-            : (articleData.interest_tags || [])
+          const allTags = typeof articleData.interest_tags === 'string' ? JSON.parse(articleData.interest_tags || '[]') : (articleData.interest_tags || [])
           const tags = allTags.slice(0, 6)
           if (tags.length > 0) {
             const { data: profileData, table } = await loadUserField(admin, user.id, 'tag_profile')
             if (table) {
               const tagProfile = profileData?.tag_profile || {}
-
-              // Fix 3: Count existing tags — if <10, this is early learning, boost 5x
-              const existingTagCount = Object.keys(tagProfile).length
-              const earlyBoost = existingTagCount < 10 ? 5.0 : existingTagCount < 30 ? 2.0 : 1.0
-
-              for (let i = 0; i < tags.length; i++) {
-                const t = tags[i].toLowerCase()
-                const positionMultiplier = 1.0 - (i * 0.12)
-                const tagWeight = baseWeight * positionMultiplier * earlyBoost
-                tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.5) // cap at 1.5 not 1.0 for stronger differentiation
+              // Flat weight per tag — all tags equal, frequency does the differentiation
+              const weight = 0.15
+              for (const tag of tags) {
+                const t = tag.toLowerCase()
+                tagProfile[t] = Math.min((tagProfile[t] || 0) + weight, 1.5)
               }
               await updateUserField(admin, user.id, table, { tag_profile: tagProfile })
-              console.log('[analytics] tag_profile updated from', event_type, 'dwell:', dwellSeconds.toFixed(0) + 's', 'weight:', baseWeight.toFixed(2), 'earlyBoost:', earlyBoost + 'x', tags.length, 'tags for', user.id?.substring(0, 8))
             }
           }
         }
-      } catch (e) {
-        console.log('[analytics] tag_profile update error:', e.message?.substring(0, 80))
-      }
+      } catch (e) {}
     }
 
     // ============================================================
