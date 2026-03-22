@@ -1919,14 +1919,31 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (recentTags.length > SIMILARITY_WINDOW) recentTags.shift();
     }
 
-    // Interleave: round-robin through interest groups
-    // Every 4th position = trending article (big events)
-    let gIdx = 0, trendingInserted = 0;
+    // WEIGHTED INTERLEAVING — groups with higher entity scores get more slots
+    // Instead of equal round-robin (1 soccer, 1 AI, 1 movie, 1 soccer...),
+    // weight-proportional selection: if galatasaray=0.8 and mls=0.2,
+    // galatasaray group gets ~4x more slots than mls group.
+    //
+    // Each group's weight = its top article's tag_profile score.
+    // Weighted random: probability of picking group = its weight / total weights.
+    // Still enforces: max 2 consecutive from same group, every 4th = trending.
+
+    // Calculate group weights from tag_profile
+    const groupWeights = {};
+    for (const gKey of groupKeys) {
+      // Weight = the best tag_profile score for this group's key entity
+      // Falls back to the top article's personalization score
+      const tagWeight = effectiveTagProfile[gKey] || 0;
+      const scoreWeight = (interestGroups[gKey][0]?._pScore || 0) / 500; // normalize
+      groupWeights[gKey] = Math.max(tagWeight, scoreWeight, 0.1); // minimum 0.1 so every group has a chance
+    }
+
+    let trendingInserted = 0;
 
     while (selected.length < limit) {
       const pos = selected.length;
 
-      // Every 4th slot (positions 3,7,11,15,...) = trending
+      // Every 4th slot = trending
       if (pos > 0 && pos % 4 === 3 && tPool.length > 0) {
         const tPicked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (tPicked) {
@@ -1941,50 +1958,57 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
 
-      // Pick from interest groups via round-robin
       if (groupKeys.length === 0) break;
+
+      // Weighted group selection
+      // Build cumulative weights (excluding groups that would violate max 2 consecutive)
       let picked = null;
       let attempts = 0;
 
-      while (!picked && attempts < groupKeys.length) {
-        const gKey = groupKeys[gIdx % groupKeys.length];
-        const queue = interestGroups[gKey];
-
-        // Max 2 consecutive from same group
-        if (gKey === lastGroup && consecutiveCount >= 2) {
-          gIdx++;
-          attempts++;
-          continue;
+      while (!picked && attempts < groupKeys.length * 2) {
+        // Calculate available weights (exclude last group if consecutive >= 2)
+        let totalWeight = 0;
+        const available = [];
+        for (const gKey of groupKeys) {
+          if (gKey === lastGroup && consecutiveCount >= 2) continue;
+          if (!interestGroups[gKey] || interestGroups[gKey].length === 0) continue;
+          const w = groupWeights[gKey] || 0.1;
+          available.push({ key: gKey, weight: w, cumWeight: totalWeight + w });
+          totalWeight += w;
         }
 
-        // Find best unused article from this group (considering similarity penalty)
-        // Don't just take the first — score candidates by original score minus similarity penalty
+        if (available.length === 0 || totalWeight === 0) break;
+
+        // Weighted random selection
+        const rand = Math.random() * totalWeight;
+        let selectedGroup = available[available.length - 1].key;
+        for (const g of available) {
+          if (rand <= g.cumWeight) { selectedGroup = g.key; break; }
+        }
+
+        const queue = interestGroups[selectedGroup];
+
+        // Find best article from this group (with similarity penalty)
         const candidates = [];
-        const tempQueue = [];
         while (queue.length > 0 && candidates.length < 5) {
           const c = queue.shift();
-          if (!usedIds.has(c.id) && !isEventCapped(c)) {
-            candidates.push(c);
-          }
+          if (!usedIds.has(c.id) && !isEventCapped(c)) candidates.push(c);
         }
         if (candidates.length > 0) {
-          // Pick the one with best score after similarity penalty
           candidates.sort((a, b) => applySimilarityPenalty(b) - applySimilarityPenalty(a));
           picked = candidates[0];
-          // Put unused candidates back
           for (let ci = 1; ci < candidates.length; ci++) queue.unshift(candidates[ci]);
         }
 
         if (picked) {
-          if (gKey === lastGroup) consecutiveCount++;
-          else { lastGroup = gKey; consecutiveCount = 1; }
+          if (selectedGroup === lastGroup) consecutiveCount++;
+          else { lastGroup = selectedGroup; consecutiveCount = 1; }
         } else {
-          // Group exhausted, remove it
-          groupKeys.splice(gIdx % groupKeys.length, 1);
-          if (groupKeys.length === 0) break;
+          // Group exhausted
+          const idx = groupKeys.indexOf(selectedGroup);
+          if (idx >= 0) groupKeys.splice(idx, 1);
         }
 
-        gIdx++;
         attempts++;
       }
 
@@ -2161,26 +2185,44 @@ async function handleV2Feed(req, res, supabase, opts) {
     const gKeys2 = Object.keys(iGroups2).filter(k => iGroups2[k].length > 0)
       .sort((a, b) => (iGroups2[b][0]?._pScore || 0) - (iGroups2[a][0]?._pScore || 0));
 
+    // Weighted interleaving (same as cold-start mode above)
+    const gWeights2 = {};
+    for (const gk of gKeys2) {
+      const tw = effectiveTagProfile[gk] || 0;
+      const sw = (iGroups2[gk][0]?._pScore || 0) / 500;
+      gWeights2[gk] = Math.max(tw, sw, 0.1);
+    }
+
     const usedIds = new Set();
-    let lastG2 = '', consec2 = 0, gIdx2 = 0, trend2 = 0;
+    let lastG2 = '', consec2 = 0, trend2 = 0;
 
     while (selected.length < limit) {
       const pos = selected.length;
-      // Every 4th slot = trending
       if (pos > 0 && pos % 4 === 3 && tPool.length > 0) {
         const tp = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
         if (tp) { tp.bucket = 'trending'; recordEventSelection(tp); selected.push(tp); trend2++; lastG2 = '__t__'; consec2 = 1; continue; }
       }
       if (gKeys2.length === 0) break;
       let picked = null, att = 0;
-      while (!picked && att < gKeys2.length) {
-        const gk = gKeys2[gIdx2 % gKeys2.length];
-        const q = iGroups2[gk];
-        if (gk === lastG2 && consec2 >= 2) { gIdx2++; att++; continue; }
+      while (!picked && att < gKeys2.length * 2) {
+        let totW = 0;
+        const avail = [];
+        for (const gk of gKeys2) {
+          if (gk === lastG2 && consec2 >= 2) continue;
+          if (!iGroups2[gk] || !iGroups2[gk].length) continue;
+          const w = gWeights2[gk] || 0.1;
+          avail.push({ key: gk, weight: w, cum: totW + w });
+          totW += w;
+        }
+        if (!avail.length || !totW) break;
+        const r = Math.random() * totW;
+        let selG = avail[avail.length - 1].key;
+        for (const g of avail) { if (r <= g.cum) { selG = g.key; break; } }
+        const q = iGroups2[selG];
         while (q.length > 0) { const c = q.shift(); if (!usedIds.has(c.id) && !isEventCapped(c)) { picked = c; break; } }
-        if (picked) { if (gk === lastG2) consec2++; else { lastG2 = gk; consec2 = 1; } }
-        else { gKeys2.splice(gIdx2 % gKeys2.length, 1); if (!gKeys2.length) break; }
-        gIdx2++; att++;
+        if (picked) { if (selG === lastG2) consec2++; else { lastG2 = selG; consec2 = 1; } }
+        else { const idx = gKeys2.indexOf(selG); if (idx >= 0) gKeys2.splice(idx, 1); }
+        att++;
       }
       if (!picked) {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
@@ -2192,7 +2234,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       usedIds.add(picked.id); picked.bucket = 'interest'; recordEventSelection(picked); selected.push(picked);
     }
 
-    if (hasTP2) console.log(`[feed] MULTI-INTEREST-PERSO: ${selected.length} articles, ${gKeys2.length} groups, ${trend2} trending for ${userId?.substring(0,8)}`);
+    if (hasTP2) console.log(`[feed] WEIGHTED-PERSO: ${selected.length} articles, ${gKeys2.length} groups, ${trend2} trending for ${userId?.substring(0,8)}`);
   } else {
     // Personalized user without topic selections: standard slot-filling
     for (let pos = 0; selected.length < limit; pos++) {
@@ -2340,7 +2382,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v20',  // deployment version marker
+    _v: 'v21',  // deployment version marker
   });
 }
 
