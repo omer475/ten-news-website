@@ -413,14 +413,20 @@ function formatArticle(article, eventMap = {}) {
 function getRecencyDecay(createdAt, category, shelfLifeDays) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
   const shelfLifeHours = (shelfLifeDays || 7) * 24;
-  const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
-  // Blend: 90% freshness decay, 10% baseline.
-  // Aggressive decay ensures stale articles don't dominate the feed.
-  // shelf_life_days handles per-vertical tuning:
-  //   Breaking news (1-2d): dies fast after ~12h
-  //   Explainers (14-30d): gradual decline over weeks
-  //   Evergreen (60d+): stays discoverable but heavily penalized after shelf life
-  return freshnessMultiplier * 0.9 + 0.1;
+
+  // Two-phase decay (per MEGA_RAPOR: Pinterest content lives months, news dies fast)
+  // Phase 1: Within shelf life — gentle decay (article is "fresh")
+  // Phase 2: Past shelf life — steep penalty but NOT zero (still findable if highly relevant)
+  if (ageHours <= shelfLifeHours) {
+    // Within shelf life: gentle exponential decay
+    const freshness = Math.exp(-0.5 * ageHours / shelfLifeHours);
+    return freshness * 0.85 + 0.15; // 100% → 67% over shelf life
+  } else {
+    // Past shelf life: steep penalty — but baseline 5% keeps it discoverable
+    const overageHours = ageHours - shelfLifeHours;
+    const penalty = Math.exp(-2.0 * overageHours / shelfLifeHours);
+    return penalty * 0.30 + 0.05; // drops to 5-35% quickly past shelf life
+  }
 }
 
 // ==========================================
@@ -442,10 +448,11 @@ async function buildUserInterestProfile(supabase, userId) {
 
   if (!events || events.length === 0) return null;
 
-  // Weight by engagement type: liked > shared > saved > engaged > viewed
-  // article_liked is the strongest signal — explicit "I want more of this"
-  // article_shared is second — user vouches for this content to others
-  const eventWeights = { article_liked: 4, article_shared: 3.5, article_saved: 3, article_engaged: 2, article_detail_view: 1 };
+  // Weight by engagement type — per MEGA_RAPOR research:
+  // Save/Share are the strongest actions (all platforms agree)
+  // Like is WEAK (TikTok: 2pts vs Share: 6pts vs Completion: 8pts)
+  // Dwell time is handled via the tiered amplifier below
+  const eventWeights = { article_saved: 5, article_shared: 4.5, article_engaged: 3, article_liked: 1.5, article_detail_view: 0.5 };
   const articleWeights = {};
   for (const e of events) {
     let w = eventWeights[e.event_type] || 1;
@@ -1572,54 +1579,77 @@ async function handleV2Feed(req, res, supabase, opts) {
   const dPool = [...discoveryScored];
   const iPool = [...interestScored];
 
-  // Fix 5: Simple collaborative filtering
-  // "Users who liked what you liked also liked X"
+  // Fix 6: User cluster collaborative filtering (MEGA_RAPOR: Twitter SimClusters, Pinterest Pixie)
+  // Find users with similar engagement patterns, surface what they engaged with.
+  // Uses saved/shared/engaged (high-value actions per research) not just likes.
   if (userId && interactionCount >= 5) {
     try {
-      // Get this user's liked article IDs
-      const { data: myLikes } = await supabase
+      // Get this user's high-value engagement IDs (saves, shares, engaged reads)
+      const { data: myEngagements } = await supabase
         .from('user_article_events')
-        .select('article_id')
+        .select('article_id, event_type')
         .eq('user_id', userId)
-        .eq('event_type', 'article_liked')
-        .limit(20);
-      const myLikedIds = (myLikes || []).map(e => e.article_id).filter(Boolean);
+        .in('event_type', ['article_saved', 'article_shared', 'article_liked', 'article_engaged'])
+        .order('created_at', { ascending: false })
+        .limit(30);
+      const myEngagedIds = [...new Set((myEngagements || []).map(e => e.article_id).filter(Boolean))];
 
-      if (myLikedIds.length >= 2) {
-        // Find other users who liked the same articles
+      if (myEngagedIds.length >= 3) {
+        // Find other users who engaged with the same articles (weighted by action type)
         const { data: similarUsers } = await supabase
           .from('user_article_events')
-          .select('user_id')
-          .in('article_id', myLikedIds.slice(0, 10))
-          .eq('event_type', 'article_liked')
+          .select('user_id, event_type')
+          .in('article_id', myEngagedIds.slice(0, 15))
+          .in('event_type', ['article_saved', 'article_shared', 'article_liked', 'article_engaged'])
           .neq('user_id', userId)
-          .limit(50);
+          .limit(100);
 
-        const otherUserIds = [...new Set((similarUsers || []).map(e => e.user_id))].slice(0, 10);
+        // Score similar users by overlap strength
+        const userScores = {};
+        const actionWeight = { article_saved: 3, article_shared: 2.5, article_liked: 1, article_engaged: 1.5 };
+        for (const e of (similarUsers || [])) {
+          userScores[e.user_id] = (userScores[e.user_id] || 0) + (actionWeight[e.event_type] || 1);
+        }
+        // Take top 15 most similar users (not just first 10)
+        const topUsers = Object.entries(userScores)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 15)
+          .map(([id]) => id);
 
-        if (otherUserIds.length > 0) {
-          // Get articles THOSE users liked that I haven't seen
+        if (topUsers.length > 0) {
+          // Get high-value articles THOSE users engaged with that I haven't seen
           const { data: collabArticles } = await supabase
             .from('user_article_events')
-            .select('article_id')
-            .in('user_id', otherUserIds)
-            .eq('event_type', 'article_liked')
-            .not('article_id', 'in', `(${myLikedIds.join(',')})`)
-            .limit(30);
+            .select('article_id, event_type')
+            .in('user_id', topUsers)
+            .in('event_type', ['article_saved', 'article_shared', 'article_liked'])
+            .limit(50);
 
-          const collabIds = [...new Set((collabArticles || []).map(e => e.article_id))];
-          if (collabIds.length > 0) {
+          // Score collab articles by how many similar users engaged + action weight
+          const collabScores = {};
+          for (const e of (collabArticles || [])) {
+            if (myEngagedIds.includes(e.article_id)) continue; // already seen
+            collabScores[e.article_id] = (collabScores[e.article_id] || 0) + (actionWeight[e.event_type] || 1);
+          }
+
+          // Take top 8 collab articles by score
+          const topCollabIds = Object.entries(collabScores)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([id]) => parseInt(id));
+
+          if (topCollabIds.length > 0) {
             const existingIds = new Set([...dPool, ...iPool, ...tPool, ...pPool].map(a => a.id));
-            const newCollabIds = collabIds.filter(id => !existingIds.has(id) && articleMap[id]);
-            for (const id of newCollabIds.slice(0, 5)) {
+            let injected = 0;
+            for (const id of topCollabIds) {
+              if (existingIds.has(id) || !articleMap[id]) continue;
               const a = articleMap[id];
-              if (a) {
-                a._score = 500; // High score for collab-filtered articles
-                a._bucket = 'collaborative';
-                dPool.push(a); // Add to discovery pool
-              }
+              a._score = 600 + (collabScores[id] || 0) * 50; // High base + strength bonus
+              a._bucket = 'collaborative';
+              dPool.push(a);
+              injected++;
             }
-            if (newCollabIds.length > 0) console.log(`[feed] COLLAB: injected ${Math.min(newCollabIds.length, 5)} articles from ${otherUserIds.length} similar users for ${userId?.substring(0,8)}`);
+            if (injected > 0) console.log(`[feed] COLLAB: injected ${injected} articles from ${topUsers.length} similar users for ${userId?.substring(0,8)}`);
           }
         }
       }
@@ -1862,6 +1892,33 @@ async function handleV2Feed(req, res, supabase, opts) {
     const usedIds = new Set();
     let lastGroup = '', consecutiveCount = 0;
 
+    // Fix 5: Similarity penalty tracking (YouTube DPP-inspired)
+    // After showing an article, its tags get a decay penalty for next 4 positions
+    // This prevents "5 soccer articles in a row" even across different interest groups
+    const recentTags = []; // rolling window of tags from last 4 inserted articles
+    const SIMILARITY_WINDOW = 4;
+    const SIMILARITY_PENALTY = 0.4; // 40% score reduction for overlapping tags
+
+    function applySimilarityPenalty(article) {
+      if (recentTags.length === 0) return article._pScore;
+      const articleTags = new Set(safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase()));
+      let overlapCount = 0;
+      for (const recentTagSet of recentTags) {
+        for (const t of articleTags) {
+          if (recentTagSet.has(t)) { overlapCount++; break; }
+        }
+      }
+      // Penalty proportional to how many of the last 4 articles share tags
+      const penalty = 1 - (overlapCount / SIMILARITY_WINDOW * SIMILARITY_PENALTY);
+      return article._pScore * penalty;
+    }
+
+    function recordRecentTags(article) {
+      const tags = new Set(safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase()));
+      recentTags.push(tags);
+      if (recentTags.length > SIMILARITY_WINDOW) recentTags.shift();
+    }
+
     // Interleave: round-robin through interest groups
     // Every 4th position = trending article (big events)
     let gIdx = 0, trendingInserted = 0;
@@ -1875,6 +1932,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (tPicked) {
           tPicked.bucket = 'trending';
           recordEventSelection(tPicked);
+          recordRecentTags(tPicked);
           selected.push(tPicked);
           trendingInserted++;
           lastGroup = '__trending__';
@@ -1899,13 +1957,22 @@ async function handleV2Feed(req, res, supabase, opts) {
           continue;
         }
 
-        // Find next unused article from this group
-        while (queue.length > 0) {
-          const candidate = queue.shift();
-          if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
-            picked = candidate;
-            break;
+        // Find best unused article from this group (considering similarity penalty)
+        // Don't just take the first — score candidates by original score minus similarity penalty
+        const candidates = [];
+        const tempQueue = [];
+        while (queue.length > 0 && candidates.length < 5) {
+          const c = queue.shift();
+          if (!usedIds.has(c.id) && !isEventCapped(c)) {
+            candidates.push(c);
           }
+        }
+        if (candidates.length > 0) {
+          // Pick the one with best score after similarity penalty
+          candidates.sort((a, b) => applySimilarityPenalty(b) - applySimilarityPenalty(a));
+          picked = candidates[0];
+          // Put unused candidates back
+          for (let ci = 1; ci < candidates.length; ci++) queue.unshift(candidates[ci]);
         }
 
         if (picked) {
@@ -1958,6 +2025,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       usedIds.add(picked.id);
       picked.bucket = 'interest';
       recordEventSelection(picked);
+      recordRecentTags(picked); // Fix 5: Track for similarity penalty
       selected.push(picked);
     }
 
@@ -2272,7 +2340,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v19',  // deployment version marker
+    _v: 'v20',  // deployment version marker
   });
 }
 
