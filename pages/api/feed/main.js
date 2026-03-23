@@ -563,7 +563,9 @@ function scoreArticleV3(article, similarity, entityAffinities) {
 
 // ==========================================
 // UNIFIED MULTI-POINT RETRIEVAL
-// Returns query vectors based on available data. No phases.
+// 0 engagements: 1 query per subtopic the user picked
+// 1-19 engagements: raw article embeddings (consolidated) + subtopics as backup
+// 20+ engagements: K-Means clusters (stored or computed on the fly)
 // ==========================================
 
 function consolidateNearDuplicates(engagements, threshold = 0.85) {
@@ -574,7 +576,6 @@ function consolidateNearDuplicates(engagements, threshold = 0.85) {
       if (cosineSim(eng.embedding, group.centroid) > threshold) {
         group.members.push(eng);
         group.totalWeight += eng.weight;
-        // Update centroid as weighted average
         const dim = group.centroid.length;
         for (let i = 0; i < dim; i++) {
           group.centroid[i] = (group.centroid[i] * (group.totalWeight - eng.weight) + eng.embedding[i] * eng.weight) / group.totalWeight;
@@ -590,80 +591,107 @@ function consolidateNearDuplicates(engagements, threshold = 0.85) {
   return groups;
 }
 
-async function getQueryVectors(supabase, personalizationId, onboardingVector) {
-  if (!personalizationId) {
-    // No personalization — use onboarding vector if available
-    if (onboardingVector && Array.isArray(onboardingVector)) {
-      return [{ vector: onboardingVector, importance: 1.0 }];
+async function getSubtopicVectors(supabase, followedTopics) {
+  // Find 1 representative article per subtopic the user selected
+  if (!followedTopics || followedTopics.length === 0) return [];
+
+  const vectors = [];
+  const categories = new Set();
+
+  for (const topic of followedTopics) {
+    const mapping = ONBOARDING_TOPIC_MAP[topic];
+    if (!mapping) continue;
+    for (const cat of mapping.categories) categories.add(cat);
+  }
+
+  if (categories.size === 0) return [];
+
+  // Get 1 top article per category (with embedding)
+  for (const cat of categories) {
+    const { data: art } = await supabase
+      .from('published_articles')
+      .select('embedding_minilm')
+      .eq('category', cat)
+      .not('embedding_minilm', 'is', null)
+      .order('ai_final_score', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (art?.embedding_minilm && Array.isArray(art.embedding_minilm)) {
+      vectors.push({ vector: art.embedding_minilm, importance: 1.0 / categories.size });
     }
-    return [];
   }
 
-  // Fetch ALL positive engagements from buffer
-  const { data: buffer } = await supabase
-    .from('engagement_buffer')
-    .select('embedding_minilm, interaction_weight, created_at')
-    .eq('personalization_id', personalizationId)
-    .gt('interaction_weight', 0)
-    .order('created_at', { ascending: false })
-    .limit(500);
+  return vectors;
+}
 
-  const engagements = [];
-  for (const row of (buffer || [])) {
-    const emb = row.embedding_minilm;
-    if (!emb || !Array.isArray(emb) || emb.length !== 384) continue;
-    engagements.push({ embedding: emb, weight: row.interaction_weight });
+async function getQueryVectors(supabase, personalizationId, followedTopics) {
+  // Fetch engagements
+  let engagements = [];
+  if (personalizationId) {
+    const { data: buffer } = await supabase
+      .from('engagement_buffer')
+      .select('embedding_minilm, interaction_weight, created_at')
+      .eq('personalization_id', personalizationId)
+      .gt('interaction_weight', 0)
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    for (const row of (buffer || [])) {
+      const emb = row.embedding_minilm;
+      if (!emb || !Array.isArray(emb) || emb.length !== 384) continue;
+      engagements.push({ embedding: emb, weight: row.interaction_weight });
+    }
   }
 
+  // ---- 0 engagements: use subtopics directly ----
   if (engagements.length === 0) {
-    // Brand new user — use onboarding vector
-    if (onboardingVector && Array.isArray(onboardingVector)) {
-      return [{ vector: onboardingVector, importance: 1.0 }];
-    }
-    return [];
+    return await getSubtopicVectors(supabase, followedTopics);
   }
 
-  if (engagements.length < 10) {
-    // Too few for clustering — consolidate near-duplicates and use raw embeddings
+  // ---- 1-19 engagements: raw embeddings + subtopics as backup ----
+  if (engagements.length < 20) {
     const groups = consolidateNearDuplicates(engagements, 0.85);
     const totalWeight = groups.reduce((s, g) => s + g.totalWeight, 0);
-    return groups.map(g => ({
+    const vectors = groups.map(g => ({
       vector: g.centroid,
       importance: g.totalWeight / totalWeight,
     }));
+
+    // Also add subtopic vectors at reduced importance (so user still sees their picked topics)
+    const subtopicVecs = await getSubtopicVectors(supabase, followedTopics);
+    const engagementShare = engagements.length / 20; // 0 to 1 as engagements grow
+    const subtopicShare = 1 - engagementShare;
+
+    // Blend: engagement vectors get engagementShare weight, subtopics get subtopicShare
+    for (const v of vectors) v.importance *= engagementShare;
+    for (const sv of subtopicVecs) sv.importance *= subtopicShare;
+
+    return [...vectors, ...subtopicVecs];
   }
 
-  // 10+ engagements — K-Means clustering
-  // Use the K-Means from track.js (imported at top level would be circular,
-  // so we inline a lightweight version here)
-  const embeddings = engagements.map(e => e.embedding);
-  const weights = engagements.map(e => e.weight);
+  // ---- 20+ engagements: K-Means clusters ----
+  // Try stored clusters first
+  if (personalizationId) {
+    const { data: storedClusters } = await supabase
+      .from('user_interest_clusters')
+      .select('cluster_index, medoid_minilm, importance_score, article_count')
+      .eq('personalization_id', personalizationId)
+      .eq('is_archived', false)
+      .order('importance_score', { ascending: false });
 
-  // Determine optimal k
-  const maxK = Math.min(8, Math.floor(engagements.length / 3));
-  const minK = 2;
-
-  // Try stored clusters first (computed by track.js on engagement)
-  const { data: storedClusters } = await supabase
-    .from('user_interest_clusters')
-    .select('cluster_index, medoid_minilm, importance_score, article_count')
-    .eq('personalization_id', personalizationId)
-    .eq('is_archived', false)
-    .order('importance_score', { ascending: false });
-
-  if (storedClusters && storedClusters.length >= 2) {
-    // Use pre-computed clusters from track.js
-    const totalImportance = storedClusters.reduce((s, c) => s + (c.importance_score || 0), 0) || 1;
-    return storedClusters
-      .filter(c => c.medoid_minilm && Array.isArray(c.medoid_minilm))
-      .map(c => ({
-        vector: c.medoid_minilm,
-        importance: (c.importance_score || 0) / totalImportance,
-      }));
+    if (storedClusters && storedClusters.length >= 2) {
+      const totalImportance = storedClusters.reduce((s, c) => s + (c.importance_score || 0), 0) || 1;
+      return storedClusters
+        .filter(c => c.medoid_minilm && Array.isArray(c.medoid_minilm))
+        .map(c => ({
+          vector: c.medoid_minilm,
+          importance: (c.importance_score || 0) / totalImportance,
+        }));
+    }
   }
 
-  // No stored clusters — fall back to consolidation with lower threshold
-  // This naturally creates 2-8 groups from diverse engagements
+  // No stored clusters — consolidate on the fly with lower threshold
   const groups = consolidateNearDuplicates(engagements, 0.60);
   const totalWeight = groups.reduce((s, g) => s + g.totalWeight, 0);
   return groups.map(g => ({
@@ -711,8 +739,8 @@ function mmrSelectEmb(candidates, selected, embCache, lambda) {
       if (tSim >= 0.4) sim = Math.max(sim, 0.85);
       else if (tSim >= 0.25) sim = Math.max(sim, 0.6);
 
-      // Same category penalty (lowered — cluster proportional allocation handles cross-topic diversity)
-      if (c.category === s.category) sim = Math.max(sim, 0.10);
+      // Same category penalty — ensures feed diversity across categories
+      if (c.category === s.category) sim = Math.max(sim, 0.25);
 
       // Same cluster penalty (v23 interest clusters, not article clusters)
       if (c._cluster !== undefined && c._cluster === s._cluster) sim = Math.max(sim, 0.15);
@@ -961,7 +989,8 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   personalPromise = (async () => {
     // Step 1: Get query vectors
-    const queryVectors = await getQueryVectors(supabase, personalizationId, tasteVectorMinilm);
+    const userFollowedTopics = userPrefs?.followed_topics || [];
+    const queryVectors = await getQueryVectors(supabase, personalizationId, userFollowedTopics);
 
     if (queryVectors.length === 0) {
       return { data: [], error: null };

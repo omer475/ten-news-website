@@ -402,16 +402,13 @@ export default async function handler(req, res) {
         const currentPhase = persData[0].phase
         const newInteractions = persData[0].total_interactions + 1 // +1 because sliding window just incremented it
 
-        // Phase transition: 1→2 at 30, 2→3 at 50
-        if (newInteractions === 30 && currentPhase === 1) {
-          admin.from('personalization_profiles').update({ phase: 2 }).eq('personalization_id', persId).then(() => {
-            console.log('[analytics] Phase 1→2 transition for', persId.substring(0, 8))
-            runClusteringForUser(admin, persId, 2).catch(e => console.log('[analytics] Phase 2 clustering failed:', e.message))
-          })
-        } else if (newInteractions === 50 && currentPhase === 2) {
-          admin.from('personalization_profiles').update({ phase: 3 }).eq('personalization_id', persId).then(() => {
-            console.log('[analytics] Phase 2→3 transition for', persId.substring(0, 8))
-            runClusteringForUser(admin, persId, 3).catch(e => console.log('[analytics] Phase 3 clustering failed:', e.message))
+        // Clustering trigger: at 20+ interactions, run K-Means every 20 engagements
+        // (at 20, 40, 60, 80, ...) to keep clusters fresh
+        if (newInteractions >= 20 && newInteractions % 20 === 0) {
+          const clusterPhase = newInteractions >= 50 ? 3 : 2;
+          admin.from('personalization_profiles').update({ phase: clusterPhase }).eq('personalization_id', persId).then(() => {
+            console.log('[analytics] Running K-Means at', newInteractions, 'interactions for', persId.substring(0, 8))
+            runClusteringForUser(admin, persId, clusterPhase).catch(e => console.log('[analytics] Clustering failed:', e.message))
           })
         }
 
