@@ -58,12 +58,18 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!user) {
-      console.log('[analytics] No user found after auth attempts')
+    // Accept guest_device_id from request body for unauthenticated users
+    const { guest_device_id: bodyDeviceId } = req.body || {}
+
+    if (!user && !bodyDeviceId) {
+      console.log('[analytics] No user and no guest_device_id')
       return res.status(401).json({ error: 'Not authenticated' })
     }
-    
-    console.log('[analytics] Auth success via', authMethod, 'user:', user.id?.substring(0, 8))
+
+    const effectiveUserId = user?.id || null
+    const effectiveDeviceId = bodyDeviceId || null
+
+    console.log('[analytics] Auth:', effectiveUserId ? `user ${effectiveUserId.substring(0, 8)}` : `guest ${effectiveDeviceId?.substring(0, 8)}`)
 
     const {
       event_type,
@@ -89,8 +95,12 @@ export default async function handler(req, res) {
       view_seconds = parseInt(metadata.engaged_seconds, 10) || null
     }
 
+    // For guests without auth, we still need a user_id for the events table.
+    // Use the guest_device_id as a pseudo-UUID (or the auth user id).
+    const eventUserId = effectiveUserId || effectiveDeviceId
+
     const row = {
-      user_id: user.id,
+      user_id: eventUserId,
       session_id,
       event_type,
       article_id,
@@ -104,7 +114,7 @@ export default async function handler(req, res) {
     }
 
     console.log('[analytics] Inserting event:', event_type, 'article:', article_id)
-    
+
     const { error: insertError } = await admin
       .from('user_article_events')
       .insert(row)
@@ -116,33 +126,71 @@ export default async function handler(req, res) {
 
     console.log('[analytics] Event stored successfully:', event_type)
 
-    // Update taste vector via EMA on engagement events (non-blocking)
-    // This feeds the pgvector personalization system
-    // NOTE: article_view is NOT included — passive views pollute the taste vector
-    // toward dominant content. Only real engagement signals update the vector.
-    // article_skipped pushes the vector AWAY from skipped content and builds skip_profile.
+    // ============================================================
+    // V3 ALGORITHM: Resolve personalization_id, then update
+    // sliding window + entity affinity (replaces EMA)
+    // ============================================================
     const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_skipped', 'article_liked', 'article_shared']
     if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
-      // user.id IS the profiles.id (auth UUID) — update directly
-      admin.rpc('update_taste_vector_ema_profiles', {
-        p_user_id: user.id,
-        p_article_id: article_id,
-        p_event_type: event_type,
-      }).then(({ error: emaError }) => {
-        if (emaError) {
-          console.log('[analytics] Taste vector EMA update failed:', emaError.message)
-        } else {
-          console.log('[analytics] Taste vector updated for user:', user.id?.substring(0, 8))
+      // Resolve personalization_id (creates row if needed)
+      const rpcParams = effectiveUserId
+        ? { p_auth_id: effectiveUserId }
+        : { p_device_id: effectiveDeviceId }
+
+      admin.rpc('resolve_personalization_id', rpcParams).then(({ data: persData, error: persError }) => {
+        if (persError || !persData || persData.length === 0) {
+          console.log('[analytics] Failed to resolve personalization_id:', persError?.message)
+          return
         }
+        const persId = persData[0].personalization_id
+
+        // For skips: only process if card was visible 1s+ (deliberate skip)
+        if (event_type === 'article_skipped') {
+          const viewSec = metadata?.dwell ? parseFloat(metadata.dwell) :
+                          metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
+          if (viewSec < 1) {
+            console.log('[analytics] Fast skip ignored (< 1s dwell)')
+            return
+          }
+        }
+
+        // Update sliding window (taste vector)
+        admin.rpc('update_sliding_window', {
+          p_pers_id: persId,
+          p_article_id: article_id,
+          p_event_type: event_type,
+        }).then(({ error: swError }) => {
+          if (swError) console.log('[analytics] Sliding window update failed:', swError.message)
+          else console.log('[analytics] Sliding window updated for:', persId.substring(0, 8))
+        })
+
+        // Update entity affinity (positive events only, handled inside RPC)
+        admin.rpc('update_entity_affinity', {
+          p_pers_id: persId,
+          p_article_id: article_id,
+          p_event_type: event_type,
+        }).then(({ error: eaError }) => {
+          if (eaError) console.log('[analytics] Entity affinity update failed:', eaError.message)
+        })
       })
+
+      // Also keep legacy EMA update on profiles for backward compatibility during transition
+      if (effectiveUserId) {
+        admin.rpc('update_taste_vector_ema_profiles', {
+          p_user_id: effectiveUserId,
+          p_article_id: article_id,
+          p_event_type: event_type,
+        }).then(({ error: emaError }) => {
+          if (emaError) console.log('[analytics] Legacy EMA update failed:', emaError.message)
+        })
+      }
     }
 
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
-    // Only first 6 tags (primary topics) with position-based weighting:
-    //   Tag 1 gets full weight, Tag 6 gets ~28%. Tail tags are noise.
+    // Only runs for authenticated users (guests use entity_affinity via personalization_profiles)
     const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
     const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
-    if (TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
+    if (effectiveUserId && TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
       let baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
 
       // Tiered dwell amplifier for engaged events — longer reads = stronger learning
@@ -173,7 +221,7 @@ export default async function handler(req, res) {
           admin
             .from('profiles')
             .select('tag_profile')
-            .eq('id', user.id)
+            .eq('id', effectiveUserId)
             .single()
             .then(({ data: profileData }) => {
               const tagProfile = profileData?.tag_profile || {}
@@ -187,7 +235,7 @@ export default async function handler(req, res) {
               admin
                 .from('profiles')
                 .update({ tag_profile: tagProfile })
-                .eq('id', user.id)
+                .eq('id', effectiveUserId)
                 .then(() => {})
                 .catch(() => {})
             })
@@ -209,7 +257,7 @@ export default async function handler(req, res) {
     // ============================================================
 
     const EXPLORE_EVENTS = ['explore_topic_tap', 'explore_topic_dwell', 'explore_article_tap']
-    if (EXPLORE_EVENTS.includes(event_type)) {
+    if (effectiveUserId && EXPLORE_EVENTS.includes(event_type)) {
       const entityName = (metadata?.entity_name || '').toLowerCase().trim()
       if (!entityName) {
         console.log('[analytics] Explore event missing entity_name in metadata')
@@ -217,7 +265,7 @@ export default async function handler(req, res) {
         admin
           .from('profiles')
           .select('tag_profile, explore_daily_boost')
-          .eq('id', user.id)
+          .eq('id', effectiveUserId)
           .single()
           .then(({ data: profileData }) => {
             const tagProfile = profileData?.tag_profile || {}
@@ -268,7 +316,7 @@ export default async function handler(req, res) {
                     admin
                       .from('profiles')
                       .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                      .eq('id', user.id)
+                      .eq('id', effectiveUserId)
                       .then(() => {})
                       .catch(() => {})
                     return
@@ -289,7 +337,7 @@ export default async function handler(req, res) {
                   admin
                     .from('profiles')
                     .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                    .eq('id', user.id)
+                    .eq('id', effectiveUserId)
                     .then(() => console.log('[analytics] Explore article_tap tag_profile updated'))
                     .catch(() => {})
                 })
@@ -299,7 +347,7 @@ export default async function handler(req, res) {
               admin
                 .from('profiles')
                 .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                .eq('id', user.id)
+                .eq('id', effectiveUserId)
                 .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
                 .catch(() => {})
             }
@@ -313,13 +361,13 @@ export default async function handler(req, res) {
     // When a user searches, their query terms reveal strong interest.
     // Boost matching tags in tag_profile.
     // ============================================================
-    if (event_type === 'search_query' && metadata?.query) {
+    if (effectiveUserId && event_type === 'search_query' && metadata?.query) {
       const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
       if (queryTerms.length > 0) {
         admin
           .from('profiles')
           .select('tag_profile')
-          .eq('id', user.id)
+          .eq('id', effectiveUserId)
           .single()
           .then(({ data: profileData }) => {
             const tagProfile = profileData?.tag_profile || {}
@@ -335,7 +383,7 @@ export default async function handler(req, res) {
             admin
               .from('profiles')
               .update({ tag_profile: tagProfile })
-              .eq('id', user.id)
+              .eq('id', effectiveUserId)
               .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query))
               .catch(() => {})
           })
@@ -343,8 +391,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build skip_profile from skipped articles (non-blocking)
-    if (event_type === 'article_skipped' && article_id) {
+    // Build skip_profile from skipped articles (non-blocking, auth users only)
+    if (effectiveUserId && event_type === 'article_skipped' && article_id) {
       admin
         .from('published_articles')
         .select('interest_tags')
@@ -361,7 +409,7 @@ export default async function handler(req, res) {
           admin
             .from('profiles')
             .select('skip_profile')
-            .eq('id', user.id)
+            .eq('id', effectiveUserId)
             .single()
             .then(({ data: profileData }) => {
               const skipProfile = profileData?.skip_profile || {}
@@ -372,14 +420,14 @@ export default async function handler(req, res) {
               admin
                 .from('profiles')
                 .update({ skip_profile: skipProfile })
-                .eq('id', user.id)
+                .eq('id', effectiveUserId)
                 .then(() => {})
                 .catch(() => {
                   // Fallback to users table
                   admin
                     .from('users')
                     .update({ skip_profile: skipProfile })
-                    .eq('id', user.id)
+                    .eq('id', effectiveUserId)
                     .then(() => {})
                     .catch(() => {})
                 })

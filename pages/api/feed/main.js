@@ -410,6 +410,43 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   return base * (1 - skipPenalty);
 }
 
+// ==========================================
+// V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
+// ==========================================
+
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
+  const vectorScore = similarity || 0;
+
+  // Entity bonus: 0.10 × affinity × (matching/total), capped at 0.30
+  const tags = safeJsonParse(article.interest_tags, []);
+  let entityBonus = 0;
+  let matchCount = 0;
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    const affinity = entityAffinities[t];
+    if (affinity && affinity > 0) {
+      entityBonus += 0.10 * affinity;
+      matchCount++;
+      if (matchCount >= 3) break; // Cap at 3 entity matches per article
+    }
+  }
+  const totalTags = Math.max(tags.length, 1);
+  entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
+
+  // Quality: normalized ai_final_score (0-1)
+  const quality = (article.ai_final_score || 0) / 1000;
+
+  // Freshness: 0.10 × (1 - hours_old/shelf_life_hours), min 0
+  const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
+  const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
+  const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
+
+  // Session boost: 0.20 × cosine_sim(article, session_vector) when active
+  const sessionScore = sessionBoost || 0;
+
+  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + sessionScore * 150;
+}
+
 function scoreTrendingV3(article) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   return (article.ai_final_score || 0) * recency;
@@ -572,6 +609,7 @@ export default async function handler(req, res) {
     const followedCountries = req.query.followed_countries ? req.query.followed_countries.split(',') : [];
     const followedTopics = req.query.followed_topics ? req.query.followed_topics.split(',') : [];
     const userId = req.query.user_id || null;
+    const guestDeviceId = req.query.guest_device_id || null;
 
     // Session signals from client (real-time skip/engage tracking)
     const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
@@ -580,7 +618,7 @@ export default async function handler(req, res) {
     const clientSeenIds = req.query.seen_ids ? req.query.seen_ids.split(',').map(Number).filter(Boolean) : [];
 
     // ==========================================
-    // LOAD USER DATA
+    // LOAD USER DATA (v3: personalization_profiles first, fallback to profiles)
     // ==========================================
 
     let userPrefs = null;
@@ -590,9 +628,36 @@ export default async function handler(req, res) {
     let storedTagProfile = null;
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
+    let personalizationId = null;
+    let userPhase = 1;
+    let totalInteractions = 0;
+
+    // Try v3 personalization_profiles first
+    if (userId || guestDeviceId) {
+      const rpcParams = userId
+        ? { p_auth_id: userId }
+        : { p_device_id: guestDeviceId };
+
+      const { data: persData } = await supabase.rpc('resolve_personalization_id', rpcParams);
+      if (persData && persData.length > 0) {
+        personalizationId = persData[0].personalization_id;
+        userPhase = persData[0].phase;
+        totalInteractions = persData[0].total_interactions;
+
+        // Load taste vector from personalization_profiles
+        const { data: ppData } = await supabase
+          .from('personalization_profiles')
+          .select('taste_vector_minilm')
+          .eq('personalization_id', personalizationId)
+          .single();
+        if (ppData?.taste_vector_minilm) {
+          tasteVectorMinilm = ppData.taste_vector_minilm;
+        }
+      }
+    }
 
     if (userId) {
-      // Look up profiles table (where real users live, id = auth UUID)
+      // Load profiles table for prefs + legacy taste vectors
       let { data: userData } = await supabase
         .from('profiles')
         .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile')
@@ -624,13 +689,15 @@ export default async function handler(req, res) {
         persUserId = userData.id;
       }
 
-      // Extract MiniLM taste vector, skip profile, and stored tag profile
-      tasteVectorMinilm = userData?.taste_vector_minilm || null;
+      // Use personalization_profiles taste vector if available (v3), else fall back to profiles
+      if (!tasteVectorMinilm) {
+        tasteVectorMinilm = userData?.taste_vector_minilm || null;
+      }
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
 
       // Check if user has interest clusters (PinnerSage-lite)
-      if (tasteVector && persUserId) {
+      if ((tasteVector || tasteVectorMinilm) && persUserId) {
         const { count } = await supabase
           .from('user_interest_clusters')
           .select('id', { count: 'exact', head: true })
@@ -1047,15 +1114,35 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // Personal bucket: entity-level tag scoring with session momentum
+  // V3: Load entity affinities for scoring (if personalization_profiles exists)
+  let entityAffinities = {};
+  if (personalizationId) {
+    const { data: affinityRows } = await supabase
+      .from('user_entity_affinity')
+      .select('entity, affinity_score')
+      .eq('personalization_id', personalizationId)
+      .order('affinity_score', { ascending: false })
+      .limit(100);
+    if (affinityRows) {
+      for (const row of affinityRows) {
+        entityAffinities[row.entity] = row.affinity_score;
+      }
+    }
+  }
+
+  // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
+      // Use V3 scoring if personalizationId exists, else fall back to V2
+      const score = personalizationId
+        ? scoreArticleV3(article, similarity, entityAffinities, 0)
+        : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       return {
         ...article,
-        _score: scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile),
+        _score: score,
         _similarity: similarity,
         _bucket: 'personal',
       };
