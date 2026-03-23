@@ -632,27 +632,31 @@ export default async function handler(req, res) {
     let userPhase = 1;
     let totalInteractions = 0;
 
-    // Try v3 personalization_profiles first
+    // Try v3 personalization_profiles first (non-blocking — falls back to profiles if fails)
     if (userId || guestDeviceId) {
-      const rpcParams = userId
-        ? { p_auth_id: userId }
-        : { p_device_id: guestDeviceId };
+      try {
+        const rpcParams = userId
+          ? { p_auth_id: userId }
+          : { p_device_id: guestDeviceId };
 
-      const { data: persData } = await supabase.rpc('resolve_personalization_id', rpcParams);
-      if (persData && persData.length > 0) {
-        personalizationId = persData[0].personalization_id;
-        userPhase = persData[0].phase;
-        totalInteractions = persData[0].total_interactions;
+        const { data: persData, error: persError } = await supabase.rpc('resolve_personalization_id', rpcParams);
+        if (!persError && persData && persData.length > 0) {
+          personalizationId = persData[0].personalization_id;
+          userPhase = persData[0].phase;
+          totalInteractions = persData[0].total_interactions;
 
-        // Load taste vector from personalization_profiles
-        const { data: ppData } = await supabase
-          .from('personalization_profiles')
-          .select('taste_vector_minilm')
-          .eq('personalization_id', personalizationId)
-          .single();
-        if (ppData?.taste_vector_minilm) {
-          tasteVectorMinilm = ppData.taste_vector_minilm;
+          // Load taste vector from personalization_profiles
+          const { data: ppData } = await supabase
+            .from('personalization_profiles')
+            .select('taste_vector_minilm')
+            .eq('personalization_id', personalizationId)
+            .single();
+          if (ppData?.taste_vector_minilm) {
+            tasteVectorMinilm = ppData.taste_vector_minilm;
+          }
         }
+      } catch (e) {
+        // V3 not available — continue with legacy flow
       }
     }
 
