@@ -31,6 +31,7 @@ struct CreateContentView: View {
     // Flow state
     @State private var showPreview = false
     @State private var isPublishing = false
+    @State private var publishError: String?
     @State private var highlightMode = false
     @FocusState private var focusedBullet: Int?
     @FocusState private var tagFieldFocused: Bool
@@ -77,10 +78,6 @@ struct CreateContentView: View {
                     .padding(.bottom, 20)
 
                 titleSection
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
-
-                categorySection
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
 
@@ -625,12 +622,12 @@ struct CreateContentView: View {
     private var bulletsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("KEY POINTS")
+                Text("BULLETS")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .tracking(1)
                 Spacer()
-                Text("\(cleanBullets.count) points")
+                Text("\(cleanBullets.count) bullets")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.tertiary)
             }
@@ -654,7 +651,7 @@ struct CreateContentView: View {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 18))
                         .foregroundStyle(.blue)
-                    Text("Add Point")
+                    Text("Add Bullet")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.blue)
                 }
@@ -666,15 +663,14 @@ struct CreateContentView: View {
     }
 
     private func bulletRow(index: Int) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .center, spacing: 10) {
             Text("\(index + 1)")
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .foregroundStyle(.secondary)
                 .frame(width: 24, height: 24)
                 .background(.fill.quaternary, in: Circle())
-                .padding(.top, 10)
 
-            TextField("Add a key point...", text: $bullets[index], axis: .vertical)
+            TextField("Add a bullet...", text: $bullets[index], axis: .vertical)
                 .font(.system(size: 16))
                 .lineLimit(1...6)
                 .focused($focusedBullet, equals: index)
@@ -967,6 +963,14 @@ struct CreateContentView: View {
                         coordinate: $locationCoordinate
                     )
                 }
+                .alert("Publish Failed", isPresented: Binding(
+                    get: { publishError != nil },
+                    set: { if !$0 { publishError = nil } }
+                )) {
+                    Button("OK") { publishError = nil }
+                } message: {
+                    Text(publishError ?? "Something went wrong. Please try again.")
+                }
             }
         }
     }
@@ -1025,7 +1029,7 @@ struct CreateContentView: View {
 
             do {
                 guard let jsonData = try? JSONSerialization.data(withJSONObject: body),
-                      let url = URL(string: "https://www.tennews.ai/api/content/create") else {
+                      let url = URL(string: APIEndpoints.baseURL + APIEndpoints.contentCreate) else {
                     isPublishing = false
                     return
                 }
@@ -1042,13 +1046,22 @@ struct CreateContentView: View {
                 if let http = response as? HTTPURLResponse, http.statusCode >= 200 && http.statusCode < 300 {
                     await MainActor.run {
                         isPublishing = false
+                        HapticManager.success()
                         dismiss()
                     }
                 } else {
-                    await MainActor.run { isPublishing = false }
+                    await MainActor.run {
+                        isPublishing = false
+                        publishError = "Server returned an error. Please try again."
+                        HapticManager.error()
+                    }
                 }
             } catch {
-                await MainActor.run { isPublishing = false }
+                await MainActor.run {
+                    isPublishing = false
+                    publishError = "Network error. Check your connection and try again."
+                    HapticManager.error()
+                }
             }
         }
     }
@@ -1064,7 +1077,7 @@ struct CreateContentView: View {
     }
 
     private func uploadImage(_ data: Data) async -> String? {
-        guard let url = URL(string: "https://www.tennews.ai/api/content/upload-image") else { return nil }
+        guard let url = URL(string: APIEndpoints.baseURL + APIEndpoints.contentUploadImage) else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let boundary = UUID().uuidString

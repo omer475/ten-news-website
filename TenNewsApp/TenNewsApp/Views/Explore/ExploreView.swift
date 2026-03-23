@@ -385,11 +385,24 @@ struct ExploreView: View {
 
     private func openArticle(_ topicArticle: ExploreTopicArticle) {
         HapticManager.selection()
+
+        // Check feed cache first
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == topicArticle.id.stringValue }) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                selectedArticle = cached
+            }
+            return
+        }
+
+        // Open instantly with what we have, upgrade in background
+        let fallback = Article.from(exploreArticle: topicArticle)
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            selectedArticle = fallback
+        }
+
         Task {
             if let full: Article = try? await APIClient.shared.get("/api/article/\(topicArticle.id.stringValue)") {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                    selectedArticle = full
-                }
+                selectedArticle = full
             }
         }
     }

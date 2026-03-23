@@ -35,9 +35,10 @@ struct ArticleCardView: View {
     private let padding: CGFloat = 20
     private let imageRatio: CGFloat = 0.42
 
-    /// Device screen corner radius (read via private key, fallback 55)
+    /// Device screen corner radius based on device model
     private var screenCornerRadius: CGFloat {
-        (UIScreen.main.value(forKey: "_displayCornerRadius") as? CGFloat) ?? 55
+        let hasRoundedCorners = UIScreen.main.bounds.height >= 812 // iPhone X and later
+        return hasRoundedCorners ? 55 : 0
     }
 
     enum ContentMode: String, CaseIterable { case bullets, fiveW }
@@ -1537,6 +1538,7 @@ struct ArticleCardView: View {
                             Image(systemName: LikeManager.shared.isLiked(article.id) ? "heart.fill" : "heart")
                                 .font(.system(size: 24, weight: .medium))
                                 .foregroundStyle(LikeManager.shared.isLiked(article.id) ? .red : .white.opacity(0.8))
+                                .symbolEffect(.bounce, value: LikeManager.shared.isLiked(article.id))
                             Text("0")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.5))
@@ -1563,7 +1565,8 @@ struct ArticleCardView: View {
                         VStack(spacing: 2) {
                             Image(systemName: BookmarkManager.shared.isBookmarked(article.id) ? "bookmark.fill" : "bookmark")
                                 .font(.system(size: 24, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
+                                .foregroundStyle(BookmarkManager.shared.isBookmarked(article.id) ? .white : .white.opacity(0.8))
+                                .symbolEffect(.bounce, value: BookmarkManager.shared.isBookmarked(article.id))
                             Text("0")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.5))
