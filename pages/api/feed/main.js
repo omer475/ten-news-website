@@ -820,8 +820,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
-  const sevenDaysAgo = new Date(now - 7 * 24 * 3600000).toISOString();
-  const fortyEightHoursAgo = new Date(now - 48 * 3600000).toISOString();
+  const sevenDaysAgo = new Date(now - 365 * 24 * 3600000).toISOString();
+  const fortyEightHoursAgo = new Date(now - 365 * 24 * 3600000).toISOString();
 
   // Personalized feed -- no shared/CDN caching
   res.setHeader('Cache-Control', 'private, no-store, max-age=0');
@@ -845,7 +845,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
       p_user_id: userId,
       match_per_cluster: Math.min(75 + Math.floor(offset / 3), 150),
-      hours_window: 168,
+      hours_window: 8760,
       exclude_ids: excludeIds,
       min_similarity: minSim,
     });
@@ -853,7 +853,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
       p_user_id: userId,
       match_per_cluster: Math.min(75 + Math.floor(offset / 3), 150),
-      hours_window: 168,
+      hours_window: 8760,
       exclude_ids: excludeIds,
       min_similarity: minSim,
     });
@@ -861,7 +861,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
       query_embedding: tasteVectorMinilm,
       match_count: personalMatchCount,
-      hours_window: 168,
+      hours_window: 8760,
       exclude_ids: excludeIds,
       min_similarity: minSim,
     });
@@ -869,7 +869,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = supabase.rpc('match_articles_personal', {
       query_embedding: tasteVector,
       match_count: personalMatchCount,
-      hours_window: 168,
+      hours_window: 8760,
       exclude_ids: excludeIds,
       min_similarity: minSim,
     });
