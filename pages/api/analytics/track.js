@@ -1,6 +1,231 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
+// ============================================================
+// K-MEANS CLUSTERING (JavaScript implementation for V23)
+// ============================================================
+
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i]; magA += a[i] * a[i]; magB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB);
+  return denom > 0 ? dot / denom : 0;
+}
+
+function weightedAverage(embeddings, weights) {
+  const dim = embeddings[0].length;
+  const avg = new Array(dim).fill(0);
+  let totalW = 0;
+  for (let j = 0; j < embeddings.length; j++) {
+    const w = weights[j];
+    totalW += w;
+    for (let i = 0; i < dim; i++) avg[i] += embeddings[j][i] * w;
+  }
+  if (totalW <= 0) return avg;
+  for (let i = 0; i < dim; i++) avg[i] /= totalW;
+  return avg;
+}
+
+function silhouetteScore(embeddings, labels, centroids) {
+  if (embeddings.length < 3) return -1;
+  const k = centroids.length;
+  let totalScore = 0;
+  let count = 0;
+  for (let i = 0; i < embeddings.length; i++) {
+    const myCluster = labels[i];
+    // a(i) = avg distance to same cluster
+    let aSum = 0, aCount = 0;
+    for (let j = 0; j < embeddings.length; j++) {
+      if (j === i || labels[j] !== myCluster) continue;
+      aSum += 1 - cosineSim(embeddings[i], embeddings[j]);
+      aCount++;
+    }
+    if (aCount === 0) continue;
+    const a = aSum / aCount;
+    // b(i) = min avg distance to other clusters
+    let minB = Infinity;
+    for (let c = 0; c < k; c++) {
+      if (c === myCluster) continue;
+      let bSum = 0, bCount = 0;
+      for (let j = 0; j < embeddings.length; j++) {
+        if (labels[j] !== c) continue;
+        bSum += 1 - cosineSim(embeddings[i], embeddings[j]);
+        bCount++;
+      }
+      if (bCount > 0) minB = Math.min(minB, bSum / bCount);
+    }
+    if (minB === Infinity) continue;
+    const s = (minB - a) / Math.max(a, minB);
+    totalScore += s;
+    count++;
+  }
+  return count > 0 ? totalScore / count : -1;
+}
+
+function runKMeans(embeddings, weights, k, maxIter = 20) {
+  const n = embeddings.length;
+  const dim = embeddings[0].length;
+  if (n < k) return null;
+
+  // Initialize centroids with K-Means++ (weighted)
+  const centroids = [];
+  const totalW = weights.reduce((a, b) => a + b, 0);
+  // First centroid: weighted random
+  let cumW = 0;
+  const r = Math.random() * totalW;
+  for (let i = 0; i < n; i++) {
+    cumW += weights[i];
+    if (cumW >= r) { centroids.push([...embeddings[i]]); break; }
+  }
+  // Remaining centroids: pick proportional to distance from nearest existing centroid
+  for (let c = 1; c < k; c++) {
+    const dists = embeddings.map(emb => {
+      let minD = Infinity;
+      for (const cent of centroids) {
+        minD = Math.min(minD, 1 - cosineSim(emb, cent));
+      }
+      return minD * minD;
+    });
+    const totalD = dists.reduce((a, b) => a + b, 0);
+    let cumD = 0;
+    const r2 = Math.random() * totalD;
+    for (let i = 0; i < n; i++) {
+      cumD += dists[i];
+      if (cumD >= r2) { centroids.push([...embeddings[i]]); break; }
+    }
+  }
+
+  // Iterate
+  let labels = new Array(n).fill(0);
+  for (let iter = 0; iter < maxIter; iter++) {
+    // Assign to nearest centroid
+    const newLabels = embeddings.map(emb => {
+      let bestC = 0, bestSim = -Infinity;
+      for (let c = 0; c < k; c++) {
+        const sim = cosineSim(emb, centroids[c]);
+        if (sim > bestSim) { bestSim = sim; bestC = c; }
+      }
+      return bestC;
+    });
+
+    // Check convergence
+    const changed = newLabels.some((l, i) => l !== labels[i]);
+    labels = newLabels;
+    if (!changed) break;
+
+    // Update centroids (weighted average)
+    for (let c = 0; c < k; c++) {
+      const clusterEmbs = [];
+      const clusterWeights = [];
+      for (let i = 0; i < n; i++) {
+        if (labels[i] === c) { clusterEmbs.push(embeddings[i]); clusterWeights.push(weights[i]); }
+      }
+      if (clusterEmbs.length > 0) {
+        centroids[c] = weightedAverage(clusterEmbs, clusterWeights);
+      }
+    }
+  }
+
+  return { centroids, labels };
+}
+
+function findOptimalClusters(embeddings, weights, minK = 2, maxK = 8) {
+  let bestK = 2, bestScore = -Infinity, bestResult = null;
+  for (let k = minK; k <= Math.min(maxK, Math.floor(embeddings.length / 3)); k++) {
+    const result = runKMeans(embeddings, weights, k);
+    if (!result) continue;
+    // Check min 3 articles per cluster
+    const counts = {};
+    for (const l of result.labels) counts[l] = (counts[l] || 0) + 1;
+    if (Object.values(counts).some(c => c < 3)) continue;
+
+    const score = silhouetteScore(embeddings, result.labels, result.centroids);
+    if (score > bestScore) { bestScore = score; bestK = k; bestResult = result; }
+  }
+  return bestResult || runKMeans(embeddings, weights, 2);
+}
+
+async function runClusteringForUser(admin, persId, phase) {
+  // Fetch all positive engagements from buffer
+  const { data: buffer } = await admin
+    .from('engagement_buffer')
+    .select('embedding_minilm, interaction_weight, created_at')
+    .eq('personalization_id', persId)
+    .gt('interaction_weight', 0)
+    .order('created_at', { ascending: false });
+
+  if (!buffer || buffer.length < 6) return;
+
+  const embeddings = [];
+  const weights = [];
+  const now = Date.now();
+  const DECAY_LAMBDA = 0.0231; // 30-day half-life for initial clustering
+
+  for (const row of buffer) {
+    const emb = row.embedding_minilm;
+    if (!emb || !Array.isArray(emb) || emb.length !== 384) continue;
+    const daysOld = (now - new Date(row.created_at).getTime()) / 86400000;
+    const decayedWeight = row.interaction_weight * Math.exp(-DECAY_LAMBDA * daysOld);
+    if (decayedWeight < 0.01) continue;
+    embeddings.push(emb);
+    weights.push(decayedWeight);
+  }
+
+  if (embeddings.length < 6) return;
+
+  // Run K-Means
+  const result = phase === 2
+    ? runKMeans(embeddings, weights, Math.min(3, Math.floor(embeddings.length / 3)))
+    : findOptimalClusters(embeddings, weights);
+
+  if (!result) return;
+
+  // Compute cluster metadata
+  const clusterData = [];
+  const k = result.centroids.length;
+  let totalWeight = 0;
+  for (let c = 0; c < k; c++) {
+    let clusterWeight = 0;
+    let count = 0;
+    let maxDate = 0;
+    for (let i = 0; i < embeddings.length; i++) {
+      if (result.labels[i] === c) {
+        clusterWeight += weights[i];
+        count++;
+        const d = new Date(buffer[i]?.created_at).getTime();
+        if (d > maxDate) maxDate = d;
+      }
+    }
+    totalWeight += clusterWeight;
+    clusterData.push({ centroid: result.centroids[c], weight: clusterWeight, count, lastEngaged: new Date(maxDate).toISOString() });
+  }
+
+  // Delete old clusters
+  await admin.from('user_interest_clusters').delete().eq('personalization_id', persId);
+
+  // Insert new clusters
+  for (let c = 0; c < clusterData.length; c++) {
+    const d = clusterData[c];
+    const importance = totalWeight > 0 ? d.weight / totalWeight : 1 / k;
+    await admin.from('user_interest_clusters').insert({
+      user_id: persId, // reuse user_id column for personalization_id
+      cluster_index: c,
+      medoid_embedding: d.centroid,
+      medoid_minilm: d.centroid,
+      article_count: d.count,
+      importance_score: importance,
+      is_centroid: true,
+      personalization_id: persId,
+      last_engaged_at: d.lastEngaged,
+    });
+  }
+
+  console.log(`[analytics] Clustered ${embeddings.length} articles into ${k} clusters for ${persId.substring(0, 8)}`);
+}
+
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -172,6 +397,72 @@ export default async function handler(req, res) {
         }).then(({ error: eaError }) => {
           if (eaError) console.log('[analytics] Entity affinity update failed:', eaError.message)
         })
+
+        // V23: Phase transitions + incremental cluster updates
+        const currentPhase = persData[0].phase
+        const newInteractions = persData[0].total_interactions + 1 // +1 because sliding window just incremented it
+
+        // Phase transition: 1→2 at 30, 2→3 at 50
+        if (newInteractions === 30 && currentPhase === 1) {
+          admin.from('personalization_profiles').update({ phase: 2 }).eq('personalization_id', persId).then(() => {
+            console.log('[analytics] Phase 1→2 transition for', persId.substring(0, 8))
+            runClusteringForUser(admin, persId, 2).catch(e => console.log('[analytics] Phase 2 clustering failed:', e.message))
+          })
+        } else if (newInteractions === 50 && currentPhase === 2) {
+          admin.from('personalization_profiles').update({ phase: 3 }).eq('personalization_id', persId).then(() => {
+            console.log('[analytics] Phase 2→3 transition for', persId.substring(0, 8))
+            runClusteringForUser(admin, persId, 3).catch(e => console.log('[analytics] Phase 3 clustering failed:', e.message))
+          })
+        }
+
+        // Incremental cluster update (Phase 2/3 only, positive engagements only)
+        if ((currentPhase >= 2 || newInteractions >= 30) && event_type !== 'article_skipped') {
+          admin.from('published_articles').select('embedding_minilm').eq('id', article_id).single().then(({ data: artData }) => {
+            if (!artData?.embedding_minilm || !Array.isArray(artData.embedding_minilm)) return
+            const artEmb = artData.embedding_minilm
+
+            admin.from('user_interest_clusters')
+              .select('id, cluster_index, medoid_minilm, article_count, importance_score')
+              .eq('personalization_id', persId)
+              .eq('is_archived', false)
+              .then(({ data: clusters }) => {
+                if (!clusters || clusters.length === 0) return
+
+                // Find nearest cluster
+                let bestIdx = -1, bestSim = -1
+                for (let i = 0; i < clusters.length; i++) {
+                  const centroid = clusters[i].medoid_minilm
+                  if (!centroid || !Array.isArray(centroid)) continue
+                  const sim = cosineSim(artEmb, centroid)
+                  if (sim > bestSim) { bestSim = sim; bestIdx = i; }
+                }
+
+                // Only update if similarity > 0.40 threshold
+                if (bestIdx >= 0 && bestSim > 0.40) {
+                  const cluster = clusters[bestIdx]
+                  const count = cluster.article_count || 1
+                  const centroid = cluster.medoid_minilm
+                  // Incremental centroid: new = (old × count + article) / (count + 1)
+                  const newCentroid = centroid.map((v, i) => (v * count + artEmb[i]) / (count + 1))
+                  const newCount = count + 1
+
+                  // Recalculate importance
+                  const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
+                  const updates = { medoid_minilm: newCentroid, medoid_embedding: newCentroid, article_count: newCount, importance_score: newCount / totalCount, last_engaged_at: new Date().toISOString() }
+
+                  admin.from('user_interest_clusters').update(updates).eq('id', cluster.id).then(() => {
+                    // Also update other clusters' importance scores
+                    for (const c of clusters) {
+                      if (c.id === cluster.id) continue
+                      admin.from('user_interest_clusters')
+                        .update({ importance_score: (c.article_count || 0) / totalCount })
+                        .eq('id', c.id).then(() => {}).catch(() => {})
+                    }
+                  }).catch(() => {})
+                }
+              }).catch(() => {})
+          }).catch(() => {})
+        }
       })
 
       // Also keep legacy EMA update on profiles for backward compatibility during transition

@@ -544,7 +544,7 @@ function scoreArticleV3(article, similarity, entityAffinities) {
   for (const tag of tags) {
     const affinity = entityAffinities[tag.toLowerCase()];
     if (affinity && affinity > 0) {
-      entityBonus += 0.10 * affinity;
+      entityBonus += 0.10 * (affinity / 10.0);
       matchCount++;
       if (matchCount >= 3) break;
     }
@@ -600,10 +600,12 @@ function mmrSelectEmb(candidates, selected, embCache, lambda) {
       if (tSim >= 0.4) sim = Math.max(sim, 0.85);
       else if (tSim >= 0.25) sim = Math.max(sim, 0.6);
 
-      // Same category penalty
-      if (c.category === s.category) sim = Math.max(sim, 0.15);
+      // Same category penalty (lowered — cluster proportional allocation handles cross-topic diversity)
+      if (c.category === s.category) sim = Math.max(sim, 0.10);
 
-      // Same cluster penalty
+      // Same cluster penalty (v23 interest clusters, not article clusters)
+      if (c._cluster !== undefined && c._cluster === s._cluster) sim = Math.max(sim, 0.15);
+      // Legacy article cluster dedup
       if (c.cluster_id && c.cluster_id === s.cluster_id) sim = Math.max(sim, 0.4);
 
       maxSim = Math.max(maxSim, sim);
@@ -798,6 +800,8 @@ export default async function handler(req, res) {
       limit,
       offset,
       personalizationId,
+      userPhase,
+      totalInteractions,
     });
 
   } catch (error) {
@@ -815,7 +819,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, seenArticleIds,
         sessionEngagedIds, sessionSkippedIds, limit, offset,
-        personalizationId } = opts;
+        personalizationId, userPhase, totalInteractions } = opts;
+  userPhase = userPhase || 1;
+  totalInteractions = totalInteractions || 0;
   sessionEngagedIds = sessionEngagedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
@@ -835,51 +841,72 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
   const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
 
-  // pgvector ANN search — PinnerSage-style: query per engaged article, never average
+  // ==========================================
+  // V23: Phase-aware candidate generation
+  // Phase 1: single taste vector query
+  // Phase 2: blend taste vector + cluster queries
+  // Phase 3: cluster queries only (PinnerSage)
+  // ==========================================
   const personalMatchCount = Math.min(300 + offset, 600);
   let personalPromise;
+  let v23Clusters = []; // Store cluster info for proportional P-slot distribution
 
-  // V3 PinnerSage: query separately for each recent engaged article embedding
-  if (personalizationId) {
+  if (personalizationId && userPhase >= 2) {
+    // Phase 2/3: Query per cluster
     personalPromise = (async () => {
-      // Fetch last 10 distinct engaged article embeddings from buffer
-      const { data: bufferRows } = await supabase
-        .from('engagement_buffer')
-        .select('article_id, embedding_minilm, interaction_weight')
+      const { data: clusters } = await supabase
+        .from('user_interest_clusters')
+        .select('cluster_index, medoid_minilm, importance_score, article_count')
         .eq('personalization_id', personalizationId)
-        .gt('interaction_weight', 0)
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .eq('is_archived', false)
+        .order('importance_score', { ascending: false });
 
-      if (!bufferRows || bufferRows.length === 0) {
-        // No engagement history yet — fall back to initial taste vector
+      if (!clusters || clusters.length === 0) {
+        // No clusters yet — fall back to taste vector
         if (tasteVectorMinilm) {
           return supabase.rpc('match_articles_personal_minilm', {
-            query_embedding: tasteVectorMinilm,
-            match_count: personalMatchCount,
-            hours_window: 8760,
-            exclude_ids: excludeIds,
-            min_similarity: minSim,
+            query_embedding: tasteVectorMinilm, match_count: personalMatchCount,
+            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
           });
         }
         return { data: [], error: null };
       }
 
-      // Run parallel ANN queries — one per engaged article
-      const perArticleCount = Math.max(30, Math.floor(personalMatchCount / bufferRows.length));
-      const queries = bufferRows.map(row =>
-        supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: row.embedding_minilm,
-          match_count: perArticleCount,
-          hours_window: 8760,
-          exclude_ids: excludeIds,
-          min_similarity: minSim,
-        })
-      );
+      v23Clusters = clusters;
+
+      // Query per cluster, proportional to importance
+      const queries = clusters.map(cluster => {
+        const matchCount = Math.max(30, Math.round(personalMatchCount * (cluster.importance_score || 0.2)));
+        const centroid = cluster.medoid_minilm;
+        if (!centroid || !Array.isArray(centroid)) return Promise.resolve({ data: [], error: null });
+        return supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: centroid, match_count: matchCount,
+          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+        }).then(result => {
+          // Tag each result with its cluster_index
+          if (result.data) {
+            for (const r of result.data) r._cluster = cluster.cluster_index;
+          }
+          return result;
+        });
+      });
+
+      // Phase 2: also query with taste vector for blending
+      if (userPhase === 2 && tasteVectorMinilm) {
+        queries.push(
+          supabase.rpc('match_articles_personal_minilm', {
+            query_embedding: tasteVectorMinilm, match_count: personalMatchCount,
+            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+          }).then(result => {
+            if (result.data) { for (const r of result.data) r._cluster = -1; } // -1 = taste vector
+            return result;
+          })
+        );
+      }
 
       const results = await Promise.all(queries);
 
-      // Merge: keep best similarity per article across all queries
+      // Merge: keep best similarity per article, preserve cluster tag
       const bestSim = new Map();
       for (const result of results) {
         if (result.data) {
@@ -892,47 +919,22 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
 
-      // Sort by similarity descending, take top N
-      const merged = [...bestSim.values()]
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, personalMatchCount);
-
+      const merged = [...bestSim.values()].sort((a, b) => b.similarity - a.similarity).slice(0, personalMatchCount);
       return { data: merged, error: null };
     })();
-  } else if (!hasAnyPersonalization) {
-    personalPromise = Promise.resolve({ data: [], error: null });
-  } else if (hasInterestClusters && useMinilm) {
-    personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId,
-      match_per_cluster: Math.min(75 + Math.floor(offset / 3), 150),
-      hours_window: 8760,
-      exclude_ids: excludeIds,
-      min_similarity: minSim,
-    });
-  } else if (hasInterestClusters) {
-    personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId,
-      match_per_cluster: Math.min(75 + Math.floor(offset / 3), 150),
-      hours_window: 8760,
-      exclude_ids: excludeIds,
-      min_similarity: minSim,
-    });
-  } else if (useMinilm) {
-    personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm,
-      match_count: personalMatchCount,
-      hours_window: 8760,
-      exclude_ids: excludeIds,
-      min_similarity: minSim,
-    });
+  } else if (personalizationId || useMinilm) {
+    // Phase 1 or legacy: single taste vector query
+    const queryVec = tasteVectorMinilm || tasteVector;
+    if (queryVec) {
+      personalPromise = supabase.rpc(tasteVectorMinilm ? 'match_articles_personal_minilm' : 'match_articles_personal', {
+        query_embedding: queryVec, match_count: personalMatchCount,
+        hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+      });
+    } else {
+      personalPromise = Promise.resolve({ data: [], error: null });
+    }
   } else {
-    personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector,
-      match_count: personalMatchCount,
-      hours_window: 8760,
-      exclude_ids: excludeIds,
-      min_similarity: minSim,
-    });
+    personalPromise = Promise.resolve({ data: [], error: null });
   }
 
   const [personalResult, trendingResult, discoveryResult] = await Promise.all([
@@ -1200,72 +1202,66 @@ async function handleV2Feed(req, res, supabase, opts) {
     return null;
   }
 
-  const selected = [];
+  // ==========================================
+  // V23: 30-article slot pattern with MMR within each pool
+  // P=Personal, T=Trending, E=Exploration, CS=Cold-Start
+  // ==========================================
+  const V23_SLOTS = ['P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E','P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E'];
+
+  // Step 1: MMR-select within each pool
   const pPool = [...personalScored];
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
 
-  if (hasAnyPersonalization) {
-    // Pattern: every 4th = trending, every 8th = discovery, rest = personal
-    for (let pos = 0; selected.length < limit; pos++) {
-      let picked = null;
+  const pSelected = [];
+  for (let i = 0; i < 18 && pPool.length > 0; i++) {
+    const picked = mmrSelectDeduped(pPool, pSelected, 0.7);
+    if (!picked) break;
+    picked.bucket = 'personal';
+    recordClusterSelection(picked);
+    pSelected.push(picked);
+  }
 
-      if (pos > 0 && pos % 8 === 7 && dPool.length > 0) {
-        // Discovery slot
-        picked = mmrSelectDeduped(dPool, selected, 0.4);
-        if (picked) {
-          picked.bucket = 'discovery';
-          recordClusterSelection(picked);
-          selected.push(picked);
-          continue;
-        }
-      }
+  const tSelected = [];
+  for (let i = 0; i < 6 && tPool.length > 0; i++) {
+    const picked = mmrSelectDeduped(tPool, tSelected, 0.85);
+    if (!picked) break;
+    picked.bucket = 'trending';
+    tSelected.push(picked);
+  }
 
-      if (pos > 0 && pos % 4 === 3 && tPool.length > 0) {
-        // Trending slot
-        picked = mmrSelectDeduped(tPool, selected, 0.85);
-        if (picked) {
-          picked.bucket = 'trending';
-          recordClusterSelection(picked);
-          selected.push(picked);
-          continue;
-        }
-      }
+  const eSelected = [];
+  for (let i = 0; i < 4 && dPool.length > 0; i++) {
+    const picked = mmrSelectDeduped(dPool, eSelected, 0.5);
+    if (!picked) break;
+    picked.bucket = 'exploration';
+    eSelected.push(picked);
+  }
 
-      // Personal slot
-      picked = mmrSelectDeduped(pPool, selected, 0.7);
-      if (!picked) picked = mmrSelectDeduped(tPool, selected, 0.85);
-      if (!picked) picked = mmrSelectDeduped(dPool, selected, 0.5);
-      if (!picked) break;
+  // Cold-start: new/unscored content from categories user doesn't usually see
+  const csSelected = dPool.slice(0, 2).map(a => ({ ...a, bucket: 'cold-start' }));
 
-      picked.bucket = picked._bucket || 'personal';
-      recordClusterSelection(picked);
-      selected.push(picked);
+  // Step 2: Interleave into slot pattern
+  const selected = [];
+  let pIdx = 0, tIdx = 0, eIdx = 0, csIdx = 0;
+
+  for (let pos = 0; pos < Math.min(V23_SLOTS.length, limit); pos++) {
+    const slot = V23_SLOTS[pos];
+    let picked = null;
+
+    if (slot === 'P' && pIdx < pSelected.length) picked = pSelected[pIdx++];
+    else if (slot === 'T' && tIdx < tSelected.length) picked = tSelected[tIdx++];
+    else if (slot === 'E' && eIdx < eSelected.length) picked = eSelected[eIdx++];
+    else if (slot === 'CS' && csIdx < csSelected.length) picked = csSelected[csIdx++];
+
+    // Backfill: P→next P, T→next T, etc. If pool empty, try others
+    if (!picked) {
+      if (pIdx < pSelected.length) picked = pSelected[pIdx++];
+      else if (tIdx < tSelected.length) picked = tSelected[tIdx++];
+      else if (eIdx < eSelected.length) picked = eSelected[eIdx++];
     }
-  } else {
-    // No personalization: fill with trending + discovery using simple MMR diversity
-    for (let pos = 0; selected.length < limit; pos++) {
-      let picked = null;
 
-      // Alternate: trending heavy, discovery sprinkled
-      if (pos % 3 === 2 && dPool.length > 0) {
-        picked = mmrSelectDeduped(dPool, selected, 0.4);
-        if (picked) {
-          picked.bucket = 'discovery';
-          recordClusterSelection(picked);
-          selected.push(picked);
-          continue;
-        }
-      }
-
-      picked = mmrSelectDeduped(tPool, selected, 0.7);
-      if (!picked) picked = mmrSelectDeduped(dPool, selected, 0.5);
-      if (!picked) break;
-
-      picked.bucket = picked._bucket || 'trending';
-      recordClusterSelection(picked);
-      selected.push(picked);
-    }
+    if (picked) selected.push(picked);
   }
 
   // ==========================================
