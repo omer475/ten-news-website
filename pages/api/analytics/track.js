@@ -379,24 +379,67 @@ export default async function handler(req, res) {
           }
         }
 
-        // Update sliding window (taste vector)
+        // ============================================================
+        // BUCKET-WEIGHTED LEARNING
+        // Articles from trending/discovery barely move the taste profile.
+        // Only personal-bucket and explore/search get full weight.
+        // ============================================================
+        const bucket = (metadata?.bucket || 'personal').toLowerCase()
+        const dwellSec = metadata?.dwell ? parseFloat(metadata.dwell) :
+                         metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
+
+        // Determine bucket multiplier
+        let bucketMultiplier = 1.0
+        if (bucket === 'trending') bucketMultiplier = 0.2
+        else if (bucket === 'discovery' || bucket === 'exploration' || bucket === 'cold-start') bucketMultiplier = 0.1
+        // 'personal', 'explore', 'search' = 1.0 (full weight)
+
+        // For feed articles (not explore/search): filter out glances < 3s
+        if (bucket !== 'explore' && bucket !== 'search') {
+          if (event_type === 'article_engaged' && dwellSec < 3) {
+            console.log('[analytics] Glance ignored (< 3s dwell, bucket:', bucket + ')')
+            // Still increment interactions but don't add to buffer
+            admin.rpc('update_sliding_window', {
+              p_pers_id: persId, p_article_id: article_id, p_event_type: 'article_glance',
+            }).catch(() => {})
+            return
+          }
+        }
+
+        // Compute effective event type for weight calculation
+        // For trending/discovery: only saves/shares/likes go into buffer (viewed articles don't)
+        let shouldAddToBuffer = true
+        if (bucketMultiplier < 1.0) {
+          // Trending/discovery: only strong signals
+          if (!['article_saved', 'article_shared', 'article_liked'].includes(event_type)) {
+            if (event_type !== 'article_engaged' || dwellSec < 10) {
+              shouldAddToBuffer = false
+            }
+          }
+        }
+
+        // Update sliding window with bucket multiplier
         admin.rpc('update_sliding_window', {
           p_pers_id: persId,
           p_article_id: article_id,
-          p_event_type: event_type,
+          p_event_type: shouldAddToBuffer ? event_type : 'article_glance',
+          p_bucket_multiplier: shouldAddToBuffer ? bucketMultiplier : 0.0,
         }).then(({ error: swError }) => {
           if (swError) console.log('[analytics] Sliding window update failed:', swError.message)
-          else console.log('[analytics] Sliding window updated for:', persId.substring(0, 8))
+          else console.log('[analytics] Buffer:', persId.substring(0, 8), bucket, event_type, shouldAddToBuffer ? 'x' + bucketMultiplier : 'SKIP')
         })
 
-        // Update entity affinity (positive events only, handled inside RPC)
-        admin.rpc('update_entity_affinity', {
-          p_pers_id: persId,
-          p_article_id: article_id,
-          p_event_type: event_type,
-        }).then(({ error: eaError }) => {
-          if (eaError) console.log('[analytics] Entity affinity update failed:', eaError.message)
-        })
+        // Update entity affinity — also bucket-weighted
+        // Only update entity affinity for personal/explore/search engagements
+        if (bucketMultiplier >= 1.0) {
+          admin.rpc('update_entity_affinity', {
+            p_pers_id: persId,
+            p_article_id: article_id,
+            p_event_type: event_type,
+          }).then(({ error: eaError }) => {
+            if (eaError) console.log('[analytics] Entity affinity update failed:', eaError.message)
+          })
+        }
 
         // V23: Phase transitions + incremental cluster updates
         const currentPhase = persData[0].phase
