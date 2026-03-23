@@ -522,7 +522,8 @@ struct ExploreView: View {
             "Motorsport": "#E10600", "Combat Sports": "#DD6622",
             "Sports Events": "#DD6622", "Automotive": "#336699",
             "Gaming": "#7744BB", "Fashion": "#CC6699", "Skincare": "#CC6699",
-            "Beauty": "#CC6699", "Lifestyle": "#CC9922", "Food": "#22AA66",
+            "Beauty": "#CC6699", "Food": "#E07020", "Travel": "#2299BB",
+            "Lifestyle": "#66AA44",
         ]
         return Color(hex: colors[category] ?? "#3366CC")
     }

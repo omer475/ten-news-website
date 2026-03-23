@@ -97,9 +97,6 @@ if [ "$CREATE_SECRETS" = "y" ] || [ "$CREATE_SECRETS" = "Y" ]; then
     read -sp "GEMINI_API_KEY: " GEMINI_KEY && echo ""
     create_secret "GEMINI_API_KEY" "$GEMINI_KEY"
     
-    read -sp "ANTHROPIC_API_KEY: " ANTHROPIC_KEY && echo ""
-    create_secret "ANTHROPIC_API_KEY" "$ANTHROPIC_KEY"
-    
     read -sp "BRIGHTDATA_API_KEY: " BRIGHTDATA_KEY && echo ""
     create_secret "BRIGHTDATA_API_KEY" "$BRIGHTDATA_KEY"
     
@@ -144,7 +141,7 @@ PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectN
 SERVICE_ACCOUNT="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
 
 echo "   Granting secret access to service account..."
-for SECRET in GEMINI_API_KEY ANTHROPIC_API_KEY BRIGHTDATA_API_KEY SUPABASE_URL SUPABASE_SERVICE_KEY; do
+for SECRET in GEMINI_API_KEY BRIGHTDATA_API_KEY SUPABASE_URL SUPABASE_SERVICE_KEY; do
     gcloud secrets add-iam-policy-binding "$SECRET" \
         --member="serviceAccount:$SERVICE_ACCOUNT" \
         --role="roles/secretmanager.secretAccessor" \
@@ -160,32 +157,32 @@ gcloud run jobs deploy tennews-workflow \
     --cpu 2 \
     --task-timeout 60m \
     --max-retries 1 \
-    --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest" \
+    --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest" \
     --quiet
 
 echo -e "${GREEN}✅ Cloud Run Job deployed${NC}"
 echo ""
 
 # ============================================================
-# STEP 5: Ensure scheduler is running (every 10 minutes)
+# STEP 5: Ensure scheduler is running (every 20 minutes)
 # ============================================================
-echo -e "${BLUE}⏰ Step 5: Setting up Cloud Scheduler (every 10 minutes)...${NC}"
+echo -e "${BLUE}⏰ Step 5: Setting up Cloud Scheduler (every 20 minutes)...${NC}"
 
 # Check if scheduler job exists and resume it
 if gcloud scheduler jobs describe tennews-trigger --location="$REGION" &>/dev/null 2>&1; then
     echo "   Resuming scheduler job..."
     gcloud scheduler jobs resume tennews-trigger --location="$REGION" --quiet 2>/dev/null || true
-    echo -e "${GREEN}✅ Scheduler resumed (runs every 10 minutes)${NC}"
+    echo -e "${GREEN}✅ Scheduler resumed (runs every 20 minutes)${NC}"
 else
     echo "   Creating scheduler job..."
     gcloud scheduler jobs create http tennews-trigger \
         --location="$REGION" \
-        --schedule="*/10 * * * *" \
+        --schedule="*/20 * * * *" \
         --uri="https://$REGION-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$PROJECT_ID/jobs/tennews-workflow:run" \
         --http-method=POST \
         --oauth-service-account-email="$SERVICE_ACCOUNT" \
         --quiet
-    echo -e "${GREEN}✅ Scheduler created (runs every 10 minutes)${NC}"
+    echo -e "${GREEN}✅ Scheduler created (runs every 20 minutes)${NC}"
 fi
 echo ""
 
@@ -196,7 +193,7 @@ echo -e "${BLUE}============================================================${NC
 echo -e "${GREEN}🎉 DEPLOYMENT COMPLETE!${NC}"
 echo -e "${BLUE}============================================================${NC}"
 echo ""
-echo -e "Your news workflow runs every 10 minutes on Google Cloud Run!"
+echo -e "Your news workflow runs every 20 minutes on Google Cloud Run!"
 echo ""
 echo -e "${YELLOW}📋 Useful Commands:${NC}"
 echo ""

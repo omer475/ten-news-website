@@ -1,0 +1,1538 @@
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 701.8 seconds
+================================================================================
+   Articles published: 7
+   Clusters processed: 16
+   Approved (Step 1): 25
+   Articles fetched: 44
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+      Skipping cluster 24563
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.cbsnews.com/news/democrats-immigration...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24563
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  ❌ Error: 429 Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.
+[1/1] Processing: **Nine States** Challenge **Federal Mandate** for ...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11538
+   🏷️ Tags: ['federal mandate', 'community care', 'disability rights', 'section 504', 'rehabilitation act', 'nursing homes', 'lawsuit', 'politics']
+   🏷️ Generated 8 interest tags: ['federal mandate', 'community care', 'disability rights']...
+   🏷️ Generating interest tags...
+   📊 Article score: 865/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Nine States** Challenge **Federal Mandate** for ...
+      Source 1: STAT News - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+ ...
+    {
+    },
+      "value": "76.7 million covered"
+      "label": "Medicaid enrollees",
+    {
+    },
+      "value": "504 impacted"
+      "label": "Rehabilitation Act section",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+ ...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "15,000 in US"
+      "label": "Nursing facilities",
+    {
+    },
+      "value": "76.7 million covered"
+      "label": "Medicaid enrollees",
+    {
+    },
+      "value": "504 impacted"
+      "label": "Rehabilitation Act section",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11505 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 321 chars
+      Title: **Nine States** Challenge **Federal Mandate** for Community Care...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (121 chars)
+   ✅ Gemini context search completed (121 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Nine States** Challenge **Federal Mandate** for Community ...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: STAT News (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a person, likely a worker, in a location that could be related to a news story, and the photo itself is not from a TV broadcast or social media.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://www.statnews.com/wp-content/uploads/2022/08/AP22023656909666-1024x576.jp...
+      [1/1] Checking: STAT News
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.statnews.com/wp-content/uploads/2022/0...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.statnews.com/2026/01/29/states-lawsuit... (47629 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.statnews.com/2026/01/29/states-lawsuit...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24562
+================================================================================
+      Cluster 24561 will not be published
+   ❌ ELIMINATED: Failed verification after 3 attempts
+         1. Incorrect year for January decline....
+      Discrepancies: 1
+      Summary: The AI-generated content accurately reflects the source article, except for an incorrect year.
+   ⚠️  Verification FAILED (Attempt 3/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **OpenAI's Sora** App **Struggles** After Stellar ...
+      Source 1: TechCrunch - content: 4025 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **OpenAI's Sora** App **Struggles** After Stellar ...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 3/3)
+         1. Incorrect year for January decline....
+      Discrepancies: 1
+      Summary: The article is mostly accurate, but contains a wrong date.
+   ⚠️  Verification FAILED (Attempt 2/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **OpenAI's Sora** App Struggles After **Stellar** ...
+      Source 1: TechCrunch - content: 4025 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **OpenAI's Sora** App Struggles After **Stellar** ...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The article incorrectly states the decline continued in January 2026....
+      Discrepancies: 1
+      Summary: The AI article contains a wrong date, stating January 2026 instead of January.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **OpenAI's Sora** App **Plunges 45%** After Stella...
+      Source 1: TechCrunch - content: 4025 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, graph]
+      "label": "Fund...
+    {
+    },
+      "value": "250 million"
+      "label": "Parameters trained",
+    {
+    },
+      "value": "60 seconds"
+      "label": "Video length limit",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+    "title...
+    "type": "line",
+  "graph": {
+  ],
+    }
+      "value": "$11.3 billion"
+      "label": "Funding received",
+    {
+    },
+      "value": "250 million"
+      "label": "Parameters trained",
+    {
+    },
+      "value": "60 seconds"
+      "label": "Video length limit",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11554 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details', 'graph']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details, graph
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details, graph]
+      Validated components: ['details', 'graph']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "graph"
+    "details",
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "graph"
+    "details",
+  "components": [
+      Gemini returned: {
+      Content length sent: 316 chars
+      Title: **OpenAI's Sora** App **Plunges 45%** After Stellar Launch...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (86 chars)
+   ✅ Gemini context search completed (86 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **OpenAI's Sora** App **Plunges 45%** After Stellar Launch...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: TechCrunch (score: 83.0, AI approved)
+         ✅ AI APPROVED (90%)
+   ✅ Suitable (90% confidence): The image depicts app icons, which can be relevant in a technology news context, is of sufficient quality, and does not contain any elements that would disqualify it under the given criteria.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://techcrunch.com/wp-content/uploads/2025/10/sora-app-GettyImages-224027867...
+      [1/1] Checking: TechCrunch
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://techcrunch.com/wp-content/uploads/2025/10/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for TechCrunch: https://techcrunch.com/wp-content/uploads/2025/10/sora-app-G...
+Fetched 1/1 articles
+✅ Fetched: https://techcrunch.com/2026/01/29/openais-sora-app... (4025 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24561
+================================================================================
+      Skipping cluster 24560
+   ❌ ELIMINATED: No image found and AI generation failed
+   ❌ AI image generation failed: Generation failed: 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   ⚠️ Generation error (attempt 3/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 3/3)...
+   ⚠️ Generation error (attempt 2/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 2/3)...
+   ⚠️ Generation error (attempt 1/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: deep red
+   🎨 Generating image for: First Brands Founder Indicted On Us Fraud...
+   📦 Supabase storage initialized
+      Topic: First Brands Founder Indicted On Us Fraud...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image depicts a shelf of Fram oil filters, which is not a news event or related to any significant news story, making it unsuitable for a professional news website.
+   ❌ Unsuitable (100% confidence): The image depicts a shelf of Fram oil filters, which is not a news event or related to any significant news story, making it unsuitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1160x653 pixels, mode: RGB
+   📥 Downloading image: https://www.ft.com/__origami/service/image/v2/images/raw/https%3A%2F%2Fd1e00ek4e...
+      [1/1] Checking: Financial Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.ft.com/__origami/service/image/v2/imag...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.ft.com/content/90e0fb6a-8c0e-46fe-8c91... (758 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24560
+================================================================================
+============================================================
+  Articles tagged: 1
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Matched existing event: AI Industry Boom
+  ✅ Updated latest development for AI Industry Boom
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "11537"', 'code': '22P02', 'hint': None, 'details': None}
+[1/1] Processing: **Tech Stocks** Slide After **Microsoft** AI Spend...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11537
+   🏷️ Tags: ['microsoft', 'artificial intelligence', 'tech stocks', 'stock market', 'capital expenditure', 'data centers', 'finance']
+   🏷️ Generated 7 interest tags: ['microsoft', 'artificial intelligence', 'tech stocks']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Tech Stocks** Slide After **Microsoft** AI Spend...
+      Source 1: Financial Times - content: 791 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "event": "Microsoft invested in OpenAI, integrating AI models into its products, signaling a major push into AI technology and setting the ...
+      "date": "February 2023",
+    {
+  "timeline": [
+   📝 Cleaned JSON: {
+      "event": "Microsoft...
+      "date": "January 2025",
+    {
+    },
+      "event": "Microsoft invested in OpenAI, integrating AI models into its products, signaling a major push into AI technology and setting the stage for future developments."
+      "date": "February 2023",
+    {
+  "timeline": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (13267 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['timeline', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: timeline, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [timeline, details]
+      Validated components: ['timeline', 'details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "details"
+    "timeline",
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "details"
+    "timeline",
+  "components": [
+      Gemini returned: {
+      Content length sent: 331 chars
+      Title: **Tech Stocks** Slide After **Microsoft** AI Spending Worries...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (932 chars)
+   ✅ Gemini context search completed (932 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Tech Stocks** Slide After **Microsoft** AI Spending Worrie...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Financial Times (score: 98.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image is a professional-looking chart showing stock prices, which is suitable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1160x653 pixels, mode: RGB
+   📥 Downloading image: https://www.ft.com/__origami/service/image/v2/images/raw/https%3A%2F%2Fd1e00ek4e...
+      [1/1] Checking: Financial Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.ft.com/__origami/service/image/v2/imag...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.ft.com/content/c7e23f07-70b3-43a7-8e1d... (791 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24559
+================================================================================
+      Skipping cluster 24558
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.cnbc.com/2026/01/29/senate-voting-gove...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24558
+================================================================================
+============================================================
+  Articles tagged: 1
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Matched existing event: US Trade Policies
+  ✅ Updated latest development for US Trade Policies
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "11536"', 'code': '22P02', 'hint': None, 'details': None}
+[1/1] Processing: **Hegseth** Skips **NATO** Meeting, Second Trump S...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11536
+   🏷️ Tags: ['pete hegseth', 'nato', 'donald trump', 'us foreign policy', 'europe', 'international relations', 'defense', 'brussels']
+   🏷️ Generated 8 interest tags: ['pete hegseth', 'nato', 'donald trump']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI accurately summarizes the news article about Pete Hegseth skipping the NATO meeting.
+      Verification result: ✅ PASSED
+      Generated title: **Hegseth** Skips **NATO** Meeting, Second Trump S...
+      Source 1: The Straits Times - content: 1843 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+        "lng": 4.42...
+        "lat": 50.8798,
+      "coordinates": {
+      "country": "Belgium",
+      "city": "Brussels",
+      "type": "military",
+      "name": "NATO Headquarters",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+      "description": "Location of the NATO defense ministers' meeting that Hegseth is ex...
+      },
+        "lng": 4.4244
+        "lat": 50.8798,
+      "coordinates": {
+      "country": "Belgium",
+      "city": "Brussels",
+      "type": "military",
+      "name": "NATO Headquarters",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (14379 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "NATO Headquarters, Brussels, Belgium"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "NATO Headquarters, Brussels, Belgium"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 284 chars
+      Title: **Hegseth** Skips **NATO** Meeting, Second Trump Snub...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (1470 chars)
+   ✅ Gemini context search completed (1470 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Hegseth** Skips **NATO** Meeting, Second Trump Snub...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Straits Times (score: 80.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image shows a man, presumably a politician or official, speaking at a press conference or event, with a NATO backdrop and the US flag, and it doesn't contain any elements that would disqualify it from a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1140x760 pixels, mode: RGB
+   📥 Downloading image: https://cassette.sphdigital.com.sg/image/straitstimes/47dd7cfa32c5dfbdf670f413e9...
+      [1/1] Checking: The Straits Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cassette.sphdigital.com.sg/image/straitsti...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for The Straits Times: https://cassette.sphdigital.com.sg/image/straitstimes/47dd7c...
+Fetched 1/1 articles
+✅ Fetched: https://www.straitstimes.com/world/europe/hegseth-... (1843 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24557
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Spanish Court** Rejects Father's Bid to Stop Dau...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11535
+   🏷️ Tags: ['spanish court', 'euthanasia', 'catalonia', 'supreme court', 'mental disorders', 'spain', 'chronic illness', 'law']
+   🏷️ Generated 8 interest tags: ['spanish court', 'euthanasia', 'catalonia']...
+   🏷️ Generating interest tags...
+   📊 Article score: 810/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Spanish Court** Rejects Father's Bid to Stop Dau...
+      Source 1: The Straits Times - content: 2807 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+  ...
+      "label": "Floors fallen",
+    {
+    },
+      "value": "20s"
+      "label": "Woman's age",
+    {
+    },
+      "value": "3 years old"
+      "label": "Euthanasia law age",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "event": "Spain...
+      "date": "2021",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "5 floors"
+      "label": "Floors fallen",
+    {
+    },
+      "value": "20s"
+      "label": "Woman's age",
+    {
+    },
+      "value": "3 years old"
+      "label": "Euthanasia law age",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (15378 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details', 'timeline', 'map']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details, timeline, map
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details, timeline, map]
+      Validated components: ['details', 'timeline', 'map']
+}
+  ]
+    "Barcelona, Barcelona, Spain"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "map"
+    "timeline",
+    "details",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Barcelona, Barcelona, Spain"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "map"
+    "timeline",
+    "details",
+  "components": [
+      Gemini returned: {
+      Content length sent: 343 chars
+      Title: **Spanish Court** Rejects Father's Bid to Stop Daughter's **Euthanasia**...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (1286 chars)
+   ✅ Gemini context search completed (1286 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Spanish Court** Rejects Father's Bid to Stop Daughter's **...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Straits Times (score: 79.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image depicts a person in a hospital bed with an IV, which could be suitable for a news article depending on the story's subject matter.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1140x760 pixels, mode: RGB
+   📥 Downloading image: https://cassette.sphdigital.com.sg/image/straitstimes/ee2f935776e5808f4f5173625b...
+      [1/1] Checking: The Straits Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cassette.sphdigital.com.sg/image/straitsti...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for The Straits Times: https://cassette.sphdigital.com.sg/image/straitstimes/ee2f93...
+Fetched 1/1 articles
+✅ Fetched: https://www.straitstimes.com/world/europe/spain-co... (2807 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24556
+================================================================================
+      Skipping cluster 24555 (reason: duplicate_title)
+      Existing (ID 11133): **GOP Senator Tillis** Fires Back After **Trump** Insult...
+      New: **GOP Senator Tillis** Defies **Trump**, Attacks **Noem**...
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 67%)
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **GOP Senator Tillis** Defies **Trump**, Attacks *...
+      Source 1: Newsweek - content: 1363 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "DHS Secre...
+    {
+    },
+      "value": "2 Americans"
+      "label": "Americans killed",
+    {
+    },
+      "value": "2 senators"
+      "label": "Senators voting",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+ ...
+      "date": "January 2017",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "1 Secretary"
+      "label": "DHS Secretary",
+    {
+    },
+      "value": "2 Americans"
+      "label": "Americans killed",
+    {
+    },
+      "value": "2 senators"
+      "label": "Senators voting",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11549 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 331 chars
+      Title: **GOP Senator Tillis** Defies **Trump**, Attacks **Noem**...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (162 chars)
+   ✅ Gemini context search completed (162 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **GOP Senator Tillis** Defies **Trump**, Attacks **Noem**...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Newsweek (score: 84.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a person of interest surrounded by reporters, which depicts a real news event and therefore is suitable.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x799 pixels, mode: RGB
+   📥 Downloading image: https://assets.newsweek.com/wp-content/uploads/2026/01/GettyImages-2258565669.jp...
+      [1/1] Checking: Newsweek
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://assets.newsweek.com/wp-content/uploads/202...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Newsweek: https://assets.newsweek.com/wp-content/uploads/2026/01/Getty...
+Fetched 1/1 articles
+✅ Fetched: https://www.newsweek.com/gop-senator-defies-trump-... (1363 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24555
+================================================================================
+      Skipping cluster 24554
+   ❌ ELIMINATED: No image found and AI generation failed
+   ❌ AI image generation failed: Generation failed: 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   ⚠️ Generation error (attempt 3/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 3/3)...
+   ⚠️ Generation error (attempt 2/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 2/3)...
+   ⚠️ Generation error (attempt 1/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: warm beige
+   🎨 Generating image for: Scientists Raise Alarm About Two Viruses That...
+   📦 Supabase storage initialized
+      Topic: Scientists Raise Alarm About Two Viruses That...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (90%): The image contains a graphic of a virus overlaid, making it unsuitable for professional news websites.
+   ❌ Unsuitable (90% confidence): The image contains a graphic of a virus overlaid, making it unsuitable for professional news websites.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://assets.newsweek.com/wp-content/uploads/2026/01/Copy-of-32-circle-inset-r...
+      [1/1] Checking: Newsweek
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://assets.newsweek.com/wp-content/uploads/202...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Newsweek: https://assets.newsweek.com/wp-content/uploads/2026/01/Copy-...
+Fetched 1/1 articles
+✅ Fetched: https://www.newsweek.com/two-viruses-next-pandemic... (5207 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24554
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Boualem Sansal** Elected to **Académie française...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11534
+   🏷️ Tags: ['boualem sansal', 'academie francaise', 'algeria', 'france', 'literature', 'free speech', 'politics', 'novelist']
+   🏷️ Generated 8 interest tags: ['boualem sansal', 'academie francaise', 'algeria']...
+   🏷️ Generating interest tags...
+   📊 Article score: 780/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Boualem Sansal** Elected to **Académie française...
+      Source 1: France 24 - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Boualem Sansal** Elected to **Académie française...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The AI states the election occurred in January 2025, but the article was publish...
+      Discrepancies: 1
+      Summary: The AI-generated content contains a wrong date, stating the election occurred in January 2025 when the source article indicates it was published in January 2026.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Boualem Sansal** Elected to **Académie française...
+      Source 1: France 24 - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+  ...
+      "label": "Founded in",
+    {
+    },
+      "value": "74 years"
+      "label": "Sansal's age",
+    {
+    },
+      "value": "40 members"
+      "label": "Académie members",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "event": "Boualem S...
+      "date": "2011",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "1635"
+      "label": "Founded in",
+    {
+    },
+      "value": "74 years"
+      "label": "Sansal's age",
+    {
+    },
+      "value": "40 members"
+      "label": "Académie members",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11498 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏆",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏆",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 327 chars
+      Title: **Boualem Sansal** Elected to **Académie française**...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (120 chars)
+   ✅ Gemini context search completed (120 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Boualem Sansal** Elected to **Académie française**...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: France 24 (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a person who could be involved in a news story, and the image quality is good.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/4e96d35a-fd2a-11f0-a1bb-005056bfb2b6/w:1024...
+      [1/1] Checking: France 24
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://s.france24.com/media/display/4e96d35a-fd2a...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.france24.com/en/france/20260129-noveli... (27546 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.france24.com/en/france/20260129-noveli...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24553
+================================================================================
+      Skipping cluster 24552
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.independent.co.uk/bulletin/lifestyle/g...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24552
+================================================================================
+============================================================
+  Articles tagged: 1
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Matched existing event: Gaza-Israel Conflict
+  ✅ Updated latest development for Gaza-Israel Conflict
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "11533"', 'code': '22P02', 'hint': None, 'details': None}
+[1/1] Processing: **Armed Gangs** Target **Hamas** with Israeli Weap...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11533
+   🏷️ Tags: ['gaza strip', 'hamas', 'israel', 'armed gangs', 'popular forces', 'helles gang', 'crime', 'middle east']
+   🏷️ Generated 8 interest tags: ['gaza strip', 'hamas', 'israel']...
+   🏷️ Generating interest tags...
+   📊 Article score: 890/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding armed gangs targeting Hamas in Gaza.
+      Verification result: ✅ PASSED
+      Generated title: **Armed Gangs** Target **Hamas** with Israeli Weap...
+      Source 1: The Independent - content: 2668 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+      "label": "Homes destroyed...
+    {
+    },
+      "value": "100+ active"
+      "label": "Gang members",
+    {
+    },
+      "value": "$5,000 each"
+      "label": "Weapon price",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+   ...
+      "date": "October 2023",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "50+ buildings"
+      "label": "Homes destroyed",
+    {
+    },
+      "value": "100+ active"
+      "label": "Gang members",
+    {
+    },
+      "value": "$5,000 each"
+      "label": "Weapon price",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11703 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details', 'map', 'timeline']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details, map, timeline
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details, map, timeline]
+      Validated components: ['details', 'map', 'timeline']
+}
+  ]
+    "Gaza Strip"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "timeline"
+    "map",
+    "details",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Gaza Strip"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "timeline"
+    "map",
+    "details",
+  "components": [
+      Gemini returned: {
+      Content length sent: 335 chars
+      Title: **Armed Gangs** Target **Hamas** with Israeli Weapons in Gaza...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (73 chars)
+   ✅ Gemini context search completed (73 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Armed Gangs** Target **Hamas** with Israeli Weapons in Gaz...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Independent (score: 70.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image shows the aftermath of a news event with collapsed buildings and people walking, appropriate for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://static.independent.co.uk/2026/01/27/15/30/SEI281826366.jpg?width=1200&au...
+      [1/1] Checking: The Independent
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2026/01/27/15/30/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.independent.co.uk/news/world/middle-ea... (2668 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24551
+================================================================================
+      Skipping cluster 24550
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+   ⚠️ Could not update source article status: {'message': 'invalid input syntax for type boolean: ""', 'code': '22P02', 'hint': None, 'details': None}
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.independent.co.uk/bulletin/news/bullet...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24550
+================================================================================
+      Skipping cluster 24527
+   ❌ ELIMINATED: No image found and AI generation failed
+   ❌ AI image generation failed: Generation failed: 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   ⚠️ Generation error (attempt 3/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 3/3)...
+   ⚠️ Generation error (attempt 2/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 2/3)...
+   ⚠️ Generation error (attempt 1/3): 404 models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generat
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: deep red
+   🎨 Generating image for: The Eu Takes On Musk’S Ai That...
+   📦 Supabase storage initialized
+      Topic: The Eu Takes On Musk’S Ai That...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 3 images rejected by AI quality check
+         ❌ AI REJECTED (95%): The image contains a suggestive image on a screen and an image of an app on another screen.
+   ❌ Unsuitable (95% confidence): The image contains a suggestive image on a screen and an image of an app on another screen.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   📥 Downloading image: https://static.dw.com/image/75713143_6.jpg...
+      [3/3] Checking: Deutsche Welle World
+         ❌ AI REJECTED (90%): The image features what seems like content from Grok, displayed on a phone, and also contains a photo that is inappropriate for a professional news website.
+   ❌ Unsuitable (90% confidence): The image features what seems like content from Grok, displayed on a phone, and also contains a photo that is inappropriate for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   📥 Downloading image: https://static.dw.com/image/75713143_6.jpg...
+      [2/3] Checking: Deutsche Welle Top Stories
+         ❌ AI REJECTED (90%): The image features potentially sexually suggestive material alongside the Grok app interface, which makes it unsuitable for a professional news website due to issues of content and professionalism.
+   ❌ Unsuitable (90% confidence): The image features potentially sexually suggestive material alongside the Grok app interface, which makes it unsuitable for a professional news website due to issues of content and professionalism.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   📥 Downloading image: https://static.dw.com/image/75713143_6.jpg...
+      [1/3] Checking: Deutsche Welle
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 3
+      Total candidates: 3
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://static.dw.com/image/75713143_6.jpg...
+   🔍 DEBUG Source 1: image_url = https://static.dw.com/image/75713143_6.jpg...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 3/3
+   📸 Fetched image for Deutsche Welle World: https://static.dw.com/image/75713143_6.jpg...
+   📸 Fetched image for Deutsche Welle Top Stories: https://static.dw.com/image/75713143_6.jpg...
+   📸 Fetched image for Deutsche Welle: https://static.dw.com/image/75713143_6.jpg...
+Fetched 3/3 articles
+✅ Fetched: https://www.dw.com/en/the-eu-takes-on-musk-s-ai-th... (3957 chars)
+✅ Fetched: https://www.dw.com/en/the-eu-takes-on-musk-s-ai-th... (3957 chars)
+✅ Fetched: https://www.dw.com/en/the-eu-takes-on-musk-s-ai-th... (3957 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 24527
+================================================================================
+============================================================
+  Articles tagged: 1
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Matched existing event: Climate Change Lawsuits
+  ✅ Updated latest development for Climate Change Lawsuits
+  Failed to tag article: {'message': 'invalid input syntax for type uuid: "11532"', 'code': '22P02', 'hint': None, 'details': None}
+[1/1] Processing: **New Mexico Developer** Ditches Gas for **$3,000*...
+Found 46 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 11532
+   🏷️ Tags: ['new mexico', 'las cruces', 'metro verde', 'john moscato', 'all-electric', 'home building', 'real estate', 'construction']
+   🏷️ Generated 8 interest tags: ['new mexico', 'las cruces', 'metro verde']...
+   🏷️ Generating interest tags...
+   📊 Article score: 730/1000
+   📊 Using 8 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **New Mexico Developer** Ditches Gas for **$3,000*...
+      Source 1: The New York Times Science - content: 2164 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+        "lng": ...
+        "lat": 32.3123,
+      "coordinates": {
+      "country": "USA",
+      "city": "Las Cruces",
+      "type": "building",
+      "name": "Metro Verde Development",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+  "d...
+  ],
+    }
+      "description": "Location of all-electric home development."
+      },
+        "lng": -106.7795
+        "lat": 32.3123,
+      "coordinates": {
+      "country": "USA",
+      "city": "Las Cruces",
+      "type": "building",
+      "name": "Metro Verde Development",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (13104 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Metro Verde Development, Las Cruces, USA"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌱",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Metro Verde Development, Las Cruces, USA"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌱",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 315 chars
+      Title: **New Mexico Developer** Ditches Gas for **$3,000** Savings...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (812 chars)
+   ✅ Gemini context search completed (812 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **New Mexico Developer** Ditches Gas for **$3,000** Savings...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The New York Times Science (score: 99.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image is a high-quality photo of a residential area and doesn't contain any elements that would make it unsuitable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1800x1803 pixels, mode: RGB
+   📥 Downloading image: https://static01.nyt.com/images/2026/01/30/multimedia/30CLI-NO-GAS-stillpromo-pw...
+      [1/1] Checking: The New York Times Science
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://static01.nyt.com/images/2026/01/30/multime...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.nytimes.com/2026/01/29/climate/why-a-n... (2164 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 24549
+================================================================================
+   🎯 Clusters ready for processing: 16 (NEW this cycle)
+   🔗 Matched existing: 10
+   📊 New clusters: 15
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1015
+⏭️ Already clustered: 0
+✨ New clusters created: 15
+✅ Matched to existing: 10 (embedding: 10, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+         Cluster: Ahead of midterms, Democrats mobilize around immig...
+      ✅ EMBEDDING MATCH: Cluster #24563 (similarity: 1.00)
+   [25/25] Ahead of midterms, Democrats mobilize around immigration, an...
+         Cluster: The Former Illinois Deputy Convicted Of Killing...
+      ✅ EMBEDDING MATCH: Cluster #23816 (similarity: 0.95)
+   [24/25] Former Illinois sheriff's deputy sentenced to 20 years for m...
+      ✨ Created cluster #24563
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [23/25] Ahead of midterms, Democrats mobilize around immigration, an...
+      ✨ Created cluster #24562
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [22/25] Nine states challenge federal mandate that disabled people r...
+         Cluster: OpenAI’s Sora app is struggling after its stellar ...
+      ✅ EMBEDDING MATCH: Cluster #24561 (similarity: 1.00)
+   [21/25] OpenAI’s Sora app is struggling after its stellar launch...
+      ✨ Created cluster #24561
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [20/25] OpenAI’s Sora app is struggling after its stellar launch...
+      ✨ Created cluster #24560
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [19/25] First Brands founder indicted on US fraud charges...
+      ✨ Created cluster #24559
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [18/25] US tech stocks slide after Microsoft’s AI spending unnerves ...
+         Cluster: Us Opens Probe After Waymo Self-Driving Vehicle...
+      ✅ EMBEDDING MATCH: Cluster #24055 (similarity: 0.87)
+   [17/25] A Waymo hit a child near an elementary school. The NHTSA is ...
+      ✨ Created cluster #24558
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [16/25] Senate begins voting on critical funding measure with shutdo...
+      ✨ Created cluster #24557
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [15/25] Hegseth expected to skip NATO ministers' meeting next month,...
+      ✨ Created cluster #24556
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [14/25] Court in Spain rejects dad’s bid to stop daughter’s euthanas...
+      ✨ Created cluster #24555
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [13/25] GOP Senator Defies Trump, Escalates Attack on Noem and Mille...
+      ✨ Created cluster #24554
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [12/25] Scientists Raise Alarm About Two Viruses That Could Cause th...
+      ✨ Created cluster #24553
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [11/25] Novelist Boualem Sansal elected to Académie française months...
+         Cluster: Silver: Why The Price Of 'Poor Man'S...
+      ✅ EMBEDDING MATCH: Cluster #24538 (similarity: 1.00)
+   [10/25] Silver: Why the price of 'poor man's gold' has hit a record...
+      ✨ Created cluster #24552
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [9/25] Google’s AI tool can now plan parties and shop for you...
+      ✨ Created cluster #24551
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [8/25] Armed gangs running rampant in Gaza and killing Hamas and Pa...
+      ✨ Created cluster #24550
+      🆕 No match found: Creating new cluster
+      ⚠️ AI error: 429 Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.
+      🤖 Sending to AI (top 75 clusters)...
+   [7/25] Bulletin PM briefing: Russian ship ordered to leave UK water...
+         Cluster: Baldness Classified As Disability In Landmark Tax...
+      ✅ EMBEDDING MATCH: Cluster #23997 (similarity: 0.92)
+   [6/25] Judge rules that baldness is a disability in tax row with wi...
+         Cluster: The Eu Takes On Musk’S Ai That...
+      ✅ EMBEDDING MATCH: Cluster #24527 (similarity: 1.00)
+   [5/25] The EU takes on Musk’s AI that "undresses" women. Can it pro...
+         Cluster: Silver: Why The Price Of 'Poor Man'S...
+      ✅ EMBEDDING MATCH: Cluster #24538 (similarity: 1.00)
+   [4/25] Silver: Why the price of 'poor man's gold' has hit a record...
+         Cluster: Ice Ends Special Operation In Maine, Senator...
+      ✅ EMBEDDING MATCH: Cluster #24210 (similarity: 0.83)
+   [3/25] ICE Ends Operation in Maine After Arresting 206 Over Five Da...
+         Cluster: Why a New Mexico Developer Quit Natural Gas...
+      ✅ EMBEDDING MATCH: Cluster #24549 (similarity: 1.00)
+   [2/25] Why a New Mexico Developer Quit Natural Gas...
+      ✨ Created cluster #24549
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (top 75 clusters)...
+   [1/25] Why a New Mexico Developer Quit Natural Gas...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 25 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 25
+   ⏭️ Already clustered: 0
+   ✅ Saved: 25
+📝 Step 1: Saving articles to database...
+Articles to cluster: 25
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 25 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 19 filtered articles to Supabase
+✅ Step 1 Complete: 25 approved, 19 filtered
+  Processing batch 2/2 (14 articles)...
+  Processing batch 1/2 (30 articles)...
+📦 Processing 44 articles in batches of 30...
+   ✅ Filtering 44 total articles
+   📷 25 articles without images (Bright Data will fetch later)
+Scoring 44 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 44 NEW articles (after deduplication)
+✅ The Straits Times: 2 new
+✅ The New York Times US: 1 new
+✅ The New York Times Science: 1 new
+✅ The New York Times Climate: 1 new
+✅ The Independent: 7 new
+✅ TechCrunch: 2 new
+✅ Seeking Alpha: 7 new
+✅ STAT News: 1 new
+✅ Newsweek: 6 new
+✅ NBC News: 1 new
+✅ Mashable Tech: 3 new
+✅ Inc. Magazine: 1 new
+✅ France 24: 1 new
+✅ Financial Times: 2 new
+✅ Deutsche Welle World: 1 new
+✅ Deutsche Welle Top Stories: 1 new
+✅ Deutsche Welle: 1 new
+✅ CNBC: 2 new
+✅ CBS News Politics: 1 new
+✅ CBS News Main: 1 new
+✅ Artnet News: 1 new
+   ✅ After database check: 44 NEW articles
+   ⏰ After time filter (1440min): 1049 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2064 articles
+📊 Fetched 2064 articles from 208 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-29 16:51:31
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-29T16:51:22.207143
+🚀 TEN NEWS - Cloud Run Execution
+============================================================

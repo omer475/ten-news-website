@@ -20,7 +20,6 @@ from collections import Counter
 from urllib.parse import urlparse, parse_qs, urlunparse
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import anthropic
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import google.generativeai as genai
@@ -699,15 +698,26 @@ def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
 
 
 # ==========================================
-# ANTHROPIC CLIENT (FALLBACK ONLY)
+# GEMINI CLIENT FOR CLUSTER VALIDATION
 # ==========================================
 
-def get_anthropic_client():
-    """Get Anthropic client for Claude Haiku 4.5 (fallback only)"""
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+def _gemini_cluster_query(prompt: str, max_tokens: int = 200) -> str:
+    """Send a clustering query to Gemini 2.0 Flash and return the text response."""
+    api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY must be set in environment")
-    return anthropic.Anthropic(api_key=api_key)
+        raise ValueError("GEMINI_API_KEY must be set in environment")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    request_data = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0,
+            "maxOutputTokens": max_tokens,
+        }
+    }
+    response = requests.post(url, json=request_data, timeout=30)
+    response.raise_for_status()
+    result = response.json()
+    return result['candidates'][0]['content']['parts'][0]['text'].strip()
 
 # ==========================================
 # CONFIGURATION
@@ -719,11 +729,17 @@ class ClusteringConfig:
     # CENTROID-BASED MATCHING (v3.0)
     # Each cluster stores a centroid (average of all article embeddings).
     # New articles match if cosine similarity to centroid >= threshold.
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.90  # Fixed threshold, no dynamic adjustment
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.84  # Lowered from 0.87 to catch more same-event articles (tested: 62% good, 9% bad)
     # 0.95+ = Nearly identical articles
-    # 0.90-0.95 = Same event, different wording (MATCH)
-    # 0.85-0.90 = Related but possibly different events (NO MATCH)
-    # <0.85 = Different events
+    # 0.87-0.95 = Same event, different wording (MATCH)
+    # 0.80-0.87 = Related but possibly different events (NO MATCH)
+    # <0.80 = Different events
+
+    # Fallback string-based matching thresholds (used when embeddings unavailable)
+    TITLE_SIMILARITY_THRESHOLD = 0.75  # Strong match: high title similarity
+    MIN_TITLE_SIMILARITY = 0.40       # Minimum title similarity to check keywords
+    KEYWORD_MATCH_THRESHOLD = 3       # Shared keywords needed for moderate match
+    ENTITY_MATCH_THRESHOLD = 2        # Shared entities needed for entity match
     
     # Time windows
     MAX_CLUSTER_AGE_HOURS = 336  # Only match with clusters updated in last 336h (14 days)
@@ -948,32 +964,21 @@ Reply ONLY: 1:YES, 2:NO, 3:YES (etc.) - be STRICT, only YES for the exact same e
 Nothing else."""
 
     try:
-        client = get_anthropic_client()
-        
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=200,
-            temperature=0,  # Deterministic matching
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        result_text = response.content[0].text.strip()
-        
+        result_text = _gemini_cluster_query(prompt, max_tokens=200)
+
         # Extract just the first line (the actual response)
         first_line = result_text.split('\n')[0].strip()
-        
+
         if debug:
             print(f"  🤖 AI Response: {first_line}")
-        
+
         # Parse the response: "1:YES, 2:NO, 3:NO, ..." or just "22:YES" for matches only
         results = {}
-        
+
         # Initialize ALL clusters as NO (not matching) - AI only returns what it finds
         for cluster_id, _ in cluster_titles:
             results[cluster_id] = False
-        
+
         # Handle various formats the AI might use
         parts = first_line.replace(" ", "").replace(";", ",").split(",")
         for part in parts:
@@ -1046,23 +1051,12 @@ Format: A1:C3, A2:NONE, A3:C1
 Reply ONLY the matches."""
 
     try:
-        client = get_anthropic_client()
-        
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=500,
-            temperature=0,  # Deterministic matching
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        result_text = response.content[0].text.strip()
+        result_text = _gemini_cluster_query(prompt, max_tokens=500)
         first_line = result_text.split('\n')[0].strip()
-        
+
         if debug:
             print(f"  🤖 Batch AI Response: {first_line}")
-        
+
         # Initialize results - all articles start with no matches
         results = {}
         for article_idx, _ in articles_with_titles:
@@ -1401,24 +1395,47 @@ class EventClusteringEngine:
     def get_active_clusters(self) -> List[Dict]:
         """
         Get all active clusters (not closed, updated within 24 hours).
-        
+
         Returns:
             List of cluster dicts
         """
         try:
             # Get clusters updated in last 24 hours
             cutoff_time = datetime.utcnow() - timedelta(hours=self.config.MAX_CLUSTER_AGE_HOURS)
-            
+
             result = self.supabase.table('clusters').select('*').eq(
                 'status', 'active'
             ).gte(
                 'last_updated_at', cutoff_time.isoformat()
             ).order('last_updated_at', desc=True).execute()
-            
+
             return result.data if result.data else []
-            
+
         except Exception as e:
             print(f"❌ Error getting active clusters: {e}")
+            return []
+
+    def get_recently_published_clusters(self) -> List[Dict]:
+        """
+        Get recently published clusters (last 24h) for cross-cycle dedup.
+        Uses publish_status column (not status, which stays 'active' forever).
+        Only fetches id, main_title, event_name, and embedding to save bandwidth.
+        """
+        try:
+            cutoff_time = datetime.utcnow() - timedelta(hours=self.config.MAX_CLUSTER_AGE_HOURS)
+
+            result = self.supabase.table('clusters').select(
+                'id, main_title, event_name, embedding, last_updated_at'
+            ).eq(
+                'publish_status', 'published'
+            ).gte(
+                'last_updated_at', cutoff_time.isoformat()
+            ).order('last_updated_at', desc=True).execute()
+
+            return result.data if result.data else []
+
+        except Exception as e:
+            print(f"❌ Error getting published clusters: {e}")
             return []
     
     def get_cluster_sources(self, cluster_id: int) -> List[Dict]:
@@ -1442,7 +1459,8 @@ class EventClusteringEngine:
             
         except Exception as e:
             print(f"❌ Error getting cluster sources: {e}")
-    
+            return []
+
     def get_all_cluster_sources_batch(self, cluster_ids: List[int]) -> Dict[int, List[Dict]]:
         """
         Get all source articles for multiple clusters in ONE query.
@@ -1570,9 +1588,14 @@ class EventClusteringEngine:
                 'cluster_id': cluster_id
             }).eq('id', source_article_id).execute()
 
-            # Update cluster's last_updated_at and centroid
+            # Update cluster's last_updated_at, centroid, and source_count
+            # Fetch current source_count to increment it accurately
+            current = self.supabase.table('clusters').select('source_count').eq('id', cluster_id).execute()
+            current_count = (current.data[0].get('source_count', 1) if current.data else 1) or 1
+
             update_data = {
-                'last_updated_at': datetime.utcnow().isoformat()
+                'last_updated_at': datetime.utcnow().isoformat(),
+                'source_count': current_count + 1
             }
             if new_centroid is not None:
                 centroid_list = new_centroid.tolist() if hasattr(new_centroid, 'tolist') else list(new_centroid)
@@ -1641,6 +1664,7 @@ class EventClusteringEngine:
             'matched_to_existing': 0,
             'new_clusters_created': 0,
             'already_clustered': 0,  # Articles skipped because already in a cluster
+            'skipped_published_match': 0,  # Articles skipped because matched a published cluster
             'failed': 0,
             'cluster_ids': []  # Track ALL affected cluster IDs (new + updated)
         }
@@ -1651,6 +1675,10 @@ class EventClusteringEngine:
         # Get active clusters
         active_clusters = self.get_active_clusters()
         print(f"📊 Found {len(active_clusters)} active clusters")
+
+        # Load recently published clusters for cross-cycle dedup
+        published_clusters = self.get_recently_published_clusters()
+        print(f"📊 Found {len(published_clusters)} recently published clusters (for cross-cycle dedup)")
         
         # Pre-fetch ALL cluster sources in ONE query (optimized)
         print(f"📦 Pre-caching cluster sources (batch mode)...")
@@ -1817,6 +1845,15 @@ class EventClusteringEngine:
                 cluster_centroids[cid] = np.array(emb, dtype=np.float64)
             cluster_counts[cid] = max(cluster.get('source_count', 1), 1)
 
+        # Build published cluster centroids for cross-cycle dedup
+        published_centroids = {}
+        for cluster in published_clusters:
+            cid = cluster['id']
+            emb = cluster.get('embedding')
+            if emb and isinstance(emb, list) and len(emb) == EXPECTED_EMBEDDING_DIM:
+                published_centroids[cid] = np.array(emb, dtype=np.float64)
+        print(f"   📊 {len(published_centroids)} published cluster centroids loaded for cross-cycle dedup")
+
         threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
 
         for i, article in enumerate(articles):
@@ -1907,7 +1944,31 @@ class EventClusteringEngine:
                         stats['failed'] += 1
                 continue
 
-            # No centroid match — check published articles before creating new cluster
+            # No centroid match — check published cluster centroids (cross-cycle dedup)
+            # Use lower threshold (0.80) since we're skipping, not merging
+            published_dedup_threshold = 0.80
+            published_match_id = None
+            published_match_sim = 0.0
+            for cid, centroid in published_centroids.items():
+                dot = np.dot(article_emb_np, centroid)
+                norm_a = np.linalg.norm(article_emb_np)
+                norm_b = np.linalg.norm(centroid)
+                if norm_a == 0 or norm_b == 0:
+                    continue
+                sim = dot / (norm_a * norm_b)
+                if sim >= published_dedup_threshold and sim > published_match_sim:
+                    published_match_sim = sim
+                    published_match_id = cid
+
+            if published_match_id is not None:
+                pub_name = next((c.get('event_name', c.get('main_title', '')) for c in published_clusters if c['id'] == published_match_id), '')
+                print(f"\n   ⏭️ SKIP (already published) [{i+1}/{len(articles)}] (sim: {published_match_sim:.3f})")
+                print(f"      📰 {full_title[:70]}")
+                print(f"      📁 Already published as Cluster {published_match_id}: {pub_name[:60]}")
+                with stats_lock:
+                    stats['skipped_published_match'] += 1
+                continue
+
             print(f"\n   🆕 NO MATCHING CLUSTER [{i+1}/{len(articles)}]")
             print(f"      📰 {full_title[:70]}")
 
@@ -1931,7 +1992,7 @@ class EventClusteringEngine:
                 for pub in (recent_published.data or []):
                     clean_pub = _clean(pub.get('title_news', ''))
                     if clean_new and clean_pub and SM(None, clean_new, clean_pub).ratio() >= 0.65:
-                        print(f"      ⏭️ SKIPPING - Similar to published article")
+                        print(f"      ⏭️ SKIPPING - Similar to published article title")
                         print(f"         Published (ID {pub['id']}): {pub.get('title_news', '')[:60]}...")
                         skip_article = True
                         break
@@ -1942,6 +2003,56 @@ class EventClusteringEngine:
                 with stats_lock:
                     stats['failed'] += 1
                 continue
+
+            # Soft match: check if a newly created cluster in this batch has a very similar title
+            # This catches cases like multiple "The Madison Review" articles that score 0.83-0.86
+            # on embeddings (below 0.87 threshold) but are clearly the same event
+            try:
+                clean_new = re.sub(r'[^\w\s]', '', full_title.lower()).strip()
+                soft_match_id = None
+                soft_match_sim = 0.0
+                for cid, centroid in cluster_centroids.items():
+                    cluster_obj = next((c for c in active_clusters if c['id'] == cid), None)
+                    if not cluster_obj:
+                        continue
+                    clean_existing = re.sub(r'[^\w\s]', '', (cluster_obj.get('main_title') or '').lower()).strip()
+                    if clean_new and clean_existing:
+                        title_ratio = SequenceMatcher(None, clean_new, clean_existing).ratio()
+                        if title_ratio >= 0.55:
+                            # Also verify embedding similarity is reasonable (>= 0.75)
+                            dot = np.dot(article_emb_np, centroid)
+                            norm_a = np.linalg.norm(article_emb_np)
+                            norm_b = np.linalg.norm(centroid)
+                            if norm_a > 0 and norm_b > 0:
+                                emb_sim = dot / (norm_a * norm_b)
+                                if emb_sim >= 0.75 and emb_sim > soft_match_sim:
+                                    soft_match_sim = emb_sim
+                                    soft_match_id = cid
+
+                if soft_match_id is not None:
+                    old_count = cluster_counts[soft_match_id]
+                    new_centroid = (cluster_centroids[soft_match_id] * old_count + article_emb_np) / (old_count + 1)
+                    if self.add_to_cluster(soft_match_id, source_id, new_centroid=new_centroid):
+                        cluster_centroids[soft_match_id] = new_centroid
+                        cluster_counts[soft_match_id] = old_count + 1
+                        cluster_name = next((c.get('event_name', '') for c in active_clusters if c['id'] == soft_match_id), '')
+                        print(f"      🔗 SOFT-MATCHED (title: {soft_match_sim:.2f} emb) → Cluster {soft_match_id}: {cluster_name}")
+                        with stats_lock:
+                            stats['matched_to_existing'] += 1
+                            if soft_match_id not in stats['cluster_ids']:
+                                stats['cluster_ids'].append(soft_match_id)
+                        if soft_match_id not in cluster_sources_cache:
+                            cluster_sources_cache[soft_match_id] = []
+                        cluster_sources_cache[soft_match_id].append({
+                            'title': full_title,
+                            'score': article.get('score', 0)
+                        })
+                    else:
+                        with stats_lock:
+                            stats['failed'] += 1
+                    continue
+            except Exception as e:
+                print(f"      ⚠️ Soft match check error: {e}")
 
             # Create new cluster with this article's embedding as initial centroid
             cluster_id = self.create_cluster(article, source_id, embedding=article_emb)
@@ -1987,7 +2098,10 @@ class EventClusteringEngine:
         print(f"✓ New clusters created: {stats['new_clusters_created']}")
         if stats['already_clustered'] > 0:
             print(f"⏭️ Already in clusters (skipped): {stats['already_clustered']}")
+        if stats['skipped_published_match'] > 0:
+            print(f"⏭️ Skipped (matched published cluster): {stats['skipped_published_match']}")
         print(f"✓ Total active clusters: {len(active_clusters)}")
+        print(f"✓ Published clusters checked: {len(published_centroids)}")
         print(f"✓ Centroid threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
         if stats['failed'] > 0:
             print(f"⚠ Failed: {stats['failed']}")

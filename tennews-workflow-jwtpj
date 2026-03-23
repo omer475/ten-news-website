@@ -1,0 +1,480 @@
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 608.1 seconds
+================================================================================
+   Articles published: 0
+   Clusters processed: 10
+   Approved (Step 1): 10
+   Articles fetched: 14
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Guardian UK (score: 98.0, AI approved)
+         ✅ AI APPROVED (90%)
+   ✅ Suitable (90% confidence): The image shows a person looking at a mammogram on a screen, which could be relevant to a news story about breast cancer, medical imaging, or healthcare.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 700x560 pixels, mode: RGB
+   📥 Downloading image: https://i.guim.co.uk/img/media/36bd61defa92b32057223c60bfa35827f0ec8e3b/111_0_24...
+      [1/1] Checking: The Guardian UK
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://i.guim.co.uk/img/media/36bd61defa92b320572...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.theguardian.com/science/2026/jan/29/ai... (53350 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.theguardian.com', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.theguardian.com', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.theguardian.com', port=443): Max retries exceeded 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25033
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 3 sources...
+      ✅ All 3 sources validated - same event
+   🔍 VALIDATING 3 sources for cluster: Apple Hails ‘Remarkable’ $144Bn Quarter With Best-...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Financial Times (score: 99.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows the Apple logo on a building, which is appropriate for news related to the company or its physical locations.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1160x653 pixels, mode: RGB
+   📥 Downloading image: https://www.ft.com/__origami/service/image/v2/images/raw/https%3A%2F%2Fd1e00ek4e...
+      [1/3] Checking: Financial Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 3
+      Total candidates: 3
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://platform.theverge.com/wp-content/uploads/s...
+   🔍 DEBUG Source 1: image_url = https://www.ft.com/__origami/service/image/v2/imag...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/3
+Fetched 1/3 articles
+✅ Jina fallback: https://www.ft.com/content/53f1033e-a479-4365-a13c... (38462 chars)
+   🔄 Trying Jina fallback for 3 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.theverge.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.engadget.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.ft.com', port=443): Max retries exceeded with url:
+❌ Proxy error: HTTPSConnectionPool(host='www.theverge.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.engadget.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.ft.com', port=443): Max retries exceeded with url:
+❌ Proxy error: HTTPSConnectionPool(host='www.theverge.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.engadget.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.ft.com', port=443): Max retries exceeded with url:
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 24904
+================================================================================
+      Skipping cluster 25032
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.cbsnews.com', port=443): Max retries exceeded with
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25032
+================================================================================
+      Skipping cluster 25016
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/2
+Fetched 0/2 articles
+   🔄 Trying Jina fallback for 2 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.cnbc.com', port=443): Max retries exceeded with ur
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.cnbc.com', port=443): Max retries exceeded with ur
+❌ Proxy error: HTTPSConnectionPool(host='www.newsweek.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.cnbc.com', port=443): Max retries exceeded with ur
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 25016
+================================================================================
+      Skipping cluster 24864
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/4
+Fetched 0/4 articles
+   🔄 Trying Jina fallback for 4 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.nytimes.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.nytimes.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.nytimes.com', port=443): Max retries exceeded with
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.bbc.com', port=443): Max retries exceeded with url
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 4 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 4
+================================================================================
+📰 PROCESSING CLUSTER 24864
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 3 sources...
+      ✅ All 3 sources validated - same event
+   🔍 VALIDATING 3 sources for cluster: Genes May Shape How Long We Live...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: warm beige)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260129_235845_20260129_235845.png
+   ✅ Image generated successfully (1267817 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: warm beige
+   🎨 Generating image for: Genes May Shape How Long We Live...
+   📦 Supabase storage initialized
+      Topic: Genes May Shape How Long We Live...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 2 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image contains a graphic of DNA on a clock background, making it unsuitable for a professional news website as it's not a real-world event.
+   ❌ Unsuitable (100% confidence): The image contains a graphic of DNA on a clock background, making it unsuitable for a professional news website as it's not a real-world event.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://www.statnews.com/wp-content/uploads/2024/09/AdobeStock_39985961-1024x576...
+      [2/2] Checking: STAT News
+         ❌ AI REJECTED (100%): The image appears to be a stock photo or staged shot and not directly tied to any specific news event, and is therefore unsuitable for a professional news website.
+   ❌ Unsuitable (100% confidence): The image appears to be a stock photo or staged shot and not directly tied to any specific news event, and is therefore unsuitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 800x450 pixels, mode: RGB
+   📥 Downloading image: https://www.sciencenews.org/wp-content/uploads/sites/2/2026/01/012925_JB_genes_m...
+      [1/2] Checking: Science News
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 2
+      Total candidates: 2
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://www.statnews.com/wp-content/uploads/2024/0...
+   🔍 DEBUG Source 1: image_url = https://www.sciencenews.org/wp-content/uploads/sit...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 2/3
+Fetched 2/3 articles
+✅ Jina fallback: https://www.straitstimes.com/world/study-finds-gre... (44617 chars)
+✅ Jina fallback: https://www.statnews.com/2026/01/29/human-longevit... (47020 chars)
+   🔄 Trying Jina fallback for 3 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.sciencenews.org', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.statnews.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.sciencenews.org', port=443): Max retries exceeded 
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.statnews.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.straitstimes.com', port=443): Max retries exceeded
+❌ Proxy error: HTTPSConnectionPool(host='www.statnews.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.sciencenews.org', port=443): Max retries exceeded 
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 24734
+================================================================================
+      Skipping cluster 25031
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+❌ Proxy error: HTTPSConnectionPool(host='www.independent.co.uk', port=443): Max retries exceede
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25031
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: France 24 (score: 70.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image is a high-quality photograph of a soccer player in action during a game.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x576 pixels, mode: RGB
+   📥 Downloading image: https://s.france24.com/media/display/241862c6-fd5f-11f0-9e55-005056bfb2b6/w:1024...
+      [1/1] Checking: France 24
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://s.france24.com/media/display/241862c6-fd5f...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.france24.com/en/sport/20260129-forest-... (26515 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+❌ Proxy error: HTTPSConnectionPool(host='www.france24.com', port=443): Max retries exceeded wit
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25030
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: PBS NewsHour Politics (score: 85.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image shows a clear photograph of a politician, which is acceptable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x683 pixels, mode: RGB
+   📥 Downloading image: https://d3i6fh83elv35t.cloudfront.net/static/2026/01/polfalloutjohnson-1024x683....
+      [1/1] Checking: PBS NewsHour Politics
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://d3i6fh83elv35t.cloudfront.net/static/2026/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.pbs.org/newshour/show/sen-johnson-says... (34256 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25029
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+   ❌ Failed after 5 attempts
+   ⚠️  API error (attempt 5/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 4/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 3/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 2/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   ⚠️  API error (attempt 1/5): 400 Client Error: Bad Request for url: https://api.anthropic.com/v1/messages
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: PBS NewsHour Politics (score: 84.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a photograph of people, including what appears to be a politician, walking through a building, which is acceptable for news publication.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1024x683 pixels, mode: RGB
+   📥 Downloading image: https://d3i6fh83elv35t.cloudfront.net/static/2026/01/polfalloutdb-1024x683.jpg...
+      [1/1] Checking: PBS NewsHour Politics
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://d3i6fh83elv35t.cloudfront.net/static/2026/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.pbs.org/newshour/show/whats-in-the-bip... (35046 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+❌ Proxy error: HTTPSConnectionPool(host='www.pbs.org', port=443): Max retries exceeded with url
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 25028
+================================================================================
+   🎯 Clusters ready for processing: 10 (NEW this cycle)
+   🔗 Matched existing: 4
+   📊 New clusters: 6
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1006
+⏭️ Already clustered: 0
+✨ New clusters created: 6
+✅ Matched to existing: 4 (embedding: 4, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #25033
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [10/10] AI use in breast cancer screening cuts rate of later diagnos...
+         Cluster: Apple Hails ‘Remarkable’ $144Bn Quarter With Best-...
+      ✅ EMBEDDING MATCH: Cluster #24904 (similarity: 0.90)
+   [9/10] Apple just reported its best-ever quarter for iPhone sales...
+      ✨ Created cluster #25032
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [8/10] Inside Trump's first Cabinet meeting of 2026...
+         Cluster: Trump Backs Senate Government Funding Deal That...
+      ✅ EMBEDDING MATCH: Cluster #25016 (similarity: 0.84)
+   [7/10] Donald Trump Reacts to Senate Deal on DHS To Avoid Looming S...
+         Cluster: Venezuelan Lawmakers Approve Easing State Control ...
+      ✅ EMBEDDING MATCH: Cluster #24864 (similarity: 0.86)
+   [6/10] Sweeping oil reform in Venezuela approved, operators expecte...
+         Cluster: Genes May Shape How Long We Live...
+      ✅ EMBEDDING MATCH: Cluster #24734 (similarity: 0.87)
+   [5/10] Study finds greater role for genetics in driving human lifes...
+      ✨ Created cluster #25031
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (1 clusters with 3+ keyword matches)...
+      🔑 Top keyword matches: [('Forest, Celtic advance in Europa League ', 3)]
+   [4/10] Boss Unai Emery cheered by Aston Villa’s comeback Europa Lea...
+      ✨ Created cluster #25030
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [3/10] Forest, Celtic advance in Europa League as Villa seal second...
+      ✨ Created cluster #25029
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [2/10] Sen. Johnson says he has sympathy for ICE officers amid prot...
+      ✨ Created cluster #25028
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (1 clusters with 3+ keyword matches)...
+      🔑 Top keyword matches: [('Senate Reaches Deal Ahead Of Shutdown De', 3)]
+   [1/10] What's in the bipartisan Senate deal to avoid a shutdown, te...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 10 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 10
+   ⏭️ Already clustered: 0
+   ✅ Saved: 10
+📝 Step 1: Saving articles to database...
+Articles to cluster: 10
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 10 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 4 filtered articles to Supabase
+✅ Step 1 Complete: 10 approved, 4 filtered
+   ✅ Filtering 14 total articles
+   📷 7 articles without images (Bright Data will fetch later)
+Scoring 14 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 14 NEW articles (after deduplication)
+✅ The Straits Times: 2 new
+✅ The Independent: 1 new
+✅ The Guardian UK: 1 new
+✅ TechCrunch: 2 new
+✅ Seeking Alpha: 1 new
+✅ PBS NewsHour Politics: 2 new
+✅ Newsweek: 1 new
+✅ France 24: 1 new
+✅ Engadget: 1 new
+✅ CBS News Main: 1 new
+✅ CBC Top Stories: 1 new
+   ✅ After database check: 14 NEW articles
+   ⏰ After time filter (1440min): 1105 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EDT identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2051 articles
+📊 Fetched 2051 articles from 207 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-29 23:51:45
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-29T23:51:33.468693
+🚀 TEN NEWS - Cloud Run Execution
+============================================================

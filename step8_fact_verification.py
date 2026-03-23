@@ -114,7 +114,13 @@ CONTENT: {content if content else '[No content available]'}
   WHY: {five_ws.get('why', 'N/A')}
 """
     
+    from datetime import datetime
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     prompt = f"""Verify this AI-generated news article against the source articles.
+
+⚠️ TODAY'S DATE: {today_str}
+Use this to verify dates. These are RECENT news articles — any date that is months or years in the past is likely a hallucinated wrong date and should be flagged as "wrong_date".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📰 ORIGINAL SOURCE ARTICLES ({sources_with_content} with content)

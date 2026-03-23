@@ -1,0 +1,4759 @@
+==================== LOGS FOR tennews-workflow-m7l2g ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 585.2 seconds
+================================================================================
+   Articles published: 4
+   Clusters processed: 10
+   Approved (Step 1): 11
+   Articles fetched: 22
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **House GOP** Majority Shrinks as **Texas** Specia...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12250
+   🏷️ Tags: ['texas', 'house gop', 'special election', 'democrats', 'christian menefee', 'amanda edwards', 'politics', 'us congress']
+   🏷️ Generated 8 interest tags: ['texas', 'house gop', 'special election']...
+   🏷️ Generating interest tags...
+   📊 Article score: 780/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding the Texas special election and its impact on the House GOP majority.
+      Verification result: ✅ PASSED
+      Generated title: **House GOP** Majority Shrinks as **Texas** Specia...
+      Source 1: Fox News Politics - content: 5764 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "Needed for...
+    {
+    },
+      "value": "4 seats"
+      "label": "Vacant House seats",
+    {
+    },
+      "value": "435 seats"
+      "label": "Total House seats",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "November 2022...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "218 seats"
+      "label": "Needed for majority",
+    {
+    },
+      "value": "4 seats"
+      "label": "Vacant House seats",
+    {
+    },
+      "value": "435 seats"
+      "label": "Total House seats",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11495 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 357 chars
+      Title: **House GOP** Majority Shrinks as **Texas** Special Election Nears...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (73 chars)
+   ✅ Gemini context search completed (73 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **House GOP** Majority Shrinks as **Texas** Special Election...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Fox News Politics (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a high-quality photograph of an individual likely involved in a news story, with no disqualifying elements like TV graphics or dominant watermarks.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 931x523 pixels, mode: RGB
+   📥 Downloading image: https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2025/11/9...
+      [1/1] Checking: Fox News Politics
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.foxnews.com/politics/house-gop-majorit... (5764 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26509
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Hundreds** Join **ICE Watchers** After 2 Fatal S...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12249
+   🏷️ Tags: ['ice', 'immigration', 'minneapolis', 'police shooting', 'community activism', 'civil rights', 'law enforcement']
+   🏷️ Generated 7 interest tags: ['ice', 'immigration', 'minneapolis']...
+   🏷️ Generating interest tags...
+   📊 Article score: 840/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Hundreds** Join **ICE Watchers** After 2 Fatal S...
+      Source 1: Washington Post National - content: 366 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Hundreds** Join **ICE Watchers** After 2 Fatal S...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The article states 'thousands' joined, but the source says 'hundreds'....
+      Discrepancies: 1
+      Summary: The AI article incorrectly states that thousands of volunteers joined the ICE Watchers, when the source says hundreds.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **ICE Watchers** Surge After **2** Fatal Shootings...
+      Source 1: Washington Post National - content: 366 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "ICE monitors"...
+    {
+    },
+      "value": "2 incidents"
+      "label": "Fatal shootings",
+    {
+    },
+      "value": "1 day"
+      "label": "Training duration",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "ev...
+      "date": "January 2017",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "2 killed"
+      "label": "ICE monitors",
+    {
+    },
+      "value": "2 incidents"
+      "label": "Fatal shootings",
+    {
+    },
+      "value": "1 day"
+      "label": "Training duration",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 2 details have numbers (need at least 3)']
+      "value...
+      "label": "Recruits",
+    {
+    },
+      "value": "2 fatal"
+      "label": "Shootings",
+    {
+    },
+      "value": "1 day"
+      "label": "Training duration",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "Hundreds of"
+      "label": "Recruits",
+    {
+    },
+      "value": "2 fatal"
+      "label": "Shootings",
+    {
+    },
+      "value": "1 day"
+      "label": "Training duration",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11440 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚖️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 311 chars
+      Title: **ICE Watchers** Surge After **2** Fatal Shootings...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (80 chars)
+   ✅ Gemini context search completed (80 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **ICE Watchers** Surge After **2** Fatal Shootings...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Washington Post National (score: 99.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image depicts attendees at an event, which is suitable for a news website as it shows real people directly involved in the story.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1440x960 pixels, mode: RGB
+   📥 Downloading image: https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washp...
+      [1/1] Checking: Washington Post National
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.washingtonpost.com/wp-apps/imrs.php?sr...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Washington Post National: https://www.washingtonpost.com/wp-apps/imrs.php?src=https://...
+Fetched 1/1 articles
+✅ Fetched: https://www.washingtonpost.com/nation/2026/01/31/i... (366 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26508
+================================================================================
+      Skipping cluster 26507
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15515201/...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26507
+================================================================================
+   ❌ Error processing cluster 26506: {'message': 'index row requires 1832304 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['tiktok', 'sephora', 'scam', 'data theft', 'social media', 'cybersecurity', 'identity theft', 'isla makeup']
+   🏷️ Generated 8 interest tags: ['tiktok', 'sephora', 'scam']...
+   🏷️ Generating interest tags...
+   📊 Article score: 770/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding the TikTok scam involving a fake Sephora firing and a gift card scheme.
+      Verification result: ✅ PASSED
+      Generated title: **TikTok** Scam Uses Fake **Sephora** Firing for D...
+      Source 1: Business Insider - content: 7601 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "Da...
+    {
+    },
+      "value": "16-24 years"
+      "label": "Victim age range",
+    {
+    },
+      "value": "30 minutes"
+      "label": "Survey completion time",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "20-30"
+      "label": "Data points collected",
+    {
+    },
+      "value": "16-24 years"
+      "label": "Victim age range",
+    {
+    },
+      "value": "30 minutes"
+      "label": "Survey completion time",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11952 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🔐",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🔐",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 358 chars
+      Title: **TikTok** Scam Uses Fake **Sephora** Firing for Data Theft...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (536 chars)
+   ✅ Gemini context search completed (536 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **TikTok** Scam Uses Fake **Sephora** Firing for Data Theft...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: navy blue)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_111940_20260131_111940.png
+   ✅ Image generated successfully (1374199 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: navy blue
+   🎨 Generating image for: Misleading Tiktok Posts Are Going Viral And...
+   📦 Supabase storage initialized
+      Topic: Misleading Tiktok Posts Are Going Viral And...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image is a photo of a retail store, Sephora, which is inappropriate for a news website unless the store itself is the subject of the news story; the prominent branding and commercial nature make it unsuitable.
+   ❌ Unsuitable (100% confidence): The image is a photo of a retail store, Sephora, which is inappropriate for a news website unless the store itself is the subject of the news story; the prominent branding and commercial nature make it unsuitable.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 2667x2000 pixels, mode: RGB
+   📥 Downloading image: https://i.insider.com/697b8defd3c7faef0ecd2dc2?format=jpeg...
+      [1/1] Checking: Business Insider
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://i.insider.com/697b8defd3c7faef0ecd2dc2?for...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.businessinsider.com/misleading-viral-t... (7601 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26506
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  ✅ AI image generated for: Economic and political tension...
+[1/1] Processing: **Businesses** Fear Blowback from **Saudi-UAE** Ri...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12247
+   🏷️ Tags: ['saudi arabia', 'uae', 'gulf region', 'middle east', 'international relations', 'business', 'trade', 'geopolitics']
+   🏷️ Generated 8 interest tags: ['saudi arabia', 'uae', 'gulf region']...
+   🏷️ Generating interest tags...
+   📊 Article score: 845/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Businesses** Fear Blowback from **Saudi-UAE** Ri...
+      Source 1: Financial Times - content: 795 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "GDP con...
+    {
+    },
+      "value": "35 million people"
+      "label": "Population",
+    {
+    },
+      "value": "163 billion USD"
+      "label": "Trade volume",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "January 2021...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "22 percent"
+      "label": "GDP contribution",
+    {
+    },
+      "value": "35 million people"
+      "label": "Population",
+    {
+    },
+      "value": "163 billion USD"
+      "label": "Trade volume",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11523 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 295 chars
+      Title: **Businesses** Fear Blowback from **Saudi-UAE** Rift...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (177 chars)
+   ✅ Gemini context search completed (177 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Businesses** Fear Blowback from **Saudi-UAE** Rift...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Financial Times (score: 100.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): This is a high-quality photograph of a city skyline (Dubai), and it doesn't contain any elements that would make it unsuitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1160x653 pixels, mode: RGB
+   📥 Downloading image: https://www.ft.com/__origami/service/image/v2/images/raw/https%3A%2F%2Fd1e00ek4e...
+      [1/1] Checking: Financial Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.ft.com/__origami/service/image/v2/imag...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.ft.com/content/c8bba149-8ce2-4ed7-b7a6... (795 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26505
+================================================================================
+   ❌ Synthesis failed - skipping cluster
+      Preview: I cannot synthesize a news article from the provided source. The content appears to be only a cookie...
+   ⚠️  Claude returned text instead of JSON (attempt 5/5)
+      Preview: I cannot synthesize a news summary from the provided source. The content appears to be only a cookie...
+   ⚠️  Claude returned text instead of JSON (attempt 4/5)
+      Preview: I cannot synthesize a news summary from the provided source. The content appears to be only a cookie...
+   ⚠️  Claude returned text instead of JSON (attempt 3/5)
+      Preview: I cannot synthesize a news summary from the provided source. The content from The New Yorker appears...
+   ⚠️  Claude returned text instead of JSON (attempt 2/5)
+      Preview: I cannot synthesize a news article from the provided source. The content appears to be only a cookie...
+   ⚠️  Claude returned text instead of JSON (attempt 1/5)
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The New Yorker (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image is a clear photograph of a protest, featuring people directly involved in the event, and it doesn't contain any elements that would make it unsuitable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 2560x1707 pixels, mode: RGB
+   📥 Downloading image: https://media.newyorker.com/photos/697d00dc6b92b4ed2f217578/master/pass/WINTER-C...
+      [1/1] Checking: The New Yorker
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://media.newyorker.com/photos/697d00dc6b92b4e...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.newyorker.com/news/the-lede/ices-assau... (57108 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.newyorker.com/news/the-lede/ices-assau...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26504
+================================================================================
+   ❌ Error processing cluster 26503: {'message': 'index row requires 1863816 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['donald trump', 'trump media', 'truth social', 'real estate', 'net worth', '2024 election', 'finance', 'politics']
+   🏷️ Generated 8 interest tags: ['donald trump', 'trump media', 'truth social']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, specifically mentioning Trump's net worth reaching $4 billion.
+      Verification result: ✅ PASSED
+      Generated title: **Trump's** Net Worth Hits **$4 Billion** Mark...
+      Source 1: The New Yorker - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, graph]
+      "label": "Trump ...
+    {
+    },
+      "value": "6.94 million"
+      "label": "DJT ticker shares",
+    {
+    },
+      "value": "$79.38 per share"
+      "label": "Stock high",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+    "title":...
+    "type": "line",
+  "graph": {
+  ],
+    }
+      "value": "$5.5 billion"
+      "label": "Trump stake value",
+    {
+    },
+      "value": "6.94 million"
+      "label": "DJT ticker shares",
+    {
+    },
+      "value": "$79.38 per share"
+      "label": "Stock high",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11556 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details', 'graph']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details, graph
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details, graph]
+      Validated components: ['details', 'graph']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "graph"
+    "details",
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "graph"
+    "details",
+  "components": [
+      Gemini returned: {
+      Content length sent: 302 chars
+      Title: **Trump's** Net Worth Hits **$4 Billion** Mark...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Trump's** Net Worth Hits **$4 Billion** Mark...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: muted violet)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_111718_20260131_111718.png
+   ✅ Image generated successfully (1397830 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: muted violet
+   🎨 Generating image for: Trump’S Profiteering Hits $4 Billion...
+   📦 Supabase storage initialized
+      Topic: Trump’S Profiteering Hits $4 Billion...
+   🎨 GENERATING AI IMAGE
+   ⚠️  All images filtered out (quality/size issues)
+      ❌ Filtered (bad format): gif
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://media.newyorker.com/photos/697d3898dd6088a...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.newyorker.com/news/a-reporter-at-large... (64020 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.newyorker.com/news/a-reporter-at-large...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26503
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Trump** Approval Hits **44%** as Polls Show Econ...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12245
+   🏷️ Tags: ['donald trump', 'fox news', 'economic policy', 'voter approval', 'midterm elections', 'health care', 'politics', 'polls']
+   🏷️ Generated 8 interest tags: ['donald trump', 'fox news', 'economic policy']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Trump's approval rating, economic concerns, and poll results.
+      Verification result: ✅ PASSED
+      Generated title: **Trump** Approval Hits **44%** as Polls Show Econ...
+      Source 1: Newsweek - content: 9950 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "lab...
+    {
+    },
+      "value": "11 points"
+      "label": "Republican Decline",
+    {
+    },
+      "source": "Pew"
+      "value": "37%",
+      "label": "Trump Approval",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "source": "Pew"
+      "value": "8,512 adults",
+      "label": "Survey Sample",
+    {
+    },
+      "value": "11 points"
+      "label": "Republican Decline",
+    {
+    },
+      "source": "Pew"
+      "value": "37%",
+      "label": "Trump Approval",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (12505 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 308 chars
+      Title: **Trump** Approval Hits **44%** as Polls Show Economic Fears...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (1138 chars)
+   ✅ Gemini context search completed (1138 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Trump** Approval Hits **44%** as Polls Show Economic Fears...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Newsweek (score: 85.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image is a clear photo of a politician, which is acceptable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x799 pixels, mode: RGB
+   📥 Downloading image: https://assets.newsweek.com/wp-content/uploads/2026/01/GettyImages-2258483703.jp...
+      [1/1] Checking: Newsweek
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://assets.newsweek.com/wp-content/uploads/202...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Newsweek: https://assets.newsweek.com/wp-content/uploads/2026/01/Getty...
+Fetched 1/1 articles
+✅ Fetched: https://www.newsweek.com/polls-pose-danger-donald-... (9950 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26502
+================================================================================
+   ❌ Error processing cluster 26501: {'message': 'index row requires 1543704 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['aryna sabalenka', 'tennis', 'sports', 'australian open', 'belarusian', 'racquet', 'athlete', 'emotional outburst']
+   🏷️ Generated 8 interest tags: ['aryna sabalenka', 'tennis', 'sports']...
+   🏷️ Generating interest tags...
+   📊 Article score: 720/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information available in the source article, with no major factual errors detected.
+      Verification result: ✅ PASSED
+      Generated title: **Sabalenka** Boils Over as **Racquet** Flies in O...
+      Source 1: The Sydney Morning Herald - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+        "lng": 144.97...
+        "lat": -37.8206,
+      "coordinates": {
+      "country": "Australia",
+      "city": "Melbourne",
+      "type": "venue",
+      "name": "Melbourne Park",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+    }...
+      "description": "Location of the Australian Open where the incident occurred"
+      },
+        "lng": 144.9747
+        "lat": -37.8206,
+      "coordinates": {
+      "country": "Australia",
+      "city": "Melbourne",
+      "type": "venue",
+      "name": "Melbourne Park",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (13241 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Melbourne Park | Melbourne | Australia"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Melbourne Park | Melbourne | Australia"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 294 chars
+      Title: **Sabalenka** Boils Over as **Racquet** Flies in Outburst...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (893 chars)
+   ✅ Gemini context search completed (893 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Sabalenka** Boils Over as **Racquet** Flies in Outburst...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: warm beige)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_111616_20260131_111616.png
+   ✅ Image generated successfully (1157749 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: warm beige
+   🎨 Generating image for: Sabalenka Boils Over As Racquet Flies...
+   📦 Supabase storage initialized
+      Topic: Sabalenka Boils Over As Racquet Flies...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image contains a TV broadcast graphic (channel logo with '9' and Olympics logo) indicating it is a screenshot from a TV broadcast.
+   ❌ Unsuitable (100% confidence): The image contains a TV broadcast graphic (channel logo with '9' and Olympics logo) indicating it is a screenshot from a TV broadcast.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 800x450 pixels, mode: RGB
+   📥 Downloading image: https://static.ffx.io/images/$width_800%2C$height_450/t_crop_fill/q_86%2Cf_jpg/6...
+      [1/1] Checking: The Sydney Morning Herald
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://static.ffx.io/images/$width_800%2C$height_...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://www.smh.com.au/sport/tennis/sabalenka-boil... (29689 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.smh.com.au/sport/tennis/sabalenka-boil...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26501
+================================================================================
+   ❌ Error processing cluster 26388: {'message': 'index row requires 1813304 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['euronews', 'news bulletin', 'january 31st', 'europe', 'global developments', 'political developments', 'news', 'media']
+   🏷️ Generated 8 interest tags: ['euronews', 'news bulletin', 'january 31st']...
+   🏷️ Generating interest tags...
+   📊 Article score: 710/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, which are Euronews news bulletins from January 31st, 2026.
+      Verification result: ✅ PASSED
+      Generated title: **Euronews** Releases **January 31st** News Bullet...
+      Source 2: Euronews - content: 15000 chars
+      Source 1: Euronews - content: 15000 chars
+      Sources provided: 2
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+    ...
+      "label": "Languages",
+    {
+    },
+      "value": "40 plus"
+      "label": "Countries covered",
+    {
+    },
+      "value": "2 daily"
+      "label": "Bulletin count",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "13 versions"
+      "label": "Languages",
+    {
+    },
+      "value": "40 plus"
+      "label": "Countries covered",
+    {
+    },
+      "value": "2 daily"
+      "label": "Bulletin count",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11605 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📺",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📺",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 300 chars
+      Title: **Euronews** Releases **January 31st** News Bulletins...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (253 chars)
+   ✅ Gemini context search completed (253 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Euronews** Releases **January 31st** News Bulletins...
+   Synthesizing article from 2 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: muted violet)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_111535_20260131_111535.png
+   ✅ Image generated successfully (1359947 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: muted violet
+   🎨 Generating image for: Latest News Bulletin | January 31St, 2026...
+   📦 Supabase storage initialized
+      Topic: Latest News Bulletin | January 31St, 2026...
+   🎨 GENERATING AI IMAGE
+   ⚠️  No images found in any source
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = NONE...
+   🔍 DEBUG Source 1: image_url = NONE...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 2 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 2/2
+Fetched 2/2 articles
+✅ Jina fallback: http://www.euronews.com/video/2026/01/31/latest-ne... (103026 chars)
+✅ Jina fallback: http://www.euronews.com/video/2026/01/31/latest-ne... (102852 chars)
+   🔄 Trying Jina fallback for 2 URLs...
+⚠️ Insufficient content for http://www.euronews.com/video/2026/01/31/latest-ne...
+⚠️ Insufficient content for http://www.euronews.com/video/2026/01/31/latest-ne...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 26388
+================================================================================
+   🎯 Clusters ready for processing: 10 (NEW this cycle)
+   🔗 Matched existing: 2
+   📊 New clusters: 9
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1009
+⏭️ Already clustered: 0
+✨ New clusters created: 9
+✅ Matched to existing: 2 (embedding: 2, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+         Cluster: House GOP majority on the brink as all-Democrat Te...
+      ✅ EMBEDDING MATCH: Cluster #26509 (similarity: 1.00)
+   [11/11] House GOP majority on the brink as all-Democrat Texas specia...
+      ✨ Created cluster #26509
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [10/11] House GOP majority on the brink as all-Democrat Texas specia...
+      ✨ Created cluster #26508
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [9/11] Thousands of new ICE watchers hit the streets after two kill...
+      ✨ Created cluster #26507
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [8/11] Richard Branson told Jeffrey Epstein to 'bring his harem' th...
+      ✨ Created cluster #26506
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [7/11] Misleading TikTok posts are going viral and driving backlash...
+      ✨ Created cluster #26505
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [6/11] Businesses fear blowback from Saudi-UAE rift...
+      ✨ Created cluster #26504
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [5/11] ICE’s Assault on a Minnesota School District...
+      ✨ Created cluster #26503
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [4/11] Trump’s Profiteering Hits $4 Billion...
+      ✨ Created cluster #26502
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [3/11] 5 New Polls Spell Danger for Donald Trump...
+      ✨ Created cluster #26501
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [2/11] Sabalenka boils over as racquet flies...
+         Cluster: Latest News Bulletin | January 31St, 2026...
+      ✅ EMBEDDING MATCH: Cluster #26388 (similarity: 0.96)
+   [1/11] Latest news bulletin | January 31st, 2026 – Midday...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 11 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 11
+   ⏭️ Already clustered: 0
+   ✅ Saved: 11
+📝 Step 1: Saving articles to database...
+Articles to cluster: 11
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 11 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 11 filtered articles to Supabase
+✅ Step 1 Complete: 11 approved, 11 filtered
+   ✅ Filtering 22 total articles
+   📷 6 articles without images (Bright Data will fetch later)
+Scoring 22 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 22 NEW articles (after deduplication)
+✅ Wired: 1 new
+✅ Washington Post National: 1 new
+✅ The Sydney Morning Herald: 1 new
+✅ The New Yorker: 3 new
+✅ The New York Times Americas: 1 new
+✅ The Independent: 1 new
+✅ Seeking Alpha: 1 new
+✅ Newsweek: 3 new
+✅ Fox News Politics: 1 new
+✅ Fox News Latest: 2 new
+✅ Financial Times: 2 new
+✅ Euronews: 1 new
+✅ Daily Mail Home: 1 new
+✅ Business Insider: 3 new
+   ✅ After database check: 22 NEW articles
+   ⏰ After time filter (1440min): 998 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2052 articles
+📊 Fetched 2052 articles from 207 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 11:11:31
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T11:11:24.066567
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+
+==================== LOGS FOR tennews-workflow-jt2bf ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 362.8 seconds
+================================================================================
+   Articles published: 4
+   Clusters processed: 6
+   Approved (Step 1): 9
+   Articles fetched: 17
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **ESA** Launches **Draco** Mission to Study Spacec...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12242
+   🏷️ Tags: ['european space agency', 'esa', 'draco spacecraft', 'spacecraft reentry', 'zero debris', 'space debris', 'space exploration', 'aerospace']
+   🏷️ Generated 8 interest tags: ['european space agency', 'esa', 'draco spacecraft']...
+   🏷️ Generating interest tags...
+   📊 Article score: 860/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding the ESA's Draco mission and its objectives.
+      Verification result: ✅ PASSED
+      Generated title: **ESA** Launches **Draco** Mission to Study Spacec...
+      Source 1: Space.com - content: 6587 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "unit": "cent...
+      "value": "40 cm",
+      "label": "Capsule diameter",
+    {
+    },
+      "unit": "kilograms"
+      "value": "150 kg",
+      "label": "Satellite weight",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "unit": "minu...
+      "value": "20 minutes",
+      "label": "Data window",
+    {
+    },
+      "unit": "centimeters"
+      "value": "40 cm",
+      "label": "Capsule diameter",
+    {
+    },
+      "unit": "kilograms"
+      "value": "150 kg",
+      "label": "Satellite weight",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (12168 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🚀",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🚀",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 316 chars
+      Title: **ESA** Launches **Draco** Mission to Study Spacecraft Reentry...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (791 chars)
+   ✅ Gemini context search completed (791 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **ESA** Launches **Draco** Mission to Study Spacecraft Reent...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Space.com (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image is a depiction of a space event/scene, which is suitable for a professional news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1280x720 pixels, mode: RGB
+   📥 Downloading image: https://cdn.mos.cms.futurecdn.net/iSwxvMQZESz2HpCrVn6tpY-1280-80.jpg...
+      [1/1] Checking: Space.com
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cdn.mos.cms.futurecdn.net/iSwxvMQZESz2HpCr...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.space.com/space-exploration/satellites... (6587 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26500
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Webb Telescope** Solves **Blue Straggler** Vampi...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12241
+   🏷️ Tags: ['webb telescope', 'james webb', 'blue straggler stars', 'galactic clusters', 'astronomy', 'space', 'stellar vampires', 'stars']
+   🏷️ Generated 8 interest tags: ['webb telescope', 'james webb', 'blue straggler stars']...
+   🏷️ Generating interest tags...
+   📊 Article score: 875/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Webb Telescope** Solves **Blue Straggler** Vampi...
+      Source 1: Live Science - content: 6529 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "W...
+    {
+    },
+      "value": "1 million"
+      "label": "Globular cluster stars",
+    {
+    },
+      "value": "6.5 meters"
+      "label": "Webb primary mirror",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "$10 billion"
+      "label": "Webb cost",
+    {
+    },
+      "value": "1 million"
+      "label": "Globular cluster stars",
+    {
+    },
+      "value": "6.5 meters"
+      "label": "Webb primary mirror",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11758 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🚀",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🚀",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 310 chars
+      Title: **Webb Telescope** Solves **Blue Straggler** Vampire Mystery...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (389 chars)
+   ✅ Gemini context search completed (389 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Webb Telescope** Solves **Blue Straggler** Vampire Mystery...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Live Science (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a clear photograph of star clusters which is appropriate for a news article about space or astronomy.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1280x720 pixels, mode: RGB
+   📥 Downloading image: https://cdn.mos.cms.futurecdn.net/wu6HmfpvRvzYJNEtTJMJjC-1280-80.jpg...
+      [1/1] Checking: Live Science
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cdn.mos.cms.futurecdn.net/wu6HmfpvRvzYJNEt...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.livescience.com/space/astronomy/james-... (6529 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26499
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **India** Considers **Under-16** Social Media Ban...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12240
+   🏷️ Tags: ['india', 'social media ban', 'under-16', 'minors', 'instagram', 'facebook', 'x', 'social media']
+   🏷️ Generated 8 interest tags: ['india', 'social media ban', 'under-16']...
+   🏷️ Generating interest tags...
+   📊 Article score: 865/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **India** Considers **Under-16** Social Media Ban...
+      Source 1: The Independent - content: 4164 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      },...
+        "value": "833 million"
+        "label": "Children using internet",
+      {
+      },
+        "value": "$50 million"
+        "label": "Age verification cost",
+      {
+    "details": [
+   📝 Cleaned JSON: {
+    ]...
+      }
+        "value": "8 years old"
+        "label": "Age of digital consent",
+      {
+      },
+        "value": "833 million"
+        "label": "Children using internet",
+      {
+      },
+        "value": "$50 million"
+        "label": "Age verification cost",
+      {
+    "details": [
+  {
+   📝 Raw Claude response: [
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11772 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 313 chars
+      Title: **India** Considers **Under-16** Social Media Ban...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (411 chars)
+   ✅ Gemini context search completed (411 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **India** Considers **Under-16** Social Media Ban...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Independent (score: 66.0, AI approved)
+         ✅ AI APPROVED (80%)
+   ✅ Suitable (80% confidence): The image shows a phone displaying social media applications, which is acceptable as it is an image of a subject matter and not a broadcast graphic.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://static.independent.co.uk/2026/01/31/9/07/A-13-year-old-boy-poses-at-his-...
+      [1/1] Checking: The Independent
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2026/01/31/9/07/A...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.independent.co.uk/tech/india-social-me... (4164 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26498
+================================================================================
+      Skipping cluster 26497
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.aljazeera.com/sports/2026/1/31/why-has...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26497
+================================================================================
+      Skipping cluster 25885 (reason: duplicate_title)
+      Existing (ID 12108): **Djokovic** Reaches **Australian Open** Final at Age 38...
+      New: **Djokovic** Faces **Alcaraz** in Historic Australian Open F...
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 67%)
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately summarizes the key details of the Australian Open final between Djokovic and Alcaraz, drawing from the provided source.
+      Verification result: ✅ PASSED
+      Generated title: **Djokovic** Faces **Alcaraz** in Historic Austral...
+      Source 2: Al Jazeera English - content: 116 chars
+      Source 1: The Independent - content: 6342 chars
+      Sources provided: 2
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+      "label": "Mat...
+    {
+    },
+      "value": "2 in world"
+      "label": "Alcaraz ranking",
+    {
+    },
+      "value": "10 Australian Open"
+      "label": "Djokovic titles",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "July 2...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "3-5 hours est."
+      "label": "Match duration",
+    {
+    },
+      "value": "2 in world"
+      "label": "Alcaraz ranking",
+    {
+    },
+      "value": "10 Australian Open"
+      "label": "Djokovic titles",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11490 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 327 chars
+      Title: **Djokovic** Faces **Alcaraz** in Historic Australian Open Final...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Djokovic** Faces **Alcaraz** in Historic Australian Open F...
+   Synthesizing article from 2 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Independent (score: 70.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image shows two tennis players during a match, which is suitable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://static.independent.co.uk/2026/01/30/16/36/GettyImages-2258472206.jpeg?wi...
+      [1/1] Checking: The Independent
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = NONE...
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2026/01/30/16/36/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 2 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/2
+Fetched 1/2 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.aljazeera.com/sports/2026/1/31/djokovi...
+✅ Fetched: https://www.independent.co.uk/sport/tennis/djokovi... (6342 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 25885
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Thames Water** Nears **£16bn** Rescue Deal with ...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12239
+   🏷️ Tags: ['thames water', 'debt crisis', 'london', 'thames valley', 'nationalization', 'water company', 'finance', 'utilities']
+   🏷️ Generated 8 interest tags: ['thames water', 'debt crisis', 'london']...
+   🏷️ Generating interest tags...
+   📊 Article score: 885/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Thames Water's rescue deal negotiations.
+      Verification result: ✅ PASSED
+      Generated title: **Thames Water** Nears **£16bn** Rescue Deal with ...
+      Source 1: Sky News Business - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Thames Water** Nears **£16bn** Rescue Deal with ...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The article is dated January 31, 2024, not January 2025....
+      Discrepancies: 1
+      Summary: The AI-generated content is mostly accurate, but it contains a wrong date.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Thames Water** Nears **£16bn** Rescue Deal with ...
+      Source 1: Sky News Business - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+      "lab...
+    {
+    },
+      "value": "600 million liters"
+      "label": "Leakage per day",
+    {
+    },
+      "value": "3,200 square miles"
+      "label": "Operational area",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+   ...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "2.7 million in London"
+      "label": "Customers served",
+    {
+    },
+      "value": "600 million liters"
+      "label": "Leakage per day",
+    {
+    },
+      "value": "3,200 square miles"
+      "label": "Operational area",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11524 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 314 chars
+      Title: **Thames Water** Nears **£16bn** Rescue Deal with Lenders...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (154 chars)
+   ✅ Gemini context search completed (154 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Thames Water** Nears **£16bn** Rescue Deal with Lenders...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Sky News Business (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a Thames Water van on the street, possibly in relation to a news story about water infrastructure, and contains no elements that would disqualify it.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1920x1080 pixels, mode: RGB
+   📥 Downloading image: https://e3.365dm.com/25/05/1920x1080/skynews-thames-water-thameswater_6929423.jp...
+      [1/1] Checking: Sky News Business
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://e3.365dm.com/25/05/1920x1080/skynews-thame...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://news.sky.com/story/thames-water-closes-in-... (18999 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://news.sky.com/story/thames-water-closes-in-...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26496
+================================================================================
+   🎯 Clusters ready for processing: 6 (NEW this cycle)
+   🔗 Matched existing: 4
+   📊 New clusters: 5
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1005
+⏭️ Already clustered: 0
+✨ New clusters created: 5
+✅ Matched to existing: 4 (embedding: 4, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #26500
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: No keyword matches found
+   [9/9] What actually happens to a spacecraft during its fiery last ...
+      ✨ Created cluster #26499
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [8/9] James Webb telescope solves mystery of 'forever young' vampi...
+         Cluster: Moldova Hit By Widespread Power Cuts Amid...
+      ✅ EMBEDDING MATCH: Cluster #26490 (similarity: 0.88)
+   [7/9] Massive outage knocks out power across Ukraine, Moldova...
+      ✨ Created cluster #26498
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [6/9] Growing calls for under-16s ban in one of world’s largest ma...
+         Cluster: Us Judge Temporarily Blocks End Of Ethiopians'...
+      ✅ EMBEDDING MATCH: Cluster #25996 (similarity: 0.96)
+   [5/9] Judge blocks US gov’t move to end deportation protections fo...
+      ✨ Created cluster #26497
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [4/9] Why have rapper Ghali’s Israel comments led to Winter Olympi...
+         Cluster: Novak Djokovic V Carlos Alcaraz Start Time...
+      ✅ EMBEDDING MATCH: Cluster #25885 (similarity: 0.89)
+   [3/9] Djokovic vs Alcaraz – Australian Open final: Start time, hea...
+         Cluster: Thames Water closes in on &#163;16bn rescue deal w...
+      ✅ EMBEDDING MATCH: Cluster #26496 (similarity: 1.00)
+   [2/9] Thames Water closes in on &#163;16bn rescue deal with lender...
+      ✨ Created cluster #26496
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [1/9] Thames Water closes in on &#163;16bn rescue deal with lender...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 9 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 9
+   ⏭️ Already clustered: 0
+   ✅ Saved: 9
+📝 Step 1: Saving articles to database...
+Articles to cluster: 9
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 9 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 8 filtered articles to Supabase
+✅ Step 1 Complete: 9 approved, 8 filtered
+   ✅ Filtering 17 total articles
+   📷 6 articles without images (Bright Data will fetch later)
+Scoring 17 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 17 NEW articles (after deduplication)
+✅ ZDNet: 2 new
+✅ The Sydney Morning Herald: 1 new
+✅ The Independent: 2 new
+✅ The Guardian UK: 1 new
+✅ Space.com: 2 new
+✅ Sky News Home: 1 new
+✅ Sky News Business: 1 new
+✅ NBC News: 1 new
+✅ Live Science: 1 new
+✅ Inc. Magazine: 1 new
+✅ Deutsche Welle EU: 1 new
+✅ Al Jazeera English: 3 new
+   ✅ After database check: 17 NEW articles
+   ⏰ After time filter (1440min): 989 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2041 articles
+📊 Fetched 2041 articles from 206 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 11:01:38
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T11:01:28.947580
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+
+==================== LOGS FOR tennews-workflow-c68k4 ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 454.0 seconds
+================================================================================
+   Articles published: 1
+   Clusters processed: 4
+   Approved (Step 1): 7
+   Articles fetched: 14
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   ❌ Error processing cluster 26495: {'message': 'index row requires 1804496 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['boko haram', 'nigeria', 'terrorism', 'west africa', 'borno state', 'insurgency', 'crime', 'conflict']
+   🏷️ Generated 8 interest tags: ['boko haram', 'nigeria', 'terrorism']...
+   🏷️ Generating interest tags...
+   📊 Article score: 905/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, with no major factual errors or inconsistencies.
+      Verification result: ✅ PASSED
+      Generated title: **Boko Haram** Kills **25** Workers in Nigeria Att...
+      Source 1: ABC News International - content: 2495 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+      ...
+        "lat": 12.3547,
+      "coordinates": {
+      "country": "Nigeria",
+      "city": "Sabon Gari",
+      "type": "building",
+      "name": "Sabon Gari Construction Site",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+      "description": "Location of construction site attacked by Boko Haram...
+      },
+        "lng": 13.3864
+        "lat": 12.3547,
+      "coordinates": {
+      "country": "Nigeria",
+      "city": "Sabon Gari",
+      "type": "building",
+      "name": "Sabon Gari Construction Site",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11602 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Sabon Gari, Borno State, Nigeria"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Sabon Gari, Borno State, Nigeria"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 304 chars
+      Title: **Boko Haram** Kills **25** Workers in Nigeria Attacks...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (73 chars)
+   ✅ Gemini context search completed (73 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Boko Haram** Kills **25** Workers in Nigeria Attacks...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: olive green)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_105847_20260131_105847.png
+   ✅ Image generated successfully (1353345 bytes)
+   🤖 Calling Gemini image generation (attempt 2/3)...
+   ⚠️ No image data in response
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: olive green
+   🎨 Generating image for: Armed Extremists Kill Dozens In Northeastern Nigeria...
+   📦 Supabase storage initialized
+      Topic: Armed Extremists Kill Dozens In Northeastern Nigeria...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image shows the ABC News logo, making it unsuitable for publication.
+   ❌ Unsuitable (100% confidence): The image shows the ABC News logo, making it unsuitable for publication.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 384x288 pixels, mode: RGB
+   📥 Downloading image: https://s.abcnews.com/images/US/abc_news_default_2000x2000_update_4x3t_384.jpg...
+      [1/1] Checking: ABC News International
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://s.abcnews.com/images/US/abc_news_default_2...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://abcnews.go.com/International/wireStory/arm... (2495 chars)
+⚠️ Proxy error 502, retrying...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26495
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  ✅ AI image generated for: The cascading effects of the R...
+[1/1] Processing: **Ukraine Grid** Failure Triggers **Power Outages*...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+      • [Deutsche Welle Top Stories] Massive outage knocks out power across Ukraine, Moldova...
+      • [Deutsche Welle] Massive outage knocks out power across Ukraine, Moldova...
+      • [The Straits Times] Moldova hit by widespread power cuts amid Ukraine grid problems...
+   📚 MULTI-SOURCE CLUSTER (3 articles):
+   ✅ Published article ID: 12237
+   ✅ Publishing with: []
+   ⚠️ Some components failed: ['map', 'details']
+   🏷️ Tags: ['ukraine', 'moldova', 'power outages', 'electrical grid', 'russian strikes', 'kyiv', 'chisinau', 'infrastructure']
+   🏷️ Generated 8 interest tags: ['ukraine', 'moldova', 'power outages']...
+   🏷️ Generating interest tags...
+   📊 Article score: 870/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, with no major factual errors or inconsistencies.
+      Verification result: ✅ PASSED
+      Generated title: **Ukraine Grid** Failure Triggers **Power Outages*...
+      Source 3: Deutsche Welle Top Stories - content: 576 chars
+      Source 2: Deutsche Welle - content: 576 chars
+      Source 1: The Straits Times - content: 1277 chars
+      Sources provided: 3
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Ukraine Grid** Failure Triggers **Power Outages*...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. Incorrect date. The article states the date as January 31st, but the year is mis...
+      Discrepancies: 1
+      Summary: The AI-generated content is mostly accurate, but it contains a wrong date.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Ukraine Grid** Failure Triggers **Massive** Powe...
+      Source 3: Deutsche Welle Top Stories - content: 576 chars
+      Source 2: Deutsche Welle - content: 576 chars
+      Source 1: The Straits Times - content: 1277 chars
+      Sources provided: 3
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ⚠️ Step 7 Failed: No components generated after 3 attempts
+  ⚠ Validation issues (attempt 3): ['Map must have at least 1 location']
+      "label...
+    {
+    },
+      "value": "7 hours"
+      "label": "Restoration time",
+    {
+    },
+      "value": "10 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "6,000 MW"
+      "label": "Power plant capacity",
+    {
+    },
+      "value": "7 hours"
+      "label": "Restoration time",
+    {
+    },
+      "value": "10 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Map must have at least 1 location']
+    ...
+    {
+    },
+      "value": "9.3 million"
+      "label": "Affected population",
+    {
+    },
+      "value": "1.4 million"
+      "label": "Homes without power",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "7 hours"
+      "label": "Restoration time",
+    {
+    },
+      "value": "9.3 million"
+      "label": "Affected population",
+    {
+    },
+      "value": "1.4 million"
+      "label": "Homes without power",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Map must have at least 1 location']
+      "label"...
+    {
+    },
+      "value": "15 percent"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "11 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "7 hours"
+      "label": "Restoration time",
+    {
+    },
+      "value": "15 percent"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "11 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11661 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   ⚠️ No components generated - retrying (3/3)...
+  ⚠ Validation issues (attempt 3): ['Map must have at least 1 location']
+      "label": ...
+    {
+    },
+      "value": "52 stations"
+      "label": "Metro stations",
+    {
+    },
+      "value": "60% decrease"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "10 million"
+      "label": "People affected",
+    {
+    },
+      "value": "52 stations"
+      "label": "Metro stations",
+    {
+    },
+      "value": "60% decrease"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Map must have at least 1 location']
+      "lab...
+    {
+    },
+      "value": "10+ in Moldova"
+      "label": "Affected cities",
+    {
+    },
+      "value": "60% reduction"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "7 hours est."
+      "label": "Restoration time",
+    {
+    },
+      "value": "10+ in Moldova"
+      "label": "Affected cities",
+    {
+    },
+      "value": "60% reduction"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Map must have at least 1 location']
+      "label"...
+    {
+    },
+      "value": "5 hours"
+      "label": "Outage duration",
+    {
+    },
+      "value": "11 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "30 percent"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "5 hours"
+      "label": "Outage duration",
+    {
+    },
+      "value": "11 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11661 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   ⚠️ No components generated - retrying (2/3)...
+  ⚠ Validation issues (attempt 3): ['Map must have at least 1 location']
+      "label"...
+    {
+    },
+      "value": "15 percent"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "10 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "12-24 hours"
+      "label": "Restoration time",
+    {
+    },
+      "value": "15 percent"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "10 million"
+      "label": "Affected population",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Map must have at least 1 location']
+      "label": "Af...
+    {
+    },
+      "value": "5 hours"
+      "label": "Outage duration",
+    {
+    },
+      "value": "60% decrease"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "1.6 million"
+      "label": "Affected population",
+    {
+    },
+      "value": "5 hours"
+      "label": "Outage duration",
+    {
+    },
+      "value": "60% decrease"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Map must have at least 1 location']
+      "lab...
+    {
+    },
+      "value": "10+ in Moldova"
+      "label": "Affected cities",
+    {
+    },
+      "value": "60% reduction"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "7 hours est."
+      "label": "Restoration time",
+    {
+    },
+      "value": "10+ in Moldova"
+      "label": "Affected cities",
+    {
+    },
+      "value": "60% reduction"
+      "label": "Voltage drop",
+    {
+  "details": [
+  "map": [],
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11661 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Chisinau"
+    "Kyiv",
+    "Moldova",
+    "Ukraine",
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Chisinau"
+    "Kyiv",
+    "Moldova",
+    "Ukraine",
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 301 chars
+      Title: **Ukraine Grid** Failure Triggers **Massive** Power Outages...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Ukraine Grid** Failure Triggers **Massive** Power Outages...
+   Synthesizing article from 3 sources...
+      ✅ All 3 sources validated - same event
+   🔍 VALIDATING 3 sources for cluster: Moldova Hit By Widespread Power Cuts Amid...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Straits Times (score: 79.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image is a high-quality photograph of a snow-covered landscape, which could be suitable for a news article if it relates to the story.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1140x760 pixels, mode: RGB
+   📥 Downloading image: https://cassette.sphdigital.com.sg/image/straitstimes/e96168200049a4b470f85f7c67...
+      [1/3] Checking: The Straits Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 3
+      Total candidates: 3
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://static.dw.com/image/75738840_6.jpg...
+   🔍 DEBUG Source 1: image_url = https://cassette.sphdigital.com.sg/image/straitsti...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 3/3
+   📸 Fetched image for Deutsche Welle Top Stories: https://static.dw.com/image/75738840_6.jpg...
+   📸 Fetched image for Deutsche Welle: https://static.dw.com/image/75738840_6.jpg...
+   📸 Fetched image for The Straits Times: https://cassette.sphdigital.com.sg/image/straitstimes/e96168...
+Fetched 3/3 articles
+✅ Fetched: https://www.dw.com/en/massive-outage-knocks-out-po... (576 chars)
+✅ Fetched: https://www.dw.com/en/massive-outage-knocks-out-po... (576 chars)
+✅ Fetched: https://www.straitstimes.com/world/europe/moldova-... (1277 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 26490
+================================================================================
+      Skipping cluster 26235 (reason: duplicate_title)
+      Existing (ID 12217): **Alcohol Duty** Rises **3.66%** as Booze Prices Jump...
+      New: **UK Alcohol** Duty Rises **3.66%**, Boosting Drink Prices...
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 73%)
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles regarding the UK alcohol duty increase.
+      Verification result: ✅ PASSED
+      Generated title: **UK Alcohol** Duty Rises **3.66%**, Boosting Drin...
+      Source 3: The Independent - content: 4668 chars
+      Source 2: The Independent - content: 4662 chars
+      Source 1: The Independent - content: 4668 chars
+      Sources provided: 3
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **UK Alcohol** Duty Rises **3.66%**, Boosting Drin...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The date is wrong. The increase took effect February 1, but the year is not 2025...
+      Discrepancies: 1
+      Summary: The article is mostly accurate, but contains a wrong date.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **UK Alcohol Duty** Rises **3.66%**, Boosting Drin...
+      Source 3: The Independent - content: 4668 chars
+      Source 2: The Independent - content: 4662 chars
+      Source 1: The Independent - content: 4668 chars
+      Sources provided: 3
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label":...
+    {
+    },
+      "value": "69% since 2010"
+      "label": "Gin duty increase",
+    {
+    },
+      "value": "20% since 2022"
+      "label": "Wine duty increase",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date"...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "30% since 2010"
+      "label": "Beer duty increase",
+    {
+    },
+      "value": "69% since 2010"
+      "label": "Gin duty increase",
+    {
+    },
+      "value": "20% since 2022"
+      "label": "Wine duty increase",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11478 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "📈",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 321 chars
+      Title: **UK Alcohol Duty** Rises **3.66%**, Boosting Drink Prices...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **UK Alcohol Duty** Rises **3.66%**, Boosting Drink Prices...
+   Synthesizing article from 3 sources...
+      ✅ All 3 sources validated - same event
+   🔍 VALIDATING 3 sources for cluster: Cost Of Pint To Rise Under New...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Independent (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image depicts a shelf of wine bottles with a hand reaching for one; it's a clear, relevant photo of a real-world scenario without any disqualifying elements.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   📥 Downloading image: https://static.independent.co.uk/2024/08/16/17/PA-1282018.jpg?width=1200&auto=we...
+      [1/3] Checking: The Independent
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 3
+      Total candidates: 3
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://static.independent.co.uk/2024/06/14/00/0b4...
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2024/08/16/17/PA-...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 3 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 3/3
+Fetched 3/3 articles
+✅ Fetched: https://www.independent.co.uk/news/business/rachel... (4668 chars)
+✅ Fetched: https://www.independent.co.uk/news/business/alcoho... (4668 chars)
+✅ Fetched: https://www.independent.co.uk/news/uk/home-news/be... (4662 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 3 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 3
+================================================================================
+📰 PROCESSING CLUSTER 26235
+================================================================================
+      Cluster 26494 will not be published
+   ❌ ELIMINATED: Failed verification after 3 attempts
+         1. Incorrect year for Israeli military strike....
+      Discrepancies: 1
+      Summary: The AI-generated content is mostly accurate, but contains an incorrect year for the Israeli military strike.
+   ⚠️  Verification FAILED (Attempt 3/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Gaza Border** Reopens **Sunday**, Offers Medical...
+      Source 1: The New York Times World - content: 1828 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Gaza Border** Reopens **Sunday**, Offers Medical...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 3/3)
+         1. Incorrect year for Israeli military strike....
+      Discrepancies: 1
+      Summary: The AI article is mostly accurate, but contains a wrong date.
+   ⚠️  Verification FAILED (Attempt 2/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Gaza-Egypt Border** Reopens **Sunday** for Medic...
+      Source 1: The New York Times World - content: 1828 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Gaza-Egypt Border** Reopens **Sunday** for Medic...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The AI claims the Israeli military said it carried out a strike in June 2025, bu...
+      Discrepancies: 1
+      Summary: The AI-generated content contains a wrong date, claiming the Israeli military said it carried out a strike in June 2025, but the source article says June 2023.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Gaza-Egypt Border** Reopens **Sunday** for Medic...
+      Source 1: The New York Times World - content: 1828 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+      "label": "Crossing ele...
+    {
+    },
+      "value": "13 kilometers"
+      "label": "Border length",
+    {
+    },
+      "value": "20 meters"
+      "label": "Crossing width",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "name": "Rafah Border Crossing...
+    {
+  "map": [
+  ],
+    }
+      "value": "50 meters"
+      "label": "Crossing elevation",
+    {
+    },
+      "value": "13 kilometers"
+      "label": "Border length",
+    {
+    },
+      "value": "20 meters"
+      "label": "Crossing width",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11809 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   ⚠️ No components generated - retrying (2/3)...
+  ⚠ Validation issues (attempt 3): ['Only 2 details have numbers (need at least 3)']
+        "lng": 34.2...
+        "lat": 31.2950,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+      "description": "Border crossing between the Gaza Strip and Egypt, used for medica...
+      },
+        "lng": 34.2400
+        "lat": 31.2950,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Only 2 details have numbers (need at least 3)']
+        "lng": 34.2...
+        "lat": 31.2953,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+  "d...
+  ],
+    }
+      "description": "Border crossing between the Gaza Strip and Egypt"
+      },
+        "lng": 34.2406
+        "lat": 31.2953,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 2 details have numbers (need at least 3)']
+        "lng": 34.2...
+        "lat": 31.2953,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+      "description": "Border crossing between Egypt and Gaza Strip, reopening for medic...
+      },
+        "lng": 34.2411
+        "lat": 31.2953,
+      "coordinates": {
+      "country": "Egypt",
+      "city": "Rafah",
+      "type": "transport",
+      "name": "Rafah Border Crossing",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11809 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Rafah crossing, Gaza-Egypt Border"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Rafah crossing, Gaza-Egypt Border"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 336 chars
+      Title: **Gaza-Egypt Border** Reopens **Sunday** for Medical Evacuations...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (155 chars)
+   ✅ Gemini context search completed (155 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Gaza-Egypt Border** Reopens **Sunday** for Medical Evacuat...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The New York Times World (score: 99.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image is a photograph of a person in a hospital bed, which is appropriate for a news article if relevant to the story.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1800x1800 pixels, mode: RGB
+   📥 Downloading image: https://static01.nyt.com/images/2026/01/30/multimedia/30Gaza-medical-evacuees-04...
+      [1/1] Checking: The New York Times World
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://static01.nyt.com/images/2026/01/30/multime...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.nytimes.com/2026/01/31/world/middleeas... (1828 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26494
+================================================================================
+   🎯 Clusters ready for processing: 4 (NEW this cycle)
+   🔗 Matched existing: 5
+   📊 New clusters: 2
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1002
+⏭️ Already clustered: 0
+✨ New clusters created: 2
+✅ Matched to existing: 5 (embedding: 5, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #26495
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [7/7] Armed extremists kill dozens in northeastern Nigeria...
+         Cluster: Moldova Hit By Widespread Power Cuts Amid...
+      ✅ EMBEDDING MATCH: Cluster #26490 (similarity: 0.88)
+   [6/7] Massive outage knocks out power across Ukraine, Moldova...
+         Cluster: Moldova Hit By Widespread Power Cuts Amid...
+      ✅ EMBEDDING MATCH: Cluster #26490 (similarity: 0.88)
+   [5/7] Massive outage knocks out power across Ukraine, Moldova...
+         Cluster: 'No End In Sight' As Myanmar Marks...
+      ✅ EMBEDDING MATCH: Cluster #25677 (similarity: 0.82)
+   [4/7] Myanmar coup 5 years on: 'It has gone horrifically wrong for...
+         Cluster: Cost Of Pint To Rise Under New...
+      ✅ EMBEDDING MATCH: Cluster #26235 (similarity: 0.89)
+   [3/7] How new alcohol duty increase is set to affect drink prices ...
+         Cluster: These Gazans May Finally Get a Lifeline to the Wor...
+      ✅ EMBEDDING MATCH: Cluster #26494 (similarity: 1.00)
+   [2/7] These Gazans May Finally Get a Lifeline to the World...
+      ✨ Created cluster #26494
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [1/7] These Gazans May Finally Get a Lifeline to the World...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 7 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 7
+   ⏭️ Already clustered: 0
+   ✅ Saved: 7
+📝 Step 1: Saving articles to database...
+Articles to cluster: 7
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 7 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 7 filtered articles to Supabase
+✅ Step 1 Complete: 7 approved, 7 filtered
+   ✅ Filtering 14 total articles
+   📷 2 articles without images (Bright Data will fetch later)
+Scoring 14 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 14 NEW articles (after deduplication)
+✅ The New York Times World: 1 new
+✅ The New York Times Middle East: 1 new
+✅ The New York Times Homepage: 4 new
+✅ The Independent: 2 new
+✅ NBC News: 1 new
+✅ Inc. Magazine: 1 new
+✅ France 24: 1 new
+✅ Deutsche Welle Top Stories: 1 new
+✅ Deutsche Welle: 1 new
+✅ ABC News International: 1 new
+   ✅ After database check: 14 NEW articles
+   ⏰ After time filter (1440min): 1006 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2052 articles
+📊 Fetched 2052 articles from 207 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 10:51:40
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T10:51:32.454656
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+
+==================== LOGS FOR tennews-workflow-p2n95 ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 409.1 seconds
+================================================================================
+   Articles published: 4
+   Clusters processed: 6
+   Approved (Step 1): 9
+   Articles fetched: 15
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+      Skipping cluster 26493
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15514117/...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26493
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Amazon** Closes **60** Fresh Stores Across US...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12236
+   🏷️ Tags: ['amazon', 'amazon fresh', 'whole foods', 'grocery stores', 'retail', 'walmart', 'business', 'market share']
+   🏷️ Generated 8 interest tags: ['amazon', 'amazon fresh', 'whole foods']...
+   🏷️ Generating interest tags...
+   📊 Article score: 870/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Amazon** Closes **60** Fresh Stores Across US...
+      Source 1: Business Insider - content: 8354 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Amazon** Closes **60** Fresh Stores Across US...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The AI states that Amazon is closing *all* Fresh stores, but the source says the...
+      Discrepancies: 1
+      Summary: The AI-generated content contains a major error by stating that Amazon is closing all Fresh stores when the source says they are closing roughly 60 stores.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Amazon** Shuts **60** Fresh Stores Across US...
+      Source 1: Business Insider - content: 8354 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "event": "Amazon opened its first brick-and-mortar bookstore in Seattle, Washington, marking its initial expansion into physical retail spac...
+      "date": "January 2015",
+    {
+  "timeline": [
+   📝 Cleaned JSON: {
+      "event": "Amazon acquired Who...
+      "date": "June 2017",
+    {
+    },
+      "event": "Amazon opened its first brick-and-mortar bookstore in Seattle, Washington, marking its initial expansion into physical retail spaces beyond online sales."
+      "date": "January 2015",
+    {
+  "timeline": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (14342 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['timeline', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: timeline, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [timeline, details]
+      Validated components: ['timeline', 'details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+    "timeline",
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💰",
+  ],
+    "details"
+    "timeline",
+  "components": [
+      Gemini returned: {
+      Content length sent: 319 chars
+      Title: **Amazon** Shuts **60** Fresh Stores Across US...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (1483 chars)
+   ✅ Gemini context search completed (1483 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Amazon** Shuts **60** Fresh Stores Across US...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Business Insider (score: 79.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows an employee stocking shelves in an Amazon Fresh grocery store, which is relevant to news about retail, grocery shopping, or Amazon's operations.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 4117x3088 pixels, mode: RGB
+   📥 Downloading image: https://i.insider.com/697b6d39d3c7faef0ecd2907?format=jpeg...
+      [1/1] Checking: Business Insider
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://i.insider.com/697b6d39d3c7faef0ecd2907?for...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.businessinsider.com/why-amazon-fresh-s... (8354 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26492
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  ✅ AI image generated for: Balloons from Belarus cross in...
+[1/1] Processing: **Belarus** Balloons Breach **NATO** Airspace in P...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12235
+   🏷️ Tags: ['belarus', 'poland', 'nato', 'hybrid warfare', 'russia', 'balloons', 'military', 'geopolitics']
+   🏷️ Generated 8 interest tags: ['belarus', 'poland', 'nato']...
+   🏷️ Generating interest tags...
+   📊 Article score: 865/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding the balloon incursion from Belarus into Poland.
+      Verification result: ✅ PASSED
+      Generated title: **Belarus** Balloons Breach **NATO** Airspace in P...
+      Source 1: Newsweek - content: 2784 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+      "event": "NATO announced increased air presence along its eastern edge after approximately 20 Russian drones entered Poland, following...
+      "date": "September 10, 2023",
+    {
+  "timeline": [
+   📝 Cleaned JSON: {
+      ...
+      "date": "December 26, 2025",
+    {
+    },
+      "event": "NATO announced increased air presence along its eastern edge after approximately 20 Russian drones entered Poland, following reports of smuggling balloons from Belarus."
+      "date": "September 10, 2023",
+    {
+  "timeline": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 2 details have numbers (need at least 3)']
+      "event": "NATO announced increased air presence along its eastern edge after about 20 Russian drones entered Poland, following reports...
+      "date": "September 10, 2023",
+    {
+  "timeline": [
+   📝 Cleaned JSON: {
+      "event":...
+      "date": "December 26, 2025",
+    {
+    },
+      "event": "NATO announced increased air presence along its eastern edge after about 20 Russian drones entered Poland, following reports of smuggling balloons from Belarus."
+      "date": "September 10, 2023",
+    {
+  "timeline": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (15327 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['timeline', 'map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: timeline, map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [timeline, map, details]
+      Validated components: ['timeline', 'map', 'details']
+}
+  ]
+    "Podlaskie province, Poland"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+    "map",
+    "timeline",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Podlaskie province, Poland"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "🌍",
+  ],
+    "details"
+    "map",
+    "timeline",
+  "components": [
+      Gemini returned: {
+      Content length sent: 328 chars
+      Title: **Belarus** Balloons Breach **NATO** Airspace in Poland...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (1280 chars)
+   ✅ Gemini context search completed (1280 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Belarus** Balloons Breach **NATO** Airspace in Poland...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Newsweek (score: 85.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image depicts soldiers and vehicles along a border fence, showing an actual news event.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1200x775 pixels, mode: RGB
+   📥 Downloading image: https://assets.newsweek.com/wp-content/uploads/2026/01/GettyImages-2232406058_06...
+      [1/1] Checking: Newsweek
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://assets.newsweek.com/wp-content/uploads/202...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Newsweek: https://assets.newsweek.com/wp-content/uploads/2026/01/Getty...
+Fetched 1/1 articles
+✅ Fetched: https://www.newsweek.com/nato-hit-by-aerial-incurs... (2784 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26491
+================================================================================
+   ❌ Error processing cluster 26490: {'message': 'index row requires 1884408 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['moldova', 'ukraine', 'blackouts', 'power grid', 'russian strikes', 'chisinau', 'energy', 'geopolitics']
+   🏷️ Generated 8 interest tags: ['moldova', 'ukraine', 'blackouts']...
+   🏷️ Generating interest tags...
+   📊 Article score: 870/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, with no major factual errors or inconsistencies.
+      Verification result: ✅ PASSED
+      Generated title: **Moldova** Hit by **Blackouts** After Ukraine Gri...
+      Source 1: The Straits Times - content: 1136 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+      "label": "Voltage...
+    {
+    },
+      "value": "1 hour"
+      "label": "Outage duration",
+    {
+    },
+      "value": "40% of Moldova"
+      "label": "Affected population",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "...
+      "name": "Chisinau City Hall",
+    {
+  "map": [
+  ],
+    }
+      "value": "50%"
+      "label": "Voltage drop",
+    {
+    },
+      "value": "1 hour"
+      "label": "Outage duration",
+    {
+    },
+      "value": "40% of Moldova"
+      "label": "Affected population",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11663 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details', 'map']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details, map
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details, map]
+      Validated components: ['details', 'map']
+}
+  ]
+    "Chisinau, Moldova"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "map"
+    "details",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Chisinau, Moldova"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "map"
+    "details",
+  "components": [
+      Gemini returned: {
+      Content length sent: 315 chars
+      Title: **Moldova** Hit by **Blackouts** After Ukraine Grid Fails...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (104 chars)
+   ✅ Gemini context search completed (104 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Moldova** Hit by **Blackouts** After Ukraine Grid Fails...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: mustard yellow)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_104632_20260131_104632.png
+   ✅ Image generated successfully (1413278 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: mustard yellow
+   🎨 Generating image for: Moldova Hit By Widespread Power Cuts Amid...
+   📦 Supabase storage initialized
+      Topic: Moldova Hit By Widespread Power Cuts Amid...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 1 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image is a logo and not a suitable news photograph.
+   ❌ Unsuitable (100% confidence): The image is a logo and not a suitable news photograph.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 607x405 pixels, mode: RGB
+   📥 Downloading image: https://cassette.sphdigital.com.sg/image/straitstimes/a1c6c0831c7e2c0968e46225bb...
+      [1/1] Checking: The Straits Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cassette.sphdigital.com.sg/image/straitsti...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for The Straits Times: https://cassette.sphdigital.com.sg/image/straitstimes/a1c6c0...
+Fetched 1/1 articles
+✅ Fetched: https://www.straitstimes.com/world/europe/moldova-... (1136 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26490
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  📅 Event start date: 2022-02-24
+  ✅ AI image generated for: Ukraine war with missile attac...
+[1/1] Processing: **Kyiv Metro** Shuts Down Due to **Power Shortage*...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12233
+   🏷️ Tags: ['kyiv metro', 'power shortage', 'vitali klitschko', 'russian attacks', 'ukraine', 'vladimir putin', 'donald trump', 'infrastructure']
+   🏷️ Generated 8 interest tags: ['kyiv metro', 'power shortage', 'vitali klitschko']...
+   🏷️ Generating interest tags...
+   📊 Article score: 905/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Kyiv Metro** Shuts Down Due to **Power Shortage*...
+      Source 1: The Straits Times - content: 1353 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+      ...
+        "lng": 30.5234
+        "lat": 50.4501,
+      "coordinates": {
+      "country": "Ukraine",
+      "city": "Kyiv",
+      "type": "transport",
+      "name": "Kyiv Metro",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+  "...
+  ],
+    }
+      "description": "Subway system in Kyiv, Ukraine, affected by power shortages"
+      },
+        "lng": 30.5234
+        "lat": 50.4501,
+      "coordinates": {
+      "country": "Ukraine",
+      "city": "Kyiv",
+      "type": "transport",
+      "name": "Kyiv Metro",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11633 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Kyiv Metro, Kyiv, Ukraine"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Kyiv Metro, Kyiv, Ukraine"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚔️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 291 chars
+      Title: **Kyiv Metro** Shuts Down Due to **Power Shortage**...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Kyiv Metro** Shuts Down Due to **Power Shortage**...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Straits Times (score: 79.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows people boarding a train with generators nearby, potentially related to a news story about transportation or infrastructure issues, and does not contain any of the rejection criteria.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1140x760 pixels, mode: RGB
+   📥 Downloading image: https://cassette.sphdigital.com.sg/image/straitstimes/92f1ab381fafb11826f846b750...
+      [1/1] Checking: The Straits Times
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cassette.sphdigital.com.sg/image/straitsti...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for The Straits Times: https://cassette.sphdigital.com.sg/image/straitstimes/92f1ab...
+Fetched 1/1 articles
+✅ Fetched: https://www.straitstimes.com/world/europe/kyiv-met... (1353 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26489
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  ✅ AI image generated for: Landslide at a mineral mine, k...
+[1/1] Processing: **Landslide** Kills **200+** Miners at Smartphone ...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12232
+   🏷️ Tags: ['landslide', 'mining accident', 'mineral extraction', 'smartphone', 'tech industry', 'disaster', 'mining', 'casualties']
+   🏷️ Generated 8 interest tags: ['landslide', 'mining accident', 'mineral extraction']...
+   🏷️ Generating interest tags...
+   📊 Article score: 930/1000
+   📊 Using 6 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information provided in the source article regarding the landslide that killed over 200 miners at a smartphone mineral site.
+      Verification result: ✅ PASSED
+      Generated title: **Landslide** Kills **200+** Miners at Smartphone ...
+      Source 1: Sky News Home - content: 15000 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details, map]
+        "la...
+      "coordinates": {
+      "country": "Democratic Republic of Congo",
+      "city": "Rubaya",
+      "type": "landmark",
+      "name": "Coltan Mining Quarry in Rubaya",
+    {
+  "map": [
+   📝 Cleaned JSON: {
+      "description": "Location of coltan mining quarry ...
+      },
+        "lng": 29.2167
+        "lat": -1.7333,
+      "coordinates": {
+      "country": "Democratic Republic of Congo",
+      "city": "Rubaya",
+      "type": "landmark",
+      "name": "Coltan Mining Quarry in Rubaya",
+    {
+  "map": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (13453 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: map, details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [map, details]
+      Validated components: ['map', 'details']
+}
+  ]
+    "Rubaya, Democratic Republic of Congo"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Cleaned JSON: {
+}
+  ]
+    "Rubaya, Democratic Republic of Congo"
+  "map_locations": [
+  "graph_type": null,
+  "emoji": "⚠️",
+  ],
+    "details"
+    "map",
+  "components": [
+      Gemini returned: {
+      Content length sent: 297 chars
+      Title: **Landslide** Kills **200+** Miners at Smartphone Mineral Site...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (996 chars)
+   ✅ Gemini context search completed (996 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Landslide** Kills **200+** Miners at Smartphone Mineral Si...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Sky News Home (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows people directly involved in a news-worthy activity, appearing to be mining on a large scale, and meets the criteria for professional news photography.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1920x1080 pixels, mode: RGB
+   📥 Downloading image: https://e3.365dm.com/26/01/1920x1080/skynews-coltan-congo_7150966.jpg?2026013109...
+      [1/1] Checking: Sky News Home
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://e3.365dm.com/26/01/1920x1080/skynews-colta...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Jina fallback: https://news.sky.com/story/more-than-200-killed-af... (17446 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://news.sky.com/story/more-than-200-killed-af...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26488
+================================================================================
+   🎯 Clusters ready for processing: 6 (NEW this cycle)
+   🔗 Matched existing: 3
+   📊 New clusters: 6
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1006
+⏭️ Already clustered: 0
+✨ New clusters created: 6
+✅ Matched to existing: 3 (embedding: 3, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+         Cluster: Eton headmaster 'appalled' as he apologises after ...
+      ✅ EMBEDDING MATCH: Cluster #26493 (similarity: 1.00)
+   [9/9] Eton headmaster 'appalled' as he apologises after former tea...
+      ✨ Created cluster #26493
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [8/9] Eton headmaster 'appalled' as he apologises after former tea...
+      ✨ Created cluster #26492
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [7/9] Empty stores and massage chairs next to produce: Amazon Fres...
+      ✨ Created cluster #26491
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [6/9] NATO Hit By Aerial Incursion From Russia&#039;s Closest Ally...
+      ✨ Created cluster #26490
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [5/9] Moldova hit by widespread power cuts amid Ukraine grid probl...
+      ✨ Created cluster #26489
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [4/9] Kyiv metro temporarily closes due to power shortage...
+         Cluster: Dozens Killed In Baloch Sepratist Attack In...
+      ✅ EMBEDDING MATCH: Cluster #26466 (similarity: 0.84)
+   [3/9] Pakistan: Dozens killed in 'coordinated' Balochistan attacks...
+         Cluster: More than 200 killed after landslide collapses sma...
+      ✅ EMBEDDING MATCH: Cluster #26488 (similarity: 1.00)
+   [2/9] More than 200 killed after landslide collapses smartphone mi...
+      ✨ Created cluster #26488
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [1/9] More than 200 killed after landslide collapses smartphone mi...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 9 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 9
+   ⏭️ Already clustered: 0
+   ✅ Saved: 9
+📝 Step 1: Saving articles to database...
+Articles to cluster: 9
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 9 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 6 filtered articles to Supabase
+✅ Step 1 Complete: 9 approved, 6 filtered
+   ✅ Filtering 15 total articles
+   📷 5 articles without images (Bright Data will fetch later)
+Scoring 15 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 15 NEW articles (after deduplication)
+✅ Wired: 1 new
+✅ The Straits Times: 2 new
+✅ The Independent: 1 new
+✅ Sky News World: 1 new
+✅ Sky News Home: 1 new
+✅ Newsweek: 2 new
+✅ Deutsche Welle World: 1 new
+✅ Daily Mail News: 1 new
+✅ Daily Mail Home: 2 new
+✅ Business Insider: 3 new
+   ✅ After database check: 15 NEW articles
+   ⏰ After time filter (1440min): 1004 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2050 articles
+📊 Fetched 2050 articles from 207 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 10:41:38
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T10:41:32.084950
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+
+==================== LOGS FOR tennews-workflow-zgbrj ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 294.9 seconds
+================================================================================
+   Articles published: 2
+   Clusters processed: 3
+   Approved (Step 1): 5
+   Articles fetched: 11
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **Nashville Songwriter** Veltz Pens **2025's** Vir...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12231
+   🏷️ Tags: ['laura veltz', 'nashville', 'songwriter', 'music industry', 'country music', 'viral hit', 'songwriting', 'music']
+   🏷️ Generated 8 interest tags: ['laura veltz', 'nashville', 'songwriter']...
+   🏷️ Generating interest tags...
+   📊 Article score: 770/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Nashville Songwriter** Veltz Pens **2025's** Vir...
+      Source 1: Washington Post Entertainment - content: 437 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "Genre diversity",...
+    {
+    },
+      "value": "Over 10 charted"
+      "label": "Hit songs",
+    {
+    },
+      "value": "2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+   ...
+      "date": "January 2020",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "3+ music genres"
+      "label": "Genre diversity",
+    {
+    },
+      "value": "Over 10 charted"
+      "label": "Hit songs",
+    {
+    },
+      "value": "2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+  ⚠ Validation issues (attempt 2): ['Only 2 details have numbers (need at least 3)']
+      "valu...
+      "label": "Location",
+    {
+    },
+      "value": "2025"
+      "label": "Hit year",
+    {
+    },
+      "value": "Nearly 2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "event": "Laura...
+      "date": "January 2005",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "Nashville"
+      "label": "Location",
+    {
+    },
+      "value": "2025"
+      "label": "Hit year",
+    {
+    },
+      "value": "Nearly 2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 2 details have numbers (need at least 3)']
+ ...
+      "label": "Location",
+    {
+    },
+      "value": "2025 viral hit"
+      "label": "Hit year",
+    {
+    },
+      "value": "Nearly 2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      ...
+      "date": "January 2005",
+    {
+  "timeline": [
+  ],
+    }
+      "value": "Nashville base"
+      "label": "Location",
+    {
+    },
+      "value": "2025 viral hit"
+      "label": "Hit year",
+    {
+    },
+      "value": "Nearly 2 decades"
+      "label": "Career span",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11479 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🎭",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🎭",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 317 chars
+      Title: **Nashville Songwriter** Veltz Pens **2025's** Viral Hit...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (107 chars)
+   ✅ Gemini context search completed (107 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Nashville Songwriter** Veltz Pens **2025's** Viral Hit...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Washington Post Entertainment (score: 98.0, AI approved)
+         ✅ AI APPROVED (90%)
+   ✅ Suitable (90% confidence): The image shows a person involved in the story, and there are no elements that would disqualify it for publication.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1440x960 pixels, mode: RGB
+   📥 Downloading image: https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washp...
+      [1/1] Checking: Washington Post Entertainment
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://www.washingtonpost.com/wp-apps/imrs.php?sr...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+   📸 Fetched image for Washington Post Entertainment: https://www.washingtonpost.com/wp-apps/imrs.php?src=https://...
+Fetched 1/1 articles
+✅ Fetched: https://www.washingtonpost.com/entertainment/music... (437 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26487
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+  → Not a world event (regular news)
+[1/1] Processing: **UK PM Starmer** Arrives in **Japan** for Final A...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12230
+   🏷️ Tags: ['keir starmer', 'japan', 'ukraine', 'defense', 'trade', 'security', 'asia', 'politics']
+   🏷️ Generated 8 interest tags: ['keir starmer', 'japan', 'ukraine']...
+   🏷️ Generating interest tags...
+   📊 Article score: 865/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **UK PM Starmer** Arrives in **Japan** for Final A...
+      Source 1: South China Morning Post - content: 1088 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "Tra...
+    {
+    },
+      "value": "£29.5 billion"
+      "label": "Japanese investment",
+    {
+    },
+      "value": "£37 billion"
+      "label": "Bilateral trade",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "13.8% increase"
+      "label": "Trade growth",
+    {
+    },
+      "value": "£29.5 billion"
+      "label": "Japanese investment",
+    {
+    },
+      "value": "£37 billion"
+      "label": "Bilateral trade",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11483 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🤝",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 317 chars
+      Title: **UK PM Starmer** Arrives in **Japan** for Final Asia Visit...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (108 chars)
+   ✅ Gemini context search completed (108 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **UK PM Starmer** Arrives in **Japan** for Final Asia Visit...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: South China Morning Post (score: 69.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows a politician (presumably Sir Keir Starmer) speaking, which is acceptable for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1280x720 pixels, mode: RGB
+   📥 Downloading image: https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canv...
+      [1/1] Checking: South China Morning Post
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://cdn.i-scmp.com/sites/default/files/styles/...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.scmp.com/news/asia/east-asia/article/3... (1088 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26486
+================================================================================
+      Skipping cluster 26485
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15514461/...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26485
+================================================================================
+   🎯 Clusters ready for processing: 3 (NEW this cycle)
+   🔗 Matched existing: 2
+   📊 New clusters: 3
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1003
+⏭️ Already clustered: 0
+✨ New clusters created: 3
+✅ Matched to existing: 2 (embedding: 2, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #26487
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [5/5] She writes the sweetest country songs. Also, the dirtiest vi...
+         Cluster: More than half of voters say Labour should replace...
+      ✅ EMBEDDING MATCH: Cluster #26485 (similarity: 1.00)
+   [4/5] More than half of voters say Labour should replace Sir Keir ...
+      ✨ Created cluster #26486
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [3/5] UK PM Starmer arrives in Japan for last leg of East Asia vis...
+      ✨ Created cluster #26485
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [2/5] More than half of voters say Labour should replace Sir Keir ...
+         Cluster: Dozens Killed In Baloch Sepratist Attack In...
+      ✅ EMBEDDING MATCH: Cluster #26466 (similarity: 0.84)
+   [1/5] Pakistan: Dozens killed in 'coordinated' Balochistan attacks...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 5 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 5
+   ⏭️ Already clustered: 0
+   ✅ Saved: 5
+📝 Step 1: Saving articles to database...
+Articles to cluster: 5
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 5 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 6 filtered articles to Supabase
+✅ Step 1 Complete: 5 approved, 6 filtered
+   ✅ Filtering 11 total articles
+   📷 3 articles without images (Bright Data will fetch later)
+Scoring 11 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 11 NEW articles (after deduplication)
+✅ Washington Post Entertainment: 1 new
+✅ The Independent: 1 new
+✅ South China Morning Post: 1 new
+✅ Seeking Alpha: 1 new
+✅ Mashable Tech: 4 new
+✅ Deutsche Welle Asia: 1 new
+✅ Daily Mail News: 1 new
+✅ Daily Mail Home: 1 new
+   ✅ After database check: 11 NEW articles
+   ⏰ After time filter (1440min): 1006 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2045 articles
+📊 Fetched 2045 articles from 206 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 10:31:54
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T10:31:45.612320
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+
+==================== LOGS FOR tennews-workflow-n8cnc ====================
+
+Container called exit(0).
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+✅ Workflow completed in 357.4 seconds
+================================================================================
+   Articles published: 1
+   Clusters processed: 7
+   Approved (Step 1): 9
+   Articles fetched: 14
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+      Skipping cluster 26484 (reason: duplicate_title)
+      Existing (ID 12108): **Djokovic** Reaches **Australian Open** Final at Age 38...
+      New: **Djokovic** Faces **Alcaraz** in Australian Open Final...
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 74%)
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+      Verification result: ✅ PASSED
+      Generated title: **Djokovic** Faces **Alcaraz** in Australian Open ...
+      Source 1: The Guardian UK Sport - content: 4112 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+      ✅ New article: **Djokovic** Faces **Alcaraz** in Australian Open ...
+      Re-synthesizing with verification feedback...
+   🔄 REGENERATING ARTICLE (Attempt 2/3)
+         1. The final is for the 2024 Australian Open, not 2025....
+      Discrepancies: 1
+      Summary: The article is mostly accurate, but incorrectly states the final is for the 2025 Australian Open.
+   ⚠️  Verification FAILED (Attempt 1/3)
+      Discrepancies found: 1
+      Verification result: ❌ FAILED
+      Generated title: **Djokovic** Faces **Alcaraz** in Historic Austral...
+      Source 1: The Guardian UK Sport - content: 4112 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "Djokovic Slams...
+    {
+    },
+      "value": "12 career"
+      "label": "Alcaraz titles",
+    {
+    },
+      "value": "96 career"
+      "label": "Djokovic titles",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "24 Grand"
+      "label": "Djokovic Slams",
+    {
+    },
+      "value": "12 career"
+      "label": "Alcaraz titles",
+    {
+    },
+      "value": "96 career"
+      "label": "Djokovic titles",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11524 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "⚽",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 327 chars
+      Title: **Djokovic** Faces **Alcaraz** in Historic Australian Open Final...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (134 chars)
+   ✅ Gemini context search completed (134 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **Djokovic** Faces **Alcaraz** in Historic Australian Open F...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: The Guardian UK Sport (score: 99.0, AI approved)
+         ✅ AI APPROVED (95%)
+   ✅ Suitable (95% confidence): The image shows athletes competing in a tennis match, a suitable subject for a news website.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 700x560 pixels, mode: RGB
+   📥 Downloading image: https://i.guim.co.uk/img/media/4672b41afadd64fbb943afd093d2b3bfaa63cd48/232_0_30...
+      [1/1] Checking: The Guardian UK Sport
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://i.guim.co.uk/img/media/4672b41afadd64fbb94...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.theguardian.com/sport/2026/jan/31/nova... (4112 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26484
+================================================================================
+============================================================
+  Articles tagged: 0
+  New events created: 0
+WORLD EVENT DETECTION COMPLETE
+============================================================
+❌ Failed to create world event: {'message': "Could not find the 'day_counter_type' column of 'world_events' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+  ✅ AI image generated for: Robots and humans working toge...
+[1/1] Processing: **AI** Creates **Rebound Effect**, Weakens Worker ...
+Found 1 existing world events
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+   ✅ Published article ID: 12226
+   🏷️ Tags: ['artificial intelligence', 'skill regression', 'john nosta', 'nostalab', 'worker skills', 'automation', 'technology', 'cognitive bias']
+   🏷️ Generated 8 interest tags: ['artificial intelligence', 'skill regression', 'john nosta']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the main points and arguments presented in the source article regarding the potential negative impacts of AI on worker skills.
+      Verification result: ✅ PASSED
+      Generated title: **AI** Creates **Rebound Effect**, Weakens Worker ...
+      Source 1: Business Insider - content: 3095 chars
+      Sources provided: 1
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [details]
+      "label": "AI in...
+    {
+    },
+      "value": "$10.92 billion"
+      "label": "AI in healthcare",
+    {
+    },
+      "value": "$200 billion"
+      "label": "AI market size",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "$7.38 billion"
+      "label": "AI in retail",
+    {
+    },
+      "value": "$10.92 billion"
+      "label": "AI in healthcare",
+    {
+    },
+      "value": "$200 billion"
+      "label": "AI market size",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+  ⚠ Validation issues (attempt 1): ['Only 1 details have numbers (need at least 3)']
+      "label": "AI relia...
+    {
+    },
+      "value": "Atrophy"
+      "label": "Epistemic vigilance",
+    {
+    },
+      "value": "October 2023"
+      "label": "Report released",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+}...
+  ]
+    }
+      "value": "Heavy"
+      "label": "AI reliance",
+    {
+    },
+      "value": "Atrophy"
+      "label": "Epistemic vigilance",
+    {
+    },
+      "value": "October 2023"
+      "label": "Report released",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11994 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "💻",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 326 chars
+      Title: **AI** Creates **Rebound Effect**, Weakens Worker Skills...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (613 chars)
+   ✅ Gemini context search completed (613 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **AI** Creates **Rebound Effect**, Weakens Worker Skills...
+   Synthesizing article from 1 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   ✅ Selected: Business Insider (score: 80.0, AI approved)
+         ✅ AI APPROVED (100%)
+   ✅ Suitable (100% confidence): The image is a clear photo of a person who could be involved in a news story.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 1680x1260 pixels, mode: RGB
+   📥 Downloading image: https://i.insider.com/696631a764858d02d2183b31?format=jpeg...
+      [1/1] Checking: Business Insider
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 1
+      Total candidates: 1
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 1: image_url = https://i.insider.com/696631a764858d02d2183b31?for...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 1 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 1/1
+Fetched 1/1 articles
+✅ Fetched: https://www.businessinsider.com/ai-can-make-you-be... (3095 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26483
+================================================================================
+      Skipping cluster 26482
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.smh.com.au/sport/tennis/sabalenka-forc...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26482
+================================================================================
+   ❌ Error processing cluster 26481: {'message': 'index row requires 1968640 bytes, maximum size is 8191', 'code': '54000', 'hint': None, 'details': None}
+   🏷️ Tags: ['afd', 'martin sellner', 'austria', 'germany', 'deportation', 'immigration', 'far right', 'politics']
+   🏷️ Generated 8 interest tags: ['afd', 'martin sellner', 'austria']...
+   🏷️ Generating interest tags...
+   📊 Article score: 830/1000
+   📊 Using 7 reference articles for calibration
+   🎯 STEP 10: SCORING ARTICLE
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, with no major factual errors or inconsistencies.
+      Verification result: ✅ PASSED
+      Generated title: **AfD** Bonds with Austrian **Extremists** on Depo...
+      Source 2: Deutsche Welle - content: 6445 chars
+      Source 1: Deutsche Welle Top Stories - content: 6445 chars
+      Sources provided: 2
+   🔍 DEBUG - VERIFICATION INPUT:
+   Checking for hallucinations in generated content...
+🔍 STEP 8: FACT VERIFICATION
+   ✅ Step 7 Complete: Generated [timeline, details]
+      "label": "German popul...
+    {
+    },
+      "value": "35 years old"
+      "label": "Sellner's age",
+    {
+    },
+      "value": "February 2013"
+      "label": "AfD founded",
+    {
+  "details": [
+   📝 Cleaned JSON: {
+      "date": "September 2017...
+    {
+  "timeline": [
+  ],
+    }
+      "value": "83.2 million"
+      "label": "German population",
+    {
+    },
+      "value": "35 years old"
+      "label": "Sellner's age",
+    {
+    },
+      "value": "February 2013"
+      "label": "AfD founded",
+    {
+  "details": [
+   📝 Raw Claude response: {
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   🔧 DEBUG: System prompt built (11494 chars)
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Starting component generation...
+   Generating content for: details
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   ✅ Step 6 Complete: Selected [details]
+      Validated components: ['details']
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Cleaned JSON: {
+}
+  "map_locations": null
+  "graph_type": null,
+  "emoji": "🏛️",
+  ],
+    "details"
+  "components": [
+      Gemini returned: {
+      Content length sent: 337 chars
+      Title: **AfD** Bonds with Austrian **Extremists** on Deportations...
+   🔍 DEBUG - Gemini Raw Response:
+   Analyzing search data to select appropriate components...
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   ✅ Step 5 Complete: Search context fetched (100 chars)
+   ✅ Gemini context search completed (100 chars)
+   Searching for component data with Google Search grounding...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   ✅ Synthesized: **AfD** Bonds with Austrian **Extremists** on Deportations...
+   Synthesizing article from 2 sources...
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🎨 AI Generated: editorial illustration (background: olive green)
+   ✅ AI image generated successfully
+   ⚠️ Upload failed: {'statusCode': 404, 'error': Bucket not found, 'me
+Storage endpoint URL should have a trailing slash.
+   📤 Uploading to Supabase: generated/20260131_102615_20260131_102615.png
+   ✅ Image generated successfully (1476449 bytes)
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   🎨 Background color: olive green
+   🎨 Generating image for: Germany'S Afd Bonds With Austrian Far-Right Extremists...
+   📦 Supabase storage initialized
+      Topic: Germany'S Afd Bonds With Austrian Far-Right Extremists...
+   🎨 GENERATING AI IMAGE
+         → Article needs AI-generated image
+      ❌ All 2 images rejected by AI quality check
+         ❌ AI REJECTED (100%): The image shows a person being interviewed by news reporters, including a microphone with a news channel logo, making it a photo of reporters covering a story, not the story itself.
+   ❌ Unsuitable (100% confidence): The image shows a person being interviewed by news reporters, including a microphone with a news channel logo, making it a photo of reporters covering a story, not the story itself.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   📥 Downloading image: https://static.dw.com/image/75738306_6.jpg...
+      [2/2] Checking: Deutsche Welle
+         ❌ AI REJECTED (100%): The image shows a person being interviewed by reporters with microphones and cameras, making it unsuitable.
+   ❌ Unsuitable (100% confidence): The image shows a person being interviewed by reporters with microphones and cameras, making it unsuitable.
+   🤖 Analyzing with Gemini 2.0 Flash...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   📥 Downloading image: https://static.dw.com/image/75738306_6.jpg...
+      [1/2] Checking: Deutsche Welle Top Stories
+      🤖 Running AI quality check on top candidates...
+      Valid (rule-based): 2
+      Total candidates: 2
+   📸 IMAGE SELECTION:
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   🔍 DEBUG Source 2: image_url = https://static.dw.com/image/75738306_6.jpg...
+   🔍 DEBUG Source 1: image_url = https://static.dw.com/image/75738306_6.jpg...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   Selecting best image from 2 sources...
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   ✅ Fetched full text: 2/2
+   📸 Fetched image for Deutsche Welle: https://static.dw.com/image/75738306_6.jpg...
+   📸 Fetched image for Deutsche Welle Top Stories: https://static.dw.com/image/75738306_6.jpg...
+Fetched 2/2 articles
+✅ Fetched: https://www.dw.com/en/germany-s-afd-bonds-with-aus... (6445 chars)
+✅ Fetched: https://www.dw.com/en/germany-s-afd-bonds-with-aus... (6445 chars)
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 2 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 2
+================================================================================
+📰 PROCESSING CLUSTER 26481
+================================================================================
+      Skipping cluster 26480
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.aljazeera.com/opinions/2026/1/31/why-a...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26480
+================================================================================
+      Skipping cluster 26479
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.aljazeera.com/sports/2026/1/31/officia...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26479
+================================================================================
+      Skipping cluster 26478
+      Reason: Cannot write accurate article without source content
+   ❌ ELIMINATED: No article content fetched (blocked by site)
+   ✅ Fetched full text: 0/1
+Fetched 0/1 articles
+   🔄 Trying Jina fallback for 1 URLs...
+⚠️ Insufficient content for https://www.aljazeera.com/news/2026/1/31/like-judg...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+   Fetching full text for 1 sources...
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Sources in cluster: 1
+================================================================================
+📰 PROCESSING CLUSTER 26478
+================================================================================
+   🎯 Clusters ready for processing: 7 (NEW this cycle)
+   🔗 Matched existing: 2
+   📊 New clusters: 7
+✅ Step 1.5 Complete:
+📊 Total active clusters: 1007
+⏭️ Already clustered: 0
+✨ New clusters created: 7
+✅ Matched to existing: 2 (embedding: 2, AI: 0)
+============================================================
+CLUSTERING COMPLETE
+============================================================
+      ✨ Created cluster #26484
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (1 clusters with 3+ keyword matches)...
+      🔑 Top keyword matches: [('Djokovic To Meet Alcaraz In Melbourne Fi', 3)]
+   [9/9] Durable, determined Djokovic undaunted by Alcaraz’s historic...
+      ✨ Created cluster #26483
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [8/9] AI can make workers better &mdash; then worse at their jobs,...
+      ✨ Created cluster #26482
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [7/9] Sabalenka forces title decider...
+         Cluster: Venezuela Announces Bill That Could Lead To...
+      ✅ EMBEDDING MATCH: Cluster #26247 (similarity: 0.84)
+   [6/9] Venezuela announces a general amnesty for political prisoner...
+         Cluster: Germany's AfD bonds with Austrian far-right extrem...
+      ✅ EMBEDDING MATCH: Cluster #26481 (similarity: 1.00)
+   [5/9] Germany's AfD bonds with Austrian far-right extremists...
+      ✨ Created cluster #26481
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [4/9] Germany's AfD bonds with Austrian far-right extremists...
+      ✨ Created cluster #26480
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 3+)
+   [3/9] Why attacking UNRWA is attacking Gaza’s survival...
+      ✨ Created cluster #26479
+      🆕 No match found: Creating new cluster
+      ⏭️ Skipping AI: Best keyword match only 2 keywords (need 3+)
+   [2/9] Officials defend conditions at pre-Olympic race after Vonn c...
+      ✨ Created cluster #26478
+      🆕 No match found: Creating new cluster
+      🤖 AI: NEW CLUSTER
+      🤖 Sending to AI (1 clusters with 3+ keyword matches)...
+      🔑 Top keyword matches: [('A Sudanese Doctor Recounts His Harrowing', 4)]
+   [1/9] ‘Like judgement day’: Sudanese doctor recounts escape from e...
+🔍 Step 4: Matching articles to clusters...
+   ✅ Embeddings ready
+   Embedding 9 article titles...
+🧠 Step 3: Generating embeddings...
+   Found 1000 active clusters
+📂 Step 2: Getting active clusters...
+   📋 To cluster: 9
+   ⏭️ Already clustered: 0
+   ✅ Saved: 9
+📝 Step 1: Saving articles to database...
+Articles to cluster: 9
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Clustering 9 articles...
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+   📊 Saved 5 filtered articles to Supabase
+✅ Step 1 Complete: 9 approved, 5 filtered
+   ✅ Filtering 14 total articles
+   📷 6 articles without images (Bright Data will fetch later)
+Scoring 14 articles...
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+✅ Step 0 Complete: 14 NEW articles (after deduplication)
+✅ The Sydney Morning Herald: 1 new
+✅ The Independent: 2 new
+✅ The Guardian UK Sport: 1 new
+✅ The Guardian UK: 1 new
+✅ Euronews: 1 new
+✅ Deutsche Welle Top Stories: 1 new
+✅ Deutsche Welle: 1 new
+✅ Business Insider: 3 new
+✅ Al Jazeera English: 3 new
+   ✅ After database check: 14 NEW articles
+   ⏰ After time filter (1440min): 1012 articles
+  warnings.warn("tzname {tzname} identified but not understood.  "
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+🔍 Deduplication: Starting with 2044 articles
+📊 Fetched 2044 articles from 206 sources
+Fetching from 257 premium sources...
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+================================================================================
+Started: 2026-01-31 10:22:09
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+  Components per article: 1-3
+  Model: gemini-2.0-flash
+✓ Initialized Gemini component selector
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+  import google.generativeai as genai
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+See README for more details:
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+============================================================
+⏰ Started at: 2026-01-31T10:22:00.758507
+🚀 TEN NEWS - Cloud Run Execution
+============================================================
+
+
+

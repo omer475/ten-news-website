@@ -27,8 +27,8 @@ class ComponentConfig:
     top_p: float = 0.95
     top_k: int = 40
     max_output_tokens: int = 256
-    min_components: int = 1  # Minimum components per article (just details is fine for most)
-    max_components: int = 3  # Maximum components per article (reduced from 4 - be more selective)
+    min_components: int = 0  # No minimum — AI decides if components add value
+    max_components: int = 3  # Maximum components per article
     max_article_preview: int = 2000  # Max chars to send (save tokens)
     retry_attempts: int = 3
     retry_delay: float = 2.0
@@ -42,33 +42,36 @@ COMPONENT_SELECTION_PROMPT = """Select components for this news article.
 
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
-SEARCH CONTEXT: {search_context}
 
 ═══════════════════════════════════════════════════════════════
 COMPONENTS OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-📋 DETAILS - Key facts not in bullets (~70% of stories)
-📅 TIMELINE - Historical context (~10% of stories, rare)
-🗺️ MAP - Where it happened (~20% of stories)
+📋 DETAILS - Key facts not in bullets (only if genuinely useful)
+📅 TIMELINE - Historical context (rare, ~5% of stories)
+🗺️ MAP - Where it happened (~15% of stories)
 📊 GRAPH - Data trends (~10% of stories)
+
+IMPORTANT: All components are OPTIONAL. If no component adds genuine value beyond
+the title and bullets, return an empty components array []. Do NOT force components.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Shows additional facts and statistics.
+Shows additional facts and statistics NOT already in the bullet summary.
 
 SELECT IF:
-- Search found 3+ facts NOT in bullet summary
-- Facts contain actual numbers
-- Facts are relevant to the story
+- The story likely has additional facts with real numbers beyond what's in bullets
+- Extra context (specs, stats, comparisons) would genuinely help the reader
+- The topic is data-rich (business, science, sports, economics)
 
 DO NOT SELECT IF:
-- All facts duplicate bullet summary
-- Only irrelevant trivia available
+- The bullets already cover everything important
+- Only irrelevant trivia or filler would be available (ages, jersey numbers, episode counts)
+- It's a simple announcement or opinion piece with no extra data
 
-FREQUENCY: ~70% of stories
+FREQUENCY: Only when genuinely useful — do NOT default to including details
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE
@@ -209,22 +212,24 @@ FREQUENCY: ~10% of stories
 🏆 SCORE CARD
 ═══════════════════════════════════════════════════════════════
 
-Shows completed match/game results with final scores.
+Shows match/game results with scores.
 
-SELECT ONLY IF:
-- Article is about a COMPLETED match/game with FINAL scores
-- Both teams/competitors and their scores are clearly stated
-- This is a match RESULT, not a preview, transfer, or opinion piece
+SELECT IF ANY OF THESE ARE TRUE:
+- Article is about a COMPLETED match/game with final scores
+- Article is a game RECAP or POST-MATCH analysis that mentions the score
+- Article discusses match HIGHLIGHTS with the result mentioned
+- Article headline or bullets contain a score (e.g., "3-1", "beat", "defeated", "won")
+- Any score or final result is clearly stated, even if the article also has analysis
 
 DO NOT SELECT IF:
-- Article is about transfers, signings, contracts, injuries
-- Article is a match preview or prediction
-- Article is about sports politics, doping, coaching changes
-- No final score is mentioned
+- Article is about transfers, signings, contracts, injuries with NO game score
+- Article is purely a match PREVIEW or prediction (no result yet)
+- Article is about sports politics, doping, coaching changes with no game result
+- No score or match result is mentioned anywhere
 
 WHEN SELECTED: Scorecard REPLACES all other components. Do NOT add details/timeline/graph/map alongside scorecard.
 
-FREQUENCY: ~30% of Sports articles
+FREQUENCY: ~50% of Sports articles (any article that mentions a game result)
 
 ═══════════════════════════════════════════════════════════════
 🍳 RECIPE CARD
@@ -249,11 +254,12 @@ FREQUENCY: ~50% of Food articles
 TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
-Most stories (80%): ["details"] - Just details, nothing else
+Simple stories (announcements, opinions): [] - No components needed
+Stories with useful extra facts: ["details"]
 Incidents with SPECIFIC location: ["map", "details"]
 Economic news with data: ["graph", "details"]
 Complex ongoing sagas (very rare, ~5%): ["timeline", "details"]
-Completed match results: ["scorecard"] - EXCLUSIVE, no other components
+Sports articles mentioning a game result/score: ["scorecard"] - EXCLUSIVE, no other components
 Actual recipes: ["recipe"] - EXCLUSIVE, no other components
 
 MISTAKES TO AVOID:
@@ -264,7 +270,7 @@ MISTAKES TO AVOID:
 ✗ Adding timeline for single events (plane crash, earthquake, announcement)
 ✗ Adding graph with made-up data
 ✗ Adding details that duplicate bullets
-✗ Adding scorecard for non-match sports articles (transfers, previews, etc.)
+✗ Adding scorecard for sports articles with NO score/result (transfers, previews, opinions)
 ✗ Adding recipe for food industry/restaurant news
 
 ═══════════════════════════════════════════════════════════════
@@ -305,8 +311,8 @@ DECISION EXAMPLES
 "SNL Mocks Trump in Christmas Sketch"
 → MAP: NO - Nobody cares where TV studio is
 → TIMELINE: NO - Entertainment news, no background needed
-→ DETAILS: YES - If additional facts
-→ components: ["details"], article_type: "standard"
+→ DETAILS: NO - Bullets already cover the story
+→ components: [], article_type: "standard"
 
 "Russia Strikes Ukrainian Power Plant with Missiles"
 → MAP: YES - Show the SPECIFIC power plant location
@@ -348,10 +354,22 @@ DECISION EXAMPLES
 → SCORECARD: YES - Completed match with final scores
 → components: ["scorecard"], article_type: "match_result"
 
+"Phoenix Rising Draws with Orange County in Opener"
+→ SCORECARD: YES - Game recap with result (1-1 draw) mentioned in bullets
+→ components: ["scorecard"], article_type: "match_result"
+
+"Sunderland Misses Opportunity, Charlton Secures Win"
+→ SCORECARD: YES - Post-match recap with result, scorers mentioned
+→ components: ["scorecard"], article_type: "match_result"
+
 "Mbappe Signs 5-Year Deal with Real Madrid"
-→ SCORECARD: NO - Transfer news, not a match result
+→ SCORECARD: NO - Transfer news, no game result
 → DETAILS: YES
 → components: ["details"], article_type: "standard"
+
+"Schumacher Slams F1 2026 Rules as Too Artificial"
+→ SCORECARD: NO - Opinion piece about rules, no match result
+→ components: [], article_type: "standard"
 
 "Easy 30-Minute Pasta Carbonara Recipe"
 → RECIPE: YES - Actual recipe with cooking details
@@ -443,36 +461,33 @@ class GeminiComponentSelector:
     
     def select_components(self, article: Dict, search_context: str = "") -> Dict:
         """
-        Select components for a single article
-        
+        Select components for a single article.
+        Runs BEFORE context search — decides which components are needed
+        so the search can be skipped or targeted.
+
         Args:
             article: Dict with 'title' and 'text' (full article content from Step 3)
-            search_context: Optional search context from Gemini search
-        
+            search_context: Unused (kept for backwards compatibility)
+
         Returns:
             Dict with component selection
         """
         # Get article title and content
         article_title = article.get('title', 'No title')
         article_content = article.get('text', '')
-        
+
         # Get bullet summary if available
         bullets = article.get('summary_bullets_news', article.get('summary_bullets', []))
         if isinstance(bullets, list):
             bullets_text = '\n'.join([f"• {b}" for b in bullets])
         else:
             bullets_text = str(bullets) if bullets else article_content[:500]
-        
-        # Use article content as search context if none provided
-        if not search_context:
-            search_context = article_content[:2000] if article_content else "No search context available."
-        
+
         # Format the prompt with article data using replace (not .format()
         # because the prompt contains JSON examples with braces)
         formatted_prompt = COMPONENT_SELECTION_PROMPT
         formatted_prompt = formatted_prompt.replace('{title}', article_title)
         formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
-        formatted_prompt = formatted_prompt.replace('{search_context}', search_context[:3000])
         
         user_prompt = formatted_prompt + "\n\nAnalyze and return ONLY valid JSON."
 
@@ -623,8 +638,8 @@ class GeminiComponentSelector:
         elif 'recipe' in components:
             components = ['recipe']
         
-        # Ensure minimum components - if empty or too few, use fallback (need article reference for smart fallback)
-        if len(components) < self.config.min_components:
+        # Ensure minimum components (now 0 is allowed — no components is a valid decision)
+        if self.config.min_components > 0 and len(components) < self.config.min_components:
             print(f"  ⚠ Too few components ({len(components)}), using fallback")
             return self._get_fallback_selection()
         

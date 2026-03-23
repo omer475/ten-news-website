@@ -7,10 +7,10 @@ Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
 Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
-Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
-Step 5: Gemini Context Search (Google Search grounding for component data)
-Step 6: Gemini Component Selection (decides which components based on search data)
-Step 7: Claude Component Generation (timeline, details, graph, map)
+Step 4: Multi-Source Synthesis with Gemini Flash (generates article from all sources)
+Step 6: Gemini Component Selection (decides which components article needs — cheap, no grounding)
+Step 5: Gemini Context Search (Google Search grounding — ONLY if components need it, skipped otherwise)
+Step 7: Gemini Component Generation (timeline, details, graph, map)
 Step 8: Fact Verification (catches hallucinations, regenerates if needed)
 Step 9: Publishing to Supabase
 Step 10: Article Scoring (AI importance scoring 700-950)
@@ -28,6 +28,8 @@ import os
 from dotenv import load_dotenv
 import warnings
 import urllib3
+from io import BytesIO
+from PIL import Image
 
 # Import all pipeline components
 from rss_sources import ALL_SOURCES
@@ -36,7 +38,7 @@ from step1_5_event_clustering import EventClusteringEngine
 from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
 from step3_image_selection import select_best_image_for_cluster, ImageSelector
 from image_quality_checker import ImageQualityChecker, check_and_select_best_image
-from step4_multi_source_synthesis import MultiSourceSynthesizer
+# step4_multi_source_synthesis no longer used (was Claude-based, now using inline Gemini synthesis)
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import GeminiComponentWriter
@@ -46,6 +48,81 @@ from step11_article_tagging import tag_article
 # Event detection paused (re-enable after app launch)
 # from step6_world_event_detection import detect_world_events
 from supabase import create_client
+
+# ==========================================
+# SUBTOPIC TAGGING — appends subtopic names to interest_tags
+# so the feed can match user-selected subtopics directly
+# ==========================================
+
+SUBTOPIC_MAP = {
+    'War & Conflict': ['war', 'conflict', 'military', 'defense', 'armed forces', 'invasion', 'military conflict', 'military strikes', 'air strikes', 'bombing'],
+    'US Politics': ['us politics', 'congress', 'senate', 'white house', 'republican', 'democrat', 'trump', 'biden', 'republican party', 'supreme court', 'pentagon'],
+    'European Politics': ['european politics', 'eu', 'european union', 'brexit', 'nato', 'parliament', 'germany', 'france', 'uk', 'hungary', 'spain'],
+    'Asian Politics': ['asian politics', 'china', 'india', 'japan', 'southeast asia', 'asean', 'asia', 'north korea', 'south korea', 'taiwan'],
+    'Middle East': ['middle east', 'iran', 'israel', 'saudi arabia', 'palestine', 'gulf', 'lebanon', 'hezbollah', 'tehran', 'strait of hormuz'],
+    'Latin America': ['latin america', 'brazil', 'mexico', 'argentina', 'colombia', 'venezuela', 'cuba'],
+    'Africa & Oceania': ['africa', 'oceania', 'australia', 'nigeria', 'south africa', 'kenya', 'egypt'],
+    'Human Rights & Civil Liberties': ['human rights', 'civil liberties', 'freedom', 'protest', 'democracy', 'censorship', 'war crimes'],
+    'NFL': ['nfl', 'american football', 'quarterback', 'super bowl', 'touchdown', 'wide receiver', 'running back'],
+    'NBA': ['nba', 'basketball', 'lakers', 'celtics', 'lebron', 'dunk', 'playoffs'],
+    'Soccer/Football': ['soccer', 'football', 'premier league', 'champions league', 'la liga', 'bundesliga', 'serie a', 'mls', 'fifa', 'world cup'],
+    'MLB/Baseball': ['mlb', 'baseball', 'world series', 'home run', 'pitcher'],
+    'Cricket': ['cricket', 'ipl', 'test match', 'ashes', 'world cup cricket', 't20', 'bcci'],
+    'F1 & Motorsport': ['f1', 'formula 1', 'motorsport', 'nascar', 'indycar', 'grand prix', 'racing'],
+    'Boxing & MMA/UFC': ['boxing', 'mma', 'ufc', 'fight', 'knockout', 'heavyweight', 'bout'],
+    'Olympics & Paralympics': ['olympics', 'paralympics', 'olympic games', 'gold medal', 'ioc', 'olympic'],
+    'Oil & Energy': ['oil', 'energy', 'opec', 'natural gas', 'renewable energy', 'petroleum', 'oil prices', 'crude oil', 'energy security', 'nuclear energy'],
+    'Automotive': ['automotive', 'cars', 'tesla', 'ford', 'gm', 'toyota', 'electric vehicles', 'ev'],
+    'Retail & Consumer': ['retail', 'consumer', 'amazon', 'walmart', 'shopping', 'e-commerce'],
+    'Corporate Deals': ['merger', 'acquisition', 'deal', 'takeover', 'ipo', 'corporate'],
+    'Trade & Tariffs': ['trade', 'tariffs', 'sanctions', 'import', 'export', 'trade war', 'supply chain'],
+    'Corporate Earnings': ['earnings', 'quarterly results', 'revenue', 'profit', 'financial results'],
+    'Startups & Venture Capital': ['startup', 'venture capital', 'funding', 'seed round', 'unicorn', 'vc'],
+    'Real Estate': ['real estate', 'property', 'housing', 'mortgage', 'commercial real estate'],
+    'Movies & Film': ['movies', 'film', 'box office', 'hollywood', 'director', 'cinema', 'oscar', 'oscars'],
+    'TV & Streaming': ['tv', 'streaming', 'netflix', 'hbo', 'disney plus', 'series', 'show'],
+    'Music': ['music', 'album', 'concert', 'tour', 'grammy', 'rapper', 'singer', 'beyonce'],
+    'Gaming': ['gaming', 'video games', 'playstation', 'xbox', 'nintendo', 'esports', 'steam'],
+    'Celebrity News': ['celebrity', 'famous', 'scandal', 'gossip', 'paparazzi', 'star', 'billionaire'],
+    'K-Pop & K-Drama': ['k-pop', 'k-drama', 'korean', 'bts', 'blackpink', 'kdrama', 'hallyu'],
+    'AI & Machine Learning': ['ai', 'artificial intelligence', 'machine learning', 'chatgpt', 'openai', 'deep learning', 'llm'],
+    'Smartphones & Gadgets': ['smartphone', 'iphone', 'samsung', 'pixel', 'gadget', 'wearable', 'apple', 'android'],
+    'Social Media': ['social media', 'twitter', 'instagram', 'tiktok', 'facebook', 'meta'],
+    'Cybersecurity': ['cybersecurity', 'hacking', 'data breach', 'ransomware', 'privacy', 'encryption', 'vulnerability'],
+    'Space Tech': ['space tech', 'spacex', 'nasa', 'rocket', 'satellite', 'starship', 'blue origin', 'space exploration'],
+    'Robotics & Hardware': ['robotics', 'robot', 'hardware', 'chip', 'semiconductor', 'nvidia', 'processor'],
+    'Space & Astronomy': ['space', 'astronomy', 'nasa', 'mars', 'telescope', 'galaxy', 'asteroid', 'planet'],
+    'Climate & Environment': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'pollution', 'biodiversity', 'climate change'],
+    'Biology & Nature': ['biology', 'nature', 'wildlife', 'evolution', 'genetics', 'species', 'ecosystem'],
+    'Earth Science': ['earth science', 'geology', 'earthquake', 'volcano', 'ocean', 'weather'],
+    'Medical Breakthroughs': ['medical', 'breakthrough', 'treatment', 'cure', 'clinical trial', 'surgery'],
+    'Public Health': ['public health', 'pandemic', 'vaccine', 'cdc', 'who', 'outbreak', 'disease'],
+    'Mental Health': ['mental health', 'anxiety', 'depression', 'therapy', 'mindfulness', 'wellbeing'],
+    'Pharma & Drug Industry': ['pharma', 'pharmaceutical', 'drug', 'fda', 'medication', 'biotech', 'pharmaceuticals'],
+    'Stock Markets': ['stock market', 'wall street', 'nasdaq', 'sp500', 'dow jones', 'shares', 'trading'],
+    'Banking & Lending': ['banking', 'lending', 'interest rate', 'federal reserve', 'loan', 'credit', 'inflation'],
+    'Commodities': ['commodities', 'gold', 'silver', 'oil price', 'futures', 'copper'],
+    'Bitcoin': ['bitcoin', 'btc', 'satoshi', 'mining', 'halving'],
+    'DeFi & Web3': ['defi', 'web3', 'blockchain', 'smart contract', 'dao', 'decentralized'],
+    'Crypto Regulation & Legal': ['crypto regulation', 'sec', 'crypto law', 'crypto ban', 'crypto tax', 'cryptocurrency'],
+    'Pets & Animals': ['pets', 'animals', 'dog', 'cat', 'veterinary', 'adoption', 'wildlife'],
+    'Home & Garden': ['home', 'garden', 'diy', 'renovation', 'decor', 'landscaping'],
+    'Shopping & Product Reviews': ['shopping', 'product review', 'best buy', 'deal', 'discount', 'gadget review'],
+    'Sneakers & Streetwear': ['sneakers', 'streetwear', 'nike', 'adidas', 'jordan', 'yeezy', 'drop'],
+    'Celebrity Style & Red Carpet': ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'],
+}
+
+def enrich_with_subtopics(interest_tags, title):
+    """Append matching subtopic names to interest_tags list."""
+    if not interest_tags:
+        interest_tags = []
+    tag_set = set(t.lower() for t in interest_tags)
+    title_lower = (title or '').lower()
+    for subtopic, keywords in SUBTOPIC_MAP.items():
+        if subtopic.lower() not in tag_set:
+            if any(kw in tag_set or kw in title_lower for kw in keywords):
+                interest_tags.append(subtopic)
+    return interest_tags
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -521,11 +598,10 @@ clustering_engine = EventClusteringEngine()
 
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
-anthropic_key = os.getenv('ANTHROPIC_API_KEY')
 brightdata_key = os.getenv('BRIGHTDATA_API_KEY')
 
-if not all([gemini_key, anthropic_key, brightdata_key]):
-    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY, BRIGHTDATA_API_KEY)")
+if not all([gemini_key, brightdata_key]):
+    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, BRIGHTDATA_API_KEY)")
 
 # Initialize Bright Data fetcher
 brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
@@ -623,12 +699,20 @@ def fetch_rss_articles(max_articles_per_source=10):
     # Mark new articles as processed (batched for speed)
     if new_articles:
         try:
-            batch_records = [{
-                'article_url': a.get('url'),
-                'source': a.get('source', 'Unknown'),
-                'title': a.get('title', 'No title'),
-                'published_date': a.get('published_date')
-            } for a in new_articles]
+            # Deduplicate by URL within the batch to avoid
+            # "ON CONFLICT DO UPDATE command cannot affect row a second time"
+            seen_urls = set()
+            batch_records = []
+            for a in new_articles:
+                url = a.get('url')
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    batch_records.append({
+                        'article_url': url,
+                        'source': a.get('source', 'Unknown'),
+                        'title': a.get('title', 'No title'),
+                        'published_date': a.get('published_date')
+                    })
             # Batch upsert in chunks of 50
             for i in range(0, len(batch_records), 50):
                 chunk = batch_records[i:i+50]
@@ -657,44 +741,6 @@ def fetch_rss_articles(max_articles_per_source=10):
 # COMPLETE PIPELINE
 # ==========================================
 
-def check_api_health():
-    """Quick health check on Anthropic API before starting pipeline.
-    Catches credit/billing issues early instead of failing on every cluster."""
-    print("🔑 Checking Anthropic API health...")
-    try:
-        test_response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": anthropic_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            },
-            json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 10,
-                "messages": [{"role": "user", "content": "Hi"}]
-            },
-            timeout=15
-        )
-        if test_response.status_code >= 400:
-            try:
-                error_body = test_response.json()
-                error_msg = error_body.get('error', {}).get('message', test_response.text[:500])
-                error_type = error_body.get('error', {}).get('type', 'unknown')
-            except Exception:
-                error_msg = test_response.text[:500]
-                error_type = 'unknown'
-            print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: [{error_type}] {error_msg}")
-            print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
-            return False
-        print("✅ Anthropic API is healthy")
-        return True
-    except Exception as e:
-        print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: {type(e).__name__}: {str(e)[:300]}")
-        print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
-        return False
-
-
 def run_complete_pipeline():
     """Run the complete 9-step clustered news workflow"""
 
@@ -704,9 +750,9 @@ def run_complete_pipeline():
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
 
-    # PRE-CHECK: Verify API keys are working before wasting time
-    if not check_api_health():
-        print("⚠️  Aborting pipeline - Anthropic API not available")
+    # PRE-CHECK: Verify Gemini API key exists
+    if not gemini_key:
+        print("⚠️  Aborting pipeline - GEMINI_API_KEY not set")
         return
 
     # STEP 0: RSS Feed Collection
@@ -804,34 +850,7 @@ def run_complete_pipeline():
             clusters_to_process.append(cluster_id)
     
     print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)} (NEW this cycle)")
-
-    # Also retry recently failed clusters (created in last 6h, not yet published, max 3 attempts)
-    try:
-        retry_cutoff = (datetime.now() - timedelta(hours=6)).isoformat()
-        retry_result = supabase.table('clusters')\
-            .select('id, attempt_count')\
-            .not_('failure_reason', 'is', 'null')\
-            .gte('created_at', retry_cutoff)\
-            .limit(20)\
-            .execute()
-
-        retry_ids = set()
-        if retry_result.data:
-            for c in retry_result.data:
-                cid = c['id']
-                attempts = c.get('attempt_count') or 0
-                if attempts >= 3 or cid in clusters_to_process:
-                    continue
-                # Check not already published
-                pub = supabase.table('published_articles').select('id').eq('cluster_id', cid).execute()
-                if not pub.data:
-                    retry_ids.add(cid)
-            if retry_ids:
-                clusters_to_process.extend(retry_ids)
-                print(f"   🔄 Retrying {len(retry_ids)} previously failed clusters: {sorted(retry_ids)}")
-    except Exception as e:
-        print(f"   ⚠️ Retry check failed: {e}")
-
+    
     if not clusters_to_process:
         print("⚠️  No clusters ready - ending cycle")
         return
@@ -992,6 +1011,22 @@ def run_complete_pipeline():
                     'height': source.get('image_height', 0)
                 })
             
+            # Fetch real dimensions for candidates missing width/height
+            for candidate in all_candidates:
+                if candidate.get('width', 0) == 0 or candidate.get('height', 0) == 0:
+                    try:
+                        resp = requests.get(candidate['url'], timeout=5, stream=True, headers={
+                            'User-Agent': 'Mozilla/5.0 (compatible; TenNewsBot/1.0)'
+                        })
+                        resp.raise_for_status()
+                        # Read up to 512KB to get image header
+                        chunk = resp.raw.read(524288)
+                        resp.close()
+                        img = Image.open(BytesIO(chunk))
+                        candidate['width'], candidate['height'] = img.size
+                    except Exception:
+                        pass  # Keep width=0, height=0 — filter will handle it
+
             valid_candidates = []
             for candidate in all_candidates:
                 if selector._is_valid_image(candidate):
@@ -1026,20 +1061,10 @@ def run_complete_pipeline():
                 print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
             
             if not selected_image:
-                # Only fall back to rule-based if it's from a trusted English-language source
-                fallback = valid_candidates[0]
-                fallback_source = (fallback.get('source_name') or '').lower()
-                trusted_fallback_sources = ['reuters', 'ap', 'afp', 'getty', 'bbc', 'cnn', 'nyt',
-                    'guardian', 'washington post', 'al jazeera english', 'france24', 'dw']
-                if any(t in fallback_source for t in trusted_fallback_sources):
-                    selected_image = {
-                        'url': fallback['url'],
-                        'source_name': fallback['source_name'],
-                        'quality_score': fallback['quality_score']
-                    }
-                    print(f"   ↩️  [Cluster {cluster_id}] Using trusted fallback: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
-                else:
-                    print(f"   ❌ [Cluster {cluster_id}] No suitable image — fallback source '{fallback_source}' not trusted, skipping image")
+                print(f"   ❌ [Cluster {cluster_id}] No images passed AI quality check — skipping article")
+                update_cluster_status(cluster_id, 'failed', 'no_quality_image',
+                    f'All {len(valid_candidates)} candidate images failed AI quality check')
+                return False
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
@@ -1064,69 +1089,80 @@ def run_complete_pipeline():
             if not synthesized:
                 print(f"   ❌ [Cluster {cluster_id}] Synthesis failed")
                 update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
-                    'Claude API failed to synthesize article from sources')
+                    'Gemini API failed to synthesize article from sources')
                 return False
             
-            if selected_image:
-                synthesized['image_url'] = selected_image['url']
-                synthesized['image_source'] = selected_image['source_name']
-                synthesized['image_score'] = selected_image['quality_score']
-
+            synthesized['image_url'] = selected_image['url']
+            synthesized['image_source'] = selected_image['source_name']
+            synthesized['image_score'] = selected_image['quality_score']
+            
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
+            
+            # ==========================================
+            # STEP 6 FIRST: COMPONENT SELECTION (cheap, no grounding)
+            # Then STEP 5: CONTEXT SEARCH (expensive grounding, only if needed)
+            # ==========================================
 
-            # ==========================================
-            # STEPS 5+6: CONTEXT SEARCH + COMPONENT SELECTION (sequential, both Gemini)
-            # ==========================================
-            print(f"\n🔍 [Cluster {cluster_id}] STEP 5: GEMINI CONTEXT SEARCH")
-            
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
-            
-            full_article_text = ""
-            for source in cluster_sources:
-                if source.get('full_text') and len(source.get('full_text', '')) > 100:
-                    full_article_text = source['full_text'][:3000]
-                    break
-            
-            gemini_result = None
-            search_context_text = ""
-            if gemini_key:
-                try:
-                    with gemini_semaphore:
-                        gemini_result = search_gemini_context(
-                            synthesized['title_news'], 
-                            bullets_text,
-                            full_article_text
-                        )
-                    search_context_text = gemini_result.get('results', '') if gemini_result else ""
-                    print(f"   ✅ [Cluster {cluster_id}] Step 5 Complete: ({len(search_context_text)} chars)")
-                except Exception as search_error:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Step 5 Failed: {search_error}")
-                    search_context_text = ""
-            
+
+            # --- STEP 6: Decide which components this article needs ---
             print(f"\n📋 [Cluster {cluster_id}] STEP 6: GEMINI COMPONENT SELECTION")
-            
+
             article_for_selection = {
                 'title': synthesized['title_news'],
                 'text': bullets_text,
                 'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
             }
-            
+
             selected = []
             component_result = {}
             try:
                 with gemini_semaphore:
-                    component_result = component_selector.select_components(article_for_selection, search_context_text)
+                    component_result = component_selector.select_components(article_for_selection)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
                 print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
                 print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                selected = ['timeline', 'details']
+                selected = ['details']
                 component_result = {'components': selected, 'emoji': '📰'}
-            
+
+            # --- STEP 5: Context search ONLY if components need it ---
+            # Components that need Google Search grounding: timeline, details, graph, map
+            # Components that DON'T need search: scorecard, recipe, or empty []
+            components_needing_search = [c for c in selected if c in ('timeline', 'details', 'graph', 'map')]
+
+            gemini_result = None
             context_data = {}
-            if selected and gemini_result:
-                for component in selected:
-                    context_data[component] = gemini_result
+
+            if components_needing_search and gemini_key:
+                print(f"\n🔍 [Cluster {cluster_id}] STEP 5: GEMINI CONTEXT SEARCH (for: {', '.join(components_needing_search)})")
+
+                full_article_text = ""
+                for source in cluster_sources:
+                    if source.get('full_text') and len(source.get('full_text', '')) > 100:
+                        full_article_text = source['full_text'][:3000]
+                        break
+
+                try:
+                    with gemini_semaphore:
+                        gemini_result = search_gemini_context(
+                            synthesized['title_news'],
+                            bullets_text,
+                            full_article_text,
+                            selected_components=components_needing_search
+                        )
+                    search_context_text = gemini_result.get('results', '') if gemini_result else ""
+                    print(f"   ✅ [Cluster {cluster_id}] Step 5 Complete: ({len(search_context_text)} chars)")
+                except Exception as search_error:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Step 5 Failed: {search_error}")
+
+                if gemini_result:
+                    for component in selected:
+                        context_data[component] = gemini_result
+            elif not components_needing_search and selected:
+                print(f"\n⏭️  [Cluster {cluster_id}] STEP 5: SKIPPED (components [{', '.join(selected)}] don't need web search)")
+            elif not selected:
+                print(f"\n⏭️  [Cluster {cluster_id}] STEP 5: SKIPPED (no components selected)")
             
             # ==========================================
             # STEP 7: COMPONENT GENERATION (with retry)
@@ -1136,7 +1172,7 @@ def run_complete_pipeline():
             components = {}
             map_locations = component_result.get('map_locations', []) if isinstance(component_result, dict) else []
             
-            if selected and context_data:
+            if selected:
                 max_component_retries = 3
                 for comp_attempt in range(max_component_retries):
                     try:
@@ -1155,7 +1191,9 @@ def run_complete_pipeline():
                                 'timeline': generation_result.get('timeline'),
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
-                                'map': generation_result.get('map')
+                                'map': generation_result.get('map'),
+                                'scorecard': generation_result.get('scorecard'),
+                                'recipe': generation_result.get('recipe')
                             }
                             components = {k: v for k, v in components.items() if v is not None}
 
@@ -1238,11 +1276,10 @@ def run_complete_pipeline():
                     f'Failed fact verification after {max_verification_attempts} attempts')
                 return False
             
-            if selected_image:
-                synthesized['image_url'] = selected_image['url']
-                synthesized['image_source'] = selected_image['source_name']
-                synthesized['image_score'] = selected_image['quality_score']
-
+            synthesized['image_url'] = selected_image['url']
+            synthesized['image_source'] = selected_image['source_name']
+            synthesized['image_score'] = selected_image['quality_score']
+            
             # STEP 9: Publishing to Supabase
             print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
             
@@ -1289,6 +1326,8 @@ def run_complete_pipeline():
             article_category = synthesized.get('category', 'Other')
             
             article_score = 750  # default
+            shelf_life_days = 1
+            freshness_category = 'short'
             interest_tags = []
             article_countries = []
             article_topics = []
@@ -1312,12 +1351,14 @@ def run_complete_pipeline():
                 
                 try:
                     score_result = score_future.result(timeout=30)
-                    # score_article_with_references returns dict with 'score', 'topic_relevance', 'country_relevance'
+                    # score_article_with_references returns {'score': int, 'topic_relevance': {}, 'country_relevance': {}, 'freshness_category': str, 'shelf_life_days': int}
                     if isinstance(score_result, dict):
-                        article_score = score_result.get('score', 0)
+                        article_score = score_result.get('score', 750)
+                        shelf_life_days = score_result.get('shelf_life_days', 1)
+                        freshness_category = score_result.get('freshness_category', 'medium')
                     else:
-                        article_score = int(score_result) if score_result else 0
-                    print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000")
+                        article_score = int(score_result) if score_result else 750
+                    print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000, shelf_life: {shelf_life_days}d ({freshness_category})")
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Scoring failed: {e}")
                 
@@ -1336,8 +1377,13 @@ def run_complete_pipeline():
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
+            # NOTE: enrich_with_subtopics REMOVED — it was appending onboarding
+            # subtopic names ("Soccer/Football", "AI & Machine Learning", etc.)
+            # to interest_tags, causing wrong articles to appear under Explore entities.
+            # Concept entity ANN tagging (below) handles entity matching now.
+
             five_ws = synthesized.get('five_ws', {})
-            
+
             source_titles = [
                 {
                     'title': s.get('title', 'Unknown'),
@@ -1367,6 +1413,53 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
+            # ANN concept entity tagging: find matching entities via embedding similarity
+            if article_embedding_minilm:
+                try:
+                    emb_str = '[' + ','.join(str(x) for x in article_embedding_minilm) + ']'
+                    ann_result = supabase.rpc('match_concept_entities', {
+                        'query_embedding': emb_str,
+                        'match_threshold': 0.50,
+                        'match_count': 5
+                    }).execute()
+                    if ann_result.data:
+                        concept_tags = [r['entity_name'] for r in ann_result.data]
+                        # Add to interest_tags (avoid duplicates)
+                        existing_lower = {t.lower() for t in interest_tags}
+                        for ct in concept_tags:
+                            if ct.lower() not in existing_lower:
+                                interest_tags.append(ct)
+                                existing_lower.add(ct.lower())
+                        print(f"   🎯 [Cluster {cluster_id}] Concept entities: {concept_tags}")
+                except Exception as e:
+                    # Non-blocking: concept tagging is optional
+                    print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
+
+            # If article has info box components, trim bullets to 450 max
+            # Articles without components keep up to 550 chars
+            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
+            if has_components and isinstance(bullets, list):
+                total_bullet_chars = sum(len(b) for b in bullets)
+                if total_bullet_chars > 450:
+                    trimmed = []
+                    running = 0
+                    for b in bullets:
+                        if running + len(b) <= 450:
+                            trimmed.append(b)
+                            running += len(b)
+                        else:
+                            remaining = 450 - running
+                            if remaining > 30:
+                                truncated = b[:remaining]
+                                cut_at = max(truncated.rfind('.'), truncated.rfind(','))
+                                if cut_at > 30:
+                                    trimmed.append(b[:cut_at + 1].rstrip(','))
+                                else:
+                                    trimmed.append(truncated.rsplit(' ', 1)[0])
+                            break
+                    bullets = trimmed
+                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (has components)")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1379,6 +1472,10 @@ def run_complete_pipeline():
                 'details': components.get('details'),
                 'graph': components.get('graph'),
                 'map': components.get('map'),
+                'scorecard': components.get('scorecard'),
+                'recipe': components.get('recipe'),
+                'article_type': component_result.get('article_type', 'standard') if isinstance(component_result, dict) else 'standard',
+                'emoji': component_result.get('emoji') if isinstance(component_result, dict) else None,
                 'components_order': successful_components,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
@@ -1390,6 +1487,8 @@ def run_complete_pipeline():
                 'image_source': synthesized.get('image_source'),
                 'image_score': synthesized.get('image_score'),
                 'source_titles': source_titles,
+                'shelf_life_days': shelf_life_days,
+                'freshness_category': freshness_category,
                 'embedding': article_embedding,
                 'embedding_minilm': article_embedding_minilm,
             }
@@ -1464,8 +1563,8 @@ def run_complete_pipeline():
 
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
-    Synthesize one article from multiple sources using Claude (better rate limits than Gemini)
-    
+    Synthesize one article from multiple sources using Gemini.
+
     Args:
         sources: List of source articles
         cluster_id: Cluster ID
@@ -1474,14 +1573,8 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import requests
     import json
     import time
-    
-    # Use Claude API (better rate limits than Gemini)
-    claude_url = "https://api.anthropic.com/v1/messages"
-    claude_headers = {
-        "x-api-key": anthropic_key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
+
+    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -1523,7 +1616,12 @@ ISSUES FOUND IN PREVIOUS VERSION:
 
 """
     
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     prompt = f"""You are synthesizing information from {len(limited_sources)} sources about the same event.
+
+⚠️ TODAY'S DATE: {today_str}
+Use this date as context. All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
 SOURCES:
 {sources_text}
@@ -1538,8 +1636,7 @@ You are a professional news editor for Ten News, synthesizing multiple source ar
 
 You will produce:
   • TITLE: Punchy headline (40-60 chars)
-  • BULLETS: 3 narrative bullets for reading (80-100 chars each)
-  • 5 W's: Structured quick-reference factsheet (WHO/WHAT/WHEN/WHERE/WHY)
+  • BULLETS: Narrative bullets for reading (250-450 chars total, as many as the story needs)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ CORE WRITING PRINCIPLES
@@ -1626,96 +1723,35 @@ EXAMPLES:
   ✓ "**Bitcoin** Crashes **15%** as Mt. Gox Repayments Begin" (48 chars)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 SUMMARY BULLETS (Exactly 3 bullets)
+🔹 SUMMARY BULLETS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PURPOSE: Narrative summary for readers who want context and flow.
 
-LENGTH: 80-100 characters per bullet (15-20 words)
-
-STRUCTURE (Inverted Pyramid):
-  • Bullet 1: WHAT happened (the core news fact not already in title)
-  • Bullet 2: WHO/HOW (key players, names, method, cause)
-  • Bullet 3: WHY IT MATTERS (significance, impact, what's next)
+TOTAL LENGTH: Minimum 250 characters, maximum 550 characters across ALL bullets combined.
+HARD LIMIT: Do NOT exceed 550 characters total. Count your characters. If you have 3 bullets at 180 chars each, that's 540 — close to the max.
+NUMBER OF BULLETS: Write 2-3 bullets (minimum 2, maximum 3).
+  - Simple story (sports score, death announcement): 2 bullets with context
+  - Medium story: 2-3 bullets
+  - Complex story (geopolitics, policy): 3 shorter bullets
+  - IMPORTANT: Every article MUST reach 250 chars total. Add context, numbers, or background details.
+  - IMPORTANT: Keep each bullet under 190 characters. 3 bullets × 180 chars = 540 max.
 
 WRITING RULES:
   ✓ Each bullet provides NEW information not in the title
-  ✓ Include specific numbers in at least 2 bullets
-  ✓ Use parallel structure (all bullets start with same part of speech)
+  ✓ Include specific numbers where possible
   ✓ Active voice, present tense
   ✓ Front-load important words
-  ✓ All bullets approximately equal length
   ✓ 2-3 **bold** highlights per bullet
 
-PARALLEL STRUCTURE EXAMPLE:
-  ✓ GOOD (all start with subject + verb):
-    • Fed raises rates to 5.5%, highest level since 2007
-    • Markets drop 2% following the announcement
-    • Economists predict two more increases this year
+EXAMPLES:
+  1 bullet (simple story):
+  • "**PSG** dominated with goals from **Dembélé**, **Barcola**, and **Doué** to eliminate Chelsea from the Champions League"
 
-  ✗ BAD (inconsistent structure):
-    • The Fed raised rates to 5.5%
-    • A 2% market drop followed
-    • Economists are predicting more increases
-
-EXAMPLES (80-100 chars):
-  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**" (95 chars)
-  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 loss" (93 chars)
-  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week" (89 chars)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 5 W's QUICK REFERENCE (Exactly 5 fields)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PURPOSE: Structured factsheet for quick scanning and at-a-glance reference.
-
-STRUCTURE:
-  • WHO: Key people and organizations involved (20-50 chars)
-  • WHAT: The core action or event (30-60 chars)
-  • WHEN: Specific timing (15-40 chars)
-  • WHERE: Location(s) affected (20-50 chars)
-  • WHY: Cause or reason (30-60 chars)
-
-WRITING RULES:
-  ✓ Short, punchy phrases (not full sentences)
-  ✓ Most important entity/fact first in each field
-  ✓ Include specific numbers where relevant
-  ✓ 1-2 **bold** highlights per field
-  ✓ No repetition across fields
-  ✓ Can omit articles and verbs for brevity
-
-EXAMPLE:
-
-  five_ws: {{
-    "who": "**Tesla**, CEO **Elon Musk**",
-    "what": "Cutting **14,000** jobs (**10%** of workforce)",
-    "when": "Announced **Wednesday**, effective **Q2 2024**",
-    "where": "**US**, **Europe**, and **Asia** factories",
-    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
-  }}
-
-MORE EXAMPLES BY CATEGORY:
-
-  FINANCE:
-    "who": "**Federal Reserve**, Chair **Jerome Powell**",
-    "what": "Holds interest rates at **5.5%**",
-    "when": "**Wednesday**, sixth consecutive meeting",
-    "where": "**US** economy, global markets",
-    "why": "Inflation remains above **2%** target"
-
-  TECH:
-    "who": "**Apple**, CEO **Tim Cook**",
-    "what": "Launches **iPhone 16** with **AI** features",
-    "when": "**September 12**, available **September 20**",
-    "where": "**29 countries** at launch",
-    "why": "Competing with **Samsung** Galaxy AI push"
-
-  CRYPTO:
-    "who": "**Mt. Gox** creditors, **Bitcoin** holders",
-    "what": "**$9B** in Bitcoin repayments begin",
-    "when": "Starting **July 2024**, over 90 days",
-    "where": "Global, primarily **Japan** and **US**",
-    "why": "Court-ordered distribution after 2014 hack"
+  3 bullets (complex story):
+  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**"
+  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD**"
+  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
@@ -1738,8 +1774,7 @@ WHAT NOT TO HIGHLIGHT:
 
 HIGHLIGHT COUNTS:
   • Title: 2-3 highlights
-  • Bullets: 2-3 highlights per bullet (6-9 total)
-  • 5 W's: 1-2 highlights per field (5-10 total)
+  • Bullets: 2-3 highlights per bullet
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
@@ -1748,18 +1783,10 @@ HIGHLIGHT COUNTS:
 {{
   "title": "40-60 char title with **2-3 bold** terms",
   "summary_bullets": [
-    "WHAT: 80-100 chars, **2-3 highlights**",
-    "WHO/HOW: 80-100 chars, **2-3 highlights**",
-    "WHY IT MATTERS: 80-100 chars, **2-3 highlights**"
+    "Bullet with **2-3 highlights** — as many bullets as the story needs",
+    "Min 250, max 550 chars total across all bullets"
   ],
-  "five_ws": {{
-    "who": "Key people/orgs, 20-50 chars, **1-2 highlights**",
-    "what": "Core action, 30-60 chars, **1-2 highlights**",
-    "when": "Timing, 15-40 chars, **1-2 highlights**",
-    "where": "Location(s), 20-50 chars, **1-2 highlights**",
-    "why": "Cause/reason, 30-60 chars, **1-2 highlights**"
-  }},
-  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Food|Fashion|Travel|Lifestyle"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1770,18 +1797,10 @@ HIGHLIGHT COUNTS:
   "title": "**Tesla** Cuts **14,000** Jobs Amid Global EV Sales Slump",
 
   "summary_bullets": [
-    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia** factories",
-    "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 sales loss",
-    "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week alone"
+    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**",
+    "CEO **Elon Musk** blames overcapacity and price war with Chinese rival **BYD** after Q4 loss",
+    "Stock tumbles **8%** to **$165**, erasing **$50B** in market value"
   ],
-
-  "five_ws": {{
-    "who": "**Tesla**, CEO **Elon Musk**",
-    "what": "Cutting **14,000** jobs (**10%** of workforce)",
-    "when": "Announced **Wednesday**, effective **Q2 2024**",
-    "where": "**US**, **Europe**, and **Asia** factories",
-    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
-  }},
 
   "category": "Business"
 }}
@@ -1798,20 +1817,12 @@ TITLE:
   □ 2-3 highlights
 
 BULLETS:
-  □ Exactly 3 bullets
-  □ Each 80-100 characters
-  □ Bullet 1 = What happened
-  □ Bullet 2 = Who/How
-  □ Bullet 3 = Why it matters
-  □ Parallel structure
+  □ At least 1 bullet
+  □ Minimum 250 characters total across all bullets
+  □ Maximum 450 characters total across all bullets
+  □ Each bullet adds NEW info not in the title
   □ 2-3 highlights per bullet
 
-5 W's:
-  □ All 5 fields completed (WHO/WHAT/WHEN/WHERE/WHY)
-  □ Short phrases, not full sentences
-  □ Specific facts in each field
-  □ 1-2 highlights per field
-  □ No repetition across fields
 
 CRITICAL RULES:
 1. ALWAYS output valid JSON - never explanations or commentary
@@ -1825,18 +1836,18 @@ Return ONLY valid JSON, no markdown, no explanations."""
     # Try up to 5 times with exponential backoff
     for attempt in range(5):
         try:
-            # Build Claude API request
+            # Build Gemini API request
             request_data = {
-                "model": "claude-sonnet-4-5-20250929",
-                "max_tokens": 2048,
-                "temperature": 0.3,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0,
+                    "maxOutputTokens": 2048,
+                    "responseMimeType": "application/json"
+                }
             }
-            
-            response = requests.post(claude_url, headers=claude_headers, json=request_data, timeout=60)
-            
+
+            response = requests.post(gemini_synthesis_url, json=request_data, timeout=60)
+
             # Handle rate limiting with exponential backoff
             if response.status_code == 429:
                 wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
@@ -1845,66 +1856,96 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 continue
 
             if response.status_code >= 400:
-                # Log the actual error body for debugging
                 try:
                     error_body = response.json()
-                    error_msg = error_body.get('error', {}).get('message', response.text[:500])
-                    error_type = error_body.get('error', {}).get('type', 'unknown')
-                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): [{error_type}] {error_msg}")
+                    error_msg = str(error_body.get('error', {}).get('message', response.text[:500]))
+                    print(f"   ⚠️  Gemini API error (attempt {attempt + 1}/5): {error_msg[:300]}")
                 except Exception:
-                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
+                    print(f"   ⚠️  Gemini API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
                 if attempt < 4:
                     time.sleep(3)
                 continue
 
             response_json = response.json()
-            
-            # Check if response has expected structure
-            if 'content' not in response_json or not response_json['content']:
-                print(f"   ⚠️  No content in Claude response (attempt {attempt + 1}/5)")
-                print(f"      Response: {str(response_json)[:200]}")
+
+            # Get response text from Gemini format
+            candidates = response_json.get('candidates', [])
+            if not candidates:
+                print(f"   ⚠️  No candidates in Gemini response (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Get response text from Claude format
-            response_text = response_json['content'][0].get('text', '')
-            
+
+            response_text = candidates[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+
             if not response_text:
-                print(f"   ⚠️  Empty response from Claude (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Empty response from Gemini (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
+
             # Clean response (remove markdown if present)
             response_text = response_text.replace('```json', '').replace('```', '').strip()
-            
-            # Debug: Check if response is empty after cleaning
+
             if not response_text:
                 print(f"   ⚠️  Response empty after cleaning (attempt {attempt + 1}/5)")
-                print(f"      Original length: {len(response_json['content'][0].get('text', ''))}")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Check if Claude returned commentary instead of JSON
+
+            # Check if model returned commentary instead of JSON
             if response_text.startswith('Looking') or response_text.startswith('I ') or not response_text.startswith('{'):
-                print(f"   ⚠️  Claude returned text instead of JSON (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Gemini returned text instead of JSON (attempt {attempt + 1}/5)")
                 print(f"      Preview: {response_text[:100]}...")
                 if attempt < 4:
                     time.sleep(3)
                     continue
                 return None
-            
+
             # Parse JSON
             result = json.loads(response_text)
-            
-            # Validate required fields (new format with 5W's - no content field)
-            required = ['title', 'summary_bullets', 'five_ws', 'category']
+
+            # Validate required fields
+            required = ['title', 'summary_bullets', 'category']
             if all(k in result for k in required):
+                # Check bullet length (250-550 chars total; will be trimmed to 450 later if article has components)
+                bullets = result.get('summary_bullets', [])
+                total_bullet_chars = sum(len(b) for b in bullets) if bullets else 0
+                if total_bullet_chars < 250:
+                    print(f"   ⚠️  Bullets too short: {total_bullet_chars} chars (min 250) (attempt {attempt + 1}/5)")
+                    if attempt < 4:
+                        time.sleep(3)
+                        continue
+                    # On last attempt, accept what we have rather than failing
+                elif total_bullet_chars > 550:
+                    print(f"   ⚠️  Bullets too long: {total_bullet_chars} chars (max 550) (attempt {attempt + 1}/5)")
+                    if attempt < 4:
+                        time.sleep(3)
+                        continue
+                    # On last attempt, trim bullets to fit under 550
+                    trimmed = []
+                    running = 0
+                    for b in bullets:
+                        if running + len(b) <= 550:
+                            trimmed.append(b)
+                            running += len(b)
+                        else:
+                            remaining = 550 - running
+                            if remaining > 30:
+                                truncated = b[:remaining]
+                                last_period = truncated.rfind('.')
+                                last_comma = truncated.rfind(',')
+                                cut_at = max(last_period, last_comma)
+                                if cut_at > 30:
+                                    trimmed.append(b[:cut_at + 1].rstrip(','))
+                                else:
+                                    trimmed.append(truncated.rsplit(' ', 1)[0])
+                            break
+                    result['summary_bullets'] = trimmed
+                    print(f"   ✂️  Trimmed to {sum(len(b) for b in trimmed)} chars ({len(trimmed)} bullets)")
                 # Map to old field names for backward compatibility
                 result['title_news'] = result['title']
                 result['summary_bullets_news'] = result['summary_bullets']
@@ -1916,7 +1957,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     time.sleep(3)
                     continue
                 return None
-            
+
         except json.JSONDecodeError as e:
             print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
             print(f"      Response preview: {response_text[:200] if response_text else 'EMPTY'}...")
@@ -1924,21 +1965,21 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 time.sleep(3)
                 continue
             return None
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = str(e)
             print(f"   ⚠️  API error (attempt {attempt + 1}/5): {error_msg[:100]}")
             if attempt < 4:
                 time.sleep(3)
             continue
-            
+
         except Exception as e:
             print(f"   ⚠️  Synthesis error (attempt {attempt + 1}/5): {str(e)[:100]}")
             if attempt < 4:
                 time.sleep(3)
                 continue
             return None
-    
+
     print(f"   ❌ Failed after 5 attempts")
     return None
 
@@ -1988,9 +2029,9 @@ def main():
     print("  🔗 Cluster similar events")
     print("  📡 Fetch full article text")
     print("  ✍️  Synthesize multi-source articles")
-    print("  🔍 Step 5: Search for context (Gemini)")
     print("  📋 Step 6: Select components (Gemini)")
-    print("  📊 Step 7: Generate components (Claude)")
+    print("  🔍 Step 5: Search for context (Gemini, only if needed)")
+    print("  📊 Step 7: Generate components (Gemini)")
     print("  🔬 Verify facts (catch hallucinations)")
     print("  💾 Publish to Supabase")
     print("\nPress Ctrl+C to stop")

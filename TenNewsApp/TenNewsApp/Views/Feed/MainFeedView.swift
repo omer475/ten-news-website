@@ -95,6 +95,11 @@ struct MainFeedView: View {
                 viewModel.recordSwipeAway(fromIndex: oldIndex)
             }
 
+            // Scroll-back detection: swiping backward = strong positive for the revisited article
+            if newIndex < oldIndex {
+                viewModel.recordRevisit(at: newIndex)
+            }
+
             currentPageIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)  // reading history only, no analytics event

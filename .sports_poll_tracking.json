@@ -1,0 +1,128 @@
+{
+  "epl_740876": {
+    "sport": "epl",
+    "event_name": "Chelsea at Aston Villa",
+    "published_article_id": 38790,
+    "processed_at": "2026-03-04T23:19:16.993829"
+  },
+  "epl_740878": {
+    "sport": "epl",
+    "event_name": "Arsenal at Brighton & Hove Albion",
+    "published_article_id": 38791,
+    "processed_at": "2026-03-04T23:19:19.551248"
+  },
+  "epl_740880": {
+    "sport": "epl",
+    "event_name": "West Ham United at Fulham",
+    "published_article_id": 38792,
+    "processed_at": "2026-03-04T23:19:21.987066"
+  },
+  "epl_740882": {
+    "sport": "epl",
+    "event_name": "Nottingham Forest at Manchester City",
+    "published_article_id": 38793,
+    "processed_at": "2026-03-04T23:19:24.480552"
+  },
+  "epl_740883": {
+    "sport": "epl",
+    "event_name": "Manchester United at Newcastle United",
+    "published_article_id": 38794,
+    "processed_at": "2026-03-04T23:19:26.878066"
+  },
+  "la_liga_748372": {
+    "sport": "la_liga",
+    "event_name": "Real Oviedo at Rayo Vallecano",
+    "published_article_id": 38795,
+    "processed_at": "2026-03-04T23:19:31.061689"
+  },
+  "bundesliga_746866": {
+    "sport": "bundesliga",
+    "event_name": "Bayer Leverkusen at Hamburg SV",
+    "published_article_id": 38796,
+    "processed_at": "2026-03-04T23:19:35.820349"
+  },
+  "europa_401858782": {
+    "sport": "europa",
+    "event_name": "Ludogorets Razgrad at Ferencvaros",
+    "published_article_id": 38797,
+    "processed_at": "2026-03-04T23:19:41.433370"
+  },
+  "europa_401858783": {
+    "sport": "europa",
+    "event_name": "Lille at Red Star Belgrade",
+    "published_article_id": null,
+    "processed_at": "2026-03-04T23:19:43.765806"
+  },
+  "europa_401858779": {
+    "sport": "europa",
+    "event_name": "Celtic at VfB Stuttgart",
+    "published_article_id": 38798,
+    "processed_at": "2026-03-04T23:19:45.214233"
+  },
+  "europa_401858785": {
+    "sport": "europa",
+    "event_name": "Panathinaikos at Viktoria Plzen",
+    "published_article_id": 38799,
+    "processed_at": "2026-03-04T23:19:47.540149"
+  },
+  "europa_401858778": {
+    "sport": "europa",
+    "event_name": "SK Brann at Bologna",
+    "published_article_id": null,
+    "processed_at": "2026-03-04T23:19:49.916908"
+  },
+  "europa_401858784": {
+    "sport": "europa",
+    "event_name": "PAOK Salonika at Celta Vigo",
+    "published_article_id": null,
+    "processed_at": "2026-03-04T23:19:51.242181"
+  },
+  "europa_401858780": {
+    "sport": "europa",
+    "event_name": "Fenerbahce at Nottingham Forest",
+    "published_article_id": null,
+    "processed_at": "2026-03-04T23:19:52.266738"
+  },
+  "europa_401858781": {
+    "sport": "europa",
+    "event_name": "Dinamo Zagreb at Racing Genk",
+    "published_article_id": 38800,
+    "processed_at": "2026-03-04T23:19:53.623912"
+  },
+  "mls_761469": {
+    "sport": "mls",
+    "event_name": "Houston Dynamo FC at New England Revolution",
+    "published_article_id": 38801,
+    "processed_at": "2026-03-04T23:19:58.023142"
+  },
+  "nfl_401772988": {
+    "sport": "nfl",
+    "event_name": "Seattle Seahawks at New England Patriots",
+    "published_article_id": 38802,
+    "processed_at": "2026-03-04T23:20:04.526679"
+  },
+  "mlb_401833052": {
+    "sport": "mlb",
+    "event_name": "Houston Astros at Baltimore Orioles",
+    "published_article_id": 38803,
+    "processed_at": "2026-03-04T23:20:08.746289"
+  },
+  "mlb_401833053": {
+    "sport": "mlb",
+    "event_name": "New York Yankees at Boston Red Sox",
+    "published_article_id": 38804,
+    "processed_at": "2026-03-04T23:20:11.186822"
+  },
+  "mlb_401833051": {
+    "sport": "mlb",
+    "event_name": "Arizona Diamondbacks at Athletics Athletics",
+    "published_article_id": 38805,
+    "processed_at": "2026-03-04T23:20:13.627919"
+  },
+  "mlb_401833054": {
+    "sport": "mlb",
+    "event_name": "Chicago Cubs at Milwaukee Brewers",
+    "published_article_id": 38806,
+    "processed_at": "2026-03-04T23:20:15.912455"
+  }
+}

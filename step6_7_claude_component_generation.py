@@ -50,7 +50,7 @@ Generate ONLY the selected components.
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Generate EXACTLY 3 fact cards with NEW information.
+Generate EXACTLY 3 fact cards with NEW information. Always 3 — no more, no less.
 
 CRITICAL RULE: No duplicates from bullet summary.
 
@@ -78,6 +78,8 @@ BAD DETAILS (never do):
 ✗ Duplicates from bullets
 ✗ No number: {"label": "Status", "value": "Ongoing"}
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
+✗ Filler: {"label": "Age", "value": "43 years"} when age adds nothing
+✗ Fewer than 3 or more than 3 details
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE
@@ -705,10 +707,12 @@ class GeminiComponentWriter:
                 # Too many events - just trim to 4 instead of failing
                 result['timeline'] = result['timeline'][:4]
 
-        # --- DETAILS validation (relaxed: keep details with or without numbers) ---
+        # --- DETAILS validation (exactly 3 required) ---
         if 'details' in selected_components:
-            if 'details' not in result:
-                errors.append("Details selected but not in output")
+            if 'details' not in result or not isinstance(result['details'], list) or len(result['details']) == 0:
+                errors.append("Details selected but missing or empty — need exactly 3")
+                if 'details' in result:
+                    del result['details']
             else:
                 valid_details = []
                 details_with_numbers = []
@@ -723,15 +727,12 @@ class GeminiComponentWriter:
                         if any(char.isdigit() for char in detail):
                             details_with_numbers.append(detail)
 
-                # Prefer details with numbers, but accept without if that's all we have
-                if len(details_with_numbers) >= 3:
-                    result['details'] = details_with_numbers[:3]
-                elif len(valid_details) >= 2:
-                    # Use whatever valid details we have (at least 2)
-                    result['details'] = valid_details[:3]
-                    errors.append(f"Only {len(details_with_numbers)} details have numbers, using {len(result['details'])} valid details")
+                # Prefer details with numbers, require exactly 3
+                best_details = details_with_numbers if len(details_with_numbers) >= 3 else valid_details
+                if len(best_details) >= 3:
+                    result['details'] = best_details[:3]
                 else:
-                    errors.append(f"Only {len(valid_details)} valid details (need at least 2)")
+                    errors.append(f"Only {len(best_details)} valid details (need exactly 3)")
                     del result['details']
 
         # --- GRAPH validation ---

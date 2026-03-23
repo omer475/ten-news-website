@@ -2,7 +2,7 @@ import Foundation
 
 /// Real-time client-side feed re-ranker.
 /// Tracks dwell time per article as the user swipes.
-/// Fast swipe (<3s) = skip signal. Engaged (>=5s) = interest signal.
+/// 4-tier dwell signals: hard skip (<1.5s), soft skip (1.5-3s), neutral (3-5s), engaged (>=5s).
 /// Re-ranks unseen articles instantly using tag/category overlap with session signals.
 @MainActor @Observable
 final class SessionReRanker {
@@ -14,7 +14,8 @@ final class SessionReRanker {
     private var interestProfile: [String: Double] = [:]
     private var skipProfile: [String: Double] = [:]
 
-    private let skipThreshold: TimeInterval = 3.0
+    private let hardSkipThreshold: TimeInterval = 1.5
+    private let softSkipThreshold: TimeInterval = 3.0
     private let engageThreshold: TimeInterval = 5.0
 
     // MARK: - Record Signal
@@ -22,7 +23,8 @@ final class SessionReRanker {
     func recordSignal(article: Article, dwellSeconds: TimeInterval) {
         let tags = articleTags(article)
 
-        if dwellSeconds < skipThreshold {
+        if dwellSeconds < hardSkipThreshold {
+            // Hard skip: didn't even read headline — strong negative
             skippedIds.insert(article.id.stringValue)
             for tag in tags {
                 skipProfile[tag] = (skipProfile[tag] ?? 0) + 1.0
@@ -30,7 +32,17 @@ final class SessionReRanker {
             if let cat = article.category?.lowercased() {
                 skipProfile[cat] = (skipProfile[cat] ?? 0) + 0.5
             }
+        } else if dwellSeconds < softSkipThreshold {
+            // Soft skip: read headline but wasn't interested — moderate negative
+            skippedIds.insert(article.id.stringValue)
+            for tag in tags {
+                skipProfile[tag] = (skipProfile[tag] ?? 0) + 0.4
+            }
+            if let cat = article.category?.lowercased() {
+                skipProfile[cat] = (skipProfile[cat] ?? 0) + 0.2
+            }
         } else if dwellSeconds >= engageThreshold {
+            // Engaged: spent meaningful time — positive signal
             engagedIds.insert(article.id.stringValue)
             for tag in tags {
                 interestProfile[tag] = (interestProfile[tag] ?? 0) + 1.0
@@ -39,7 +51,20 @@ final class SessionReRanker {
                 interestProfile[cat] = (interestProfile[cat] ?? 0) + 0.5
             }
         }
-        // 2-5s = neutral, no signal
+        // 3-5s = neutral, no signal
+    }
+
+    /// Scroll-back = very strong positive signal (4x weight).
+    /// User saw the next article, decided this one was more interesting, went back.
+    func recordRevisit(article: Article) {
+        engagedIds.insert(article.id.stringValue)
+        let tags = articleTags(article)
+        for tag in tags {
+            interestProfile[tag] = (interestProfile[tag] ?? 0) + 4.0
+        }
+        if let cat = article.category?.lowercased() {
+            interestProfile[cat] = (interestProfile[cat] ?? 0) + 2.0
+        }
     }
 
     /// Source click = strongest engagement signal (3× weight)

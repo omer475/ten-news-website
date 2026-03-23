@@ -317,17 +317,39 @@ Only output topics with relevance >= 30. Only output countries with relevance >=
 
 ---
 
+## FRESHNESS CLASSIFICATION
+
+IMPORTANT: Most news expires FAST. Default to 1 day unless there's a clear reason for longer.
+
+| Category | freshness_category | shelf_life_days | Examples |
+|----------|-------------------|-----------------|----------|
+| Breaking | "breaking" | 1 | Wars, attacks, election results, disasters, major deaths, arrests, Oscar winners, game scores |
+| Short | "short" | 1-2 | Sports results, transfers, stock moves, product launches, album releases, political statements, crypto prices, weather events |
+| Medium | "medium" | 3-5 | In-depth investigations, feature interviews, policy analysis, deep explainers, documentary releases |
+| Evergreen | "evergreen" | 14-30 | Recipes, health guides, how-tos, workout routines, travel guides, educational content |
+
+CRITICAL RULES:
+- If the headline contains TODAY's date, a score, "wins", "loses", "signs", "announces", "launches", "crashes" → shelf_life = 1
+- Sports scores, transfer news, earnings reports, stock movements → ALWAYS 1 day
+- Oscar results, award shows, election results → ALWAYS 1 day
+- Default should be 1, not 5. Only increase if the article has lasting analytical value.
+- Ask yourself: "Will anyone care about this specific article in 3 days?" If no → shelf_life = 1
+
+---
+
 ## OUTPUT FORMAT
 
-Return ONLY a JSON object with the score and relevance:
+Return ONLY a JSON object with the score, relevance, and freshness:
 
 ```json
-{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}}
+{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}, "freshness_category": "short", "shelf_life_days": 1}
 ```
 
 - `topic_relevance`: only include topics with relevance >= 30
 - `country_relevance`: only include countries with relevance >= 20 (national importance, NOT geographic)
 - If no topics/countries are relevant, use empty objects: `{}`
+- `freshness_category`: one of "breaking", "short", "medium", "evergreen"
+- `shelf_life_days`: integer, how many days this article stays relevant
 """
 
 
@@ -742,7 +764,7 @@ Both deserve visibility. Score accordingly.
     for bullet in bullets:
         article_text += f"- {bullet}\n"
     
-    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}}'
+    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}, "freshness_category": "short|medium|breaking|evergreen", "shelf_life_days": N}'
     
     # Prepare request
     request_data = {
@@ -844,7 +866,14 @@ Both deserve visibility. Score accordingly.
                         else:
                             country_relevance = {}
 
-                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance}
+                        # Extract freshness fields
+                        freshness_category = parsed.get('freshness_category', 'short') if isinstance(parsed, dict) else 'short'
+                        shelf_life_days = parsed.get('shelf_life_days', 1) if isinstance(parsed, dict) else 1
+                        if freshness_category not in ('breaking', 'short', 'medium', 'evergreen'):
+                            freshness_category = 'short'
+                        shelf_life_days = max(1, min(30, int(shelf_life_days))) if shelf_life_days else 1
+
+                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance, 'freshness_category': freshness_category, 'shelf_life_days': shelf_life_days}
 
                     except json.JSONDecodeError:
                         # Try to extract score from text
@@ -914,32 +943,41 @@ def score_article_with_references(
 # INTEREST TAGS GENERATION (for personalization)
 # ============================================================
 
-INTEREST_TAGS_PROMPT = """You are a news content tagger. Extract 4-8 keywords/tags from this article for personalization matching.
+INTEREST_TAGS_PROMPT = """You are a news content tagger. Extract 4-8 tags from this article for personalization.
+
+**CRITICAL: Salience rule — only tag what the article is ABOUT, not what it merely mentions.**
+- If "Manchester United" appears because the article compares them to another team, do NOT tag "manchester united" — the article is not about them.
+- If a person is quoted as a source/expert but the article is not about them, do NOT tag that person.
+- Only tag entities/topics where the article would appear in a dedicated feed for that tag.
+
+**Tag types (ordered by priority):**
+1. **Primary entities** (MOST IMPORTANT): The specific people, orgs, teams, or products the article is ABOUT.
+   Tag the full name: "manchester united" not just "united". "donald trump" not just "trump".
+2. **Core topics**: The 1-2 main themes (e.g., "electric vehicles", "climate change").
+3. **Broad category**: One broad area (e.g., "soccer", "tech", "politics").
 
 **Rules:**
-1. Include a MIX of:
-   - **Entities**: Specific people, companies, places (e.g., "elon musk", "tesla", "california")
-   - **Topics**: General themes (e.g., "electric vehicles", "artificial intelligence", "climate change")
-   - **Categories**: Broad areas (e.g., "tech", "politics", "finance", "health")
-
-2. Keywords should be:
-   - Lowercase
-   - 1-3 words each
-   - Specific enough to be useful for matching
-   - A mix of narrow (specific) and broad (general) terms
-
-3. Return ONLY a JSON array of strings, nothing else.
+- Lowercase, 1-4 words each
+- Put the MOST relevant tags first (primary subject → secondary → broad)
+- Max 8 tags. Prefer fewer precise tags over many vague ones.
+- Do NOT include tags for entities only mentioned in passing or as comparisons.
+- Return ONLY a JSON array of strings, nothing else.
 
 **Examples:**
 
 Article: "Tesla Stock Surges 15% After Record Q4 Deliveries"
-["tesla", "elon musk", "electric vehicles", "stock market", "automotive", "tech", "earnings"]
+["tesla", "elon musk", "electric vehicles", "stock market", "earnings"]
+
+Article: "Tottenham Sack Manager Igor Tudor After 4 Straight Losses"
+["tottenham hotspur", "igor tudor", "premier league", "soccer"]
+(NOT "arsenal" or "west ham" even if mentioned as upcoming opponents)
 
 Article: "WHO Declares New Vaccine 95% Effective Against Bird Flu"
-["world health organization", "bird flu", "vaccine", "pandemic", "health", "medicine", "infectious disease"]
+["world health organization", "bird flu", "vaccine", "pandemic", "health"]
 
 Article: "Apple and Google Partner on AI After Siri Struggles"
-["apple", "google", "artificial intelligence", "siri", "tech partnership", "big tech", "voice assistant"]
+["apple", "google", "artificial intelligence", "siri", "tech"]
+(NOT "samsung" or "alexa" even if mentioned for comparison)
 
 ---
 

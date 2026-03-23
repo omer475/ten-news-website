@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ten News — Cloud Run Pipeline Architecture</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232738;
+    --border: #2e3347;
+    --text: #e2e4ed;
+    --text-dim: #8b8fa7;
+    --accent: #6c8cff;
+    --green: #34d399;
+    --green-dim: rgba(52,211,153,.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,.12);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,.12);
+    --orange: #fb923c;
+    --orange-dim: rgba(251,146,60,.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,.10);
+    --cyan: #22d3ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    background: linear-gradient(180deg, rgba(108,140,255,.08) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 320px; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    border-radius: 2px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  /* ── Legend ──────────────────────────────────── */
+  .legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Layout ─────────────────────────────────── */
+  .layout {
+    display: flex;
+    max-width: 1440px;
+    margin: 0 auto;
+    min-height: calc(100vh - 160px);
+  }
+  .main {
+    flex: 1;
+    padding: 32px 40px 64px;
+    overflow-y: auto;
+  }
+  .sidebar {
+    width: 320px;
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    padding: 24px;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  /* ── Section titles ─────────────────────────── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin: 32px 0 16px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* ── Flowchart ──────────────────────────────── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Arrow connector */
+  .arrow {
+    width: 2px;
+    height: 32px;
+    background: var(--border);
+    position: relative;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--border);
+  }
+  .arrow.blue { background: var(--blue); }
+  .arrow.blue::after { border-top-color: var(--blue); }
+  .arrow.green { background: var(--green); }
+  .arrow.green::after { border-top-color: var(--green); }
+  .arrow.long { height: 48px; }
+
+  /* ── Step cards ─────────────────────────────── */
+  .step-card {
+    width: 100%;
+    max-width: 600px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .step-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(108,140,255,.08);
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .step-header:hover { background: rgba(255,255,255,.02); }
+  .step-number {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: -.2px;
+  }
+  .step-number.trigger { background: var(--purple-dim); color: var(--purple); }
+  .step-number.process { background: var(--blue-dim); color: var(--blue); }
+  .step-number.api { background: var(--orange-dim); color: var(--orange); }
+  .step-number.success { background: var(--green-dim); color: var(--green); }
+  .step-number.filter { background: var(--red-dim); color: var(--red); }
+
+  .step-info { flex: 1; min-width: 0; }
+  .step-title {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .step-chevron {
+    color: var(--text-dim);
+    transition: transform .2s;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .step-card.open .step-chevron { transform: rotate(90deg); }
+
+  .step-detail {
+    display: none;
+    padding: 0 18px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .step-card.open .step-detail { display: block; padding-top: 14px; }
+
+  .detail-row {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text-dim);
+  }
+  .detail-row .label {
+    color: var(--text);
+    font-weight: 500;
+    min-width: 60px;
+  }
+  .detail-row code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    background: rgba(108,140,255,.1);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── Badges ─────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .badge.gemini { background: var(--orange-dim); color: var(--orange); }
+  .badge.claude { background: var(--purple-dim); color: var(--purple); }
+  .badge.brightdata { background: var(--cyan); color: var(--bg); }
+  .badge.supabase { background: var(--green-dim); color: var(--green); }
+  .badge.filter-badge { background: var(--red-dim); color: var(--red); }
+
+  /* ── Parallel container ─────────────────────── */
+  .parallel-wrapper {
+    width: 100%;
+    max-width: 780px;
+    position: relative;
+  }
+  .parallel-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--yellow);
+    background: var(--yellow-dim);
+    border: 1px dashed rgba(251,191,36,.3);
+    padding: 8px 20px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .parallel-border {
+    border: 1px dashed rgba(251,191,36,.2);
+    border-radius: 16px;
+    padding: 24px 16px;
+    position: relative;
+    background: rgba(251,191,36,.02);
+  }
+  .parallel-border .flow {
+    align-items: center;
+  }
+
+  /* ── External Services cards ────────────────── */
+  .ext-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color .2s;
+  }
+  .ext-card:hover { border-color: var(--accent); }
+  .ext-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .ext-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ext-card-header .ext-name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .ext-card .ext-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: 42px;
+  }
+
+  /* ── Docker file list ───────────────────────── */
+  .file-list {
+    list-style: none;
+  }
+  .file-list li {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    color: var(--text-dim);
+    transition: background .15s, color .15s;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .file-list li:hover {
+    background: rgba(108,140,255,.06);
+    color: var(--accent);
+  }
+  .file-list li .file-icon {
+    color: var(--accent);
+    font-size: 11px;
+    opacity: .5;
+  }
+
+  /* ── DB diagram ─────────────────────────────── */
+  .db-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .db-table {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    transition: border-color .2s, transform .15s;
+    cursor: default;
+  }
+  .db-table:hover {
+    border-color: var(--green);
+    transform: translateY(-1px);
+  }
+  .db-table .db-name {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 600;
+    color: var(--green);
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .db-table .db-desc {
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .db-category-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin: 14px 0 6px;
+    padding-left: 2px;
+  }
+  .db-category-label:first-child { margin-top: 4px; }
+
+  /* ── Infra cards ────────────────────────────── */
+  .infra-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    width: 100%;
+    max-width: 600px;
+  }
+  .infra-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .infra-stat {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .infra-stat .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .infra-stat .stat-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── Retry banner ───────────────────────────── */
+  .retry-banner {
+    width: 100%;
+    max-width: 600px;
+    background: var(--red-dim);
+    border: 1px solid rgba(248,113,113,.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .retry-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .retry-text {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .retry-text strong { color: var(--red); }
+
+  /* ── Publish banner ─────────────────────────── */
+  .publish-banner {
+    width: 100%;
+    max-width: 600px;
+    background: var(--green-dim);
+    border: 1px solid rgba(52,211,153,.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  /* ── Responsive ─────────────────────────────── */
+  @media (max-width: 960px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      position: static;
+      height: auto;
+    }
+    .main { padding: 24px 16px 48px; }
+    .parallel-wrapper { max-width: 100%; }
+    .step-card { max-width: 100%; }
+    .infra-card { max-width: 100%; }
+  }
+
+  /* ── Scrollbar ──────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* ── Tooltip ────────────────────────────────── */
+  .tooltip-wrap { position: relative; }
+  .tooltip-wrap .tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .tooltip-wrap:hover .tooltip { display: block; }
+
+  /* ── Pulsing dot ────────────────────────────── */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+    display: inline-block;
+  }
+
+  /* ── Fork / merge lines ─────────────────────── */
+  .fork-line {
+    width: 60%;
+    max-width: 360px;
+    height: 2px;
+    background: var(--yellow);
+    opacity: .3;
+    margin: 0 auto;
+  }
+
+  /* ── Animated gradient on parallel box ──────── */
+  @keyframes borderShift {
+    0% { border-color: rgba(251,191,36,.15); }
+    50% { border-color: rgba(251,191,36,.35); }
+    100% { border-color: rgba(251,191,36,.15); }
+  }
+  .parallel-border { animation: borderShift 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="header">
+  <h1>Ten News &mdash; Cloud Run Pipeline Architecture</h1>
+  <div class="subtitle">Last updated: March 8, 2026 &nbsp;&middot;&nbsp; <span class="pulse-dot"></span> Active</div>
+</div>
+
+<!-- ===== Legend ===== -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Data Flow</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Success / Publish</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Failure / Elimination</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> External API</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Trigger / Orchestrator</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Parallel Processing</div>
+</div>
+
+<!-- ===== Layout ===== -->
+<div class="layout">
+
+  <!-- ─── Main Column ─── -->
+  <div class="main">
+    <div class="flow">
+
+      <!-- ── Cloud Scheduler Trigger ── -->
+      <div class="step-card" onclick="toggle(this)">
+        <div class="step-header">
+          <div class="step-number trigger">&#9200;</div>
+          <div class="step-info">
+            <div class="step-title">Cloud Scheduler Trigger</div>
+            <div class="step-subtitle">Fires every 10 minutes</div>
+          </div>
+          <div class="step-chevron">&#9654;</div>
+        </div>
+        <div class="step-detail">
+          <div class="detail-row"><span class="label">Service</span> Google Cloud Scheduler</div>
+          <div class="detail-row"><span class="label">Interval</span> Every 10 minutes (*/10 * * * *)</div>
+          <div class="detail-row"><span class="label">Target</span> Cloud Run Job: <code>tennews-workflow</code></div>
+        </div>
+      </div>
+
+      <div class="arrow blue"></div>
+
+      <!-- ── Cloud Run Job ── -->
+      <div class="step-card" onclick="toggle(this)">
+        <div class="step-header">
+          <div class="step-number trigger">&#9881;</div>
+          <div class="step-info">
+            <div class="step-title">Cloud Run Job <span class="badge gemini" style="background:var(--purple-dim);color:var(--purple)">GCP</span></div>
+            <div class="step-subtitle">tennews-workflow &middot; us-central1</div>
+          </div>
+          <div class="step-chevron">&#9654;</div>
+        </div>
+        <div class="step-detail">
+          <div class="detail-row"><span class="label">Memory</span> 2 Gi</div>
+          <div class="detail-row"><span class="label">Timeout</span> 25 minutes</div>
+          <div class="detail-row"><span class="label">Entry</span> <code>cloudrun_entrypoint.py</code> &rarr; <code>run_single_cycle()</code></div>
+          <div class="detail-row"><span class="label">Lock</span> <code>pipeline_run_lock</code> table, 30-min timeout</div>
+          <div class="detail-row"><span class="label">Prevents</span> overlapping runs via DB lock</div>
+        </div>
+      </div>
+
+      <div class="arrow blue"></div>
+
+      <!-- ── Infrastructure ── -->
+      <div class="infra-card">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Infrastructure Overview</div>
+        <div class="infra-grid">
+          <div class="infra-stat">
+            <div class="stat-label">Region</div>
+            <div class="stat-value">us-central1</div>
+          </div>
+          <div class="infra-stat">
+            <div class="stat-label">Memory</div>
+            <div class="stat-value">2 Gi</div>
+          </div>
+          <div class="infra-stat">
+            <div class="stat-label">Max Timeout</div>
+            <div class="stat-value">25 min</div>
+          </div>
+          <div class="infra-stat">
+            <div class="stat-label">Overlap Guard</div>
+            <div class="stat-value">30 min lock</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow blue long"></div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 0 — RSS Fetch & Dedup
+           ══════════════════════════════════════════ -->
+      <div class="step-card" onclick="toggle(this)">
+        <div class="step-header">
+          <div class="step-number process">0</div>
+          <div class="step-info">
+            <div class="step-title">RSS Fetch &amp; Dedup</div>
+            <div class="step-subtitle">415+ feeds, 24 categories &rarr; ~100-400 new articles</div>
+          </div>
+          <div class="step-chevron">&#9654;</div>
+        </div>
+        <div class="step-detail">
+          <div class="detail-row"><span class="label">Feeds</span> 415+ RSS sources across 24 categories</div>
+          <div class="detail-row"><span class="label">File</span> <code>rss_sources.py</code></div>
+          <div class="detail-row"><span class="label">Dedup</span> Checks against <code>source_articles</code> table</div>
+          <div class="detail-row"><span class="label">Output</span> ~100&ndash;400 new articles per cycle</div>
+        </div>
+      </div>
+
+      <div class="arrow blue"></div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 1 — Gemini Scoring & Filtering
+           ══════════════════════════════════════════ -->
+      <div class="step-card" onclick="toggle(this)">
+        <div class="step-header">
+          <div class="step-number api">1</div>
+          <div class="step-info">
+            <div class="step-title">Gemini Scoring &amp; Filtering <span class="badge gemini">Gemini</span></div>
+            <div class="step-subtitle">Score 0&ndash;1000, batches of 50, filter low-quality</div>
+          </div>
+          <div class="step-chevron">&#9654;</div>
+        </div>
+        <div class="step-detail">
+          <div class="detail-row"><span class="label">Model</span> Gemini 2.0 Flash</div>
+          <div class="detail-row"><span class="label">Range</span> Score 0&ndash;1000</div>
+          <div class="detail-row"><span class="label">Batches</span> 50 articles per batch</div>
+          <div class="detail-row"><span class="label">File</span> <code>step1_gemini_news_scoring_filtering.py</code></div>
+          <div class="detail-row"><span class="label">Effect</span> <span style="color:var(--red)">Low-scoring articles eliminated</span></div>
+        </div>
+      </div>
+
+      <div class="arrow blue"></div>
+
+      <!-- ══════════════════════════════════════════
+           STEP 1.5 — Event Clustering
+           ══════════════════════════════════════════ -->
+      <div class="step-card" onclick="toggle(this)">
+        <div class="step-header">
+          <div class="step-number api">1.5</div>
+          <div class="step-info">
+            <div class="step-title">Event Clustering <span class="badge gemini">Gemini</span></div>
+            <div class="step-subtitle">Dual embeddings, centroid-based, ~1000 active clusters</div>
+          </div>
+          <div class="step-chevron">&#9654;</div>
+        </div>
+        <div class="step-detail">
+          <div class="detail-row"><span class="label">Embed 1</span> Gemini embeddings (3072-dim)</div>
+          <div class="detail-row"><span class="label">Embed 2</span> MiniLM (384-dim)</div>
+          <div class="detail-row"><span class="label">Method</span> Centroid-based clustering v3.0</div>
+          <div class="detail-row"><span class="label">Scale</span> ~1000 active clusters</div>
+          <div class="detail-row"><span class="label">File</span> <code>step1_5_event_clustering.py</code></div>
+        </div>
+      </div>
+
+      <div class="arrow blue long"></div>
+
+      <!-- ══════════════════════════════════════════
+           PARALLEL PROCESSING ZONE
+           ══════════════════════════════════════════ -->
+      <div class="parallel-wrapper">
+        <div class="parallel-label">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h4v4H2V3zm0 6h4v4H2V9zm6-6h4v4H8V3zm0 6h4v4H8V9zm-6.5-.5h13" stroke="currentColor" stroke-width=".5" fill="none"/></svg>
+          Parallel Processing &mdash; 10 workers per cluster &middot; Gemini semaphore = 2
+        </div>
+        <div class="parallel-border">
+          <div class="flow">
+
+            <!-- Step 2 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">2</div>
+                <div class="step-info">
+                  <div class="step-title">Full Article Fetch <span class="badge brightdata">Bright Data</span></div>
+                  <div class="step-subtitle">Residential proxies, full-text extraction</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Service</span> Bright Data residential proxies</div>
+                <div class="detail-row"><span class="label">File</span> <code>step2_brightdata_full_article_fetching.py</code></div>
+                <div class="detail-row"><span class="label">Output</span> Full article text for each source</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 3 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">3</div>
+                <div class="step-info">
+                  <div class="step-title">Image Selection &amp; AI Quality Check <span class="badge gemini">Gemini</span></div>
+                  <div class="step-subtitle">Pick best image, verify quality with AI</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Files</span> <code>step3_image_selection.py</code>, <code>image_quality_checker.py</code></div>
+                <div class="detail-row"><span class="label">Check</span> AI-powered image quality verification</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 3.5 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number filter">3.5</div>
+                <div class="step-info">
+                  <div class="step-title">Cluster Source Validation <span class="badge filter-badge">Filter</span></div>
+                  <div class="step-subtitle">Require &gt;2 independent sources per cluster</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Rule</span> Cluster must have &gt;2 unique sources</div>
+                <div class="detail-row"><span class="label">Effect</span> <span style="color:var(--red)">Single-source clusters skipped</span></div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 4 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">4</div>
+                <div class="step-info">
+                  <div class="step-title">Multi-Source Synthesis <span class="badge claude">Claude</span></div>
+                  <div class="step-subtitle">Synthesize multiple sources into unified narrative</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Model</span> Anthropic Claude API</div>
+                <div class="detail-row"><span class="label">File</span> <code>step4_multi_source_synthesis.py</code></div>
+                <div class="detail-row"><span class="label">Output</span> Unified article narrative from all sources</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 5 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">5</div>
+                <div class="step-info">
+                  <div class="step-title">Context Search <span class="badge gemini">Gemini</span></div>
+                  <div class="step-subtitle">Find relevant background context &amp; history</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">File</span> <code>step2_gemini_context_search.py</code></div>
+                <div class="detail-row"><span class="label">Purpose</span> Enrich article with historical context</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 6 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">6</div>
+                <div class="step-info">
+                  <div class="step-title">Component Selection <span class="badge gemini">Gemini</span></div>
+                  <div class="step-subtitle">Choose visual components for article layout</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">File</span> <code>step5_gemini_component_selection.py</code></div>
+                <div class="detail-row"><span class="label">Output</span> Component plan for article rendering</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 7 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number api">7</div>
+                <div class="step-info">
+                  <div class="step-title">Component Generation <span class="badge gemini">Gemini</span></div>
+                  <div class="step-subtitle">Generate article components with retry logic</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Writer</span> GeminiComponentWriter</div>
+                <div class="detail-row"><span class="label">File</span> <code>step6_7_claude_component_generation.py</code></div>
+                <div class="detail-row"><span class="label">Retry</span> Automatic retry on failure</div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Step 8 -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number filter">8</div>
+                <div class="step-info">
+                  <div class="step-title">Fact Verification <span class="badge filter-badge">Gate</span></div>
+                  <div class="step-subtitle">Up to 3 regeneration attempts on failure</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">File</span> <code>step8_fact_verification.py</code></div>
+                <div class="detail-row"><span class="label">Retries</span> Up to 3 regeneration attempts</div>
+                <div class="detail-row"><span class="label">Effect</span> <span style="color:var(--red)">Articles failing all 3 attempts are discarded</span></div>
+              </div>
+            </div>
+
+            <div class="arrow blue"></div>
+
+            <!-- Steps 10+11 (parallel within parallel) -->
+            <div style="width:100%;max-width:600px;margin:0 auto;">
+              <div style="display:flex;gap:10px;width:100%;">
+                <div class="step-card" onclick="toggle(this)" style="flex:1">
+                  <div class="step-header">
+                    <div class="step-number api" style="width:30px;height:30px;font-size:11px;">10</div>
+                    <div class="step-info">
+                      <div class="step-title" style="font-size:13px;">Scoring &amp; Interest Tags <span class="badge gemini" style="font-size:9px">Gemini</span></div>
+                      <div class="step-subtitle">Article quality + interest clusters</div>
+                    </div>
+                    <div class="step-chevron">&#9654;</div>
+                  </div>
+                  <div class="step-detail">
+                    <div class="detail-row"><span class="label">File</span> <code>step10_article_scoring.py</code></div>
+                  </div>
+                </div>
+                <div class="step-card" onclick="toggle(this)" style="flex:1">
+                  <div class="step-header">
+                    <div class="step-number api" style="width:30px;height:30px;font-size:11px;">11</div>
+                    <div class="step-info">
+                      <div class="step-title" style="font-size:13px;">Country &amp; Topic Tags <span class="badge gemini" style="font-size:9px">Gemini</span></div>
+                      <div class="step-subtitle">Geographic + topic classification</div>
+                    </div>
+                    <div class="step-chevron">&#9654;</div>
+                  </div>
+                  <div class="step-detail">
+                    <div class="detail-row"><span class="label">File</span> <code>step11_article_tagging.py</code></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="arrow green"></div>
+
+            <!-- Step 9 — Publish -->
+            <div class="step-card" onclick="toggle(this)">
+              <div class="step-header">
+                <div class="step-number success">9</div>
+                <div class="step-info">
+                  <div class="step-title">Publish to Supabase <span class="badge supabase">Supabase</span></div>
+                  <div class="step-subtitle">Duplicate check, embeddings, insert to DB</div>
+                </div>
+                <div class="step-chevron">&#9654;</div>
+              </div>
+              <div class="step-detail">
+                <div class="detail-row"><span class="label">Check</span> Duplicate detection before insert</div>
+                <div class="detail-row"><span class="label">Embed</span> Generate pgvector embeddings</div>
+                <div class="detail-row"><span class="label">Target</span> <code>published_articles</code> table</div>
+                <div class="detail-row"><span class="label">Storage</span> Supabase (PostgreSQL + pgvector)</div>
+              </div>
+            </div>
+
+          </div><!-- /flow inside parallel -->
+        </div><!-- /parallel-border -->
+      </div><!-- /parallel-wrapper -->
+
+      <div class="arrow green long"></div>
+
+      <!-- ── Retry ── -->
+      <div class="retry-banner">
+        <div class="retry-icon">&#8635;</div>
+        <div class="retry-text">
+          <strong>Retry Logic:</strong> Failed clusters from the last 6 hours with &lt;3 attempts are automatically retried in subsequent cycles.
+        </div>
+      </div>
+
+      <div class="arrow green"></div>
+
+      <!-- ── Done ── -->
+      <div class="publish-banner">
+        &#10003; &nbsp;Cycle Complete &mdash; Release Lock &amp; Exit
+      </div>
+
+    </div><!-- /flow -->
+
+    <!-- ── Database Tables ── -->
+    <div class="section-title" style="margin-top:56px;">Database Tables (Supabase / PostgreSQL + pgvector)</div>
+
+    <div class="db-category-label">Pipeline &amp; Content</div>
+    <div class="db-grid">
+      <div class="db-table">
+        <div class="db-name">source_articles</div>
+        <div class="db-desc">Raw articles fetched from RSS feeds, used for dedup</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">clusters</div>
+        <div class="db-desc">Event clusters with centroid embeddings, status tracking</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">published_articles</div>
+        <div class="db-desc">Final published articles with components &amp; embeddings</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">pipeline_run_lock</div>
+        <div class="db-desc">Prevents overlapping pipeline runs, 30-min timeout</div>
+      </div>
+    </div>
+
+    <div class="db-category-label">User &amp; Personalization</div>
+    <div class="db-grid">
+      <div class="db-table">
+        <div class="db-name">user_article_events</div>
+        <div class="db-desc">Click, read, share, and other engagement events</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">user_feed_impressions</div>
+        <div class="db-desc">Articles shown in feed for impression tracking</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">user_interest_clusters</div>
+        <div class="db-desc">Per-user interest vectors for personalization</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">profiles</div>
+        <div class="db-desc">User profile data and preferences</div>
+      </div>
+      <div class="db-table">
+        <div class="db-name">users</div>
+        <div class="db-desc">Core user authentication records</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- ─── Sidebar ─── -->
+  <div class="sidebar">
+
+    <!-- External Services -->
+    <div class="section-title">External Services</div>
+
+    <div class="ext-card">
+      <div class="ext-card-header">
+        <div class="ext-icon" style="background:var(--orange-dim);color:var(--orange);">G</div>
+        <div class="ext-name">Google Gemini API</div>
+      </div>
+      <div class="ext-desc">Scoring, clustering embeddings, component selection, component generation, image quality check</div>
+    </div>
+
+    <div class="ext-card">
+      <div class="ext-card-header">
+        <div class="ext-icon" style="background:var(--purple-dim);color:var(--purple);">A</div>
+        <div class="ext-name">Anthropic Claude API</div>
+      </div>
+      <div class="ext-desc">Multi-source article synthesis into unified narrative</div>
+    </div>
+
+    <div class="ext-card">
+      <div class="ext-card-header">
+        <div class="ext-icon" style="background:rgba(34,211,238,.15);color:var(--cyan);">B</div>
+        <div class="ext-name">Bright Data</div>
+      </div>
+      <div class="ext-desc">Full article fetching via residential proxies, bypass paywalls</div>
+    </div>
+
+    <div class="ext-card">
+      <div class="ext-card-header">
+        <div class="ext-icon" style="background:var(--green-dim);color:var(--green);">S</div>
+        <div class="ext-name">Supabase</div>
+      </div>
+      <div class="ext-desc">PostgreSQL + pgvector for all data storage, auth, and vector search</div>
+    </div>
+
+    <!-- Docker Files -->
+    <div class="section-title">Docker Container Files</div>
+    <ul class="file-list">
+      <li><span class="file-icon">&#9656;</span> cloudrun_entrypoint.py</li>
+      <li><span class="file-icon">&#9656;</span> complete_clustered_8step_workflow.py</li>
+      <li><span class="file-icon">&#9656;</span> rss_sources.py</li>
+      <li><span class="file-icon">&#9656;</span> step1_gemini_news_scoring_filtering.py</li>
+      <li><span class="file-icon">&#9656;</span> step1_5_event_clustering.py</li>
+      <li><span class="file-icon">&#9656;</span> step2_brightdata_full_article_fetching.py</li>
+      <li><span class="file-icon">&#9656;</span> step3_image_selection.py</li>
+      <li><span class="file-icon">&#9656;</span> image_quality_checker.py</li>
+      <li><span class="file-icon">&#9656;</span> step4_multi_source_synthesis.py</li>
+      <li><span class="file-icon">&#9656;</span> step5_gemini_component_selection.py</li>
+      <li><span class="file-icon">&#9656;</span> step2_gemini_context_search.py</li>
+      <li><span class="file-icon">&#9656;</span> step6_7_claude_component_generation.py</li>
+      <li><span class="file-icon">&#9656;</span> step8_fact_verification.py</li>
+      <li><span class="file-icon">&#9656;</span> step10_article_scoring.py</li>
+      <li><span class="file-icon">&#9656;</span> step11_article_tagging.py</li>
+      <li><span class="file-icon">&#9656;</span> article_deduplication.py</li>
+      <li><span class="file-icon">&#9656;</span> sports_espn_poller.py</li>
+    </ul>
+
+    <!-- Pipeline Stats -->
+    <div class="section-title">Pipeline Stats</div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">RSS Feeds</span>
+        <span style="font-size:14px;font-weight:600;">415+</span>
+      </div>
+    </div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">Categories</span>
+        <span style="font-size:14px;font-weight:600;">24</span>
+      </div>
+    </div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">Active Clusters</span>
+        <span style="font-size:14px;font-weight:600;">~1,000</span>
+      </div>
+    </div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">Embedding Dims</span>
+        <span style="font-size:14px;font-weight:600;">3072 + 384</span>
+      </div>
+    </div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">Parallel Workers</span>
+        <span style="font-size:14px;font-weight:600;">10</span>
+      </div>
+    </div>
+    <div class="ext-card" style="margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text-dim)">Gemini Concurrency</span>
+        <span style="font-size:14px;font-weight:600;">2</span>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+</div><!-- /layout -->
+
+<script>
+function toggle(card) {
+  card.classList.toggle('open');
+}
+
+// Open first two cards by default for a welcoming view
+document.addEventListener('DOMContentLoaded', function() {
+  var cards = document.querySelectorAll('.step-card');
+  if (cards.length > 0) cards[0].classList.add('open');
+  if (cards.length > 1) cards[1].classList.add('open');
+});
+</script>
+
+</body>
+</html>

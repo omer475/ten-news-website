@@ -38,7 +38,8 @@ final class BookmarkManager {
                 try? await AnalyticsService().track(
                     event: "article_saved",
                     articleId: numericId,
-                    category: article.category
+                    category: article.category,
+                    metadata: ["bucket": article.bucket ?? "personal"]
                 )
             }
         }

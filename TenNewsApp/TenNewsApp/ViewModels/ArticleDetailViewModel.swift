@@ -11,13 +11,17 @@ final class ArticleDetailViewModel {
 
     private var engagementTimer: Task<Void, Never>?
     private var viewStartTime: Date?
+    /// Bucket from the feed response — needed so analytics events include bucket
+    /// for proper taste vector / tag profile guard logic on the server.
+    private var articleBucket: String = "personal"
 
     var availableComponents: [String] { article?.availableComponents ?? ["details"] }
 
-    func loadArticle(id: String) async {
+    func loadArticle(id: String, bucket: String? = nil) async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
+        if let bucket { articleBucket = bucket }
         do {
             let response = try await articleService.fetchArticle(id: id)
             article = response.article
@@ -26,7 +30,8 @@ final class ArticleDetailViewModel {
             Task {
                 try? await analytics.track(
                     event: "article_detail_view",
-                    articleId: Int(id)
+                    articleId: Int(id),
+                    metadata: ["bucket": articleBucket]
                 )
             }
         } catch {
@@ -54,15 +59,17 @@ final class ArticleDetailViewModel {
 
     // MARK: - Engagement Tracking
 
-    func startEngagementTracking(articleId: Int) {
+    func startEngagementTracking(articleId: Int, bucket: String? = nil) {
+        if let bucket { articleBucket = bucket }
         viewStartTime = Date()
+        let bucketValue = articleBucket
         engagementTimer = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 10_000_000_000)
             guard !Task.isCancelled else { return }
             try? await AnalyticsService().track(
                 event: "article_engaged",
                 articleId: articleId,
-                metadata: ["engaged_seconds": "10"]
+                metadata: ["engaged_seconds": "10", "bucket": bucketValue]
             )
             _ = self // prevent premature dealloc
         }
@@ -75,11 +82,12 @@ final class ArticleDetailViewModel {
         if let start = viewStartTime {
             let seconds = Int(Date().timeIntervalSince(start))
             if seconds >= 10 {
+                let bucketValue = articleBucket
                 Task {
                     try? await analytics.track(
                         event: "article_exit",
                         articleId: articleId,
-                        metadata: ["total_active_seconds": String(seconds)]
+                        metadata: ["total_active_seconds": String(seconds), "bucket": bucketValue]
                     )
                 }
             }

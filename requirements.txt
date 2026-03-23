@@ -1,34 +1,27 @@
 requests>=2.31.0
 beautifulsoup4>=4.12.2
 pytz>=2023.3
-schedule>=1.2.0
 lxml>=4.9.3
-openai>=1.0.0
 google-generativeai>=0.3.0
 supabase>=2.0.0
 
 # RSS Feed Parsing
 feedparser>=6.0.10
 
-# HTTP Server for API
-flask>=3.0.0
-flask-cors>=4.0.0
-gunicorn>=21.0.0
-
 # Date/Time utilities
 python-dateutil>=2.8.2
-
-# Anthropic Claude API (used by Step 1.5 clustering only)
-anthropic>=0.18.0
 
 # Numerical computing (for embeddings)
 numpy>=1.24.0
 
 # MiniLM embeddings (384-dim, better topic discrimination for feed ranking)
+# Install CPU-only torch first to avoid downloading 2GB+ CUDA version
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
 sentence-transformers>=3.0.0
 scikit-learn>=1.3.0
 
-# Image processing (for quality checker)
+# Image processing (for quality checker + dimension fetching)
 Pillow>=10.0.0
 
 # Environment variables

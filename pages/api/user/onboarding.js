@@ -145,12 +145,100 @@ export default async function handler(req, res) {
       });
     }
 
+    // ═══════════════════════════════════════════════════
+    // EMBEDDING-FIRST: Initialize taste_vector from subtopic embeddings
+    // This gives pgvector personalization from page 1 (no cold start)
+    // ═══════════════════════════════════════════════════
+    const TOPIC_TO_SUBTOPIC = {
+      'politics': ['US Politics', 'European Politics', 'Asian Politics', 'Middle East'],
+      'geopolitics': ['War & Conflict', 'Middle East', 'Asian Politics'],
+      'sports': ['NFL', 'NBA', 'Soccer/Football', 'MLB/Baseball', 'Cricket', 'F1 & Motorsport', 'Boxing & MMA/UFC', 'Tennis', 'Golf'],
+      'ai': ['AI & Machine Learning'],
+      'tech_industry': ['AI & Machine Learning', 'Robotics & Hardware'],
+      'consumer_tech': ['Smartphones & Gadgets'],
+      'cybersecurity': ['Cybersecurity'],
+      'space': ['Space Tech', 'Space & Astronomy'],
+      'science': ['Climate & Environment', 'Biology & Nature', 'Space & Astronomy'],
+      'climate': ['Climate & Environment'],
+      'health': ['Medical Breakthroughs', 'Public Health', 'Mental Health'],
+      'biotech': ['Medical Breakthroughs', 'Biology & Nature'],
+      'economics': ['Stock Markets', 'Oil & Energy'],
+      'stock_markets': ['Stock Markets'],
+      'banking': ['Stock Markets'],
+      'startups': ['AI & Machine Learning'],
+      'entertainment': ['Movies & Film', 'TV & Streaming', 'Music', 'Gaming', 'Celebrity News'],
+      'movies': ['Movies & Film'],
+      'music': ['Music'],
+      'gaming': ['Gaming'],
+      'crypto': ['Bitcoin', 'DeFi & Web3'],
+      'soccer': ['Soccer/Football'], 'nfl': ['NFL'], 'nba': ['NBA'],
+      'baseball': ['MLB/Baseball'], 'cricket': ['Cricket'], 'f1': ['F1 & Motorsport'],
+      'boxing_mma': ['Boxing & MMA/UFC'], 'tennis': ['Tennis'], 'golf': ['Golf'],
+      'movies_film': ['Movies & Film'], 'tv_streaming': ['TV & Streaming'],
+      'kpop_kdrama': ['K-Pop & K-Drama'], 'anime_manga': ['Anime & Manga'],
+      'hip_hop': ['Music'], 'afrobeats': ['Music'], 'latin_music': ['Music'],
+      'comedy': ['Comedy & Humor'],
+      'ai_ml': ['AI & Machine Learning'], 'smartphones_gadgets': ['Smartphones & Gadgets'],
+      'social_media': ['AI & Machine Learning'], 'space_tech': ['Space Tech'],
+      'robotics_hardware': ['Robotics & Hardware'],
+      'space_astronomy': ['Space & Astronomy'], 'climate_environment': ['Climate & Environment'],
+      'biology_nature': ['Biology & Nature'], 'earth_science': ['Climate & Environment'],
+      'medical_breakthroughs': ['Medical Breakthroughs'], 'public_health': ['Public Health'],
+      'mental_health': ['Mental Health'], 'pharma_drug': ['Medical Breakthroughs'],
+      'us_politics': ['US Politics'], 'european_politics': ['European Politics'],
+      'asian_politics': ['Asian Politics'], 'middle_east': ['Middle East'],
+      'war_conflict': ['War & Conflict'],
+      'oil_energy': ['Oil & Energy'], 'automotive': ['Automotive'],
+      'startups_vc': ['AI & Machine Learning'],
+      'real_estate': ['Stock Markets'],
+      'food_cooking': ['Food & Cooking'], 'travel_adventure': ['Travel & Adventure'],
+      'fitness_workout': ['Fitness & Workout'], 'beauty_skincare': ['Beauty & Skincare'],
+      'parenting_family': ['Mental Health'], 'pets_animals': ['Pets & Animals'],
+      'sneakers_streetwear': ['Sneakers & Streetwear'], 'celebrity_style': ['Celebrity News'],
+      'bitcoin': ['Bitcoin'], 'defi_web3': ['DeFi & Web3'],
+      'news': ['War & Conflict', 'US Politics', 'Middle East'],
+    };
+
+    // Resolve followed_topics to subtopic names
+    const subtopicNames = new Set();
+    for (const code of followed_topics) {
+      const mapped = TOPIC_TO_SUBTOPIC[code];
+      if (mapped) mapped.forEach(s => subtopicNames.add(s));
+    }
+
+    // Fetch pre-computed subtopic embeddings
+    let initialTasteVector = null;
+    if (subtopicNames.size > 0) {
+      const { data: subtopicEmbs } = await supabase
+        .from('subtopic_embeddings')
+        .select('subtopic_name, embedding_minilm')
+        .in('subtopic_name', [...subtopicNames]);
+
+      if (subtopicEmbs && subtopicEmbs.length > 0) {
+        const DIM = 384;
+        const avg = new Array(DIM).fill(0);
+        let count = 0;
+        for (const se of subtopicEmbs) {
+          const emb = se.embedding_minilm;
+          if (!emb || !Array.isArray(emb) || emb.length !== DIM) continue;
+          for (let i = 0; i < DIM; i++) avg[i] += emb[i];
+          count++;
+        }
+        if (count > 0) {
+          for (let i = 0; i < DIM; i++) avg[i] /= count;
+          initialTasteVector = avg;
+          console.log('[onboarding] Initialized taste_vector from', count, 'subtopic embeddings for topics:', [...subtopicNames].join(', '));
+        }
+      }
+    }
+
     // Build personalization data
     const personalizationData = {
       home_country,
       followed_countries,
       followed_topics,
       onboarding_completed: true,
+      ...(initialTasteVector ? { taste_vector_minilm: initialTasteVector } : {}),
     };
 
     // Anonymous user (no auth_user_id): don't write to DB, return success for localStorage

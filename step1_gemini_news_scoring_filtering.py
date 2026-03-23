@@ -160,7 +160,6 @@ We serve users from **15 countries** with personalized interests across many top
 
 ### ELIMINATE if:
 - It's pure opinion with no news hook (pure editorials, hot takes with no event)
-- It's not news (listicles, guides, reviews, how-tos, advice)
 - It's promotional (betting, promo codes, deals, "how to watch")
 - It's a trivial individual story with no broader significance
 - It's from a non-covered country AND has no global impact AND no topic-interest value
@@ -313,9 +312,64 @@ Entertainment adds variety. **Approve real events involving well-known figures a
 ### ELIMINATE:
 - Celebrity gossip without real events ("spotted dating", rumor mills)
 - Reality TV recaps
-- Fashion/style commentary
-- "Who wore what" articles
 - Pure tabloid speculation
+
+---
+
+## FOOD & COOKING RULES — BE GENEROUS
+
+Food is a major interest. **Approve recipes, restaurant news, food trends, and culinary content from food sources.**
+
+### APPROVE:
+- Recipes from established food sources (BBC Good Food, NYT Cooking, Cookie and Kate, Food Republic, TASTE)
+- Restaurant openings, closings, and reviews from notable publications
+- Food trends and culinary culture stories
+- Chef profiles and interviews
+- Food safety news and recalls
+- Seasonal and holiday cooking features
+- Notable cookbook releases
+
+### ELIMINATE:
+- Generic "what I ate today" personal blogs
+- Pure product promotions ("buy this kitchen gadget")
+- Duplicate recipes from low-quality aggregator sites
+
+---
+
+## FASHION & STYLE RULES — BE GENEROUS
+
+Fashion is a key lifestyle interest. **Approve fashion news, designer stories, and style content.**
+
+### APPROVE:
+- Fashion week coverage and designer collection news
+- Major brand launches and collaborations
+- Celebrity style news with substance (not just "who wore what")
+- Designer profiles, interviews, and career news
+- Fashion industry business news (mergers, new creative directors)
+- Seasonal trend reports from established publications (Fashionista, StyleCaster, Vogue)
+- Sustainable fashion developments
+
+### ELIMINATE:
+- Pure "shop this look" affiliate content
+- Low-effort outfit roundups with no editorial value
+
+---
+
+## TRAVEL & LIFESTYLE RULES — BE GENEROUS
+
+Travel and lifestyle content serves users who want inspiration and practical information.
+
+### APPROVE:
+- Destination features and travel guides from established sources (Conde Nast Traveler, Nomadic Matt)
+- Hotel and airline industry news
+- Travel advisories and policy changes (visa rules, border changes)
+- Cultural experiences and festival coverage
+- Home and interior design features from notable publications
+- Wellness and fitness news with substance
+
+### ELIMINATE:
+- Pure promotional hotel/resort advertising
+- Generic packing lists or "travel hacks" without substance
 
 ---
 
@@ -334,7 +388,6 @@ Science readers want to stay informed. **Approve real research results and disco
 - Archaeological discoveries
 
 ### ELIMINATE:
-- Health tips and wellness advice ("5 foods that...")
 - "Study suggests maybe..." with truly weak or preliminary conclusions
 - Niche academic papers with no real-world relevance
 - Alternative medicine promotion
@@ -353,7 +406,7 @@ You will be told today's date in the user message. Use it to:
 | Type | Examples |
 |------|----------|
 | **Pure opinion with no news hook** | Pure editorials, hot takes not tied to any event |
-| **Listicles/Guides** | "15 Best...", "How to...", "Top 10...", "Complete Guide" |
+| **Non-lifestyle Listicles/Guides** | "15 Best...", "How to...", "Top 10..." — BUT approve if it's a recipe, travel guide, or fashion feature from an established lifestyle source |
 | **Promotional** | Betting odds, promo codes, deals, "where to buy", "how to watch" |
 | **Trivial individual stories** | "Mom of 3 shares...", "Man drives 5000 miles...", personal journeys |
 | **Investment advice** | "Buy this stock", Seeking Alpha, earnings transcripts |
@@ -380,6 +433,10 @@ When approving, assign one category:
 | Finance | Markets, currencies, banking |
 | Sports | All sports results and news |
 | Entertainment | Celebrity news, cultural events, music, film/TV |
+| Food | Recipes, restaurants, cooking, culinary culture |
+| Fashion | Style, designers, fashion industry, beauty |
+| Travel | Destinations, travel guides, hotel/airline news |
+| Lifestyle | Home, wellness, fitness, personal development |
 
 ---
 
@@ -540,8 +597,9 @@ If yes → APPROVE it.
                         original_article['interest_score'] = result_item.get('interest', 5)
                         
                         # Validate category
-                        valid_categories = ['World', 'Politics', 'Business', 'Tech', 'Science', 
-                                          'Health', 'Finance', 'Sports', 'Entertainment', 'Other']
+                        valid_categories = ['World', 'Politics', 'Business', 'Tech', 'Science',
+                                          'Health', 'Finance', 'Sports', 'Entertainment',
+                                          'Food', 'Fashion', 'Travel', 'Lifestyle', 'Other']
                         if original_article['category'] not in valid_categories:
                             # Map common variations
                             category_mapping = {
@@ -549,6 +607,14 @@ If yes → APPROVE it.
                                 'Economy': 'Business',
                                 'International': 'World',
                                 'Culture': 'Entertainment',
+                                'Cooking': 'Food',
+                                'Recipe': 'Food',
+                                'Recipes': 'Food',
+                                'Style': 'Fashion',
+                                'Beauty': 'Fashion',
+                                'Wellness': 'Lifestyle',
+                                'Fitness': 'Lifestyle',
+                                'Home': 'Lifestyle',
                             }
                             original_article['category'] = category_mapping.get(
                                 original_article['category'], 'Other'

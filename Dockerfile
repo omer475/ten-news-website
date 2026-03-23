@@ -10,14 +10,11 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for better caching)
+# Copy requirements first (for better Docker layer caching)
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (CPU-only torch keeps image ~1.5GB smaller)
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Add python-dotenv if not in requirements
-RUN pip install --no-cache-dir python-dotenv
 
 # Copy application code
 COPY rss_sources.py .
@@ -26,14 +23,12 @@ COPY step1_gemini_news_scoring_filtering.py .
 COPY step1_5_event_clustering.py .
 COPY step2_brightdata_full_article_fetching.py .
 COPY step3_image_selection.py .
+COPY image_selection.py .
 COPY image_quality_checker.py .
-COPY step4_multi_source_synthesis.py .
+# step4_multi_source_synthesis.py no longer used (synthesis is inline Gemini in workflow)
 COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_7_claude_component_generation.py .
-# Event detection paused (re-enable after app launch)
-# COPY step6_world_event_detection.py .
-# COPY event_components.py .
 COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
 COPY step11_article_tagging.py .

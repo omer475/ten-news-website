@@ -1,0 +1,1114 @@
+============================================================
+🚀 TEN NEWS - Cloud Run Execution
+⏰ Started at: 2026-01-31T17:21:54.043465
+============================================================
+/app/step1_5_event_clustering.py:29: FutureWarning: 
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  import google.generativeai as genai
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✓ Initialized Gemini component selector
+  Model: gemini-2.0-flash
+  Components per article: 1-3
+================================================================================
+🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW
+================================================================================
+Started: 2026-01-31 17:22:01
+================================================================================
+================================================================================
+📡 STEP 0: RSS FEED COLLECTION
+================================================================================
+Fetching from 257 premium sources...
+📊 Fetched 2051 articles from 207 sources
+🔍 Deduplication: Starting with 2051 articles
+/usr/local/lib/python3.11/site-packages/dateutil/parser/_parser.py:1207: UnknownTimezoneWarning: tzname EST identified but not understood.  Pass `tzinfos` argument in order to correctly return a timezone-aware datetime.  In a future version, this will raise an exception.
+  warnings.warn("tzname {tzname} identified but not understood.  "
+   ⏰ After time filter (1440min): 902 articles
+   ✅ After database check: 21 NEW articles
+✅ Al Jazeera English: 1 new
+✅ Daily Mail Home: 6 new
+✅ Daily Mail Money: 1 new
+✅ Deutsche Welle: 2 new
+✅ Deutsche Welle Top Stories: 2 new
+✅ Fox News Latest: 3 new
+✅ Newsweek: 2 new
+✅ The Atlantic: 1 new
+✅ The Guardian UK Sport: 1 new
+✅ The Independent: 2 new
+✅ Step 0 Complete: 21 NEW articles (after deduplication)
+================================================================================
+🎯 STEP 1: GEMINI SCORING & FILTERING
+================================================================================
+Scoring 21 articles...
+   📷 7 articles without images (Bright Data will fetch later)
+   ✅ Filtering 21 total articles
+✅ Step 1 Complete: 12 approved, 9 filtered
+   📊 Saved 9 filtered articles to Supabase
+================================================================================
+🔗 STEP 1.5: EVENT CLUSTERING (NEW)
+================================================================================
+Clustering 12 articles...
+============================================================
+STEP 1.5: EVENT CLUSTERING (SIMPLIFIED)
+============================================================
+Articles to cluster: 12
+📝 Step 1: Saving articles to database...
+   ✅ Saved: 12
+   ⏭️ Already clustered: 0
+   📋 To cluster: 12
+📂 Step 2: Getting active clusters...
+   Found 1000 active clusters
+🧠 Step 3: Generating embeddings...
+   Embedding 12 article titles...
+   ✅ Embeddings ready
+🔍 Step 4: Matching articles to clusters...
+   [1/12] Milan protests decry ‘creeping fascism’ of ICE role at Winte...
+      ✅ EMBEDDING MATCH: Cluster #26658 (similarity: 0.92)
+         Cluster: Hundreds Protest In Milan Against Ice Involvement...
+   [2/12] Goma under rebel control: Life in the shadow of violence...
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 2+)
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26682
+   [3/12] Italy church restoration probed after Meloni angel lookalike...
+      🔑 Top keyword matches: [('I’M No Angel, Italy’S Giorgia Meloni Say', 3)]
+      🤖 Sending to AI (1 clusters with 2+ keyword matches)...
+      🤖 AI: NEW CLUSTER
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26683
+   [4/12] Goma under rebel control: Life in the shadow of violence...
+      ✅ EMBEDDING MATCH: Cluster #26682 (similarity: 1.00)
+         Cluster: Goma under rebel control: Life in the shadow of vi...
+   [5/12] Italy church restoration probed after Meloni angel lookalike...
+      ✅ EMBEDDING MATCH: Cluster #26683 (similarity: 1.00)
+         Cluster: Italy church restoration probed after Meloni angel...
+   [6/12] Trump Administration Announces Major Increase To H-2B Visas ...
+      ✅ EMBEDDING MATCH: Cluster #26266 (similarity: 0.90)
+         Cluster: Trump Officials Move To Double Number Of...
+   [7/12] Peter Tatchell is arrested for 'globalise the intifada' bann...
+      ✅ EMBEDDING MATCH: Cluster #26636 (similarity: 0.86)
+         Cluster: Peter Tatchell Arrested Over ‘Intifada’ Sign...
+   [8/12] Iran hides work on nuclear sites bombed by Donald Trump from...
+      ✅ EMBEDDING MATCH: Cluster #26555 (similarity: 0.85)
+         Cluster: Satellite Images Reveal Activity At Iran Nuclear...
+   [9/12] Trump’s Relationship With the Media...
+      ⏭️ Skipping AI: Best keyword match only 1 keywords (need 2+)
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26684
+   [10/12] Federal judge rejects Minnesota request to block ICE-led Ope...
+      ✅ EMBEDDING MATCH: Cluster #26667 (similarity: 0.93)
+         Cluster: Federal Judge Denies Request To Block Ice...
+   [11/12] Lady Gaga faces backlash after anti-ICE rant during Tokyo co...
+      🔑 Top keyword matches: [('Bad Bunny, Kendirck Lamar, Lady Gaga And', 2), ('Arrests Of Journalists Fuel Backlash As ', 2)]
+      🤖 Sending to AI (2 clusters with 2+ keyword matches)...
+      🤖 AI: NEW CLUSTER
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26685
+   [12/12] How Trump officials’ narrative of a gun-carrying protester i...
+      🔑 Top keyword matches: [('Minneapolis: Thousands Rally Against Tru', 2), ('Trump Called For ‘De-Escalation’ In Minn', 2), ('The Damage That Trump’S Minneapolis Blit', 2)]
+      🤖 Sending to AI (3 clusters with 2+ keyword matches)...
+      🤖 AI: NEW CLUSTER
+      🆕 No match found: Creating new cluster
+      ✨ Created cluster #26686
+============================================================
+CLUSTERING COMPLETE
+============================================================
+✅ Matched to existing: 7 (embedding: 7, AI: 0)
+✨ New clusters created: 5
+⏭️ Already clustered: 0
+📊 Total active clusters: 1005
+✅ Step 1.5 Complete:
+   📊 New clusters: 5
+   🔗 Matched existing: 7
+   🎯 Clusters ready for processing: 7 (NEW this cycle)
+================================================================================
+📰 PROCESSING CLUSTER 26682
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.dw.com/en/goma-under-rebel-control-lif... (6042 chars)
+✅ Fetched: https://www.dw.com/en/goma-under-rebel-control-lif... (6042 chars)
+Fetched 2/2 articles
+   📸 Fetched image for Deutsche Welle Top Stories: https://static.dw.com/image/75724603_6.jpg...
+   📸 Fetched image for Deutsche Welle: https://static.dw.com/image/75724603_6.jpg...
+   ✅ Fetched full text: 2/2
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 2 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://static.dw.com/image/75724603_6.jpg...
+   🔍 DEBUG Source 2: image_url = https://static.dw.com/image/75724603_6.jpg...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid (rule-based): 2
+      🤖 Running AI quality check on top candidates...
+      [1/2] Checking: Deutsche Welle Top Stories
+   📥 Downloading image: https://static.dw.com/image/75724603_6.jpg...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image shows a crowded marketplace, which is a photograph of an actual scene relevant to news stories about local economies or daily life.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Deutsche Welle Top Stories (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **M23 Rebels** Seize **Goma** After Year of Control...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (107 chars)
+   ✅ Step 5 Complete: Search context fetched (107 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **M23 Rebels** Seize **Goma** After Year of Control...
+      Content length sent: 340 chars
+      Gemini returned: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "⚔️",
+  "graph_type": null,
+  "map_locations": [
+    "Goma, North Kivu, Democratic Republic of the Congo",
+    "Sake, North Kivu, Democratic Republic of the Congo"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "⚔️",
+  "graph_type": null,
+  "map_locations": [
+    "Goma, North Kivu, Democratic Republic of the Congo",
+    "Sake, North Kivu, Democrati
+      Validated components: ['map', 'details']
+   ✅ Step 6 Complete: Selected [map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11774 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "map": [
+    {
+      "name": "Goma International Airport",
+      "type": "transport",
+      "city": "Goma",
+      "country": "Democratic Republic of the Congo",
+      "coordinates": {
+        "lat": -1.6677,
+        "lng": 29.2286
+      },
+      "description": "Airport near Goma, potentially imp...
+   📝 Cleaned JSON: {
+  "map": [
+    {
+      "name": "Goma International Airport",
+      "type": "transport",
+      "city": "Goma",
+      "country": "Democratic Republic of the Congo",
+      "coordinates": {
+        "lat...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: Deutsche Welle Top Stories - content: 6042 chars
+      Source 2: Deutsche Welle - content: 6042 chars
+      Generated title: **M23 Rebels** Seize **Goma** After Year of Contro...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, with no major factual errors or inconsistencies.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 5 reference articles for calibration
+   📊 Article score: 890/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['m23 rebels', 'goma', 'north kivu']...
+   🏷️ Tags: ['m23 rebels', 'goma', 'north kivu', 'democratic republic of congo', 'rwanda', 'united nations', 'conflict', 'africa']
+   ✅ Published article ID: 12325
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [Deutsche Welle Top Stories] Goma under rebel control: Life in the shadow of violence...
+      • [Deutsche Welle] Goma under rebel control: Life in the shadow of violence...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 6 existing world events
+[1/1] Processing: **M23 Rebels** Seize **Goma** After Year of Contro...
+  ✅ AI image generated for: Conflict in the Democratic Rep...
+  📊 Using article's details for key_facts (3 items)
+✅ Created new world event: Congo Rebel Conflict
+  ✅ Created initial latest development
+  📅 Generating timeline for: Congo Rebel Conflict
+    ✅ Generated 11 timeline entries for Congo Rebel Conflict
+  🧩 Generating smart components...
+  🧩 Generating components for: Congo Rebel Conflict
+    Component relevance: This event will have perspectives, what_to_watch, geographic_impact, and historical_comparison components because it's a multi-faceted conflict with international implications and historical precedents.
+    Generating perspectives...
+    ✅ Added 4 perspectives
+    Generating what to watch...
+    ✅ Added 4 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 6 countries
+    Generating historical comparison...
+    ✅ Added 2 historical comparisons
+  ✅ Generated 4 components for Congo Rebel Conflict
+  ✅ Components added to event
+  Tagged article 12325 to event f486398e-b1af-4a69-8582-6662c116d5d1
+    ✅ Added timeline entry: M23 rebels seize Goma after a year of controlling ...
+  → Created NEW world event: Congo Rebel Conflict
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 1
+  Articles tagged: 1
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26683
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.dw.com/en/italy-church-restoration-pro... (1631 chars)
+✅ Fetched: https://www.dw.com/en/italy-church-restoration-pro... (1631 chars)
+Fetched 2/2 articles
+   📸 Fetched image for Deutsche Welle Top Stories: https://static.dw.com/image/75743726_6.jpg...
+   📸 Fetched image for Deutsche Welle: https://static.dw.com/image/75743726_6.jpg...
+   ✅ Fetched full text: 2/2
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 2 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://static.dw.com/image/75743726_6.jpg...
+   🔍 DEBUG Source 2: image_url = https://static.dw.com/image/75743726_6.jpg...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid (rule-based): 2
+      🤖 Running AI quality check on top candidates...
+      [1/2] Checking: Deutsche Welle Top Stories
+   📥 Downloading image: https://static.dw.com/image/75743726_6.jpg...
+   📐 Image loaded: 940x529 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): This is a high-quality image of a historical location and its artwork, suitable for a news article if relevant to the story.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Deutsche Welle Top Stories (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Italy** Probes Church **Angel** Resembling PM Meloni...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (78 chars)
+   ✅ Step 5 Complete: Search context fetched (78 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Italy** Probes Church **Angel** Resembling PM Meloni...
+      Content length sent: 316 chars
+      Gemini returned: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "San Lorenzo basilica, Rome, Italy"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "San Lorenzo basilica, Rome, Italy"
+  ]
+}
+      Validated components: ['map', 'details']
+   ✅ Step 6 Complete: Selected [map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11625 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "map": [
+    {
+      "name": "San Lorenzo fuori le Mura",
+      "type": "building",
+      "city": "Rome",
+      "country": "Italy",
+      "coordinates": {
+        "lat": 41.9019,
+        "lng": 12.5142
+      },
+      "description": "Basilica in Rome where a restored angel fresco is causing contr...
+   📝 Cleaned JSON: {
+  "map": [
+    {
+      "name": "San Lorenzo fuori le Mura",
+      "type": "building",
+      "city": "Rome",
+      "country": "Italy",
+      "coordinates": {
+        "lat": 41.9019,
+        "lng": 12...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: Deutsche Welle Top Stories - content: 1631 chars
+      Source 2: Deutsche Welle - content: 1631 chars
+      Generated title: **Italy** Probes Church **Angel** Resembling PM Me...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source articles, with no major factual errors or inconsistencies.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 5 reference articles for calibration
+   📊 Article score: 770/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 7 interest tags: ['italy', 'giorgia meloni', 'rome']...
+   🏷️ Tags: ['italy', 'giorgia meloni', 'rome', 'art restoration', 'religious art', 'politics', 'alessandro giuli']
+   ✅ Published article ID: 12326
+   📚 MULTI-SOURCE CLUSTER (2 articles):
+      • [Deutsche Welle Top Stories] Italy church restoration probed after Meloni angel lookalike...
+      • [Deutsche Welle] Italy church restoration probed after Meloni angel lookalike...
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 7 existing world events
+[1/1] Processing: **Italy** Probes Church **Angel** Resembling PM Me...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26636
+================================================================================
+   Sources in cluster: 3
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 3 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.independent.co.uk/bulletin/news/peter-...
+⚠️ Insufficient content for https://news.sky.com/story/british-activist-peter-...
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15515583/...
+   🔄 Trying Jina fallback for 3 URLs...
+✅ Jina fallback: https://news.sky.com/story/british-activist-peter-... (17095 chars)
+Fetched 1/3 articles
+   ✅ Fetched full text: 1/3
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 3 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://static.independent.co.uk/2023/06/07/15/395...
+   🔍 DEBUG Source 2: image_url = https://e3.365dm.com/26/01/1920x1080/skynews-peter...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 3
+      Valid (rule-based): 3
+      🤖 Running AI quality check on top candidates...
+      [1/3] Checking: The Independent
+   📥 Downloading image: https://static.independent.co.uk/2023/06/07/15/3952508c75bc56653b807d49c73779baY...
+   📐 Image loaded: 1200x800 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image is a clear photo of a person who may be the subject of a news story, with no disqualifying elements.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: The Independent (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   🔍 VALIDATING 3 sources for cluster: Peter Tatchell Arrested Over ‘Intifada’ Sign...
+      ✅ All 3 sources validated - same event
+   Synthesizing article from 3 sources...
+   ✅ Synthesized: **Peter Tatchell** Arrested Over **'Intifada'** Protest Sign...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (108 chars)
+   ✅ Step 5 Complete: Search context fetched (108 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Peter Tatchell** Arrested Over **'Intifada'** Protest Sign...
+      Content length sent: 330 chars
+      Gemini returned: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": [
+    "London"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "details",
+    "map"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": [
+    "London"
+  ]
+}
+      Validated components: ['details', 'map']
+   ✅ Step 6 Complete: Selected [details, map]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details, map
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details', 'map']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11678 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Arrest count",
+      "value": "1 arrest"
+    },
+    {
+      "label": "Protest duration",
+      "value": "Several hours"
+    },
+    {
+      "label": "Protest locations",
+      "value": "Multiple sites"
+    }
+  ],
+  "map": [
+    {
+      "name": "Trafalgar Square"...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Arrest count",
+      "value": "1 arrest"
+    },
+    {
+      "label": "Protest duration",
+      "value": "Several hours"
+    },
+    {
+      "label": "Protest loca...
+  ⚠ Validation issues (attempt 1): ['Only 1 details have numbers (need at least 3)']
+   🔧 DEBUG: Calling Gemini API (attempt 2)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Arrests",
+      "value": "1 activist"
+    },
+    {
+      "label": "Demonstration size",
+      "value": "100+ people"
+    },
+    {
+      "label": "Protest duration",
+      "value": "3 hours"
+    }
+  ],
+  "map": [
+    {
+      "name": "Downing Street",
+      "type...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Arrests",
+      "value": "1 activist"
+    },
+    {
+      "label": "Demonstration size",
+      "value": "100+ people"
+    },
+    {
+      "label": "Protest duratio...
+  ⚠ Validation issues (attempt 2): ["Map location 1 is too well-known: 'Downing Street' (everyone knows where this is)"]
+   🔧 DEBUG: Calling Gemini API (attempt 3)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Arrests",
+      "value": "1 arrest"
+    },
+    {
+      "label": "Protest size",
+      "value": "100+ marchers"
+    },
+    {
+      "label": "Years active",
+      "value": "50+ years"
+    }
+  ],
+  "map": [
+    {
+      "name": "Trafalgar Square",
+      "type": "la...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Arrests",
+      "value": "1 arrest"
+    },
+    {
+      "label": "Protest size",
+      "value": "100+ marchers"
+    },
+    {
+      "label": "Years active",
+      ...
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 3
+      Source 1: The Independent - content: 0 chars
+      Source 2: Sky News Home - content: 15000 chars
+      Source 3: Daily Mail Home - content: 176 chars
+      Generated title: **Peter Tatchell** Arrested Over **'Intifada'** Pr...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information found in the source articles, specifically mentioning Peter Tatchell's arrest for carrying an 'intifada' placard during a pro-Palestine demonstration in London.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 73%)
+      New: **Peter Tatchell** Arrested Over **'Intifada'** Protest Sign...
+      Existing (ID 12269): **Activist Tatchell** Arrested Over **Intifada** Placard...
+      Skipping cluster 26636 (reason: duplicate_title)
+================================================================================
+📰 PROCESSING CLUSTER 26555
+================================================================================
+   Sources in cluster: 2
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 2 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+⚠️ Insufficient content for https://www.dailymail.co.uk/news/article-15515711/...
+⏰ Timeout (attempt 1/3): https://www.foxnews.com/world/satellite-images-rev...
+✅ Fetched: https://www.foxnews.com/world/satellite-images-rev... (3580 chars)
+   🔄 Trying Jina fallback for 1 URLs...
+Fetched 1/2 articles
+   ✅ Fetched full text: 1/2
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 2 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+   🔍 DEBUG Source 2: image_url = https://i.dailymail.co.uk/1s/2026/01/31/16/1059950...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 2
+      Valid (rule-based): 2
+      🤖 Running AI quality check on top candidates...
+      [1/2] Checking: Fox News World
+   📥 Downloading image: https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/01/9...
+   📐 Image loaded: 931x523 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image shows an aerial view of a building that has been damaged, which is a relevant news event.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Fox News World (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 2 sources...
+   ✅ Synthesized: **Iran** Builds **Roofs** Over Bombed Nuclear Sites...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (78 chars)
+   ✅ Step 5 Complete: Search context fetched (78 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Iran** Builds **Roofs** Over Bombed Nuclear Sites...
+      Content length sent: 296 chars
+      Gemini returned: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "☢️",
+  "graph_type": null,
+  "map_locations": [
+    "Isfahan",
+    "Natanz"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "☢️",
+  "graph_type": null,
+  "map_locations": [
+    "Isfahan",
+    "Natanz"
+  ]
+}
+      Validated components: ['map', 'details']
+   ✅ Step 6 Complete: Selected [map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11585 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "map": [
+    {
+      "name": "Natanz Nuclear Facility",
+      "type": "military",
+      "city": "Natanz",
+      "country": "Iran",
+      "coordinates": {
+        "lat": 33.7219,
+        "lng": 51.7358
+      },
+      "description": "Iranian uranium enrichment plant reportedly struck during Operat...
+   📝 Cleaned JSON: {
+  "map": [
+    {
+      "name": "Natanz Nuclear Facility",
+      "type": "military",
+      "city": "Natanz",
+      "country": "Iran",
+      "coordinates": {
+        "lat": 33.7219,
+        "lng": 51....
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 2
+      Source 1: Fox News World - content: 3580 chars
+      Source 2: Daily Mail Home - content: 188 chars
+      Generated title: **Iran** Builds **Roofs** Over Bombed Nuclear Site...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article regarding Iran building roofs over bombed nuclear sites.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   ⏭️ DUPLICATE TITLE DETECTED (similarity: 77%)
+      New: **Iran** Builds **Roofs** Over Bombed Nuclear Sites...
+      Existing (ID 12131): **Iran** Builds Roofs Over **Nuclear Sites** After Bombings...
+      Skipping cluster 26555 (reason: duplicate_title)
+================================================================================
+📰 PROCESSING CLUSTER 26684
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.theatlantic.com/national/2026/01/don-l... (821 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://cdn.theatlantic.com/thumbor/rdgeOA2K-0IzJq...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: The Atlantic
+   📥 Downloading image: https://cdn.theatlantic.com/thumbor/rdgeOA2K-0IzJqbgHrs7w6FL4_s=/3x0:2601x1462/m...
+   📐 Image loaded: 2598x1462 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ❌ Unsuitable (100% confidence): The image is a screenshot of a TV news broadcast with the channel logo, lower third text, and studio background.
+         ❌ AI REJECTED (100%): The image is a screenshot of a TV news broadcast with the channel logo, lower third text, and studio background.
+      ❌ All 1 images rejected by AI quality check
+         → Article needs AI-generated image
+   🎨 GENERATING AI IMAGE
+      Topic: Trump’S Relationship With The Media...
+   📦 Supabase storage initialized
+   🎨 Generating image for: Trump’S Relationship With The Media...
+   🎨 Background color: dark grey
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   ✅ Image generated successfully (1496146 bytes)
+   📤 Uploading to Supabase: 20260131_172855_20260131_172855.png
+Storage endpoint URL should have a trailing slash.
+   ✅ Uploaded: https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/p...
+   ✅ AI image generated successfully
+   🎨 AI Generated: editorial illustration (background: dark grey)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Trump** Orders First **Journalist Arrest** Over Protest...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1139 chars)
+   ✅ Step 5 Complete: Search context fetched (1139 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Trump** Orders First **Journalist Arrest** Over Protest...
+      Content length sent: 323 chars
+      Gemini returned: {
+  "components": [
+    "timeline",
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Minnesota Church, Minnesota, USA"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "timeline",
+    "map",
+    "details"
+  ],
+  "emoji": "🏛️",
+  "graph_type": null,
+  "map_locations": [
+    "Minnesota Church, Minnesota, USA"
+  ]
+}
+      Validated components: ['timeline', 'map', 'details']
+   ✅ Step 6 Complete: Selected [timeline, map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: timeline, map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['timeline', 'map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (14907 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "timeline": [
+    {
+      "date": "2017-2021",
+      "event": "During his presidency, Donald Trump frequently attacked journalists and news organizations he deemed critical, often labeling their reporting as \"fake news\" to undermine their credibility."
+    },
+    {
+      "date": "2018",
+      ...
+   📝 Cleaned JSON: {
+  "timeline": [
+    {
+      "date": "2017-2021",
+      "event": "During his presidency, Donald Trump frequently attacked journalists and news organizations he deemed critical, often labeling their r...
+   ✅ Step 7 Complete: Generated [timeline, details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: The Atlantic - content: 821 chars
+      Generated title: **Trump** Orders First **Journalist Arrest** Over ...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article, with no major factual errors or inconsistencies.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 5 reference articles for calibration
+   📊 Article score: 875/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['donald trump', 'don lemon', 'cnn']...
+   🏷️ Tags: ['donald trump', 'don lemon', 'cnn', 'journalist arrest', 'protest', 'minnesota', 'press freedom', 'politics']
+   ✅ Published article ID: 12327
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 7 existing world events
+[1/1] Processing: **Trump** Orders First **Journalist Arrest** Over ...
+  ✅ AI image generated for: Global concerns about press fr...
+  📊 Using article's details for key_facts (3 items)
+✅ Created new world event: Press Freedom Concerns
+  ✅ Created initial latest development
+  📅 Generating timeline for: Press Freedom Concerns
+    ✅ Generated 8 timeline entries for Press Freedom Concerns
+  🧩 Generating smart components...
+  🧩 Generating components for: Press Freedom Concerns
+    Component relevance: This event will have Perspectives, What to Watch, Geographic Impact, and Historical Comparison components because it involves differing opinions, potential legal proceedings, international repercussions, and parallels to past incidents of press suppression.
+    Generating perspectives...
+    ✅ Added 4 perspectives
+    Generating what to watch...
+    ✅ Added 5 upcoming dates
+    Generating geographic impact...
+    ✅ Added geographic impact for 7 countries
+    Generating historical comparison...
+    ✅ Added 2 historical comparisons
+  ✅ Generated 4 components for Press Freedom Concerns
+  ✅ Components added to event
+  Tagged article 12327 to event 0fcf173d-a9c8-4ba0-be53-e3e74adbdf5b
+    ✅ Added timeline entry: Trump administration orders the arrest of a journa...
+  → Created NEW world event: Press Freedom Concerns
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 1
+  Articles tagged: 1
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26685
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.foxnews.com/entertainment/lady-gaga-fa... (4032 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: Fox News Latest
+   📥 Downloading image: https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/01/9...
+   📐 Image loaded: 931x523 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ✅ Suitable (95% confidence): The image is a professional photograph of a person performing on stage and would be suitable for a news website.
+         ✅ AI APPROVED (95%)
+   ✅ Selected: Fox News Latest (score: 69.0, AI approved)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Lady Gaga** Faces Backlash After **Anti-ICE** Tokyo Rant...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (1019 chars)
+   ✅ Step 5 Complete: Search context fetched (1019 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Lady Gaga** Faces Backlash After **Anti-ICE** Tokyo Rant...
+      Content length sent: 345 chars
+      Gemini returned: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🎭",
+  "graph_type": null,
+  "map_locations": [
+    "Tokyo Dome, Tokyo, Japan"
+  ]
+}
+      Cleaned JSON: {
+  "components": [
+    "map",
+    "details"
+  ],
+  "emoji": "🎭",
+  "graph_type": null,
+  "map_locations": [
+    "Tokyo Dome, Tokyo, Japan"
+  ]
+}
+      Validated components: ['map', 'details']
+   ✅ Step 6 Complete: Selected [map, details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: map, details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['map', 'details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (13531 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "map": [
+    {
+      "name": "Tokyo Dome",
+      "type": "venue",
+      "city": "Tokyo",
+      "country": "Japan",
+      "coordinates": {
+        "lat": 35.7056,
+        "lng": 139.7517
+      },
+      "description": "Location of Lady Gaga's \"Mayhem Ball\" concert where she made the anti-ICE com...
+   📝 Cleaned JSON: {
+  "map": [
+    {
+      "name": "Tokyo Dome",
+      "type": "venue",
+      "city": "Tokyo",
+      "country": "Japan",
+      "coordinates": {
+        "lat": 35.7056,
+        "lng": 139.7517
+      },
+ ...
+   ✅ Step 7 Complete: Generated [details, map]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fox News Latest - content: 4032 chars
+      Generated title: **Lady Gaga** Faces Backlash After **Anti-ICE** To...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 5 reference articles for calibration
+   📊 Article score: 770/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['lady gaga', 'ice', 'tokyo']...
+   🏷️ Tags: ['lady gaga', 'ice', 'tokyo', 'mayhem ball', 'minneapolis', 'social justice', 'music', 'politics']
+   ✅ Published article ID: 12328
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 8 existing world events
+[1/1] Processing: **Lady Gaga** Faces Backlash After **Anti-ICE** To...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+📰 PROCESSING CLUSTER 26686
+================================================================================
+   Sources in cluster: 1
+📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING
+   Fetching full text for 1 sources...
+   🌐 Bright Data initialized: customer=hl_3870a989, zone=residential_proxy1
+✅ Fetched: https://www.foxnews.com/media/how-trump-officials-... (11141 chars)
+Fetched 1/1 articles
+   ✅ Fetched full text: 1/1
+📸 STEP 3: SMART IMAGE SELECTION + AI QUALITY CHECK
+   Selecting best image from 1 sources...
+   🤖 AI quality checking enabled (rejects TV graphics, broadcasters, watermarks)
+   🔍 DEBUG Source 1: image_url = https://a57.foxnews.com/static.foxnews.com/foxnews...
+   🤖 AI image quality checking enabled (Gemini 2.0 Flash)
+   📸 IMAGE SELECTION:
+      Total candidates: 1
+      Valid (rule-based): 1
+      🤖 Running AI quality check on top candidates...
+      [1/1] Checking: Fox News Latest
+   📥 Downloading image: https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/01/1...
+   📐 Image loaded: 1200x675 pixels, mode: RGB
+   🤖 Analyzing with Gemini 2.0 Flash...
+   ❌ Unsuitable (95% confidence): This image appears to be a composite of headshots, possibly taken from video calls, making it unsuitable for a professional news website due to its poor visual presentation and unclear context.
+         ❌ AI REJECTED (95%): This image appears to be a composite of headshots, possibly taken from video calls, making it unsuitable for a professional news website due to its poor visual presentation and unclear context.
+      ❌ All 1 images rejected by AI quality check
+         → Article needs AI-generated image
+   🎨 GENERATING AI IMAGE
+      Topic: How Trump Officials’ Narrative Of A Gun-Carrying...
+   📦 Supabase storage initialized
+   🎨 Generating image for: How Trump Officials’ Narrative Of A Gun-Carrying...
+   🎨 Background color: charcoal black
+   🤖 Calling Gemini image generation (attempt 1/3)...
+   ✅ Image generated successfully (1430080 bytes)
+   📤 Uploading to Supabase: 20260131_173024_20260131_173024.png
+Storage endpoint URL should have a trailing slash.
+   ✅ Uploaded: https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/p...
+   ✅ AI image generated successfully
+   🎨 AI Generated: editorial illustration (background: charcoal black)
+✍️  STEP 4: MULTI-SOURCE SYNTHESIS
+   Synthesizing article from 1 sources...
+   ✅ Synthesized: **Trump Officials** Face Backlash Over **Minneapolis** Shoot...
+🔍 STEP 5: GEMINI CONTEXT SEARCH
+   Searching for component data with Google Search grounding...
+   ✅ Gemini context search completed (78 chars)
+   ✅ Step 5 Complete: Search context fetched (78 chars)
+📋 STEP 6: GEMINI COMPONENT SELECTION
+   Analyzing search data to select appropriate components...
+   🔍 DEBUG - Gemini Raw Response:
+      Title: **Trump Officials** Face Backlash Over **Minneapolis** Shooting...
+      Content length sent: 319 chars
+      Gemini returned: {
+  "components": [
+    "details"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Cleaned JSON: {
+  "components": [
+    "details"
+  ],
+  "emoji": "⚖️",
+  "graph_type": null,
+  "map_locations": null
+}
+      Validated components: ['details']
+   ✅ Step 6 Complete: Selected [details]
+📊 STEP 7: CLAUDE COMPONENT GENERATION
+   Generating content for: details
+   🔧 DEBUG: Starting component generation...
+   🔧 DEBUG: Components to generate: ['details']
+   🔧 DEBUG: Building system prompt...
+   🔧 DEBUG: System prompt built (11459 chars)
+   🔧 DEBUG: Calling Gemini API (attempt 1)...
+   📝 Raw Claude response: {
+  "details": [
+    {
+      "label": "Second Amendment ratified",
+      "value": "1791 year"
+    },
+    {
+      "label": "FBI founded",
+      "value": "1908 year"
+    },
+    {
+      "label": "DHS established",
+      "value": "2002 year"
+    }
+  ],
+  "timeline": [
+    {
+      "date": "January 6, 202...
+   📝 Cleaned JSON: {
+  "details": [
+    {
+      "label": "Second Amendment ratified",
+      "value": "1791 year"
+    },
+    {
+      "label": "FBI founded",
+      "value": "1908 year"
+    },
+    {
+      "label": "DHS est...
+   ✅ Step 7 Complete: Generated [timeline, details]
+🔍 STEP 8: FACT VERIFICATION
+   Checking for hallucinations in generated content...
+   🔍 DEBUG - VERIFICATION INPUT:
+      Sources provided: 1
+      Source 1: Fox News Latest - content: 11141 chars
+      Generated title: **Trump Officials** Face Backlash Over **Minneapol...
+      Verification result: ✅ PASSED
+   ✅ Verification PASSED: The AI-generated content accurately reflects the information presented in the source article.
+💾 STEP 9: PUBLISHING TO SUPABASE
+   🎯 STEP 10: SCORING ARTICLE
+   📊 Using 5 reference articles for calibration
+   📊 Article score: 830/1000
+   🏷️ Generating interest tags...
+   🏷️ Generated 8 interest tags: ['donald trump', 'minneapolis', 'second amendment']...
+   🏷️ Tags: ['donald trump', 'minneapolis', 'second amendment', 'department of homeland security', 'federal bureau of investigation', 'gun rights', 'alex pretti', 'domestic terrorism']
+   ✅ Published article ID: 12329
+============================================================
+STEP 6: WORLD EVENT DETECTION
+============================================================
+Found 8 existing world events
+[1/1] Processing: **Trump Officials** Face Backlash Over **Minneapol...
+  → Not a world event (regular news)
+============================================================
+WORLD EVENT DETECTION COMPLETE
+  New events created: 0
+  Articles tagged: 0
+============================================================
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================
+   Articles fetched: 21
+   Approved (Step 1): 12
+   Clusters processed: 7
+   Articles published: 5
+================================================================================
+✅ Workflow completed in 531.1 seconds
+📊 Stats: {'articles_processed': 0, 'articles_published': 0, 'clusters_found': 0, 'errors': []}
+Container called exit(0).
+
+

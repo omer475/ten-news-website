@@ -1,0 +1,1647 @@
+========================================================================================================================
+  20-PERSONA FEED + EXPLORE TEST V4
+  - All 20 personas start from ZERO (full wipe)
+  - Uses SHORT topic IDs like the real iOS app
+  - Each reads ~50 articles across multiple pages
+  - Explore checked every 20 articles
+  - Tracks feed evolution: does personalization improve?
+  Time: 2026-03-17T18:00:24.912Z
+========================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [1/20] PRIYA, 31 — Austin, TX, USA
+  ML engineer at a self-driving car startup. Follows every F1 race. Obsessed with NVIDIA stock. Plays indie games on Steam.
+  Followed topics (SHORT IDs): [ai, f1, technology, startups]
+  Behavior subtopics: AI & Machine Learning, F1 & Motorsport, Robotics & Hardware, Startups & Venture Capital
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+(node:7939) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/omersogancioglu/Ten News Website/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+    User: c5468d3d... | Topics saved: [ai, f1, technology, startups]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 24 topics | 11 relevant (46%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 24 topics, 11 relevant (46%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 14 topics, 10 relevant (71%), mode: blended
+    Read 50 articles | Engaged: 43 | Glanced: 3 | Skipped: 4 | Relevant: 46
+    Exit: NATURAL | Mood: 100/100 | Saved: 7 | Events: 57
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      16.8s     60    0.95        trending   Tech             AI & Machine Learning, Robot   **AI** Chatbots **Fuel** Mass Casualty Attack Plans
+    2     SKIP            0.6s     56   -0.19        personal   Science          (none)                         **Blue Origin** Joins **NASA** to Defend Earth From Ast
+    3     DEEP_READ      14.9s     63    0.78    YES trending   Sports           AI & Machine Learning, F1 &    **Iran War** Threatens to Halt **Formula 1** Races
+    4     DEEP_READ      12.4s     70    1.19    YES personal   Business         AI & Machine Learning, Start   **OpenAI** Seeks **$4B** Investment for Enterprise AI V
+    5     DEEP_READ       7.3s     77    0.83    YES personal   Tech             AI & Machine Learning, Robot   **Meta** AI Glasses Raise **Privacy** Concerns
+    6     SKIP            0.4s     72   -0.18        trending   Science          (none)                         **Extremophiles** Discovery **Revolutionizes** Vaccine 
+    7     DEEP_READ      15.8s     77    1.16        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Reveals **Rubin Ultra** GPU with 1TB Memory
+    8     DEEP_READ      17.3s     82    0.95        personal   Business         AI & Machine Learning, Robot   **Meta** Inks **$27 Billion** AI Deal with Nebius Group
+    9     DEEP_READ      21.0s     87    1.15        discovery  Tech             AI & Machine Learning, Robot   **Nvidia's** Vera CPU Boasts 'Extremely High' Performan
+    10    DEEP_READ       7.8s     92    1.10        personal   Sports           AI & Machine Learning, F1 &    **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    11    ENGAGE          5.4s     93    0.43        trending   Business         Startups & Venture Capital     **Funeral Home** Owner Seeks Leniency After **200** Bod
+    12    ENGAGE          5.1s     96    0.44        personal   Science          AI & Machine Learning          **AI** Unmasks Anonymous Social Media Accounts at Scale
+    13    ENGAGE          8.9s     99    0.50        trending   Finance          Startups & Venture Capital     **US** National Debt Surpasses **$38 Trillion**, Crisis
+    14    DEEP_READ      13.4s    100    1.05        personal   Tech             AI & Machine Learning, Robot   **OpenAI** Debuts GPT-5.4 **Mini** and **Nano** Models
+    15    DEEP_READ      18.4s    100    1.05    YES personal   Business         AI & Machine Learning, Robot   **Nebius** Seeks **$3.75 Billion** Loan After Meta, Nvi
+    16    DEEP_READ      14.0s     99    0.86        trending   Tech             AI & Machine Learning, Robot   **AI** Jails Grandma for **6 Months** in Mistaken ID
+    17    DEEP_READ       8.6s    100    0.83        personal   Sports           F1 & Motorsport                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    18    DEEP_READ       7.9s    100    0.87        personal   Tech             AI & Machine Learning, Robot   **Google**, **Accel** Back 5 India AI Startups
+    19    DEEP_READ      11.4s    100    0.79        discovery  Tech             AI & Machine Learning, Robot   Facial Recognition **Misidentifies** Tennessee **Grandm
+    20    DEEP_READ      14.4s    100    0.92        personal   Business         AI & Machine Learning, Start   **Meta** Prepares for **16,000** Job Cuts, Focuses on *
+    21    DEEP_READ      20.7s     99    1.05        trending   Sports           AI & Machine Learning, F1 &    **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    22    DEEP_READ      12.1s    100    1.06        personal   Business         AI & Machine Learning, Start   **Britannica** Sues **OpenAI**, Alleges AI Training Mis
+    23    SKIP            0.3s     95   -0.29        trending   Science          (none)                         Global Warming **Increases** Deaths by **Hundreds of Th
+    24    DEEP_READ      12.5s    100    1.09        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Unveils **Vera Rubin** AI Platform with 7 Ch
+    25    DEEP_READ      10.0s    100    0.94        personal   Tech             AI & Machine Learning, Robot   **Texas Instruments** and **NVIDIA** Partner on Humanoi
+    26    DEEP_READ      10.1s     98    1.08    YES personal   Tech             AI & Machine Learning, Robot   **OpenAI** Faces Suit After **Tumbler Ridge** Shooting
+    27    DEEP_READ      14.8s    100    0.88        personal   Business         AI & Machine Learning, Start   **Meta** Plans **20%** Job Cuts Amid AI Investments
+    28    DEEP_READ      20.9s    100    0.96        personal   Tech             AI & Machine Learning, Robot   **Palantir** Demos **AI** Chatbots for Military War Pla
+    29    DEEP_READ      18.3s    100    1.14        trending   Sports           AI & Machine Learning, F1 &    **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    30    DEEP_READ      18.1s    100    0.66        personal   Tech             AI & Machine Learning, Robot   **Meta** Buys **Moltbook**, AI Social Network Under Fir
+    31    ENGAGE          6.9s     98    0.57        personal   Science          AI & Machine Learning          **AI** Creates **mRNA** Cancer Vaccine for Beloved Dog
+    32    SKIP            0.8s     94   -0.48        discovery  Science          (none)                         **Goddard** Launches First Liquid-Fueled Rocket **100**
+    33    DEEP_READ       7.5s     99    0.82        personal   Finance          AI & Machine Learning, Robot   **Nvidia's** GTC **Jolts** AI Stock Market This Week
+    34    DEEP_READ      19.6s    100    0.67    YES trending   Sports           AI & Machine Learning, F1 &    **Sharma's** **50** Sparks India's T20 World Cup Win
+    35    DEEP_READ      19.8s    100    0.84        personal   Tech             AI & Machine Learning, Robot   **Glitch Prompt** Makes **ChatGPT** Smarter, More Relia
+    36    DEEP_READ      14.2s     98    0.66    YES personal   Tech             AI & Machine Learning, Robot   **Meta** Glasses Act as **AI** Shopping Assistant
+    37    DEEP_READ      20.9s    100    0.93        personal   Business         AI & Machine Learning, Robot   **Nvidia** Invests **$2 Billion** in Nebius Group N.V.
+    38    DEEP_READ      10.0s    100    0.82        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Aims for **Film-Level** Graphics in Future G
+    39    GLANCE          3.7s     98    0.27        trending   Science          AI & Machine Learning          **China** Clears First **Brain-Computer** Implant for U
+    40    DEEP_READ      12.6s    100    0.68        personal   Tech             AI & Machine Learning, Robot   **Niantic** Spinout Trains AI with **30B** Images
+    41    DEEP_READ      13.8s     98    0.61        personal   Tech             AI & Machine Learning, Robot   **Samsung Galaxy S26 Ultra** Boasts New Privacy Display
+    42    GLANCE          3.2s     97    0.27        trending   Business         Startups & Venture Capital     **Gas Prices** Jump **21%** in Germany Amid Iran War
+    43    DEEP_READ      17.1s    100    0.78        personal   Tech             AI & Machine Learning, Robot   **OpenAI** Adult Mode Blocks **Pornographic** Content
+    44    ENGAGE          3.0s    100    0.49        discovery  Tech             AI & Machine Learning, Robot   **Galaxy S26 Ultra** Lands with **Privacy Display** Fea
+    45    DEEP_READ       8.7s    100    0.77        personal   Business         AI & Machine Learning, Robot   **Nvidia** Sees Over **$500B** Revenue Through 2026
+    46    DEEP_READ       9.9s     98    0.80        personal   Tech             AI & Machine Learning, Robot   **Nvidia's** New Chip **Groq 3** Widens AI Gap with Chi
+    47    ENGAGE          4.4s    100    0.32        personal   Tech             AI & Machine Learning, Robot   **Australia** Social Media Ban: **20%** Still Use **Tik
+    48    GLANCE          3.8s     98    0.23        trending   Finance          Startups & Venture Capital     **Iran War** Oil Shock **Spikes** Fed Rate Debate
+    49    DEEP_READ      19.4s    100    0.80        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Focuses on **Groq 3**, Ditches Rubin CPX GPU
+    50    DEEP_READ      20.5s    100    0.71        personal   Tech             AI & Machine Learning, Robot   **AI** Agent Runs **700** Experiments, Boosts Speed
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  37 | Avg:  14.4s | Total:   532s
+    ENGAGE       Count:   6 | Avg:   5.6s | Total:    34s
+    SKIP         Count:   4 | Avg:   0.6s | Total:     2s
+    GLANCE       Count:   3 | Avg:   3.6s | Total:    11s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Tech                   24    24      0    24     13.5s       YES
+    Business               10     9      0    10     12.8s       YES
+    Science                 7     2      4     3      2.6s        no
+    Sports                  6     6      0     6     15.0s       YES
+    Finance                 3     2      0     3      6.7s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      80%      80%      11.4s     92
+    #2 (11-20)             10     100%     100%      10.7s    100
+    #3 (21-30)             10      90%      90%      13.8s    100
+    #4 (31-40)             10      80%      90%      11.6s    100
+    #5 (41-50)             10      80%     100%      10.4s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 11.1s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  85% | Rel:  90% | AvgDwell: 12.7s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  80% | Rel: 100% | AvgDwell: 10.4s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 24 topics | 11 relevant (46%) | mode: blended
+    Explore change: 46% -> 46% (+0%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       AI & Tech        Meta & Facebook                           5  none
+    Personal       YES      AI & Tech        Nvidia & AI Chips                         7  kw:ai+st:AI & Machine Learning
+    Personal       YES      AI & Tech        OpenAI & ChatGPT                          3  kw:ai+st:AI & Machine Learning
+    Personal       YES      Motorsport       Formula 1 Racing                          5  kw:f1+st:F1 & Motorsport
+    Personal       YES      AI & Tech        Google AI & Gemini                        1  kw:ai+st:AI & Machine Learning
+    Personal       YES      Finance          Bitcoin & Crypto                          5  cat:Finance
+    Personal       NO       Science          NASA & Space Exploration                  3  none
+    Personal       YES      AI & Tech        Anthropic & Claude                        1  kw:claude+st:AI & Machine Learning
+    Personal       YES      Finance          Ethereum                                  8  cat:Finance
+    Personal       NO       Science          Mars Exploration                          4  none
+    Personal       YES      Motorsport       Lewis Hamilton                            2  kw:hamilton
+    Personal       YES      Finance          Solana                                   13  cat:Finance
+    Personal       YES      Business         Trade Wars & Tariffs                      4  cat:Business
+    Personal       NO       Science          James Webb Telescope                      1  none
+    Trending       NO       Soccer           Premier League                           19  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       NO       Basketball       NBA Basketball                           25  none
+    Trending       NO       Entertainment    Netflix Originals                        14  none
+    Trending       NO       Baseball         MLB Baseball                              9  none
+    Trending       NO       Football         NFL Football                             49  none
+    Trending       YES      Finance          Oil Prices & Energy Markets              11  cat:Finance
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       Science          Electric Vehicles & EVs                  50  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Good (Same)
+    Session: 579s (9.6 min) | Avg dwell: 11.6s
+    Best: Article relevance to my interests
+    Complaint: Nothing major
+      - Shown 4 Science articles but I don't follow Science
+      - Worst: "**Goddard** Launches First Liquid-Fueled Rocket **100** Year" (Science) — score -0.48, 0.8s
+      - 24/50 articles were Tech — too repetitive
+    LIKED: "**AI** Chatbots **Fuel** Mass Casualty Attack Plans" (16.8s) | "**Iran War** Threatens to Halt **Formula 1** Races" (14.9s) | "**OpenAI** Seeks **$4B** Investment for Enterprise AI Ventur" (12.4s)
+    Recommend: Definitely
+    Quote: "As a ml engineer at a self-driving car startup, I found plenty of AI & Machine Learning content. Spent 579s total, engaged with 43 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [2/20] EMRE, 36 — Istanbul, Turkey
+  E-commerce founder. Fenerbahce ultra since age 12. Tracks Turkish lira and EU trade. Loves kebab reviews on YouTube.
+  Followed topics (SHORT IDs): [sports, business, trade]
+  Behavior subtopics: Soccer/Football, Trade & Tariffs, Startups & Venture Capital, Retail & Consumer
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: fb7a22ec... | Topics saved: [sports, business, trade]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 26 topics | 4 relevant (15%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 29 topics, 6 relevant (21%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 28 topics, 6 relevant (21%), mode: blended
+    Read 50 articles | Engaged: 42 | Glanced: 8 | Skipped: 0 | Relevant: 50
+    Exit: NATURAL | Mood: 100/100 | Saved: 1 | Events: 51
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     ENGAGE          2.4s     58    0.60        personal   Sports           Soccer/Football                **YouTube** Streams **World Cup** Game Action Live
+    2     ENGAGE          3.3s     61    0.60        personal   Business         Trade & Tariffs, Startups &    **Big Oil** Thanks High Crude Prices: **$63 Billion**
+    3     DEEP_READ       7.3s     66    0.86        trending   Business         Trade & Tariffs, Startups &    Emergency Oil Stockpiles See Biggest Release in History
+    4     DEEP_READ       9.7s     71    0.60        discovery  Finance          Startups & Venture Capital     **Norway Wealth Fund CEO** Warns Europe: Get Act Togeth
+    5     DEEP_READ      14.4s     76    0.79        personal   Business         Trade & Tariffs, Startups &    **Oil** Price Surges to **$100** Amid Iran Conflict
+    6     DEEP_READ      15.6s     80    0.74        personal   Business         Trade & Tariffs, Startups &    **Oil** Climbs as **Iran** Seizes Hormuz Strait Role
+    7     ENGAGE          3.1s     83    0.40        personal   Sports           Soccer/Football                **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    8     DEEP_READ       8.4s     88    0.64        personal   Business         Trade & Tariffs, Startups &    **Iran** Conflict **Spikes** Oil Prices; **$150** Possi
+    9     ENGAGE          2.6s     91    0.44        trending   Sports           Soccer/Football                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    10    ENGAGE          5.8s     94    0.59        discovery  Sports           Soccer/Football                **Sabalenka** vs **Rybakina**, **Sinner** vs **Medvedev
+    11    DEEP_READ       8.4s     97    0.84        personal   Business         Trade & Tariffs, Startups &    **Iran War** Fuels Global Shipping Cost **Surge**
+    12    DEEP_READ       5.7s    100    0.84        personal   Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    13    ENGAGE          2.7s    100    0.45        trending   Finance          Startups & Venture Capital     **Oil** Nears **$100**, Sparks Inflation and Market Fea
+    14    DEEP_READ      12.8s    100    1.09        personal   Business         Trade & Tariffs, Startups &    **USA** Considers New Tariffs Against **China**, **EU**
+    15    DEEP_READ       6.9s    100    0.83        personal   Business         Trade & Tariffs, Startups &    **Rivian** Unveils **R2** SUV Aiming to Usurp **Tesla**
+    16    ENGAGE          7.5s     99    0.45        discovery  Finance          Startups & Venture Capital     **S&P 500** Chart Parallels Dot-Com Bubble Burst
+    17    DEEP_READ       9.1s    100    0.91    YES personal   Business         Trade & Tariffs, Startups &    **US** Lifts **Russian** Oil Sanctions Temporarily
+    18    DEEP_READ      14.8s    100    0.64        personal   Business         Trade & Tariffs, Startups &    **IEA** Releases **400 Million** Barrels Amid Middle Ea
+    19    DEEP_READ       9.1s    100    0.65        trending   Sports           Soccer/Football                **Barcelona** and **Newcastle** Clash in Champions Leag
+    20    ENGAGE          5.3s    100    0.40        discovery  Finance          Startups & Venture Capital     **US Debt** Resembles Hallmark Movie, **Crisis** Looms
+    21    DEEP_READ       9.1s     99    1.04        personal   Business         Trade & Tariffs, Startups &    **Trump's Tariffs** Cost Automakers Over **$35 Billion*
+    22    ENGAGE          5.6s    100    0.59        personal   Business         Trade & Tariffs, Startups &    **Iran** Tensions Inflate Oil Prices by **$15** a Barre
+    23    ENGAGE          6.6s    100    0.30        trending   Sports           Soccer/Football                **NBA** Eyes **$7B** Expansion, Las Vegas, Seattle Lead
+    24    ENGAGE          2.3s    100    0.41        personal   Sports           Soccer/Football                **Nolan McLean** to Start in **World Baseball Classic**
+    25    DEEP_READ      15.6s    100    0.74        personal   Sports           Soccer/Football                **Real Madrid** Leans on Youth, Eyes **Champions League
+    26    ENGAGE          7.2s     98    0.44        personal   Sports           Soccer/Football                **Roman Anthony** homers, **Ortiz** gifts 'My Dawg' shi
+    27    ENGAGE          5.7s    100    0.60        personal   Business         Trade & Tariffs, Startups &    **Iran War** Drives Chinese Refineries to Frantic Prici
+    28    ENGAGE          3.6s    100    0.55        trending   Finance          Startups & Venture Capital     **Iran War** Fuels Oil Surge, Imperiling **Japan's** Ye
+    29    DEEP_READ      13.9s    100    0.62        personal   Sports           Soccer/Football                **Newcastle** Faces **Barcelona** in Champions League S
+    30    ENGAGE          3.9s    100    0.56        personal   Business         Trade & Tariffs, Startups &    **Oil** Price **Surges** Over **5%** Amid Iran Tensions
+    31    ENGAGE          5.8s     98    0.58        discovery  Business         Trade & Tariffs, Startups &    **Zaslav** Set for **$886 Million** from WBD-Paramount 
+    32    GLANCE          2.2s     97    0.27        personal   Sports           Soccer/Football                **FIFA** Faces Pressure Over **US-Iran** World Cup War
+    33    GLANCE          1.2s     96    0.24        personal   Sports           Soccer/Football                **US** Dominates **Canada**, Wins Para Ice Hockey Gold
+    34    ENGAGE          5.6s     98    0.45        trending   Finance          Startups & Venture Capital     **Lemonade** Stock **Jumps 15%** on Tesla Partnership
+    35    ENGAGE          5.0s    100    0.34        discovery  Finance          Startups & Venture Capital     **Bitcoin**, **XRP** Surge as Crude Oil Falls to **$97*
+    36    ENGAGE          3.7s     98    0.32        personal   Sports           Soccer/Football                **Real Madrid**, **Barcelona** UCL Clásico Blocked Unti
+    37    ENGAGE          6.4s    100    0.38        personal   Business         Trade & Tariffs, Startups &    **US** to Release **86 Million** Oil Barrels Next Week
+    38    ENGAGE          3.6s    100    0.41        trending   Sports           Soccer/Football                **2026 FIFA World Cup** to be Held in **NY/NJ**
+    39    ENGAGE          4.9s    100    0.45        personal   Sports           Soccer/Football                **PSG** Faces **Chelsea** with a 5-2 Lead in Champions 
+    40    ENGAGE          6.2s    100    0.43        discovery  Business         Trade & Tariffs, Startups &    **Meta** Stock Jumps on **AI** Investment, Layoff Plans
+    41    GLANCE          2.9s     97    0.22        personal   Sports           Soccer/Football                **Antonelli** Wins! **Hamilton** Joins Podium Celebrati
+    42    ENGAGE          6.1s    100    0.47        personal   Business         Trade & Tariffs, Startups &    **Qatar** Shutdown **Sparks** Helium, Chip Supply Fears
+    43    GLANCE          1.8s     98    0.13        personal   Sports           Soccer/Football                **Antonelli** Wins **Chinese** GP, First Italian in **2
+    44    GLANCE          2.2s     97    0.22        trending   Finance          Startups & Venture Capital     **Karman Holdings** IPO Leads Stocks Amid **Iran** War
+    45    GLANCE          1.7s     96    0.26        discovery  Finance          Startups & Venture Capital     **Wagers** Surge on Geopolitical Events, **Oscars**
+    46    GLANCE          1.3s     93    0.15        personal   Sports           Soccer/Football                **Bodø/Glimt** Shocks **Sporting** with **3-0** Victory
+    47    ENGAGE          4.3s     96    0.46        personal   Business         Trade & Tariffs, Startups &    **Gas Prices** Jump **21%** After Iran Strikes, Echoing
+    48    ENGAGE          6.3s     98    0.39        trending   Business         Trade & Tariffs, Startups &    **Japan** to Sell Oil at Pre-War Prices; **80M** Barrel
+    49    GLANCE          1.5s     97    0.15        personal   Sports           Soccer/Football                **Sam Kerr** Goal Sends **Australia** to Asian Cup Fina
+    50    DEEP_READ      11.7s    100    0.81        personal   Business         Trade & Tariffs, Startups &    **US** Targets **UK**, **EU** and **Canada** in Tariff 
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  26 | Avg:   4.8s | Total:   125s
+    DEEP_READ    Count:  16 | Avg:  10.8s | Total:   173s
+    GLANCE       Count:   8 | Avg:   1.9s | Total:    15s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Business               21    21      0    21      8.2s       YES
+    Sports                 20    14      0    20      4.9s       YES
+    Finance                 9     7      0     9      4.8s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10     100%     100%       7.3s     94
+    #2 (11-20)             10     100%     100%       8.2s    100
+    #3 (21-30)             10     100%     100%       7.3s    100
+    #4 (31-40)             10      80%     100%       4.5s    100
+    #5 (41-50)             10      40%     100%       4.0s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng: 100% | Rel: 100% | AvgDwell: 7.8s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  90% | Rel: 100% | AvgDwell: 5.9s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  40% | Rel: 100% | AvgDwell: 4.0s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 29 topics | 6 relevant (21%) | mode: blended
+    Explore change: 15% -> 21% (+5%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Finance          Oil Prices & Energy Markets              11  cat:Finance
+    Personal       YES      Soccer           UEFA Champions League                     9  kw:champions league+st:Soccer/Football
+    Personal       YES      Business         Trade Wars & Tariffs                      4  cat:Business+kw:trade+st:Trade & Tariffs
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       NO       AI & Tech        Tesla & Electric Vehicles                 4  none
+    Personal       NO       Motorsport       Formula 1 Racing                          5  none
+    Personal       NO       Soccer           Manchester United                         1  none
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       YES      Football         NFL Football                             49  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                              9  none
+    Personal       NO       Cricket          Cricket                                   6  none
+    Personal       NO       Soccer           Liverpool FC                              5  none
+    Personal       NO       Football         Super Bowl                                2  none
+    Personal       NO       Baseball         World Series                              1  none
+    Personal       YES      Cricket          IPL - Indian Premier League               4  kw:premier league+st:Soccer/Football
+    Personal       NO       Soccer           Arsenal FC                                5  none
+    Personal       NO       Basketball       Boston Celtics                            3  none
+    Personal       NO       Football         Kansas City Chiefs                        1  none
+    Personal       NO       Baseball         New York Yankees                          1  none
+    Trending       NO       Entertainment    Netflix Originals                        14  none
+    Trending       NO       Football         NFL Draft                                26  none
+    Trending       NO       World Politics   Israel                                   23  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       NO       Gaming           Starfield & Bethesda RPGs                 7  none
+    Trending       NO       Combat Sports    WWE Wrestling                             8  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         7  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       NO       Science          Electric Vehicles & EVs                  50  none
+    Trending       YES      Soccer           Premier League                           19  kw:premier league+st:Soccer/Football
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 313s (5.2 min) | Avg dwell: 6.3s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - 21/50 articles were Business — too repetitive
+    LIKED: "Emergency Oil Stockpiles See Biggest Release in History" (7.3s) | "**Norway Wealth Fund CEO** Warns Europe: Get Act Together" (9.7s) | "**Oil** Price Surges to **$100** Amid Iran Conflict" (14.4s)
+    Recommend: Definitely
+    Quote: "As a e-commerce founder, I found plenty of Soccer/Football content. Spent 313s total, engaged with 42 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [3/20] OLIVIA, 28 — Manchester, UK
+  Environmental journalist at The Guardian. Manchester United fan. Covers COP summits and green energy policy. Cyclist and vegan.
+  Followed topics (SHORT IDs): [climate, environment, sports, science]
+  Behavior subtopics: Climate & Environment, Biology & Nature, Soccer/Football, Space & Astronomy
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 6b53acaf... | Topics saved: [climate, environment, sports, science]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 5 relevant (19%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 29 topics, 10 relevant (34%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 29 topics, 10 relevant (34%), mode: blended
+    Read 50 articles | Engaged: 46 | Glanced: 4 | Skipped: 0 | Relevant: 50
+    Exit: NATURAL | Mood: 100/100 | Saved: 5 | Events: 55
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      12.6s     60    0.85        trending   Science          Climate & Environment, Biolo   Global Warming **Accelerates**, Exceeding Climate Model
+    2     ENGAGE          7.0s     63    0.52        personal   Sports           Soccer/Football                **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    3     DEEP_READ      11.2s     68    0.76        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    4     DEEP_READ       7.4s     73    0.94        personal   Science          Climate & Environment, Biolo   Global Warming Speeds Up; Planet Faces **1.5°C** Limit
+    5     DEEP_READ       7.1s     78    0.92        personal   Science          Climate & Environment, Biolo   **Blue Origin** Joins **NASA** to Defend Earth From Ast
+    6     ENGAGE          5.7s     80    0.46        personal   Sports           Soccer/Football                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    7     DEEP_READ       7.5s     85    1.00        personal   Science          Climate & Environment, Biolo   **NASA** Impacts Asteroid, Changes Orbit by **33 Minute
+    8     DEEP_READ      10.6s     90    0.92        personal   Science          Climate & Environment, Biolo   **Webb** Telescope Captures Bizarre **Brain-Shaped** Ne
+    9     ENGAGE          3.4s     93    0.46        trending   Sports           Soccer/Football                **Iran War** Threatens to Halt **Formula 1** Races
+    10    DEEP_READ      16.8s     98    0.79        trending   Science          Climate & Environment, Biolo   Global Warming **Increases** Deaths by **Hundreds of Th
+    11    DEEP_READ      14.4s     99    0.81        discovery  Science          Climate & Environment, Biolo   **March** Weather **Extremes** Hit US with Tornadoes, B
+    12    ENGAGE          8.3s    100    0.59        trending   Sports           Soccer/Football                **Sharma's** **50** Sparks India's T20 World Cup Win
+    13    DEEP_READ      11.5s    100    0.80    YES trending   Science          Climate & Environment, Biolo   **Supernova** Creates **Magnetar**, Confirms **Einstein
+    14    DEEP_READ      12.5s    100    1.02        personal   Science          Climate & Environment, Biolo   **Nature's** Self-Repair Ability **Stalling**, Study Fi
+    15    ENGAGE          5.0s    100    0.40        discovery  Sports           Soccer/Football                **Venezuela** Upsets **Japan** in **8-5** WBC Quarterfi
+    16    DEEP_READ       9.5s     99    0.79    YES personal   Science          Climate & Environment, Biolo   World **Heating** Up **Faster** Than Previously Thought
+    17    DEEP_READ      15.3s    100    0.88    YES personal   Science          Climate & Environment, Biolo   **NASA** Launches Twin Spacecraft to Study **Mars**
+    18    ENGAGE          3.9s    100    0.40        trending   Sports           Soccer/Football                **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    19    DEEP_READ      15.0s    100    0.71        personal   Science          Climate & Environment, Biolo   **Microbes** Survive **Asteroid** Impact, Shocking Scie
+    20    DEEP_READ      18.6s    100    0.75    YES personal   Science          Climate & Environment, Biolo   **Super El Niño** Looms, Could Drive Temps to **Record*
+    21    DEEP_READ      18.1s     99    0.64        personal   Sports           Soccer/Football                **YouTube** Streams **World Cup** Game Action Live
+    22    DEEP_READ      18.9s    100    0.69    YES personal   Science          Climate & Environment, Biolo   Climate Change: Heat **Limits** Daily Life for Millions
+    23    DEEP_READ      19.2s    100    0.81        personal   Science          Climate & Environment, Biolo   **Earth's** Rotation Slows: Day Lengthens by **1.33ms**
+    24    DEEP_READ      14.6s    100    0.80        personal   Science          Climate & Environment, Biolo   Scientists Discover **Universal** Temperature **Curve**
+    25    DEEP_READ      17.6s    100    0.71        trending   Science          Climate & Environment, Biolo   **Extremophiles** Discovery **Revolutionizes** Vaccine 
+    26    DEEP_READ      12.1s     98    0.82        personal   Science          Climate & Environment, Biolo   **Asteroid Psyche** May Expose Lost Planet's **Core**
+    27    DEEP_READ      13.5s    100    0.73        personal   Science          Climate & Environment, Biolo   **Curiosity** Rover Explores **Mars** 'Timboy Chaco' Ro
+    28    ENGAGE          3.3s    100    0.45        discovery  Sports           Soccer/Football                **Laporta** Faces **Font** in Heated Barcelona Election
+    29    ENGAGE          8.0s    100    0.51        trending   Science          Climate & Environment, Biolo   **China** Clears First **Brain-Computer** Implant for U
+    30    DEEP_READ       7.8s    100    0.64        personal   Science          Climate & Environment, Biolo   **Sun** Escaped **Milky Way's** Heart Nearly 5 Billion 
+    31    ENGAGE          3.1s     98    0.31        trending   Sports           Soccer/Football                **Williams** Shines in **Euro 2024** Final vs. England
+    32    ENGAGE          3.1s    100    0.54        personal   Science          Climate & Environment, Biolo   **Rogue Planets'** Moons May Host Life for **Billions**
+    33    DEEP_READ      16.3s    100    0.81        personal   Science          Climate & Environment, Biolo   **Scientists** Find **Hidden Water** on Mars!
+    34    GLANCE          3.3s     98    0.20        personal   Sports           Soccer/Football                **Antonelli** Wins! **Hamilton** Joins Podium Celebrati
+    35    DEEP_READ      12.1s    100    0.74        personal   Science          Climate & Environment, Biolo   **Curiosity** Rover Probes **Spiderweb** Ridges on Mars
+    36    DEEP_READ      10.9s     98    0.68        personal   Science          Climate & Environment, Biolo   **Supernova** Discovery May Unlock **Dark Energy** Secr
+    37    GLANCE          2.2s     97    0.17        discovery  Sports           Soccer/Football                **Team USA** Edges Dominican Republic in **WBC** Semifi
+    38    DEEP_READ       9.5s    100    0.73        personal   Science          Climate & Environment, Biolo   **NASA's** Nuclear **Dragonfly** to Explore Saturn Moon
+    39    ENGAGE          4.6s    100    0.59        trending   Science          Climate & Environment, Biolo   **Neuracle** Wins Approval for **Brain** Implant in Chi
+    40    GLANCE          1.4s     98    0.22        trending   Sports           Soccer/Football                **LeBron's** Block: **Cavs** End **52**-Year Drought!
+    41    DEEP_READ      15.5s     98    0.66        personal   Science          Climate & Environment, Biolo   **Colorado** Faces **Worst** Snow Drought in **40 Years
+    42    ENGAGE          5.6s    100    0.47        personal   Science          Climate & Environment, Biolo   **Hubble** Tension Eases? New Studies Show **Slower** E
+    43    GLANCE          3.4s     98    0.07        trending   Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    44    ENGAGE          6.5s    100    0.56        personal   Science          Climate & Environment, Biolo   **First** Plants Evolved From Algae **470 Million** Ago
+    45    ENGAGE          8.7s    100    0.54        personal   Science          Climate & Environment, Biolo   **Asteroid Ryugu** Reveals **Life's** Genetic Building 
+    46    ENGAGE          4.9s     98    0.51        personal   Science          Climate & Environment, Biolo   **NASA** Builds **Nuclear** Drone for Titan Launch in 2
+    47    ENGAGE          3.2s    100    0.51        personal   Science          Climate & Environment, Biolo   **Astronomers** Spot Molten Alien Planet With **Sulfur*
+    48    ENGAGE          6.2s    100    0.52        personal   Science          Climate & Environment, Biolo   **Artemis II** Mission Faces **Quantifiable** Risk, Say
+    49    ENGAGE          6.4s    100    0.51        personal   Science          Climate & Environment, Biolo   **NASA** Has No Rescue Plan for Stranded **Lunar** Astr
+    50    ENGAGE          4.6s    100    0.54        personal   Science          Climate & Environment, Biolo   **NASA** Targets Early **April** Launch for Artemis II 
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  27 | Avg:  13.2s | Total:   356s
+    ENGAGE       Count:  19 | Avg:   5.4s | Total:   102s
+    GLANCE       Count:   4 | Avg:   2.6s | Total:    10s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Science                36    36      0    36     10.8s       YES
+    Sports                 14    10      0    14      5.7s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10     100%     100%       9.0s     98
+    #2 (11-20)             10     100%     100%      11.4s    100
+    #3 (21-30)             10     100%     100%      13.3s    100
+    #4 (31-40)             10      70%     100%       6.7s     98
+    #5 (41-50)             10      90%     100%       6.5s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng: 100% | Rel: 100% | AvgDwell: 10.2s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  85% | Rel: 100% | AvgDwell: 10.0s | EndMood: 98
+    Phase 41-50+  10 articles | Eng:  90% | Rel: 100% | AvgDwell: 6.5s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 29 topics | 10 relevant (34%) | mode: blended
+    Explore change: 19% -> 34% (+16%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Science          Mars Exploration                          4  cat:Science+kw:mars+st:Space & Astronomy
+    Personal       YES      Science          NASA & Space Exploration                  3  cat:Science+kw:space+st:Space & Astronom
+    Personal       YES      Science          Climate Change                            4  cat:Science+kw:climate+st:Climate & Envi
+    Personal       YES      Science          Asteroids & Near-Earth Objects            3  cat:Science+kw:asteroid+st:Space & Astro
+    Personal       NO       Motorsport       Formula 1 Racing                          5  none
+    Personal       YES      Science          Space Telescopes                          1  cat:Science+kw:space+st:Space & Astronom
+    Personal       YES      Soccer           Premier League                           19  kw:premier league+st:Soccer/Football
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       YES      Football         NFL Football                             49  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                              9  none
+    Personal       NO       Cricket          Cricket                                   6  none
+    Personal       YES      Soccer           Manchester United                         1  kw:manchester
+    Personal       NO       Football         Super Bowl                                2  none
+    Personal       NO       Baseball         World Series                              1  none
+    Personal       YES      Cricket          IPL - Indian Premier League               4  kw:premier league+st:Soccer/Football
+    Personal       NO       Soccer           Liverpool FC                              5  none
+    Personal       NO       Basketball       Boston Celtics                            3  none
+    Personal       NO       Football         Kansas City Chiefs                        1  none
+    Personal       NO       Baseball         New York Yankees                          1  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       YES      Science          Electric Vehicles & EVs                  50  cat:Science+kw:ev
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         7  none
+    Trending       NO       Entertainment    Netflix Originals                        14  none
+    Trending       NO       Gaming           Starfield & Bethesda RPGs                 7  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       NO       Football         NFL Draft                                26  none
+    Trending       NO       Finance          Oil Prices & Energy Markets              11  none
+    Trending       NO       Combat Sports    WWE Wrestling                             8  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 468s (7.8 min) | Avg dwell: 9.4s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - 36/50 articles were Science — too repetitive
+      - Feed got WORSE: eng rate dropped from 100% (1-20) to 85% (21-40)
+    LIKED: "Global Warming **Accelerates**, Exceeding Climate Models" (12.6s) | "**Giants** Upset **Patriots** in Super Bowl XLII" (11.2s) | "Global Warming Speeds Up; Planet Faces **1.5°C** Limit" (7.4s)
+    Recommend: Definitely
+    Quote: "As a environmental journalist at the guardian, I found plenty of Climate & Environment content. Spent 468s total, engaged with 46 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [4/20] KLAUS, 54 — Frankfurt, Germany
+  Senior bond trader at Deutsche Bank. Reads Financial Times cover-to-cover. Bayern Munich fan. Follows ECB rate decisions religiously.
+  Followed topics (SHORT IDs): [finance, economy, politics, sports]
+  Behavior subtopics: Stock Markets, Banking & Lending, European Politics, Soccer/Football
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 8205cfb6... | Topics saved: [finance, economy, politics, sports]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 4 relevant (15%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 29 topics, 7 relevant (24%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 29 topics, 7 relevant (24%), mode: blended
+    Read 50 articles | Engaged: 40 | Glanced: 6 | Skipped: 4 | Relevant: 46
+    Exit: NATURAL | Mood: 98/100 | Saved: 3 | Events: 53
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      16.3s     60    0.73        trending   Finance          Stock Markets, Banking & Len   **Iran War** Drives Oil Above **$106**, Supply Chains S
+    2     ENGAGE          9.0s     63    0.45        personal   Sports           Soccer/Football                **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    3     DEEP_READ      15.4s     68    0.73        trending   Business         Stock Markets, Banking & Len   **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    4     ENGAGE          6.6s     71    0.49        personal   Politics         European Politics              **Trump** Imposes **10%** Tariff, Defies Court Ruling
+    5     DEEP_READ      23.4s     76    0.77        personal   Finance          Stock Markets, Banking & Len   **Oil** Nears **$100**, Sparks Inflation and Market Fea
+    6     ENGAGE          6.6s     78    0.46        trending   Politics         European Politics              **Trump** Removes **Sanctions** on Russian Oil Today
+    7     DEEP_READ      21.5s     83    0.85        personal   Finance          Stock Markets, Banking & Len   **Solana** Lists **200+** Tokenized Stocks for Wall Str
+    8     ENGAGE          7.3s     86    0.51    YES personal   Sports           Soccer/Football                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    9     SKIP            1.0s     82   -0.10        discovery  World            (none)                         **Israel** Launches **Airstrikes** Across Iran; Escalat
+    10    ENGAGE          5.3s     85    0.56        personal   Business         Stock Markets                  **Iran War** Fuels Global Shipping Cost **Surge**
+    11    ENGAGE          4.6s     86    0.47        trending   Sports           Soccer/Football                **Iran War** Threatens to Halt **Formula 1** Races
+    12    ENGAGE          5.2s     89    0.52        personal   Politics         European Politics              **Trump** Sanctions Critics via **Treasury** Department
+    13    DEEP_READ      22.4s     94    0.92        trending   Finance          Stock Markets, Banking & Len   **Iran War** Oil Shock **Spikes** Fed Rate Debate
+    14    ENGAGE          3.8s     97    0.41        personal   Politics         European Politics              **US** and **China** Launch Trade Talks in Paris
+    15    DEEP_READ      20.5s    100    0.71        personal   Finance          Stock Markets, Banking & Len   **Gold** Prices Stabilize Despite **Iran** War Uncertai
+    16    DEEP_READ      14.9s     99    0.82        trending   Business         Stock Markets, Banking & Len   **Wall Street** Slumps as **Iran** War Boosts Oil to **
+    17    DEEP_READ      13.1s    100    0.73    YES personal   Sports           European Politics, Soccer/Fo   **Venezuela** Reaches WBC Semifinals, Qualifies for **O
+    18    DEEP_READ      13.9s    100    0.62        personal   Politics         European Politics              **Trump** Relaunches Trade War After Court Ruling
+    19    SKIP            0.6s     96   -0.17        discovery  World            (none)                         **US-Israel** War on **Iran** Drags On, Sparks Global F
+    20    DEEP_READ      24.2s    100    0.94        personal   Finance          Stock Markets, Banking & Len   **Iran War** Drives Inflation as **Growth** Slows
+    21    ENGAGE         10.3s     99    0.50        trending   Politics         European Politics              **Trump** Removes **Russia** Sanctions Amid Iran Confli
+    22    DEEP_READ      19.3s    100    0.99        personal   Business         Stock Markets, European Poli   **Australia** Eyes **$110B** Trade Deal with Europe
+    23    ENGAGE          7.6s    100    0.50        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    24    DEEP_READ      14.0s    100    0.81        personal   Finance          Stock Markets, Banking & Len   **Stocks** Rise as **GDP** Slows, **Inflation** Stays S
+    25    DEEP_READ      24.1s    100    0.80        personal   Finance          Stock Markets, Banking & Len   **Fed** Considers Rate **Hike** Amid Fuel Price Surge
+    26    ENGAGE          7.0s     98    0.35        personal   Politics         European Politics              **US** Considers Oil Futures Trade Amid Iran Conflict
+    27    DEEP_READ      24.4s    100    0.79        personal   Business         Stock Markets, European Poli   **USA** Considers New Tariffs Against **China**, **EU**
+    28    DEEP_READ      15.9s    100    0.83        personal   Finance          Stock Markets, Banking & Len   **Dow** Rises on Surprise **Inflation**, GDP Data Today
+    29    DEEP_READ      16.6s    100    0.79        trending   Finance          Stock Markets, Banking & Len   **Dubai** Real Estate Index **Plunges 30%** Amid Iran W
+    30    ENGAGE          5.9s    100    0.54        personal   Politics         European Politics              **Trump** Sidesteps Court, **Targets** Trade Partners
+    31    DEEP_READ      24.8s     98    0.60    YES personal   Finance          Stock Markets, Banking & Len   **Bank of America** Warns: **S&P 500** Drop May Trigger
+    32    SKIP            0.9s     94   -0.25        discovery  World            (none)                         **IDF** Destroys **Khamenei's** Plane in **Tehran** Str
+    33    GLANCE          2.8s     93    0.27        personal   Business         Stock Markets                  **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    34    ENGAGE         10.7s     95    0.34        trending   Business         Stock Markets                  **Oil Prices** Soar Above **$100** Amid Strait of Hormu
+    35    ENGAGE          4.2s     98    0.32        personal   Sports           Soccer/Football                **F1** Cancels Bahrain, Saudi Races Amid **Iran** War
+    36    GLANCE          4.2s     95    0.27        personal   Politics         European Politics              **Trump** Addresses Iran War, Digresses to Personal Mat
+    37    ENGAGE          9.0s     98    0.37        personal   Finance          Stock Markets, Banking & Len   **Spain** Faces **4%** Inflation Peaks Amid Iran Confli
+    38    DEEP_READ      18.4s    100    0.80        personal   Business         Stock Markets, European Poli   **US**, **EU**, and **Japan** Advance Critical Minerals
+    39    ENGAGE          5.6s    100    0.40        trending   Politics         European Politics              **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    40    DEEP_READ      17.2s    100    0.67        personal   Business         Stock Markets, European Poli   **US** Targets **UK**, **EU** and **Canada** in Tariff 
+    41    ENGAGE          8.1s     98    0.31        personal   Sports           Soccer/Football                **MotoGP** Postpones **Qatar** GP Amid Iran War Escalat
+    42    SKIP            0.5s     94   -0.39        discovery  World            (none)                         **Israel** Strikes **Tehran**, Iran Threatens Gulf Stat
+    43    ENGAGE          7.1s     97    0.34        personal   Finance          Stock Markets, Banking & Len   **China Stocks** Face **10%** Drop if **Trump** Delays 
+    44    GLANCE          4.7s     95    0.15        trending   Sports           Soccer/Football                **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    45    GLANCE          4.0s     94    0.08        personal   Politics         European Politics              **Trump** Administration Eases Sanctions on **Russian**
+    46    ENGAGE          8.1s     95    0.31        personal   Business         Stock Markets                  **Trump's Tariffs** Cost Automakers Over **$35 Billion*
+    47    ENGAGE         12.2s     98    0.51        personal   Finance          Stock Markets, Banking & Len   **Stocks** Rise, **Oil** Jumps Above $100 Amid Iran Ten
+    48    GLANCE          3.1s     97    0.07        personal   Business         Stock Markets                  **Iran War** Drives Chinese Refineries to Frantic Prici
+    49    ENGAGE          9.0s     99    0.40        trending   Finance          Stock Markets, Banking & Len   **US** National Debt Surpasses **$38 Trillion**, Crisis
+    50    GLANCE          3.4s     98    0.19        personal   Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Amid
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  21 | Avg:   7.3s | Total:   153s
+    DEEP_READ    Count:  19 | Avg:  19.0s | Total:   360s
+    GLANCE       Count:   6 | Avg:   3.7s | Total:    22s
+    SKIP         Count:   4 | Avg:   0.7s | Total:     3s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Finance                15    15      0    15     17.4s       YES
+    Business               11     9      0    11     12.7s       YES
+    Politics               11     9      0    11      6.6s       YES
+    Sports                  9     7      0     9      6.9s       YES
+    World                   4     0      4     0      0.7s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%      11.2s     85
+    #2 (11-20)             10      90%      90%      12.3s    100
+    #3 (21-30)             10     100%     100%      14.5s    100
+    #4 (31-40)             10      70%      90%       9.8s    100
+    #5 (41-50)             10      50%      90%       6.0s     98
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 11.8s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  85% | Rel:  95% | AvgDwell: 12.1s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  50% | Rel:  90% | AvgDwell: 6.0s | EndMood: 98
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 29 topics | 6 relevant (21%) | mode: blended
+    Explore change: 15% -> 21% (+6%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       YES      Business         Trade Wars & Tariffs                      4  cat:Business
+    Personal       YES      Finance          Inflation & Cost of Living                7  cat:Finance+kw:inflation+st:Banking & Le
+    Personal       NO       Motorsport       Formula 1 Racing                          5  none
+    Personal       NO       World Politics   Venezuela                                 8  none
+    Personal       NO       Sports Events    Olympic Games                             2  none
+    Personal       YES      Finance          Oil Prices & Energy Markets              11  cat:Finance
+    Personal       YES      Soccer           Premier League                           19  kw:premier league+st:Soccer/Football
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       YES      Football         NFL Football                             49  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                              9  none
+    Personal       NO       Cricket          Cricket                                   6  none
+    Personal       NO       Soccer           Manchester United                         1  none
+    Personal       NO       Football         Super Bowl                                2  none
+    Personal       NO       Baseball         World Series                              1  none
+    Personal       YES      Cricket          IPL - Indian Premier League               4  kw:premier league+st:Soccer/Football
+    Personal       NO       Soccer           Liverpool FC                              5  none
+    Personal       NO       Basketball       Boston Celtics                            3  none
+    Personal       NO       Football         Kansas City Chiefs                        1  none
+    Trending       NO       Soccer           Arsenal FC                                5  none
+    Trending       NO       World Politics   Israel                                   23  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       NO       Science          Electric Vehicles & EVs                  50  none
+    Trending       NO       Gaming           Starfield & Bethesda RPGs                 7  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       NO       Entertainment    Netflix Originals                        14  none
+    Trending       NO       Football         NFL Draft                                26  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         7  none
+    Trending       NO       Combat Sports    WWE Wrestling                             8  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 539s (9.0 min) | Avg dwell: 10.8s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 4 World articles but I don't follow World
+      - Worst: "**Israel** Strikes **Tehran**, Iran Threatens Gulf States" (World) — score -0.39, 0.5s
+    LIKED: "**Iran War** Drives Oil Above **$106**, Supply Chains Strain" (16.3s) | "**Oil** Jumps to **$100** as Iran War Fears Grip Markets" (15.4s) | "**Oil** Nears **$100**, Sparks Inflation and Market Fears" (23.4s)
+    Recommend: Definitely
+    Quote: "As a senior bond trader at deutsche bank, I found plenty of Stock Markets content. Spent 539s total, engaged with 40 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [5/20] AMELIE, 25 — Paris, France
+  Fashion design student at Parsons Paris. Lives for Met Gala and Cannes. PSG fan. Follows every A24 release. K-pop stan (BLACKPINK).
+  Followed topics (SHORT IDs): [entertainment, culture, sports]
+  Behavior subtopics: Movies & Film, Celebrity Style & Red Carpet, K-Pop & K-Drama, Soccer/Football, Music
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 6a68f97d... | Topics saved: [entertainment, culture, sports]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 26 topics | 5 relevant (19%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 29 topics, 7 relevant (24%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 29 topics, 7 relevant (24%), mode: blended
+    Read 50 articles | Engaged: 44 | Glanced: 2 | Skipped: 1 | Relevant: 46
+    Exit: NATURAL | Mood: 100/100 | Saved: 4 | Events: 54
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     SCAN            1.6s     53   -0.01        trending   Tech             (none)                         **AI** Jails Grandma for **6 Months** in Mistaken ID
+    2     DEEP_READ       9.3s     58    1.06        personal   Entertainment    Movies & Film, Celebrity Sty   **K-Pop** Group **HUNTR/X** Wins First Oscar for Song
+    3     SCAN            2.4s     55   -0.01        trending   Tech             (none)                         **AI** Chatbots **Fuel** Mass Casualty Attack Plans
+    4     ENGAGE          5.5s     58    0.38        personal   Sports           Soccer/Football                **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    5     DEEP_READ       4.7s     63    0.71        personal   Entertainment    Movies & Film, Celebrity Sty   **Netflix CEO** Dismisses AI Mass Content as Inferior
+    6     DEEP_READ       5.0s     67    0.61        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    7     DEEP_READ       6.3s     72    1.05        personal   Entertainment    Movies & Film, Celebrity Sty   **Hattie McDaniel** Makes **Oscar** History in **1940**
+    8     DEEP_READ       6.7s     77    1.13        personal   Entertainment    Movies & Film, Celebrity Sty   **McAdams** Honors **Diane Keaton** at 2026 Oscars
+    9     SCAN            2.2s     74   -0.07        personal   Tech             (none)                         **Microsoft** Launches **Copilot AI** on Xbox Consoles
+    10    DEEP_READ       9.1s     81    1.20    YES discovery  Entertainment    Movies & Film, Celebrity Sty   **Coogler** Wins Oscar, Gives Speech to Wife, **Kids**
+    11    ENGAGE          5.2s     83    0.43        trending   Sports           Soccer/Football                **Iran War** Threatens to Halt **Formula 1** Races
+    12    DEEP_READ      13.0s     88    1.14        personal   Entertainment    Movies & Film, Celebrity Sty   **Arkapaw** Makes History as First Female Cinematograph
+    13    ENGAGE          2.9s     91    0.58    YES trending   Sports           Soccer/Football                **Sharma's** **50** Sparks India's T20 World Cup Win
+    14    DEEP_READ      10.9s     96    0.68        personal   Entertainment    Movies & Film, Celebrity Sty   **KPop Demon Hunters** Team Seeks More Cultural Animati
+    15    DEEP_READ      12.7s    100    1.15        personal   Entertainment    Movies & Film, Celebrity Sty   **Ryan Coogler** Snags **Oscar** for 'Sinners' Screenpl
+    16    ENGAGE          3.8s     99    0.54        trending   Sports           Soccer/Football                **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    17    DEEP_READ       4.9s    100    0.99        personal   Entertainment    Movies & Film, Celebrity Sty   **Netflix** Films Win Big at **Oscars** Ceremony
+    18    DEEP_READ       7.5s    100    0.77        personal   Entertainment    Movies & Film, Celebrity Sty   **BTS** Announces Comeback with New Album **ARIRANG**
+    19    ENGAGE          5.5s    100    0.49        discovery  Sports           Soccer/Football                **Cacace** Beats Dickens, Wins **WBA** Super-Featherwei
+    20    ENGAGE          6.3s    100    0.54        personal   Sports           Soccer/Football                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    21    DEEP_READ       5.6s     99    1.03    YES personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars 2026**: **'One Battle After Another'** Wins Be
+    22    ENGAGE          6.0s    100    0.35        trending   Sports           Soccer/Football                **LeBron's** Block: **Cavs** End **52**-Year Drought!
+    23    ENGAGE          4.6s    100    0.53        trending   Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    24    DEEP_READ       6.7s    100    0.62        personal   Entertainment    Movies & Film, Celebrity Sty   **Super Mario Galaxy Movie** Eyes **$160M** Opening
+    25    DEEP_READ       9.7s    100    0.94        personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars** Honor **Rob Reiner** With Star-Studded Tribu
+    26    DEEP_READ      12.6s     98    1.00        personal   Entertainment    Movies & Film, Celebrity Sty   **Jessie Buckley** Claims **Best Actress** Oscar for *H
+    27    DEEP_READ       9.8s    100    0.87        personal   Sports           Movies & Film, Soccer/Footba   **Alysa Liu** Wins **Olympic** Gold, Attends Oscar Part
+    28    DEEP_READ       5.9s    100    0.92        personal   Entertainment    Movies & Film, Celebrity Sty   **Anora** Sweeps **Oscars**, Baker Wins 4 Awards
+    29    ENGAGE          1.9s    100    0.41        trending   Sports           Soccer/Football                **Williams** Shines in **Euro 2024** Final vs. England
+    30    DEEP_READ      10.7s    100    0.93        personal   Entertainment    Movies & Film, Celebrity Sty   **Norwegian** Film **'Sentimental Value'** Wins Oscar
+    31    DEEP_READ      10.8s     98    0.95        personal   Entertainment    Movies & Film, Celebrity Sty   **Miles Caton** & **Saadiq** Rock Oscars with 'Sinners'
+    32    GLANCE          1.7s     97    0.26        discovery  Sports           Soccer/Football                **Team USA** Enters WBC Final Appreciating Opponents' F
+    33    DEEP_READ       6.9s    100    0.78        personal   Entertainment    Movies & Film, Celebrity Sty   **Paul Thomas Anderson** Wins **Oscar** for Screenplay
+    34    ENGAGE          2.8s    100    0.57        trending   Sports           Soccer/Football, Music         **Tiger Woods** Wins **15th** Major, **5th** Masters Ti
+    35    DEEP_READ      12.4s    100    0.95    YES personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars** Countdown: **'Sinners'** Leads with Record *
+    36    DEEP_READ       4.6s     98    0.78        personal   Entertainment    Movies & Film, Celebrity Sty   **Sinners** Dominates Charts After **Oscar** Wins
+    37    GLANCE          1.5s     97    0.12        discovery  Sports           Soccer/Football                **Mets'** McLean to Start for **USA** in WBC Championsh
+    38    DEEP_READ      11.2s    100    0.93        personal   Entertainment    Movies & Film, Celebrity Sty   **Jordan** Beats **Chalamet** for Best Actor Oscar
+    39    DEEP_READ      11.3s    100    0.78        trending   Entertainment    Movies & Film, Celebrity Sty   **Steve Kerr** Wins Oscar for Documentary Short
+    40    ENGAGE          4.3s    100    0.34        personal   Sports           Soccer/Football                **YouTube** Streams **World Cup** Game Action Live
+    41    ENGAGE          3.7s     98    0.52        personal   Entertainment    Movies & Film, Celebrity Sty   **Luchino Visconti** Remembered **50 Years** After Deat
+    42    DEEP_READ       4.6s    100    0.75        personal   Entertainment    Movies & Film, Celebrity Sty   **Sinners** Leads With **16** Oscar Nominations Sunday
+    43    SKIP            1.0s     95   -0.53        trending   Tech             (none)                         **Switch 2** Update Adds **Handheld Boost Mode**
+    44    ENGAGE          2.2s     98    0.59        trending   Entertainment    Movies & Film, Celebrity Sty   **Michael B. Jordan**, **Jessie Buckley** Win Oscars!
+    45    DEEP_READ      12.5s    100    0.87        personal   Entertainment    Movies & Film, Celebrity Sty   **KPop Demon Hunters** Win Sparks Oscars Speech Cutoff
+    46    DEEP_READ      10.3s     98    0.85        personal   Entertainment    Movies & Film, Celebrity Sty   **Michael B. Jordan** Wins Oscar, Makes **Premier Leagu
+    47    DEEP_READ       9.0s    100    0.75        personal   Entertainment    Movies & Film, Celebrity Sty   **Sean Penn** Wins **Oscar** for 'One Battle After Anot
+    48    DEEP_READ      12.7s    100    0.83        personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars** Face-Off: **'Battle'** vs. **'Sinners'** Ton
+    49    DEEP_READ       9.4s    100    0.78        personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars** Underway; **Sinners** Scores Record Nominati
+    50    DEEP_READ       7.1s    100    0.77        personal   Entertainment    Movies & Film, Celebrity Sty   **Amy Madigan** Ends **34-Year** Horror Oscar Drought
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  31 | Avg:   8.8s | Total:   274s
+    ENGAGE       Count:  13 | Avg:   4.2s | Total:    55s
+    SCAN         Count:   3 | Avg:   2.1s | Total:     6s
+    GLANCE       Count:   2 | Avg:   1.6s | Total:     3s
+    SKIP         Count:   1 | Avg:   1.0s | Total:     1s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Entertainment          31    31      0    31      8.5s       YES
+    Sports                 15    13      0    15      4.5s       YES
+    Tech                    4     0      1     0      1.8s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      70%      70%       5.3s     81
+    #2 (11-20)             10     100%     100%       7.3s    100
+    #3 (21-30)             10     100%     100%       7.4s    100
+    #4 (31-40)             10      80%     100%       6.7s    100
+    #5 (41-50)             10      90%      90%       7.3s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  85% | Rel:  85% | AvgDwell: 6.3s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  90% | Rel: 100% | AvgDwell: 7.0s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  90% | Rel:  90% | AvgDwell: 7.3s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 29 topics | 7 relevant (24%) | mode: blended
+    Explore change: 19% -> 24% (+5%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Entertainment    Academy Awards & Oscars                  16  cat:Entertainment+kw:oscar+st:Movies & F
+    Personal       YES      Entertainment    Netflix Originals                        14  cat:Entertainment
+    Personal       NO       Motorsport       Formula 1 Racing                          5  none
+    Personal       YES      K-Pop & Music    BTS                                       2  kw:bts+st:K-Pop & K-Drama
+    Personal       NO       Sports Events    Olympic Games                             2  none
+    Personal       NO       Soccer           Manchester United                         1  none
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       YES      Football         NFL Football                             49  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                              9  none
+    Personal       NO       Cricket          Cricket                                   6  none
+    Personal       NO       Soccer           Liverpool FC                              5  none
+    Personal       NO       Football         Super Bowl                                2  none
+    Personal       NO       Baseball         World Series                              1  none
+    Personal       YES      Cricket          IPL - Indian Premier League               4  kw:premier league+st:Soccer/Football
+    Personal       NO       Soccer           Arsenal FC                                5  none
+    Personal       NO       Basketball       Boston Celtics                            3  none
+    Personal       NO       Football         Kansas City Chiefs                        1  none
+    Personal       NO       Baseball         New York Yankees                          1  none
+    Personal       NO       Cricket          The Ashes                                 5  none
+    Trending       YES      Lifestyle        Travel & Tourism                         10  cat:Lifestyle+kw:tour+st:Music
+    Trending       NO       Science          Electric Vehicles & EVs                  50  none
+    Trending       NO       Finance          Oil Prices & Energy Markets              11  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       Football         NFL Draft                                26  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         7  none
+    Trending       NO       Combat Sports    WWE Wrestling                             8  none
+    Trending       NO       Gaming           Starfield & Bethesda RPGs                 7  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       YES      Soccer           Premier League                           19  kw:premier league+st:Soccer/Football
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Same)
+    Session: 339s (5.6 min) | Avg dwell: 6.8s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 4 Tech articles but I don't follow Tech
+      - Worst: "**Switch 2** Update Adds **Handheld Boost Mode**" (Tech) — score -0.53, 1.0s
+      - 31/50 articles were Entertainment — too repetitive
+    LIKED: "**K-Pop** Group **HUNTR/X** Wins First Oscar for Song" (9.3s) | "**Netflix CEO** Dismisses AI Mass Content as Inferior" (4.7s) | "**Giants** Upset **Patriots** in Super Bowl XLII" (5.0s)
+    Recommend: Definitely
+    Quote: "As a fashion design student at parsons paris, I found plenty of Movies & Film content. Spent 339s total, engaged with 44 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [6/20] ARJUN, 29 — Bangalore, India
+  Backend engineer at Flipkart. Die-hard RCB cricket fan. Follows Indian startup scene and AI tools. Plays PUBG Mobile competitively.
+  Followed topics (SHORT IDs): [technology, ai, sports, startups]
+  Behavior subtopics: AI & Machine Learning, Cricket, Startups & Venture Capital, Gaming, Smartphones & Gadgets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: c4e5325e... | Topics saved: [technology, ai, sports, startups]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 26 topics | 6 relevant (23%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 29 topics, 8 relevant (28%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 28 topics, 7 relevant (25%), mode: blended
+    Read 50 articles | Engaged: 47 | Glanced: 0 | Skipped: 3 | Relevant: 47
+    Exit: NATURAL | Mood: 100/100 | Saved: 1 | Events: 51
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      10.1s     60    1.02        trending   Tech             AI & Machine Learning, Gamin   **AI** Chatbots **Fuel** Mass Casualty Attack Plans
+    2     SKIP            0.7s     56   -0.19        personal   Science          (none)                         **Blue Origin** Joins **NASA** to Defend Earth From Ast
+    3     SKIP            0.9s     52   -0.16        trending   Science          (none)                         **Extremophiles** Discovery **Revolutionizes** Vaccine 
+    4     DEEP_READ      14.4s     57    0.93        personal   Business         AI & Machine Learning, Start   **OpenAI** Seeks **$4B** Investment for Enterprise AI V
+    5     DEEP_READ       9.5s     62    0.87        personal   Sports           AI & Machine Learning, Crick   **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    6     ENGAGE          6.4s     64    0.52        trending   Sports           Cricket                        **Giants** Upset **Patriots** in Super Bowl XLII
+    7     DEEP_READ      16.1s     69    0.88        personal   Tech             AI & Machine Learning, Gamin   **Meta** AI Glasses Raise **Privacy** Concerns
+    8     DEEP_READ      11.7s     74    1.10        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Debuts GPT-5.4 **Mini** and **Nano** Models
+    9     DEEP_READ       8.7s     79    1.14        personal   Business         AI & Machine Learning, Start   **Nebius** Seeks **$3.75 Billion** Loan After Meta, Nvi
+    10    DEEP_READ      11.9s     84    1.03        discovery  Tech             AI & Machine Learning, Gamin   **Nvidia** Unveils **88-Core** Vera CPU to Challenge Ri
+    11    ENGAGE          8.0s     85    0.44        trending   Business         Startups & Venture Capital     **Gas Prices** Jump **21%** in Germany Amid Iran War
+    12    ENGAGE          5.7s     88    0.36        personal   Sports           Cricket                        **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    13    ENGAGE          5.6s     91    0.47        trending   Finance          Startups & Venture Capital     **US** National Debt Surpasses **$38 Trillion**, Crisis
+    14    ENGAGE          2.9s     94    0.40    YES personal   Science          AI & Machine Learning          **AI** Unmasks Anonymous Social Media Accounts at Scale
+    15    DEEP_READ      10.0s     99    1.05        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Reveals **Rubin Ultra** GPU with 1TB Memory
+    16    DEEP_READ       6.3s     99    0.80        trending   Tech             AI & Machine Learning, Gamin   **AI** Jails Grandma for **6 Months** in Mistaken ID
+    17    DEEP_READ      10.4s    100    0.92        personal   Business         AI & Machine Learning, Start   **Britannica** Sues **OpenAI**, Alleges AI Training Mis
+    18    DEEP_READ      16.2s    100    0.93        personal   Business         AI & Machine Learning, Start   **Meta** Inks **$27 Billion** AI Deal with Nebius Group
+    19    DEEP_READ      11.0s    100    0.80        discovery  Tech             AI & Machine Learning, Gamin   **OpenClaw** Craze **Transforms** China's AI Sector
+    20    DEEP_READ       7.7s    100    0.96        personal   Tech             AI & Machine Learning, Start   **Google**, **Accel** Back 5 India AI Startups
+    21    SKIP            0.6s     95   -0.25        trending   Science          (none)                         Global Warming **Increases** Deaths by **Hundreds of Th
+    22    DEEP_READ      13.5s     99    0.69        personal   Business         AI & Machine Learning, Start   **Meta** Prepares for **16,000** Job Cuts, Focuses on *
+    23    DEEP_READ      12.3s    100    0.71        trending   Sports           AI & Machine Learning, Crick   **Iran War** Threatens to Halt **Formula 1** Races
+    24    DEEP_READ      13.2s    100    1.18        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Unveils **Vera Rubin** AI Platform with 7 Ch
+    25    DEEP_READ      14.1s    100    0.88        personal   Tech             AI & Machine Learning, Gamin   **Texas Instruments** and **NVIDIA** Partner on Humanoi
+    26    DEEP_READ      15.6s     98    0.90        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Faces Suit After **Tumbler Ridge** Shooting
+    27    DEEP_READ       7.6s    100    0.81        personal   Business         AI & Machine Learning, Start   **Meta** Plans **20%** Job Cuts Amid AI Investments
+    28    DEEP_READ      12.9s    100    0.87        personal   Tech             AI & Machine Learning, Gamin   **Palantir** Demos **AI** Chatbots for Military War Pla
+    29    ENGAGE          8.2s    100    0.44        trending   Science          AI & Machine Learning          **China** Clears First **Brain-Computer** Implant for U
+    30    DEEP_READ      12.8s    100    0.64        personal   Tech             AI & Machine Learning, Gamin   **Meta** Buys **Moltbook**, AI Social Network Under Fir
+    31    DEEP_READ       6.3s     98    0.92        personal   Finance          AI & Machine Learning, Start   **Nvidia's** GTC **Jolts** AI Stock Market This Week
+    32    DEEP_READ      13.4s    100    0.67        discovery  Sports           AI & Machine Learning, Crick   **Mbappé** Set to Travel for **Champions League** Clash
+    33    DEEP_READ       7.0s    100    0.93        personal   Business         AI & Machine Learning, Start   **Nvidia** Sees Over **$500B** Revenue Through 2026
+    34    ENGAGE          4.6s    100    0.37        trending   Science          AI & Machine Learning          **Neuracle** Wins Approval for **Brain** Implant in Chi
+    35    DEEP_READ      15.4s    100    0.99        personal   Tech             AI & Machine Learning, Gamin   **Glitch Prompt** Makes **ChatGPT** Smarter, More Relia
+    36    DEEP_READ      12.5s     98    0.64        personal   Tech             AI & Machine Learning, Gamin   **Meta** Glasses Act as **AI** Shopping Assistant
+    37    ENGAGE          5.7s    100    0.51        personal   Science          AI & Machine Learning          **AI** Creates **mRNA** Cancer Vaccine for Beloved Dog
+    38    DEEP_READ       6.2s    100    0.88        personal   Business         AI & Machine Learning, Start   **Nvidia** Invests **$2 Billion** in Nebius Group N.V.
+    39    DEEP_READ       9.5s    100    0.68        trending   Sports           AI & Machine Learning, Crick   **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    40    ENGAGE          3.4s    100    0.51        personal   Tech             AI & Machine Learning, Gamin   **Meta**, **YouTube** Face Social Media Addiction Trial
+    41    DEEP_READ      12.3s     98    0.89        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Aims for **Film-Level** Graphics in Future G
+    42    ENGAGE          3.5s    100    0.57        discovery  Business         AI & Machine Learning, Start   **AirTrunk** Invests **$8 Billion** in Japan Data Cente
+    43    ENGAGE          4.3s    100    0.50        personal   Tech             AI & Machine Learning, Gamin   **1Password** Tool **NanoClaw** Tackles AI Agent Securi
+    44    ENGAGE          7.3s    100    0.45        trending   Business         AI & Machine Learning, Start   **Iran War** Sparks **16%** Gas Price Surge in Spain
+    45    DEEP_READ      12.0s    100    0.84        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Advisor Warns: **ChatGPT** a 'Suicide Coach'
+    46    ENGAGE          2.6s     98    0.58        personal   Tech             AI & Machine Learning, Gamin   **Samsung Galaxy S26 Ultra** Boasts New Privacy Display
+    47    ENGAGE          6.3s    100    0.58        trending   Finance          AI & Machine Learning, Start   **Iran War** Drives Oil Above **$106**, Supply Chains S
+    48    DEEP_READ       6.5s    100    0.70        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** GTC 2026: **Huang** Reveals Next-Gen **GPUs*
+    49    ENGAGE          7.6s    100    0.47        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Adult Mode Blocks **Pornographic** Content
+    50    ENGAGE          2.8s    100    0.51        personal   Business         AI & Machine Learning, Start   **Meta** Weighs Layoffs Amid **AI** Investment Surge
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  31 | Avg:  11.2s | Total:   347s
+    ENGAGE       Count:  16 | Avg:   5.3s | Total:    85s
+    SKIP         Count:   3 | Avg:   0.8s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Tech                   22    22      0    22     10.5s       YES
+    Business               12    12      0    12      8.8s       YES
+    Science                 7     4      3     4      3.4s        no
+    Sports                  6     6      0     6      9.5s       YES
+    Finance                 3     3      0     3      6.1s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      80%      80%       9.1s     84
+    #2 (11-20)             10     100%     100%       8.4s    100
+    #3 (21-30)             10      90%      90%      11.1s    100
+    #4 (31-40)             10     100%     100%       8.4s    100
+    #5 (41-50)             10     100%     100%       6.5s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 8.7s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  95% | Rel:  95% | AvgDwell: 9.7s | EndMood: 100
+    Phase 41-50+  10 articles | Eng: 100% | Rel: 100% | AvgDwell: 6.5s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 28 topics | 7 relevant (25%) | mode: blended
+    Explore change: 23% -> 25% (+2%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       AI & Tech        Meta & Facebook                           5  none
+    Personal       YES      AI & Tech        Nvidia & AI Chips                         7  kw:ai+st:AI & Machine Learning
+    Personal       YES      AI & Tech        OpenAI & ChatGPT                          3  kw:ai+st:AI & Machine Learning
+    Personal       YES      AI & Tech        ChatGPT                                   1  kw:chatgpt+st:AI & Machine Learning
+    Personal       NO       Motorsport       Formula 1 Racing                          5  none
+    Personal       NO       AI & Tech        Cybersecurity & Hacking                   2  none
+    Personal       NO       Soccer           Manchester United                         1  none
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       NO       Football         NFL Football                             49  none
+    Personal       BAD      Baseball         MLB Baseball                              9  none
+    Personal       YES      Cricket          Cricket                                   6  kw:cricket+st:Cricket
+    Personal       NO       Soccer           Liverpool FC                              5  none
+    Personal       BAD      Football         Super Bowl                                2  none
+    Personal       NO       Baseball         World Series                              1  none
+    Personal       YES      Cricket          IPL - Indian Premier League               4  kw:ipl+st:Cricket
+    Personal       NO       Soccer           Arsenal FC                                5  none
+    Personal       NO       Basketball       Boston Celtics                            3  none
+    Personal       NO       Football         Kansas City Chiefs                        1  none
+    Trending       NO       Gaming           Starfield & Bethesda RPGs                 7  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       YES      Finance          Oil Prices & Energy Markets              11  cat:Finance
+    Trending       BAD      Football         NFL Draft                                26  none
+    Trending       NO       Soccer           Premier League                           19  none
+    Trending       NO       Science          Electric Vehicles & EVs                  50  none
+    Trending       NO       Sports Events    March Madness & NCAA                     13  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       Combat Sports    WWE Wrestling                             8  none
+    Trending       YES      Entertainment    Netflix Originals                        14  cat:Entertainment
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Same)
+    Session: 434s (7.2 min) | Avg dwell: 8.7s
+    Best: Article relevance to my interests
+    Complaint: Nothing major
+      - Shown 3 Science articles but I don't follow Science
+      - Worst: "Global Warming **Increases** Deaths by **Hundreds of Thousan" (Science) — score -0.25, 0.6s
+      - 22/50 articles were Tech — too repetitive
+    LIKED: "**AI** Chatbots **Fuel** Mass Casualty Attack Plans" (10.1s) | "**OpenAI** Seeks **$4B** Investment for Enterprise AI Ventur" (14.4s) | "**Antonelli** Claims Maiden **F1** Win; Sinner Gives Shoutou" (9.5s)
+    Recommend: Definitely
+    Quote: "As a backend engineer at flipkart, I found plenty of AI & Machine Learning content. Spent 434s total, engaged with 47 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [7/20] LUCAS, 27 — Sao Paulo, Brazil
+  DeFi trader and Flamengo ultra. Charts bitcoin whale wallets. Follows Vini Jr at Real Madrid. Hosts a Portuguese crypto podcast.
+  Followed topics (SHORT IDs): [crypto, sports, finance]
+  Behavior subtopics: Bitcoin, DeFi & Web3, Soccer/Football, Stock Markets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 3405d050... | Topics saved: [crypto, sports, finance]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 4 relevant (15%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore check failed at 20: socket hang up
+    [Feed API error: getaddrinfo ENOTFOUND www.tennews.ai, retrying (1/3)...]
+    [Feed API error: getaddrinfo ENOTFOUND www.tennews.ai, retrying (2/3)...]
+    Feed fetch error page 2: getaddrinfo ENOTFOUND www.tennews.ai
+    Read 25 articles | Engaged: 25 | Glanced: 0 | Skipped: 0 | Relevant: 25
+    Exit: NATURAL | Mood: 100/100 | Saved: 3 | Events: 22
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      13.6s     60    0.70        trending   Finance          Bitcoin, DeFi & Web3, Stock    **Iran War** Oil Shock **Spikes** Fed Rate Debate
+    2     ENGAGE          4.7s     63    0.49        personal   Sports           Soccer/Football                **Antonelli** Claims Maiden **F1** Win; Sinner Gives Sh
+    3     DEEP_READ       9.9s     68    0.71        trending   Tech             Bitcoin, DeFi & Web3           **AI** Jails Grandma for **6 Months** in Mistaken ID
+    4     DEEP_READ      10.7s     73    1.15        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Strategy** Buys **22,337** Bitcoin, Shifts Funding Mo
+    5     DEEP_READ      14.4s     78    1.10        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Solana** Lists **200+** Tokenized Stocks for Wall Str
+    6     DEEP_READ      13.8s     82    0.65        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    7     DEEP_READ       9.8s     87    1.07        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Oil** Price **Surge** May Hurt **Bitcoin** Recovery
+    8     ENGAGE          6.5s     90    0.45        personal   Sports           Soccer/Football                **Antonelli** Wins! **19-Year-Old** Italian F1 Sensatio
+    9     DEEP_READ       9.6s     95    0.76        discovery  Sports           Soccer/Football                **Scheib** Wins Giant Slalom, Secures **World Cup** Tit
+    10    DEEP_READ       5.0s    100    1.01        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Bitcoin** Foreshadowed Stock Plunge to **$60,000**
+    11    DEEP_READ       5.0s     99    0.63    YES trending   Business         Stock Markets                  **Wall Street** Slumps as **Iran** War Boosts Oil to **
+    12    DEEP_READ      11.4s    100    0.99        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Ethereum** Price **Jumps 8.8%**, Boosts CoinDesk 20 I
+    13    DEEP_READ       8.3s    100    0.93        trending   Finance          Bitcoin, DeFi & Web3, Stock    **European** Stocks Plunge **$1.16 Trillion** Amid Iran
+    14    DEEP_READ       6.4s    100    0.75        trending   Tech             Bitcoin, DeFi & Web3           **AI** Chatbots **Fuel** Mass Casualty Attack Plans
+    15    DEEP_READ      14.2s    100    1.14        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Bitcoin** **Surges** Above **$73,700**, Breaching Key
+    16    DEEP_READ      12.3s     99    1.00        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Bitcoin** Hits Resistance at **$75,000** Amid Energy 
+    17    ENGAGE          6.6s    100    0.57        personal   Sports           Soccer/Football                **YouTube** Streams **World Cup** Game Action Live
+    18    DEEP_READ      14.5s    100    0.74        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Stocks** Rise as **GDP** Slows, **Inflation** Stays S
+    19    ENGAGE          3.2s    100    0.60        discovery  Business         Stock Markets                  **Nvidia** Invests **$2 Billion** in Nebius Group N.V.
+    20    DEEP_READ       8.1s    100    0.76    YES personal   Finance          Bitcoin, DeFi & Web3, Stock    **Dow** Rises on Surprise **Inflation**, GDP Data Today
+    21    ENGAGE          7.0s     99    0.54        trending   Sports           Soccer/Football                **Iran War** Threatens to Halt **Formula 1** Races
+    22    DEEP_READ      14.4s    100    0.86    YES personal   Finance          Bitcoin, DeFi & Web3, Stock    **Bitcoin** Hits **8-Day** Streak, Nears **$75,000** Hi
+    23    DEEP_READ      10.4s    100    0.62        trending   Business         Stock Markets                  **Wall Street** Warns: Iran War Triggers Energy Crisis
+    24    DEEP_READ      14.9s    100    0.82        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Bitcoin**, **XRP** Surge as Crude Oil Falls to **$97*
+    25    DEEP_READ       6.7s    100    0.94        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Wall Street** Funds Limit Withdrawals as **Bitcoin** 
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  20 | Avg:  10.7s | Total:   213s
+    ENGAGE       Count:   5 | Avg:   5.6s | Total:    28s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Finance                14    14      0    14     11.3s       YES
+    Sports                  6     6      0     6      8.0s       YES
+    Business                3     3      0     3      6.2s       YES
+    Tech                    2     2      0     2      8.2s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10     100%     100%       9.8s    100
+    #2 (11-20)             10     100%     100%       9.0s    100
+    #3 (21-25)              5     100%     100%      10.7s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng: 100% | Rel: 100% | AvgDwell: 9.4s | EndMood: 100
+    Phase 21-40    5 articles | Eng: 100% | Rel: 100% | AvgDwell: 10.7s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 0 topics | 0 relevant (0%) | mode: unknown
+    Explore change: 15% -> 0% (-15%)
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Poor (Declined)
+    Session: 241s (4.0 min) | Avg dwell: 9.6s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - 14/25 articles were Finance — too repetitive
+    LIKED: "**Iran War** Oil Shock **Spikes** Fed Rate Debate" (13.6s) | "**AI** Jails Grandma for **6 Months** in Mistaken ID" (9.9s) | "**Strategy** Buys **22,337** Bitcoin, Shifts Funding Model" (10.7s)
+    Recommend: Definitely
+    Quote: "As a defi trader and flamengo ultra, I found plenty of Bitcoin content. Spent 241s total, engaged with 25 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [8/20] YUKI, 23 — Tokyo, Japan
+  Game developer at a small Tokyo studio. Follows every Nintendo Direct. Into AI art and VR. Watches anime and follows J-League casually.
+  Followed topics (SHORT IDs): [technology, entertainment, ai]
+  Behavior subtopics: Gaming, AI & Machine Learning, Robotics & Hardware, Movies & Film
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Yuki: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [9/20] MARCUS, 45 — Washington DC, USA
+  Political consultant. Philadelphia Eagles season ticket holder. Reads Politico and The Hill daily. Follows SCOTUS cases obsessively.
+  Followed topics (SHORT IDs): [politics, sports, defense]
+  Behavior subtopics: US Politics, NFL, War & Conflict, Human Rights & Civil Liberties
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Marcus: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [10/20] SARAH, 38 — Toronto, Canada
+  Pediatric nurse at SickKids Hospital. Toronto Raptors fan. Follows public health policy and pharma breakthroughs. Mom of two.
+  Followed topics (SHORT IDs): [health, sports, science]
+  Behavior subtopics: Public Health, Medical Breakthroughs, NBA, Biology & Nature
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Sarah: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [11/20] JAYLEN, 20 — Atlanta, GA, USA
+  Georgia Tech sophomore. Lives for NBA and NFL. Atlanta Hawks season ticket holder. Sneakerhead with 80+ pairs. Plays 2K and Madden.
+  Followed topics (SHORT IDs): [sports, entertainment]
+  Behavior subtopics: NBA, NFL, Gaming, Sneakers & Streetwear, Boxing & MMA/UFC
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Jaylen: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [12/20] MIA, 33 — Melbourne, Australia
+  Astrophysicist at Monash University. Watches every SpaceX launch. Runs a science podcast. Melbourne Victory A-League fan.
+  Followed topics (SHORT IDs): [space, science, technology]
+  Behavior subtopics: Space & Astronomy, Space Tech, Climate & Environment, AI & Machine Learning
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Mia: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [13/20] CHIDI, 30 — Lagos, Nigeria
+  Fintech founder building mobile payments for Africa. Follows AI and startups globally. Chelsea FC fan. Reads TechCrunch daily.
+  Followed topics (SHORT IDs): [startups, ai, finance, sports]
+  Behavior subtopics: Startups & Venture Capital, AI & Machine Learning, Stock Markets, Soccer/Football
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Chidi: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [14/20] JIWON, 22 — Seoul, South Korea
+  Music production student at SNU. BTS ARMY since 2016. Into AI music tools and Korean gaming scene. Follows Samsung closely.
+  Followed topics (SHORT IDs): [entertainment, culture, technology]
+  Behavior subtopics: K-Pop & K-Drama, Music, AI & Machine Learning, Gaming, Smartphones & Gadgets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Jiwon: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [15/20] STEFAN, 50 — Zurich, Switzerland
+  Private wealth manager at UBS. Former diplomat. Reads The Economist and FT. Follows European politics and watches FC Zurich.
+  Followed topics (SHORT IDs): [diplomacy, finance, economy, politics]
+  Behavior subtopics: European Politics, Banking & Lending, Trade & Tariffs, Human Rights & Civil Liberties, Stock Markets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Stefan: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [16/20] CARMEN, 34 — Mexico City, Mexico
+  Political journalist at El Universal. Club America fan. Covers US-Mexico trade and migration. Follows Latin American elections.
+  Followed topics (SHORT IDs): [politics, sports, trade]
+  Behavior subtopics: US Politics, Latin America, Soccer/Football, Trade & Tariffs
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Carmen: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [17/20] OMAR, 42 — Dubai, UAE
+  Real estate developer in Dubai. Follows oil prices and Gulf business. Al Ahli Dubai fan. Invested in crypto early (2017).
+  Followed topics (SHORT IDs): [business, energy, crypto, sports]
+  Behavior subtopics: Real Estate, Oil & Energy, Bitcoin, Soccer/Football, Corporate Deals
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Omar: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [18/20] ELENA, 41 — Boston, MA, USA
+  Oncologist at Mass General. Red Sox and Celtics fan. Reads NEJM and Nature. Follows pharma industry and biotech IPOs.
+  Followed topics (SHORT IDs): [health, science, sports, finance]
+  Behavior subtopics: Medical Breakthroughs, Pharma & Drug Industry, Biology & Nature, NBA, MLB/Baseball
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Elena: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [19/20] ERIK, 24 — Gothenburg, Sweden
+  Indie game developer. Streams on Twitch (12K followers). Follows NVIDIA hardware launches. AI art enthusiast. IFK Goteborg fan.
+  Followed topics (SHORT IDs): [entertainment, technology, ai]
+  Behavior subtopics: Gaming, AI & Machine Learning, Robotics & Hardware, Smartphones & Gadgets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR Erik: fetch failed
+    FAILED — skipping
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [20/20] JAMES, 39 — London, UK
+  Cybersecurity consultant at Deloitte. Former GCHQ analyst. Arsenal fan. Follows geopolitics and military tech. Reads War on the Rocks.
+  Followed topics (SHORT IDs): [cybersecurity, defense, politics, sports]
+  Behavior subtopics: Cybersecurity, War & Conflict, US Politics, European Politics, Soccer/Football
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.listUsers (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:139:30)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:656:35)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async _handleRequest (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:106:18)
+    at async _request (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:95:18)
+    at async GoTrueAdminApi.createUser (/Users/omersogancioglu/Ten News Website/node_modules/@supabase/auth-js/dist/main/GoTrueAdminApi.js:116:20)
+    at async setupPersona (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:663:29)
+    at async main (file:///Users/omersogancioglu/Ten%20News%20Website/test_20persona_v4.js:1176:19) {
+  [cause]: Error: getaddrinfo ENOTFOUND sdhdylsfngiybvoltoks.supabase.co
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'sdhdylsfngiybvoltoks.supabase.co'
+  }
+}
+  SETUP ERROR James: fetch failed
+    FAILED — skipping
+
+
+============================================================================================================================================
+  GRAND REPORT — 20-PERSONA FEED + EXPLORE TEST V4
+============================================================================================================================================
+
+  TABLE 1: PER-PERSONA SUMMARY
+  #    Name         Location            Articles   Engaged   Skipped   Relevant    Eng%    Rel%   Mood   Rating          Exit
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  1.   Priya        Austin, TX, USA           50        43         4         46   86.0%   92.0%    100    10/10       natural
+  2.   Emre         Istanbul, Turkey          50        42         0         50   84.0%  100.0%    100    10/10       natural
+  3.   Olivia       Manchester, UK            50        46         0         50   92.0%  100.0%    100    10/10       natural
+  4.   Klaus        Frankfurt, Germa          50        40         4         46   80.0%   92.0%     98    10/10       natural
+  5.   Amelie       Paris, France             50        44         1         46   88.0%   92.0%    100    10/10       natural
+  6.   Arjun        Bangalore, India          50        47         3         47   94.0%   94.0%    100    10/10       natural
+  7.   Lucas        Sao Paulo, Brazi          25        25         0         25  100.0%  100.0%    100    10/10       natural
+
+  TABLE 2: EXPLORE PAGE EVOLUTION (how explore relevance changes after 0, 20, 40 articles)
+  Name             Before   After 20   After 40      Final    Delta    Mode(F)    Verdict
+  ─────────────────────────────────────────────────────────────────────────────────────
+  Priya               46%        46%        71%        46%      +0%    blended       SAME
+  Emre                15%        21%        21%        21%      +5%    blended   IMPROVED
+  Olivia              19%        34%        34%        34%     +16%    blended   IMPROVED
+  Klaus               15%        24%        24%        21%      +6%    blended   IMPROVED
+  Amelie              19%        24%        24%        24%      +5%    blended       SAME
+  Arjun               23%        28%        25%        25%      +2%    blended       SAME
+  Lucas               15%        N/A        N/A         0%     -15%    unknown   DECLINED
+
+  TABLE 3: FEED EVOLUTION (does engagement rate improve from articles 1-20 vs 21-40 vs 41-50?)
+  Name           1-20 Eng%   1-20 Rel%   21-40 Eng%   21-40 Rel%   41-50 Eng%   41-50 Rel%      Trend
+  ───────────────────────────────────────────────────────────────────────────────────────────────
+  Priya                90%         90%          85%          90%          80%         100%     STABLE
+  Emre                100%        100%          90%         100%          40%         100%  DECLINING
+  Olivia              100%        100%          85%         100%          90%         100%  DECLINING
+  Klaus                90%         90%          85%          95%          50%          90%     STABLE
+  Amelie               85%         85%          90%         100%          90%          90%     STABLE
+  Arjun                90%         90%          95%          95%         100%         100%     STABLE
+  Lucas               100%        100%         100%         100%          N/A          N/A     STABLE
+
+  TABLE 4: INTEREST CATEGORY PERFORMANCE
+  Subtopic                           Personas   Avg Eng%   Avg Mood   Avg Rating   Explore%
+  ──────────────────────────────────────────────────────────────────────────────────────────
+  Soccer/Football                           5      88.8%        100      10.0/10        20%
+  Startups & Venture Capital                3      88.0%        100      10.0/10        31%
+  AI & Machine Learning                     2      90.0%        100      10.0/10        35%
+  Stock Markets                             2      90.0%         99      10.0/10        10%
+  F1 & Motorsport                           1      86.0%        100      10.0/10        46%
+  Robotics & Hardware                       1      86.0%        100      10.0/10        46%
+  Trade & Tariffs                           1      84.0%        100      10.0/10        21%
+  Retail & Consumer                         1      84.0%        100      10.0/10        21%
+  Climate & Environment                     1      92.0%        100      10.0/10        34%
+  Biology & Nature                          1      92.0%        100      10.0/10        34%
+  Space & Astronomy                         1      92.0%        100      10.0/10        34%
+  Banking & Lending                         1      80.0%         98      10.0/10        21%
+  European Politics                         1      80.0%         98      10.0/10        21%
+  Movies & Film                             1      88.0%        100      10.0/10        24%
+  Celebrity Style & Red Carpet              1      88.0%        100      10.0/10        24%
+  K-Pop & K-Drama                           1      88.0%        100      10.0/10        24%
+  Music                                     1      88.0%        100      10.0/10        24%
+  Cricket                                   1      94.0%        100      10.0/10        25%
+  Gaming                                    1      94.0%        100      10.0/10        25%
+  Smartphones & Gadgets                     1      94.0%        100      10.0/10        25%
+  Bitcoin                                   1     100.0%        100      10.0/10         0%
+  DeFi & Web3                               1     100.0%        100      10.0/10         0%
+
+  TABLE 5: WHAT EACH PERSONA DIDN'T LIKE
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  PRIYA (10/10, Satisfied, topics: [ai, f1, technology, startups]):
+    [Specific] Shown 4 Science articles but I don't follow Science
+    [Specific] Worst: "**Goddard** Launches First Liquid-Fueled Rocket **100** Year" (Science) — score -0.48, 0.8s
+    [Specific] 24/50 articles were Tech — too repetitive
+
+  EMRE (10/10, Satisfied, topics: [sports, business, trade]):
+    [General] Explore page showed irrelevant topics
+    [Specific] 21/50 articles were Business — too repetitive
+
+  OLIVIA (10/10, Satisfied, topics: [climate, environment, sports, science]):
+    [General] Explore page showed irrelevant topics
+    [Specific] 36/50 articles were Science — too repetitive
+    [Specific] Feed got WORSE: eng rate dropped from 100% (1-20) to 85% (21-40)
+
+  KLAUS (10/10, Satisfied, topics: [finance, economy, politics, sports]):
+    [General] Explore page showed irrelevant topics
+    [Specific] Shown 4 World articles but I don't follow World
+    [Specific] Worst: "**Israel** Strikes **Tehran**, Iran Threatens Gulf States" (World) — score -0.39, 0.5s
+
+  AMELIE (10/10, Satisfied, topics: [entertainment, culture, sports]):
+    [General] Explore page showed irrelevant topics
+    [Specific] Shown 4 Tech articles but I don't follow Tech
+    [Specific] Worst: "**Switch 2** Update Adds **Handheld Boost Mode**" (Tech) — score -0.53, 1.0s
+    [Specific] 31/50 articles were Entertainment — too repetitive
+
+  ARJUN (10/10, Satisfied, topics: [technology, ai, sports, startups]):
+    [Specific] Shown 3 Science articles but I don't follow Science
+    [Specific] Worst: "Global Warming **Increases** Deaths by **Hundreds of Thousan" (Science) — score -0.25, 0.6s
+    [Specific] 22/50 articles were Tech — too repetitive
+
+  LUCAS (10/10, Satisfied, topics: [crypto, sports, finance]):
+    [General] Explore page showed irrelevant topics
+    [General] Explore didn't improve with usage
+    [Specific] 14/25 articles were Finance — too repetitive
+
+
+  ================================================================================
+  FINAL VERDICT
+  ================================================================================
+  Average rating:              10.0/10
+  Average engagement rate:     89.1%
+  Avg articles before exit:    46.4
+  Avg session duration:        416s (6.9 min)
+  Avg dwell per article:       9.0s
+  Exit types:                  Natural: 7 | Bored: 0 | Frustrated: 0
+  Would recommend (>=6/10):    7/7 (100%)
+  Missing subtopics:           0 across 0 personas
+  Explore BEFORE relevance:    21.7%
+  Explore AFTER relevance:     24.4%
+  Explore improved:            3/7
+  Feed evolution (avg eng%):   1-20: 93.6% | 21-40: 90.0% (7 personas) | 41-50: 75.0% (6 personas)
+  Personalization improving:   NO — feed quality not improving with usage
+  APP QUALITY:                 EXCELLENT
+
+  Done at 2026-03-17T18:12:44.301Z

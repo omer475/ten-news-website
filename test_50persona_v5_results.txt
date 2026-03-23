@@ -1,0 +1,1369 @@
+========================================================================================================================
+  50-PERSONA FEED + EXPLORE TEST V5
+  - All 50 personas start from ZERO (full wipe)
+  - Uses SHORT topic IDs like the real iOS app
+  - Each reads ~50 articles across multiple pages
+  - Explore checked every 20 articles
+  - Tracks feed evolution: does personalization improve?
+  Time: 2026-03-20T14:18:15.003Z
+========================================================================================================================
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [1/50] PRIYA, 31 — Austin, TX, USA
+  ML engineer at a self-driving car startup. Follows every F1 race. Obsessed with NVIDIA stock. Plays indie games on Steam.
+  Followed topics (SHORT IDs): [ai, f1, technology, startups]
+  Behavior subtopics: AI & Machine Learning, F1 & Motorsport, Robotics & Hardware, Startups & Venture Capital
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+(node:454) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/omersogancioglu/Ten%20News%20Website/test_50persona_v5.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/omersogancioglu/Ten News Website/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+    User: c5468d3d... | Topics saved: [ai, f1, technology, startups]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 22 topics | 10 relevant (45%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 24 topics, 12 relevant (50%), mode: blended
+    [Feed API error: socket hang up, retrying (1/3)...]
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 23 topics, 10 relevant (43%), mode: blended
+    Read 50 articles | Engaged: 44 | Glanced: 2 | Skipped: 4 | Relevant: 46
+    Exit: NATURAL | Mood: 100/100 | Saved: 5 | Events: 55
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       7.7s     60    0.67        trending   Tech             AI & Machine Learning, Robot   **DarkSword** Hack Exposes Hundreds of Millions of **iP
+    2     DEEP_READ      10.7s     65    0.71        personal   Science          AI & Machine Learning          **AI** Cyberattacks Threaten **Satellite** Apocalypse i
+    3     ENGAGE          7.2s     68    0.58        trending   Sports           F1 & Motorsport                **Giants** Upset **Patriots** in Super Bowl XLII
+    4     DEEP_READ      11.5s     75    1.09    YES personal   Tech             AI & Machine Learning, Robot   **OpenAI** Merges **ChatGPT**, **Codex** Into Desktop '
+    5     DEEP_READ      10.4s     80    0.88        personal   Tech             AI & Machine Learning, Robot   **Cloaked** Secures **$375M** to Expand Privacy Solutio
+    6     SKIP            0.4s     75   -0.20        trending   Science          (none)                         Astronomers Witness Birth of **Magnetar** After **Super
+    7     DEEP_READ      15.7s     80    0.80        personal   Business         AI & Machine Learning, Start   **Meta** Prepares for **16,000** Job Cuts, Focuses on *
+    8     DEEP_READ       7.2s     85    0.83        personal   Tech             AI & Machine Learning, Robot   **Apple** iPhones Hacked via **DarkSword** Exploit
+    9     ENGAGE          6.6s     88    0.55        discovery  Business         Startups & Venture Capital     **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    SKIP            0.9s     84   -0.14        personal   Science          (none)                         **Blue Origin** Joins **NASA** to Defend Earth From Ast
+    11    DEEP_READ      17.0s     87    0.74        trending   Business         AI & Machine Learning, Start   **FAA** Tightens Air Traffic Control After **Crash**
+    12    DEEP_READ       8.7s     92    0.71        personal   Tech             AI & Machine Learning, Robot   **iPhone** Users Urged to Update Amid **DarkSword** Hac
+    13    ENGAGE          4.9s     95    0.44        trending   Finance          Startups & Venture Capital     **Global Markets** Plunge Amid Middle East **Conflict**
+    14    DEEP_READ      16.5s    100    1.02        personal   Tech             AI & Machine Learning, Robot   **Intel** Xeon 6 Powers **Nvidia's** DGX Rubin NVL8 Sys
+    15    DEEP_READ      17.5s    100    1.23        personal   Tech             AI & Machine Learning, Robot   **OpenAI** Debuts GPT-5.4 **Mini** and **Nano** Models
+    16    SKIP            1.0s     95   -0.13        discovery  Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    17    DEEP_READ      11.4s    100    1.15        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Shrinks **LLM** Memory **20x** With New Tech
+    18    DEEP_READ      17.5s    100    0.76        personal   Tech             AI & Machine Learning, Robot   **Apple** Urges Users Update iPhones After Hack Warning
+    19    DEEP_READ      12.6s    100    0.89        personal   Finance          AI & Machine Learning, Start   **Private Funds** Face Investor Exodus, **$13 Trillion*
+    20    DEEP_READ      20.7s    100    0.62        trending   Tech             AI & Machine Learning, Robot   **DarkSword** Exploit Targets **220M+** iPhones Globall
+    21    ENGAGE          5.9s     99    0.40        trending   Sports           F1 & Motorsport                **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    22    DEEP_READ      14.1s    100    0.77        personal   Business         AI & Machine Learning, Robot   **Applied Materials** Invests **$5B** in Memory Chip R&
+    23    ENGAGE          4.8s    100    0.48        trending   Science          AI & Machine Learning          **Astrophage** Powers Interstellar Travel in **Hail Mar
+    24    ENGAGE          7.7s    100    0.58    YES personal   Tech             AI & Machine Learning, Robot   **Apple** Issues Spyware Alert, Urges **iOS** Update
+    25    DEEP_READ      12.6s    100    0.62        personal   Tech             AI & Machine Learning, Robot   **Google** Exposes **DarkSword** Exploit Targeting iPho
+    26    DEEP_READ      10.8s     98    0.62        personal   Tech             AI & Machine Learning, Robot   **iPhone** Hack Exposes Hundreds of Millions to Risk
+    27    DEEP_READ      12.8s    100    0.75        personal   Tech             AI & Machine Learning, Robot   **Meta** Unveils **MTIA** Chip Lineup for AI Inferencin
+    28    ENGAGE          8.2s    100    0.41        personal   Entertainment    AI & Machine Learning          **UK** Protects Music from **AI** Use Without Permissio
+    29    DEEP_READ       9.2s    100    0.75        trending   Tech             AI & Machine Learning, Robot   **xAI** Faces Lawsuit Over **Grok's** Image Generation
+    30    DEEP_READ      17.4s    100    1.08        personal   Tech             AI & Machine Learning, Robot   **Nvidia** Unveils **Vera Rubin** AI Platform with 7 Ch
+    31    ENGAGE          5.9s     98    0.36        trending   Sports           F1 & Motorsport                **Venezuela** Celebrates **WBC** Win, Maduro's Exit
+    32    DEEP_READ      11.0s    100    0.61    YES discovery  Tech             AI & Machine Learning, Robot   **Krafton** Invests **$1 Billion** in AI Defense Tech
+    33    DEEP_READ       8.5s    100    1.00    YES personal   Tech             AI & Machine Learning, Robot   **Nvidia** GTC 2026: **Huang** Reveals Next-Gen **GPUs*
+    34    SKIP            0.5s     95   -0.36        trending   Science          (none)                         Climate Change **Accelerates** at **Unprecedented** Rat
+    35    ENGAGE          4.4s     98    0.50    YES personal   Tech             AI & Machine Learning, Robot   **MacBook Neo** Drives Record **Apple** Launch Week
+    36    ENGAGE          9.8s     98    0.59        personal   Tech             AI & Machine Learning, Robot   **AI** Jails Grandma for **6 Months** in Mistaken ID
+    37    ENGAGE          3.3s    100    0.34        discovery  Sports           F1 & Motorsport                **Bayern** Youngsters Shine in **4-1** Champions League
+    38    ENGAGE          7.7s    100    0.54        personal   Tech             AI & Machine Learning, Robot   **GitHub** Hit by Supply Chain Attack via **Invisible**
+    39    ENGAGE          7.2s    100    0.47        personal   Tech             AI & Machine Learning, Robot   **Apple** Risks Losing Customers Without **Flip** Phone
+    40    DEEP_READ       9.3s    100    0.97        personal   Business         AI & Machine Learning, Robot   **Nvidia** Expects **$1 Trillion** AI Demand Through 20
+    41    ENGAGE          3.6s     98    0.60        personal   Tech             AI & Machine Learning, Robot   **EU** Moves to **Ban** Nudify Apps After Grok Rise
+    42    ENGAGE          5.5s    100    0.40        personal   Tech             AI & Machine Learning, Robot   **Marquis** Breach Exposes **672,000**+ to Data Theft
+    43    GLANCE          2.0s     98    0.28        trending   Business         Startups & Venture Capital     **Gas Prices** Jump After Attacks on **Qatar**, **Iran*
+    44    ENGAGE          8.0s    100    0.43        personal   Tech             AI & Machine Learning, Robot   **Apple** Launches **MacBook Neo** for $600, Celebrates
+    45    DEEP_READ      16.6s    100    0.91        personal   Tech             AI & Machine Learning, Robot   **Google** Gains as **Anthropic**, **OpenAI** Face Pent
+    46    GLANCE          3.0s     97    0.30        trending   Finance          Startups & Venture Capital     **Oil** Price Surge Hits **Gold** and **Bitcoin**
+    47    ENGAGE          8.3s    100    0.41        personal   Tech             AI & Machine Learning, Robot   **Tesla** Hides Drive Mode Behind **Subscription** Payw
+    48    ENGAGE          3.4s    100    0.45        personal   Tech             AI & Machine Learning, Robot   **AirPods Max 2** Launch Tied to **iOS 26.4** Release
+    49    ENGAGE          9.5s    100    0.38        personal   Tech             AI & Machine Learning, Robot   **Zombie ZIP** Exploit Bypasses **95%** of Antivirus Ap
+    50    DEEP_READ      15.8s    100    0.73        personal   Tech             AI & Machine Learning, Robot   **Nvidia** to Offer Single **Vera CPU** Model at GTC 20
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  25 | Avg:  12.9s | Total:   323s
+    ENGAGE       Count:  19 | Avg:   6.4s | Total:   122s
+    SKIP         Count:   4 | Avg:   0.7s | Total:     3s
+    GLANCE       Count:   2 | Avg:   2.5s | Total:     5s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Tech                   30    30      0    30     10.6s       YES
+    Business                6     5      0     6     10.8s       YES
+    Science                 5     2      3     2      3.5s        no
+    Sports                  4     4      0     4      5.6s       YES
+    Finance                 3     2      0     3      6.8s       YES
+    Politics                1     0      1     0      1.0s        no
+    Entertainment           1     1      0     1      8.2s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      80%      80%       7.8s     84
+    #2 (11-20)             10      90%      90%      12.8s    100
+    #3 (21-30)             10     100%     100%      10.4s    100
+    #4 (31-40)             10      90%      90%       6.8s    100
+    #5 (41-50)             10      80%     100%       7.6s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  85% | Rel:  85% | AvgDwell: 10.3s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  95% | Rel:  95% | AvgDwell: 8.6s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  80% | Rel: 100% | AvgDwell: 7.6s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 23 topics | 10 relevant (43%) | mode: blended
+    Explore change: 45% -> 43% (-2%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       AI & Tech        Apple                                     4  none
+    Personal       NO       AI & Tech        iPhone & iOS                              4  none
+    Personal       YES      AI & Tech        Nvidia & AI Chips                         4  kw:ai+st:AI & Machine Learning
+    Personal       YES      Motorsport       Formula 1 Racing                          8  kw:f1+st:F1 & Motorsport
+    Personal       YES      AI & Tech        OpenAI & ChatGPT                          4  kw:ai+st:AI & Machine Learning
+    Personal       YES      Finance          Bitcoin & Crypto                          5  cat:Finance
+    Personal       YES      Business         BYD Electric Vehicles                     1  cat:Business
+    Personal       NO       Science          NASA & Space Exploration                  4  none
+    Personal       YES      Finance          Ethereum                                  5  cat:Finance
+    Personal       NO       Science          Mars Exploration                          4  none
+    Personal       YES      Motorsport       Lewis Hamilton                            2  kw:hamilton
+    Personal       YES      Finance          Solana                                   11  cat:Finance
+    Personal       YES      Business         Trade Wars & Tariffs                      2  cat:Business
+    Trending       NO       Science          Climate Change                           10  none
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+    Trending       NO       Football         NFL Football                             25  none
+    Trending       NO       Baseball         MLB Baseball                             12  none
+    Trending       YES      Finance          Oil Prices & Energy Markets              15  cat:Finance
+    Trending       NO       Sports Events    March Madness & NCAA                     29  none
+    Trending       NO       Soccer           Premier League                           18  none
+    Trending       NO       Basketball       NBA Basketball                           26  none
+    Trending       NO       Lifestyle        Travel & Tourism                         11  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Good (Same)
+    Session: 453s (7.6 min) | Avg dwell: 9.1s
+    Best: Article relevance to my interests
+    Complaint: Nothing major
+      - Shown 3 Science articles but I don't follow Science
+      - Shown 1 Politics article but I don't follow Politics
+      - Worst: "Climate Change **Accelerates** at **Unprecedented** Rate" (Science) — score -0.36, 0.5s
+      - 30/50 articles were Tech — too repetitive
+    LIKED: "**DarkSword** Hack Exposes Hundreds of Millions of **iPhones" (7.7s) | "**AI** Cyberattacks Threaten **Satellite** Apocalypse in **2" (10.7s) | "**OpenAI** Merges **ChatGPT**, **Codex** Into Desktop 'Super" (11.5s)
+    Recommend: Definitely
+    Quote: "As a ml engineer at a self-driving car startup, I found plenty of AI & Machine Learning content. Spent 453s total, engaged with 44 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [2/50] EMRE, 36 — Istanbul, Turkey
+  E-commerce founder. Fenerbahce ultra since age 12. Tracks Turkish lira and EU trade. Loves kebab reviews on YouTube.
+  Followed topics (SHORT IDs): [sports, business, trade]
+  Behavior subtopics: Soccer/Football, Trade & Tariffs, Startups & Venture Capital, Retail & Consumer
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: fb7a22ec... | Topics saved: [sports, business, trade]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 3 relevant (11%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Feed API error: socket hang up, retrying (1/3)...]
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 27 topics, 6 relevant (22%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 27 topics, 6 relevant (22%), mode: blended
+    Read 50 articles | Engaged: 39 | Glanced: 6 | Skipped: 5 | Relevant: 45
+    Exit: NATURAL | Mood: 93/100 | Saved: 0 | Events: 50
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      13.7s     60    0.65        personal   Business         Trade & Tariffs, Startups &    **Oil Prices** Surge Past **$110** Amid Supply Disrupti
+    2     DEEP_READ      12.7s     65    0.80        personal   Politics         Trade & Tariffs                **Trump** Imposes **10%** Tariff, Defies Court Ruling
+    3     DEEP_READ      13.0s     70    0.82        trending   Sports           Soccer/Football                **Eze's** Strike **Vanishes** Bayer Leverkusen in Champ
+    4     DEEP_READ      14.3s     75    0.76        personal   Business         Trade & Tariffs, Startups &    **Oil** Prices Surge Amid **Iran** Tensions, Supply Fea
+    5     DEEP_READ       7.2s     80    0.61        personal   Politics         Trade & Tariffs                **Trump** Removes **Sanctions** on Russian Oil Today
+    6     SKIP            1.0s     75   -0.14        discovery  Science          (none)                         **Neuracle** Wins Approval for **Brain** Implant in Chi
+    7     DEEP_READ       9.9s     80    0.67        personal   Business         Trade & Tariffs, Startups &    Emergency Oil Stockpiles See Biggest Release in History
+    8     DEEP_READ       6.5s     85    0.75        personal   Business         Trade & Tariffs, Startups &    **Tesla** Faces Probe as **Cybercab** Launch Nears
+    9     DEEP_READ      14.0s     90    0.79        trending   Sports           Soccer/Football                **Champions League** Sets Record with **68 Goals**
+    10    SKIP            0.8s     86   -0.16        discovery  Tech             (none)                         **Apple** iPhones Hacked via **DarkSword** Exploit
+    11    DEEP_READ      11.6s     89    0.74        personal   Business         Trade & Tariffs, Startups &    **Oil** Price Surges to **$100** Amid Iran Conflict
+    12    DEEP_READ      13.3s     94    0.81        personal   Business         Trade & Tariffs, Startups &    **Brent Crude** Falls Below **$100** Amid Middle East T
+    13    DEEP_READ       6.9s     99    0.80        trending   Sports           Soccer/Football                **FC Bayern** Beats Atalanta **4-1**, Advances in Champ
+    14    DEEP_READ      16.0s    100    0.71        personal   Business         Trade & Tariffs, Startups &    **Oil** Climbs as **Iran** Seizes Hormuz Strait Role
+    15    DEEP_READ       5.7s    100    0.84        personal   Business         Trade & Tariffs, Startups &    **Iran War** Fuels **EU** Petrol Prices, Taxes Soar
+    16    DEEP_READ       8.2s     99    0.62        discovery  Finance          Startups & Venture Capital     **Private Credit** Meltdown Erases **$265 Billion** in 
+    17    DEEP_READ      10.4s    100    0.76        personal   Business         Trade & Tariffs, Startups &    **Iran** Conflict **Spikes** Oil Prices; **$150** Possi
+    18    DEEP_READ      11.2s    100    0.68        personal   Business         Trade & Tariffs, Startups &    **Oil Prices** Ease After **Iran War** Escalates
+    19    DEEP_READ       8.7s    100    0.66        trending   Business         Trade & Tariffs, Startups &    **Oil** Prices **Climb** Amid US-Iran Tensions, Hit $10
+    20    DEEP_READ      16.3s    100    0.61        discovery  Business         Trade & Tariffs, Startups &    **US Army** Awards **Anduril** Contract Worth **$20B**
+    21    DEEP_READ       6.1s     99    0.79        personal   Business         Trade & Tariffs, Startups &    **Iran War** Fuels Global Shipping Cost **Surge**
+    22    DEEP_READ      13.6s    100    0.78        personal   Business         Trade & Tariffs, Startups &    **US** Considers Lifting Sanctions on **Iranian** Oil
+    23    DEEP_READ      15.1s    100    0.91        trending   Business         Trade & Tariffs, Startups &    **USA** Considers New Tariffs Against **China**, **EU**
+    24    DEEP_READ       7.1s    100    0.67        personal   Business         Trade & Tariffs, Startups &    **Brent Crude** Surges Past **$116** Amid Mideast Tensi
+    25    DEEP_READ      10.6s    100    0.75        personal   Business         Trade & Tariffs, Startups &    **US** Lifts **Russian** Oil Sanctions Temporarily
+    26    DEEP_READ       8.8s     98    0.64        personal   Business         Trade & Tariffs, Startups &    **Russia** Earns **€7.7B** as Iran War Boosts Oil Surge
+    27    DEEP_READ      11.8s    100    0.65        personal   Business         Trade & Tariffs, Startups &    **IEA** Releases **400 Million** Barrels Amid Middle Ea
+    28    DEEP_READ       9.2s    100    0.72        trending   Sports           Soccer/Football                **Bayern** Youngsters Shine in **4-1** Champions League
+    29    ENGAGE          3.9s    100    0.47        personal   Finance          Startups & Venture Capital     **Fed** May Hike Rates Amid Middle East **Conflict**
+    30    DEEP_READ      10.9s    100    0.61        personal   Business         Trade & Tariffs, Startups &    **Fertilizer** Prices **Surge** Amid Iran War, Gas Hike
+    31    DEEP_READ       8.4s     98    0.64        discovery  Business         Trade & Tariffs, Startups &    **Fed** Expected to Hold Rates Amid Oil Price **Surge**
+    32    ENGAGE          5.7s    100    0.30        personal   Sports           Soccer/Football                **NBA** Eyes **$7B** Expansion, Las Vegas, Seattle Lead
+    33    ENGAGE          4.5s    100    0.45        personal   Business         Trade & Tariffs, Startups &    **IMF** Warns Energy Surge Could Lift **Global** Inflat
+    34    DEEP_READ       8.0s    100    0.66        trending   Politics         Trade & Tariffs                **Trump**, **Modi** Finalize India-US Trade Deal, Envoy
+    35    GLANCE          1.6s     98    0.24        discovery  Finance          Startups & Venture Capital     **Fed** Eyes Inflation Amid **Iran** War Risk, Rate Cut
+    36    ENGAGE          3.6s     98    0.48        personal   Business         Trade & Tariffs, Startups &    **Oil Prices** **Surge** After Attacks on Gulf Faciliti
+    37    GLANCE          2.5s     97    0.28        personal   Sports           Soccer/Football                **Team USA** Falls to **Venezuela** in WBC Final, 3-2
+    38    SKIP            0.9s     93   -0.32        trending   Lifestyle        (none)                         **Americans** Prefer **Spread-Out** Communities, Big Ho
+    39    ENGAGE          6.9s     95    0.53        personal   Business         Trade & Tariffs, Startups &    **Supermicro** Exec Arrested, AI Servers Diverted to **
+    40    ENGAGE          2.2s     98    0.47        personal   Business         Trade & Tariffs, Startups &    **US** and **Japan** Invest **$40B** in Mini-Reactors
+    41    ENGAGE          5.0s     98    0.36        discovery  Sports           Soccer/Football                **Sabalenka** Battles **Rybakina** in Indian Wells Fina
+    42    GLANCE          2.2s     97    0.30        personal   Business         Trade & Tariffs, Startups &    **Middle East** Oil Prices **Surge** to Record Highs
+    43    GLANCE          1.3s     96    0.17        personal   Business         Trade & Tariffs, Startups &    **Oil Prices** Soar Above **$100** Amid Strait of Hormu
+    44    GLANCE          2.2s     94    0.27        trending   Finance          Startups & Venture Capital     **Gold** Price **Crashes** to **$4500**, Sharpest Drop 
+    45    SKIP            0.9s     90   -0.39        discovery  Lifestyle        (none)                         Bob Vila Explores **Permaculture** for **Home** Gardens
+    46    ENGAGE          3.4s     91    0.40        personal   Sports           Soccer/Football                **Karl** Leads **Bayern** to Champions League Quarterfi
+    47    DEEP_READ       8.7s     96    0.66        personal   Sports           Soccer/Football                **Champions League** Quarterfinals Set: **Liverpool** v
+    48    SKIP            0.5s     92   -0.34        trending   Science          (none)                         **Quantum Battery** Charges Near-Instantly with **Laser
+    49    GLANCE          1.7s     90    0.28        personal   Business         Trade & Tariffs, Startups &    **Fed** Holds Rates as **Iran** War Fuels Oil Price Sur
+    50    ENGAGE          6.6s     93    0.48        personal   Sports           Soccer/Football                **Champions League** Round of 16 Concludes **Today**
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  30 | Avg:  10.6s | Total:   318s
+    ENGAGE       Count:   9 | Avg:   4.7s | Total:    42s
+    GLANCE       Count:   6 | Avg:   1.9s | Total:    11s
+    SKIP         Count:   5 | Avg:   0.8s | Total:     4s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Business               28    25      0    28      9.0s       YES
+    Sports                 10     9      0    10      7.5s       YES
+    Finance                 4     2      0     4      3.9s       YES
+    Politics                3     3      0     3      9.3s        no
+    Science                 2     0      2     0      0.7s        no
+    Lifestyle               2     0      2     0      0.9s        no
+    Tech                    1     0      1     0      0.8s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      80%      80%       9.3s     86
+    #2 (11-20)             10     100%     100%      10.8s    100
+    #3 (21-30)             10     100%     100%       9.7s    100
+    #4 (31-40)             10      70%      90%       4.4s     98
+    #5 (41-50)             10      40%      80%       3.3s     93
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 10.1s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  85% | Rel:  95% | AvgDwell: 7.1s | EndMood: 98
+    Phase 41-50+  10 articles | Eng:  40% | Rel:  80% | AvgDwell: 3.3s | EndMood: 93
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 27 topics | 6 relevant (22%) | mode: blended
+    Explore change: 11% -> 22% (+11%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       YES      Finance          Oil Prices & Energy Markets              15  cat:Finance
+    Personal       YES      Business         Trade Wars & Tariffs                      2  cat:Business+kw:trade+st:Trade & Tariffs
+    Personal       YES      Soccer           UEFA Champions League                    11  kw:champions league+st:Soccer/Football
+    Personal       NO       AI & Tech        Tesla & Electric Vehicles                 1  none
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       NBA Basketball                           26  none
+    Personal       YES      Football         NFL Football                             25  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                             12  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       NO       Soccer           Liverpool FC                              7  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Arsenal FC                                1  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Personal       NO       Football         Kansas City Chiefs                        2  none
+    Personal       NO       Baseball         New York Yankees                          1  none
+    Trending       YES      Finance          Inflation & Cost of Living                9  cat:Finance
+    Trending       YES      Soccer           Premier League                           18  kw:premier league+st:Soccer/Football
+    Trending       NO       Sports Events    March Madness & NCAA                     29  none
+    Trending       NO       Science          Climate Change                           10  none
+    Trending       NO       World Politics   Israel                                   44  none
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+    Trending       NO       Lifestyle        Travel & Tourism                         11  none
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         4  none
+    Trending       NO       Entertainment    Netflix Originals                         7  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 375s (6.3 min) | Avg dwell: 7.5s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 2 Science articles but I don't follow Science
+      - Shown 2 Lifestyle articles but I don't follow Lifestyle
+      - Shown 1 Tech article but I don't follow Tech
+      - Skipped 5 irrelevant articles (I follow Soccer/Football, Trade & Tariffs)
+      - Worst: "Bob Vila Explores **Permaculture** for **Home** Gardens" (Lifestyle) — score -0.39, 0.9s
+      - 28/50 articles were Business — too repetitive
+    LIKED: "**Oil Prices** Surge Past **$110** Amid Supply Disruption" (13.7s) | "**Trump** Imposes **10%** Tariff, Defies Court Ruling" (12.7s) | "**Eze's** Strike **Vanishes** Bayer Leverkusen in Champions " (13.0s)
+    Recommend: Definitely
+    Quote: "As a e-commerce founder, I found plenty of Soccer/Football content. Spent 375s total, engaged with 39 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [3/50] OLIVIA, 28 — Manchester, UK
+  Environmental journalist at The Guardian. Manchester United fan. Covers COP summits and green energy policy. Cyclist and vegan.
+  Followed topics (SHORT IDs): [climate, environment, sports, science]
+  Behavior subtopics: Climate & Environment, Biology & Nature, Soccer/Football, Space & Astronomy
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 6b53acaf... | Topics saved: [climate, environment, sports, science]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 5 relevant (19%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 26 topics, 9 relevant (35%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 26 topics, 9 relevant (35%), mode: blended
+    Read 50 articles | Engaged: 40 | Glanced: 9 | Skipped: 0 | Relevant: 49
+    Exit: NATURAL | Mood: 96/100 | Saved: 4 | Events: 54
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ       7.6s     60    0.94        trending   Science          Climate & Environment, Biolo   Climate Change **Accelerates** at **Unprecedented** Rat
+    2     DEEP_READ      11.1s     65    0.85        personal   Science          Climate & Environment, Biolo   **Blue Origin** Joins **NASA** to Defend Earth From Ast
+    3     ENGAGE          6.9s     68    0.45        trending   Sports           Soccer/Football                **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    4     DEEP_READ      16.9s     73    0.82        personal   Science          Climate & Environment, Biolo   **Southwest** Faces Water Shortage Threat for **40 Mill
+    5     DEEP_READ      14.6s     78    0.91        personal   Science          Climate & Environment, Biolo   **NASA** Astronauts Prep **ISS** for New Solar Array
+    6     ENGAGE          2.7s     80    0.54        personal   Sports           Soccer/Football                **Aston Villa** Ease Into Europa League Quarter-Finals
+    7     DEEP_READ      16.0s     87    0.94    YES trending   Science          Climate & Environment, Biolo   Climate Change **Effects** Intensify, **Experts** Surpr
+    8     DEEP_READ      12.9s     92    0.72        personal   Sports           Soccer/Football                **FC Bayern** Beats Atalanta **4-1**, Advances in Champ
+    9     SCAN            2.6s     89   -0.04        discovery  Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    DEEP_READ      15.4s     94    0.82        personal   Sports           Soccer/Football                **Champions League** Round of 16 Concludes **Today**
+    11    DEEP_READ      10.3s     98    0.64        trending   Sports           Soccer/Football                **LeBron's** Block: **Cavs** End **52**-Year Drought!
+    12    DEEP_READ      16.6s    100    0.76        personal   Science          Climate & Environment, Biolo   **Google AI** Reroutes Flights, Cuts Contrails' Impact
+    13    DEEP_READ       8.2s    100    0.88        trending   Science          Climate & Environment, Biolo   Astronomers Witness Birth of **Magnetar** After **Super
+    14    ENGAGE          3.9s    100    0.50        personal   Sports           Soccer/Football                **Bayern** Youngsters Shine in **4-1** Champions League
+    15    ENGAGE          7.7s    100    0.60        personal   Sports           Soccer/Football                **Bayern Munich** Faces **Atalanta** in Champions Leagu
+    16    DEEP_READ      15.8s     99    0.99        personal   Science          Climate & Environment, Biolo   **NASA** Impacts Asteroid, Changes Orbit by **33 Minute
+    17    ENGAGE          3.5s    100    0.37        personal   Sports           Soccer/Football                **Kane** Scores **50th** Champions League Goal in Win
+    18    DEEP_READ       9.5s    100    0.67        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    19    DEEP_READ      14.0s    100    0.76    YES trending   Science          Climate & Environment, Biolo   Global Warming **Increases** Deaths by **Hundreds of Th
+    20    ENGAGE          5.2s    100    0.46    YES personal   Sports           Soccer/Football                **Spain** Dominates **Champions League**: Barça vs. Atl
+    21    ENGAGE          7.0s     99    0.45        discovery  Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    22    ENGAGE          7.3s    100    0.49        personal   Sports           Soccer/Football                **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    23    ENGAGE          4.5s    100    0.36        trending   Sports           Soccer/Football                **Venezuela** Celebrates **WBC** Win, Maduro's Exit
+    24    ENGAGE          6.0s    100    0.53        personal   Sports           Soccer/Football                **Champions League** Sets Record with **68 Goals**
+    25    ENGAGE          3.9s    100    0.47        personal   Sports           Soccer/Football                **Karl** Leads **Bayern** to Champions League Quarterfi
+    26    ENGAGE          7.6s     98    0.31        personal   Sports           Soccer/Football                **Liverpool** Routs **Galatasaray**, Eyes Champions Lea
+    27    DEEP_READ      18.0s    100    0.78    YES personal   Science          Climate & Environment, Biolo   **Perseverance** Rover Finds **Ruby-Like** Gems on Mars
+    28    ENGAGE          8.1s    100    0.36        personal   Sports           Soccer/Football                **Szoboszlai** Humbled After **Liverpool's** Win Over G
+    29    DEEP_READ       9.4s    100    0.66        trending   Science          Climate & Environment, Biolo   Global Warming **Accelerates**, Exceeding Climate Model
+    30    ENGAGE          8.6s    100    0.32        personal   Sports           Soccer/Football                **Liverpool** Defeats Doubters, **Salah** Inspires **Ch
+    31    DEEP_READ      16.2s     98    0.69        personal   Science          Climate & Environment, Biolo   **Supernova** Discovery May Unlock **Dark Energy** Secr
+    32    GLANCE          2.1s     97    0.19        discovery  Sports           Soccer/Football                **Spurs** Face **Atlético** in Champions League Showdow
+    33    DEEP_READ      12.4s    100    0.73        personal   Science          Climate & Environment, Biolo   **NASA** Launches Twin Spacecraft to Study **Mars**
+    34    GLANCE          2.3s     98    0.21        trending   Sports           Soccer/Football                **Venezuela** Wins **WBC**; **Harper** Not OK With Silv
+    35    ENGAGE          5.0s    100    0.49        personal   Science          Climate & Environment, Biolo   **Ocean Bacteria** Team Up, **Degrade** Plastics Faster
+    36    ENGAGE          7.7s     98    0.36        personal   Sports           Soccer/Football                **Champions League** Quarterfinals Set: **Real Madrid**
+    37    ENGAGE          8.1s    100    0.50        personal   Sports           Soccer/Football                **Matildas** Beat North Korea, Qualify for **World Cup*
+    38    ENGAGE          7.3s    100    0.50        trending   Science          Climate & Environment, Biolo   **Whale Protein** May Extend Human Life to **200 Years*
+    39    ENGAGE          7.8s    100    0.37        personal   Sports           Soccer/Football                **Tottenham** Seeks Comeback Against **Atlético Madrid*
+    40    ENGAGE          4.0s    100    0.57        personal   Science          Climate & Environment, Biolo   **Super El Niño** Looms, Could Drive Temps to **Record*
+    41    GLANCE          3.0s     97    0.24        personal   Sports           Soccer/Football                **Williams** Shines in **Euro 2024** Final vs. England
+    42    ENGAGE          5.7s    100    0.43        discovery  Science          Climate & Environment, Biolo   **NASA** Celebrates **100 Years** of Rocketry History
+    43    GLANCE          3.5s     98    0.08        personal   Sports           Soccer/Football                **Eze's** Strike **Vanishes** Bayer Leverkusen in Champ
+    44    GLANCE          3.0s     97    0.08        trending   Sports           Soccer/Football                **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    45    ENGAGE          4.0s    100    0.52        personal   Science          Climate & Environment, Biolo   **Microbes** Survive **Asteroid** Impact, Shocking Scie
+    46    GLANCE          3.2s     97    0.07        personal   Sports           Soccer/Football                **Liverpool** Routs Galatasaray **4-0** in Champions Le
+    47    GLANCE          2.9s     96    0.11        personal   Sports           Soccer/Football                **Senegal** Stripped of **AFCON** Title; **Morocco** Cr
+    48    ENGAGE          5.2s     98    0.44        trending   Science          Climate & Environment, Biolo   **Astrophage** Powers Interstellar Travel in **Hail Mar
+    49    GLANCE          3.0s     97    0.27        personal   Sports           Soccer/Football                **South Korea** Battles **Japan** in Asian Cup Final
+    50    GLANCE          1.8s     96    0.07        personal   Sports           Soccer/Football                **Australia** Defeats China, Reaches **Asian Cup** Fina
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  23 | Avg:   6.0s | Total:   138s
+    DEEP_READ    Count:  17 | Avg:  13.2s | Total:   225s
+    GLANCE       Count:   9 | Avg:   2.7s | Total:    25s
+    SCAN         Count:   1 | Avg:   2.6s | Total:     3s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Sports                 30    21      0    30      6.0s       YES
+    Science                19    19      0    19     10.9s       YES
+    Business                1     0      0     0      2.6s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%      10.7s     94
+    #2 (11-20)             10     100%     100%       9.5s    100
+    #3 (21-30)             10     100%     100%       8.0s    100
+    #4 (31-40)             10      80%     100%       7.3s    100
+    #5 (41-50)             10      30%     100%       3.5s     96
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  95% | Rel:  95% | AvgDwell: 10.1s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  90% | Rel: 100% | AvgDwell: 7.7s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  30% | Rel: 100% | AvgDwell: 3.5s | EndMood: 96
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 26 topics | 9 relevant (35%) | mode: blended
+    Explore change: 19% -> 35% (+16%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Science          NASA & Space Exploration                  4  cat:Science+kw:space+st:Space & Astronom
+    Personal       YES      Science          Climate Change                           10  cat:Science+kw:climate+st:Climate & Envi
+    Personal       YES      Soccer           UEFA Champions League                    11  kw:champions league+st:Soccer/Football
+    Personal       YES      Science          Mars Exploration                          4  cat:Science+kw:mars+st:Space & Astronomy
+    Personal       NO       Soccer           Bayern Munich                             5  none
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       YES      Soccer           Premier League                           18  kw:premier league+st:Soccer/Football
+    Personal       NO       Basketball       NBA Basketball                           26  none
+    Personal       YES      Football         NFL Football                             25  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                             12  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       YES      Soccer           Manchester United                         5  kw:manchester
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Liverpool FC                              7  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Personal       NO       Football         Kansas City Chiefs                        2  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         4  none
+    Trending       NO       Lifestyle        Travel & Tourism                         11  none
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       YES      Science          Electric Vehicles & EVs                  50  cat:Science+kw:ev
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+    Trending       NO       Sports Events    March Madness & NCAA                     29  none
+    Trending       NO       Finance          Oil Prices & Energy Markets              15  none
+    Trending       NO       Entertainment    Netflix Originals                         7  none
+    Trending       YES      Soccer           Manchester City                           8  kw:manchester
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 390s (6.5 min) | Avg dwell: 7.8s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 1 Business article but I don't follow Business
+      - 30/50 articles were Sports — too repetitive
+    LIKED: "Climate Change **Accelerates** at **Unprecedented** Rate" (7.6s) | "**Blue Origin** Joins **NASA** to Defend Earth From Asteroid" (11.1s) | "**Southwest** Faces Water Shortage Threat for **40 Million**" (16.9s)
+    Recommend: Definitely
+    Quote: "As a environmental journalist at the guardian, I found plenty of Climate & Environment content. Spent 390s total, engaged with 40 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [4/50] KLAUS, 54 — Frankfurt, Germany
+  Senior bond trader at Deutsche Bank. Reads Financial Times cover-to-cover. Bayern Munich fan. Follows ECB rate decisions religiously.
+  Followed topics (SHORT IDs): [finance, economy, politics, sports]
+  Behavior subtopics: Stock Markets, Banking & Lending, European Politics, Soccer/Football
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 8205cfb6... | Topics saved: [finance, economy, politics, sports]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 3 relevant (11%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 27 topics, 7 relevant (26%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 27 topics, 7 relevant (26%), mode: blended
+    Read 50 articles | Engaged: 38 | Glanced: 7 | Skipped: 4 | Relevant: 45
+    Exit: NATURAL | Mood: 91/100 | Saved: 5 | Events: 55
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      20.8s     60    1.03        trending   Finance          Stock Markets, Banking & Len   **European Markets** Set to **Slump** as Iran War Inten
+    2     DEEP_READ      18.5s     67    0.81    YES personal   Finance          Stock Markets, Banking & Len   **Gold** Price **Crashes** to **$4500**, Sharpest Drop 
+    3     DEEP_READ      13.0s     72    1.26        trending   Business         Stock Markets, Banking & Len   **Stocks** Tumble Amid **Iran** War, **Oil** Surges to 
+    4     ENGAGE          9.6s     75    0.52        personal   Sports           Soccer/Football                **Formula 1** Cancels **Bahrain**, Saudi Races Amid Ira
+    5     DEEP_READ      14.8s     80    0.67        personal   Finance          Stock Markets, Banking & Len   **UK** Households Face Cost of Living Crisis Amid **Mid
+    6     ENGAGE          8.5s     82    0.52        trending   Politics         European Politics              **US** Eases Iran Oil Sanctions Amid Ongoing **War**
+    7     DEEP_READ      20.9s     89    0.91    YES personal   Finance          Stock Markets, Banking & Len   **Central Banks** Hold Rates Amid Inflation, Market Ast
+    8     DEEP_READ      24.2s     96    0.80    YES personal   Finance          Stock Markets, Banking & Len   **Powell** Warns **Iran** Oil Crisis Will Worsen Inflat
+    9     SCAN            2.0s     93   -0.03        discovery  World            (none)                         **US**, **Israel** Launch Military Operation Against **
+    10    DEEP_READ      24.9s     98    0.67        personal   Business         Stock Markets                  **Supermicro** Exec Arrested, AI Servers Diverted to **
+    11    DEEP_READ      23.9s     99    0.78        trending   Sports           European Politics, Soccer/Fo   **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    12    ENGAGE          5.3s    100    0.57        personal   Politics         European Politics              **Trump** Relaunches Trade War After Court Ruling
+    13    DEEP_READ      23.2s    100    0.85        trending   Finance          Stock Markets, Banking & Len   **Oil** **Surges**, **Gold** Slumps as Iran War Escalat
+    14    ENGAGE          8.4s    100    0.47        personal   Sports           Soccer/Football                **Sharma's** **50** Sparks India's T20 World Cup Win
+    15    DEEP_READ      14.5s    100    0.90        personal   Business         Stock Markets, Banking & Len   **US** Share Markets Plunge; **$800B** Wiped Out After 
+    16    DEEP_READ      15.7s     99    0.86        trending   Business         Stock Markets, European Poli   **Global Stocks** Slide as **Oil** Jumps Amid Iran War
+    17    ENGAGE          5.6s    100    0.55        personal   Politics         European Politics              **Trump** Imposes **10%** Tariff, Defies Court Ruling
+    18    ENGAGE          3.8s    100    0.44        personal   Business         Stock Markets                  **Oil Prices** Soar Above **$100** Amid Strait of Hormu
+    19    SKIP            0.5s     96   -0.19        discovery  War              (none)                         **Russia** Loses **1,279,170** Troops in Ukraine Since 
+    20    ENGAGE          6.5s     99    0.45        personal   Sports           Soccer/Football                **Team USA** Falls to **Venezuela** in WBC Final, 3-2
+    21    ENGAGE          9.8s     99    0.50        trending   Politics         European Politics              **Trump** Sanctions Critics via **Treasury** Department
+    22    DEEP_READ      22.9s    100    0.86        personal   Finance          Stock Markets, Banking & Len   **Iran War** Drives Inflation as **Growth** Slows
+    23    ENGAGE          8.7s    100    0.35        trending   Sports           Soccer/Football                **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    24    DEEP_READ      11.3s    100    0.70        personal   Business         Stock Markets, European Poli   **USA** Considers New Tariffs Against **China**, **EU**
+    25    DEEP_READ      24.8s    100    0.72        personal   Finance          Stock Markets, Banking & Len   **L3Harris** Shares **Surge** Amid Middle East Tensions
+    26    ENGAGE          8.9s     98    0.37        personal   Politics         European Politics              **Trump** Addresses Iran War, Digresses to Personal Mat
+    27    ENGAGE          5.8s    100    0.42        personal   Sports           Soccer/Football                **Venezuela** Beats **USA** in World Baseball Classic
+    28    DEEP_READ      12.2s    100    0.83    YES personal   Finance          Stock Markets, Banking & Len   **Fed** May Hike Rates Amid Middle East **Conflict**
+    29    DEEP_READ      15.3s    100    0.60        trending   Finance          Stock Markets, Banking & Len   **Iran War** Drives Oil Above **$106**, Supply Chains S
+    30    ENGAGE          7.3s    100    0.56        personal   Business         Stock Markets                  **Wall Street** Warns: Iran War Triggers Energy Crisis
+    31    ENGAGE          5.9s     98    0.39        personal   Politics         European Politics              **US** Considers Oil Futures Trade Amid Iran Conflict
+    32    SKIP            0.4s     94   -0.26        discovery  World            (none)                         **Israel** Invades **Lebanon** for Fifth Time in Decade
+    33    ENGAGE          3.9s     97    0.38        personal   Sports           Soccer/Football                **Iran** Expels Star Striker **Azmoun**, World Cup Doub
+    34    ENGAGE          6.0s     99    0.32        trending   Business         Stock Markets                  **Middle East** Oil Prices **Surge** to Record Highs
+    35    DEEP_READ      22.0s    100    0.84        personal   Business         Stock Markets, Banking & Len   **Iran** Conflict Drives Oil Above **$100**, Inflation 
+    36    ENGAGE          3.8s     98    0.46        personal   Politics         European Politics              **Trump** Sidesteps Court, **Targets** Trade Partners
+    37    GLANCE          3.5s     97    0.27        personal   Business         Stock Markets                  **Iran** Blockade Threatens **Oil** Market Amid Rising 
+    38    GLANCE          4.4s     96    0.23        personal   Business         Stock Markets                  **Fertilizer** Prices **Surge** Amid Iran War, Gas Hike
+    39    ENGAGE         11.7s     98    0.41        trending   Politics         European Politics              **Trump** Waives **Jones Act** for 60 Days Amid Iran Wa
+    40    GLANCE          4.9s     97    0.22        personal   Sports           Soccer/Football                **Venezuela** Wins, Players Get **$3.375M** Prize Share
+    41    ENGAGE          7.9s     98    0.59        personal   Finance          Stock Markets, Banking & Len   **Fed** Eyes Inflation Amid **Iran** War Risk, Rate Cut
+    42    SKIP            0.7s     94   -0.36        discovery  World            (none)                         **US**/**Israel** Strike Pushes **Iran** Into All-Out W
+    43    GLANCE          1.9s     93    0.21        personal   Business         Stock Markets                  **Brent Crude** Falls Below **$100** Amid Middle East T
+    44    GLANCE          4.1s     91    0.27        trending   Sports           Soccer/Football                **Venezuela** Celebrates **WBC** Win, Maduro's Exit
+    45    ENGAGE          5.0s     94    0.44        personal   Finance          Stock Markets, Banking & Len   **Karman Holdings** IPO Leads Stocks Amid **Iran** War
+    46    ENGAGE          3.7s     95    0.47    YES personal   Business         Stock Markets, Banking & Len   **Oil** Jumps to **$100** as Iran War Fears Grip Market
+    47    GLANCE          2.6s     94    0.29        personal   Politics         European Politics              **Trump** Removes **Sanctions** on Russian Oil Today
+    48    SKIP            0.7s     90   -0.43        personal   Science          (none)                         **China** Clears First **Brain-Computer** Implant for U
+    49    ENGAGE          8.3s     92    0.34        trending   Finance          Stock Markets, Banking & Len   **Oil** Price Surge Hits **Gold** and **Bitcoin**
+    50    GLANCE          3.3s     91    0.14        personal   Sports           Soccer/Football                **Dodgers** Sign **Kyle Tucker** to **$240M** Deal
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  21 | Avg:   6.9s | Total:   144s
+    DEEP_READ    Count:  17 | Avg:  19.0s | Total:   323s
+    GLANCE       Count:   7 | Avg:   3.5s | Total:    25s
+    SKIP         Count:   4 | Avg:   0.6s | Total:     2s
+    SCAN         Count:   1 | Avg:   2.0s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Finance                13    13      0    13     16.8s       YES
+    Business               13    10      0    13     10.1s       YES
+    Sports                 10     7      0    10      7.9s       YES
+    Politics                9     8      0     9      6.9s       YES
+    World                   3     0      2     0      1.0s        no
+    War                     1     0      1     0      0.5s        no
+    Science                 1     0      1     0      0.7s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%      15.7s     98
+    #2 (11-20)             10      90%      90%      10.7s     99
+    #3 (21-30)             10     100%     100%      12.7s    100
+    #4 (31-40)             10      60%      90%       6.6s     97
+    #5 (41-50)             10      40%      80%       3.8s     91
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 13.2s | EndMood: 99
+    Phase 21-40   20 articles | Eng:  80% | Rel:  95% | AvgDwell: 9.7s | EndMood: 97
+    Phase 41-50+  10 articles | Eng:  40% | Rel:  80% | AvgDwell: 3.8s | EndMood: 91
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 27 topics | 7 relevant (26%) | mode: blended
+    Explore change: 11% -> 26% (+15%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       YES      Finance          Inflation & Cost of Living               10  cat:Finance+kw:inflation+st:Banking & Le
+    Personal       YES      Finance          Oil Prices & Energy Markets              15  cat:Finance
+    Personal       NO       World Politics   Venezuela                                 3  none
+    Personal       YES      Business         Trade Wars & Tariffs                      2  cat:Business
+    Personal       YES      Finance          Gold & Precious Metals                    4  cat:Finance
+    Personal       YES      Soccer           Premier League                           19  kw:premier league+st:Soccer/Football
+    Personal       NO       Basketball       NBA Basketball                           26  none
+    Personal       YES      Football         NFL Football                             25  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                             12  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Liverpool FC                              8  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Personal       NO       Football         Kansas City Chiefs                        2  none
+    Trending       NO       Sports Events    March Madness & NCAA                     30  none
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       NO       Lifestyle        Travel & Tourism                         11  none
+    Trending       NO       AI & Tech        Nvidia & AI Chips                         4  none
+    Trending       NO       Entertainment    Netflix Originals                         7  none
+    Trending       NO       Science          Climate Change                           10  none
+    Trending       NO       Soccer           Manchester City                           8  none
+    Trending       NO       World Politics   Israel                                   44  none
+    Trending       YES      Finance          Real Estate & Housing                     6  cat:Finance
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 496s (8.3 min) | Avg dwell: 9.9s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 3 World articles but I don't follow World
+      - Shown 1 War article but I don't follow War
+      - Shown 1 Science article but I don't follow Science
+      - Worst: "**China** Clears First **Brain-Computer** Implant for Use" (Science) — score -0.43, 0.7s
+    LIKED: "**European Markets** Set to **Slump** as Iran War Intensifie" (20.8s) | "**Gold** Price **Crashes** to **$4500**, Sharpest Drop in Ye" (18.5s) | "**Stocks** Tumble Amid **Iran** War, **Oil** Surges to $119" (13.0s)
+    Recommend: Definitely
+    Quote: "As a senior bond trader at deutsche bank, I found plenty of Stock Markets content. Spent 496s total, engaged with 38 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [5/50] AMELIE, 25 — Paris, France
+  Fashion design student at Parsons Paris. Lives for Met Gala and Cannes. PSG fan. Follows every A24 release. K-pop stan (BLACKPINK).
+  Followed topics (SHORT IDs): [entertainment, culture, sports]
+  Behavior subtopics: Movies & Film, Celebrity Style & Red Carpet, K-Pop & K-Drama, Soccer/Football, Music
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 6a68f97d... | Topics saved: [entertainment, culture, sports]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 5 relevant (19%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 26 topics, 7 relevant (27%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 27 topics, 8 relevant (30%), mode: blended
+    Read 50 articles | Engaged: 36 | Glanced: 8 | Skipped: 5 | Relevant: 44
+    Exit: NATURAL | Mood: 97/100 | Saved: 1 | Events: 51
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     SKIP            0.8s     51   -0.14        trending   Tech             (none)                         **DarkSword** Hack Exposes Hundreds of Millions of **iP
+    2     DEEP_READ      12.7s     56    0.81        personal   Entertainment    Movies & Film, Celebrity Sty   **BTS** Announces Comeback with New **Album** and **Con
+    3     SCAN            2.3s     54    0.03        trending   Tech             (none)                         **xAI** Faces Lawsuit Over **Grok's** Image Generation
+    4     DEEP_READ      12.4s     59    1.17        personal   Entertainment    Movies & Film, Celebrity Sty   **One Battle After Another** Wins **Best Picture** at O
+    5     DEEP_READ       8.8s     64    1.17        personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars** Winner: **One Battle After Another** Streams
+    6     ENGAGE          3.8s     65    0.44        trending   Sports           Soccer/Football                **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    7     DEEP_READ       7.6s     70    0.99        personal   Entertainment    Movies & Film, Celebrity Sty   **BTS** Comeback: New Album, **Netflix** Concert on Sat
+    8     DEEP_READ       7.9s     75    1.12        personal   Entertainment    Movies & Film, Celebrity Sty   **'One Battle After Another'** Wins at Anxious **Oscars
+    9     SKIP            0.6s     71   -0.14        discovery  Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    DEEP_READ       5.1s     76    0.90        personal   Entertainment    Movies & Film, Celebrity Sty   **BTS** Announces Comeback with New Album **ARIRANG**
+    11    ENGAGE          4.8s     78    0.46        trending   Sports           Soccer/Football                **Venezuela** Celebrates **WBC** Win, Maduro's Exit
+    12    DEEP_READ       7.5s     83    0.91        personal   Entertainment    Movies & Film, Celebrity Sty   **Oscars 2026**: **'One Battle After Another'** Wins Be
+    13    SKIP            0.5s     79   -0.25        trending   Tech             (none)                         **DarkSword** Exploit Targets **220M+** iPhones Globall
+    14    DEEP_READ       7.4s     84    0.75        personal   Entertainment    Movies & Film, Celebrity Sty   **Sony** Eyes Theatrical Release for **KPop Demon Hunte
+    15    ENGAGE          4.1s     87    0.53        personal   Sports           Soccer/Football                **Aston Villa** Ease Into Europa League Quarter-Finals
+    16    ENGAGE          2.9s     88    0.51        trending   Sports           Soccer/Football                **Venezuela** Wins **WBC**; **Harper** Not OK With Silv
+    17    DEEP_READ       7.9s     93    1.00        personal   Entertainment    Movies & Film, Celebrity Sty   **Hattie McDaniel** Makes **Oscar** History in **1940**
+    18    DEEP_READ       6.7s     98    0.69        personal   Sports           Soccer/Football                **FC Bayern** Beats Atalanta **4-1**, Advances in Champ
+    19    ENGAGE          3.2s    100    0.51        discovery  Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    20    SKIP            0.6s     96   -0.18        personal   Business         (none)                         **Paramount** Set to Acquire **Warner Bros.** for **$11
+    21    ENGAGE          4.2s     98    0.41        trending   Sports           Soccer/Football                **LeBron's** Block: **Cavs** End **52**-Year Drought!
+    22    DEEP_READ       7.7s    100    0.71        personal   Sports           Soccer/Football                **Champions League** Round of 16 Concludes **Today**
+    23    DEEP_READ       5.3s    100    0.81        personal   Entertainment    Movies & Film, Celebrity Sty   **Amy Madigan** Wins **Oscar**, Ends 58-Year Horror Dro
+    24    ENGAGE          3.4s    100    0.38    YES trending   Sports           Soccer/Football                **Team USA** Falls to **Venezuela** in WBC Final, 3-2
+    25    ENGAGE          5.5s    100    0.59        personal   Sports           Soccer/Football                **Bayern** Youngsters Shine in **4-1** Champions League
+    26    ENGAGE          3.7s     98    0.49        personal   Sports           Soccer/Football                **Premier League** Faces Humbling **Champions League** 
+    27    ENGAGE          3.0s    100    0.53        personal   Sports           Soccer/Football                **Bayern** Faces **Real** Amid Goalkeeper Concerns
+    28    DEEP_READ      12.7s    100    0.86        personal   Entertainment    Movies & Film, Celebrity Sty   **McAdams** Honors **Diane Keaton** at 2026 Oscars
+    29    ENGAGE          4.5s    100    0.38        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    30    ENGAGE          4.8s    100    0.49        personal   Sports           Soccer/Football                **Simons** Scores Twice, **Tottenham** Wins But Exits U
+    31    ENGAGE          4.4s     98    0.41        discovery  Lifestyle        Celebrity Style & Red Carpet   Voters Pick **Passport** as Top **Exploration Car**
+    32    ENGAGE          2.1s    100    0.34        personal   Sports           Soccer/Football                **Spain** Dominates **Champions League**: Barça vs. Atl
+    33    GLANCE          1.7s     98    0.27        personal   Sports           Soccer/Football                **Liverpool** Routs **Galatasaray**, Eyes Champions Lea
+    34    ENGAGE          3.4s    100    0.48        personal   Entertainment    Movies & Film, Celebrity Sty   **DiCaprio's** 'One Battle' **Dominates** Streaming Cha
+    35    ENGAGE          3.9s    100    0.59        trending   Sports           Soccer/Football, Music         **Tiger Woods** Wins **15th** Major, **5th** Masters Ti
+    36    ENGAGE          5.2s     98    0.38        personal   Sports           Soccer/Football                **Champions League** Sets Record with **68 Goals**
+    37    ENGAGE          6.2s    100    0.56        personal   Entertainment    Movies & Film, Celebrity Sty   **Super Mario Galaxy Movie** Eyes **$160M** Opening
+    38    GLANCE          2.4s     98    0.21        personal   Sports           Soccer/Football                **Newcastle** Crushed **7-2** by Barcelona in Champions
+    39    GLANCE          1.2s     97    0.25        trending   Sports           Soccer/Football                **Eze's** Strike **Vanishes** Bayer Leverkusen in Champ
+    40    SKIP            0.6s     93   -0.20        discovery  Tech             (none)                         **AI Bots** to Outnumber Humans Online by **2027**
+    41    ENGAGE          3.0s     94    0.35        personal   Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    42    ENGAGE          5.2s     97    0.47        personal   Sports           Soccer/Football                **PSG** Eliminates **Chelsea** After **3-0** Away Win
+    43    DEEP_READ       7.4s    100    0.73        personal   Entertainment    Movies & Film, Celebrity Sty   **Jordan** Beats **Chalamet** for Best Actor Oscar
+    44    GLANCE          2.1s     98    0.11        trending   Sports           Soccer/Football                **Dodgers** Sign **Kyle Tucker** to **$240M** Deal
+    45    GLANCE          1.1s     97    0.26        personal   Sports           Soccer/Football                **Chelsea** Suffers **8-2** Champions League Defeat to 
+    46    GLANCE          1.8s     94    0.06        personal   Sports           Soccer/Football                **Kane** Scores **50th** Champions League Goal in Win
+    47    GLANCE          2.1s     93    0.05        personal   Sports           Soccer/Football                **Bayern Munich** Faces **Atalanta** in Champions Leagu
+    48    GLANCE          1.0s     92    0.10        personal   Sports           Soccer/Football                **Spurs** Gain Confidence After **Champions League** Wi
+    49    ENGAGE          3.9s     94    0.31        trending   Sports           Soccer/Football                **FIFA** Finds **Israel FA** Guilty of 'Grave' Violatio
+    50    ENGAGE          5.0s     97    0.32        personal   Sports           Soccer/Football                **Szoboszlai** Humbled After **Liverpool's** Win Over G
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  22 | Avg:   4.1s | Total:    90s
+    DEEP_READ    Count:  14 | Avg:   8.4s | Total:   117s
+    GLANCE       Count:   8 | Avg:   1.7s | Total:    13s
+    SKIP         Count:   5 | Avg:   0.6s | Total:     3s
+    SCAN         Count:   1 | Avg:   2.3s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Sports                 29    21      0    29      3.6s       YES
+    Entertainment          14    14      0    14      8.0s       YES
+    Tech                    4     0      3     0      1.0s        no
+    Business                2     0      2     0      0.6s        no
+    Lifestyle               1     1      0     1      4.4s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      70%      70%       6.2s     76
+    #2 (11-20)             10      80%      80%       4.6s     96
+    #3 (21-30)             10     100%     100%       5.5s    100
+    #4 (31-40)             10      60%      90%       3.1s     93
+    #5 (41-50)             10      50%     100%       3.3s     97
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  75% | Rel:  75% | AvgDwell: 5.4s | EndMood: 96
+    Phase 21-40   20 articles | Eng:  80% | Rel:  95% | AvgDwell: 4.3s | EndMood: 93
+    Phase 41-50+  10 articles | Eng:  50% | Rel: 100% | AvgDwell: 3.3s | EndMood: 97
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 27 topics | 8 relevant (30%) | mode: blended
+    Explore change: 19% -> 30% (+11%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Entertainment    Academy Awards & Oscars                   4  cat:Entertainment+kw:oscar+st:Movies & F
+    Personal       YES      Soccer           UEFA Champions League                    11  kw:champions league+st:Soccer/Football
+    Personal       YES      K-Pop & Music    BTS                                       8  kw:bts+st:K-Pop & K-Drama
+    Personal       YES      Entertainment    Netflix Originals                         7  cat:Entertainment
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       NBA Basketball                           26  none
+    Personal       YES      Football         NFL Football                             26  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                             12  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       NO       Soccer           Liverpool FC                              8  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Arsenal FC                                1  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Personal       NO       Football         Kansas City Chiefs                        2  none
+    Personal       NO       Baseball         New York Yankees                          1  none
+    Personal       NO       Cricket          The Ashes                                 8  none
+    Trending       NO       Finance          Oil Prices & Energy Markets              15  none
+    Trending       YES      Entertainment    HBO & Max                                 5  cat:Entertainment
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       NO       AI & Tech        Google                                    5  none
+    Trending       NO       Health           Mental Health & Wellness                  4  none
+    Trending       YES      Lifestyle        Travel & Tourism                         11  cat:Lifestyle+kw:tour+st:Music
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       Science          Climate Change                           11  none
+    Trending       NO       Sports Events    March Madness & NCAA                     29  none
+    Trending       YES      Soccer           Premier League                           20  kw:premier league+st:Soccer/Football
+
+    FEEDBACK:
+    Rating: 9/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 226s (3.8 min) | Avg dwell: 4.5s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 4 Tech articles but I don't follow Tech
+      - Shown 2 Business articles but I don't follow Business
+      - Skipped 5 irrelevant articles (I follow Movies & Film, Celebrity Style & Red Carpet)
+      - Worst: "**DarkSword** Exploit Targets **220M+** iPhones Globally" (Tech) — score -0.25, 0.5s
+      - 29/50 articles were Sports — too repetitive
+    LIKED: "**BTS** Announces Comeback with New **Album** and **Concert*" (12.7s) | "**One Battle After Another** Wins **Best Picture** at Oscars" (12.4s) | "**Oscars** Winner: **One Battle After Another** Streams Now" (8.8s)
+    Recommend: Definitely
+    Quote: "As a fashion design student at parsons paris, I found plenty of Movies & Film content. Spent 226s total, engaged with 36 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [6/50] ARJUN, 29 — Bangalore, India
+  Backend engineer at Flipkart. Die-hard RCB cricket fan. Follows Indian startup scene and AI tools. Plays PUBG Mobile competitively.
+  Followed topics (SHORT IDs): [technology, ai, sports, startups]
+  Behavior subtopics: AI & Machine Learning, Cricket, Startups & Venture Capital, Gaming, Smartphones & Gadgets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: c4e5325e... | Topics saved: [technology, ai, sports, startups]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 27 topics | 4 relevant (15%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 26 topics, 7 relevant (27%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 26 topics, 7 relevant (27%), mode: blended
+    Read 50 articles | Engaged: 43 | Glanced: 4 | Skipped: 3 | Relevant: 47
+    Exit: NATURAL | Mood: 100/100 | Saved: 2 | Events: 52
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      14.8s     60    0.77        trending   Tech             AI & Machine Learning, Gamin   **DarkSword** Hack Exposes Hundreds of Millions of **iP
+    2     ENGAGE          7.0s     63    0.58        personal   Science          AI & Machine Learning          **AI** Cyberattacks Threaten **Satellite** Apocalypse i
+    3     SKIP            0.5s     59   -0.13        trending   Science          (none)                         Astronomers Witness Birth of **Magnetar** After **Super
+    4     DEEP_READ      17.7s     64    1.17        personal   Tech             AI & Machine Learning, Gamin   **Rome** Court Scraps **$17M** Fine on ChatGPT Maker **
+    5     DEEP_READ      17.6s     69    1.32        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Merges **ChatGPT**, **Codex** Into Desktop '
+    6     ENGAGE          3.4s     71    0.42        trending   Sports           Cricket                        **Giants** Upset **Patriots** in Super Bowl XLII
+    7     DEEP_READ       9.0s     76    1.05        personal   Tech             AI & Machine Learning, Gamin   **OpenAI's** ChatGPT Implicated in Teen's **Suicide**
+    8     DEEP_READ       7.3s     81    0.83        personal   Tech             AI & Machine Learning, Start   **Cloaked** Secures **$375M** to Expand Privacy Solutio
+    9     DEEP_READ      15.2s     86    0.62        discovery  Business         Startups & Venture Capital     **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    DEEP_READ      17.6s     91    0.87        personal   Tech             AI & Machine Learning, Gamin   Employers' **AI Experiments** Reveal **Grim Truth**
+    11    ENGAGE          5.0s     92    0.49        trending   Business         Startups & Venture Capital     **Gas Prices** Jump After Attacks on **Qatar**, **Iran*
+    12    DEEP_READ      13.1s     97    1.06        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Unveils **NemoClaw** Platform for Agentic AI
+    13    ENGAGE          3.0s    100    0.43        trending   Finance          Startups & Venture Capital     **Global Markets** Plunge Amid Middle East **Conflict**
+    14    DEEP_READ       7.1s    100    0.83        personal   Tech             AI & Machine Learning, Gamin   **Meta** AI Agent Goes Rogue, **Exposes** User Data
+    15    DEEP_READ      12.6s    100    0.84        personal   Tech             AI & Machine Learning, Gamin   **Google** Exposes **DarkSword** Exploit Targeting iPho
+    16    DEEP_READ      12.7s     99    0.83        discovery  Sports           AI & Machine Learning, Crick   **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    17    DEEP_READ      12.6s    100    1.03        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Unveils **Vera Rubin** AI Platform with 7 Ch
+    18    DEEP_READ       9.1s    100    0.68        personal   Tech             AI & Machine Learning, Gamin   **Signal's Creator** Helps **Meta** Encrypt **AI**
+    19    ENGAGE          8.2s    100    0.53        trending   Science          AI & Machine Learning          **Astrophage** Powers Interstellar Travel in **Hail Mar
+    20    DEEP_READ       6.3s    100    0.75        personal   Tech             AI & Machine Learning, Gamin   **German Laser** Tech Drives Global Semiconductor Boom
+    21    DEEP_READ      16.9s     99    0.76        trending   Tech             AI & Machine Learning, Gamin   **DarkSword** Exploit Targets **220M+** iPhones Globall
+    22    GLANCE          2.6s     97    0.30        trending   Sports           Cricket                        **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    23    DEEP_READ       9.7s    100    0.90        personal   Tech             AI & Machine Learning, Gamin   **OpenAI** Debuts GPT-5.4 **Mini** and **Nano** Models
+    24    DEEP_READ       7.6s    100    0.78        personal   Business         AI & Machine Learning, Start   **Meta** Prepares for **16,000** Job Cuts, Focuses on *
+    25    DEEP_READ       9.3s    100    0.80        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Reveals **Rubin Ultra** GPU with 1TB Memory
+    26    DEEP_READ       6.9s     98    0.66        personal   Tech             AI & Machine Learning, Gamin   **Apple** Urges Immediate **iOS 15** Update for iPhones
+    27    DEEP_READ      13.9s    100    0.79        personal   Tech             AI & Machine Learning, Gamin   **iPhone** Users Urged to Update Amid **DarkSword** Hac
+    28    SKIP            0.4s     95   -0.15        discovery  Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    29    DEEP_READ      12.5s    100    0.65        trending   Tech             AI & Machine Learning, Gamin   **xAI** Faces Lawsuit Over **Grok's** Image Generation
+    30    DEEP_READ      15.8s    100    0.79        personal   Tech             AI & Machine Learning, Gamin   **Apple** Issues Spyware Alert, Urges **iOS** Update
+    31    SKIP            1.0s     94   -0.21        trending   Science          (none)                         Climate Change **Accelerates** at **Unprecedented** Rat
+    32    ENGAGE          3.5s     97    0.54        personal   Tech             AI & Machine Learning, Gamin   **Apple** iPhones Hacked via **DarkSword** Exploit
+    33    DEEP_READ      11.4s    100    0.89        personal   Tech             AI & Machine Learning, Gamin   **ChatGPT's** 'Adult Mode' **Sparks** Intimate Surveill
+    34    GLANCE          2.9s     98    0.16        trending   Sports           Cricket                        **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    35    ENGAGE          3.0s    100    0.60        personal   Tech             AI & Machine Learning, Gamin   **iPhone** Hack Exposes Hundreds of Millions to Risk
+    36    DEEP_READ       9.7s     98    0.71        personal   Tech             AI & Machine Learning, Gamin   **Apple's** Foldable **iPhone** Nears Mass Production i
+    37    ENGAGE          8.2s    100    0.36        discovery  Science          AI & Machine Learning          **NASA** Aims for Monthly **Moon Landings** in **2027**
+    38    ENGAGE          5.4s    100    0.57    YES personal   Tech             AI & Machine Learning, Gamin   **Meta** Unveils **MTIA** Chip Lineup for AI Inferencin
+    39    DEEP_READ      16.9s    100    0.62        personal   Tech             AI & Machine Learning, Gamin   **Apple** Urges Users Update iPhones After Hack Warning
+    40    DEEP_READ      14.7s    100    0.63        trending   Business         AI & Machine Learning, Start   **Oil** Approaches **$115** After Iran Attacks Refineri
+    41    DEEP_READ      11.7s     98    0.84    YES personal   Tech             AI & Machine Learning, Gamin   **Nvidia** Shrinks **LLM** Memory **20x** With New Tech
+    42    ENGAGE          5.0s    100    0.48        personal   Tech             AI & Machine Learning, Gamin   **Apple Mail** 'Trusted Sender' Label Sparks Phishing S
+    43    ENGAGE          3.9s    100    0.58        personal   Entertainment    AI & Machine Learning, Gamin   **UK** Protects Music from **AI** Use Without Permissio
+    44    DEEP_READ       6.9s    100    0.65        personal   Tech             AI & Machine Learning, Gamin   **Samsung Galaxy S26 Ultra** Boasts New Privacy Display
+    45    ENGAGE          3.5s    100    0.52        personal   Tech             AI & Machine Learning, Gamin   **EU** Moves to **Ban** Nudify Apps After Grok Rise
+    46    GLANCE          2.7s     97    0.20        personal   Science          AI & Machine Learning          **Basecamp Research** Launches **Trillion Gene Atlas**
+    47    ENGAGE          3.7s    100    0.58        personal   Tech             AI & Machine Learning, Gamin   **iPhone 18 Pro** Rumored to Get Variable Aperture
+    48    ENGAGE          7.8s    100    0.48        personal   Tech             AI & Machine Learning, Gamin   **iPhone** Spyware **Darksword** Targets Millions of De
+    49    GLANCE          1.4s     98    0.23        trending   Finance          Startups & Venture Capital     **European Markets** Set to **Slump** as Iran War Inten
+    50    DEEP_READ      11.0s    100    0.74        personal   Tech             AI & Machine Learning, Gamin   **Nvidia** GTC 2026: **Huang** Reveals Next-Gen **GPUs*
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  29 | Avg:  12.0s | Total:   348s
+    ENGAGE       Count:  14 | Avg:   5.0s | Total:    71s
+    GLANCE       Count:   4 | Avg:   2.4s | Total:    10s
+    SKIP         Count:   3 | Avg:   0.6s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Tech                   32    32      0    32     10.3s       YES
+    Science                 6     3      2     4      4.6s        no
+    Sports                  4     2      0     4      5.4s       YES
+    Business                4     4      0     4     10.6s       YES
+    Finance                 2     1      0     2      2.2s       YES
+    Politics                1     0      1     0      0.4s        no
+    Entertainment           1     1      0     1      3.9s       YES
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%      11.0s     91
+    #2 (11-20)             10     100%     100%       9.0s    100
+    #3 (21-30)             10      80%      90%       9.6s    100
+    #4 (31-40)             10      80%      90%       7.7s    100
+    #5 (41-50)             10      80%     100%       5.8s    100
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  95% | Rel:  95% | AvgDwell: 10.0s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  80% | Rel:  90% | AvgDwell: 8.6s | EndMood: 100
+    Phase 41-50+  10 articles | Eng:  80% | Rel: 100% | AvgDwell: 5.8s | EndMood: 100
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 25 topics | 7 relevant (28%) | mode: blended
+    Explore change: 15% -> 28% (+13%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      AI & Tech        Apple                                     5  kw:apple+st:Smartphones & Gadgets
+    Personal       YES      AI & Tech        iPhone & iOS                              4  kw:iphone+st:Smartphones & Gadgets
+    Personal       YES      AI & Tech        Nvidia & AI Chips                         4  kw:ai+st:AI & Machine Learning
+    Personal       YES      AI & Tech        OpenAI & ChatGPT                          4  kw:ai+st:AI & Machine Learning
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       NBA Basketball                           25  none
+    Personal       NO       Football         NFL Football                             24  none
+    Personal       BAD      Baseball         MLB Baseball                             10  none
+    Personal       YES      Cricket          Cricket                                   2  kw:cricket+st:Cricket
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Liverpool FC                              8  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Arsenal FC                                1  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Personal       NO       Football         Kansas City Chiefs                        2  none
+    Trending       NO       AI & Tech        Google                                    5  none
+    Trending       NO       Sports Events    March Madness & NCAA                     28  none
+    Trending       YES      Entertainment    Netflix Originals                         7  cat:Entertainment
+    Trending       NO       Soccer           Premier League                           20  none
+    Trending       NO       Combat Sports    WWE Wrestling                             4  none
+    Trending       YES      Finance          Oil Prices & Energy Markets              15  cat:Finance
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+    Trending       NO       Science          Climate Change                           11  none
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+
+    FEEDBACK:
+    Rating: 10/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 430s (7.2 min) | Avg dwell: 8.6s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 2 Science articles but I don't follow Science
+      - Shown 1 Politics article but I don't follow Politics
+      - Worst: "Climate Change **Accelerates** at **Unprecedented** Rate" (Science) — score -0.21, 1.0s
+      - 32/50 articles were Tech — too repetitive
+      - Feed got WORSE: eng rate dropped from 95% (1-20) to 80% (21-40)
+    LIKED: "**DarkSword** Hack Exposes Hundreds of Millions of **iPhones" (14.8s) | "**Rome** Court Scraps **$17M** Fine on ChatGPT Maker **OpenA" (17.7s) | "**OpenAI** Merges **ChatGPT**, **Codex** Into Desktop 'Super" (17.6s)
+    Recommend: Definitely
+    Quote: "As a backend engineer at flipkart, I found plenty of AI & Machine Learning content. Spent 430s total, engaged with 43 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [7/50] LUCAS, 27 — Sao Paulo, Brazil
+  DeFi trader and Flamengo ultra. Charts bitcoin whale wallets. Follows Vini Jr at Real Madrid. Hosts a Portuguese crypto podcast.
+  Followed topics (SHORT IDs): [crypto, sports, finance]
+  Behavior subtopics: Bitcoin, DeFi & Web3, Soccer/Football, Stock Markets
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: 3405d050... | Topics saved: [crypto, sports, finance]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 26 topics | 3 relevant (12%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 25 topics, 7 relevant (28%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 25 topics, 8 relevant (32%), mode: blended
+    Read 50 articles | Engaged: 37 | Glanced: 12 | Skipped: 0 | Relevant: 49
+    Exit: NATURAL | Mood: 94/100 | Saved: 3 | Events: 53
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      11.3s     60    0.77        trending   Finance          Bitcoin, DeFi & Web3, Stock    **Global Markets** Plunge Amid Middle East **Conflict**
+    2     DEEP_READ       5.0s     65    1.07        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Gold** Price **Crashes** to **$4500**, Sharpest Drop 
+    3     DEEP_READ       7.3s     70    1.05        trending   Tech             Bitcoin, DeFi & Web3           **DarkSword** Hack Exposes Hundreds of Millions of **iP
+    4     DEEP_READ      13.5s     75    0.62        personal   Business         Stock Markets                  **US** Share Markets Plunge; **$800B** Wiped Out After 
+    5     DEEP_READ      11.1s     80    0.98        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Fed** Decision Looms: **Bitcoin** Eyes **$80K** Miles
+    6     ENGAGE          4.9s     82    0.51        trending   Sports           Soccer/Football                **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    7     DEEP_READ      10.8s     87    0.64        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Fed** Eyes Inflation Amid **Iran** War Risk, Rate Cut
+    8     ENGAGE          4.0s     90    0.53        personal   Sports           Soccer/Football                **Aston Villa** Ease Into Europa League Quarter-Finals
+    9     SCAN            1.6s     87   -0.03        discovery  Politics         (none)                         **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    10    ENGAGE          6.4s     90    0.57        personal   Business         Stock Markets                  **Paramount** Acquires **Warner Bros.** in $110B Deal
+    11    DEEP_READ       8.3s     94    0.69        trending   Business         Stock Markets                  **Stocks** Tumble Amid **Iran** War, **Oil** Surges to 
+    12    DEEP_READ       5.5s     99    0.85        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Fed** Holds, Inflation Forecast Rises to **2.7%** for
+    13    DEEP_READ       9.6s    100    0.79        trending   Finance          Bitcoin, DeFi & Web3, Stock    **Oil** **Surges**, **Gold** Slumps as Iran War Escalat
+    14    DEEP_READ      14.7s    100    0.60    YES personal   Sports           Soccer/Football                **FC Bayern** Beats Atalanta **4-1**, Advances in Champ
+    15    DEEP_READ       9.4s    100    0.72        personal   Sports           Soccer/Football                **Bayern** Youngsters Shine in **4-1** Champions League
+    16    DEEP_READ      14.3s     99    0.81        trending   Tech             Bitcoin, DeFi & Web3           **DarkSword** Exploit Targets **220M+** iPhones Globall
+    17    ENGAGE          5.8s    100    0.57        personal   Sports           Soccer/Football                **Liverpool** Routs **Galatasaray**, Eyes Champions Lea
+    18    DEEP_READ      13.5s    100    0.68        personal   Sports           Soccer/Football                **Simons** Scores Twice, **Tottenham** Wins But Exits U
+    19    DEEP_READ      12.9s    100    0.65    YES personal   Finance          Bitcoin, DeFi & Web3, Stock    **S&P 500** Chart Parallels Dot-Com Bubble Burst
+    20    ENGAGE          2.1s    100    0.41        discovery  Sports           Soccer/Football                **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    21    DEEP_READ      14.3s     99    0.70        trending   Sports           Soccer/Football                **Giants** Upset **Patriots** in Super Bowl XLII
+    22    ENGAGE          4.5s    100    0.54        trending   Business         Stock Markets                  **Global Stocks** Slide as **Oil** Jumps Amid Iran War
+    23    ENGAGE          5.1s    100    0.56        personal   Sports           Soccer/Football                **Champions League** Sets Record with **68 Goals**
+    24    ENGAGE          4.0s    100    0.47        personal   Sports           Soccer/Football                **Premier League** Faces Humbling **Champions League** 
+    25    ENGAGE          4.6s    100    0.33        personal   Sports           Soccer/Football                **Dodgers** Sign **Kyle Tucker** to **$240M** Deal
+    26    ENGAGE          3.9s     98    0.58        personal   Sports           Soccer/Football                **Bayern** Faces **Real** Amid Goalkeeper Concerns
+    27    ENGAGE          2.7s    100    0.31    YES personal   Sports           Soccer/Football                **Bayern Munich** Faces **Atalanta** in Champions Leagu
+    28    ENGAGE          2.1s    100    0.53        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Gold** Prices Stabilize Despite **Iran** War Uncertai
+    29    DEEP_READ      13.8s    100    0.98        trending   Finance          Bitcoin, DeFi & Web3, Stock    **Oil** Price Surge Hits **Gold** and **Bitcoin**
+    30    ENGAGE          5.4s    100    0.47        personal   Sports           Soccer/Football                **Szoboszlai** Humbled After **Liverpool's** Win Over G
+    31    ENGAGE          3.6s     98    0.56        personal   Sports           Soccer/Football                **Tottenham** Seeks Comeback Against **Atlético Madrid*
+    32    ENGAGE          5.1s    100    0.39        discovery  Finance          Bitcoin, DeFi & Web3, Stock    **Wall Street** Bets Big on Prediction **Markets**
+    33    GLANCE          2.1s     98    0.19        personal   Sports           Soccer/Football                **Kane** Scores **50th** Champions League Goal in Win
+    34    DEEP_READ      11.5s    100    0.62        trending   Tech             Bitcoin, DeFi & Web3           **xAI** Faces Lawsuit Over **Grok's** Image Generation
+    35    GLANCE          1.1s     98    0.22        personal   Sports           Soccer/Football                **PSG** Defeats **Chelsea** 5-2 in Champions League
+    36    GLANCE          1.7s     96    0.20        personal   Sports           Soccer/Football                **Newcastle** Crushed **7-2** by Barcelona in Champions
+    37    ENGAGE          6.5s     98    0.48        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Global Banks** Assess Damage After **US-Iran** Confli
+    38    GLANCE          1.0s     97    0.18        personal   Sports           Soccer/Football                **Karl** Leads **Bayern** to Champions League Quarterfi
+    39    GLANCE          1.9s     96    0.24        trending   Sports           Soccer/Football                **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    40    ENGAGE          6.3s     98    0.49        discovery  Finance          Bitcoin, DeFi & Web3, Stock    **War Panic** to Hit Markets in **1-3 Weeks**, Strategi
+    41    GLANCE          1.0s     96    0.16        personal   Sports           Soccer/Football                **Chelsea** Suffers **8-2** Champions League Defeat to 
+    42    GLANCE          1.5s     94    0.22        personal   Sports           Soccer/Football                **Iran** Expels Star Striker **Azmoun**, World Cup Doub
+    43    ENGAGE          3.0s     97    0.42        trending   Business         Stock Markets                  **Oil** Surges to **$115** After Attack; Stocks Plunge
+    44    GLANCE          1.8s     96    0.28        personal   Sports           Soccer/Football                **Spurs** Gain Confidence After **Champions League** Wi
+    45    GLANCE          1.7s     94    0.06        personal   Sports           Soccer/Football                **Eze's** Strike **Vanishes** Bayer Leverkusen in Champ
+    46    ENGAGE          4.0s     96    0.50        personal   Finance          Bitcoin, DeFi & Web3, Stock    **Fed** May Hike Rates Amid Middle East **Conflict**
+    47    GLANCE          2.7s     94    0.27        personal   Sports           Soccer/Football                **PSG** Dumps **Chelsea** Out of UCL, Wins 8-2 on Aggre
+    48    GLANCE          1.1s     93    0.27        personal   Sports           Soccer/Football                **PSG** Eliminates **Chelsea** After **3-0** Away Win
+    49    ENGAGE          6.7s     96    0.47        trending   Finance          Bitcoin, DeFi & Web3, Stock    **Fed** Holds Rates Steady Amid **Gulf War** Inflation
+    50    GLANCE          1.6s     94    0.28        personal   Sports           Soccer/Football                **FIFA** Finds **Israel FA** Guilty of 'Grave' Violatio
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  20 | Avg:   4.5s | Total:    91s
+    DEEP_READ    Count:  17 | Avg:  11.0s | Total:   187s
+    GLANCE       Count:  12 | Avg:   1.6s | Total:    19s
+    SCAN         Count:   1 | Avg:   1.6s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Sports                 27    15      0    27      4.3s       YES
+    Finance                14    14      0    14      7.9s       YES
+    Business                5     5      0     5      7.1s       YES
+    Tech                    3     3      0     3     11.0s       YES
+    Politics                1     0      0     0      1.6s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%       7.6s     90
+    #2 (11-20)             10     100%     100%       9.6s    100
+    #3 (21-30)             10     100%     100%       6.0s    100
+    #4 (31-40)             10      50%     100%       4.1s     98
+    #5 (41-50)             10      30%     100%       2.5s     94
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  95% | Rel:  95% | AvgDwell: 8.6s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  75% | Rel: 100% | AvgDwell: 5.1s | EndMood: 98
+    Phase 41-50+  10 articles | Eng:  30% | Rel: 100% | AvgDwell: 2.5s | EndMood: 94
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 26 topics | 8 relevant (31%) | mode: blended
+    Explore change: 12% -> 31% (+19%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       YES      Finance          Inflation & Cost of Living               10  cat:Finance
+    Personal       YES      Soccer           UEFA Champions League                    11  kw:champions league+st:Soccer/Football
+    Personal       YES      Finance          Bitcoin & Crypto                          4  cat:Finance+kw:bitcoin+st:Bitcoin
+    Personal       YES      Finance          Gold & Precious Metals                    4  cat:Finance
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       YES      Soccer           Bundesliga                                8  kw:bundesliga+st:Soccer/Football
+    Personal       YES      Soccer           Premier League                           20  kw:premier league+st:Soccer/Football
+    Personal       NO       Basketball       NBA Basketball                           24  none
+    Personal       YES      Football         NFL Football                             25  kw:football+st:Soccer/Football
+    Personal       NO       Baseball         MLB Baseball                              9  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Liverpool FC                              8  none
+    Personal       NO       Basketball       Boston Celtics                            1  none
+    Trending       YES      Finance          Oil Prices & Energy Markets              15  cat:Finance
+    Trending       NO       Lifestyle        Travel & Tourism                         10  none
+    Trending       NO       Entertainment    Netflix Originals                         8  none
+    Trending       NO       K-Pop & Music    BTS                                       8  none
+    Trending       NO       World Politics   Israel                                   41  none
+    Trending       NO       Science          Climate Change                           11  none
+    Trending       NO       Combat Sports    WWE Wrestling                             4  none
+    Trending       NO       Sports Events    March Madness & NCAA                     27  none
+    Trending       NO       AI & Tech        Google                                    5  none
+    Trending       NO       Soccer           Manchester City                           8  none
+
+    FEEDBACK:
+    Rating: 9/10 | Satisfied | Explore: Mediocre (Yes)
+    Session: 298s (5.0 min) | Avg dwell: 6.0s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 1 Politics article but I don't follow Politics
+      - 27/50 articles were Sports — too repetitive
+      - Feed got WORSE: eng rate dropped from 95% (1-20) to 75% (21-40)
+    LIKED: "**Global Markets** Plunge Amid Middle East **Conflict**" (11.3s) | "**Gold** Price **Crashes** to **$4500**, Sharpest Drop in Ye" (5.0s) | "**DarkSword** Hack Exposes Hundreds of Millions of **iPhones" (7.3s)
+    Recommend: Definitely
+    Quote: "As a defi trader and flamengo ultra, I found plenty of Bitcoin content. Spent 298s total, engaged with 37 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [8/50] YUKI, 23 — Tokyo, Japan
+  Game developer at a small Tokyo studio. Follows every Nintendo Direct. Into AI art and VR. Watches anime and follows J-League casually.
+  Followed topics (SHORT IDs): [technology, entertainment, ai]
+  Behavior subtopics: Gaming, AI & Machine Learning, Robotics & Hardware, Movies & Film
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: c26b4ce4... | Topics saved: [technology, entertainment, ai]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 19 topics | 5 relevant (26%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 23 topics, 8 relevant (35%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 22 topics, 6 relevant (27%), mode: blended
+    Read 50 articles | Engaged: 37 | Glanced: 2 | Skipped: 10 | Relevant: 40
+    Exit: NATURAL | Mood: 98/100 | Saved: 1 | Events: 51
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      10.8s     60    0.72        trending   Tech             Gaming, AI & Machine Learnin   **DarkSword** Hack Exposes Hundreds of Millions of **iP
+    2     DEEP_READ      11.7s     65    0.65        personal   Science          AI & Machine Learning          **AI** Cyberattacks Threaten **Satellite** Apocalypse i
+    3     SKIP            0.6s     61   -0.15        trending   Science          (none)                         Astronomers Witness Birth of **Magnetar** After **Super
+    4     DEEP_READ       5.3s     66    1.10        personal   Tech             Gaming, AI & Machine Learnin   **Rome** Court Scraps **$17M** Fine on ChatGPT Maker **
+    5     SKIP            0.3s     62   -0.24        personal   Lifestyle        (none)                         **Meta** Offers Guide to Help Dads Navigate **Social Me
+    6     DEEP_READ       4.5s     66    0.70        trending   Tech             Gaming, AI & Machine Learnin   **DarkSword** Exploit Targets **220M+** iPhones Globall
+    7     DEEP_READ      12.0s     71    1.02        personal   Entertainment    Gaming, Movies & Film          **Anora** Sweeps **Oscars**, Baker Wins 4 Awards
+    8     DEEP_READ       4.8s     76    0.83        personal   Tech             Gaming, AI & Machine Learnin   **German Laser** Tech Drives Global Semiconductor Boom
+    9     SKIP            0.6s     72   -0.22        discovery  Business         (none)                         **Oil Prices** Surge Amid **Israel**, **US** Strike on 
+    10    DEEP_READ       8.1s     77    1.19        personal   Tech             Gaming, AI & Machine Learnin   **OpenAI** Merges **ChatGPT**, **Codex** Into Desktop '
+    11    DEEP_READ       6.6s     80    0.96        trending   Tech             Gaming, AI & Machine Learnin   **xAI** Faces Lawsuit Over **Grok's** Image Generation
+    12    ENGAGE          4.4s     83    0.52        trending   Science          AI & Machine Learning          **Astrophage** Powers Interstellar Travel in **Hail Mar
+    13    DEEP_READ       5.9s     90    1.23    YES personal   Tech             Gaming, AI & Machine Learnin   **OpenAI's** ChatGPT Implicated in Teen's **Suicide**
+    14    DEEP_READ       5.6s     95    0.73        personal   Entertainment    Gaming, Movies & Film          **BTS** Announces Comeback with New **Album** and **Con
+    15    DEEP_READ       8.0s    100    0.77        personal   Tech             Gaming, AI & Machine Learnin   **Cloaked** Secures **$375M** to Expand Privacy Solutio
+    16    SKIP            0.8s     95   -0.21        trending   Science          (none)                         Climate Change **Accelerates** at **Unprecedented** Rat
+    17    DEEP_READ       7.8s    100    0.72        personal   Tech             Gaming, AI & Machine Learnin   **Google** Exposes **DarkSword** Exploit Targeting iPho
+    18    DEEP_READ      11.7s    100    0.72        personal   Tech             Gaming, AI & Machine Learnin   Employers' **AI Experiments** Reveal **Grim Truth**
+    19    ENGAGE          3.6s    100    0.40        discovery  Sports           AI & Machine Learning          **F1** Cancels **Bahrain**, **Saudi Arabia** Races Due 
+    20    DEEP_READ       4.4s    100    0.60        personal   Entertainment    Gaming, Movies & Film          **BTS** Comeback: New Album, **Netflix** Concert on Sat
+    21    SKIP            0.5s     95   -0.12        trending   Science          (none)                         Climate Change **Effects** Intensify, **Experts** Surpr
+    22    ENGAGE          4.8s     97    0.42        personal   Tech             Gaming, AI & Machine Learnin   **Apple** iPhones Hacked via **DarkSword** Exploit
+    23    SKIP            0.6s     93   -0.36        trending   Science          (none)                         **Superconductivity** Achieved at Record **-122°C**, Am
+    24    DEEP_READ       5.8s     98    0.63        personal   Tech             Gaming, AI & Machine Learnin   **Meta** AI Agent Goes Rogue, **Exposes** User Data
+    25    DEEP_READ       4.2s    100    0.94        personal   Entertainment    Gaming, Movies & Film          **Oscars** Winner: **One Battle After Another** Streams
+    26    DEEP_READ      10.4s     98    0.61        personal   Tech             Gaming, AI & Machine Learnin   **Apple** Urges Immediate **iOS 15** Update for iPhones
+    27    DEEP_READ      11.6s    100    0.62        personal   Tech             Gaming, AI & Machine Learnin   **Apple** Issues Spyware Alert, Urges **iOS** Update
+    28    ENGAGE          3.0s    100    0.38        trending   Science          AI & Machine Learning          **Whale Protein** May Extend Human Life to **200 Years*
+    29    ENGAGE          5.1s    100    0.58        personal   Tech             Gaming, AI & Machine Learnin   **Apple** Urges Users Update iPhones After Hack Warning
+    30    DEEP_READ       4.4s    100    0.99        personal   Entertainment    Gaming, Movies & Film          **Oscars 2026**: **'One Battle After Another'** Wins Be
+    31    DEEP_READ       9.5s     98    0.93        personal   Tech             Gaming, AI & Machine Learnin   **Nvidia** Unveils **Vera Rubin** AI Platform with 7 Ch
+    32    SKIP            0.9s     94   -0.48        discovery  Science          (none)                         **Seven-Tonne Meteor** Plunges From **Cleveland** Sky
+    33    ENGAGE          3.5s     97    0.41        personal   Tech             Gaming, AI & Machine Learnin   **iPhone** Hack Exposes Hundreds of Millions to Risk
+    34    SKIP            0.7s     92   -0.38        trending   Science          (none)                         Global Warming **Increases** Deaths by **Hundreds of Th
+    35    DEEP_READ       9.8s     97    0.66        personal   Tech             Gaming, AI & Machine Learnin   **Nvidia** Unveils **DLSS 5**, Generative AI for Games
+    36    DEEP_READ      10.1s     98    0.72        personal   Entertainment    Gaming, Movies & Film          **Steve Kerr** Wins Oscar for Documentary Short
+    37    ENGAGE          3.7s    100    0.51        personal   Tech             Gaming, AI & Machine Learnin   **Apple Mail** 'Trusted Sender' Label Sparks Phishing S
+    38    DEEP_READ       7.4s    100    0.60        personal   Tech             Gaming, AI & Machine Learnin   **Apple's** Foldable **iPhone** Nears Mass Production i
+    39    SKIP            0.8s     95   -0.52        trending   Science          (none)                         Global Warming **Accelerates**, Exceeding Climate Model
+    40    ENGAGE          1.7s     98    0.51        personal   Entertainment    Gaming, Movies & Film          **One Battle After Another** Wins **Best Picture** at O
+    41    GLANCE          1.9s     95    0.21        personal   Finance          AI & Machine Learning          **Private Funds** Face Investor Exodus, **$13 Trillion*
+    42    DEEP_READ       7.5s    100    0.65        discovery  Entertainment    Gaming, AI & Machine Learnin   **Jessie Buckley** Wins **Best Actress** Oscar for 'Ham
+    43    DEEP_READ       9.3s    100    0.69        personal   Entertainment    Gaming, Movies & Film          **Hattie McDaniel** Makes **Oscar** History in **1940**
+    44    DEEP_READ      12.0s    100    0.62        trending   Tech             Gaming, AI & Machine Learnin   **Nvidia** Unveils **NemoClaw** Platform for Agentic AI
+    45    SKIP            0.6s     95   -0.48        personal   Lifestyle        (none)                         Privacy Fears Rise: Are We All **Watched**?
+    46    GLANCE          1.2s     93    0.26        personal   Entertainment    Gaming, Movies & Film          **BTS** Announces Comeback with New Album **ARIRANG**
+    47    SCAN            1.5s     90   -0.05        personal   Science          AI & Machine Learning          **Basecamp Research** Launches **Trillion Gene Atlas**
+    48    ENGAGE          3.1s     93    0.58        personal   Entertainment    Gaming, Movies & Film          **McAdams** Honors **Diane Keaton** at 2026 Oscars
+    49    ENGAGE          4.3s     95    0.57        trending   Tech             Gaming, AI & Machine Learnin   **Meta** Unveils **MTIA** Chip Lineup for AI Inferencin
+    50    ENGAGE          1.7s     98    0.55        personal   Entertainment    Gaming, AI & Machine Learnin   **Netflix CEO** Dismisses AI Mass Content as Inferior
+
+    DWELL BY ACTION:
+    DEEP_READ    Count:  26 | Avg:   8.0s | Total:   209s
+    ENGAGE       Count:  11 | Avg:   3.6s | Total:    39s
+    SKIP         Count:  10 | Avg:   0.6s | Total:     6s
+    GLANCE       Count:   2 | Avg:   1.6s | Total:     3s
+    SCAN         Count:   1 | Avg:   1.5s | Total:     2s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Tech                   22    22      0    22      7.3s       YES
+    Entertainment          12    11      0    12      5.4s       YES
+    Science                11     3      7     4      2.3s        no
+    Lifestyle               2     0      2     0      0.4s        no
+    Business                1     0      1     0      0.6s        no
+    Sports                  1     1      0     1      3.6s        no
+    Finance                 1     0      0     1      1.9s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      70%      70%       5.9s     77
+    #2 (11-20)             10      90%      90%       5.9s    100
+    #3 (21-30)             10      80%      80%       5.0s    100
+    #4 (31-40)             10      70%      70%       4.8s     98
+    #5 (41-50)             10      60%      90%       4.3s     98
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  80% | Rel:  80% | AvgDwell: 5.9s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  75% | Rel:  75% | AvgDwell: 4.9s | EndMood: 98
+    Phase 41-50+  10 articles | Eng:  60% | Rel:  90% | AvgDwell: 4.3s | EndMood: 98
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 22 topics | 6 relevant (27%) | mode: blended
+    Explore change: 26% -> 27% (+1%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       AI & Tech        Apple                                     5  none
+    Personal       NO       AI & Tech        iPhone & iOS                              4  none
+    Personal       YES      AI & Tech        Nvidia & AI Chips                         3  kw:ai+st:AI & Machine Learning
+    Personal       YES      AI & Tech        OpenAI & ChatGPT                          4  kw:ai+st:AI & Machine Learning
+    Personal       NO       K-Pop & Music    BTS                                       9  none
+    Personal       YES      Entertainment    Taylor Swift                              3  cat:Entertainment
+    Personal       NO       Science          NASA & Space Exploration                  4  none
+    Personal       NO       Lifestyle        Fashion Week                              3  none
+    Personal       YES      AI & Tech        Anthropic & Claude                        2  kw:claude+st:AI & Machine Learning
+    Personal       NO       Science          Mars Exploration                          4  none
+    Personal       NO       Lifestyle        Sneakers & Streetwear                     2  none
+    Personal       YES      Entertainment    Beyonce                                   1  cat:Entertainment
+    Trending       NO       Football         NFL Football                             25  none
+    Trending       NO       World Politics   Iran & Middle East                       50  none
+    Trending       NO       Sports Events    March Madness & NCAA                     28  none
+    Trending       BAD      Finance          Oil Prices & Energy Markets              15  none
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       NO       Baseball         MLB Baseball                             10  none
+    Trending       NO       Lifestyle        Travel & Tourism                          9  none
+    Trending       YES      Entertainment    Netflix Originals                         8  cat:Entertainment
+    Trending       NO       Basketball       NBA Basketball                           24  none
+    Trending       NO       Soccer           Premier League                           20  none
+
+    FEEDBACK:
+    Rating: 9/10 | Satisfied | Explore: Mediocre (Same)
+    Session: 259s (4.3 min) | Avg dwell: 5.2s
+    Best: Article relevance to my interests
+    Complaint: Nothing major
+      - Shown 7 Science articles but I don't follow Science
+      - Shown 2 Lifestyle articles but I don't follow Lifestyle
+      - Shown 1 Business article but I don't follow Business
+      - Skipped 10 irrelevant articles (I follow Gaming, AI & Machine Learning)
+      - Worst: "Global Warming **Accelerates**, Exceeding Climate Models" (Science) — score -0.52, 0.8s
+      - 22/50 articles were Tech — too repetitive
+    LIKED: "**DarkSword** Hack Exposes Hundreds of Millions of **iPhones" (10.8s) | "**AI** Cyberattacks Threaten **Satellite** Apocalypse in **2" (11.7s) | "**Rome** Court Scraps **$17M** Fine on ChatGPT Maker **OpenA" (5.3s)
+    Recommend: Definitely
+    Quote: "As a game developer at a small tokyo studio, I found plenty of Gaming content. Spent 259s total, engaged with 37 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [9/50] MARCUS, 45 — Washington DC, USA
+  Political consultant. Philadelphia Eagles season ticket holder. Reads Politico and The Hill daily. Follows SCOTUS cases obsessively.
+  Followed topics (SHORT IDs): [politics, sports, defense]
+  Behavior subtopics: US Politics, NFL, War & Conflict, Human Rights & Civil Liberties
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: cb8bcc22... | Topics saved: [politics, sports, defense]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 25 topics | 3 relevant (12%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
+    [Checkpoint] 20 articles read — checking explore page...
+    Explore at 20: 26 topics, 1 relevant (4%), mode: blended
+    [Checkpoint] 40 articles read — checking explore page...
+    Explore at 40: 26 topics, 1 relevant (4%), mode: blended
+    Read 50 articles | Engaged: 32 | Glanced: 13 | Skipped: 3 | Relevant: 47
+    Exit: NATURAL | Mood: 85/100 | Saved: 3 | Events: 53
+
+    ARTICLE-BY-ARTICLE:
+    #     Action         Dwell   Mood   Score   Save Bucket     Category         Matched                        Title
+    ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    1     DEEP_READ      21.6s     60    0.85        trending   Politics         US Politics, War & Conflict,   **US War** on Iran Costs **$2 Billion** Per Day
+    2     DEEP_READ      12.7s     65    0.82        personal   Sports           NFL, War & Conflict            **Iran** Expels Star Striker **Azmoun**, World Cup Doub
+    3     ENGAGE          3.3s     68    0.58        trending   Sports           NFL                            **Venezuela** Wins **WBC** Final, Rodriguez Shines
+    4     DEEP_READ      23.8s     73    0.79        personal   Politics         US Politics, War & Conflict,   **Vance** Expressed Skepticism Before **Iran** Attack
+    5     SKIP            0.5s     69   -0.18        personal   Business         (none)                         **Middle East** Oil Prices **Surge** to Record Highs
+    6     DEEP_READ      10.3s     73    0.87        trending   Politics         US Politics, War & Conflict,   **US** Eases Iran Oil Sanctions Amid Ongoing **War**
+    7     ENGAGE          8.8s     76    0.39        personal   Sports           NFL                            **FIFA** Finds **Israel FA** Guilty of 'Grave' Violatio
+    8     ENGAGE          5.9s     79    0.54        personal   Sports           NFL                            **Sharma's** **50** Sparks India's T20 World Cup Win
+    9     ENGAGE          7.6s     82    0.49        discovery  War              War & Conflict                 **Russia** Loses **1,279,170** Troops in Ukraine Since 
+    10    ENGAGE          3.7s     85    0.50        personal   Sports           NFL                            **Team USA** Falls to **Venezuela** in WBC Final, 3-2
+    11    ENGAGE          4.1s     86    0.58    YES trending   Sports           NFL                            **Venezuela** Upsets **USA** in WBC Final, Draws Record
+    12    DEEP_READ      22.7s     91    0.82        personal   Politics         US Politics, War & Conflict,   **GOP** Rejects Public Hearings on **Trump's** Iran War
+    13    DEEP_READ      23.8s     96    0.83        trending   Politics         US Politics, War & Conflict,   **Trump** Waives **Jones Act** for 60 Days Amid Iran Wa
+    14    ENGAGE         10.3s     99    0.42        personal   Sports           NFL                            **Aston Villa** Ease Into Europa League Quarter-Finals
+    15    DEEP_READ      12.4s    100    0.76        personal   Sports           NFL, War & Conflict            **Iran War** Threatens to Halt **Formula 1** Races
+    16    SKIP            0.9s     95   -0.13        personal   Business         (none)                         **Brent Crude** Surges Past **$116** Amid Mideast Tensi
+    17    DEEP_READ      18.4s    100    0.86        personal   Sports           NFL, War & Conflict            **F1** Cancels Bahrain, Saudi Races Amid **Iran** War
+    18    ENGAGE          8.2s    100    0.50        trending   Sports           NFL                            **Team USA** Falls to **Venezuela** in WBC Final, 3-2
+    19    ENGAGE          7.2s    100    0.42        discovery  World            War & Conflict                 **US**, **Israel** Launch Military Operation Against **
+    20    ENGAGE          3.4s    100    0.33        personal   Sports           NFL                            **Tottenham** Seeks Comeback Against **Atlético Madrid*
+    21    DEEP_READ      15.8s     99    0.78        trending   Politics         US Politics, War & Conflict,   **Trump** Attacks Press Over Unpopular **Iran War** Cov
+    22    GLANCE          2.9s     97    0.28        personal   Sports           NFL                            **Venezuela** Beats **USA** in World Baseball Classic
+    23    ENGAGE          4.9s    100    0.38        trending   Sports           NFL                            **Venezuela** Celebrates **WBC** Win, Maduro's Exit
+    24    ENGAGE          8.7s    100    0.35        personal   Sports           NFL                            **FC Bayern** Beats Atalanta **4-1**, Advances in Champ
+    25    ENGAGE          3.5s    100    0.41    YES personal   Sports           NFL                            **Liverpool** Routs **Galatasaray**, Eyes Champions Lea
+    26    ENGAGE          9.9s     98    0.31        personal   Sports           NFL                            **Venezuela** Wins, Players Get **$3.375M** Prize Share
+    27    DEEP_READ      22.1s    100    0.64        personal   Sports           NFL, Human Rights & Civil Li   **Iranian** Footballers Seek Asylum After **Threats**
+    28    DEEP_READ      23.5s    100    1.16        trending   Politics         US Politics, War & Conflict,   **Trump** Imperils Democracy at 'Unprecedented' Speed
+    29    GLANCE          1.9s     98    0.26        personal   Sports           NFL                            **Szoboszlai** Humbled After **Liverpool's** Win Over G
+    30    ENGAGE         11.2s    100    0.32        personal   Sports           NFL                            **Simons** Scores Twice, **Tottenham** Wins But Exits U
+    31    DEEP_READ      18.3s     98    1.04    YES discovery  Politics         US Politics, NFL, War & Conf   **US** Bombs **Tehran**, Iranian-American Rep Feels Con
+    32    GLANCE          3.7s     97    0.24        personal   Sports           NFL                            **Premier League** Faces Humbling **Champions League** 
+    33    GLANCE          4.3s     96    0.24        personal   Sports           NFL                            **Newcastle** Crushed **7-2** by Barcelona in Champions
+    34    SKIP            0.3s     91   -0.33        personal   Business         (none)                         **Oil Prices** Surge Past **$110** Amid Supply Disrupti
+    35    GLANCE          2.8s     90    0.17        personal   Sports           NFL                            **Chelsea** Crumbles: **PSG** Dominates Champions Leagu
+    36    ENGAGE          5.1s     91    0.47        personal   Sports           NFL, War & Conflict            **Eze's** Strike **Vanishes** Bayer Leverkusen in Champ
+    37    DEEP_READ      22.4s     96    0.77        trending   Politics         US Politics, War & Conflict,   **Trump** Demands Death Penalty for **Iran War** Media
+    38    GLANCE          2.3s     95    0.23        trending   Sports           NFL                            **Venezuela** Wins **WBC**; **Harper** Not OK With Silv
+    39    SCAN            2.9s     92    0.01        personal   Sports           NFL                            **Bayern** Youngsters Shine in **4-1** Champions League
+    40    ENGAGE          3.6s     95    0.47        discovery  World            War & Conflict                 **US**/**Israel** Strike Pushes **Iran** Into All-Out W
+    41    GLANCE          2.6s     92    0.28        personal   Sports           NFL                            **USA** Loses **WBC** Final Amid Miller Controversy
+    42    GLANCE          3.7s     90    0.08        personal   Sports           NFL                            **Bayern** Faces **Real** Amid Goalkeeper Concerns
+    43    ENGAGE          5.6s     93    0.47        personal   Politics         US Politics, War & Conflict,   **US** Faces Heightened **Terrorism** Threat Amid Iran 
+    44    GLANCE          2.8s     92    0.29        trending   Sports           NFL                            **Giants** Upset **Patriots** in Super Bowl XLII
+    45    GLANCE          3.3s     91    0.15        personal   Sports           NFL                            **Dodgers** Sign **Kyle Tucker** to **$240M** Deal
+    46    ENGAGE          7.2s     92    0.45        trending   Politics         US Politics, War & Conflict,   **Trump** Sanctions Critics via **Treasury** Department
+    47    GLANCE          3.7s     90    0.05        personal   Sports           NFL                            **PSG** Defeats **Chelsea** 5-2 in Champions League
+    48    GLANCE          3.1s     89    0.12        personal   Sports           NFL                            **Matildas** Reach Asian Cup Final, Face **Japan**
+    49    GLANCE          3.9s     88    0.08        personal   Sports           NFL                            **Champions League** Sets Record with **68 Goals**
+    50    SCAN            2.7s     85    0.00        personal   Sports           NFL                            **Chelsea** Suffers **8-2** Champions League Defeat to 
+
+    DWELL BY ACTION:
+    ENGAGE       Count:  19 | Avg:   6.4s | Total:   122s
+    DEEP_READ    Count:  13 | Avg:  19.1s | Total:   248s
+    GLANCE       Count:  13 | Avg:   3.2s | Total:    41s
+    SKIP         Count:   3 | Avg:   0.6s | Total:     2s
+    SCAN         Count:   2 | Avg:   2.8s | Total:     6s
+
+    CATEGORY BREAKDOWN:
+    Category            Shown   Eng   Skip   Rel  AvgDwell   Wanted?
+    ─────────────────────────────────────────────────────────────────
+    Sports                 33    18      0    33      6.2s       YES
+    Politics               11    11      0    11     17.7s       YES
+    Business                3     0      3     0      0.6s        no
+    World                   2     2      0     2      5.4s        no
+    War                     1     1      0     1      7.6s        no
+
+    ENGAGEMENT OVER SCROLL DEPTH:
+    Window              Total     Eng%   Relev%   AvgDwell   Mood
+    ────────────────────────────────────────────────────────────
+    #1 (1-10)              10      90%      90%       9.8s     85
+    #2 (11-20)             10      90%      90%      11.1s    100
+    #3 (21-30)             10      80%     100%      10.4s    100
+    #4 (31-40)             10      40%      90%       6.6s     95
+    #5 (41-50)             10      20%     100%       3.9s     85
+
+    FEED EVOLUTION BY PHASE:
+    Phase 1-20    20 articles | Eng:  90% | Rel:  90% | AvgDwell: 10.5s | EndMood: 100
+    Phase 21-40   20 articles | Eng:  60% | Rel:  95% | AvgDwell: 8.5s | EndMood: 95
+    Phase 41-50+  10 articles | Eng:  20% | Rel: 100% | AvgDwell: 3.9s | EndMood: 85
+    Waiting 4s for backend profile processing...
+    Phase 3: Final explore page check...
+    Explore AFTER: 26 topics | 1 relevant (4%) | mode: blended
+    Explore change: 12% -> 4% (-8%)
+
+    EXPLORE TOPICS (FINAL):
+    Type           Match    Category         Topic                                  Arts  Reason
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    Personal       NO       World Politics   Iran & Middle East                       50  none
+    Personal       NO       World Politics   Venezuela                                 3  none
+    Personal       NO       Soccer           UEFA Champions League                    12  none
+    Personal       NO       World Politics   Saudi Arabia                              6  none
+    Personal       NO       World Politics   Argentina                                 1  none
+    Personal       NO       World Politics   Brazil                                    1  none
+    Personal       NO       World Politics   Australia                                 9  none
+    Personal       NO       Soccer           Premier League                           20  none
+    Personal       NO       Basketball       NBA Basketball                           23  none
+    Personal       YES      Football         NFL Football                             25  kw:nfl+st:NFL
+    Personal       NO       Baseball         MLB Baseball                             10  none
+    Personal       NO       Cricket          Cricket                                   2  none
+    Personal       NO       Motorsport       Formula 1 Racing                          8  none
+    Personal       NO       Soccer           Manchester United                         5  none
+    Personal       NO       Basketball       Los Angeles Lakers                        3  none
+    Personal       NO       Soccer           Liverpool FC                              8  none
+    Trending       NO       Soccer           Manchester City                           8  none
+    Trending       NO       AI & Tech        Apple                                     5  none
+    Trending       NO       Science          Climate Change                           11  none
+    Trending       NO       Combat Sports    WWE Wrestling                             5  none
+    Trending       NO       Sports Events    March Madness & NCAA                     26  none
+    Trending       NO       World Politics   Israel                                   40  none
+    Trending       NO       Lifestyle        Travel & Tourism                          9  none
+    Trending       NO       Finance          Oil Prices & Energy Markets              15  none
+    Trending       NO       Entertainment    Netflix Originals                         9  none
+    Trending       NO       K-Pop & Music    BTS                                       9  none
+
+    FEEDBACK:
+    Rating: 9/10 | Satisfied | Explore: Poor (Declined)
+    Session: 418s (7.0 min) | Avg dwell: 8.4s
+    Best: Article relevance to my interests
+    Complaint: Explore page showed irrelevant topics
+      - Shown 3 Business articles but I don't follow Business
+      - Worst: "**Oil Prices** Surge Past **$110** Amid Supply Disruption" (Business) — score -0.33, 0.3s
+      - 33/50 articles were Sports — too repetitive
+      - Feed got WORSE: eng rate dropped from 90% (1-20) to 60% (21-40)
+    LIKED: "**US War** on Iran Costs **$2 Billion** Per Day" (21.6s) | "**Iran** Expels Star Striker **Azmoun**, World Cup Doubt" (12.7s) | "**Vance** Expressed Skepticism Before **Iran** Attack" (23.8s)
+    Recommend: Definitely
+    Quote: "As a political consultant, I found plenty of US Politics content. Spent 418s total, engaged with 32 articles. I'd come back daily."
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [10/50] SARAH, 38 — Toronto, Canada
+  Pediatric nurse at SickKids Hospital. Toronto Raptors fan. Follows public health policy and pharma breakthroughs. Mom of two.
+  Followed topics (SHORT IDs): [health, sports, science]
+  Behavior subtopics: Public Health, Medical Breakthroughs, NBA, Biology & Nature
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    Setting up (wiping all history)...
+    User: bc076642... | Topics saved: [health, sports, science]
+    Phase 1: Explore page BEFORE reading...
+    Explore BEFORE: 25 topics | 4 relevant (16%) | mode: cold_start
+    Phase 2: Reading feed (target: 50 articles)...
