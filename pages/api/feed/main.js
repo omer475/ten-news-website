@@ -561,6 +561,117 @@ function scoreArticleV3(article, similarity, entityAffinities) {
 // NEW: EMBEDDING CACHE for MMR diversity
 // ==========================================
 
+// ==========================================
+// UNIFIED MULTI-POINT RETRIEVAL
+// Returns query vectors based on available data. No phases.
+// ==========================================
+
+function consolidateNearDuplicates(engagements, threshold = 0.85) {
+  const groups = [];
+  for (const eng of engagements) {
+    let found = false;
+    for (const group of groups) {
+      if (cosineSim(eng.embedding, group.centroid) > threshold) {
+        group.members.push(eng);
+        group.totalWeight += eng.weight;
+        // Update centroid as weighted average
+        const dim = group.centroid.length;
+        for (let i = 0; i < dim; i++) {
+          group.centroid[i] = (group.centroid[i] * (group.totalWeight - eng.weight) + eng.embedding[i] * eng.weight) / group.totalWeight;
+        }
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      groups.push({ centroid: [...eng.embedding], members: [eng], totalWeight: eng.weight });
+    }
+  }
+  return groups;
+}
+
+async function getQueryVectors(supabase, personalizationId, onboardingVector) {
+  if (!personalizationId) {
+    // No personalization — use onboarding vector if available
+    if (onboardingVector && Array.isArray(onboardingVector)) {
+      return [{ vector: onboardingVector, importance: 1.0 }];
+    }
+    return [];
+  }
+
+  // Fetch ALL positive engagements from buffer
+  const { data: buffer } = await supabase
+    .from('engagement_buffer')
+    .select('embedding_minilm, interaction_weight, created_at')
+    .eq('personalization_id', personalizationId)
+    .gt('interaction_weight', 0)
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  const engagements = [];
+  for (const row of (buffer || [])) {
+    const emb = row.embedding_minilm;
+    if (!emb || !Array.isArray(emb) || emb.length !== 384) continue;
+    engagements.push({ embedding: emb, weight: row.interaction_weight });
+  }
+
+  if (engagements.length === 0) {
+    // Brand new user — use onboarding vector
+    if (onboardingVector && Array.isArray(onboardingVector)) {
+      return [{ vector: onboardingVector, importance: 1.0 }];
+    }
+    return [];
+  }
+
+  if (engagements.length < 10) {
+    // Too few for clustering — consolidate near-duplicates and use raw embeddings
+    const groups = consolidateNearDuplicates(engagements, 0.85);
+    const totalWeight = groups.reduce((s, g) => s + g.totalWeight, 0);
+    return groups.map(g => ({
+      vector: g.centroid,
+      importance: g.totalWeight / totalWeight,
+    }));
+  }
+
+  // 10+ engagements — K-Means clustering
+  // Use the K-Means from track.js (imported at top level would be circular,
+  // so we inline a lightweight version here)
+  const embeddings = engagements.map(e => e.embedding);
+  const weights = engagements.map(e => e.weight);
+
+  // Determine optimal k
+  const maxK = Math.min(8, Math.floor(engagements.length / 3));
+  const minK = 2;
+
+  // Try stored clusters first (computed by track.js on engagement)
+  const { data: storedClusters } = await supabase
+    .from('user_interest_clusters')
+    .select('cluster_index, medoid_minilm, importance_score, article_count')
+    .eq('personalization_id', personalizationId)
+    .eq('is_archived', false)
+    .order('importance_score', { ascending: false });
+
+  if (storedClusters && storedClusters.length >= 2) {
+    // Use pre-computed clusters from track.js
+    const totalImportance = storedClusters.reduce((s, c) => s + (c.importance_score || 0), 0) || 1;
+    return storedClusters
+      .filter(c => c.medoid_minilm && Array.isArray(c.medoid_minilm))
+      .map(c => ({
+        vector: c.medoid_minilm,
+        importance: (c.importance_score || 0) / totalImportance,
+      }));
+  }
+
+  // No stored clusters — fall back to consolidation with lower threshold
+  // This naturally creates 2-8 groups from diverse engagements
+  const groups = consolidateNearDuplicates(engagements, 0.60);
+  const totalWeight = groups.reduce((s, g) => s + g.totalWeight, 0);
+  return groups.map(g => ({
+    vector: g.centroid,
+    importance: g.totalWeight / totalWeight,
+  }));
+}
+
 function buildEmbeddingCache(articles) {
   const cache = new Map();
   for (const a of articles) {
@@ -842,100 +953,51 @@ async function handleV2Feed(req, res, supabase, opts) {
   const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
 
   // ==========================================
-  // V23: Phase-aware candidate generation
-  // Phase 1: single taste vector query
-  // Phase 2: blend taste vector + cluster queries
-  // Phase 3: cluster queries only (PinnerSage)
+  // V23 UNIFIED MULTI-POINT RETRIEVAL
+  // No phases. One function picks the best query strategy.
   // ==========================================
   const personalMatchCount = Math.min(300 + offset, 600);
   let personalPromise;
-  let v23Clusters = []; // Store cluster info for proportional P-slot distribution
 
-  if (personalizationId && userPhase >= 2) {
-    // Phase 2/3: Query per cluster
-    personalPromise = (async () => {
-      const { data: clusters } = await supabase
-        .from('user_interest_clusters')
-        .select('cluster_index, medoid_minilm, importance_score, article_count')
-        .eq('personalization_id', personalizationId)
-        .eq('is_archived', false)
-        .order('importance_score', { ascending: false });
+  personalPromise = (async () => {
+    // Step 1: Get query vectors
+    const queryVectors = await getQueryVectors(supabase, personalizationId, tasteVectorMinilm);
 
-      if (!clusters || clusters.length === 0) {
-        // No clusters yet — fall back to taste vector
-        if (tasteVectorMinilm) {
-          return supabase.rpc('match_articles_personal_minilm', {
-            query_embedding: tasteVectorMinilm, match_count: personalMatchCount,
-            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-          });
-        }
-        return { data: [], error: null };
-      }
-
-      v23Clusters = clusters;
-
-      // Query per cluster, proportional to importance
-      const queries = clusters.map(cluster => {
-        const matchCount = Math.max(30, Math.round(personalMatchCount * (cluster.importance_score || 0.2)));
-        const centroid = cluster.medoid_minilm;
-        if (!centroid || !Array.isArray(centroid)) return Promise.resolve({ data: [], error: null });
-        return supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: centroid, match_count: matchCount,
-          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-        }).then(result => {
-          // Tag each result with its cluster_index
-          if (result.data) {
-            for (const r of result.data) r._cluster = cluster.cluster_index;
-          }
-          return result;
-        });
-      });
-
-      // Phase 2: also query with taste vector for blending
-      if (userPhase === 2 && tasteVectorMinilm) {
-        queries.push(
-          supabase.rpc('match_articles_personal_minilm', {
-            query_embedding: tasteVectorMinilm, match_count: personalMatchCount,
-            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-          }).then(result => {
-            if (result.data) { for (const r of result.data) r._cluster = -1; } // -1 = taste vector
-            return result;
-          })
-        );
-      }
-
-      const results = await Promise.all(queries);
-
-      // Merge: keep best similarity per article, preserve cluster tag
-      const bestSim = new Map();
-      for (const result of results) {
-        if (result.data) {
-          for (const row of result.data) {
-            const existing = bestSim.get(row.id);
-            if (!existing || row.similarity > existing.similarity) {
-              bestSim.set(row.id, row);
-            }
-          }
-        }
-      }
-
-      const merged = [...bestSim.values()].sort((a, b) => b.similarity - a.similarity).slice(0, personalMatchCount);
-      return { data: merged, error: null };
-    })();
-  } else if (personalizationId || useMinilm) {
-    // Phase 1 or legacy: single taste vector query
-    const queryVec = tasteVectorMinilm || tasteVector;
-    if (queryVec) {
-      personalPromise = supabase.rpc(tasteVectorMinilm ? 'match_articles_personal_minilm' : 'match_articles_personal', {
-        query_embedding: queryVec, match_count: personalMatchCount,
-        hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-      });
-    } else {
-      personalPromise = Promise.resolve({ data: [], error: null });
+    if (queryVectors.length === 0) {
+      return { data: [], error: null };
     }
-  } else {
-    personalPromise = Promise.resolve({ data: [], error: null });
-  }
+
+    // Step 2: One pgvector query per vector, proportional to importance
+    const queries = queryVectors.map((qv, idx) => {
+      const matchCount = Math.max(30, Math.round(personalMatchCount * qv.importance));
+      return supabase.rpc('match_articles_personal_minilm', {
+        query_embedding: qv.vector, match_count: matchCount,
+        hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+      }).then(result => {
+        if (result.data) {
+          for (const r of result.data) r._cluster = idx;
+        }
+        return result;
+      });
+    });
+
+    const results = await Promise.all(queries);
+
+    // Step 3: Merge — keep best similarity per article
+    const bestSim = new Map();
+    for (const result of results) {
+      if (result.data) {
+        for (const row of result.data) {
+          const existing = bestSim.get(row.id);
+          if (!existing || row.similarity > existing.similarity) {
+            bestSim.set(row.id, row);
+          }
+        }
+      }
+    }
+
+    return { data: [...bestSim.values()].sort((a, b) => b.similarity - a.similarity).slice(0, personalMatchCount), error: null };
+  })();
 
   const [personalResult, trendingResult, discoveryResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search
