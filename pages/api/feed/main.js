@@ -797,6 +797,7 @@ export default async function handler(req, res) {
       sessionSkippedIds,
       limit,
       offset,
+      personalizationId,
     });
 
   } catch (error) {
@@ -813,7 +814,8 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        sessionEngagedIds, sessionSkippedIds, limit, offset,
+        personalizationId } = opts;
   sessionEngagedIds = sessionEngagedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
