@@ -835,11 +835,71 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
   const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
 
-  // pgvector ANN search -- 300 candidates, 168h (7 day) window
+  // pgvector ANN search — PinnerSage-style: query per engaged article, never average
   const personalMatchCount = Math.min(300 + offset, 600);
   let personalPromise;
 
-  if (!hasAnyPersonalization) {
+  // V3 PinnerSage: query separately for each recent engaged article embedding
+  if (personalizationId) {
+    personalPromise = (async () => {
+      // Fetch last 10 distinct engaged article embeddings from buffer
+      const { data: bufferRows } = await supabase
+        .from('engagement_buffer')
+        .select('article_id, embedding_minilm, interaction_weight')
+        .eq('personalization_id', personalizationId)
+        .gt('interaction_weight', 0)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!bufferRows || bufferRows.length === 0) {
+        // No engagement history yet — fall back to initial taste vector
+        if (tasteVectorMinilm) {
+          return supabase.rpc('match_articles_personal_minilm', {
+            query_embedding: tasteVectorMinilm,
+            match_count: personalMatchCount,
+            hours_window: 8760,
+            exclude_ids: excludeIds,
+            min_similarity: minSim,
+          });
+        }
+        return { data: [], error: null };
+      }
+
+      // Run parallel ANN queries — one per engaged article
+      const perArticleCount = Math.max(30, Math.floor(personalMatchCount / bufferRows.length));
+      const queries = bufferRows.map(row =>
+        supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: row.embedding_minilm,
+          match_count: perArticleCount,
+          hours_window: 8760,
+          exclude_ids: excludeIds,
+          min_similarity: minSim,
+        })
+      );
+
+      const results = await Promise.all(queries);
+
+      // Merge: keep best similarity per article across all queries
+      const bestSim = new Map();
+      for (const result of results) {
+        if (result.data) {
+          for (const row of result.data) {
+            const existing = bestSim.get(row.id);
+            if (!existing || row.similarity > existing.similarity) {
+              bestSim.set(row.id, row);
+            }
+          }
+        }
+      }
+
+      // Sort by similarity descending, take top N
+      const merged = [...bestSim.values()]
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, personalMatchCount);
+
+      return { data: merged, error: null };
+    })();
+  } else if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
