@@ -1602,15 +1602,50 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // ==========================================
-  // V23: 30-article slot pattern with MMR within each pool
-  // P=Personal, T=Trending, E=Exploration, CS=Cold-Start
+  // V23: CATEGORY CAPS + GUARANTEED INTEREST SLOTS + SLOT PATTERN
   // ==========================================
-  const V23_SLOTS = ['P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E','P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E'];
 
-  // Step 1: MMR-select within each pool
-  const pPool = [...personalScored];
-  const tPool = [...trendingScored];
-  const dPool = [...discoveryScored];
+  // Determine which categories the user selected
+  const userSelectedCategories = new Set();
+  const userTopics = userPrefs?.followed_topics || [];
+  for (const topic of userTopics) {
+    const mapping = ONBOARDING_TOPIC_MAP[topic];
+    if (mapping) mapping.categories.forEach(c => userSelectedCategories.add(c));
+  }
+
+  // HARD CATEGORY CAPS — the single biggest fix
+  function applyCategoryCaps(articles, maxPerBatch) {
+    const caps = {};
+    const defaultCap = Math.max(3, Math.round(maxPerBatch * 0.15));
+
+    for (const cat of ['World', 'Politics', 'Sports', 'Entertainment', 'Tech', 'Business', 'Finance', 'Science', 'Health', 'Lifestyle', 'Food', 'Fashion']) {
+      if (userSelectedCategories.has(cat)) {
+        caps[cat] = Math.round(maxPerBatch * 0.30); // selected categories get up to 30%
+      } else {
+        caps[cat] = Math.round(maxPerBatch * 0.10); // unselected categories get max 10%
+      }
+    }
+
+    const catCounts = {};
+    return articles.filter(a => {
+      const cat = a.category || 'Other';
+      const count = catCounts[cat] || 0;
+      const cap = caps[cat] || defaultCap;
+      if (count >= cap) return false;
+      catCounts[cat] = count + 1;
+      return true;
+    });
+  }
+
+  // Apply caps to all pools
+  const pPoolCapped = applyCategoryCaps([...personalScored], 18);
+  const tPoolCapped = applyCategoryCaps([...trendingScored], 6);
+  const dPoolCapped = applyCategoryCaps([...discoveryScored], 4);
+
+  // Step 1: MMR-select within each capped pool
+  const pPool = [...pPoolCapped];
+  const tPool = [...tPoolCapped];
+  const dPool = [...dPoolCapped];
 
   const pSelected = [];
   for (let i = 0; i < 18 && pPool.length > 0; i++) {
@@ -1637,10 +1672,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     eSelected.push(picked);
   }
 
-  // Cold-start: new/unscored content from categories user doesn't usually see
   const csSelected = dPool.slice(0, 2).map(a => ({ ...a, bucket: 'cold-start' }));
 
   // Step 2: Interleave into slot pattern
+  const V23_SLOTS = ['P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E','P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E'];
   const selected = [];
   let pIdx = 0, tIdx = 0, eIdx = 0, csIdx = 0;
 
@@ -1653,7 +1688,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     else if (slot === 'E' && eIdx < eSelected.length) picked = eSelected[eIdx++];
     else if (slot === 'CS' && csIdx < csSelected.length) picked = csSelected[csIdx++];
 
-    // Backfill: P→next P, T→next T, etc. If pool empty, try others
     if (!picked) {
       if (pIdx < pSelected.length) picked = pSelected[pIdx++];
       else if (tIdx < tSelected.length) picked = tSelected[tIdx++];
