@@ -1017,11 +1017,13 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
   const personalMatchCount = Math.min(300 + offset, 600);
   let personalPromise;
+  let userQueryVectors = []; // stored for discovery use
 
   personalPromise = (async () => {
     // Step 1: Get query vectors
     const userFollowedTopics = userPrefs?.followed_topics || [];
     const queryVectors = await getQueryVectors(supabase, personalizationId, userFollowedTopics);
+    userQueryVectors = queryVectors; // save for discovery
 
     if (queryVectors.length === 0) {
       return { data: [], error: null };
@@ -1333,13 +1335,30 @@ async function handleV2Feed(req, res, supabase, opts) {
     return 0.1;
   }
 
+  // Helper: best cluster similarity for an article
+  function bestClusterSim(article) {
+    if (userQueryVectors.length === 0 || !article.embedding_minilm || !Array.isArray(article.embedding_minilm)) return 0;
+    let best = 0;
+    for (const qv of userQueryVectors) {
+      const sim = cosineSim(article.embedding_minilm, qv.vector);
+      if (sim > best) best = sim;
+    }
+    return best;
+  }
+
+  // TRENDING: High quality articles, but if user skipped a similar trending topic → remove it
+  // Skip repulsion hard-blocks trending articles too similar to skips (>0.7)
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
       const baseScore = (article.ai_final_score || 0) * recency;
+
+      // Hard block: if article is very similar to skipped content, exclude from trending
       const skipPen = computeSkipPenalty(article);
+      if (skipPen > 0.21) return null; // 0.3 × 0.7 = 0.21 → skip sim > 0.7 means hard block
+
       const satMult = computeSaturation(article);
       return {
         ...article,
@@ -1347,24 +1366,39 @@ async function handleV2Feed(req, res, supabase, opts) {
         _bucket: 'trending',
       };
     })
+    .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
-  // Discovery: ai_final_score * recency * catBoost(unfamiliar=1.5) * skip/saturation
+  // DISCOVERY: "Nearby but new" — similarity 0.3-0.8 to user's interests
+  // Expands interests without showing stuff they hate
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
-      const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
-      const catBoost = personalCategories.has(article.category) ? 1.0 : 1.5;
-      const randomBoost = 1.0 + (Math.random() * 0.3);
+
+      // Compute similarity to user's interest clusters
+      const clusterSim = bestClusterSim(article);
+
+      // Sweet spot: 0.3 to 0.8 — close enough to feel relevant, far enough to be new
+      if (clusterSim > 0.8) return null; // too close — that's main feed territory
+      if (clusterSim < 0.2) return null; // too far — random stuff they probably don't care about
+
+      // Skip repulsion — discovery respects what they don't like
       const skipPen = computeSkipPenalty(article);
+      if (skipPen > 0.21) return null; // too close to stuff they skip
+
+      const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
       const satMult = computeSaturation(article);
+
+      // Score: higher for the middle of the sweet spot (around 0.5 sim)
+      const discoveryBoost = 1.0 - Math.abs(clusterSim - 0.5) * 2; // peaks at 0.5 sim
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * catBoost * randomBoost * (1 - skipPen) * satMult,
+        _score: (article.ai_final_score || 0) * recency * (1 + discoveryBoost) * (1 - skipPen) * satMult,
         _bucket: 'discovery',
       };
     })
+    .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
