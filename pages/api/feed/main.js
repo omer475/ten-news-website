@@ -996,21 +996,42 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: [], error: null };
     }
 
-    // Step 2: One pgvector query per vector, proportional to importance
-    const queries = queryVectors.map((qv, idx) => {
-      const matchCount = Math.max(30, Math.round(personalMatchCount * qv.importance));
-      return supabase.rpc('match_articles_personal_minilm', {
-        query_embedding: qv.vector, match_count: matchCount,
-        hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-      }).then(result => {
-        if (result.data) {
-          for (const r of result.data) r._cluster = idx;
-        }
-        return result;
-      });
-    });
+    // Step 2: Multi-query per vector to overcome HNSW 40-result cap
+    // For each interest vector, run 3 queries with slight perturbations
+    // Each returns ~40 different articles → 120 per interest instead of 40
+    const allQueries = [];
 
-    const results = await Promise.all(queries);
+    for (let idx = 0; idx < queryVectors.length; idx++) {
+      const qv = queryVectors[idx];
+      const matchCount = Math.max(40, Math.round(personalMatchCount * qv.importance));
+
+      // Query 1: original vector
+      allQueries.push(
+        supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: qv.vector, match_count: matchCount,
+          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+        }).then(result => {
+          if (result.data) for (const r of result.data) r._cluster = idx;
+          return result;
+        })
+      );
+
+      // Query 2-5: perturbed vectors (noise=0.1 explores different HNSW paths, 96% stay relevant)
+      for (let p = 0; p < 4; p++) {
+        const perturbed = qv.vector.map(v => v + (Math.random() - 0.5) * 0.2);
+        allQueries.push(
+          supabase.rpc('match_articles_personal_minilm', {
+            query_embedding: perturbed, match_count: matchCount,
+            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+          }).then(result => {
+            if (result.data) for (const r of result.data) r._cluster = idx;
+            return result;
+          })
+        );
+      }
+    }
+
+    const results = await Promise.all(allQueries);
 
     // Step 3: Merge — keep best similarity per article
     const bestSim = new Map();
