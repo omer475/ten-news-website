@@ -1312,20 +1312,44 @@ async function handleV2Feed(req, res, supabase, opts) {
   const personalCategories = new Set(personalScored.map(a => a.category));
 
   // Trending: ai_final_score * recency
+  // Helper: compute skip penalty for any article
+  function computeSkipPenalty(article) {
+    if (skipEmbeddings.length === 0 || !article.embedding_minilm || !Array.isArray(article.embedding_minilm)) return 0;
+    let maxSim = 0;
+    for (const skipEmb of skipEmbeddings) {
+      const sim = cosineSim(article.embedding_minilm, skipEmb);
+      if (sim > maxSim) maxSim = sim;
+    }
+    return 0.3 * maxSim;
+  }
+
+  // Helper: compute saturation multiplier for any article
+  function computeSaturation(article) {
+    const catCount = sessionCategoryCounts[article.category] || 0;
+    if (catCount === 0) return 1.0;
+    if (catCount <= 2) return 0.85;
+    if (catCount <= 4) return 0.6;
+    if (catCount <= 6) return 0.3;
+    return 0.1;
+  }
+
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+      const baseScore = (article.ai_final_score || 0) * recency;
+      const skipPen = computeSkipPenalty(article);
+      const satMult = computeSaturation(article);
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency,
+        _score: (baseScore * (1 - skipPen)) * satMult,
         _bucket: 'trending',
       };
     })
     .sort((a, b) => b._score - a._score);
 
-  // Discovery: ai_final_score * recency * catBoost(unfamiliar=1.5) * random(0.3)
+  // Discovery: ai_final_score * recency * catBoost(unfamiliar=1.5) * skip/saturation
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
@@ -1333,9 +1357,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
       const catBoost = personalCategories.has(article.category) ? 1.0 : 1.5;
       const randomBoost = 1.0 + (Math.random() * 0.3);
+      const skipPen = computeSkipPenalty(article);
+      const satMult = computeSaturation(article);
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * catBoost * randomBoost,
+        _score: (article.ai_final_score || 0) * recency * catBoost * randomBoost * (1 - skipPen) * satMult,
         _bucket: 'discovery',
       };
     })
