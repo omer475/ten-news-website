@@ -623,33 +623,51 @@ function consolidateNearDuplicates(engagements, threshold = 0.85) {
 }
 
 async function getSubtopicVectors(supabase, followedTopics) {
-  // Find 1 representative article per subtopic the user selected
+  // Find 1 representative article per SUBTOPIC (not per category!)
+  // Alex picks "NBA" → find an actual NBA article, not just any Sports article
   if (!followedTopics || followedTopics.length === 0) return [];
 
   const vectors = [];
-  const categories = new Set();
+  const totalTopics = followedTopics.length;
 
   for (const topic of followedTopics) {
     const mapping = ONBOARDING_TOPIC_MAP[topic];
     if (!mapping) continue;
-    for (const cat of mapping.categories) categories.add(cat);
-  }
 
-  if (categories.size === 0) return [];
+    // Search for articles matching this subtopic's specific tags
+    const tags = mapping.tags || [];
+    if (tags.length === 0) continue;
 
-  // Get 1 top article per category (with embedding)
-  for (const cat of categories) {
-    const { data: art } = await supabase
+    // Try to find an article whose interest_tags contain any of this subtopic's tags
+    // Use the first tag as the primary search term
+    const primaryTag = tags[0]; // e.g., "nba", "gaming", "k-pop"
+
+    const { data: articles } = await supabase
       .from('published_articles')
-      .select('embedding_minilm')
-      .eq('category', cat)
+      .select('embedding_minilm, title_news')
       .not('embedding_minilm', 'is', null)
+      .or(tags.slice(0, 3).map(t => `title_news.ilike.%${t}%`).join(','))
       .order('ai_final_score', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    if (art?.embedding_minilm && Array.isArray(art.embedding_minilm)) {
-      vectors.push({ vector: art.embedding_minilm, importance: 1.0 / categories.size });
+    if (articles && articles.length > 0 && articles[0].embedding_minilm && Array.isArray(articles[0].embedding_minilm)) {
+      vectors.push({ vector: articles[0].embedding_minilm, importance: 1.0 / totalTopics });
+    } else {
+      // Fallback: search by category
+      const cat = mapping.categories[0];
+      if (cat) {
+        const { data: fallback } = await supabase
+          .from('published_articles')
+          .select('embedding_minilm')
+          .eq('category', cat)
+          .not('embedding_minilm', 'is', null)
+          .order('ai_final_score', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fallback?.embedding_minilm && Array.isArray(fallback.embedding_minilm)) {
+          vectors.push({ vector: fallback.embedding_minilm, importance: 1.0 / totalTopics });
+        }
+      }
     }
   }
 
