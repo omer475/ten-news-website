@@ -622,59 +622,206 @@ function consolidateNearDuplicates(engagements, threshold = 0.85) {
   return groups;
 }
 
+// Map subtopic names to concept_entities categories
+const SUBTOPIC_TO_ENTITY_CATEGORY = {
+  'Soccer/Football': 'Soccer', 'NBA': 'Basketball', 'NFL': 'Football',
+  'MLB/Baseball': 'Baseball', 'Cricket': 'Cricket', 'F1 & Motorsport': 'Motorsport',
+  'Boxing & MMA/UFC': 'Combat Sports', 'Olympics & Paralympics': 'Sports Events',
+  'Gaming': 'Gaming', 'Movies & Film': 'Entertainment', 'TV & Streaming': 'Entertainment',
+  'Music': 'K-Pop & Music', 'Celebrity News': 'Entertainment', 'K-Pop & K-Drama': 'K-Pop & Music',
+  'AI & Machine Learning': 'AI & Tech', 'Smartphones & Gadgets': 'AI & Tech',
+  'Cybersecurity': 'AI & Tech', 'Space Tech': 'Science', 'Robotics & Hardware': 'AI & Tech',
+  'Social Media': 'AI & Tech',
+  'Space & Astronomy': 'Science', 'Climate & Environment': 'Science',
+  'Biology & Nature': 'Science', 'Earth Science': 'Science',
+  'Medical Breakthroughs': 'Health', 'Public Health': 'Health',
+  'Mental Health': 'Health', 'Pharma & Drug Industry': 'Health',
+  'Stock Markets': 'Finance', 'Banking & Lending': 'Finance', 'Commodities': 'Finance',
+  'Oil & Energy': 'Business', 'Automotive': 'Automotive',
+  'Retail & Consumer': 'Business', 'Corporate Deals': 'Business',
+  'Trade & Tariffs': 'Business', 'Corporate Earnings': 'Business',
+  'Startups & Venture Capital': 'Business', 'Real Estate': 'Business',
+  'Bitcoin': 'Finance', 'DeFi & Web3': 'Finance', 'Crypto Regulation & Legal': 'Finance',
+  'Sneakers & Streetwear': 'Fashion', 'Celebrity Style & Red Carpet': 'Fashion',
+  'Pets & Animals': 'Lifestyle', 'War & Conflict': 'World Politics',
+  'US Politics': 'US Politics', 'European Politics': 'World Politics',
+  'Asian Politics': 'World Politics', 'Middle East': 'World Politics',
+  'Latin America': 'World Politics', 'Africa & Oceania': 'World Politics',
+  'Human Rights & Civil Liberties': 'World Politics',
+  'Food & Cooking': 'Food', 'Travel & Adventure': 'Travel',
+  'Fitness & Nutrition': 'Health', 'Fashion & Beauty': 'Fashion',
+};
+
 async function getSubtopicVectors(supabase, followedTopics) {
-  // Find 1 representative article per SUBTOPIC (not per category!)
-  // Alex picks "NBA" → find an actual NBA article, not just any Sports article
+  // DIVERSE COLD START: cluster entities per subtopic, pick 1 article per cluster
   if (!followedTopics || followedTopics.length === 0) return [];
 
-  const vectors = [];
-  const totalTopics = followedTopics.length;
-
+  // Step 1: For each subtopic, load entities and cluster them
+  const topicClusters = {};
   for (const topic of followedTopics) {
-    const mapping = ONBOARDING_TOPIC_MAP[topic];
-    if (!mapping) continue;
+    const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
+    if (!entityCat) continue;
 
-    // Search for articles matching this subtopic's specific tags
-    const tags = mapping.tags || [];
-    if (tags.length === 0) continue;
+    const { data: entities } = await supabase
+      .from('concept_entities')
+      .select('entity_name, avg_article_embedding')
+      .eq('category', entityCat)
+      .not('avg_article_embedding', 'is', null);
 
-    // Try to find an article whose interest_tags contain any of this subtopic's tags
-    // Use the first tag as the primary search term
-    const primaryTag = tags[0]; // e.g., "nba", "gaming", "k-pop"
+    if (!entities || entities.length < 2) continue;
 
-    // Search within the subtopic's categories AND matching tags in title
-    const cats = mapping.categories;
-    const { data: articles } = await supabase
-      .from('published_articles')
-      .select('embedding_minilm, title_news')
-      .not('embedding_minilm', 'is', null)
-      .in('category', cats)
-      .or(tags.slice(0, 3).map(t => `title_news.ilike.%${t}%`).join(','))
-      .order('ai_final_score', { ascending: false })
-      .limit(1);
+    // Parse embeddings
+    const parsed = entities.map(e => ({
+      name: e.entity_name,
+      embedding: typeof e.avg_article_embedding === 'string'
+        ? JSON.parse(e.avg_article_embedding)
+        : e.avg_article_embedding,
+    })).filter(e => Array.isArray(e.embedding) && e.embedding.length === 384);
 
-    if (articles && articles.length > 0 && articles[0].embedding_minilm && Array.isArray(articles[0].embedding_minilm)) {
-      vectors.push({ vector: articles[0].embedding_minilm, importance: 1.0 / totalTopics });
-    } else {
-      // Fallback: search by category
-      const cat = mapping.categories[0];
-      if (cat) {
-        const { data: fallback } = await supabase
-          .from('published_articles')
-          .select('embedding_minilm')
-          .eq('category', cat)
-          .not('embedding_minilm', 'is', null)
-          .order('ai_final_score', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (fallback?.embedding_minilm && Array.isArray(fallback.embedding_minilm)) {
-          vectors.push({ vector: fallback.embedding_minilm, importance: 1.0 / totalTopics });
+    if (parsed.length < 2) continue;
+
+    // K-Means clustering
+    const k = Math.min(8, Math.max(2, Math.round(parsed.length / 5)));
+    const embeddings = parsed.map(e => e.embedding);
+    const result = simpleKMeans(embeddings, k);
+
+    // Build cluster centroids
+    const clusters = [];
+    for (let c = 0; c < k; c++) {
+      const members = parsed.filter((_, i) => result.labels[i] === c);
+      if (members.length === 0) continue;
+      clusters.push({
+        centroid: result.centroids[c],
+        size: members.length,
+        entities: members.map(m => m.name),
+      });
+    }
+
+    topicClusters[topic] = clusters;
+  }
+
+  // Step 2: Budget allocation — proportional to cluster count, min 3 per topic
+  const TOTAL_PERSONAL_BUDGET = 18;
+  const MIN_PER_TOPIC = 3;
+  const maxTopics = Math.floor(TOTAL_PERSONAL_BUDGET / MIN_PER_TOPIC);
+  const topicsToTest = Object.keys(topicClusters);
+
+  // If too many topics, pick the ones with most diversity
+  let activeTopics, deferredTopics = [];
+  if (topicsToTest.length > maxTopics) {
+    const sorted = topicsToTest.sort((a, b) =>
+      (topicClusters[b]?.length || 0) - (topicClusters[a]?.length || 0)
+    );
+    activeTopics = sorted.slice(0, maxTopics);
+    deferredTopics = sorted.slice(maxTopics);
+  } else {
+    activeTopics = topicsToTest;
+  }
+
+  const totalClusters = activeTopics.reduce((s, t) => s + (topicClusters[t]?.length || 0), 0);
+  const allocation = {};
+  let remaining = TOTAL_PERSONAL_BUDGET;
+
+  for (const topic of activeTopics) {
+    const nClusters = topicClusters[topic]?.length || 0;
+    const ideal = Math.round((nClusters / Math.max(totalClusters, 1)) * TOTAL_PERSONAL_BUDGET);
+    const slots = Math.max(MIN_PER_TOPIC, Math.min(ideal, nClusters, remaining));
+    allocation[topic] = slots;
+    remaining -= slots;
+  }
+
+  // Distribute leftover
+  while (remaining > 0) {
+    let best = null, bestGap = -1;
+    for (const t of activeTopics) {
+      const gap = (topicClusters[t]?.length || 0) - allocation[t];
+      if (gap > bestGap) { bestGap = gap; best = t; }
+    }
+    if (!best || bestGap <= 0) break;
+    allocation[best]++;
+    remaining--;
+  }
+
+  // Step 3: Pick cluster centroids as query vectors using MMR for diversity
+  const vectors = [];
+  for (const topic of activeTopics) {
+    const clusters = topicClusters[topic] || [];
+    const nSlots = allocation[topic] || 0;
+    if (clusters.length === 0 || nSlots === 0) continue;
+
+    // MMR: pick the most diverse subset of clusters
+    const selected = [];
+    const available = [...clusters];
+    for (let i = 0; i < nSlots && available.length > 0; i++) {
+      if (i === 0) {
+        // First: pick largest cluster
+        const best = available.reduce((a, b) => a.size > b.size ? a : b);
+        selected.push(best);
+        available.splice(available.indexOf(best), 1);
+      } else {
+        // MMR: maximize diversity from already selected
+        let bestIdx = 0, bestScore = -Infinity;
+        for (let j = 0; j < available.length; j++) {
+          const maxSimToSelected = Math.max(
+            ...selected.map(s => cosineSim(available[j].centroid, s.centroid))
+          );
+          const diversity = 1 - maxSimToSelected;
+          const score = 0.4 * (available[j].size / clusters[0].size) + 0.6 * diversity;
+          if (score > bestScore) { bestScore = score; bestIdx = j; }
         }
+        selected.push(available[bestIdx]);
+        available.splice(bestIdx, 1);
       }
+    }
+
+    // Each selected cluster centroid becomes a query vector
+    const topicImportance = nSlots / TOTAL_PERSONAL_BUDGET;
+    for (const cluster of selected) {
+      vectors.push({
+        vector: cluster.centroid,
+        importance: topicImportance / selected.length,
+      });
     }
   }
 
   return vectors;
+}
+
+// Simple K-Means for entity clustering (lightweight, runs at query time)
+function simpleKMeans(embeddings, k, maxIter = 20) {
+  const n = embeddings.length;
+  const dim = embeddings[0].length;
+  if (n < k) return { labels: embeddings.map((_, i) => i), centroids: embeddings.map(e => [...e]) };
+
+  // K-Means++ init
+  const centroids = [[...embeddings[Math.floor(Math.random() * n)]]];
+  for (let c = 1; c < k; c++) {
+    const dists = embeddings.map(e => {
+      let minD = Infinity;
+      for (const ce of centroids) minD = Math.min(minD, 1 - cosineSim(e, ce));
+      return minD * minD;
+    });
+    const total = dists.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total, cum = 0;
+    for (let i = 0; i < n; i++) { cum += dists[i]; if (cum >= r) { centroids.push([...embeddings[i]]); break; } }
+  }
+
+  let labels = new Array(n).fill(0);
+  for (let iter = 0; iter < maxIter; iter++) {
+    const nl = embeddings.map(e => {
+      let b = 0, bs = -Infinity;
+      for (let c = 0; c < k; c++) { const s = cosineSim(e, centroids[c]); if (s > bs) { bs = s; b = c; } }
+      return b;
+    });
+    if (nl.every((l, i) => l === labels[i])) break;
+    labels = nl;
+    for (let c = 0; c < k; c++) {
+      const members = embeddings.filter((_, i) => labels[i] === c);
+      if (!members.length) continue;
+      for (let d = 0; d < dim; d++) centroids[c][d] = members.reduce((s, m) => s + m[d], 0) / members.length;
+    }
+  }
+  return { labels, centroids };
 }
 
 async function getQueryVectors(supabase, personalizationId, followedTopics) {
