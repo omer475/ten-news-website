@@ -642,10 +642,13 @@ async function getSubtopicVectors(supabase, followedTopics) {
     // Use the first tag as the primary search term
     const primaryTag = tags[0]; // e.g., "nba", "gaming", "k-pop"
 
+    // Search within the subtopic's categories AND matching tags in title
+    const cats = mapping.categories;
     const { data: articles } = await supabase
       .from('published_articles')
       .select('embedding_minilm, title_news')
       .not('embedding_minilm', 'is', null)
+      .in('category', cats)
       .or(tags.slice(0, 3).map(t => `title_news.ilike.%${t}%`).join(','))
       .order('ai_final_score', { ascending: false })
       .limit(1);
