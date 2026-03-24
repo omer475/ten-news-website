@@ -536,8 +536,10 @@ function scoreEmbedding(article, pgvecSimilarity, sessionVector, skipProfile) {
 // V3 SCORING: vector×500 + entity×200 + quality×200 + freshness×100 + session×150
 // ==========================================
 
-function scoreArticleV3(article, similarity, entityAffinities) {
+function scoreArticleV3(article, similarity, entityAffinities, skipEmbeddings, sessionCategoryCounts) {
   const vectorScore = similarity || 0;
+
+  // Entity bonus
   const tags = safeJsonParse(article.interest_tags, []);
   let entityBonus = 0;
   let matchCount = 0;
@@ -550,11 +552,40 @@ function scoreArticleV3(article, similarity, entityAffinities) {
     }
   }
   entityBonus = Math.min(entityBonus * (matchCount / Math.max(tags.length, 1)), 0.30);
+
+  // Quality
   const quality = (article.ai_final_score || 0) / 1000;
+
+  // Freshness
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
   const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
-  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100;
+
+  // SKIP REPULSION — push away from articles similar to what user skipped
+  let skipPenalty = 0;
+  if (skipEmbeddings && skipEmbeddings.length > 0 && article.embedding_minilm && Array.isArray(article.embedding_minilm)) {
+    let maxSkipSim = 0;
+    for (const skipEmb of skipEmbeddings) {
+      const sim = cosineSim(article.embedding_minilm, skipEmb);
+      if (sim > maxSkipSim) maxSkipSim = sim;
+    }
+    skipPenalty = 0.3 * maxSkipSim; // 0.3 weight on negative signal
+  }
+
+  // SESSION SATURATION — penalize categories the user already saw a lot of today
+  let saturationPenalty = 1.0;
+  if (sessionCategoryCounts) {
+    const catCount = sessionCategoryCounts[article.category] || 0;
+    if (catCount === 0) saturationPenalty = 1.0;
+    else if (catCount <= 2) saturationPenalty = 0.85;
+    else if (catCount <= 4) saturationPenalty = 0.6;
+    else if (catCount <= 6) saturationPenalty = 0.3;
+    else saturationPenalty = 0.1;
+  }
+
+  const relevance = vectorScore - skipPenalty;
+  const rawScore = relevance * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100;
+  return rawScore * saturationPenalty;
 }
 
 // ==========================================
@@ -1231,6 +1262,34 @@ async function handleV2Feed(req, res, supabase, opts) {
     } catch (e) { /* entity affinity not available */ }
   }
 
+  // Load skip embeddings for skip repulsion (last 50 skipped articles)
+  let skipEmbeddings = [];
+  if (personalizationId) {
+    try {
+      const { data: skipRows } = await supabase
+        .from('engagement_buffer')
+        .select('embedding_minilm')
+        .eq('personalization_id', personalizationId)
+        .lt('interaction_weight', 0)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (skipRows) {
+        skipEmbeddings = skipRows
+          .filter(r => r.embedding_minilm && Array.isArray(r.embedding_minilm))
+          .map(r => r.embedding_minilm);
+      }
+    } catch (e) { /* no skip data */ }
+  }
+
+  // Compute session category counts (from articles already seen this session)
+  const sessionCategoryCounts = {};
+  if (sessionEngagedIds && sessionEngagedIds.length > 0) {
+    for (const id of sessionEngagedIds) {
+      const art = articleMap[id];
+      if (art) sessionCategoryCounts[art.category] = (sessionCategoryCounts[art.category] || 0) + 1;
+    }
+  }
+
   // Personal: embedding-based scoring (V3 when available, else V2)
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
@@ -1238,7 +1297,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
       const score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities)
+        ? scoreArticleV3(article, similarity, entityAffinities, skipEmbeddings, sessionCategoryCounts)
         : scoreEmbedding(article, similarity, sessionVector, skipProfile);
       return {
         ...article,
