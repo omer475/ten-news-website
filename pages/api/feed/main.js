@@ -1873,6 +1873,16 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (picked) selected.push(picked);
   }
 
+  // FALLBACK: if all pools empty (anonymous user, no personalization), serve raw trending+discovery
+  if (selected.length === 0) {
+    const fallbackArticles = [...(trendingResult.data || []), ...(discoveryResult.data || [])]
+      .filter(a => articleMap[a.id])
+      .map(a => ({ ...articleMap[a.id], bucket: 'trending', _score: articleMap[a.id]?.ai_final_score || 0 }))
+      .sort((a, b) => b._score - a._score)
+      .slice(0, limit);
+    selected.push(...fallbackArticles);
+  }
+
   // ==========================================
   // PHASE 7: FORMAT + RESPOND
   // ==========================================
