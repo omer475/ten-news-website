@@ -1651,43 +1651,96 @@ async function handleV2Feed(req, res, supabase, opts) {
   const CS_BUDGET = 2;
   const MIN_PER_SUBTOPIC = 2;
 
-  // Allocate personal slots per subtopic (proportional to query vector count)
-  const subtopicKeys = Object.keys(perSubtopicResults);
+  // Allocate personal slots per SUBTOPIC GROUP (not per vector index)
+  // Vector indices 0-2 might all be Cricket clusters → group them as one subtopic
   const pSelected = [];
   const usedArticleIds = new Set();
 
-  if (subtopicKeys.length > 0) {
-    // Calculate quotas: proportional to number of articles found, min 2
-    const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
-    const activeKeys = subtopicKeys.slice(0, maxSubtopics);
-    const totalFound = activeKeys.reduce((s, k) => s + (perSubtopicResults[k]?.length || 0), 0);
+  // Group vector indices by parent subtopic category
+  // getSubtopicVectors creates vectors in order: topic1_cluster0, topic1_cluster1, topic2_cluster0, ...
+  // We need to know which indices belong to which subtopic
+  const userFollowedTopics = userPrefs?.followed_topics || [];
+  const subtopicGroups = {}; // { subtopicName: [vectorIdx, vectorIdx, ...] }
 
-    const quotas = {};
-    let remaining = PERSONAL_BUDGET;
-    for (const key of activeKeys) {
-      const found = perSubtopicResults[key]?.length || 0;
-      const ideal = Math.round((found / Math.max(totalFound, 1)) * PERSONAL_BUDGET);
-      quotas[key] = Math.max(MIN_PER_SUBTOPIC, Math.min(ideal, remaining));
-      remaining -= quotas[key];
+  if (Object.keys(perSubtopicResults).length > 0) {
+    // Reconstruct grouping: getSubtopicVectors processes topics in order,
+    // each topic produces K cluster centroids (K = entity count / 5, min 2, max 8)
+    let vectorIdx = 0;
+    for (const topic of userFollowedTopics) {
+      const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
+      if (!entityCat) continue;
+
+      // Count how many vectors this topic produced
+      // Each entity cluster = 1 vector. We need to figure out how many clusters were made.
+      // Look at which vector indices have results
+      const topicVectorIndices = [];
+      while (perSubtopicResults[String(vectorIdx)]) {
+        topicVectorIndices.push(String(vectorIdx));
+        vectorIdx++;
+      }
+
+      if (topicVectorIndices.length > 0) {
+        if (!subtopicGroups[topic]) subtopicGroups[topic] = [];
+        subtopicGroups[topic].push(...topicVectorIndices);
+      }
     }
-    // Distribute leftover
-    while (remaining > 0) {
-      for (const key of activeKeys) {
-        if (remaining <= 0) break;
-        if ((perSubtopicResults[key]?.length || 0) > quotas[key]) {
-          quotas[key]++;
-          remaining--;
+
+    // If grouping failed (indices don't align), fall back to treating each index as a group
+    if (Object.keys(subtopicGroups).length === 0) {
+      for (const key of Object.keys(perSubtopicResults)) {
+        subtopicGroups['group_' + key] = [key];
+      }
+    }
+  }
+
+  const subtopicNames = Object.keys(subtopicGroups);
+
+  if (subtopicNames.length > 0) {
+    // Allocate quotas per SUBTOPIC (not per vector index)
+    const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
+    const activeSubtopics = subtopicNames.slice(0, maxSubtopics);
+
+    // Merge all vector results within each subtopic into one pool
+    const subtopicPools = {};
+    for (const topic of activeSubtopics) {
+      const indices = subtopicGroups[topic];
+      const merged = new Map();
+      for (const idx of indices) {
+        for (const r of (perSubtopicResults[idx] || [])) {
+          const existing = merged.get(r.id);
+          if (!existing || r.similarity > existing.similarity) merged.set(r.id, r);
         }
       }
-      break; // prevent infinite loop
+      subtopicPools[topic] = [...merged.values()].sort((a, b) => b.similarity - a.similarity);
     }
 
-    // ROUND-ROBIN: pick 1 from each subtopic, then 2nd from each, etc.
-    // This guarantees every subtopic gets at least 1 before any gets 2
+    // Calculate quotas proportional to articles found, min 2 per subtopic
+    const totalFound = activeSubtopics.reduce((s, t) => s + (subtopicPools[t]?.length || 0), 0);
+    const quotas = {};
+    let remaining = PERSONAL_BUDGET;
+    for (const topic of activeSubtopics) {
+      const found = subtopicPools[topic]?.length || 0;
+      const ideal = Math.round((found / Math.max(totalFound, 1)) * PERSONAL_BUDGET);
+      quotas[topic] = Math.max(MIN_PER_SUBTOPIC, Math.min(ideal, remaining));
+      remaining -= quotas[topic];
+    }
+    while (remaining > 0) {
+      let distributed = false;
+      for (const topic of activeSubtopics) {
+        if (remaining <= 0) break;
+        if ((subtopicPools[topic]?.length || 0) > quotas[topic]) {
+          quotas[topic]++;
+          remaining--;
+          distributed = true;
+        }
+      }
+      if (!distributed) break;
+    }
+
+    // Score articles within each subtopic pool
     const subtopicQueues = {};
-    for (const key of activeKeys) {
-      // Score articles within this subtopic
-      const candidates = (perSubtopicResults[key] || [])
+    for (const topic of activeSubtopics) {
+      const candidates = (subtopicPools[topic] || [])
         .filter(r => articleMap[r.id])
         .map(r => {
           const article = articleMap[r.id];
@@ -1699,19 +1752,19 @@ async function handleV2Feed(req, res, supabase, opts) {
               : scoreEmbedding(article, similarity, sessionVector, skipProfile),
             _similarity: similarity,
             _bucket: 'personal',
-            _subtopicIdx: key,
+            _subtopicName: topic,
           };
         })
         .sort((a, b) => b._score - a._score);
-      subtopicQueues[key] = candidates;
+      subtopicQueues[topic] = candidates;
     }
 
-    // Round-robin selection
+    // Round-robin selection across subtopics
     const maxRounds = Math.max(...Object.values(quotas));
     for (let round = 0; round < maxRounds; round++) {
-      for (const key of activeKeys) {
-        if (round >= (quotas[key] || 0)) continue;
-        const queue = subtopicQueues[key];
+      for (const topic of activeSubtopics) {
+        if (round >= (quotas[topic] || 0)) continue;
+        const queue = subtopicQueues[topic];
         // Find next unused article
         while (queue.length > 0) {
           const candidate = queue.shift();
