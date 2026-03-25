@@ -1642,16 +1642,19 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (mapping) mapping.categories.forEach(c => userSelectedCategories.add(c));
   }
 
-  // HARD CATEGORY CAPS — the single biggest fix
+  // HARD CATEGORY CAPS — only applies when user has selected topics
   function applyCategoryCaps(articles, maxPerBatch) {
+    // If no topics selected (anonymous user), no caps
+    if (userSelectedCategories.size === 0) return articles;
+
     const caps = {};
     const defaultCap = Math.max(3, Math.round(maxPerBatch * 0.15));
 
     for (const cat of ['World', 'Politics', 'Sports', 'Entertainment', 'Tech', 'Business', 'Finance', 'Science', 'Health', 'Lifestyle', 'Food', 'Fashion']) {
       if (userSelectedCategories.has(cat)) {
-        caps[cat] = Math.round(maxPerBatch * 0.30); // selected categories get up to 30%
+        caps[cat] = Math.round(maxPerBatch * 0.30);
       } else {
-        caps[cat] = Math.round(maxPerBatch * 0.10); // unselected categories get max 10%
+        caps[cat] = Math.round(maxPerBatch * 0.10);
       }
     }
 
