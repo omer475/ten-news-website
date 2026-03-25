@@ -1230,9 +1230,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     const allQueries = [];
     for (let idx = 0; idx < queryVectors.length; idx++) {
       const qv = queryVectors[idx];
-      // 3 queries per vector (original + 2 perturbations) to overcome HNSW cap
-      for (let p = 0; p < 3; p++) {
-        const vec = p === 0 ? qv.vector : qv.vector.map(v => v + (Math.random() - 0.5) * 0.2);
+      // 1 query per vector (keep it fast — Vercel has 10s timeout)
+      for (let p = 0; p < 1; p++) {
+        const vec = qv.vector;
         allQueries.push(
           supabase.rpc('match_articles_personal_minilm', {
             query_embedding: vec, match_count: 40,

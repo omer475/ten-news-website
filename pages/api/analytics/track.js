@@ -441,13 +441,15 @@ export default async function handler(req, res) {
           })
         }
 
-        // UCB TRACKING: update user_cluster_stats for the article's nearest cluster
-        if (bucket === 'personal' && article_id) {
+        // UCB TRACKING: disabled for now to avoid performance impact
+        // Will re-enable once feed is stable
+        if (false && bucket === 'personal' && article_id) {
           admin.from('published_articles').select('embedding_minilm, category').eq('id', article_id).single().then(({ data: artInfo }) => {
             if (!artInfo?.embedding_minilm || !Array.isArray(artInfo.embedding_minilm)) return
 
-            // Find which subtopic cluster this article came from
-            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').then(({ data: allClusters }) => {
+            // Find which subtopic cluster this article came from (only check relevant category)
+            const artCat = artInfo.category || '';
+            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').eq('subtopic_category', artCat).then(({ data: allClusters }) => {
               if (!allClusters) return
 
               let bestCat = null, bestIdx = null, bestSim = -1
