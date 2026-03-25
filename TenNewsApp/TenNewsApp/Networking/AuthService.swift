@@ -21,6 +21,11 @@ struct AuthService {
         let body = ForgotPasswordRequest(email: email)
         return try await client.post(APIEndpoints.forgotPassword, body: body)
     }
+
+    func googleAuth(idToken: String) async throws -> LoginResponse {
+        let body = GoogleAuthRequest(idToken: idToken)
+        return try await client.post(APIEndpoints.googleAuth, body: body)
+    }
 }
 
 // MARK: - Empty Body for POST requests without a payload

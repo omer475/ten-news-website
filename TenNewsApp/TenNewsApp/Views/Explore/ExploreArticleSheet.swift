@@ -55,8 +55,13 @@ struct ExploreArticleSheet: View {
             // Rebuild pages if the selected article identity changes
             articlePages = buildArticlePages()
         }
-        .onChange(of: selectedArticle.displayBullets) {
-            // Update first page in-place when full content arrives from API
+        .onChange(of: selectedArticle.displayBullets.count) {
+            // Full article arrived from API — update first page with bullets/content
+            if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
+                articlePages[0] = selectedArticle
+            }
+        }
+        .onChange(of: selectedArticle.summaryText) {
             if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
                 articlePages[0] = selectedArticle
             }

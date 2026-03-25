@@ -394,15 +394,18 @@ struct ExploreView: View {
             return
         }
 
-        // Open instantly with what we have, upgrade in background
-        let fallback = Article.from(exploreArticle: topicArticle)
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-            selectedArticle = fallback
-        }
-
+        // Fetch full article from API, then open
         Task {
             if let full: Article = try? await APIClient.shared.get("/api/article/\(topicArticle.id.stringValue)") {
-                selectedArticle = full
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                    selectedArticle = full
+                }
+            } else {
+                // API failed — open with minimal data
+                let fallback = Article.from(exploreArticle: topicArticle)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                    selectedArticle = fallback
+                }
             }
         }
     }

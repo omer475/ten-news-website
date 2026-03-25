@@ -8,11 +8,23 @@ final class ReadingHistoryManager {
 
     private(set) var entries: [HistoryEntry] = []
 
+    /// Count of articles read for more than 3 seconds
+    private(set) var readCount: Int = 0
+
     private let storageKey = "reading_history_entries"
+    private let readCountKey = "articles_read_count"
+    private let readArticleIdsKey = "articles_read_ids"
     private let maxEntries = 500
+
+    /// Set of article IDs that have been counted as "read" (>3s dwell)
+    private var readArticleIds: Set<String> = []
 
     private init() {
         load()
+        readCount = UserDefaults.standard.integer(forKey: readCountKey)
+        if let ids = UserDefaults.standard.array(forKey: readArticleIdsKey) as? [String] {
+            readArticleIds = Set(ids)
+        }
     }
 
     struct HistoryEntry: Codable, Identifiable {
@@ -59,9 +71,22 @@ final class ReadingHistoryManager {
         save()
     }
 
+    /// Record that an article was actually read (dwell > 3 seconds). Only counts each article once.
+    func recordRead(articleId: String) {
+        guard !readArticleIds.contains(articleId) else { return }
+        readArticleIds.insert(articleId)
+        readCount += 1
+        UserDefaults.standard.set(readCount, forKey: readCountKey)
+        UserDefaults.standard.set(Array(readArticleIds), forKey: readArticleIdsKey)
+    }
+
     func clearHistory() {
         entries.removeAll()
+        readCount = 0
+        readArticleIds.removeAll()
         save()
+        UserDefaults.standard.set(0, forKey: readCountKey)
+        UserDefaults.standard.set([String](), forKey: readArticleIdsKey)
     }
 
     // MARK: - Persistence

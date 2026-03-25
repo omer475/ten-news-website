@@ -210,6 +210,21 @@ final class FeedViewModel {
         viewStartTimes[arts[index].id.stringValue] = Date()
     }
 
+    /// Call when user swipes back to a previously seen card — strong positive signal.
+    func recordRevisit(at index: Int) {
+        let arts = articles
+        guard index < arts.count else { return }
+        let article = arts[index]
+        Task {
+            try? await analytics.track(
+                event: "article_revisit",
+                articleId: Int(article.id.stringValue),
+                category: article.category,
+                metadata: ["index": String(index)]
+            )
+        }
+    }
+
     /// Call when user leaves a card (swiped away). Computes dwell time,
     /// feeds to re-ranker, and sends the appropriate analytics event:
     ///  - <3s dwell → article_skipped (pushes taste vector AWAY)
@@ -227,6 +242,11 @@ final class FeedViewModel {
         }
         viewStartTimes.removeValue(forKey: article.id.stringValue)
         reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
+
+        // Count as "read" if user spent more than 3 seconds
+        if dwellSeconds >= 3.0 {
+            ReadingHistoryManager.shared.recordRead(articleId: article.id.stringValue)
+        }
 
         // Professional-grade tiered dwell tracking (TikTok/Pinterest style)
         // 7 tiers with continuous dwell weighting via metadata

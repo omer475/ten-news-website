@@ -18,6 +18,7 @@ struct ArticleCardView: View {
     @State private var graphAnimated = false
     @State private var imageIsLight = false
     @State private var showSafari = false
+    @State private var showCreatorProfile = false
 
     // Double-tap like animation
     @State private var showHeartAnimation = false
@@ -234,6 +235,14 @@ struct ArticleCardView: View {
                 SafariView(url: url)
                     .ignoresSafeArea()
             }
+        }
+        .fullScreenCover(isPresented: $showCreatorProfile) {
+            let creator = SampleCreators.find(bySource: article.source ?? "Unknown")
+            CreatorProfileView(
+                creator: creator,
+                articles: [],
+                onDismiss: { showCreatorProfile = false }
+            )
         }
         .fullScreenCover(isPresented: $showEventDetail) {
             if let event = article.worldEvent {
@@ -1508,23 +1517,34 @@ struct ArticleCardView: View {
             HStack {
                 Spacer()
                 VStack(spacing: 28) {
-                    // Source logo circle
+                    // Creator profile button (TikTok-style)
                     Button {
-                        if article.url != nil { showSafari = true }
+                        showCreatorProfile = true
                         HapticManager.light()
                     } label: {
                         let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
                         let logoColor = logoColors[abs((article.source ?? "").hashValue) % logoColors.count]
-                        Text(String((article.source ?? "N").prefix(1)).uppercased())
-                            .font(.system(size: 14, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
-                            .background(logoColor)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(.white.opacity(0.15), lineWidth: 1)
-                            )
+                        ZStack(alignment: .bottom) {
+                            Text(String((article.source ?? "N").prefix(1)).uppercased())
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(.white)
+                                .frame(width: 44, height: 44)
+                                .background(logoColor)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(.white.opacity(0.2), lineWidth: 1.5)
+                                )
+
+                            // "+" follow badge
+                            Image(systemName: "plus")
+                                .font(.system(size: 8, weight: .black))
+                                .foregroundStyle(.white)
+                                .frame(width: 18, height: 18)
+                                .background(.red, in: Circle())
+                                .overlay(Circle().stroke(.black, lineWidth: 1.5))
+                                .offset(y: 8)
+                        }
                     }
 
                     // Like

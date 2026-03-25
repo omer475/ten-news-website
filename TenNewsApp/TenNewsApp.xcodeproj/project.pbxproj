@@ -126,6 +126,8 @@
 		RHV1READHISTVIEWBUILD1 /* ReadingHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RHV1READHISTVIEWFREF01 /* ReadingHistoryView.swift */; };
 		SF01SAFARI01BUILD00001 /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SF01SAFARI01FREF000001 /* SafariView.swift */; };
 		SR01SESSION01BUILD00001 /* SessionReRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR01SESSION01FREF00001 /* SessionReRanker.swift */; };
+		CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR01CREATORMODELSFRF01 /* CreatorModels.swift */; };
+		CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -250,6 +252,8 @@
 		RHV1READHISTVIEWFREF01 /* ReadingHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHistoryView.swift; sourceTree = "<group>"; };
 		SF01SAFARI01FREF000001 /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		SR01SESSION01FREF00001 /* SessionReRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReRanker.swift; sourceTree = "<group>"; };
+		CR01CREATORMODELSFRF01 /* CreatorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorModels.swift; sourceTree = "<group>"; };
+		CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorProfileView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -442,6 +446,7 @@
 		9CF43B31E8845D861542A38E /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CR01CREATORMODELSFRF01 /* CreatorModels.swift */,
 				21CA6575B4528A411A51289E /* Article.swift */,
 				CH01CHATMODELSFREF001 /* ChatModels.swift */,
 				30831F78E9F127EF2D8F8847 /* AuthModels.swift */,
@@ -489,6 +494,7 @@
 		C454586A1F4E28C340BDC1AD /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				CR03PROFILEGRP0000001 /* Profile */,
 				032C6A7132D229C1F55E91F3 /* Article */,
 				A97FCC19EDEA74730EE7E114 /* Auth */,
 				CH06CHATGRP000000001 /* Chat */,
@@ -574,6 +580,14 @@
 			path = Events;
 			sourceTree = "<group>";
 		};
+		CR03PROFILEGRP0000001 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -633,6 +647,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */,
+				CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */,
 				E5032C5771095F342C0ADB1F /* AsyncCachedImage.swift in Sources */,
 				F17D20C30CF120A3A0073125 /* CategoryBadge.swift in Sources */,
 				640C1B5EE725FD528B197062 /* GlassButton.swift in Sources */,

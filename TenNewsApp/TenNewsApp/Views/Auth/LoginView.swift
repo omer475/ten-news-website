@@ -9,13 +9,7 @@ struct LoginView: View {
     var onShowSignup: (() -> Void)?
     var onShowForgotPassword: (() -> Void)?
 
-    // Palette
-    private let warmBlack = Color(hex: "#1a1a2e")
-    private let warmGray = Color(hex: "#6b7280")
-    private let lightGray = Color(hex: "#9ca3af")
     private let accent = Color(hex: "#3b82f6")
-    private let fieldBg = Color.white
-    private let fieldBorder = Color.black.opacity(0.07)
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -25,13 +19,51 @@ struct LoginView: View {
                 Text("Welcome back")
                     .font(.system(size: 30, weight: .bold))
                     .tracking(-0.8)
-                    .foregroundStyle(warmBlack)
+                    .foregroundStyle(.white)
 
                 Text("Sign in to your Today+ account\nto continue reading.")
                     .font(.system(size: 15))
-                    .foregroundStyle(warmGray)
+                    .foregroundStyle(.white.opacity(0.5))
                     .lineSpacing(4)
                     .padding(.top, 10)
+
+                // MARK: - Google Sign In
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        if let result = await viewModel.signInWithGoogle() {
+                            onLogin?(result.user, result.session)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "g.circle.fill")
+                            .font(.system(size: 20))
+                        Text("Continue with Google")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(LoginPressStyle())
+                .padding(.top, 28)
+
+                // Divider
+                HStack(spacing: 12) {
+                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                    Text("or")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.35))
+                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 20)
 
                 // MARK: - Fields
                 VStack(spacing: 0) {
@@ -39,7 +71,7 @@ struct LoginView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "envelope")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(lightGray)
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(width: 20)
                         TextField("Email address", text: $viewModel.email)
                             .textContentType(.emailAddress)
@@ -47,18 +79,18 @@ struct LoginView: View {
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .font(.system(size: 16))
-                            .foregroundStyle(warmBlack)
+                            .foregroundStyle(.white)
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 54)
 
-                    Divider().padding(.leading, 50)
+                    Divider().overlay(.white.opacity(0.1)).padding(.leading, 50)
 
                     // Password
                     HStack(spacing: 14) {
                         Image(systemName: "lock")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(lightGray)
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(width: 20)
 
                         Group {
@@ -70,7 +102,7 @@ struct LoginView: View {
                         }
                         .textContentType(.password)
                         .font(.system(size: 16))
-                        .foregroundStyle(warmBlack)
+                        .foregroundStyle(.white)
 
                         Button {
                             showPassword.toggle()
@@ -78,7 +110,7 @@ struct LoginView: View {
                         } label: {
                             Image(systemName: showPassword ? "eye.slash" : "eye")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(lightGray)
+                                .foregroundStyle(.white.opacity(0.4))
                                 .frame(width: 28, height: 28)
                                 .contentShape(Rectangle())
                         }
@@ -86,12 +118,11 @@ struct LoginView: View {
                     .padding(.horizontal, 16)
                     .frame(height: 54)
                 }
-                .background(fieldBg, in: RoundedRectangle(cornerRadius: 16))
+                .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(fieldBorder, lineWidth: 1)
+                        .strokeBorder(.white.opacity(0.1), lineWidth: 1)
                 }
-                .padding(.top, 32)
 
                 // Forgot password
                 HStack {
@@ -138,14 +169,14 @@ struct LoginView: View {
                                 .tracking(-0.2)
                         }
                     }
-                    .foregroundStyle(viewModel.canLogin ? .white : .white.opacity(0.35))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(
-                        viewModel.canLogin ? warmBlack : warmBlack.opacity(0.18),
-                        in: RoundedRectangle(cornerRadius: 16)
-                    )
-                    .contentShape(RoundedRectangle(cornerRadius: 16))
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(viewModel.canLogin ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
+                    }
+                    .contentShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(LoginPressStyle())
                 .disabled(!viewModel.canLogin || viewModel.isLoading)
@@ -154,7 +185,7 @@ struct LoginView: View {
                 // MARK: - Switch to Signup
                 HStack(spacing: 4) {
                     Text("Don't have an account?")
-                        .foregroundStyle(warmGray)
+                        .foregroundStyle(.white.opacity(0.5))
                     Button {
                         onShowSignup?()
                     } label: {
@@ -171,8 +202,8 @@ struct LoginView: View {
             .padding(.top, 28)
             .padding(.bottom, 40)
         }
-        .background(Color(hex: "#f8f8f6").ignoresSafeArea())
-        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+        .background(Color.black.ignoresSafeArea())
+        .scrollDismissesKeyboard(.interactively)
     }
 }
 
