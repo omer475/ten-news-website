@@ -1183,71 +1183,73 @@ async function handleV2Feed(req, res, supabase, opts) {
   // V23 UNIFIED MULTI-POINT RETRIEVAL
   // No phases. One function picks the best query strategy.
   // ==========================================
-  const personalMatchCount = Math.min(300 + offset, 600);
+  // PER-SUBTOPIC PIPELINES — each interest gets its own retrieval
+  // Cricket candidates never compete against Business candidates
+  // ==========================================
   let personalPromise;
-  let userQueryVectors = []; // stored for discovery use
+  let userQueryVectors = [];
 
   personalPromise = (async () => {
-    // Step 1: Get query vectors
     const userFollowedTopics = userPrefs?.followed_topics || [];
     const queryVectors = await getQueryVectors(supabase, personalizationId, userFollowedTopics);
-    userQueryVectors = queryVectors; // save for discovery
+    userQueryVectors = queryVectors;
 
-    if (queryVectors.length === 0) {
-      return { data: [], error: null };
-    }
+    if (queryVectors.length === 0) return { data: [], error: null, perSubtopic: {} };
 
-    // Step 2: Multi-query per vector to overcome HNSW 40-result cap
-    // For each interest vector, run 3 queries with slight perturbations
-    // Each returns ~40 different articles → 120 per interest instead of 40
+    // Each query vector is one subtopic cluster. Group them by source subtopic.
+    // getSubtopicVectors returns vectors with importance. Each vector = 1 entity cluster.
+    // Run ANN per vector, keep results SEPARATE per vector index.
+    const perVector = {};
+
     const allQueries = [];
-
     for (let idx = 0; idx < queryVectors.length; idx++) {
       const qv = queryVectors[idx];
-      const matchCount = Math.max(40, Math.round(personalMatchCount * qv.importance));
-
-      // Query 1: original vector
-      allQueries.push(
-        supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: qv.vector, match_count: matchCount,
-          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-        }).then(result => {
-          if (result.data) for (const r of result.data) r._cluster = idx;
-          return result;
-        })
-      );
-
-      // Query 2-5: perturbed vectors (noise=0.1 explores different HNSW paths, 96% stay relevant)
-      for (let p = 0; p < 4; p++) {
-        const perturbed = qv.vector.map(v => v + (Math.random() - 0.5) * 0.2);
+      // 3 queries per vector (original + 2 perturbations) to overcome HNSW cap
+      for (let p = 0; p < 3; p++) {
+        const vec = p === 0 ? qv.vector : qv.vector.map(v => v + (Math.random() - 0.5) * 0.2);
         allQueries.push(
           supabase.rpc('match_articles_personal_minilm', {
-            query_embedding: perturbed, match_count: matchCount,
+            query_embedding: vec, match_count: 40,
             hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-          }).then(result => {
-            if (result.data) for (const r of result.data) r._cluster = idx;
-            return result;
-          })
+          }).then(result => ({ idx, data: result.data || [] }))
         );
       }
     }
 
     const results = await Promise.all(allQueries);
 
-    // Step 3: Merge — keep best similarity per article
-    const bestSim = new Map();
-    for (const result of results) {
-      if (result.data) {
-        for (const row of result.data) {
-          const existing = bestSim.get(row.id);
-          if (!existing || row.similarity > existing.similarity) {
-            bestSim.set(row.id, row);
-          }
+    // Group results by vector index, deduplicate within each
+    for (const r of results) {
+      if (!perVector[r.idx]) perVector[r.idx] = new Map();
+      for (const row of r.data) {
+        const existing = perVector[r.idx].get(row.id);
+        if (!existing || row.similarity > existing.similarity) {
+          perVector[r.idx].set(row.id, row);
         }
       }
     }
 
-    return { data: [...bestSim.values()].sort((a, b) => b.similarity - a.similarity).slice(0, personalMatchCount), error: null };
+    // Convert to arrays, sorted by similarity
+    const perSubtopic = {};
+    for (const [idx, map] of Object.entries(perVector)) {
+      perSubtopic[idx] = [...map.values()].sort((a, b) => b.similarity - a.similarity);
+    }
+
+    // Also create merged pool for backward compat
+    const allMerged = new Map();
+    for (const [idx, articles] of Object.entries(perSubtopic)) {
+      for (const a of articles) {
+        a._cluster = parseInt(idx);
+        const existing = allMerged.get(a.id);
+        if (!existing || a.similarity > existing.similarity) allMerged.set(a.id, a);
+      }
+    }
+
+    return {
+      data: [...allMerged.values()].sort((a, b) => b.similarity - a.similarity),
+      error: null,
+      perSubtopic,
+    };
   })();
 
   const [personalResult, trendingResult, discoveryResult] = await Promise.all([
@@ -1276,6 +1278,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (personalResult.error) {
     console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
   }
+  const perSubtopicResults = personalResult.perSubtopic || {};
 
   // ==========================================
   // PHASE 2: BUILD CANDIDATE POOLS
@@ -1637,42 +1640,131 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   }
 
-  // Apply caps to all pools
-  const pPoolCapped = applyCategoryCaps([...personalScored], 18);
-  const tPoolCapped = applyCategoryCaps([...trendingScored], 6);
-  const dPoolCapped = applyCategoryCaps([...discoveryScored], 4);
+  // ==========================================
+  // PER-SUBTOPIC QUOTA SELECTION
+  // Each interest fills its own slots. Cricket never competes with Business.
+  // ==========================================
 
-  // Step 1: MMR-select within each capped pool
-  const pPool = [...pPoolCapped];
-  const tPool = [...tPoolCapped];
-  const dPool = [...dPoolCapped];
+  const PERSONAL_BUDGET = 18;
+  const TRENDING_BUDGET = 6;
+  const EXPLORE_BUDGET = 4;
+  const CS_BUDGET = 2;
+  const MIN_PER_SUBTOPIC = 2;
 
+  // Allocate personal slots per subtopic (proportional to query vector count)
+  const subtopicKeys = Object.keys(perSubtopicResults);
   const pSelected = [];
-  for (let i = 0; i < 18 && pPool.length > 0; i++) {
-    const picked = mmrSelectDeduped(pPool, pSelected, 0.7);
-    if (!picked) break;
-    picked.bucket = 'personal';
-    recordClusterSelection(picked);
-    pSelected.push(picked);
+  const usedArticleIds = new Set();
+
+  if (subtopicKeys.length > 0) {
+    // Calculate quotas: proportional to number of articles found, min 2
+    const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
+    const activeKeys = subtopicKeys.slice(0, maxSubtopics);
+    const totalFound = activeKeys.reduce((s, k) => s + (perSubtopicResults[k]?.length || 0), 0);
+
+    const quotas = {};
+    let remaining = PERSONAL_BUDGET;
+    for (const key of activeKeys) {
+      const found = perSubtopicResults[key]?.length || 0;
+      const ideal = Math.round((found / Math.max(totalFound, 1)) * PERSONAL_BUDGET);
+      quotas[key] = Math.max(MIN_PER_SUBTOPIC, Math.min(ideal, remaining));
+      remaining -= quotas[key];
+    }
+    // Distribute leftover
+    while (remaining > 0) {
+      for (const key of activeKeys) {
+        if (remaining <= 0) break;
+        if ((perSubtopicResults[key]?.length || 0) > quotas[key]) {
+          quotas[key]++;
+          remaining--;
+        }
+      }
+      break; // prevent infinite loop
+    }
+
+    // ROUND-ROBIN: pick 1 from each subtopic, then 2nd from each, etc.
+    // This guarantees every subtopic gets at least 1 before any gets 2
+    const subtopicQueues = {};
+    for (const key of activeKeys) {
+      // Score articles within this subtopic
+      const candidates = (perSubtopicResults[key] || [])
+        .filter(r => articleMap[r.id])
+        .map(r => {
+          const article = articleMap[r.id];
+          const similarity = r.similarity || 0;
+          return {
+            ...article,
+            _score: personalizationId
+              ? scoreArticleV3(article, similarity, entityAffinities, skipEmbeddings, sessionCategoryCounts)
+              : scoreEmbedding(article, similarity, sessionVector, skipProfile),
+            _similarity: similarity,
+            _bucket: 'personal',
+            _subtopicIdx: key,
+          };
+        })
+        .sort((a, b) => b._score - a._score);
+      subtopicQueues[key] = candidates;
+    }
+
+    // Round-robin selection
+    const maxRounds = Math.max(...Object.values(quotas));
+    for (let round = 0; round < maxRounds; round++) {
+      for (const key of activeKeys) {
+        if (round >= (quotas[key] || 0)) continue;
+        const queue = subtopicQueues[key];
+        // Find next unused article
+        while (queue.length > 0) {
+          const candidate = queue.shift();
+          if (!usedArticleIds.has(candidate.id)) {
+            candidate.bucket = 'personal';
+            pSelected.push(candidate);
+            usedArticleIds.add(candidate.id);
+            break;
+          }
+        }
+      }
+    }
+  } else {
+    // Fallback: no per-subtopic data, use merged pool
+    const pPool = applyCategoryCaps([...personalScored], 18);
+    for (let i = 0; i < 18 && pPool.length > 0; i++) {
+      const picked = mmrSelectDeduped(pPool, pSelected, 0.7);
+      if (!picked) break;
+      picked.bucket = 'personal';
+      pSelected.push(picked);
+    }
   }
 
+  // TRENDING: category-diverse (max 1 per category)
+  const tPoolCapped = applyCategoryCaps([...trendingScored], TRENDING_BUDGET);
+  const tPool = [...tPoolCapped];
   const tSelected = [];
-  for (let i = 0; i < 6 && tPool.length > 0; i++) {
-    const picked = mmrSelectDeduped(tPool, tSelected, 0.85);
-    if (!picked) break;
-    picked.bucket = 'trending';
-    tSelected.push(picked);
+  const trendingCats = new Set();
+  for (const article of tPool) {
+    if (tSelected.length >= TRENDING_BUDGET) break;
+    if (trendingCats.has(article.category)) continue; // 1 per category
+    if (usedArticleIds.has(article.id)) continue;
+    article.bucket = 'trending';
+    tSelected.push(article);
+    trendingCats.add(article.category);
+    usedArticleIds.add(article.id);
   }
 
+  // EXPLORATION: category-diverse
+  const dPool = applyCategoryCaps([...discoveryScored], EXPLORE_BUDGET);
   const eSelected = [];
-  for (let i = 0; i < 4 && dPool.length > 0; i++) {
-    const picked = mmrSelectDeduped(dPool, eSelected, 0.5);
-    if (!picked) break;
-    picked.bucket = 'exploration';
-    eSelected.push(picked);
+  const exploreCats = new Set();
+  for (const article of dPool) {
+    if (eSelected.length >= EXPLORE_BUDGET) break;
+    if (exploreCats.has(article.category)) continue;
+    if (usedArticleIds.has(article.id)) continue;
+    article.bucket = 'exploration';
+    eSelected.push(article);
+    exploreCats.add(article.category);
+    usedArticleIds.add(article.id);
   }
 
-  const csSelected = dPool.slice(0, 2).map(a => ({ ...a, bucket: 'cold-start' }));
+  const csSelected = dPool.filter(a => !usedArticleIds.has(a.id)).slice(0, CS_BUDGET).map(a => ({ ...a, bucket: 'cold-start' }));
 
   // Step 2: Interleave into slot pattern
   const V23_SLOTS = ['P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E','P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E'];
