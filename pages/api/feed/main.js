@@ -1576,9 +1576,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Compute similarity to user's interest clusters
       const clusterSim = bestClusterSim(article);
 
-      // Sweet spot: 0.3 to 0.8 — close enough to feel relevant, far enough to be new
-      if (clusterSim > 0.8) return null; // too close — that's main feed territory
-      if (clusterSim < 0.2) return null; // too far — random stuff they probably don't care about
+      // Sweet spot filter only when we have user vectors
+      if (userQueryVectors.length > 0) {
+        if (clusterSim > 0.8) return null; // too close — that's main feed territory
+        if (clusterSim < 0.2) return null; // too far — random stuff
+      }
 
       // Skip repulsion — discovery respects what they don't like
       const skipPen = computeSkipPenalty(article);
