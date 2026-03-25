@@ -441,6 +441,60 @@ export default async function handler(req, res) {
           })
         }
 
+        // UCB TRACKING: update user_cluster_stats for the article's nearest cluster
+        if (bucket === 'personal' && article_id) {
+          admin.from('published_articles').select('embedding_minilm, category').eq('id', article_id).single().then(({ data: artInfo }) => {
+            if (!artInfo?.embedding_minilm || !Array.isArray(artInfo.embedding_minilm)) return
+
+            // Find which subtopic cluster this article came from
+            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').then(({ data: allClusters }) => {
+              if (!allClusters) return
+
+              let bestCat = null, bestIdx = null, bestSim = -1
+              for (const c of allClusters) {
+                const centroid = typeof c.centroid_embedding === 'string' ? JSON.parse(c.centroid_embedding) : c.centroid_embedding
+                if (!Array.isArray(centroid)) continue
+                const sim = cosineSim(artInfo.embedding_minilm, centroid)
+                if (sim > bestSim) { bestSim = sim; bestCat = c.subtopic_category; bestIdx = c.cluster_index; }
+              }
+
+              if (bestCat && bestSim > 0.3) {
+                const isEngaged = !['article_skipped', 'article_glance'].includes(event_type)
+                admin.from('user_cluster_stats').upsert({
+                  personalization_id: persId,
+                  subtopic_category: bestCat,
+                  cluster_index: bestIdx,
+                  times_shown: 1,
+                  times_engaged: isEngaged ? 1 : 0,
+                  last_shown_at: new Date().toISOString(),
+                }, { onConflict: 'personalization_id,subtopic_category,cluster_index' })
+                .then(() => {
+                  // Increment existing stats
+                  admin.rpc('increment_cluster_stats', { p_pers_id: persId, p_cat: bestCat, p_idx: bestIdx, p_engaged: isEngaged })
+                    .catch(() => {
+                      // RPC doesn't exist yet, do manual update
+                      admin.from('user_cluster_stats')
+                        .select('times_shown, times_engaged')
+                        .eq('personalization_id', persId)
+                        .eq('subtopic_category', bestCat)
+                        .eq('cluster_index', bestIdx)
+                        .single()
+                        .then(({ data: stat }) => {
+                          if (stat) {
+                            admin.from('user_cluster_stats').update({
+                              times_shown: (stat.times_shown || 0) + 1,
+                              times_engaged: (stat.times_engaged || 0) + (isEngaged ? 1 : 0),
+                              last_shown_at: new Date().toISOString(),
+                            }).eq('personalization_id', persId).eq('subtopic_category', bestCat).eq('cluster_index', bestIdx).then(() => {}).catch(() => {})
+                          }
+                        }).catch(() => {})
+                    })
+                }).catch(() => {})
+              }
+            }).catch(() => {})
+          }).catch(() => {})
+        }
+
         // V23: Phase transitions + incremental cluster updates
         const currentPhase = persData[0].phase
         const newInteractions = persData[0].total_interactions + 1 // +1 because sliding window just incremented it

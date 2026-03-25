@@ -652,134 +652,160 @@ const SUBTOPIC_TO_ENTITY_CATEGORY = {
   'Fitness & Nutrition': 'Health', 'Fashion & Beauty': 'Fashion',
 };
 
-async function getSubtopicVectors(supabase, followedTopics) {
-  // DIVERSE COLD START: cluster entities per subtopic, pick 1 article per cluster
+async function getSubtopicVectors(supabase, followedTopics, personalizationId) {
+  // UCB-BASED CLUSTER SELECTION from precomputed subtopic_entity_clusters
   if (!followedTopics || followedTopics.length === 0) return [];
 
-  // Step 1: For each subtopic, load entities and cluster them
+  const TOTAL_BUDGET = 18;
+  const MIN_PER_TOPIC = 2;
+
+  // Step 1: Load precomputed clusters for each subtopic
   const topicClusters = {};
+  const seenCategories = new Set();
+
   for (const topic of followedTopics) {
     const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
-    if (!entityCat) continue;
+    if (!entityCat || seenCategories.has(entityCat)) continue;
+    seenCategories.add(entityCat);
 
-    const { data: entities } = await supabase
-      .from('concept_entities')
-      .select('entity_name, avg_article_embedding')
-      .eq('category', entityCat)
-      .not('avg_article_embedding', 'is', null);
+    const { data: clusters } = await supabase
+      .from('subtopic_entity_clusters')
+      .select('cluster_index, centroid_embedding, entity_names, cluster_size')
+      .eq('subtopic_category', entityCat)
+      .order('cluster_size', { ascending: false });
 
-    if (!entities || entities.length < 2) continue;
+    if (!clusters || clusters.length === 0) continue;
 
-    // Parse embeddings
-    const parsed = entities.map(e => ({
-      name: e.entity_name,
-      embedding: typeof e.avg_article_embedding === 'string'
-        ? JSON.parse(e.avg_article_embedding)
-        : e.avg_article_embedding,
-    })).filter(e => Array.isArray(e.embedding) && e.embedding.length === 384);
+    topicClusters[topic] = clusters.map(c => ({
+      index: c.cluster_index,
+      centroid: typeof c.centroid_embedding === 'string' ? JSON.parse(c.centroid_embedding) : c.centroid_embedding,
+      entities: c.entity_names || [],
+      size: c.cluster_size || 1,
+      category: entityCat,
+    })).filter(c => Array.isArray(c.centroid) && c.centroid.length === 384);
+  }
 
-    if (parsed.length < 2) continue;
+  const topicNames = Object.keys(topicClusters);
+  if (topicNames.length === 0) return [];
 
-    // K-Means clustering
-    const k = Math.min(8, Math.max(2, Math.round(parsed.length / 5)));
-    const embeddings = parsed.map(e => e.embedding);
-    const result = simpleKMeans(embeddings, k);
+  // Step 2: Load UCB stats if user has engagement history
+  let ucbStats = {};
+  if (personalizationId) {
+    const { data: stats } = await supabase
+      .from('user_cluster_stats')
+      .select('subtopic_category, cluster_index, times_shown, times_engaged, ucb_score')
+      .eq('personalization_id', personalizationId);
 
-    // Build cluster centroids
-    const clusters = [];
-    for (let c = 0; c < k; c++) {
-      const members = parsed.filter((_, i) => result.labels[i] === c);
-      if (members.length === 0) continue;
-      clusters.push({
-        centroid: result.centroids[c],
-        size: members.length,
-        entities: members.map(m => m.name),
-      });
+    for (const s of (stats || [])) {
+      const key = s.subtopic_category + '_' + s.cluster_index;
+      ucbStats[key] = s;
     }
-
-    topicClusters[topic] = clusters;
   }
 
-  // Step 2: Budget allocation — proportional to cluster count, min 3 per topic
-  const TOTAL_PERSONAL_BUDGET = 18;
-  const MIN_PER_TOPIC = 3;
-  const maxTopics = Math.floor(TOTAL_PERSONAL_BUDGET / MIN_PER_TOPIC);
-  const topicsToTest = Object.keys(topicClusters);
+  // Step 3: Allocate budget per subtopic (equal in session 1, weighted by engagement later)
+  const maxTopics = Math.floor(TOTAL_BUDGET / MIN_PER_TOPIC);
+  const activeTopics = topicNames.slice(0, maxTopics);
 
-  // If too many topics, pick the ones with most diversity
-  let activeTopics, deferredTopics = [];
-  if (topicsToTest.length > maxTopics) {
-    const sorted = topicsToTest.sort((a, b) =>
-      (topicClusters[b]?.length || 0) - (topicClusters[a]?.length || 0)
-    );
-    activeTopics = sorted.slice(0, maxTopics);
-    deferredTopics = sorted.slice(maxTopics);
-  } else {
-    activeTopics = topicsToTest;
-  }
+  // Check if we have ANY engagement data
+  const hasHistory = Object.keys(ucbStats).length > 0;
 
-  const totalClusters = activeTopics.reduce((s, t) => s + (topicClusters[t]?.length || 0), 0);
   const allocation = {};
-  let remaining = TOTAL_PERSONAL_BUDGET;
+  let remaining = TOTAL_BUDGET;
 
-  for (const topic of activeTopics) {
-    const nClusters = topicClusters[topic]?.length || 0;
-    const ideal = Math.round((nClusters / Math.max(totalClusters, 1)) * TOTAL_PERSONAL_BUDGET);
-    const slots = Math.max(MIN_PER_TOPIC, Math.min(ideal, nClusters, remaining));
-    allocation[topic] = slots;
-    remaining -= slots;
-  }
-
-  // Distribute leftover
-  while (remaining > 0) {
-    let best = null, bestGap = -1;
-    for (const t of activeTopics) {
-      const gap = (topicClusters[t]?.length || 0) - allocation[t];
-      if (gap > bestGap) { bestGap = gap; best = t; }
+  if (!hasHistory) {
+    // Session 1: equal split
+    for (const topic of activeTopics) {
+      allocation[topic] = Math.max(MIN_PER_TOPIC, Math.min(Math.floor(TOTAL_BUDGET / activeTopics.length), remaining));
+      remaining -= allocation[topic];
     }
-    if (!best || bestGap <= 0) break;
-    allocation[best]++;
-    remaining--;
+  } else {
+    // Session 2+: weight by engagement rate, min 1 per topic
+    const topicEngagement = {};
+    for (const topic of activeTopics) {
+      const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
+      let shown = 0, engaged = 0;
+      for (const c of (topicClusters[topic] || [])) {
+        const key = entityCat + '_' + c.index;
+        const stat = ucbStats[key];
+        if (stat) { shown += stat.times_shown; engaged += stat.times_engaged; }
+      }
+      topicEngagement[topic] = shown > 0 ? engaged / shown : 0.5;
+    }
+
+    // Proportional allocation weighted by engagement
+    const totalEng = activeTopics.reduce((s, t) => s + topicEngagement[t], 0);
+    for (const topic of activeTopics) {
+      const ideal = Math.round((topicEngagement[topic] / Math.max(totalEng, 0.1)) * TOTAL_BUDGET);
+      allocation[topic] = Math.max(1, Math.min(ideal, remaining));
+      remaining -= allocation[topic];
+    }
   }
 
-  // Step 3: Pick cluster centroids as query vectors using MMR for diversity
+  // Distribute leftover to topics with most untested clusters
+  while (remaining > 0) {
+    let distributed = false;
+    for (const topic of activeTopics) {
+      if (remaining <= 0) break;
+      if ((topicClusters[topic]?.length || 0) > allocation[topic]) {
+        allocation[topic]++;
+        remaining--;
+        distributed = true;
+      }
+    }
+    if (!distributed) break;
+  }
+
+  // Step 4: UCB cluster selection within each subtopic
   const vectors = [];
+
   for (const topic of activeTopics) {
     const clusters = topicClusters[topic] || [];
     const nSlots = allocation[topic] || 0;
     if (clusters.length === 0 || nSlots === 0) continue;
 
-    // MMR: pick the most diverse subset of clusters
+    const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
+
+    // Compute UCB score for each cluster
+    const totalTests = Object.values(ucbStats).reduce((s, st) => s + (st.times_shown || 0), 0);
+    const scored = clusters.map(c => {
+      const key = entityCat + '_' + c.index;
+      const stat = ucbStats[key];
+      if (!stat || stat.times_shown === 0) {
+        return { ...c, ucb: Infinity }; // untested → test first
+      }
+      const engRate = stat.times_engaged / stat.times_shown;
+      const explorationBonus = Math.sqrt(2 * Math.log(Math.max(1, totalTests)) / stat.times_shown);
+      return { ...c, ucb: engRate + explorationBonus };
+    });
+
+    // Sort by UCB (highest first), then pick using MMR for spread among ties
+    scored.sort((a, b) => b.ucb - a.ucb);
+
     const selected = [];
-    const available = [...clusters];
-    for (let i = 0; i < nSlots && available.length > 0; i++) {
-      if (i === 0) {
-        // First: pick largest cluster
-        const best = available.reduce((a, b) => a.size > b.size ? a : b);
-        selected.push(best);
-        available.splice(available.indexOf(best), 1);
+    for (let i = 0; i < nSlots && scored.length > 0; i++) {
+      if (i === 0 || selected.length === 0) {
+        selected.push(scored.shift());
       } else {
-        // MMR: maximize diversity from already selected
-        let bestIdx = 0, bestScore = -Infinity;
-        for (let j = 0; j < available.length; j++) {
-          const maxSimToSelected = Math.max(
-            ...selected.map(s => cosineSim(available[j].centroid, s.centroid))
-          );
-          const diversity = 1 - maxSimToSelected;
-          const score = 0.4 * (available[j].size / clusters[0].size) + 0.6 * diversity;
-          if (score > bestScore) { bestScore = score; bestIdx = j; }
+        // Among top UCB candidates, pick most diverse from already selected
+        const topCandidates = scored.slice(0, Math.min(5, scored.length));
+        let bestIdx = 0, bestDiv = -Infinity;
+        for (let j = 0; j < topCandidates.length; j++) {
+          const minSim = Math.min(...selected.map(s => cosineSim(topCandidates[j].centroid, s.centroid)));
+          const diversity = 1 - minSim;
+          if (diversity > bestDiv) { bestDiv = diversity; bestIdx = j; }
         }
-        selected.push(available[bestIdx]);
-        available.splice(bestIdx, 1);
+        selected.push(topCandidates[bestIdx]);
+        scored.splice(scored.indexOf(topCandidates[bestIdx]), 1);
       }
     }
 
-    // Each selected cluster centroid becomes a query vector
-    const topicImportance = nSlots / TOTAL_PERSONAL_BUDGET;
+    const topicWeight = nSlots / TOTAL_BUDGET;
     for (const cluster of selected) {
       vectors.push({
         vector: cluster.centroid,
-        importance: topicImportance / selected.length,
+        importance: topicWeight / selected.length,
+        _subtopicCategory: entityCat,
+        _clusterIndex: cluster.index,
       });
     }
   }
@@ -845,7 +871,7 @@ async function getQueryVectors(supabase, personalizationId, followedTopics) {
 
   // ---- 0 engagements: use subtopics directly ----
   if (engagements.length === 0) {
-    return await getSubtopicVectors(supabase, followedTopics);
+    return await getSubtopicVectors(supabase, followedTopics, personalizationId);
   }
 
   // ---- 1-19 engagements: raw embeddings + subtopics as backup ----
@@ -858,7 +884,7 @@ async function getQueryVectors(supabase, personalizationId, followedTopics) {
     }));
 
     // Also add subtopic vectors at reduced importance (so user still sees their picked topics)
-    const subtopicVecs = await getSubtopicVectors(supabase, followedTopics);
+    const subtopicVecs = await getSubtopicVectors(supabase, followedTopics, personalizationId);
     const engagementShare = engagements.length / 20; // 0 to 1 as engagements grow
     const subtopicShare = 1 - engagementShare;
 
