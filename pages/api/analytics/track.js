@@ -510,10 +510,10 @@ export default async function handler(req, res) {
                 if (!clusters || clusters.length === 0) {
                   // First engagement — create first cluster
                   admin.from('user_interest_clusters').insert({
-                    user_id: persId, cluster_index: 0,
+                    user_id: null, cluster_index: 0,
                     medoid_embedding: artEmb, medoid_minilm: artEmb,
                     article_count: 1, importance_score: 1.0,
-                    is_centroid: true, personalization_id: persId,
+                    personalization_id: persId,
                     last_engaged_at: new Date().toISOString()
                   }).then(() => console.log('[analytics] First cluster created for', persId.substring(0, 8))).catch(() => {})
                   return
@@ -559,10 +559,10 @@ export default async function handler(req, res) {
                   const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
                   const newIdx = clusters.length > 0 ? Math.max(...clusters.map(c => c.cluster_index)) + 1 : 0
                   admin.from('user_interest_clusters').insert({
-                    user_id: persId, cluster_index: newIdx,
+                    user_id: null, cluster_index: newIdx,
                     medoid_embedding: artEmb, medoid_minilm: artEmb,
                     article_count: 1, importance_score: 1 / totalCount,
-                    is_centroid: true, personalization_id: persId,
+                    personalization_id: persId,
                     last_engaged_at: new Date().toISOString()
                   }).then(() => {
                     console.log('[analytics] New interest cluster #' + newIdx + ' for', persId.substring(0, 8))
