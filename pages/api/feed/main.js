@@ -1227,38 +1227,41 @@ async function handleV2Feed(req, res, supabase, opts) {
     // Run ANN per vector, keep results SEPARATE per vector index.
     const perVector = {};
 
+    // Build a topic→category lookup from query vectors
+    const vectorTopicMap = {}; // idx → subtopic category name
+    for (let idx = 0; idx < queryVectors.length; idx++) {
+      vectorTopicMap[idx] = queryVectors[idx]._subtopicCategory || ('unknown_' + idx);
+    }
+
     const allQueries = [];
     for (let idx = 0; idx < queryVectors.length; idx++) {
       const qv = queryVectors[idx];
-      // 1 query per vector (keep it fast — Vercel has 10s timeout)
-      for (let p = 0; p < 1; p++) {
-        const vec = qv.vector;
-        allQueries.push(
-          supabase.rpc('match_articles_personal_minilm', {
-            query_embedding: vec, match_count: 40,
-            hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-          }).then(result => ({ idx, data: result.data || [] }))
-        );
-      }
+      allQueries.push(
+        supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: qv.vector, match_count: 40,
+          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+        }).then(result => ({ idx, topic: vectorTopicMap[idx], data: result.data || [] }))
+      );
     }
 
     const results = await Promise.all(allQueries);
 
-    // Group results by vector index, deduplicate within each
+    // Group results by SUBTOPIC CATEGORY (not by vector index)
+    const perSubtopic = {};
     for (const r of results) {
-      if (!perVector[r.idx]) perVector[r.idx] = new Map();
+      const topic = r.topic;
+      if (!perSubtopic[topic]) perSubtopic[topic] = new Map();
       for (const row of r.data) {
-        const existing = perVector[r.idx].get(row.id);
+        const existing = perSubtopic[topic].get(row.id);
         if (!existing || row.similarity > existing.similarity) {
-          perVector[r.idx].set(row.id, row);
+          perSubtopic[topic].set(row.id, row);
         }
       }
     }
 
-    // Convert to arrays, sorted by similarity
-    const perSubtopic = {};
-    for (const [idx, map] of Object.entries(perVector)) {
-      perSubtopic[idx] = [...map.values()].sort((a, b) => b.similarity - a.similarity);
+    // Convert maps to sorted arrays
+    for (const topic of Object.keys(perSubtopic)) {
+      perSubtopic[topic] = [...perSubtopic[topic].values()].sort((a, b) => b.similarity - a.similarity);
     }
 
     // Also create merged pool for backward compat
@@ -1636,12 +1639,43 @@ async function handleV2Feed(req, res, supabase, opts) {
   // V23: CATEGORY CAPS + GUARANTEED INTEREST SLOTS + SLOT PATTERN
   // ==========================================
 
-  // Determine which categories the user selected
+  // Determine which ARTICLE categories the user selected
+  // Maps subtopic selections to the actual article categories in the database
+  const SUBTOPIC_TO_ARTICLE_CATEGORIES = {
+    'War & Conflict': ['World','Politics'], 'Middle East': ['World','Politics'],
+    'US Politics': ['Politics','World'], 'European Politics': ['Politics','World'],
+    'Asian Politics': ['World','Politics'], 'Latin America': ['World'],
+    'Africa & Oceania': ['World'], 'Human Rights & Civil Liberties': ['Politics','World'],
+    'NBA': ['Sports'], 'NFL': ['Sports'], 'Soccer/Football': ['Sports'],
+    'Cricket': ['Sports'], 'MLB/Baseball': ['Sports'], 'F1 & Motorsport': ['Sports'],
+    'Boxing & MMA/UFC': ['Sports'], 'Olympics & Paralympics': ['Sports'],
+    'Movies & Film': ['Entertainment'], 'TV & Streaming': ['Entertainment'],
+    'Music': ['Entertainment'], 'Gaming': ['Entertainment','Tech'],
+    'Celebrity News': ['Entertainment'], 'K-Pop & K-Drama': ['Entertainment'],
+    'AI & Machine Learning': ['Tech'], 'Smartphones & Gadgets': ['Tech'],
+    'Cybersecurity': ['Tech'], 'Space Tech': ['Tech','Science'],
+    'Robotics & Hardware': ['Tech'], 'Social Media': ['Tech'],
+    'Space & Astronomy': ['Science'], 'Climate & Environment': ['Science'],
+    'Biology & Nature': ['Science'], 'Earth Science': ['Science'],
+    'Medical Breakthroughs': ['Health'], 'Public Health': ['Health'],
+    'Mental Health': ['Health'], 'Pharma & Drug Industry': ['Health'],
+    'Stock Markets': ['Finance','Business'], 'Banking & Lending': ['Finance'],
+    'Commodities': ['Finance','Business'], 'Oil & Energy': ['Business'],
+    'Automotive': ['Business'], 'Retail & Consumer': ['Business'],
+    'Corporate Deals': ['Business'], 'Trade & Tariffs': ['Business'],
+    'Corporate Earnings': ['Business'], 'Startups & Venture Capital': ['Business'],
+    'Real Estate': ['Business'], 'Bitcoin': ['Crypto','Finance'],
+    'DeFi & Web3': ['Crypto','Finance'], 'Crypto Regulation & Legal': ['Crypto'],
+    'Sneakers & Streetwear': ['Fashion','Lifestyle'], 'Celebrity Style & Red Carpet': ['Fashion'],
+    'Food & Cooking': ['Food'], 'Travel & Adventure': ['Travel'],
+    'Pets & Animals': ['Lifestyle'],
+  };
+
   const userSelectedCategories = new Set();
   const userTopics = userPrefs?.followed_topics || [];
   for (const topic of userTopics) {
-    const mapping = ONBOARDING_TOPIC_MAP[topic];
-    if (mapping) mapping.categories.forEach(c => userSelectedCategories.add(c));
+    const cats = SUBTOPIC_TO_ARTICLE_CATEGORIES[topic];
+    if (cats) cats.forEach(c => userSelectedCategories.add(c));
   }
 
   // HARD CATEGORY CAPS — only applies when user has selected topics
@@ -1687,62 +1721,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   const pSelected = [];
   const usedArticleIds = new Set();
 
-  // Group vector indices by parent subtopic category
-  // getSubtopicVectors creates vectors in order: topic1_cluster0, topic1_cluster1, topic2_cluster0, ...
-  // We need to know which indices belong to which subtopic
-  const userFollowedTopics = userPrefs?.followed_topics || [];
-  const subtopicGroups = {}; // { subtopicName: [vectorIdx, vectorIdx, ...] }
-
-  if (Object.keys(perSubtopicResults).length > 0) {
-    // Reconstruct grouping: getSubtopicVectors processes topics in order,
-    // each topic produces K cluster centroids (K = entity count / 5, min 2, max 8)
-    let vectorIdx = 0;
-    for (const topic of userFollowedTopics) {
-      const entityCat = SUBTOPIC_TO_ENTITY_CATEGORY[topic];
-      if (!entityCat) continue;
-
-      // Count how many vectors this topic produced
-      // Each entity cluster = 1 vector. We need to figure out how many clusters were made.
-      // Look at which vector indices have results
-      const topicVectorIndices = [];
-      while (perSubtopicResults[String(vectorIdx)]) {
-        topicVectorIndices.push(String(vectorIdx));
-        vectorIdx++;
-      }
-
-      if (topicVectorIndices.length > 0) {
-        if (!subtopicGroups[topic]) subtopicGroups[topic] = [];
-        subtopicGroups[topic].push(...topicVectorIndices);
-      }
-    }
-
-    // If grouping failed (indices don't align), fall back to treating each index as a group
-    if (Object.keys(subtopicGroups).length === 0) {
-      for (const key of Object.keys(perSubtopicResults)) {
-        subtopicGroups['group_' + key] = [key];
-      }
-    }
-  }
-
-  const subtopicNames = Object.keys(subtopicGroups);
+  // perSubtopicResults is now keyed by topic category name (e.g., "Cricket", "AI & Tech")
+  // No grouping needed — it's already grouped correctly
+  const subtopicNames = Object.keys(perSubtopicResults);
 
   if (subtopicNames.length > 0) {
-    // Allocate quotas per SUBTOPIC (not per vector index)
     const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
     const activeSubtopics = subtopicNames.slice(0, maxSubtopics);
 
-    // Merge all vector results within each subtopic into one pool
+    // perSubtopicResults already has merged pools per topic
     const subtopicPools = {};
     for (const topic of activeSubtopics) {
-      const indices = subtopicGroups[topic];
-      const merged = new Map();
-      for (const idx of indices) {
-        for (const r of (perSubtopicResults[idx] || [])) {
-          const existing = merged.get(r.id);
-          if (!existing || r.similarity > existing.similarity) merged.set(r.id, r);
-        }
-      }
-      subtopicPools[topic] = [...merged.values()].sort((a, b) => b.similarity - a.similarity);
+      subtopicPools[topic] = perSubtopicResults[topic] || [];
     }
 
     // Calculate quotas proportional to articles found, min 2 per subtopic
