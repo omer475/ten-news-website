@@ -1253,35 +1253,91 @@ async function handleV2Feed(req, res, supabase, opts) {
       vectorTopicMap[idx] = queryVectors[idx]._subtopicCategory || ('unknown_' + idx);
     }
 
-    const allQueries = [];
+    // TAG-FILTERED RETRIEVAL: search by subtopic tags + ANN fallback
+    // Each subtopic gets articles that ACTUALLY match its tags
+    const perSubtopic = {};
+
+    // Group query vectors by topic
+    const topicVectors = {};
     for (let idx = 0; idx < queryVectors.length; idx++) {
-      const qv = queryVectors[idx];
-      allQueries.push(
-        supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: qv.vector, match_count: 40,
-          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
-        }).then(result => ({ idx, topic: vectorTopicMap[idx], data: result.data || [] }))
-      );
+      const topic = vectorTopicMap[idx];
+      if (!topicVectors[topic]) topicVectors[topic] = [];
+      topicVectors[topic].push(queryVectors[idx]);
     }
 
-    const results = await Promise.all(allQueries);
+    // For each unique topic, find articles using tag filter + ANN
+    const topicQueries = Object.entries(topicVectors).map(async ([topic, vectors]) => {
+      const results = new Map();
 
-    // Group results by SUBTOPIC CATEGORY (not by vector index)
-    const perSubtopic = {};
-    for (const r of results) {
-      const topic = r.topic;
-      if (!perSubtopic[topic]) perSubtopic[topic] = new Map();
-      for (const row of r.data) {
-        const existing = perSubtopic[topic].get(row.id);
-        if (!existing || row.similarity > existing.similarity) {
-          perSubtopic[topic].set(row.id, row);
+      // Get tags for this entity category from ONBOARDING_TOPIC_MAP
+      const subtopicTags = [];
+      const subtopicCategories = [];
+      for (const [topicName, mapping] of Object.entries(ONBOARDING_TOPIC_MAP)) {
+        if (SUBTOPIC_TO_ENTITY_CATEGORY[topicName] === topic) {
+          subtopicTags.push(...mapping.tags);
+          subtopicCategories.push(...mapping.categories);
         }
       }
-    }
+      const uniqueTags = [...new Set(subtopicTags)].slice(0, 10);
+      const uniqueCats = [...new Set(subtopicCategories)];
 
-    // Convert maps to sorted arrays
-    for (const topic of Object.keys(perSubtopic)) {
-      perSubtopic[topic] = [...perSubtopic[topic].values()].sort((a, b) => b.similarity - a.similarity);
+      // PATH 1: Tag-filtered search (primary — most precise)
+      if (uniqueTags.length > 0 && uniqueCats.length > 0) {
+        const orFilter = uniqueTags.slice(0, 6).map(t => 'interest_tags.cs.["' + t + '"]').join(',');
+        const { data: tagResults } = await supabase
+          .from('published_articles')
+          .select('id, ai_final_score, category, embedding_minilm')
+          .or(orFilter)
+          .in('category', uniqueCats)
+          .not('embedding_minilm', 'is', null)
+          .order('ai_final_score', { ascending: false })
+          .limit(20);
+
+        for (const a of (tagResults || [])) {
+          if (excludeIds && excludeIds.includes(a.id)) continue;
+          results.set(a.id, { id: a.id, similarity: 0.8, _source: 'tag_filtered' });
+        }
+      }
+
+      // PATH 2: ANN search using cluster centroid (broader, catches related)
+      if (results.size < 10 && vectors.length > 0) {
+        const { data: annResults } = await supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: vectors[0].vector, match_count: 20,
+          hours_window: 8760, exclude_ids: excludeIds, min_similarity: minSim,
+        });
+
+        for (const r of (annResults || [])) {
+          if (!results.has(r.id)) {
+            results.set(r.id, { ...r, _source: 'ann' });
+          }
+        }
+      }
+
+      // PATH 3: Title text search (fallback for missed articles)
+      if (results.size < 5 && uniqueTags.length > 0) {
+        const searchTag = uniqueTags[0];
+        const { data: textResults } = await supabase
+          .from('published_articles')
+          .select('id, ai_final_score, category')
+          .ilike('title_news', '%' + searchTag + '%')
+          .not('embedding_minilm', 'is', null)
+          .order('ai_final_score', { ascending: false })
+          .limit(10);
+
+        for (const a of (textResults || [])) {
+          if (!results.has(a.id)) {
+            results.set(a.id, { id: a.id, similarity: 0.6, _source: 'text' });
+          }
+        }
+      }
+
+      return { topic, results: [...results.values()].sort((a, b) => (b.similarity || 0) - (a.similarity || 0)) };
+    });
+
+    const topicResults = await Promise.all(topicQueries);
+
+    for (const { topic, results } of topicResults) {
+      perSubtopic[topic] = results;
     }
 
     // Also create merged pool for backward compat
@@ -1749,10 +1805,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
     const activeSubtopics = subtopicNames.slice(0, maxSubtopics);
 
-    // perSubtopicResults already has merged pools per topic
+    // Build pools per topic, with World filtering for non-World users
+    const WORLD_ENTITY_CATS = new Set(['World Politics']);
+    const userSelectedWorld = activeSubtopics.some(t => WORLD_ENTITY_CATS.has(t));
+
     const subtopicPools = {};
     for (const topic of activeSubtopics) {
-      subtopicPools[topic] = perSubtopicResults[topic] || [];
+      let pool = perSubtopicResults[topic] || [];
+
+      // If user didn't select World topics AND this isn't a World subtopic,
+      // remove World-category articles that snuck through tag overlap
+      if (!userSelectedWorld && !WORLD_ENTITY_CATS.has(topic)) {
+        pool = pool.filter(r => {
+          const art = articleMap[r.id];
+          return !art || art.category !== 'World';
+        });
+      }
+
+      subtopicPools[topic] = pool;
     }
 
     // Calculate quotas proportional to articles found, min 2 per subtopic
