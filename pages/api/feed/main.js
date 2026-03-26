@@ -537,42 +537,65 @@ function scoreEmbedding(article, pgvecSimilarity, sessionVector, skipProfile) {
 // ==========================================
 
 function scoreArticleV3(article, similarity, entityAffinities, skipEmbeddings, sessionCategoryCounts) {
-  const vectorScore = similarity || 0;
+  // ==========================================
+  // USER RELEVANCE (60% of total score)
+  // Entity affinity is the PRIMARY signal — not a bonus
+  // ==========================================
 
-  // Entity bonus
+  // Entity match: does this article contain entities the user loves?
+  // Normalized against user's max affinity (no cap)
   const tags = safeJsonParse(article.interest_tags, []);
-  let entityBonus = 0;
-  let matchCount = 0;
+  const maxAffinity = Math.max(1, ...Object.values(entityAffinities));
+  let entityScore = 0;
   for (const tag of tags) {
     const affinity = entityAffinities[tag.toLowerCase()];
     if (affinity && affinity > 0) {
-      entityBonus += 0.10 * (affinity / 10.0);
-      matchCount++;
-      if (matchCount >= 3) break;
+      entityScore = Math.max(entityScore, affinity / maxAffinity); // relative to user's top interest
     }
   }
-  entityBonus = Math.min(entityBonus * (matchCount / Math.max(tags.length, 1)), 0.30);
 
-  // Quality
+  // Embedding similarity from ANN search
+  const clusterScore = similarity || 0;
+
+  // Combined user relevance
+  const userRelevance = 0.50 * entityScore + 0.50 * clusterScore;
+
+  // ==========================================
+  // CONTENT QUALITY (25% of total score)
+  // ==========================================
   const quality = (article.ai_final_score || 0) / 1000;
 
-  // Freshness
+  // ==========================================
+  // FRESHNESS (15% of total score)
+  // ==========================================
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
-  const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
+  const freshness = Math.max(0, 1 - ageHours / maxHours);
 
-  // SKIP REPULSION — push away from articles similar to what user skipped
-  let skipPenalty = 0;
+  // ==========================================
+  // BLEND: 60% user relevance + 25% quality + 15% freshness
+  // ==========================================
+  let score = (
+    0.60 * userRelevance +
+    0.25 * quality +
+    0.15 * freshness
+  ) * 1000; // scale to 0-1000 range
+
+  // ==========================================
+  // NEGATIVE SIGNALS (multiplicative penalties)
+  // ==========================================
+
+  // Skip repulsion
   if (skipEmbeddings && skipEmbeddings.length > 0 && article.embedding_minilm && Array.isArray(article.embedding_minilm)) {
     let maxSkipSim = 0;
     for (const skipEmb of skipEmbeddings) {
       const sim = cosineSim(article.embedding_minilm, skipEmb);
       if (sim > maxSkipSim) maxSkipSim = sim;
     }
-    skipPenalty = 0.3 * maxSkipSim; // 0.3 weight on negative signal
+    score *= (1 - 0.3 * maxSkipSim);
   }
 
-  // SESSION SATURATION — penalize categories the user already saw a lot of today
+  // Session saturation
   let saturationPenalty = 1.0;
   if (sessionCategoryCounts) {
     const catCount = sessionCategoryCounts[article.category] || 0;
@@ -582,10 +605,7 @@ function scoreArticleV3(article, similarity, entityAffinities, skipEmbeddings, s
     else if (catCount <= 6) saturationPenalty = 0.3;
     else saturationPenalty = 0.1;
   }
-
-  const relevance = vectorScore - skipPenalty;
-  const rawScore = relevance * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100;
-  return rawScore * saturationPenalty;
+  return score * saturationPenalty;
 }
 
 // ==========================================

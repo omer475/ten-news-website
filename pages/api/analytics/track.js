@@ -441,15 +441,13 @@ export default async function handler(req, res) {
           })
         }
 
-        // UCB TRACKING: disabled for now to avoid performance impact
-        // Will re-enable once feed is stable
-        if (false && bucket === 'personal' && article_id) {
+        // UCB TRACKING: lightweight — only match against user's own interest clusters
+        if (bucket === 'personal' && article_id) {
           admin.from('published_articles').select('embedding_minilm, category').eq('id', article_id).single().then(({ data: artInfo }) => {
             if (!artInfo?.embedding_minilm || !Array.isArray(artInfo.embedding_minilm)) return
 
-            // Find which subtopic cluster this article came from (only check relevant category)
-            const artCat = artInfo.category || '';
-            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').eq('subtopic_category', artCat).then(({ data: allClusters }) => {
+            // Find which precomputed cluster this article is closest to (limit to 20 for performance)
+            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').limit(20).then(({ data: allClusters }) => {
               if (!allClusters) return
 
               let bestCat = null, bestIdx = null, bestSim = -1
@@ -497,22 +495,9 @@ export default async function handler(req, res) {
           }).catch(() => {})
         }
 
-        // V23: Phase transitions + incremental cluster updates
-        const currentPhase = persData[0].phase
-        const newInteractions = persData[0].total_interactions + 1 // +1 because sliding window just incremented it
-
-        // Clustering trigger: at 20+ interactions, run K-Means every 20 engagements
-        // (at 20, 40, 60, 80, ...) to keep clusters fresh
-        if (newInteractions >= 20 && newInteractions % 20 === 0) {
-          const clusterPhase = newInteractions >= 50 ? 3 : 2;
-          admin.from('personalization_profiles').update({ phase: clusterPhase }).eq('personalization_id', persId).then(() => {
-            console.log('[analytics] Running K-Means at', newInteractions, 'interactions for', persId.substring(0, 8))
-            runClusteringForUser(admin, persId, clusterPhase).catch(e => console.log('[analytics] Clustering failed:', e.message))
-          })
-        }
-
-        // Incremental cluster update (Phase 2/3 only, positive engagements only)
-        if ((currentPhase >= 2 || newInteractions >= 30) && event_type !== 'article_skipped') {
+        // INCREMENTAL CLUSTERING — from the very first engagement
+        // No phases, no triggers. Clusters form and evolve with every positive engagement.
+        if (event_type !== 'article_skipped' && event_type !== 'article_glance') {
           admin.from('published_articles').select('embedding_minilm').eq('id', article_id).single().then(({ data: artData }) => {
             if (!artData?.embedding_minilm || !Array.isArray(artData.embedding_minilm)) return
             const artEmb = artData.embedding_minilm
@@ -522,7 +507,17 @@ export default async function handler(req, res) {
               .eq('personalization_id', persId)
               .eq('is_archived', false)
               .then(({ data: clusters }) => {
-                if (!clusters || clusters.length === 0) return
+                if (!clusters || clusters.length === 0) {
+                  // First engagement — create first cluster
+                  admin.from('user_interest_clusters').insert({
+                    user_id: persId, cluster_index: 0,
+                    medoid_embedding: artEmb, medoid_minilm: artEmb,
+                    article_count: 1, importance_score: 1.0,
+                    is_centroid: true, personalization_id: persId,
+                    last_engaged_at: new Date().toISOString()
+                  }).then(() => console.log('[analytics] First cluster created for', persId.substring(0, 8))).catch(() => {})
+                  return
+                }
 
                 // Find nearest cluster
                 let bestIdx = -1, bestSim = -1
@@ -533,27 +528,44 @@ export default async function handler(req, res) {
                   if (sim > bestSim) { bestSim = sim; bestIdx = i; }
                 }
 
-                // Only update if similarity > 0.40 threshold
-                if (bestIdx >= 0 && bestSim > 0.40) {
+                const MERGE_THRESHOLD = 0.70
+                const MAX_CLUSTERS = 7
+
+                if (bestIdx >= 0 && bestSim >= MERGE_THRESHOLD) {
+                  // Close to existing cluster — update it
                   const cluster = clusters[bestIdx]
                   const count = cluster.article_count || 1
                   const centroid = cluster.medoid_minilm
-                  // Incremental centroid: new = (old × count + article) / (count + 1)
-                  const newCentroid = centroid.map((v, i) => (v * count + artEmb[i]) / (count + 1))
+                  const learningRate = 1.0 / (count + 1)
+                  const newCentroid = centroid.map((v, i) => (1 - learningRate) * v + learningRate * artEmb[i])
                   const newCount = count + 1
-
-                  // Recalculate importance
                   const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
-                  const updates = { medoid_minilm: newCentroid, medoid_embedding: newCentroid, article_count: newCount, importance_score: newCount / totalCount, last_engaged_at: new Date().toISOString() }
 
-                  admin.from('user_interest_clusters').update(updates).eq('id', cluster.id).then(() => {
-                    // Also update other clusters' importance scores
+                  admin.from('user_interest_clusters').update({
+                    medoid_minilm: newCentroid, medoid_embedding: newCentroid,
+                    article_count: newCount, importance_score: newCount / totalCount,
+                    last_engaged_at: new Date().toISOString()
+                  }).eq('id', cluster.id).then(() => {
                     for (const c of clusters) {
                       if (c.id === cluster.id) continue
                       admin.from('user_interest_clusters')
                         .update({ importance_score: (c.article_count || 0) / totalCount })
                         .eq('id', c.id).then(() => {}).catch(() => {})
                     }
+                  }).catch(() => {})
+
+                } else if (clusters.length < MAX_CLUSTERS) {
+                  // Too far from any cluster + room for new one → create it
+                  const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
+                  const newIdx = clusters.length > 0 ? Math.max(...clusters.map(c => c.cluster_index)) + 1 : 0
+                  admin.from('user_interest_clusters').insert({
+                    user_id: persId, cluster_index: newIdx,
+                    medoid_embedding: artEmb, medoid_minilm: artEmb,
+                    article_count: 1, importance_score: 1 / totalCount,
+                    is_centroid: true, personalization_id: persId,
+                    last_engaged_at: new Date().toISOString()
+                  }).then(() => {
+                    console.log('[analytics] New interest cluster #' + newIdx + ' for', persId.substring(0, 8))
                   }).catch(() => {})
                 }
               }).catch(() => {})
