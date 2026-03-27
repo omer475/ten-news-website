@@ -463,8 +463,33 @@ function scoreDiscoveryV3(article, personalCategories) {
 
 // ==========================================
 // MMR SELECTION (Maximal Marginal Relevance)
-// Prevents topic flooding by penalizing candidates too similar to already-selected articles
+// Uses embedding cosine similarity to detect same-story articles.
+// Checks against ALL selected articles (not just last 5).
+// Falls back to tag Jaccard when embeddings unavailable.
 // ==========================================
+
+function cosineSimilarityVec(a, b) {
+  if (!a || !b || a.length !== b.length || a.length === 0) return 0;
+  let dot = 0, nA = 0, nB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    nA += a[i] * a[i];
+    nB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(nA) * Math.sqrt(nB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+function buildEmbeddingCache(articles) {
+  const cache = new Map();
+  for (const a of articles) {
+    const emb = safeJsonParse(a.embedding_minilm, null);
+    if (emb && Array.isArray(emb) && emb.length > 0) {
+      cache.set(a.id, emb);
+    }
+  }
+  return cache;
+}
 
 function buildTagSetsCache(articles) {
   const cache = new Map();
@@ -475,7 +500,7 @@ function buildTagSetsCache(articles) {
   return cache;
 }
 
-function mmrSelect(candidates, selected, tagCache, lambda) {
+function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   if (candidates.length === 0) return null;
   if (selected.length === 0) return candidates.shift();
 
@@ -483,26 +508,34 @@ function mmrSelect(candidates, selected, tagCache, lambda) {
   let bestIdx = 0;
   let bestMMR = -Infinity;
 
-  // Check diversity against last 5 selected (recent context matters most)
-  const recent = selected.slice(-5);
-
+  // Check diversity against ALL selected articles (not just last 5)
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
     const normScore = c._score / maxScore;
 
     let maxSim = 0;
+    const cEmb = embeddingCache ? embeddingCache.get(c.id) : null;
     const cTags = tagCache.get(c.id) || new Set();
 
-    for (const s of recent) {
-      const sTags = tagCache.get(s.id) || new Set();
-      let intersection = 0;
-      for (const t of cTags) {
-        if (sTags.has(t)) intersection++;
+    for (const s of selected) {
+      let sim = 0;
+      const sEmb = embeddingCache ? embeddingCache.get(s.id) : null;
+
+      if (cEmb && sEmb) {
+        // Embedding cosine similarity: detects same-story different-angle
+        sim = Math.max(0, cosineSimilarityVec(cEmb, sEmb));
+      } else {
+        // Fallback: tag Jaccard
+        const sTags = tagCache.get(s.id) || new Set();
+        let intersection = 0;
+        for (const t of cTags) {
+          if (sTags.has(t)) intersection++;
+        }
+        const unionSize = new Set([...cTags, ...sTags]).size;
+        sim = unionSize > 0 ? intersection / unionSize : 0;
       }
-      const unionSize = new Set([...cTags, ...sTags]).size;
-      let sim = unionSize > 0 ? intersection / unionSize : 0;
       // Same category carries a minimum similarity penalty
-      if (c.category === s.category) sim = Math.max(sim, 0.4);
+      if (c.category === s.category) sim = Math.max(sim, 0.3);
       maxSim = Math.max(maxSim, sim);
     }
 
@@ -581,6 +614,7 @@ const ARTICLE_COLUMNS = [
   'country_relevance', 'topic_relevance', 'interest_tags',
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
+  'embedding_minilm',
 ].join(', ');
 
 // ==========================================
@@ -1112,8 +1146,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   const articleMap = {};
   for (const a of allArticles) articleMap[a.id] = a;
 
-  // Pre-compute tag sets for MMR diversity calculations
+  // Pre-compute tag sets and embedding cache for MMR diversity calculations
   const tagCache = buildTagSetsCache(allArticles);
+  const embeddingCache = buildEmbeddingCache(allArticles);
 
   // ==========================================
   // PHASE 5: SCORE CANDIDATES
@@ -1250,71 +1285,311 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
   }
 
-  // IMPROVEMENT 3: MMR select with event/cluster dedup
+  // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
-    while (attempts < 5 && pool.length > 0) {
-      const picked = mmrSelect(pool, sel, tc, lambda);
+    while (attempts < 10 && pool.length > 0) {
+      const picked = mmrSelect(pool, sel, tc, lambda, embeddingCache);
       if (!picked) return null;
-      if (!isEventCapped(picked)) return picked;
-      // Capped — skip this one and try next
-      attempts++;
+      if (isEventCapped(picked)) { attempts++; continue; }
+      if (isEntityCappedShared(picked)) { attempts++; continue; }
+      return picked;
     }
     return null;
   }
 
-  // IMPROVEMENT 5: Cold-start Thompson Sampling bandit
+  // ==========================================
+  // ENTITY-LEVEL FREQUENCY CAP (shared across all paths)
+  // Tiered by how dominant an entity is in the candidate pool.
+  // ==========================================
+
+  const entityFreqInPoolShared = {};
+  for (const a of allArticles) {
+    const tags = safeJsonParse(a.interest_tags, []);
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      entityFreqInPoolShared[t] = (entityFreqInPoolShared[t] || 0) + 1;
+    }
+  }
+
+  function getEntityCapShared(tag) {
+    const freq = entityFreqInPoolShared[tag] || 0;
+    if (freq >= 20) return 2;
+    if (freq >= 10) return 3;
+    if (freq >= 5) return 4;
+    return Infinity;
+  }
+
+  const entitySelectionCountsShared = {};
+
+  function isEntityCappedShared(article) {
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      const cap = getEntityCapShared(t);
+      if ((entitySelectionCountsShared[t] || 0) >= cap) return true;
+    }
+    return false;
+  }
+
+  function recordEntitySelectionShared(article) {
+    const tags = safeJsonParse(article.interest_tags, []);
+    for (const tag of tags) {
+      const t = tag.toLowerCase();
+      entitySelectionCountsShared[t] = (entitySelectionCountsShared[t] || 0) + 1;
+    }
+  }
+
+  // ==========================================
+  // V15 COLD-START: Thompson Sampling bandit with:
+  // - Per-category normalized pools (Fix 2)
+  // - Entity-level frequency cap (Fix 1)
+  // - Entity-level bandit learning (Fix 4)
+  // - Proper Beta sampling via gamma distribution (Fix 6)
+  // - Dynamic time window for deeper pages (Fix 5)
+  // - Missing article lookup bug fix (Fix 4b)
+  // ==========================================
+
   if (!hasAnyPersonalization) {
-    // Group all candidates by category for bandit
-    const categoryPools = {};
-    for (const a of [...trendingScored, ...discoveryScored]) {
-      const cat = a.category || 'Other';
-      if (!categoryPools[cat]) categoryPools[cat] = [];
-      categoryPools[cat].push(a);
+
+    // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
+    function normalRandom() {
+      const u1 = Math.random();
+      const u2 = Math.random();
+      return Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
     }
 
-    // Initialize Beta priors (uniform)
+    function sampleGamma(shape) {
+      if (shape < 1) {
+        return sampleGamma(shape + 1) * Math.pow(Math.random() || 0.001, 1 / shape);
+      }
+      const d = shape - 1 / 3;
+      const c = 1 / Math.sqrt(9 * d);
+      while (true) {
+        let x, v;
+        do {
+          x = normalRandom();
+          v = 1 + c * x;
+        } while (v <= 0);
+        v = v * v * v;
+        const u = Math.random() || 0.001;
+        if (u < 1 - 0.0331 * (x * x) * (x * x)) return d * v;
+        if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+      }
+    }
+
+    function sampleBeta(alpha, beta) {
+      const x = sampleGamma(alpha);
+      const y = sampleGamma(beta);
+      return (x + y) > 0 ? x / (x + y) : 0.5;
+    }
+
+    // ── Fix 2: Per-category normalized pool construction ──
+    // Detect page depth from seen articles count
+    const pageNum = Math.floor(seenArticleIds.length / limit) + 1;
+    // Fix 5: Expand time window for deeper pages
+    const catTimeWindow = pageNum >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
+    const catScoreThreshold = pageNum >= 3 ? 200 : 300;
+    const perCatLimit = 30;
+
+    const ALL_CATEGORIES = [
+      'Politics', 'World', 'Business', 'Sports', 'Entertainment',
+      'Tech', 'Science', 'Health', 'Finance', 'Lifestyle',
+    ];
+
+    // Fetch top articles per category in parallel
+    const catFetchPromises = ALL_CATEGORIES.map(cat =>
+      supabase
+        .from('published_articles')
+        .select(ARTICLE_COLUMNS)
+        .eq('category', cat)
+        .gte('created_at', catTimeWindow)
+        .gte('ai_final_score', catScoreThreshold)
+        .order('ai_final_score', { ascending: false })
+        .limit(perCatLimit)
+    );
+    const catFetchResults = await Promise.all(catFetchPromises);
+
+    // Build category pools with blended normalization
+    const categoryPools = {};
+    const globalMaxScore = 1000; // theoretical max from scoring rubric
+
+    for (let ci = 0; ci < ALL_CATEGORIES.length; ci++) {
+      const cat = ALL_CATEGORIES[ci];
+      let articles = (catFetchResults[ci].data || []).filter(a => {
+        // Exclude seen, session-excluded, and test articles
+        if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
+        const url = a?.url || '';
+        const title = a?.title_news || a?.title || '';
+        return !(/test/i.test(url) || /test/i.test(title));
+      });
+
+      if (articles.length === 0) continue;
+
+      // Within-category normalization
+      const catMax = Math.max(...articles.map(a => a.ai_final_score || 0));
+      const catMin = Math.min(...articles.map(a => a.ai_final_score || 0));
+      const catRange = catMax - catMin || 1;
+
+      categoryPools[cat] = articles.map(a => {
+        const raw = a.ai_final_score || 0;
+        const normalizedWithinCat = (raw - catMin) / catRange;
+        const normalizedGlobal = raw / globalMaxScore;
+        // Blended: 70% within-category + 30% global quality
+        const blendedScore = 0.7 * normalizedWithinCat + 0.3 * normalizedGlobal;
+        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
+        return {
+          ...a,
+          _score: blendedScore * recency * 1000, // scale for MMR compatibility
+          _bucket: 'bandit',
+        };
+      }).sort((a, b) => b._score - a._score);
+
+      // Add to articleMap and caches for MMR
+      for (const a of categoryPools[cat]) {
+        if (!articleMap[a.id]) articleMap[a.id] = a;
+        if (!tagCache.has(a.id)) {
+          const tags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+          tagCache.set(a.id, new Set(tags));
+        }
+        if (!embeddingCache.has(a.id)) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+
+    // ── Fix 1: Entity-level frequency cap (tiered by pool dominance) ──
+    // Compute entity frequency across the entire candidate pool
+    const entityFreqInPool = {};
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      for (const a of pool) {
+        const tags = safeJsonParse(a.interest_tags, []);
+        for (const tag of tags) {
+          const t = tag.toLowerCase();
+          entityFreqInPool[t] = (entityFreqInPool[t] || 0) + 1;
+        }
+      }
+    }
+
+    function getEntityCap(tag) {
+      const freq = entityFreqInPool[tag] || 0;
+      if (freq >= 20) return 2;   // extreme dominance (e.g. iran) → very strict
+      if (freq >= 10) return 3;   // moderate dominance (e.g. oil) → strict
+      if (freq >= 5) return 4;    // some presence → mild cap
+      return Infinity;            // rare tag → no cap needed
+    }
+
+    const entitySelectionCounts = {};
+
+    function isEntityCappedFn(article) {
+      const tags = safeJsonParse(article.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        const cap = getEntityCap(t);
+        if ((entitySelectionCounts[t] || 0) >= cap) return true;
+      }
+      return false;
+    }
+
+    function recordEntitySelection(article) {
+      const tags = safeJsonParse(article.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        entitySelectionCounts[t] = (entitySelectionCounts[t] || 0) + 1;
+      }
+    }
+
+    // ── Fix 4b: Fix missing article lookup bug for session signals ──
+    // Fetch metadata for engaged/skipped articles not in current articleMap
+    const missingSignalIds = [...sessionEngagedIds, ...sessionSkippedIds]
+      .filter(id => id && !articleMap[id]);
+    if (missingSignalIds.length > 0) {
+      const batchSize = 300;
+      for (let i = 0; i < missingSignalIds.length; i += batchSize) {
+        const batch = missingSignalIds.slice(i, i + batchSize);
+        const { data } = await supabase
+          .from('published_articles')
+          .select('id, category, interest_tags')
+          .in('id', batch);
+        if (data) {
+          for (const a of data) articleMap[a.id] = a;
+        }
+      }
+    }
+
+    // ── Fix 4: Category + Entity level bandit state ──
     const banditState = {};
     for (const cat of Object.keys(categoryPools)) {
       banditState[cat] = { alpha: 1, beta: 1 };
     }
 
-    // Update priors from session signals
+    const entityBanditState = {};
+
+    // Update priors from session signals (now using fixed articleMap)
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
-      if (art) {
-        const cat = art.category || 'Other';
-        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
-        banditState[cat].alpha += 2; // Engage = strong positive
+      if (!art) continue;
+      // Category-level
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+      banditState[cat].alpha += 2;
+      // Entity-level
+      const tags = safeJsonParse(art.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
+        entityBanditState[t].alpha += 2;
       }
     }
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
-      if (art) {
-        const cat = art.category || 'Other';
-        if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
-        banditState[cat].beta += 1; // Skip = mild negative
+      if (!art) continue;
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+      banditState[cat].beta += 1;
+      const tags = safeJsonParse(art.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
+        entityBanditState[t].beta += 1;
       }
     }
 
-    // Thompson Sampling: sample from Beta distribution per category
-    function sampleBeta(alpha, beta) {
-      // Approximation using Jitter method for Beta(a,b)
-      // For small a,b: use uniform jitter around mean
-      const mean = alpha / (alpha + beta);
-      const variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1));
-      const std = Math.sqrt(variance);
-      // Box-Muller for normal sample
-      const u1 = Math.random();
-      const u2 = Math.random();
-      const z = Math.sqrt(-2 * Math.log(u1 || 0.001)) * Math.cos(2 * Math.PI * u2);
-      return Math.max(0, Math.min(1, mean + z * std));
+    // Entity bandit scoring: boost/penalize articles within a category
+    function entityBanditMultiplier(article) {
+      const tags = safeJsonParse(article.interest_tags, []);
+      let totalRate = 0;
+      let count = 0;
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        const state = entityBanditState[t];
+        if (state && (state.alpha + state.beta) > 2) {
+          totalRate += state.alpha / (state.alpha + state.beta);
+          count++;
+        }
+      }
+      if (count === 0) return 1.0; // no data → neutral
+      const avgRate = totalRate / count;
+      // Engaged entities get up to 1.5x, skipped entities get down to 0.5x
+      return 0.5 + avgRate;
     }
 
-    // Fill slots via Thompson Sampling with diversity
+    // Apply entity bandit multiplier to pool scores
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      for (const a of pool) {
+        a._score *= entityBanditMultiplier(a);
+      }
+      pool.sort((a, b) => b._score - a._score);
+    }
+
+    // ── Fill slots via Thompson Sampling with entity cap ──
     let banditAttempts = 0;
-    while (selected.length < limit && banditAttempts < limit * 3) {
+    while (selected.length < limit && banditAttempts < limit * 5) {
       banditAttempts++;
+
       // Sample from each category's Beta distribution
       let bestSample = -1;
       let bestCat = null;
@@ -1329,15 +1604,21 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!bestCat) break;
 
       const pool = categoryPools[bestCat];
-      const picked = mmrSelect(pool, selected, tagCache, 0.6);
+      const picked = mmrSelect(pool, selected, tagCache, 0.6, embeddingCache);
       if (!picked) {
         delete categoryPools[bestCat]; // Exhausted
         continue;
       }
+
+      // Event/cluster cap
       if (isEventCapped(picked)) continue;
+      // Entity-level cap (Fix 1)
+      if (isEntityCappedFn(picked)) continue;
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
+      recordEntitySelection(picked);
+      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
@@ -1377,7 +1658,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       while (queue.length > 0) {
         const candidate = queue.shift();
-        if (!usedIds.has(candidate.id) && !isEventCapped(candidate)) {
+        if (!usedIds.has(candidate.id) && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) {
           picked = candidate;
           break;
         }
@@ -1387,6 +1668,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         usedIds.add(picked.id);
         picked.bucket = 'interest';
         recordEventSelection(picked);
+        recordEntitySelectionShared(picked);
         selected.push(picked);
       } else {
         catKeys.splice(catIdx % catKeys.length, 1);
@@ -1418,6 +1700,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
+      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   } else {
@@ -1444,7 +1727,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           if (tailStart < tailEnd) {
             const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
             const candidate = pPool.splice(tailIdx, 1)[0];
-            if (candidate && !isEventCapped(candidate)) picked = candidate;
+            if (candidate && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) picked = candidate;
           }
         }
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
@@ -1456,6 +1739,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
+      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   }
