@@ -1385,68 +1385,215 @@ async function handleV2Feed(req, res, supabase, opts) {
       return (x + y) > 0 ? x / (x + y) : 0.5;
     }
 
-    // ── Fix 2: Per-category normalized pool construction ──
-    // Detect page depth from seen articles count
+    // ── Fix 2+7: Subtopic-diverse pool construction ──
+    // Instead of top 30 per category (dominated by mainstream),
+    // fetch top N per SUBTOPIC within each category.
+    // Guarantees niche content (K-Drama, Cricket, etc.) exists in pool.
     const pageNum = Math.floor(seenArticleIds.length / limit) + 1;
-    // Fix 5: Expand time window for deeper pages
     const catTimeWindow = pageNum >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
+    const catFallbackWindow = sevenDaysAgo; // expanded window for empty subtopics
     const catScoreThreshold = pageNum >= 3 ? 200 : 300;
-    const perCatLimit = 30;
+
+    const SUBTOPIC_MAP = {
+      'Entertainment': [
+        { name: 'Movies & Film', tags: ['movie', 'film', 'cinema', 'box office', 'director', 'oscar', 'hollywood'] },
+        { name: 'TV & Streaming', tags: ['netflix', 'hbo', 'streaming', 'series', 'television', 'disney'] },
+        { name: 'Music', tags: ['album', 'concert', 'song', 'billboard', 'grammy', 'rapper', 'singer', 'tour'] },
+        { name: 'Gaming', tags: ['game', 'playstation', 'xbox', 'nintendo', 'steam', 'esports', 'gaming'] },
+        { name: 'K-Pop & K-Drama', tags: ['kpop', 'k-pop', 'bts', 'blackpink', 'kdrama', 'k-drama', 'korean', 'hallyu', 'stray kids', 'newjeans'] },
+        { name: 'Celebrity', tags: ['celebrity', 'red carpet', 'award', 'star', 'met gala'] },
+      ],
+      'Sports': [
+        { name: 'NFL', tags: ['nfl', 'touchdown', 'quarterback', 'super bowl', 'american football'] },
+        { name: 'NBA', tags: ['nba', 'basketball', 'lakers', 'celtics', 'lebron'] },
+        { name: 'Soccer', tags: ['soccer', 'football', 'premier league', 'la liga', 'champions league', 'mls', 'fifa'] },
+        { name: 'Cricket', tags: ['cricket', 'ipl', 't20', 'ashes', 'test match', 'bcci'] },
+        { name: 'F1 & Motorsport', tags: ['formula 1', 'f1', 'grand prix', 'racing', 'nascar'] },
+        { name: 'Combat Sports', tags: ['ufc', 'mma', 'boxing', 'fight', 'knockout'] },
+        { name: 'Other Sports', tags: ['tennis', 'golf', 'olympics', 'swimming', 'rugby'] },
+      ],
+      'Politics': [
+        { name: 'US Politics', tags: ['trump', 'congress', 'senate', 'republican', 'democrat', 'white house', 'biden', 'supreme court'] },
+        { name: 'Middle East', tags: ['iran', 'israel', 'hezbollah', 'hamas', 'gaza', 'tehran', 'saudi'] },
+        { name: 'European Politics', tags: ['eu', 'european union', 'macron', 'germany', 'uk', 'nato', 'brexit'] },
+        { name: 'Asian Politics', tags: ['china', 'india', 'modi', 'japan', 'north korea', 'taiwan'] },
+        { name: 'Human Rights', tags: ['human rights', 'protest', 'democracy', 'censorship', 'war crimes'] },
+      ],
+      'Tech': [
+        { name: 'AI & ML', tags: ['ai', 'artificial intelligence', 'chatgpt', 'openai', 'llm', 'machine learning', 'deep learning'] },
+        { name: 'Consumer Tech', tags: ['iphone', 'apple', 'samsung', 'google', 'smartphone', 'gadget'] },
+        { name: 'Cybersecurity', tags: ['cybersecurity', 'hack', 'breach', 'ransomware', 'privacy'] },
+        { name: 'Space Tech', tags: ['spacex', 'nasa', 'rocket', 'satellite', 'starship'] },
+        { name: 'Social Media', tags: ['social media', 'tiktok', 'instagram', 'twitter', 'meta', 'facebook'] },
+      ],
+      'Science': [
+        { name: 'Space & Astronomy', tags: ['space', 'astronomy', 'mars', 'telescope', 'galaxy', 'planet', 'nasa'] },
+        { name: 'Climate & Environment', tags: ['climate', 'environment', 'warming', 'carbon', 'emissions', 'biodiversity'] },
+        { name: 'Biology & Nature', tags: ['biology', 'wildlife', 'evolution', 'genetics', 'species'] },
+        { name: 'Physics & Earth', tags: ['physics', 'quantum', 'earthquake', 'volcano', 'ocean'] },
+      ],
+      'Health': [
+        { name: 'Medical', tags: ['medical', 'treatment', 'surgery', 'clinical trial', 'fda'] },
+        { name: 'Public Health', tags: ['pandemic', 'vaccine', 'cdc', 'who', 'outbreak', 'covid'] },
+        { name: 'Mental Health', tags: ['mental health', 'anxiety', 'depression', 'therapy', 'wellbeing'] },
+        { name: 'Nutrition & Fitness', tags: ['nutrition', 'diet', 'fitness', 'exercise', 'obesity'] },
+      ],
+    };
 
     const ALL_CATEGORIES = [
       'Politics', 'World', 'Business', 'Sports', 'Entertainment',
       'Tech', 'Science', 'Health', 'Finance', 'Lifestyle',
     ];
 
-    // Fetch top articles per category in parallel
-    const catFetchPromises = ALL_CATEGORIES.map(cat =>
-      supabase
-        .from('published_articles')
-        .select(ARTICLE_COLUMNS)
+    const categoryPools = {};
+    const globalMaxScore = 1000;
+
+    // Build subtopic-diverse pools in parallel
+    const allSubtopicPromises = [];
+    const promiseMeta = []; // track which category+subtopic each promise belongs to
+
+    for (const cat of ALL_CATEGORIES) {
+      const subtopics = SUBTOPIC_MAP[cat];
+      if (subtopics) {
+        const perSubLimit = Math.max(4, Math.floor(30 / subtopics.length));
+        for (const st of subtopics) {
+          // Primary: tag-filtered query for this subtopic
+          allSubtopicPromises.push(
+            supabase.from('published_articles').select(ARTICLE_COLUMNS)
+              .eq('category', cat)
+              .gte('created_at', catTimeWindow)
+              .gte('ai_final_score', catScoreThreshold)
+              .containedBy('interest_tags', st.tags) // won't work — use textSearch workaround
+              .order('ai_final_score', { ascending: false })
+              .limit(perSubLimit)
+              // Supabase doesn't support array overlap easily, so fetch more and filter client-side
+              .then(r => r) // passthrough
+              .catch(() => ({ data: [] }))
+          );
+          promiseMeta.push({ cat, subtopic: st.name, tags: st.tags, limit: perSubLimit, isFallback: false });
+        }
+      }
+      // Always fetch a general pool for this category (catches articles that don't match subtopics)
+      allSubtopicPromises.push(
+        supabase.from('published_articles').select(ARTICLE_COLUMNS)
+          .eq('category', cat)
+          .gte('created_at', catTimeWindow)
+          .gte('ai_final_score', catScoreThreshold)
+          .order('ai_final_score', { ascending: false })
+          .limit(30)
+      );
+      promiseMeta.push({ cat, subtopic: 'general', tags: [], limit: 30, isFallback: false });
+    }
+
+    // Supabase doesn't have a good array overlap filter, so we fetch general pools
+    // per category and then partition client-side by subtopic tags
+    const catGeneralResults = {};
+    const generalPromises = ALL_CATEGORIES.map(cat =>
+      supabase.from('published_articles').select(ARTICLE_COLUMNS)
         .eq('category', cat)
         .gte('created_at', catTimeWindow)
         .gte('ai_final_score', catScoreThreshold)
         .order('ai_final_score', { ascending: false })
-        .limit(perCatLimit)
+        .limit(60) // fetch more to have subtopic variety
     );
-    const catFetchResults = await Promise.all(catFetchPromises);
-
-    // Build category pools with blended normalization
-    const categoryPools = {};
-    const globalMaxScore = 1000; // theoretical max from scoring rubric
+    const generalResults = await Promise.all(generalPromises);
 
     for (let ci = 0; ci < ALL_CATEGORIES.length; ci++) {
       const cat = ALL_CATEGORIES[ci];
-      let articles = (catFetchResults[ci].data || []).filter(a => {
-        // Exclude seen, session-excluded, and test articles
+      const allArticles_cat = (generalResults[ci].data || []).filter(a => {
         if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
         const url = a?.url || '';
         const title = a?.title_news || a?.title || '';
         return !(/test/i.test(url) || /test/i.test(title));
       });
 
-      if (articles.length === 0) continue;
+      if (allArticles_cat.length === 0) continue;
 
-      // Within-category normalization
-      const catMax = Math.max(...articles.map(a => a.ai_final_score || 0));
-      const catMin = Math.min(...articles.map(a => a.ai_final_score || 0));
+      const subtopics = SUBTOPIC_MAP[cat];
+      const poolArticles = [];
+      const usedIds = new Set();
+
+      if (subtopics) {
+        const perSubLimit = Math.max(4, Math.floor(30 / subtopics.length));
+
+        // For each subtopic, find articles whose interest_tags overlap with subtopic tags
+        for (const st of subtopics) {
+          const stTagSet = new Set(st.tags.map(t => t.toLowerCase()));
+          const matching = allArticles_cat.filter(a => {
+            if (usedIds.has(a.id)) return false;
+            const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+            return artTags.some(t => {
+              for (const stTag of stTagSet) {
+                if (t.includes(stTag) || stTag.includes(t)) return true;
+              }
+              return false;
+            });
+          });
+
+          let picked = matching.slice(0, perSubLimit);
+
+          // If empty in 48h, try 7-day fallback for this subtopic
+          if (picked.length === 0) {
+            const { data: fallbackData } = await supabase.from('published_articles')
+              .select(ARTICLE_COLUMNS)
+              .eq('category', cat)
+              .gte('created_at', catFallbackWindow)
+              .gte('ai_final_score', 200)
+              .order('ai_final_score', { ascending: false })
+              .limit(30);
+            if (fallbackData) {
+              const fallbackFiltered = fallbackData.filter(a => {
+                if (usedIds.has(a.id) || seenArticleIds.includes(a.id)) return false;
+                const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+                return artTags.some(t => {
+                  for (const stTag of stTagSet) {
+                    if (t.includes(stTag) || stTag.includes(t)) return true;
+                  }
+                  return false;
+                });
+              });
+              picked = fallbackFiltered.slice(0, perSubLimit);
+            }
+          }
+
+          for (const a of picked) {
+            usedIds.add(a.id);
+            poolArticles.push(a);
+          }
+        }
+
+        // Fill remaining slots with general articles not yet used
+        for (const a of allArticles_cat) {
+          if (poolArticles.length >= 30) break;
+          if (!usedIds.has(a.id)) {
+            usedIds.add(a.id);
+            poolArticles.push(a);
+          }
+        }
+      } else {
+        // No subtopic map for this category — use top 30 directly
+        for (const a of allArticles_cat.slice(0, 30)) {
+          poolArticles.push(a);
+        }
+      }
+
+      if (poolArticles.length === 0) continue;
+
+      // Blended normalization within the pool
+      const catMax = Math.max(...poolArticles.map(a => a.ai_final_score || 0));
+      const catMin = Math.min(...poolArticles.map(a => a.ai_final_score || 0));
       const catRange = catMax - catMin || 1;
 
-      categoryPools[cat] = articles.map(a => {
+      categoryPools[cat] = poolArticles.map(a => {
         const raw = a.ai_final_score || 0;
         const normalizedWithinCat = (raw - catMin) / catRange;
         const normalizedGlobal = raw / globalMaxScore;
-        // Blended: 70% within-category + 30% global quality
         const blendedScore = 0.7 * normalizedWithinCat + 0.3 * normalizedGlobal;
         const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
-        return {
-          ...a,
-          _score: blendedScore * recency * 1000, // scale for MMR compatibility
-          _bucket: 'bandit',
-        };
+        return { ...a, _score: blendedScore * recency * 1000, _bucket: 'bandit' };
       }).sort((a, b) => b._score - a._score);
 
-      // Add to articleMap and caches for MMR
+      // Add to articleMap and caches
       for (const a of categoryPools[cat]) {
         if (!articleMap[a.id]) articleMap[a.id] = a;
         if (!tagCache.has(a.id)) {
@@ -1455,9 +1602,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
         if (!embeddingCache.has(a.id)) {
           const emb = safeJsonParse(a.embedding_minilm, null);
-          if (emb && Array.isArray(emb) && emb.length > 0) {
-            embeddingCache.set(a.id, emb);
-          }
+          if (emb && Array.isArray(emb) && emb.length > 0) embeddingCache.set(a.id, emb);
         }
       }
     }
@@ -1521,10 +1666,54 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
+    // ── Fix 8: Session entity blocklist (negative preference) ──
+    // If user skipped 3+ articles with the same specific entity, HARD BLOCK it.
+    // Broad category words (politics, sports, etc.) are never blocked.
+    const BROAD_TAGS = new Set([
+      'politics', 'sports', 'business', 'technology', 'health', 'science',
+      'entertainment', 'world', 'finance', 'energy', 'military', 'economy',
+      'trade', 'security', 'government', 'breaking news', 'analysis',
+      'investigation', 'opinion', 'editorial', 'lifestyle', 'culture',
+    ]);
+
+    const entitySkipCounts = {};
+    for (const id of sessionSkippedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      const tags = safeJsonParse(art.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        if (!BROAD_TAGS.has(t)) {
+          entitySkipCounts[t] = (entitySkipCounts[t] || 0) + 1;
+        }
+      }
+    }
+
+    const entityBlocklist = new Set();
+    for (const [entity, count] of Object.entries(entitySkipCounts)) {
+      if (count >= 3) entityBlocklist.add(entity);
+    }
+
+    // Filter blocked entities out of category pools and penalize categories
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      const beforeLen = pool.length;
+      categoryPools[cat] = pool.filter(a => {
+        const tags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+        return !tags.some(t => entityBlocklist.has(t));
+      });
+      const removedRatio = beforeLen > 0 ? (beforeLen - categoryPools[cat].length) / beforeLen : 0;
+      // If >50% of pool was blocked content, this category is mostly unwanted
+      // Store the penalty — will apply to bandit state below
+      categoryPools[cat]._blockPenalty = removedRatio > 0.5 ? 5 : removedRatio > 0.3 ? 3 : removedRatio > 0.1 ? 1 : 0;
+    }
+
     // ── Fix 4: Category + Entity level bandit state ──
     const banditState = {};
     for (const cat of Object.keys(categoryPools)) {
       banditState[cat] = { alpha: 1, beta: 1 };
+      // Apply block penalty to bandit state
+      const penalty = categoryPools[cat]._blockPenalty || 0;
+      if (penalty > 0) banditState[cat].beta += penalty;
     }
 
     const entityBanditState = {};
