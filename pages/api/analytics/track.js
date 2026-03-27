@@ -571,6 +571,43 @@ export default async function handler(req, res) {
               }).catch(() => {})
           }).catch(() => {})
         }
+
+        // ============================================================
+        // BUCKET ENGAGEMENT STATS — for adaptive budget allocation
+        // Tracks how well trending/exploration performs for this user
+        // ============================================================
+        if (bucket === 'trending' || bucket === 'exploration' || bucket === 'discovery' || bucket === 'cold-start') {
+          const isEngaged = !['article_skipped', 'article_glance'].includes(event_type)
+          admin.rpc('update_bucket_stats', {
+            p_pers_id: persId,
+            p_bucket: bucket,
+            p_engaged: isEngaged,
+          }).catch(() => {})
+        }
+
+        // ============================================================
+        // SUBTOPIC ENGAGEMENT STATS — for weighted subtopic allocation
+        // Matches article to user's subtopics via category + tags
+        // ============================================================
+        if (article_id && bucket === 'personal') {
+          admin.from('published_articles').select('category, interest_tags').eq('id', article_id).single().then(({ data: artInfo }) => {
+            if (!artInfo) return
+            const artCat = artInfo.category
+            const artTags = Array.isArray(artInfo.interest_tags) ? artInfo.interest_tags :
+              (typeof artInfo.interest_tags === 'string' ? JSON.parse(artInfo.interest_tags || '[]') : [])
+
+            // Find which subtopic this article belongs to by matching the metadata bucket subtopic
+            // Use the article's category + tags to find best matching subtopic
+            const subtopicName = metadata?.subtopic_name
+            if (subtopicName) {
+              admin.rpc('update_subtopic_stats', {
+                p_pers_id: persId,
+                p_subtopic: subtopicName,
+                p_event_type: event_type,
+              }).catch(() => {})
+            }
+          }).catch(() => {})
+        }
       })
 
       // Also keep legacy EMA update on profiles for backward compatibility during transition

@@ -1052,6 +1052,8 @@ export default async function handler(req, res) {
     let personalizationId = null;
     let userPhase = 1;
     let totalInteractions = 0;
+    let bucketStats = null;
+    let subtopicOrder = [];
 
     // V3: Try personalization_profiles first (non-blocking)
     if (userId || guestDeviceId) {
@@ -1068,6 +1070,23 @@ export default async function handler(req, res) {
             .eq('personalization_id', personalizationId)
             .single();
           if (ppData?.taste_vector_minilm) tasteVectorMinilm = ppData.taste_vector_minilm;
+          // Load adaptive budget stats (separate query, graceful if columns don't exist yet)
+          try {
+            const { data: bsData } = await supabase
+              .from('personalization_profiles')
+              .select('trending_shown, trending_engaged, exploration_shown, exploration_engaged, subtopic_order')
+              .eq('personalization_id', personalizationId)
+              .single();
+            if (bsData) {
+              bucketStats = {
+                trending_shown: bsData.trending_shown || 0,
+                trending_engaged: bsData.trending_engaged || 0,
+                exploration_shown: bsData.exploration_shown || 0,
+                exploration_engaged: bsData.exploration_engaged || 0,
+              };
+              subtopicOrder = bsData.subtopic_order || [];
+            }
+          } catch (e) { /* columns not yet migrated — use defaults */ }
         }
       } catch (e) { /* V3 not available — continue with legacy */ }
     }
@@ -1186,6 +1205,8 @@ export default async function handler(req, res) {
       personalizationId,
       userPhase,
       totalInteractions,
+      bucketStats,
+      subtopicOrder,
     });
 
   } catch (error) {
@@ -1203,7 +1224,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, seenArticleIds,
         sessionEngagedIds, sessionSkippedIds, limit, offset,
-        personalizationId, userPhase, totalInteractions } = opts;
+        personalizationId, userPhase, totalInteractions,
+        bucketStats, subtopicOrder } = opts;
   userPhase = userPhase || 1;
   totalInteractions = totalInteractions || 0;
   sessionEngagedIds = sessionEngagedIds || [];
@@ -1645,6 +1667,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
+  // Apply story dedup to trending pool
+  const trendingDeduped = deduplicateStories(trendingScored);
+
   // DISCOVERY: "Nearby but new" — similarity 0.3-0.8 to user's interests
   // Expands interests without showing stuff they hate
   const discoveryScored = discoveryArticleMeta
@@ -1678,6 +1703,85 @@ async function handleV2Feed(req, res, supabase, opts) {
     })
     .filter(Boolean)
     .sort((a, b) => b._score - a._score);
+
+  // Apply story dedup to discovery pool
+  const discoveryDeduped = deduplicateStories(discoveryScored);
+
+  // ==========================================
+  // STORY DEDUPLICATION — group similar articles about the same event
+  // Uses embedding similarity + entity overlap + temporal proximity
+  // Keeps only the best article per story cluster in each pool
+  // ==========================================
+  function deduplicateStories(articles) {
+    if (articles.length <= 1) return articles;
+
+    const clusters = []; // [{representative, members}]
+
+    for (const article of articles) {
+      const emb = article.embedding_minilm;
+      const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+      const pubTime = new Date(article.created_at).getTime();
+
+      let bestCluster = null;
+      let bestScore = 0;
+
+      for (const cluster of clusters) {
+        const rep = cluster.representative;
+        const repEmb = rep.embedding_minilm;
+
+        // Embedding similarity
+        let embSim = 0;
+        if (emb && repEmb && Array.isArray(emb) && Array.isArray(repEmb)) {
+          embSim = cosineSim(emb, repEmb);
+        }
+
+        // Entity/tag overlap
+        const repTags = safeJsonParse(rep.interest_tags, []).map(t => t.toLowerCase());
+        const tagOverlap = tags.length > 0
+          ? tags.filter(t => repTags.includes(t)).length / Math.max(tags.length, 1)
+          : 0;
+
+        // Temporal proximity (within 48h)
+        const repTime = new Date(rep.created_at).getTime();
+        const hoursApart = Math.abs(pubTime - repTime) / 3600000;
+        const temporalScore = Math.max(0, 1.0 - hoursApart / 48);
+
+        // Combined story match score
+        const matchScore = 0.35 * embSim + 0.35 * tagOverlap + 0.30 * temporalScore;
+
+        if (matchScore > bestScore) {
+          bestScore = matchScore;
+          bestCluster = cluster;
+        }
+      }
+
+      const STORY_THRESHOLD = 0.55;
+      if (bestCluster && bestScore > STORY_THRESHOLD) {
+        // Same story — keep the higher scored article as representative
+        if ((article._score || 0) > (bestCluster.representative._score || 0)) {
+          bestCluster.representative = article;
+        }
+        bestCluster.members.push(article);
+      } else {
+        // New story cluster
+        clusters.push({ representative: article, members: [article] });
+      }
+    }
+
+    return clusters.map(c => c.representative);
+  }
+
+  // Apply story dedup to each pool
+  const personalDedupedMap = {};
+  for (const [topic, articles] of Object.entries(perSubtopicResults)) {
+    const deduped = deduplicateStories(
+      (articles || []).filter(r => articleMap[r.id]).map(r => ({
+        ...articleMap[r.id],
+        _similarity: r.similarity || 0,
+      }))
+    );
+    personalDedupedMap[topic] = deduped.map(a => ({ id: a.id, similarity: a._similarity || 0.8 }));
+  }
 
   // ==========================================
   // PHASE 6: FILL FEED WITH EMBEDDING MMR
@@ -1786,23 +1890,45 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Each interest fills its own slots. Cricket never competes with Business.
   // ==========================================
 
-  const PERSONAL_BUDGET = 18;
-  const TRENDING_BUDGET = 6;
-  const EXPLORE_BUDGET = 4;
-  const CS_BUDGET = 2;
-  const MIN_PER_SUBTOPIC = 2;
+  // ==========================================
+  // ADAPTIVE BUDGET ALLOCATION
+  // Shrinks trending/exploration when they don't work for this user.
+  // Recovered slots go to personal content.
+  // ==========================================
+  const TOTAL_FEED_SLOTS = 26;
+  const CS_BUDGET = 2; // cold-start always 2
+  let TRENDING_BUDGET, EXPLORE_BUDGET, PERSONAL_BUDGET;
+
+  if (!bucketStats || (bucketStats.trending_shown + bucketStats.exploration_shown) < 10) {
+    // New user or insufficient data: fixed ratio for testing
+    TRENDING_BUDGET = 4;
+    EXPLORE_BUDGET = 4;
+  } else {
+    // Calculate engagement rates per bucket
+    const tRate = bucketStats.trending_shown > 0
+      ? bucketStats.trending_engaged / bucketStats.trending_shown : 0;
+    const eRate = bucketStats.exploration_shown > 0
+      ? bucketStats.exploration_engaged / bucketStats.exploration_shown : 0;
+
+    // Scale slots with engagement — if it doesn't work, shrink it
+    // 30%+ engagement → 4 slots (full), 15% → 2 slots, 0% → 1 slot (minimum)
+    TRENDING_BUDGET = Math.max(1, Math.min(4, Math.round(4 * (tRate / 0.30))));
+    EXPLORE_BUDGET = Math.max(1, Math.min(4, Math.round(4 * (eRate / 0.25))));
+  }
+  PERSONAL_BUDGET = TOTAL_FEED_SLOTS - TRENDING_BUDGET - EXPLORE_BUDGET;
+  const MIN_PER_SUBTOPIC = 1;
 
   // Allocate personal slots per SUBTOPIC GROUP (not per vector index)
   // Vector indices 0-2 might all be Cricket clusters → group them as one subtopic
   const pSelected = [];
   const usedArticleIds = new Set();
 
-  // perSubtopicResults is now keyed by topic category name (e.g., "Cricket", "AI & Tech")
-  // No grouping needed — it's already grouped correctly
-  const subtopicNames = Object.keys(perSubtopicResults);
+  // Use story-deduplicated personal map (falls back to original if dedup produced nothing)
+  const effectiveSubtopicResults = Object.keys(personalDedupedMap).length > 0 ? personalDedupedMap : perSubtopicResults;
+  const subtopicNames = Object.keys(effectiveSubtopicResults);
 
   if (subtopicNames.length > 0) {
-    const maxSubtopics = Math.floor(PERSONAL_BUDGET / MIN_PER_SUBTOPIC);
+    const maxSubtopics = Math.floor(PERSONAL_BUDGET / Math.max(MIN_PER_SUBTOPIC, 1));
     const activeSubtopics = subtopicNames.slice(0, maxSubtopics);
 
     // Build pools per topic, with World filtering for non-World users
@@ -1811,7 +1937,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     const subtopicPools = {};
     for (const topic of activeSubtopics) {
-      let pool = perSubtopicResults[topic] || [];
+      let pool = effectiveSubtopicResults[topic] || [];
 
       // If user didn't select World topics AND this isn't a World subtopic,
       // remove World-category articles that snuck through tag overlap
@@ -1825,19 +1951,104 @@ async function handleV2Feed(req, res, supabase, opts) {
       subtopicPools[topic] = pool;
     }
 
-    // Calculate quotas proportional to articles found, min 2 per subtopic
-    const totalFound = activeSubtopics.reduce((s, t) => s + (subtopicPools[t]?.length || 0), 0);
+    // ==========================================
+    // TWO-PHASE WEIGHTED SUBTOPIC ALLOCATION
+    // Phase A (session 1): weight by onboarding order + category concentration
+    // Phase B (session 2+): weight by actual engagement rates
+    // ==========================================
     const quotas = {};
     let remaining = PERSONAL_BUDGET;
-    for (const topic of activeSubtopics) {
-      const found = subtopicPools[topic]?.length || 0;
-      const ideal = Math.round((found / Math.max(totalFound, 1)) * PERSONAL_BUDGET);
-      quotas[topic] = Math.max(MIN_PER_SUBTOPIC, Math.min(ideal, remaining));
-      remaining -= quotas[topic];
+
+    // Load subtopic engagement stats if available (graceful if table not yet created)
+    let subtopicEngStats = {};
+    if (personalizationId) {
+      try {
+        const { data: sstats, error: ssErr } = await supabase
+          .from('user_subtopic_stats')
+          .select('subtopic_name, times_shown, times_engaged')
+          .eq('personalization_id', personalizationId);
+        if (!ssErr) {
+          for (const s of (sstats || [])) {
+            subtopicEngStats[s.subtopic_name] = s;
+          }
+        }
+      } catch (e) { /* table not yet migrated */ }
     }
+
+    const hasSubtopicHistory = Object.keys(subtopicEngStats).length > 0 &&
+      Object.values(subtopicEngStats).some(s => s.times_shown >= 3);
+
+    if (!hasSubtopicHistory) {
+      // PHASE A: Use onboarding order + category concentration
+      // Earlier picks = stronger interests, more picks in same category = higher weight
+      const userTopicsList = subtopicOrder.length > 0 ? subtopicOrder : (userPrefs?.followed_topics || []);
+
+      // Count subtopics per parent category for concentration signal
+      const categoryCount = {};
+      for (const topic of userTopicsList) {
+        const cats = SUBTOPIC_TO_ARTICLE_CATEGORIES[topic] || [];
+        for (const cat of cats) {
+          categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+        }
+      }
+      const totalUserTopics = userTopicsList.length || 1;
+
+      const weights = {};
+      for (let i = 0; i < activeSubtopics.length; i++) {
+        const topic = activeSubtopics[i];
+        // Find order position in user's original selection
+        const orderIdx = userTopicsList.findIndex(t =>
+          (SUBTOPIC_TO_ENTITY_CATEGORY[t] || '').toLowerCase() === topic.toLowerCase() || t === topic
+        );
+        const orderWeight = orderIdx >= 0 ? (1.0 - orderIdx * 0.05) : 0.5;
+
+        // Category concentration weight
+        const topicCats = SUBTOPIC_TO_ARTICLE_CATEGORIES[
+          userTopicsList.find(t => (SUBTOPIC_TO_ENTITY_CATEGORY[t] || '') === topic) || topic
+        ] || [];
+        const concWeight = topicCats.reduce((max, cat) =>
+          Math.max(max, (categoryCount[cat] || 0) / totalUserTopics), 0
+        );
+
+        weights[topic] = Math.max(0.1, orderWeight + concWeight);
+      }
+
+      const totalWeight = Object.values(weights).reduce((s, w) => s + w, 0) || 1;
+      for (const topic of activeSubtopics) {
+        const raw = (weights[topic] / totalWeight) * PERSONAL_BUDGET;
+        quotas[topic] = Math.max(MIN_PER_SUBTOPIC, Math.min(Math.round(raw), remaining));
+        remaining -= quotas[topic];
+      }
+    } else {
+      // PHASE B: Rebalance by actual engagement data
+      const weights = {};
+      for (const topic of activeSubtopics) {
+        const stat = subtopicEngStats[topic];
+        if (!stat || stat.times_shown === 0) {
+          weights[topic] = 0.5; // untested, neutral — give it a chance
+        } else {
+          const rate = stat.times_engaged / stat.times_shown;
+          const volume = Math.min(stat.times_engaged || 0, 10);
+          weights[topic] = rate + (0.1 * volume);
+        }
+      }
+
+      const totalWeight = Object.values(weights).reduce((s, w) => s + w, 0) || 1;
+      for (const topic of activeSubtopics) {
+        const raw = (weights[topic] / totalWeight) * PERSONAL_BUDGET;
+        quotas[topic] = Math.max(MIN_PER_SUBTOPIC, Math.min(Math.round(raw), remaining));
+        remaining -= quotas[topic];
+      }
+    }
+
+    // Distribute leftover to highest-weighted subtopics with available articles
     while (remaining > 0) {
       let distributed = false;
-      for (const topic of activeSubtopics) {
+      // Sort by weight descending to give extras to strongest interests
+      const byWeight = [...activeSubtopics].sort((a, b) =>
+        (subtopicPools[b]?.length || 0) - (subtopicPools[a]?.length || 0)
+      );
+      for (const topic of byWeight) {
         if (remaining <= 0) break;
         if ((subtopicPools[topic]?.length || 0) > quotas[topic]) {
           quotas[topic]++;
@@ -1899,14 +2110,46 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // TRENDING: category-diverse (max 1 per category)
-  const tPoolCapped = applyCategoryCaps([...trendingScored], TRENDING_BUDGET);
-  const tPool = [...tPoolCapped];
+  // PERSONALIZED TRENDING: blend global trending score with user relevance
+  // Also suppresses categories user consistently skips
+  const suppressedCategories = new Set();
+  if (bucketStats && bucketStats.trending_shown >= 10) {
+    // Build category skip history from session data
+    for (const a of trendingScored) {
+      if (!userSelectedCategories.has(a.category) && a.category !== 'Other') {
+        // If user never selected this category AND trending is low-engagement, suppress it
+        suppressedCategories.add(a.category);
+      }
+    }
+    // Don't suppress user-selected categories
+    for (const cat of userSelectedCategories) suppressedCategories.delete(cat);
+  }
+
+  const personalizedTrending = trendingDeduped
+    .filter(a => !suppressedCategories.has(a.category))
+    .map(a => {
+      const trendScore = a._score || 0;
+      // Personal relevance from entity affinities
+      let personalScore = 0;
+      if (entityAffinities && Object.keys(entityAffinities).length > 0) {
+        const tags = safeJsonParse(a.interest_tags, []);
+        const maxAff = Math.max(1, ...Object.values(entityAffinities));
+        for (const tag of tags) {
+          const aff = entityAffinities[tag.toLowerCase()];
+          if (aff && aff > 0) personalScore = Math.max(personalScore, aff / maxAff);
+        }
+      }
+      // Blend: 50% trending importance + 50% personal relevance
+      const blendedScore = 0.50 * (trendScore / Math.max(1, trendingDeduped[0]?._score || 1)) + 0.50 * personalScore;
+      return { ...a, _trendBlend: blendedScore };
+    })
+    .sort((a, b) => b._trendBlend - a._trendBlend);
+
   const tSelected = [];
   const trendingCats = new Set();
-  for (const article of tPool) {
+  for (const article of personalizedTrending) {
     if (tSelected.length >= TRENDING_BUDGET) break;
-    if (trendingCats.has(article.category)) continue; // 1 per category
+    if (trendingCats.has(article.category)) continue; // max 1 per category
     if (usedArticleIds.has(article.id)) continue;
     article.bucket = 'trending';
     tSelected.push(article);
@@ -1914,8 +2157,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     usedArticleIds.add(article.id);
   }
 
-  // EXPLORATION: category-diverse
-  const dPool = applyCategoryCaps([...discoveryScored], EXPLORE_BUDGET);
+  // EXPLORATION: category-diverse, suppress categories user doesn't engage with
+  const dPool = discoveryDeduped
+    .filter(a => !suppressedCategories.has(a.category));
   const eSelected = [];
   const exploreCats = new Set();
   for (const article of dPool) {
@@ -1930,24 +2174,53 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const csSelected = dPool.filter(a => !usedArticleIds.has(a.id)).slice(0, CS_BUDGET).map(a => ({ ...a, bucket: 'cold-start' }));
 
-  // Step 2: Interleave into slot pattern
-  const V23_SLOTS = ['P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E','P','P','T','P','E','P','P','T','P','CS','P','P','T','P','E'];
-  const selected = [];
-  let pIdx = 0, tIdx = 0, eIdx = 0, csIdx = 0;
+  // Step 2: Build DYNAMIC slot pattern based on adaptive budgets
+  // Personal slots dominate, with trending/exploration/cold-start distributed evenly
+  const totalSlots = PERSONAL_BUDGET + TRENDING_BUDGET + EXPLORE_BUDGET + CS_BUDGET;
+  const dynamicSlots = [];
+  let pRemain = PERSONAL_BUDGET, tRemain = TRENDING_BUDGET, eRemain = EXPLORE_BUDGET, csRemain = CS_BUDGET;
 
-  for (let pos = 0; pos < Math.min(V23_SLOTS.length, limit); pos++) {
-    const slot = V23_SLOTS[pos];
+  // Distribute: every ~5 personal slots, insert 1 trending or exploration
+  let nonPersonalQueue = [];
+  for (let i = 0; i < TRENDING_BUDGET; i++) nonPersonalQueue.push('T');
+  for (let i = 0; i < EXPLORE_BUDGET; i++) nonPersonalQueue.push('E');
+  for (let i = 0; i < CS_BUDGET; i++) nonPersonalQueue.push('CS');
+
+  const pInterval = PERSONAL_BUDGET > 0 ? Math.max(2, Math.floor(PERSONAL_BUDGET / (nonPersonalQueue.length + 1))) : 2;
+  let pCount = 0;
+  let npIdx = 0;
+  for (let i = 0; i < totalSlots; i++) {
+    if (pCount >= pInterval && npIdx < nonPersonalQueue.length) {
+      dynamicSlots.push(nonPersonalQueue[npIdx++]);
+      pCount = 0;
+    } else if (pRemain > 0) {
+      dynamicSlots.push('P');
+      pRemain--;
+      pCount++;
+    } else if (npIdx < nonPersonalQueue.length) {
+      dynamicSlots.push(nonPersonalQueue[npIdx++]);
+    }
+  }
+  // Append any remaining non-personal
+  while (npIdx < nonPersonalQueue.length) dynamicSlots.push(nonPersonalQueue[npIdx++]);
+
+  const selected = [];
+  let pI = 0, tI = 0, eI = 0, csI = 0;
+
+  for (let pos = 0; pos < Math.min(dynamicSlots.length, limit); pos++) {
+    const slot = dynamicSlots[pos];
     let picked = null;
 
-    if (slot === 'P' && pIdx < pSelected.length) picked = pSelected[pIdx++];
-    else if (slot === 'T' && tIdx < tSelected.length) picked = tSelected[tIdx++];
-    else if (slot === 'E' && eIdx < eSelected.length) picked = eSelected[eIdx++];
-    else if (slot === 'CS' && csIdx < csSelected.length) picked = csSelected[csIdx++];
+    if (slot === 'P' && pI < pSelected.length) picked = pSelected[pI++];
+    else if (slot === 'T' && tI < tSelected.length) picked = tSelected[tI++];
+    else if (slot === 'E' && eI < eSelected.length) picked = eSelected[eI++];
+    else if (slot === 'CS' && csI < csSelected.length) picked = csSelected[csI++];
 
     if (!picked) {
-      if (pIdx < pSelected.length) picked = pSelected[pIdx++];
-      else if (tIdx < tSelected.length) picked = tSelected[tIdx++];
-      else if (eIdx < eSelected.length) picked = eSelected[eIdx++];
+      // Fallback to personal if slot empty
+      if (pI < pSelected.length) picked = pSelected[pI++];
+      else if (tI < tSelected.length) picked = tSelected[tI++];
+      else if (eI < eSelected.length) picked = eSelected[eI++];
     }
 
     if (picked) selected.push(picked);
@@ -1979,6 +2252,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     const formatted = formatArticle(a);
     formatted.bucket = a.bucket;
     formatted.final_score = a._score;
+    if (a._subtopicName) formatted.subtopic_name = a._subtopicName;
     return formatted;
   });
 
@@ -1999,6 +2273,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _v: 'v22',
+    _v: 'v14',
   });
 }
