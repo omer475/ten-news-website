@@ -1768,64 +1768,173 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // ── Fix 4: Category + Entity level bandit state ──
-    const banditState = {};
-    for (const cat of Object.keys(categoryPools)) {
-      banditState[cat] = { alpha: 1, beta: 1 };
-      // Apply block penalty to bandit state
-      const penalty = categoryPools[cat]._blockPenalty || 0;
-      if (penalty > 0) banditState[cat].beta += penalty;
-    }
+    // ══════════════════════════════════════════════════════════════
+    // V18: SIGNAL QUALITY ANALYSIS (anti-curiosity-pollution)
+    // 4 mechanisms: consistency gate, skip-after-serve penalty,
+    // signal-quality-weighted bandit, recency decay
+    // ══════════════════════════════════════════════════════════════
 
-    const entityBanditState = {};
+    // Step 1: Build per-entity engagement/skip counts
+    const entityExposures = {}; // { entity: { engaged: count, skipped: count } }
+    const engagedSet = new Set(sessionEngagedIds);
+    const skippedSet = new Set(sessionSkippedIds);
 
-    // Update priors from session signals (now using fixed articleMap)
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      // Category-level
-      const cat = art.category || 'Other';
-      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
-      banditState[cat].alpha += 2;
-      // Entity-level
       const tags = safeJsonParse(art.interest_tags, []);
       for (const tag of tags) {
         const t = tag.toLowerCase();
-        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
-        entityBanditState[t].alpha += 2;
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityExposures[t]) entityExposures[t] = { engaged: 0, skipped: 0 };
+        entityExposures[t].engaged++;
       }
     }
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      const cat = art.category || 'Other';
-      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
-      banditState[cat].beta += 1;
       const tags = safeJsonParse(art.interest_tags, []);
       for (const tag of tags) {
         const t = tag.toLowerCase();
-        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
-        entityBanditState[t].beta += 1;
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityExposures[t]) entityExposures[t] = { engaged: 0, skipped: 0 };
+        entityExposures[t].skipped++;
       }
     }
 
-    // Entity bandit scoring: boost/penalize articles within a category
+    // Step 2: Consistency gate + skip-after-serve → signal quality per entity
+    const entitySignalQuality = {};
+    for (const [entity, exp] of Object.entries(entityExposures)) {
+      const total = exp.engaged + exp.skipped;
+      if (total < 2) {
+        // Too few exposures — don't trust the signal yet
+        entitySignalQuality[entity] = { signal: 'insufficient', weight: 0.3 };
+        continue;
+      }
+      const engRate = exp.engaged / total;
+
+      // Skip-after-serve detection: entity was engaged AND skipped multiple times
+      // This pattern means: user clicked once (curiosity) then rejected when shown more
+      const hasSkipAfterServe = exp.engaged >= 1 && exp.skipped >= 2 && engRate < 0.6;
+
+      if (engRate >= 0.6 && exp.engaged >= 3) {
+        entitySignalQuality[entity] = { signal: 'genuine_interest', weight: 2.0 };
+      } else if (engRate >= 0.5 && exp.engaged >= 2 && !hasSkipAfterServe) {
+        entitySignalQuality[entity] = { signal: 'likely_interest', weight: 1.5 };
+      } else if (hasSkipAfterServe) {
+        // Engaged then rejected when shown more = curiosity
+        entitySignalQuality[entity] = { signal: 'curiosity', weight: -1.0 };
+      } else if (engRate < 0.25 && exp.skipped >= 3) {
+        entitySignalQuality[entity] = { signal: 'not_interested', weight: -2.0 };
+      } else {
+        entitySignalQuality[entity] = { signal: 'mixed', weight: 0.5 };
+      }
+    }
+
+    // Step 3: Build bandit state with recency decay + signal quality
+    const banditState = {};
+    for (const cat of Object.keys(categoryPools)) {
+      banditState[cat] = { alpha: 1, beta: 1 };
+      const penalty = categoryPools[cat]._blockPenalty || 0;
+      if (penalty > 0) banditState[cat].beta += penalty;
+    }
+
+    const entityBanditState = {};
+    const totalSignals = sessionEngagedIds.length + sessionSkippedIds.length;
+
+    // Process engagements with recency + quality weighting
+    for (let i = 0; i < sessionEngagedIds.length; i++) {
+      const id = sessionEngagedIds[i];
+      const art = articleMap[id];
+      if (!art) continue;
+
+      // Recency: later signals matter more (position in cumulative array)
+      const position = i / Math.max(sessionEngagedIds.length - 1, 1);
+      const recencyWeight = 0.5 + position; // 0.5x for first, 1.5x for last
+
+      // Signal quality: average weight of this article's entities
+      const tags = safeJsonParse(art.interest_tags, []);
+      const entityWeights = tags
+        .map(t => entitySignalQuality[t.toLowerCase()]?.weight)
+        .filter(w => w !== undefined);
+      const avgEntityWeight = entityWeights.length > 0
+        ? entityWeights.reduce((a, b) => a + b, 0) / entityWeights.length
+        : 0.5; // unknown entities get mild positive
+
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+
+      if (avgEntityWeight > 0) {
+        // Genuine or likely interest — boost category, scaled by quality × recency
+        banditState[cat].alpha += Math.max(0.1, avgEntityWeight * recencyWeight);
+      } else {
+        // Curiosity or negative — this engagement was misleading
+        // Don't boost category, slightly penalize it
+        banditState[cat].beta += 0.3 * recencyWeight;
+      }
+
+      // Entity bandit: update with signal quality
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
+        const quality = entitySignalQuality[t]?.weight || 0.3;
+        if (quality > 0) {
+          entityBanditState[t].alpha += quality * recencyWeight;
+        } else {
+          // Curiosity/negative entity — penalize despite engagement
+          entityBanditState[t].beta += Math.abs(quality) * recencyWeight;
+        }
+      }
+    }
+
+    // Process skips — always honest signal, with recency
+    for (let i = 0; i < sessionSkippedIds.length; i++) {
+      const id = sessionSkippedIds[i];
+      const art = articleMap[id];
+      if (!art) continue;
+
+      const position = i / Math.max(sessionSkippedIds.length - 1, 1);
+      const recencyWeight = 0.5 + position;
+
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+      banditState[cat].beta += 1.0 * recencyWeight;
+
+      const tags = safeJsonParse(art.interest_tags, []);
+      for (const tag of tags) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
+        entityBanditState[t].beta += 1.0 * recencyWeight;
+      }
+    }
+
+    // Entity bandit scoring with quality-aware multiplier
     function entityBanditMultiplier(article) {
       const tags = safeJsonParse(article.interest_tags, []);
-      let totalRate = 0;
+      let totalWeight = 0;
       let count = 0;
       for (const tag of tags) {
         const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
         const state = entityBanditState[t];
+        const quality = entitySignalQuality[t];
+
         if (state && (state.alpha + state.beta) > 2) {
-          totalRate += state.alpha / (state.alpha + state.beta);
+          const rate = state.alpha / (state.alpha + state.beta);
+          // If entity was identified as curiosity, cap its positive influence
+          if (quality && quality.signal === 'curiosity') {
+            totalWeight += Math.min(rate, 0.3); // cap curiosity entities at 0.3
+          } else {
+            totalWeight += rate;
+          }
           count++;
         }
       }
-      if (count === 0) return 1.0; // no data → neutral
-      const avgRate = totalRate / count;
-      // Engaged entities get up to 1.5x, skipped entities get down to 0.5x
-      return 0.5 + avgRate;
+      if (count === 0) return 1.0;
+      const avgRate = totalWeight / count;
+      return 0.4 + avgRate * 1.2; // range: 0.4 (all negative) to 1.6 (all genuine)
     }
 
     // Apply entity bandit multiplier to pool scores
