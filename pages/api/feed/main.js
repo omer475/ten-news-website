@@ -1694,17 +1694,78 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (count >= 3) entityBlocklist.add(entity);
     }
 
-    // Filter blocked entities out of category pools and penalize categories
+    // Stricter blocking: check primary tags (first 2), co-occurrence (2+ blocked), AND title
+    function isBlockedByEntity(article) {
+      if (entityBlocklist.size === 0) return false;
+      const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+      // Primary tags (first 2) are the main topic — if blocked, article is blocked
+      const primaryTags = tags.slice(0, 2);
+      if (primaryTags.some(t => entityBlocklist.has(t))) return true;
+      // 2+ blocked tags = article is substantially about blocked content
+      const blockedCount = tags.filter(t => entityBlocklist.has(t)).length;
+      if (blockedCount >= 2) return true;
+      // Title check — if blocked entity appears in headline, article is about it
+      const titleLower = (article.title_news || '').toLowerCase();
+      for (const blocked of entityBlocklist) {
+        if (titleLower.includes(blocked)) return true;
+      }
+      return false;
+    }
+
+    // Filter blocked articles from category pools and penalize categories
     for (const [cat, pool] of Object.entries(categoryPools)) {
       const beforeLen = pool.length;
-      categoryPools[cat] = pool.filter(a => {
-        const tags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
-        return !tags.some(t => entityBlocklist.has(t));
-      });
+      categoryPools[cat] = pool.filter(a => !isBlockedByEntity(a));
       const removedRatio = beforeLen > 0 ? (beforeLen - categoryPools[cat].length) / beforeLen : 0;
-      // If >50% of pool was blocked content, this category is mostly unwanted
-      // Store the penalty — will apply to bandit state below
       categoryPools[cat]._blockPenalty = removedRatio > 0.5 ? 5 : removedRatio > 0.3 ? 3 : removedRatio > 0.1 ? 1 : 0;
+    }
+
+    // ── Fix 9: Global pool topic cap (15%) ──
+    // Prevent any single topic from dominating the entire candidate pool
+    const GLOBAL_MAX_TOPIC_SHARE = 0.15;
+    const globalTopicCounts = {};
+    let globalPoolSize = 0;
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      for (const a of pool) {
+        const tags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+        // Count primary tags (first 2) for topic dominance
+        for (const t of tags.slice(0, 2)) {
+          if (!BROAD_TAGS.has(t)) {
+            globalTopicCounts[t] = (globalTopicCounts[t] || 0) + 1;
+          }
+        }
+        globalPoolSize++;
+      }
+    }
+
+    // Trim dominant topics to 15% of pool
+    for (const [topic, count] of Object.entries(globalTopicCounts)) {
+      const maxAllowed = Math.max(6, Math.floor(globalPoolSize * GLOBAL_MAX_TOPIC_SHARE));
+      if (count <= maxAllowed) continue;
+
+      let toRemove = count - maxAllowed;
+      // Remove lowest-scored articles with this topic, across all pools
+      const candidates = [];
+      for (const [cat, pool] of Object.entries(categoryPools)) {
+        for (let i = 0; i < pool.length; i++) {
+          const tags = safeJsonParse(pool[i].interest_tags, []).map(t => t.toLowerCase());
+          if (tags.slice(0, 2).includes(topic)) {
+            candidates.push({ cat, idx: i, score: pool[i]._score || pool[i].ai_final_score || 0 });
+          }
+        }
+      }
+      // Sort by score ascending (remove worst first)
+      candidates.sort((a, b) => a.score - b.score);
+      const removeSet = new Set();
+      for (const c of candidates) {
+        if (toRemove <= 0) break;
+        removeSet.add(`${c.cat}_${c.idx}`);
+        toRemove--;
+      }
+      // Apply removals (reverse index order to avoid shifting)
+      for (const [cat, pool] of Object.entries(categoryPools)) {
+        categoryPools[cat] = pool.filter((a, i) => !removeSet.has(`${cat}_${i}`));
+      }
     }
 
     // ── Fix 4: Category + Entity level bandit state ──
