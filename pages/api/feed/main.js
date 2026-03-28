@@ -1448,10 +1448,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     // fetch top N per SUBTOPIC within each category.
     // Guarantees niche content (K-Drama, Cricket, etc.) exists in pool.
     const pageNum = Math.floor(seenArticleIds.length / limit) + 1;
-    // Use 7-day window with decay curves instead of binary 48h cutoff
-    const catTimeWindow = sevenDaysAgo;
+    const pageNum2 = Math.floor(seenArticleIds.length / limit) + 1;
+    const catTimeWindow = pageNum2 >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
     const catFallbackWindow = sevenDaysAgo;
-    const catScoreThreshold = 250;
+    const catScoreThreshold = 300;
 
     const SUBTOPIC_MAP = {
       'Entertainment': [
@@ -1539,7 +1539,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .gte('created_at', catTimeWindow)
           .gte('ai_final_score', catScoreThreshold)
           .order('ai_final_score', { ascending: false })
-          .limit(80)  // increased from 30 — wider funnel with decay handling relevance
+          .limit(30)
       );
       promiseMeta.push({ cat, subtopic: 'general', tags: [], limit: 30, isFallback: false });
     }
@@ -1553,7 +1553,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('created_at', catTimeWindow)
         .gte('ai_final_score', catScoreThreshold)
         .order('ai_final_score', { ascending: false })
-        .limit(80) // wider pool — decay curves handle relevance over time
+        .limit(60)
     );
     const generalResults = await Promise.all(generalPromises);
 
@@ -1623,7 +1623,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
         // Fill remaining slots with general articles not yet used
         for (const a of allArticles_cat) {
-          if (poolArticles.length >= 60) break;
+          if (poolArticles.length >= 30) break;
           if (!usedIds.has(a.id)) {
             usedIds.add(a.id);
             poolArticles.push(a);
