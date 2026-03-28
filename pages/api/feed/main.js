@@ -647,6 +647,7 @@ export default async function handler(req, res) {
 
     // Session signals from client (real-time skip/engage tracking)
     const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
+    const sessionGlancedIds = req.query.glanced_ids ? req.query.glanced_ids.split(',').map(Number).filter(Boolean) : [];
     const sessionSkippedIds = req.query.skipped_ids ? req.query.skipped_ids.split(',').map(Number).filter(Boolean) : [];
     // Client-sent seen IDs for dedup (prevents repeats even for guests without server events)
     const clientSeenIds = req.query.seen_ids ? req.query.seen_ids.split(',').map(Number).filter(Boolean) : [];
@@ -812,8 +813,10 @@ export default async function handler(req, res) {
       storedTagProfile,
       seenArticleIds,
       sessionEngagedIds,
+      sessionGlancedIds,
       sessionSkippedIds,
       personalizationId,
+      usedTempTasteVector: false,
       limit,
       offset,
     });
@@ -833,8 +836,10 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, personalizationId, limit, offset } = opts;
+        sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
+        personalizationId, usedTempTasteVector, limit, offset } = opts;
   sessionEngagedIds = sessionEngagedIds || [];
+  sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
@@ -855,11 +860,74 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
-  // For cold-start users without any embedding data, skip the personal query
-  // entirely — V2 will fill the feed with trending + discovery articles.
-  // IMPROVEMENT 1: Deeper pages request more candidates
-  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
-  const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
+  // CHANGE 1: If cold-start user has 3+ engaged articles, build temp taste vector
+  // and switch from bandit to pgvector path mid-session.
+  let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
+  if (!usedTempTasteVector) usedTempTasteVector = false;
+
+  if (!hasAnyPersonalization && sessionEngagedIds.length >= 3) {
+    // Fetch MiniLM embeddings for engaged articles
+    const { data: engagedEmbData } = await supabase
+      .from('published_articles')
+      .select('id, embedding_minilm')
+      .in('id', sessionEngagedIds.slice(-20)); // last 20 engaged
+
+    if (engagedEmbData && engagedEmbData.length >= 3) {
+      const validEmbs = engagedEmbData
+        .map(a => safeJsonParse(a.embedding_minilm, null))
+        .filter(e => e && Array.isArray(e) && e.length === 384);
+
+      if (validEmbs.length >= 3) {
+        // Check if interests are scattered (max pairwise cosine < 0.3)
+        let maxPairwiseSim = 0;
+        for (let i = 0; i < Math.min(validEmbs.length, 5); i++) {
+          for (let j = i + 1; j < Math.min(validEmbs.length, 5); j++) {
+            const sim = cosineSimilarityVec(validEmbs[i], validEmbs[j]);
+            maxPairwiseSim = Math.max(maxPairwiseSim, sim);
+          }
+        }
+
+        if (maxPairwiseSim >= 0.3) {
+          // Interests are focused enough — compute weighted average as temp taste vector
+          const DIM = 384;
+          const tempVec = new Array(DIM).fill(0);
+          for (const emb of validEmbs) {
+            for (let d = 0; d < DIM; d++) tempVec[d] += emb[d];
+          }
+          for (let d = 0; d < DIM; d++) tempVec[d] /= validEmbs.length;
+
+          // Also subtract skipped article embeddings with -0.5 weight
+          if (sessionSkippedIds.length > 0) {
+            const { data: skipEmbData } = await supabase
+              .from('published_articles')
+              .select('id, embedding_minilm')
+              .in('id', sessionSkippedIds.slice(-15));
+            if (skipEmbData) {
+              const skipEmbs = skipEmbData
+                .map(a => safeJsonParse(a.embedding_minilm, null))
+                .filter(e => e && Array.isArray(e) && e.length === 384);
+              for (const emb of skipEmbs) {
+                for (let d = 0; d < DIM; d++) tempVec[d] -= 0.15 * emb[d] / Math.max(skipEmbs.length, 1);
+              }
+            }
+          }
+
+          // Normalize
+          let norm = 0;
+          for (let d = 0; d < DIM; d++) norm += tempVec[d] * tempVec[d];
+          norm = Math.sqrt(norm);
+          if (norm > 0) for (let d = 0; d < DIM; d++) tempVec[d] /= norm;
+
+          tasteVectorMinilm = tempVec;
+          hasAnyPersonalization = true;
+          usedTempTasteVector = true;
+        }
+        // If scattered (maxPairwiseSim < 0.3), stay on bandit path
+      }
+    }
+  }
+
+  const personalMatchCount = Math.min(150 + offset, 400);
   let personalPromise;
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
@@ -1666,9 +1734,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // ── Fix 8: Session entity blocklist (negative preference) ──
-    // If user skipped 3+ articles with the same specific entity, HARD BLOCK it.
-    // Broad category words (politics, sports, etc.) are never blocked.
+    // ── Change 3: Soft entity blocklist with skip severity ──
+    // Hard block only when penalty > 0.80 AND weightedSkips >= 4
+    // Soft penalties reduce entity scoring smoothly
     const BROAD_TAGS = new Set([
       'politics', 'sports', 'business', 'technology', 'health', 'science',
       'entertainment', 'world', 'finance', 'energy', 'military', 'economy',
@@ -1676,35 +1744,39 @@ async function handleV2Feed(req, res, supabase, opts) {
       'investigation', 'opinion', 'editorial', 'lifestyle', 'culture',
     ]);
 
+    // Build soft blocklist from entity penalties (computed later in entity scoring)
+    // For now, build hard blocklist from raw skip counts as safety net
     const entitySkipCounts = {};
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
-        if (!BROAD_TAGS.has(t)) {
-          entitySkipCounts[t] = (entitySkipCounts[t] || 0) + 1;
-        }
+        if (!BROAD_TAGS.has(t)) entitySkipCounts[t] = (entitySkipCounts[t] || 0) + 1;
+      }
+    }
+    // Also count glanced articles — they REDUCE the skip penalty (Change 2)
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (!BROAD_TAGS.has(t)) entitySkipCounts[t] = (entitySkipCounts[t] || 0) - 0.3; // partial offset
       }
     }
 
     const entityBlocklist = new Set();
     for (const [entity, count] of Object.entries(entitySkipCounts)) {
-      if (count >= 3) entityBlocklist.add(entity);
+      if (count >= 4) entityBlocklist.add(entity); // raised from 3 to 4, softer threshold
     }
 
-    // Stricter blocking: check primary tags (first 2), co-occurrence (2+ blocked), AND title
     function isBlockedByEntity(article) {
       if (entityBlocklist.size === 0) return false;
       const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
-      // Primary tags (first 2) are the main topic — if blocked, article is blocked
       const primaryTags = tags.slice(0, 2);
       if (primaryTags.some(t => entityBlocklist.has(t))) return true;
-      // 2+ blocked tags = article is substantially about blocked content
       const blockedCount = tags.filter(t => entityBlocklist.has(t)).length;
       if (blockedCount >= 2) return true;
-      // Title check — if blocked entity appears in headline, article is about it
       const titleLower = (article.title_news || '').toLowerCase();
       for (const blocked of entityBlocklist) {
         if (titleLower.includes(blocked)) return true;
@@ -1769,13 +1841,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // V20: UNIFIED ENTITY SCORING
-    // ONE formula replaces: consistency gate, context pairs, retroactive
-    // penalty, page-aware scaling, volume-aware thresholds.
-    // Signal = engagement rate × confidence (smooth, no hard thresholds)
+    // ══════════════════════════════════════════════════════════════
+    // V21: UNIFIED ENTITY SCORING + GLANCE SIGNALS + SKIP SEVERITY
+    // Changes 2+3: glanced_ids count as 0.3 positive, skip severity differentiated
     // ══════════════════════════════════════════════════════════════
 
-    // Step 1: Compute per-entity engagement rate + confidence
+    // Step 1: Compute per-entity weighted engagement rate
+    // engaged=1.0, glanced=0.3, skipped=0 (counted as exposure only)
     const entityStats = {};
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
@@ -1783,8 +1855,20 @@ async function handleV2Feed(req, res, supabase, opts) {
       for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
-        if (!entityStats[t]) entityStats[t] = { engaged: 0, shown: 0 };
-        entityStats[t].engaged++;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].weightedEng += 1.0;
+        entityStats[t].shown++;
+      }
+    }
+    // Change 2: Glanced articles = 0.3 positive signal
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].weightedEng += 0.3;
         entityStats[t].shown++;
       }
     }
@@ -1794,29 +1878,31 @@ async function handleV2Feed(req, res, supabase, opts) {
       for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
-        if (!entityStats[t]) entityStats[t] = { engaged: 0, shown: 0 };
-        entityStats[t].shown++;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].shown++; // exposure only, no positive weight
       }
     }
 
-    // The unified score: neutral (0.5) adjusted toward actual rate by confidence
-    // confidence = 1 - 1/(1+shown) → smooth: 0.50 at 1, 0.67 at 2, 0.83 at 5, 0.95 at 20
-    // No hard thresholds. Niche entities (few exposures) get mild signals.
-    // High-volume entities (many exposures) get strong signals.
+    // Unified score with weighted engagement rate
     const entityScores = {};
     for (const [entity, stats] of Object.entries(entityStats)) {
       if (stats.shown === 0) continue;
-      const rate = stats.engaged / stats.shown;
+      const rate = stats.weightedEng / stats.shown;
       const confidence = 1 - (1 / (1 + stats.shown));
       entityScores[entity] = 0.5 + (rate - 0.5) * confidence;
-      // shown=1, rate=1.0 → 0.75 (mild boost)
-      // shown=5, rate=1.0 → 0.92 (strong boost)
-      // shown=10, rate=0.2 → 0.23 (strong penalty)
-      // shown=2, rate=0.5 → 0.50 (neutral)
-      // shown=15, rate=0.47 → 0.47 (mild negative — Jake's Iran)
     }
 
-    // Step 2: Category bandit — simple engagement/skip counting
+    // Change 3: Soft entity blocklist (replaces hard 3-skip block)
+    // entityPenalty = weightedSkips / (weightedSkips + weightedEngages + 1)
+    // Hard block only when penalty > 0.80 AND weightedSkips >= 4
+    const entityPenalties = {};
+    for (const [entity, stats] of Object.entries(entityStats)) {
+      const weightedSkips = stats.shown - stats.weightedEng; // skips+partial_glances
+      const penalty = weightedSkips / (weightedSkips + stats.weightedEng + 1);
+      entityPenalties[entity] = { penalty, weightedSkips, hardBlock: penalty > 0.80 && weightedSkips >= 4 };
+    }
+
+    // Step 2: Category bandit with glance support
     const banditState = {};
     for (const cat of Object.keys(categoryPools)) {
       banditState[cat] = { alpha: 1, beta: 1 };
@@ -1830,6 +1916,14 @@ async function handleV2Feed(req, res, supabase, opts) {
       const cat = art.category || 'Other';
       if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
       banditState[cat].alpha += 2;
+    }
+    // Change 2: glanced articles = alpha += 0.3 (weak positive)
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+      banditState[cat].alpha += 0.3;
     }
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
