@@ -860,72 +860,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
-  // CHANGE 1: If cold-start user has 3+ engaged articles, build temp taste vector
-  // and switch from bandit to pgvector path mid-session.
+  // NOTE: Change 1 (temp taste vector) disabled — causes 504 timeouts
+  // on Vercel due to extra embedding fetches. Needs optimization before re-enabling.
   let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
-  if (!usedTempTasteVector) usedTempTasteVector = false;
-
-  if (!hasAnyPersonalization && sessionEngagedIds.length >= 3) {
-    // Fetch MiniLM embeddings for engaged articles
-    const { data: engagedEmbData } = await supabase
-      .from('published_articles')
-      .select('id, embedding_minilm')
-      .in('id', sessionEngagedIds.slice(-20)); // last 20 engaged
-
-    if (engagedEmbData && engagedEmbData.length >= 3) {
-      const validEmbs = engagedEmbData
-        .map(a => safeJsonParse(a.embedding_minilm, null))
-        .filter(e => e && Array.isArray(e) && e.length === 384);
-
-      if (validEmbs.length >= 3) {
-        // Check if interests are scattered (max pairwise cosine < 0.3)
-        let maxPairwiseSim = 0;
-        for (let i = 0; i < Math.min(validEmbs.length, 5); i++) {
-          for (let j = i + 1; j < Math.min(validEmbs.length, 5); j++) {
-            const sim = cosineSimilarityVec(validEmbs[i], validEmbs[j]);
-            maxPairwiseSim = Math.max(maxPairwiseSim, sim);
-          }
-        }
-
-        if (maxPairwiseSim >= 0.3) {
-          // Interests are focused enough — compute weighted average as temp taste vector
-          const DIM = 384;
-          const tempVec = new Array(DIM).fill(0);
-          for (const emb of validEmbs) {
-            for (let d = 0; d < DIM; d++) tempVec[d] += emb[d];
-          }
-          for (let d = 0; d < DIM; d++) tempVec[d] /= validEmbs.length;
-
-          // Also subtract skipped article embeddings with -0.5 weight
-          if (sessionSkippedIds.length > 0) {
-            const { data: skipEmbData } = await supabase
-              .from('published_articles')
-              .select('id, embedding_minilm')
-              .in('id', sessionSkippedIds.slice(-15));
-            if (skipEmbData) {
-              const skipEmbs = skipEmbData
-                .map(a => safeJsonParse(a.embedding_minilm, null))
-                .filter(e => e && Array.isArray(e) && e.length === 384);
-              for (const emb of skipEmbs) {
-                for (let d = 0; d < DIM; d++) tempVec[d] -= 0.15 * emb[d] / Math.max(skipEmbs.length, 1);
-              }
-            }
-          }
-
-          // Normalize
-          let norm = 0;
-          for (let d = 0; d < DIM; d++) norm += tempVec[d] * tempVec[d];
-          norm = Math.sqrt(norm);
-          if (norm > 0) for (let d = 0; d < DIM; d++) tempVec[d] /= norm;
-
-          tasteVectorMinilm = tempVec;
-          hasAnyPersonalization = true;
-          usedTempTasteVector = true;
-        }
-        // If scattered (maxPairwiseSim < 0.3), stay on bandit path
-      }
-    }
-  }
 
   const personalMatchCount = Math.min(150 + offset, 400);
   let personalPromise;
