@@ -199,68 +199,22 @@ function formatArticle(article, eventMap = {}) {
 }
 
 // ==========================================
-// CONTENT-TYPE DECAY (replaces binary shelf life)
-// Continuous decay curves instead of alive/dead.
-// Content types: breaking, developing, analysis, evergreen, timeless
-// A 4-day-old NASA deep-dive is still valuable at 0.4 multiplier.
+// RECENCY DECAY (shelf-life-aware)
+// Articles decay relative to their own shelf_life_days.
+// Breaking news (1-2d) dies fast. Evergreen (30-90d) stays discoverable.
 // ==========================================
 
-// Infer content type from category + score + shelf_life_days
-function inferContentType(category, aiScore, shelfLifeDays) {
-  // If shelf_life_days is explicitly set, use it as a hint
-  if (shelfLifeDays && shelfLifeDays <= 2) return 'breaking';
-  if (shelfLifeDays && shelfLifeDays >= 14) return 'evergreen';
-
-  // Otherwise infer from category + score
-  const cat = (category || '').toLowerCase();
-  if (cat === 'world' || cat === 'politics') {
-    if (aiScore >= 900) return 'breaking';    // high-score world = breaking event
-    return 'developing';                       // normal politics = developing story
-  }
-  if (cat === 'sports') return 'breaking';     // sports results expire fast
-  if (cat === 'finance') return 'developing';  // market moves = developing
-  if (cat === 'business') return 'developing';
-  if (cat === 'tech') return 'analysis';       // tech coverage = analysis
-  if (cat === 'science') return 'evergreen';   // science doesn't expire fast
-  if (cat === 'health') return 'evergreen';    // health info stays relevant
-  if (cat === 'entertainment') return 'analysis'; // reviews, profiles
-  if (cat === 'lifestyle') return 'timeless';  // lifestyle/how-to
-  return 'developing'; // default
-}
-
-// Decay curves: returns 0.0-1.0 multiplier based on content type and age
-function decayMultiplier(contentType, ageHours) {
-  switch (contentType) {
-    case 'breaking':
-      // Aggressive: 1.0 → 0.5 at 6h → 0.2 at 12h → 0.05 at 24h
-      return Math.max(0.02, Math.exp(-0.12 * ageHours));
-
-    case 'developing':
-      // Moderate: 1.0 → 0.7 at 24h → 0.4 at 48h → 0.15 at 72h
-      return Math.max(0.02, Math.exp(-0.015 * ageHours));
-
-    case 'analysis':
-      // Slow: 1.0 → 0.85 at 24h → 0.65 at 48h → 0.4 at 72h → 0.2 at 7d
-      return Math.max(0.02, Math.exp(-0.01 * ageHours));
-
-    case 'evergreen':
-      // Very slow: 1.0 → 0.9 at 24h → 0.75 at 72h → 0.5 at 7d → 0.25 at 14d
-      return Math.max(0.02, Math.exp(-0.004 * ageHours));
-
-    case 'timeless':
-      // Minimal: 1.0 → 0.95 at 48h → 0.85 at 7d → 0.6 at 30d
-      return Math.max(0.02, Math.exp(-0.001 * ageHours));
-
-    default:
-      return Math.max(0.02, Math.exp(-0.015 * ageHours)); // developing default
-  }
-}
-
-// Combined decay function — replaces getRecencyDecay everywhere
-function getRecencyDecay(createdAt, category, shelfLifeDays, aiScore) {
+function getRecencyDecay(createdAt, category, shelfLifeDays) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
-  const contentType = inferContentType(category, aiScore || 0, shelfLifeDays);
-  return decayMultiplier(contentType, ageHours);
+  const shelfLifeHours = (shelfLifeDays || 7) * 24;
+  const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
+  // Blend: 90% freshness decay, 10% baseline.
+  // Aggressive decay ensures stale articles don't dominate the feed.
+  // shelf_life_days handles per-vertical tuning:
+  //   Breaking news (1-2d): dies fast after ~12h
+  //   Explainers (14-30d): gradual decline over weeks
+  //   Evergreen (60d+): stays discoverable but heavily penalized after shelf life
+  return freshnessMultiplier * 0.9 + 0.1;
 }
 
 // ==========================================
@@ -413,7 +367,7 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 
 function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
   const tags = safeJsonParse(article.interest_tags, []);
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.ai_final_score);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   const aiScore = article.ai_final_score || 0;
   const n = Math.max(tags.length, 1);
 
@@ -494,12 +448,12 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
 }
 
 function scoreTrendingV3(article) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.ai_final_score);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   return (article.ai_final_score || 0) * recency;
 }
 
 function scoreDiscoveryV3(article, personalCategories) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.ai_final_score);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
   // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   // Random factor for variable reward (surprise element)
@@ -650,13 +604,6 @@ function calculateTagScore(article, userPrefs) {
 // ==========================================
 // COLUMNS TO SELECT (not SELECT *)
 // ==========================================
-
-// Light columns for pool construction (no heavy JSONB fields like embeddings, map, graph)
-const POOL_COLUMNS = [
-  'id', 'title_news', 'category', 'created_at', 'published_at',
-  'ai_final_score', 'interest_tags', 'cluster_id',
-  'shelf_life_days', 'freshness_category',
-].join(', ');
 
 const ARTICLE_COLUMNS = [
   'id', 'title_news', 'url', 'source', 'category', 'emoji',
@@ -1285,7 +1232,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.ai_final_score),
+        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
@@ -1448,10 +1395,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     // fetch top N per SUBTOPIC within each category.
     // Guarantees niche content (K-Drama, Cricket, etc.) exists in pool.
     const pageNum = Math.floor(seenArticleIds.length / limit) + 1;
-    const pageNum2 = Math.floor(seenArticleIds.length / limit) + 1;
-    const catTimeWindow = pageNum2 >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
-    const catFallbackWindow = sevenDaysAgo;
-    const catScoreThreshold = 300;
+    const catTimeWindow = pageNum >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
+    const catFallbackWindow = sevenDaysAgo; // expanded window for empty subtopics
+    const catScoreThreshold = pageNum >= 3 ? 200 : 300;
 
     const SUBTOPIC_MAP = {
       'Entertainment': [
@@ -1518,7 +1464,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         for (const st of subtopics) {
           // Primary: tag-filtered query for this subtopic
           allSubtopicPromises.push(
-            supabase.from('published_articles').select(POOL_COLUMNS)
+            supabase.from('published_articles').select(ARTICLE_COLUMNS)
               .eq('category', cat)
               .gte('created_at', catTimeWindow)
               .gte('ai_final_score', catScoreThreshold)
@@ -1534,7 +1480,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
       // Always fetch a general pool for this category (catches articles that don't match subtopics)
       allSubtopicPromises.push(
-        supabase.from('published_articles').select(POOL_COLUMNS)
+        supabase.from('published_articles').select(ARTICLE_COLUMNS)
           .eq('category', cat)
           .gte('created_at', catTimeWindow)
           .gte('ai_final_score', catScoreThreshold)
@@ -1548,12 +1494,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     // per category and then partition client-side by subtopic tags
     const catGeneralResults = {};
     const generalPromises = ALL_CATEGORIES.map(cat =>
-      supabase.from('published_articles').select(POOL_COLUMNS)
+      supabase.from('published_articles').select(ARTICLE_COLUMNS)
         .eq('category', cat)
         .gte('created_at', catTimeWindow)
         .gte('ai_final_score', catScoreThreshold)
         .order('ai_final_score', { ascending: false })
-        .limit(60)
+        .limit(60) // fetch more to have subtopic variety
     );
     const generalResults = await Promise.all(generalPromises);
 
@@ -1594,7 +1540,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           // If empty in 48h, try 7-day fallback for this subtopic
           if (picked.length === 0) {
             const { data: fallbackData } = await supabase.from('published_articles')
-              .select(POOL_COLUMNS)
+              .select(ARTICLE_COLUMNS)
               .eq('category', cat)
               .gte('created_at', catFallbackWindow)
               .gte('ai_final_score', 200)
@@ -1648,7 +1594,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const normalizedWithinCat = (raw - catMin) / catRange;
         const normalizedGlobal = raw / globalMaxScore;
         const blendedScore = 0.7 * normalizedWithinCat + 0.3 * normalizedGlobal;
-        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days, a.ai_final_score);
+        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
         return { ...a, _score: blendedScore * recency * 1000, _bucket: 'bandit' };
       }).sort((a, b) => b._score - a._score);
 
@@ -2116,9 +2062,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   enforceConsecutiveLimit(selected, 2);
 
   // ==========================================
-  // PHASE 8: FETCH FULL ARTICLE DATA + FORMAT & RESPOND
-  // Cold-start pool articles only have POOL_COLUMNS (lightweight).
-  // Now fetch ARTICLE_COLUMNS for the ~20 selected articles only.
+  // PHASE 8: FORMAT & RESPOND
   // ==========================================
 
   if (selected.length === 0) {
@@ -2126,30 +2070,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const pageIds = selected.map(a => a.id);
-
-  // Fetch full article data for selected articles (only if missing fields)
-  if (selected[0] && !selected[0].url) {
-    // Pool articles — need full data
-    const { data: fullArticles } = await supabase
-      .from('published_articles')
-      .select(ARTICLE_COLUMNS)
-      .in('id', pageIds);
-    if (fullArticles) {
-      const fullMap = {};
-      for (const a of fullArticles) fullMap[a.id] = a;
-      for (let i = 0; i < selected.length; i++) {
-        const full = fullMap[selected[i].id];
-        if (full) {
-          const bucket = selected[i].bucket;
-          const score = selected[i]._score;
-          Object.assign(selected[i], full);
-          selected[i].bucket = bucket;
-          selected[i]._score = score;
-        }
-      }
-    }
-  }
-
   // Re-use the candidate event map we already fetched (no duplicate query)
   const eventMap = candidateEventMap;
 
