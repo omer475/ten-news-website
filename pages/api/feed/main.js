@@ -1769,21 +1769,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     // ══════════════════════════════════════════════════════════════
-    // V18: SIGNAL QUALITY ANALYSIS (anti-curiosity-pollution)
-    // 4 mechanisms: consistency gate, skip-after-serve penalty,
-    // signal-quality-weighted bandit, recency decay
+    // V19: SIGNAL QUALITY ANALYSIS
+    // V18 mechanisms + 3 new fixes:
+    //   Fix A: Context pairs — "oil+climate" vs "oil+iran" disambiguation
+    //   Fix B: Volume-aware thresholds — niche entities trusted faster
+    //   Fix C: Page-aware entity influence — category drives P1-2, entity drives P3+
     // ══════════════════════════════════════════════════════════════
 
-    // Step 1: Build per-entity engagement/skip counts
-    const entityExposures = {}; // { entity: { engaged: count, skipped: count } }
-    const engagedSet = new Set(sessionEngagedIds);
-    const skippedSet = new Set(sessionSkippedIds);
+    // Detect page number for entity influence scaling (Fix C)
+    const effectivePageNum = Math.floor(seenArticleIds.length / limit) + 1;
+    // Pages 1-2: entity influence 20%, Pages 3+: entity influence 60%
+    const entityInfluence = effectivePageNum <= 2 ? 0.2 : 0.6;
 
+    // Step 1: Build per-entity engagement/skip counts
+    const entityExposures = {};
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
         if (!entityExposures[t]) entityExposures[t] = { engaged: 0, skipped: 0 };
@@ -1793,8 +1796,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
         if (!entityExposures[t]) entityExposures[t] = { engaged: 0, skipped: 0 };
@@ -1802,32 +1804,66 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Step 2: Consistency gate + skip-after-serve → signal quality per entity
+    // Step 1b (Fix A): Build TAG PAIR engagement data for context disambiguation
+    const pairEngaged = {};
+    const pairTotal = {};
+    for (const id of [...sessionEngagedIds, ...sessionSkippedIds]) {
+      const art = articleMap[id];
+      if (!art) continue;
+      const tags = safeJsonParse(art.interest_tags, []).map(t => t.toLowerCase()).filter(t => !BROAD_TAGS.has(t));
+      const wasEngaged = sessionEngagedIds.includes(id);
+      // Generate tag pairs (first 5 tags only to limit computation)
+      for (let i = 0; i < Math.min(tags.length, 5); i++) {
+        for (let j = i + 1; j < Math.min(tags.length, 5); j++) {
+          const pair = [tags[i], tags[j]].sort().join('|');
+          pairTotal[pair] = (pairTotal[pair] || 0) + 1;
+          if (wasEngaged) pairEngaged[pair] = (pairEngaged[pair] || 0) + 1;
+        }
+      }
+    }
+
+    // Step 2: Consistency gate with VOLUME-AWARE thresholds (Fix B)
     const entitySignalQuality = {};
     for (const [entity, exp] of Object.entries(entityExposures)) {
       const total = exp.engaged + exp.skipped;
-      if (total < 2) {
-        // Too few exposures — don't trust the signal yet
-        entitySignalQuality[entity] = { signal: 'insufficient', weight: 0.3 };
-        continue;
-      }
-      const engRate = exp.engaged / total;
+      const engRate = total > 0 ? exp.engaged / total : 0;
 
-      // Skip-after-serve detection: entity was engaged AND skipped multiple times
-      // This pattern means: user clicked once (curiosity) then rejected when shown more
+      // Fix B: Check if this entity is niche or high-volume in the pool
+      const poolFreq = entityFreqInPoolShared[entity] || 0;
+      const isNiche = poolFreq < 15;
+
       const hasSkipAfterServe = exp.engaged >= 1 && exp.skipped >= 2 && engRate < 0.6;
 
-      if (engRate >= 0.6 && exp.engaged >= 3) {
-        entitySignalQuality[entity] = { signal: 'genuine_interest', weight: 2.0 };
-      } else if (engRate >= 0.5 && exp.engaged >= 2 && !hasSkipAfterServe) {
-        entitySignalQuality[entity] = { signal: 'likely_interest', weight: 1.5 };
-      } else if (hasSkipAfterServe) {
-        // Engaged then rejected when shown more = curiosity
-        entitySignalQuality[entity] = { signal: 'curiosity', weight: -1.0 };
-      } else if (engRate < 0.25 && exp.skipped >= 3) {
-        entitySignalQuality[entity] = { signal: 'not_interested', weight: -2.0 };
+      if (isNiche) {
+        // NICHE ENTITY: lower thresholds, higher default weight
+        if (total < 1) {
+          entitySignalQuality[entity] = { signal: 'insufficient', weight: 0.5 };
+        } else if (engRate >= 0.5 && exp.engaged >= 1) {
+          entitySignalQuality[entity] = { signal: 'genuine_interest', weight: 2.0 };
+        } else if (engRate > 0 && exp.engaged >= 1) {
+          entitySignalQuality[entity] = { signal: 'moderate', weight: 1.0 };
+        } else if (total >= 2 && exp.engaged === 0) {
+          entitySignalQuality[entity] = { signal: 'not_interested', weight: -1.0 };
+        } else {
+          entitySignalQuality[entity] = { signal: 'mixed', weight: 0.5 };
+        }
       } else {
-        entitySignalQuality[entity] = { signal: 'mixed', weight: 0.5 };
+        // HIGH-VOLUME ENTITY: stricter thresholds (V18 logic)
+        if (total < 2) {
+          entitySignalQuality[entity] = { signal: 'insufficient', weight: 0.0 };
+          continue;
+        }
+        if (engRate >= 0.6 && exp.engaged >= 3) {
+          entitySignalQuality[entity] = { signal: 'genuine_interest', weight: 2.0 };
+        } else if (engRate >= 0.5 && exp.engaged >= 2 && !hasSkipAfterServe) {
+          entitySignalQuality[entity] = { signal: 'likely_interest', weight: 1.5 };
+        } else if (hasSkipAfterServe) {
+          entitySignalQuality[entity] = { signal: 'curiosity', weight: -1.0 };
+        } else if (engRate < 0.25 && exp.skipped >= 3) {
+          entitySignalQuality[entity] = { signal: 'not_interested', weight: -2.0 };
+        } else {
+          entitySignalQuality[entity] = { signal: 'mixed', weight: 0.3 };
+        }
       }
     }
 
@@ -1840,7 +1876,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     const entityBanditState = {};
-    const totalSignals = sessionEngagedIds.length + sessionSkippedIds.length;
 
     // Process engagements with recency + quality weighting
     for (let i = 0; i < sessionEngagedIds.length; i++) {
@@ -1848,32 +1883,32 @@ async function handleV2Feed(req, res, supabase, opts) {
       const art = articleMap[id];
       if (!art) continue;
 
-      // Recency: later signals matter more (position in cumulative array)
       const position = i / Math.max(sessionEngagedIds.length - 1, 1);
-      const recencyWeight = 0.5 + position; // 0.5x for first, 1.5x for last
+      const recencyWeight = 0.5 + position;
 
-      // Signal quality: average weight of this article's entities
       const tags = safeJsonParse(art.interest_tags, []);
       const entityWeights = tags
         .map(t => entitySignalQuality[t.toLowerCase()]?.weight)
         .filter(w => w !== undefined);
       const avgEntityWeight = entityWeights.length > 0
         ? entityWeights.reduce((a, b) => a + b, 0) / entityWeights.length
-        : 0.5; // unknown entities get mild positive
+        : 0.5;
 
       const cat = art.category || 'Other';
       if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
 
-      if (avgEntityWeight > 0) {
-        // Genuine or likely interest — boost category, scaled by quality × recency
+      // Fix C: on pages 1-2, category gets full boost regardless of entity quality
+      // On pages 3+, entity quality gates the category boost
+      if (effectivePageNum <= 2) {
+        // Early pages: category bandit drives, entity barely matters
+        banditState[cat].alpha += 1.5 * recencyWeight; // flat boost for engagement
+      } else if (avgEntityWeight > 0) {
         banditState[cat].alpha += Math.max(0.1, avgEntityWeight * recencyWeight);
       } else {
-        // Curiosity or negative — this engagement was misleading
-        // Don't boost category, slightly penalize it
         banditState[cat].beta += 0.3 * recencyWeight;
       }
 
-      // Entity bandit: update with signal quality
+      // Entity bandit: update with signal quality (scaled by entityInfluence)
       for (const tag of tags) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
@@ -1882,13 +1917,12 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (quality > 0) {
           entityBanditState[t].alpha += quality * recencyWeight;
         } else {
-          // Curiosity/negative entity — penalize despite engagement
           entityBanditState[t].beta += Math.abs(quality) * recencyWeight;
         }
       }
     }
 
-    // Process skips — always honest signal, with recency
+    // Process skips with recency
     for (let i = 0; i < sessionSkippedIds.length; i++) {
       const id = sessionSkippedIds[i];
       const art = articleMap[id];
@@ -1901,8 +1935,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
       banditState[cat].beta += 1.0 * recencyWeight;
 
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
         const t = tag.toLowerCase();
         if (BROAD_TAGS.has(t)) continue;
         if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
@@ -1910,31 +1943,63 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Entity bandit scoring with quality-aware multiplier
+    // Entity bandit scoring: uses CONTEXT PAIRS (Fix A) + quality awareness
     function entityBanditMultiplier(article) {
-      const tags = safeJsonParse(article.interest_tags, []);
-      let totalWeight = 0;
-      let count = 0;
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        if (BROAD_TAGS.has(t)) continue;
-        const state = entityBanditState[t];
-        const quality = entitySignalQuality[t];
+      const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase()).filter(t => !BROAD_TAGS.has(t));
 
-        if (state && (state.alpha + state.beta) > 2) {
-          const rate = state.alpha / (state.alpha + state.beta);
-          // If entity was identified as curiosity, cap its positive influence
-          if (quality && quality.signal === 'curiosity') {
-            totalWeight += Math.min(rate, 0.3); // cap curiosity entities at 0.3
-          } else {
-            totalWeight += rate;
+      // Fix A: context pair scoring — score tag PAIRS not individual tags
+      let pairScore = 0;
+      let pairCount = 0;
+      for (let i = 0; i < Math.min(tags.length, 5); i++) {
+        for (let j = i + 1; j < Math.min(tags.length, 5); j++) {
+          const pair = [tags[i], tags[j]].sort().join('|');
+          const total = pairTotal[pair] || 0;
+          if (total >= 2) {
+            const engaged = pairEngaged[pair] || 0;
+            pairScore += engaged / total;
+            pairCount++;
           }
-          count++;
         }
       }
-      if (count === 0) return 1.0;
-      const avgRate = totalWeight / count;
-      return 0.4 + avgRate * 1.2; // range: 0.4 (all negative) to 1.6 (all genuine)
+
+      // Individual entity scoring (fallback when no pair data)
+      let entityScore = 0;
+      let entityCount = 0;
+      for (const t of tags) {
+        const state = entityBanditState[t];
+        const quality = entitySignalQuality[t];
+        if (state && (state.alpha + state.beta) > 2) {
+          const rate = state.alpha / (state.alpha + state.beta);
+          if (quality && quality.signal === 'curiosity') {
+            entityScore += Math.min(rate, 0.3);
+          } else {
+            entityScore += rate;
+          }
+          entityCount++;
+        }
+      }
+
+      // Blend pair score and entity score
+      // Fix C: entityInfluence controls how much entity scoring matters vs neutral
+      let finalScore;
+      if (pairCount >= 2) {
+        // Pair data available — use it (more accurate for context disambiguation)
+        const avgPair = pairScore / pairCount;
+        const avgEntity = entityCount > 0 ? entityScore / entityCount : 0.5;
+        finalScore = avgPair * 0.6 + avgEntity * 0.4;
+      } else if (entityCount > 0) {
+        finalScore = entityScore / entityCount;
+      } else {
+        return 1.0; // no data
+      }
+
+      // Fix C: scale entity influence by page
+      // Pages 1-2: multiplier stays close to 1.0 (entity barely affects score)
+      // Pages 3+: multiplier has full range
+      const range = entityInfluence; // 0.2 for P1-2, 0.6 for P3+
+      return (1 - range) + finalScore * range * 2;
+      // P1-2: 0.8 + score*0.4 → range [0.8, 1.2] (mild influence)
+      // P3+:  0.4 + score*1.2 → range [0.4, 1.6] (strong influence)
     }
 
     // Apply entity bandit multiplier to pool scores
