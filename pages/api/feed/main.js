@@ -1767,7 +1767,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     const entityBlocklist = new Set();
     for (const [entity, count] of Object.entries(entitySkipCounts)) {
-      if (count >= 4) entityBlocklist.add(entity); // raised from 3 to 4, softer threshold
+      if (count >= 3) entityBlocklist.add(entity); // hard threshold stays at 3
     }
 
     function isBlockedByEntity(article) {
