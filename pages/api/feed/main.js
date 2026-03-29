@@ -199,22 +199,58 @@ function formatArticle(article, eventMap = {}) {
 }
 
 // ==========================================
-// RECENCY DECAY (shelf-life-aware)
-// Articles decay relative to their own shelf_life_days.
-// Breaking news (1-2d) dies fast. Evergreen (30-90d) stays discoverable.
+// CONTENT-TYPE DECAY CURVES
+// Reads freshness_category from DB when available.
+// Falls back to category-name inference for old articles.
+// Continuous 0.0-1.0 multiplier, no binary alive/dead.
 // ==========================================
 
-function getRecencyDecay(createdAt, category, shelfLifeDays) {
+function decayMultiplier(contentType, ageHours) {
+  switch (contentType) {
+    case 'breaking':
+      // 1.0→0.5@6h→0.2@12h→0.05@24h
+      return Math.max(0.02, Math.exp(-0.115 * ageHours));
+    case 'developing':
+      // 1.0→0.7@24h→0.4@48h→0.15@72h
+      return Math.max(0.02, Math.exp(-0.015 * ageHours));
+    case 'analysis':
+      // 1.0→0.85@24h→0.65@48h→0.4@72h→0.2@7d
+      return Math.max(0.02, Math.exp(-0.0095 * ageHours));
+    case 'evergreen':
+      // 1.0→0.9@24h→0.75@72h→0.5@7d→0.25@14d
+      return Math.max(0.02, Math.exp(-0.004 * ageHours));
+    case 'timeless':
+      // 1.0→0.95@48h→0.85@7d→0.6@30d
+      return Math.max(0.02, Math.exp(-0.0007 * ageHours));
+    default:
+      return Math.max(0.02, Math.exp(-0.015 * ageHours)); // developing default
+  }
+}
+
+function inferContentType(freshnessCategory, category, shelfLifeDays) {
+  // Use DB field when populated with valid value
+  const validTypes = new Set(['breaking', 'developing', 'analysis', 'evergreen', 'timeless']);
+  if (freshnessCategory && validTypes.has(freshnessCategory)) return freshnessCategory;
+
+  // Use shelf_life_days as hint
+  if (shelfLifeDays && shelfLifeDays <= 1) return 'breaking';
+  if (shelfLifeDays && shelfLifeDays <= 3) return 'developing';
+  if (shelfLifeDays && shelfLifeDays >= 14) return 'evergreen';
+
+  // Fallback: infer from category name (for old articles with null fields)
+  const cat = (category || '').toLowerCase();
+  if (cat === 'sports') return 'breaking';
+  if (cat === 'world' || cat === 'politics' || cat === 'finance') return 'developing';
+  if (cat === 'business' || cat === 'tech' || cat === 'entertainment') return 'developing';
+  if (cat === 'science' || cat === 'health') return 'evergreen';
+  if (cat === 'lifestyle') return 'evergreen';
+  return 'developing';
+}
+
+function getRecencyDecay(createdAt, category, shelfLifeDays, freshnessCategory) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
-  const shelfLifeHours = (shelfLifeDays || 7) * 24;
-  const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
-  // Blend: 90% freshness decay, 10% baseline.
-  // Aggressive decay ensures stale articles don't dominate the feed.
-  // shelf_life_days handles per-vertical tuning:
-  //   Breaking news (1-2d): dies fast after ~12h
-  //   Explainers (14-30d): gradual decline over weeks
-  //   Evergreen (60d+): stays discoverable but heavily penalized after shelf life
-  return freshnessMultiplier * 0.9 + 0.1;
+  const contentType = inferContentType(freshnessCategory, category, shelfLifeDays);
+  return decayMultiplier(contentType, ageHours);
 }
 
 // ==========================================
@@ -367,7 +403,7 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 
 function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
   const tags = safeJsonParse(article.interest_tags, []);
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const aiScore = article.ai_final_score || 0;
   const n = Math.max(tags.length, 1);
 
@@ -448,12 +484,12 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
 }
 
 function scoreTrendingV3(article) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   return (article.ai_final_score || 0) * recency;
 }
 
 function scoreDiscoveryV3(article, personalCategories) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   // Random factor for variable reward (surprise element)
@@ -615,6 +651,13 @@ const ARTICLE_COLUMNS = [
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'embedding_minilm',
+].join(', ');
+
+// Lightweight columns for pool construction (no heavy JSONB)
+const POOL_COLUMNS = [
+  'id', 'title_news', 'category', 'created_at', 'published_at',
+  'ai_final_score', 'interest_tags', 'cluster_id',
+  'shelf_life_days', 'freshness_category',
 ].join(', ');
 
 // ==========================================
@@ -1232,7 +1275,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
+        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category),
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
@@ -1453,53 +1496,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     const categoryPools = {};
     const globalMaxScore = 1000;
 
-    // Build subtopic-diverse pools in parallel
-    const allSubtopicPromises = [];
-    const promiseMeta = []; // track which category+subtopic each promise belongs to
-
-    for (const cat of ALL_CATEGORIES) {
-      const subtopics = SUBTOPIC_MAP[cat];
-      if (subtopics) {
-        const perSubLimit = Math.max(4, Math.floor(30 / subtopics.length));
-        for (const st of subtopics) {
-          // Primary: tag-filtered query for this subtopic
-          allSubtopicPromises.push(
-            supabase.from('published_articles').select(ARTICLE_COLUMNS)
-              .eq('category', cat)
-              .gte('created_at', catTimeWindow)
-              .gte('ai_final_score', catScoreThreshold)
-              .containedBy('interest_tags', st.tags) // won't work — use textSearch workaround
-              .order('ai_final_score', { ascending: false })
-              .limit(perSubLimit)
-              // Supabase doesn't support array overlap easily, so fetch more and filter client-side
-              .then(r => r) // passthrough
-              .catch(() => ({ data: [] }))
-          );
-          promiseMeta.push({ cat, subtopic: st.name, tags: st.tags, limit: perSubLimit, isFallback: false });
-        }
-      }
-      // Always fetch a general pool for this category (catches articles that don't match subtopics)
-      allSubtopicPromises.push(
-        supabase.from('published_articles').select(ARTICLE_COLUMNS)
-          .eq('category', cat)
-          .gte('created_at', catTimeWindow)
-          .gte('ai_final_score', catScoreThreshold)
-          .order('ai_final_score', { ascending: false })
-          .limit(30)
-      );
-      promiseMeta.push({ cat, subtopic: 'general', tags: [], limit: 30, isFallback: false });
-    }
-
-    // Supabase doesn't have a good array overlap filter, so we fetch general pools
-    // per category and then partition client-side by subtopic tags
-    const catGeneralResults = {};
+    // Fetch pools per category using POOL_COLUMNS (lightweight, no embeddings)
+    // Then partition client-side by subtopic tags
     const generalPromises = ALL_CATEGORIES.map(cat =>
-      supabase.from('published_articles').select(ARTICLE_COLUMNS)
+      supabase.from('published_articles').select(POOL_COLUMNS)
         .eq('category', cat)
         .gte('created_at', catTimeWindow)
         .gte('ai_final_score', catScoreThreshold)
         .order('ai_final_score', { ascending: false })
-        .limit(60) // fetch more to have subtopic variety
+        .limit(120) // wide fetch — subtopic partitioning + decay will select the best
     );
     const generalResults = await Promise.all(generalPromises);
 
@@ -1507,9 +1512,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       const cat = ALL_CATEGORIES[ci];
       const allArticles_cat = (generalResults[ci].data || []).filter(a => {
         if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
-        const url = a?.url || '';
         const title = a?.title_news || a?.title || '';
-        return !(/test/i.test(url) || /test/i.test(title));
+        return !(/test/i.test(title));
       });
 
       if (allArticles_cat.length === 0) continue;
@@ -1519,9 +1523,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       const usedIds = new Set();
 
       if (subtopics) {
-        const perSubLimit = Math.max(4, Math.floor(30 / subtopics.length));
+        const perSubLimit = Math.max(8, Math.floor(80 / subtopics.length));
 
-        // For each subtopic, find articles whose interest_tags overlap with subtopic tags
         for (const st of subtopics) {
           const stTagSet = new Set(st.tags.map(t => t.toLowerCase()));
           const matching = allArticles_cat.filter(a => {
@@ -1537,15 +1540,15 @@ async function handleV2Feed(req, res, supabase, opts) {
 
           let picked = matching.slice(0, perSubLimit);
 
-          // If empty in 48h, try 7-day fallback for this subtopic
+          // If empty, try 7-day fallback
           if (picked.length === 0) {
             const { data: fallbackData } = await supabase.from('published_articles')
-              .select(ARTICLE_COLUMNS)
+              .select(POOL_COLUMNS)
               .eq('category', cat)
               .gte('created_at', catFallbackWindow)
               .gte('ai_final_score', 200)
               .order('ai_final_score', { ascending: false })
-              .limit(30);
+              .limit(40);
             if (fallbackData) {
               const fallbackFiltered = fallbackData.filter(a => {
                 if (usedIds.has(a.id) || seenArticleIds.includes(a.id)) return false;
@@ -1567,17 +1570,16 @@ async function handleV2Feed(req, res, supabase, opts) {
           }
         }
 
-        // Fill remaining slots with general articles not yet used
+        // Fill remaining slots with general articles
         for (const a of allArticles_cat) {
-          if (poolArticles.length >= 30) break;
+          if (poolArticles.length >= 80) break;
           if (!usedIds.has(a.id)) {
             usedIds.add(a.id);
             poolArticles.push(a);
           }
         }
       } else {
-        // No subtopic map for this category — use top 30 directly
-        for (const a of allArticles_cat.slice(0, 30)) {
+        for (const a of allArticles_cat.slice(0, 80)) {
           poolArticles.push(a);
         }
       }
@@ -1594,7 +1596,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const normalizedWithinCat = (raw - catMin) / catRange;
         const normalizedGlobal = raw / globalMaxScore;
         const blendedScore = 0.7 * normalizedWithinCat + 0.3 * normalizedGlobal;
-        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
+        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days, a.freshness_category);
         return { ...a, _score: blendedScore * recency * 1000, _bucket: 'bandit' };
       }).sort((a, b) => b._score - a._score);
 
@@ -1731,7 +1733,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // ── Fix 9: Global pool topic cap (15%) ──
     // Prevent any single topic from dominating the entire candidate pool
-    const GLOBAL_MAX_TOPIC_SHARE = 0.15;
+    const GLOBAL_MAX_TOPIC_SHARE = 0.10; // tighter cap with larger pool
     const globalTopicCounts = {};
     let globalPoolSize = 0;
     for (const [cat, pool] of Object.entries(categoryPools)) {
@@ -2070,6 +2072,29 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const pageIds = selected.map(a => a.id);
+
+  // Fetch full article data for cold-start pool articles (they only have POOL_COLUMNS)
+  if (selected[0] && !selected[0].url) {
+    const { data: fullArticles } = await supabase
+      .from('published_articles')
+      .select(ARTICLE_COLUMNS)
+      .in('id', pageIds);
+    if (fullArticles) {
+      const fullMap = {};
+      for (const a of fullArticles) fullMap[a.id] = a;
+      for (let i = 0; i < selected.length; i++) {
+        const full = fullMap[selected[i].id];
+        if (full) {
+          const bucket = selected[i].bucket;
+          const score = selected[i]._score;
+          Object.assign(selected[i], full);
+          selected[i].bucket = bucket;
+          selected[i]._score = score;
+        }
+      }
+    }
+  }
+
   // Re-use the candidate event map we already fetched (no duplicate query)
   const eventMap = candidateEventMap;
 
