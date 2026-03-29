@@ -7,6 +7,7 @@ import Foundation
 @MainActor @Observable
 final class SessionReRanker {
     private(set) var engagedIds: Set<String> = []
+    private(set) var glancedIds: Set<String> = []
     private(set) var skippedIds: Set<String> = []
     private(set) var sourceClickedIds: Set<String> = []
 
@@ -50,8 +51,16 @@ final class SessionReRanker {
             if let cat = article.category?.lowercased() {
                 interestProfile[cat] = (interestProfile[cat] ?? 0) + 0.5
             }
+        } else {
+            // 3-5s = glance — weak positive signal (0.3 weight)
+            glancedIds.insert(article.id.stringValue)
+            for tag in tags {
+                interestProfile[tag] = (interestProfile[tag] ?? 0) + 0.3
+            }
+            if let cat = article.category?.lowercased() {
+                interestProfile[cat] = (interestProfile[cat] ?? 0) + 0.15
+            }
         }
-        // 3-5s = neutral, no signal
     }
 
     /// Scroll-back = very strong positive signal (4x weight).
@@ -127,12 +136,13 @@ final class SessionReRanker {
 
     // MARK: - Session Context for Server
 
-    var sessionSignals: (engaged: [String], skipped: [String]) {
-        (Array(engagedIds.prefix(50)), Array(skippedIds.prefix(50)))
+    var sessionSignals: (engaged: [String], glanced: [String], skipped: [String]) {
+        (Array(engagedIds.prefix(50)), Array(glancedIds.prefix(50)), Array(skippedIds.prefix(50)))
     }
 
     func reset() {
         engagedIds.removeAll()
+        glancedIds.removeAll()
         skippedIds.removeAll()
         sourceClickedIds.removeAll()
         interestProfile.removeAll()

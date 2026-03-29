@@ -112,6 +112,7 @@ final class FeedViewModel {
                 preferences: currentPreferences,
                 userId: currentUserId,
                 engagedIds: signals.engaged,
+                glancedIds: signals.glanced,
                 skippedIds: signals.skipped,
                 seenIds: existingIds
             )
