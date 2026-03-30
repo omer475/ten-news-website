@@ -1310,6 +1310,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
 
   const selected = [];
+  let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
   const pPool = [...personalScored];
   const tPool = [...trendingScored];
   const dPool = [...discoveryScored];
@@ -1897,6 +1898,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       pool.sort((a, b) => b._score - a._score);
     }
 
+    // Count total bandit pool for accurate has_more calculation
+    banditPoolTotal = 0;
+    for (const pool of Object.values(categoryPools)) {
+      banditPoolTotal += (pool.length || 0);
+    }
+
     // ── Fill slots via Thompson Sampling with entity cap ──
     let banditAttempts = 0;
     while (selected.length < limit && banditAttempts < limit * 5) {
@@ -2111,8 +2118,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // IMPROVEMENT 1: True pagination — encode actual offset in cursor
-  const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  // True pagination — use bandit pool total for cold-start, scored totals for personalized
+  const totalAvailable = (typeof banditPoolTotal !== 'undefined' && banditPoolTotal > 0)
+    ? banditPoolTotal + selected.length  // bandit path: pool remaining + already selected
+    : personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
