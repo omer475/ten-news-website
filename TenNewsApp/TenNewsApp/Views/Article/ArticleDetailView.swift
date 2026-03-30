@@ -19,6 +19,9 @@ struct ArticleDetailView: View {
                 loadingView
             } else if let error = viewModel.errorMessage {
                 errorView(error)
+            } else {
+                // Fallback: show loading while waiting for .task to fire
+                loadingView
             }
         }
         .navigationTitle(article?.source ?? "Article")
