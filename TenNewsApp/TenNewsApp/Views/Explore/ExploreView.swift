@@ -351,6 +351,10 @@ struct ExploreView: View {
         var params: [String] = []
         if let uid = userId {
             params.append("user_id=\(uid)")
+        } else {
+            // Guest users: send device ID so server can identify them
+            let guestId = UserDefaults.standard.string(forKey: "guest_device_id") ?? UUID().uuidString
+            params.append("guest_device_id=\(guestId)")
         }
         let prefs = appViewModel.preferences
         if let home = prefs.homeCountry {
