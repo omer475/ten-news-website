@@ -193,9 +193,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { user_id, followed_topics: qFollowed, home_country: qHome } = req.query
-  if (!user_id) {
-    return res.status(400).json({ error: 'Missing user_id' })
+  const { user_id, guest_device_id, followed_topics: qFollowed, home_country: qHome } = req.query
+  if (!user_id && !qFollowed && !guest_device_id) {
+    return res.status(400).json({ error: 'Missing user_id or followed_topics' })
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey)
@@ -205,11 +205,15 @@ export default async function handler(req, res) {
     // 1. LOAD USER PROFILE
     // ──────────────────────────────────────────────
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('tag_profile, skip_profile, followed_topics, home_country')
-      .eq('id', user_id)
-      .single()
+    let profile = null
+    if (user_id) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('tag_profile, skip_profile, followed_topics, home_country')
+        .eq('id', user_id)
+        .single()
+      profile = data
+    }
 
     const tagProfile = profile?.tag_profile || {}
     const skipProfile = profile?.skip_profile || {}
