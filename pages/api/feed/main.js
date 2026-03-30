@@ -923,12 +923,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVectorMinilm, match_count: Math.max(personalMatchCount, 300), hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVector, match_count: Math.max(personalMatchCount, 300), hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -937,26 +937,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24h
-    // Cold-start users need more trending articles since personal pool is empty
+    // 2. TRENDING: high editorial score
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
+      .gte('created_at', fortyEightHoursAgo)
+      .gte('ai_final_score', 600)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 50 : 300),
+      .limit(200),
 
     // 3. DISCOVERY: diverse quality content, 7-day pool
-    // Tightened from 30 days to 7 days to prevent stale articles in feed.
-    // Cold-start: fetch larger pool to compensate for empty personal
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
+      .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 200 : 500),
+      .limit(500),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
