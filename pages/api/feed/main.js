@@ -922,12 +922,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: 100, hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: userId, match_per_cluster: 100, hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
