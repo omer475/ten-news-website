@@ -2154,7 +2154,12 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // True pagination — use bandit pool for cold-start, all scored pools for personalized
   const scoredTotal = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
-  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
+  // For personalized users: always report large pool — trending+discovery have thousands of articles.
+  // The actual pool for slot-filling may be smaller, but has_more should stay true
+  // so the app can keep requesting. The server generates fresh results each request.
+  const totalAvailable = hasAnyPersonalization
+    ? Math.max(500, scoredTotal, banditPoolTotal + selected.length)
+    : Math.max(banditPoolTotal + selected.length, scoredTotal);
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
