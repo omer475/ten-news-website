@@ -1398,8 +1398,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
-  const personalizedPoolSize = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
-  if (!hasAnyPersonalization || personalizedPoolSize < 100) {
+  if (!hasAnyPersonalization) {
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
     function normalRandom() {
@@ -2117,10 +2116,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // True pagination — use bandit pool total for cold-start, scored totals for personalized
-  const totalAvailable = (typeof banditPoolTotal !== 'undefined' && banditPoolTotal > 0)
-    ? banditPoolTotal + selected.length  // bandit path: pool remaining + already selected
-    : personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  // True pagination — use bandit pool for cold-start, all scored pools for personalized
+  const scoredTotal = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
