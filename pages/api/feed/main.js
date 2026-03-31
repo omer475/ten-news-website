@@ -1118,7 +1118,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 3 : 10;
+  const trendingCatMax = hasAnyPersonalization ? 8 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1133,8 +1133,8 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
-  const discoveryCatMax = hasAnyPersonalization ? 2 : 8;
-  const discoveryTotalMax = hasAnyPersonalization ? 30 : 200;
+  const discoveryCatMax = hasAnyPersonalization ? 6 : 8;
+  const discoveryTotalMax = hasAnyPersonalization ? 150 : 200;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
