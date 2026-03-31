@@ -54,8 +54,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-MAX_CLUSTERS = 5
-MIN_CLUSTER_SIZE = 5
+MAX_CLUSTERS = 8
+MIN_CLUSTER_SIZE = 3
 LOOKBACK_DAYS = 90
 MIN_INTERACTIONS = 10
 
@@ -94,9 +94,9 @@ def fetch_user_engagements(user_id, lookback_days=LOOKBACK_DAYS):
     for i in range(0, len(article_ids), 300):
         batch = article_ids[i:i+300]
         art_result = supabase.table('published_articles') \
-            .select('id, title_news, category, embedding, embedding_minilm') \
+            .select('id, title_news, category, embedding, embedding_minilm, interest_tags') \
             .in_('id', batch) \
-            .not_.is_('embedding', 'null') \
+            .not_.is_('embedding_minilm', 'null') \
             .execute()
         all_articles.extend(art_result.data or [])
 
@@ -180,7 +180,8 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     weights = []
     article_ids = []
     for art in articles:
-        emb = art.get('embedding')
+        # Use MiniLM 384-dim embeddings (matches pgvector search)
+        emb = art.get('embedding_minilm') or art.get('embedding')
         if emb and isinstance(emb, list) and len(emb) > 0:
             embeddings.append(np.array(emb, dtype=np.float64))
             weights.append(article_weights.get(art['id'], 1.0))
@@ -220,7 +221,24 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         nearest_idx = cluster_indices[np.argmin(distances)]
         nearest_article_id = article_ids[nearest_idx]
 
-        label = category_counts.most_common(1)[0][0] if category_counts else f"Cluster-{ci}"
+        # Label from most common interest tags (more specific than category)
+        cluster_tags = []
+        broad_tags = {'politics','sports','business','technology','health','science',
+                      'entertainment','world','finance','energy','military','economy',
+                      'government','trade','security','lifestyle','culture'}
+        for aid in cluster_article_ids:
+            art = article_map.get(aid, {})
+            tags = art.get('interest_tags', [])
+            if isinstance(tags, list):
+                for t in tags[:3]:
+                    if t.lower() not in broad_tags:
+                        cluster_tags.append(t)
+        tag_counts = Counter(cluster_tags)
+        if tag_counts:
+            top_tags = [t for t, _ in tag_counts.most_common(2)]
+            label = ' & '.join(top_tags)
+        else:
+            label = category_counts.most_common(1)[0][0] if category_counts else f"Cluster-{ci}"
 
         clusters.append({
             'cluster_index': ci,
@@ -283,7 +301,6 @@ def cluster_user(user_id, dry_run=False, verbose=True):
             'medoid_article_id': c['medoid_article_id'],
             'article_count': c['article_count'],
             'label': c['label'],
-            'is_centroid': True,
         }
         # Add MiniLM embedding from medoid article if available
         minilm = medoid_art.get('embedding_minilm')

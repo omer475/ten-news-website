@@ -388,45 +388,55 @@ export default async function handler(req, res) {
         const dwellSec = metadata?.dwell ? parseFloat(metadata.dwell) :
                          metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
 
-        // Determine bucket multiplier
-        let bucketMultiplier = 1.0
-        if (bucket === 'trending') bucketMultiplier = 0.2
-        else if (bucket === 'discovery' || bucket === 'exploration' || bucket === 'cold-start') bucketMultiplier = 0.1
-        // 'personal', 'explore', 'search' = 1.0 (full weight)
+        // ── Change 4: Override bucket multiplier on strong engagement signals ──
+        // Strong signals (save, like, revisit) override bucket suppression.
+        // A user who saves a trending article is telling you they love it.
+        const baseBucketMult = bucket === 'trending' ? 0.2
+          : (bucket === 'discovery' || bucket === 'exploration' || bucket === 'cold-start') ? 0.1
+          : 1.0 // personal, explore, search = full weight
 
-        // For feed articles (not explore/search): filter out glances < 3s
-        if (bucket !== 'explore' && bucket !== 'search') {
-          if (event_type === 'article_engaged' && dwellSec < 3) {
-            console.log('[analytics] Glance ignored (< 3s dwell, bucket:', bucket + ')')
-            // Still increment interactions but don't add to buffer
-            admin.rpc('update_sliding_window', {
-              p_pers_id: persId, p_article_id: article_id, p_event_type: 'article_glance',
-            }).catch(() => {})
-            return
-          }
+        // Interaction weight for the signal
+        const signalWeight = event_type === 'article_saved' ? 3.0
+          : event_type === 'article_shared' ? 2.0
+          : event_type === 'article_liked' ? 1.5
+          : event_type === 'article_revisit' ? 4.0
+          : event_type === 'article_engaged' ? 1.0
+          : event_type === 'article_view' ? 0.3 // glance
+          : 0.0
+        const maxSignal = 4.0
+        const effectiveMultiplier = baseBucketMult + (Math.max(signalWeight, 0) / maxSignal) * (1.0 - baseBucketMult)
+        // personal save: 1.0, trending save: 0.8, trending glance: 0.26, discovery read: 0.33
+
+        // ── Change 5: Glanced articles (3-6s dwell, article_view) update taste vector ──
+        const isGlance = event_type === 'article_view' && dwellSec >= 3 && dwellSec < 6
+        const isSkip = event_type === 'article_skipped'
+
+        // Determine what goes into the engagement buffer
+        let bufferEventType = event_type
+        let bufferMultiplier = effectiveMultiplier
+
+        if (isGlance) {
+          // Glance: add to buffer with low weight (0.3)
+          bufferEventType = 'article_glanced'
+          bufferMultiplier = effectiveMultiplier * 0.3
+        } else if (isSkip && dwellSec < 1) {
+          // Instant skip: skip with normal weight
+          bufferEventType = 'article_skipped'
+        } else if (effectiveMultiplier < 0.15 && !['article_saved', 'article_shared', 'article_liked', 'article_revisit'].includes(event_type)) {
+          // Weak signal from suppressed bucket: skip buffer
+          bufferMultiplier = 0.0
+          bufferEventType = 'article_glance' // legacy: just increment counter
         }
 
-        // Compute effective event type for weight calculation
-        // For trending/discovery: only saves/shares/likes go into buffer (viewed articles don't)
-        let shouldAddToBuffer = true
-        if (bucketMultiplier < 1.0) {
-          // Trending/discovery: only strong signals
-          if (!['article_saved', 'article_shared', 'article_liked'].includes(event_type)) {
-            if (event_type !== 'article_engaged' || dwellSec < 10) {
-              shouldAddToBuffer = false
-            }
-          }
-        }
-
-        // Update sliding window with bucket multiplier
+        // Update sliding window → writes to session_taste_vector_minilm (Change 1)
         admin.rpc('update_sliding_window', {
           p_pers_id: persId,
           p_article_id: article_id,
-          p_event_type: shouldAddToBuffer ? event_type : 'article_glance',
-          p_bucket_multiplier: shouldAddToBuffer ? bucketMultiplier : 0.0,
+          p_event_type: bufferEventType,
+          p_bucket_multiplier: bufferMultiplier,
         }).then(({ error: swError }) => {
           if (swError) console.log('[analytics] Sliding window update failed:', swError.message)
-          else console.log('[analytics] Buffer:', persId.substring(0, 8), bucket, event_type, shouldAddToBuffer ? 'x' + bucketMultiplier : 'SKIP')
+          else console.log('[analytics] Buffer:', persId.substring(0, 8), bucket, event_type, 'x' + effectiveMultiplier.toFixed(2))
         })
 
         // Update entity affinity — also bucket-weighted

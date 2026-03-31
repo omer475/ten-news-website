@@ -450,8 +450,15 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
 // ==========================================
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
-  const vectorScore = similarity || 0;
+// Change 1: Blend long-term vector (from clusters) with session vector (from sliding window)
+// Long-term = 70% weight (stable interests), Session = 30% (what you're reading now)
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim) {
+  // Blend long-term and session vector scores
+  const longTermScore = similarity || 0;
+  const sessionScore = sessionVectorSim || 0;
+  const vectorScore = sessionScore > 0
+    ? longTermScore * 0.7 + sessionScore * 0.3
+    : longTermScore; // if no session vector yet, use 100% long-term
 
   // Entity bonus: 0.10 × affinity × (matching/total), capped at 0.30
   const tags = safeJsonParse(article.interest_tags, []);
@@ -463,24 +470,20 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
     if (affinity && affinity > 0) {
       entityBonus += 0.10 * affinity;
       matchCount++;
-      if (matchCount >= 3) break; // Cap at 3 entity matches per article
+      if (matchCount >= 3) break;
     }
   }
   const totalTags = Math.max(tags.length, 1);
   entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
 
-  // Quality: normalized ai_final_score (0-1)
   const quality = (article.ai_final_score || 0) / 1000;
-
-  // Freshness: 0.10 × (1 - hours_old/shelf_life_hours), min 0
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
   const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
 
-  // Session boost: 0.20 × cosine_sim(article, session_vector) when active
-  const sessionScore = sessionBoost || 0;
+  const momentum = sessionBoost || 0;
 
-  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + sessionScore * 150;
+  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
 }
 
 function scoreTrendingV3(article) {
@@ -709,6 +712,7 @@ export default async function handler(req, res) {
     let personalizationId = null;
     let userPhase = 1;
     let totalInteractions = 0;
+    let sessionTasteVector = null; // Change 1: short-term session vector
 
     // Try v3 personalization_profiles first (non-blocking — falls back to profiles if fails)
     if (userId || guestDeviceId) {
@@ -723,14 +727,18 @@ export default async function handler(req, res) {
           userPhase = persData[0].phase;
           totalInteractions = persData[0].total_interactions;
 
-          // Load taste vector from personalization_profiles
+          // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
             .from('personalization_profiles')
-            .select('taste_vector_minilm')
+            .select('taste_vector_minilm, session_taste_vector_minilm')
             .eq('personalization_id', personalizationId)
             .single();
           if (ppData?.taste_vector_minilm) {
             tasteVectorMinilm = ppData.taste_vector_minilm;
+          }
+          // Session vector loaded for scoring blend (used in scoreArticleV3)
+          if (ppData?.session_taste_vector_minilm) {
+            sessionTasteVector = ppData.session_taste_vector_minilm;
           }
         }
       } catch (e) {
@@ -859,6 +867,7 @@ export default async function handler(req, res) {
       sessionGlancedIds,
       sessionSkippedIds,
       personalizationId,
+      sessionTasteVector,
       usedTempTasteVector: false,
       limit,
       offset,
@@ -880,7 +889,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
-        personalizationId, usedTempTasteVector, limit, offset } = opts;
+        personalizationId, sessionTasteVector, usedTempTasteVector, limit, offset } = opts;
   sessionEngagedIds = sessionEngagedIds || [];
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
@@ -1222,9 +1231,16 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
-      // Use V3 scoring if personalizationId exists, else fall back to V2
+      // Compute session vector similarity if available (Change 1)
+      let sessionVecSim = 0;
+      if (sessionTasteVector && article.embedding_minilm) {
+        const emb = safeJsonParse(article.embedding_minilm, null);
+        if (emb && Array.isArray(emb) && emb.length === 384 && sessionTasteVector.length === 384) {
+          sessionVecSim = cosineSimilarityVec(emb, sessionTasteVector);
+        }
+      }
       const score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       return {
         ...article,
@@ -1921,6 +1937,26 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!bestCat) break;
 
       const pool = categoryPools[bestCat];
+
+      // Change 3: Lazy-fetch embeddings for MMR candidates in this category
+      // Only fetch once per category, cache for reuse
+      if (!pool._embeddingsFetched && pool.length > 0) {
+        const poolIds = pool.slice(0, 30).map(a => a.id);
+        const { data: embData } = await supabase
+          .from('published_articles')
+          .select('id, embedding_minilm')
+          .in('id', poolIds);
+        if (embData) {
+          for (const a of embData) {
+            const emb = safeJsonParse(a.embedding_minilm, null);
+            if (emb && Array.isArray(emb) && emb.length > 0) {
+              embeddingCache.set(a.id, emb);
+            }
+          }
+        }
+        pool._embeddingsFetched = true;
+      }
+
       const picked = mmrSelect(pool, selected, tagCache, 0.6, embeddingCache);
       if (!picked) {
         delete categoryPools[bestCat]; // Exhausted
