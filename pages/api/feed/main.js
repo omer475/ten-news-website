@@ -1395,9 +1395,11 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Proper Beta sampling via gamma distribution (Fix 6)
   // - Dynamic time window for deeper pages (Fix 5)
   // - Missing article lookup bug fix (Fix 4b)
+  // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
-  if (!hasAnyPersonalization) {
+  const personalizedPoolSize = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  if (!hasAnyPersonalization || personalizedPoolSize < 100) {
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
     function normalRandom() {
