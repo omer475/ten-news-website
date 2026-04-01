@@ -813,12 +813,13 @@ export default async function handler(req, res) {
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
 
-      // Check if user has interest clusters (PinnerSage-lite)
+      // Check if user has active (non-suppressed) interest clusters
       if ((tasteVector || tasteVectorMinilm) && persUserId) {
         const { count } = await supabase
           .from('user_interest_clusters')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', persUserId);
+          .eq('user_id', persUserId)
+          .neq('suppressed', true);
         hasInterestClusters = (count || 0) > 0;
       }
     }

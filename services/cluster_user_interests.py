@@ -165,6 +165,15 @@ def cluster_user(user_id, dry_run=False, verbose=True):
             print(f"  Only {len(articles)} articles with embeddings. Need {MIN_INTERACTIONS}+. Skipping.")
         return 0
 
+    # Fix A: Load skip_profile to exclude skip-heavy articles from clustering
+    skip_profile = {}
+    try:
+        sp_result = supabase.table('profiles').select('skip_profile').eq('id', user_id).single().execute()
+        if sp_result.data and sp_result.data.get('skip_profile'):
+            skip_profile = sp_result.data['skip_profile']
+    except:
+        pass
+
     # Build recency-weighted embedding matrix
     # Weight each article by its strongest event's recency * event weight
     article_weights = {}
@@ -179,7 +188,19 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     embeddings = []
     weights = []
     article_ids = []
+    skipped_out = 0
     for art in articles:
+        # Fix A: Skip articles whose primary tags are heavily skipped
+        tags = art.get('interest_tags', [])
+        if isinstance(tags, list) and len(tags) >= 2 and skip_profile:
+            top2_skip_weight = sum(
+                skip_profile.get(t.lower(), 0) if isinstance(skip_profile.get(t.lower()), (int, float)) else 0
+                for t in tags[:2]
+            )
+            if top2_skip_weight > 0.30:
+                skipped_out += 1
+                continue  # exclude this article from clustering
+
         # Use MiniLM 384-dim embeddings (matches pgvector search)
         emb = art.get('embedding_minilm') or art.get('embedding')
         if emb and isinstance(emb, list) and len(emb) > 0:
@@ -275,9 +296,26 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         weighted_centroid += c['centroid'] * (c['article_count'] / total_count)
     sim_floor = compute_similarity_floor(emb_matrix, weighted_centroid)
 
+    # Fix A: Validate clusters against skip_profile — suppress skip-heavy clusters
+    for c in clusters:
+        # Get the top tags from the label (split by ' & ')
+        label_tags = [t.strip().lower() for t in c['label'].split('&')]
+        avg_skip = 0
+        count = 0
+        for tag in label_tags:
+            w = skip_profile.get(tag, 0)
+            if isinstance(w, (int, float)):
+                avg_skip += w
+                count += 1
+        avg_skip = avg_skip / max(count, 1)
+        c['suppressed'] = avg_skip > 0.20
+        if c['suppressed'] and verbose:
+            print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
+
     if verbose:
         print(f"  Similarity floor: {sim_floor:.4f}")
-        print(f"  Final: {len(clusters)} clusters after merging")
+        active = sum(1 for c in clusters if not c.get('suppressed'))
+        print(f"  Final: {len(clusters)} clusters ({active} active, {len(clusters)-active} suppressed)")
 
     if dry_run:
         if verbose:
@@ -301,6 +339,7 @@ def cluster_user(user_id, dry_run=False, verbose=True):
             'medoid_article_id': c['medoid_article_id'],
             'article_count': c['article_count'],
             'label': c['label'],
+            'suppressed': c.get('suppressed', False),
         }
         # Add MiniLM embedding from medoid article if available
         minilm = medoid_art.get('embedding_minilm')
