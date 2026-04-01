@@ -639,17 +639,28 @@ export default async function handler(req, res) {
     // 6. RESPONSE — only topics with articles
     // ──────────────────────────────────────────────
 
-    const topics = allTopics
-      .filter(t => topicArticles[t.entity_name] && topicArticles[t.entity_name].length > 0)
-      .map(t => ({
-        entity_name: t.entity_name,
-        display_title: t.display_title,
-        category: t.category,
-        emoji: CATEGORY_EMOJIS[t.category] || '📰',
-        type: t.type,
-        weight: t.weight,
-        articles: topicArticles[t.entity_name] || []
-      }))
+    const formatTopic = t => ({
+      entity_name: t.entity_name,
+      display_title: t.display_title,
+      category: t.category,
+      emoji: CATEGORY_EMOJIS[t.category] || '📰',
+      type: t.type,
+      weight: t.weight,
+      articles: topicArticles[t.entity_name] || []
+    })
+
+    const hasArticles = t => topicArticles[t.entity_name] && topicArticles[t.entity_name].length > 0
+    const personalizedWithArticles = userTopics.filter(hasArticles).map(formatTopic)
+    const trendingWithArticles = trendingTopics.filter(hasArticles).map(formatTopic)
+
+    // Interleave: 2 personalized, 1 trending, repeat
+    const topics = []
+    let pi = 0, ti = 0
+    while (pi < personalizedWithArticles.length || ti < trendingWithArticles.length) {
+      if (pi < personalizedWithArticles.length) topics.push(personalizedWithArticles[pi++])
+      if (pi < personalizedWithArticles.length) topics.push(personalizedWithArticles[pi++])
+      if (ti < trendingWithArticles.length) topics.push(trendingWithArticles[ti++])
+    }
 
     return res.status(200).json({
       topics,
