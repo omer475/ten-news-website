@@ -450,17 +450,30 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
 // ==========================================
 
-// Change 1: Blend long-term vector (from clusters) with session vector (from sliding window)
-// Long-term = 70% weight (stable interests), Session = 30% (what you're reading now)
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim) {
-  // Blend long-term and session vector scores
+// ══════════════════════════════════════════════════════════════
+// SKIP PENALTY HELPER — used by ALL scoring functions
+// Reads skip_profile to penalize content the user explicitly skipped.
+// ══════════════════════════════════════════════════════════════
+function computeSkipPenalty(article, userSkipProfile) {
+  if (!userSkipProfile || typeof userSkipProfile !== 'object') return 0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let penalty = 0;
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    const w = userSkipProfile[t];
+    if (w && w > 0) penalty += w;
+  }
+  return Math.min(penalty, 0.80); // cap — don't fully zero out
+}
+
+// Change 1: Blend long-term + session vectors. Now includes skip penalty.
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
   const vectorScore = sessionScore > 0
     ? longTermScore * 0.7 + sessionScore * 0.3
-    : longTermScore; // if no session vector yet, use 100% long-term
+    : longTermScore;
 
-  // Entity bonus: 0.10 × affinity × (matching/total), capped at 0.30
   const tags = safeJsonParse(article.interest_tags, []);
   let entityBonus = 0;
   let matchCount = 0;
@@ -480,24 +493,37 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
   const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
-
   const momentum = sessionBoost || 0;
 
-  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
+  const baseScore = vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
+
+  // Skip penalty: iran(0.35) + iran_war(0.30) = 0.65 → score × 0.35
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  return baseScore * skipMultiplier;
 }
 
-function scoreTrendingV3(article) {
+function scoreTrendingV3(article, userSkipProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-  return (article.ai_final_score || 0) * recency;
+  const baseScore = (article.ai_final_score || 0) * recency;
+
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  return baseScore * skipMultiplier;
 }
 
-function scoreDiscoveryV3(article, personalCategories) {
+function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-  // Boost categories the user doesn't usually see (true discovery)
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
-  // Random factor for variable reward (surprise element)
   const surprise = 1 + Math.random() * 0.4;
-  return (article.ai_final_score || 0) * recency * categoryBoost * surprise;
+  const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
+
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  return baseScore * skipMultiplier;
 }
 
 // ==========================================
@@ -1300,7 +1326,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       const score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       return {
         ...article,
@@ -1319,7 +1345,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id]),
+      _score: scoreTrendingV3(articleMap[a.id], skipProfile),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1329,7 +1355,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1356,7 +1382,67 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
-  // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
+  // PHASE 5.5a: ENTITY BLOCKLIST FOR ALL USERS (not just cold-start)
+  // Combines session skips + persistent skip_profile to hard-block
+  // entities the user repeatedly skipped.
+  // ==========================================
+
+  const SKIP_GENERIC_TERMS = new Set(['politics', 'world', 'business', 'sports',
+    'entertainment', 'tech', 'science', 'health', 'finance', 'lifestyle',
+    'united states', 'china', 'europe', 'energy', 'military', 'economy',
+    'government', 'trade', 'security', 'culture']);
+
+  const globalEntitySkipCounts = {};
+
+  // From persistent skip_profile (accumulated across all sessions)
+  if (skipProfile && typeof skipProfile === 'object') {
+    for (const [entity, weight] of Object.entries(skipProfile)) {
+      if (SKIP_GENERIC_TERMS.has(entity.toLowerCase())) continue;
+      const equivalentSkips = Math.round((typeof weight === 'number' ? weight : 0) / 0.05);
+      if (equivalentSkips > 0) globalEntitySkipCounts[entity.toLowerCase()] = equivalentSkips;
+    }
+  }
+
+  // From current session skipped IDs
+  for (const id of sessionSkippedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const tags = safeJsonParse(art.interest_tags, []);
+    for (const tag of tags.slice(0, 3)) {
+      const t = tag.toLowerCase();
+      if (!SKIP_GENERIC_TERMS.has(t)) {
+        globalEntitySkipCounts[t] = (globalEntitySkipCounts[t] || 0) + 1;
+      }
+    }
+  }
+
+  const globalBlocklist = new Set();
+  for (const [entity, count] of Object.entries(globalEntitySkipCounts)) {
+    if (count >= 3) globalBlocklist.add(entity);
+  }
+
+  function isGlobalBlocked(article) {
+    if (globalBlocklist.size === 0) return false;
+    const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+    const primaryTags = tags.slice(0, 2);
+    if (primaryTags.some(t => globalBlocklist.has(t))) return true;
+    const blockedCount = tags.filter(t => globalBlocklist.has(t)).length;
+    if (blockedCount >= 2) return true;
+    const titleLower = (article.title_news || '').toLowerCase();
+    for (const blocked of globalBlocklist) {
+      if (blocked.length > 3 && titleLower.includes(blocked)) return true;
+    }
+    return false;
+  }
+
+  // Apply blocklist to ALL scored pools
+  const personalScoredFiltered = personalScored.filter(a => !isGlobalBlocked(a));
+  const trendingScoredFiltered = trendingScored.filter(a => !isGlobalBlocked(a));
+  const discoveryScoredFiltered = discoveryScored.filter(a => !isGlobalBlocked(a));
+  const interestScoredFiltered = interestScored.filter(a => !isGlobalBlocked(a));
+
+  // ==========================================
+  // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
   // Cap articles per world_event/cluster to prevent event flooding
   // (e.g., 15 Iran war articles won't all appear in the feed)
   // ==========================================
@@ -1384,10 +1470,10 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
-  const pPool = [...personalScored];
-  const tPool = [...trendingScored];
-  const dPool = [...discoveryScored];
-  const iPool = [...interestScored];
+  const pPool = [...personalScoredFiltered];
+  const tPool = [...trendingScoredFiltered];
+  const dPool = [...discoveryScoredFiltered];
+  const iPool = [...interestScoredFiltered];
 
   // IMPROVEMENT 3: Track world event and cluster counts
   const eventCounts = {};
@@ -2213,7 +2299,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // True pagination — use bandit pool for cold-start, all scored pools for personalized
-  const scoredTotal = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
   const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
