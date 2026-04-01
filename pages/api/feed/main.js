@@ -1475,6 +1475,31 @@ async function handleV2Feed(req, res, supabase, opts) {
   const dPool = [...discoveryScoredFiltered];
   const iPool = [...interestScoredFiltered];
 
+  // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
+  // Take top 50 from each pool — these are the candidates MMR will actually score
+  if (hasAnyPersonalization) {
+    const mmrCandidateIds = new Set();
+    for (const pool of [pPool, tPool, dPool, iPool]) {
+      for (const a of pool.slice(0, 50)) {
+        if (!embeddingCache.has(a.id)) mmrCandidateIds.add(a.id);
+      }
+    }
+    if (mmrCandidateIds.size > 0) {
+      const { data: embData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...mmrCandidateIds].slice(0, 200));
+      if (embData) {
+        for (const a of embData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+  }
+
   // IMPROVEMENT 3: Track world event and cluster counts
   const eventCounts = {};
   const clusterCounts = {};
