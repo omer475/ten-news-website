@@ -238,68 +238,122 @@ export default async function handler(req, res) {
     const entityNames = sortedTags.map(([tag]) => tag)
 
     // ──────────────────────────────────────────────
-    // 2. CHECK HOW MANY TAG_PROFILE ENTRIES MATCH CONCEPT_ENTITIES
-    //    This determines cold-start vs mature mode.
+    // 2. GENERATE "FOR YOU" TOPICS DYNAMICALLY FROM USER DATA
+    //    No dependency on concept_entities for personalization.
+    //    Topics come from: tag_profile → interest_clusters → onboarding
     // ──────────────────────────────────────────────
-
-    let directMatches = [] // concept_entities that match tag_profile keys
-    if (entityNames.length > 0) {
-      const { data: entities } = await supabase
-        .from('concept_entities')
-        .select('entity_name, display_title, category')
-        .in('entity_name', entityNames)
-
-      directMatches = entities || []
-    }
-
-    // ──────────────────────────────────────────────
-    // 3. BUILD PERSONALIZED TOPICS — SLIDING BLEND
-    //    behavior_weight slides from 0% to 85% as user accumulates
-    //    entity matches. Cold_start always keeps ≥15% influence.
-    // ──────────────────────────────────────────────
-
-    const matchCount = directMatches.length
-    const behaviorWeight = matchCount < BLEND_START_AT
-      ? 0
-      : Math.min((matchCount - BLEND_START_AT) / (BLEND_FULL_AT - BLEND_START_AT), 1.0) * MAX_BEHAVIOR_WEIGHT
-    const coldStartWeight = 1.0 - behaviorWeight
 
     const TARGET_TOPICS = 20
-    const behaviorSlots = Math.round(TARGET_TOPICS * behaviorWeight)
-    const coldStartSlots = TARGET_TOPICS - behaviorSlots
-
     const userTopics = []
     const usedEntityNames = new Set()
+    let matchCount = 0
 
-    // ═══════════════════════════════════════════
-    // BEHAVIOR PORTION — entities from tag_profile
-    // ═══════════════════════════════════════════
+    // Source 1: tag_profile top entities → group by co-occurrence into topics
+    // Skip entities that are in skip_profile with high weight
+    const GENERIC_TAGS = new Set(['politics', 'world', 'business', 'sports',
+      'entertainment', 'tech', 'science', 'health', 'finance', 'lifestyle',
+      'united states', 'energy', 'military', 'economy', 'government'])
 
-    if (behaviorSlots > 0 && directMatches.length > 0) {
-      const entityMap = {}
-      for (const e of directMatches) {
-        entityMap[e.entity_name] = { display_title: e.display_title, category: e.category }
+    const topTagsForTopics = sortedTags
+      .filter(([tag, w]) => !GENERIC_TAGS.has(tag.toLowerCase()) && w >= 0.15)
+      .filter(([tag]) => !(skipProfile[tag] && skipProfile[tag] > 0.25))
+      .slice(0, 20)
+
+    if (topTagsForTopics.length >= 3) {
+      // Group co-occurring tags: fetch articles for each top tag and find overlaps
+      const tagArticleMap = {}
+      for (const [tag] of topTagsForTopics.slice(0, 12)) {
+        const { data: tagArts } = await supabase
+          .from('published_articles')
+          .select('id, interest_tags')
+          .contains('interest_tags', [tag])
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
+          .order('ai_final_score', { ascending: false })
+          .limit(20)
+        tagArticleMap[tag] = new Set((tagArts || []).map(a => a.id))
       }
 
-      for (const [tag, weight] of sortedTags) {
-        if (userTopics.length >= behaviorSlots) break
-        if (!entityMap[tag]) continue
-        if (usedEntityNames.has(tag)) continue
+      // Find co-occurring tag pairs
+      const tagPairs = []
+      const tagKeys = Object.keys(tagArticleMap)
+      for (let i = 0; i < tagKeys.length; i++) {
+        for (let j = i + 1; j < tagKeys.length; j++) {
+          const overlap = [...tagArticleMap[tagKeys[i]]].filter(id => tagArticleMap[tagKeys[j]].has(id)).length
+          if (overlap >= 2) tagPairs.push({ tags: [tagKeys[i], tagKeys[j]], overlap })
+        }
+      }
+      tagPairs.sort((a, b) => b.overlap - a.overlap)
 
+      // Create topics from paired tags
+      const usedInPairs = new Set()
+      for (const pair of tagPairs.slice(0, 8)) {
+        if (userTopics.length >= 10) break
+        if (usedInPairs.has(pair.tags[0]) && usedInPairs.has(pair.tags[1])) continue
+        const label = pair.tags.map(t => t.split(' ').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')).join(' & ')
+        usedEntityNames.add(pair.tags[0])
+        usedEntityNames.add(pair.tags[1])
+        usedInPairs.add(pair.tags[0])
+        usedInPairs.add(pair.tags[1])
+        userTopics.push({
+          entity_name: pair.tags[0],
+          display_title: label,
+          category: 'For You',
+          weight: (tagProfile[pair.tags[0]] || 0) + (tagProfile[pair.tags[1]] || 0),
+          type: 'personalized',
+          searchTags: pair.tags,
+        })
+      }
+
+      // Create single-tag topics for remaining top tags not yet used
+      for (const [tag, weight] of topTagsForTopics) {
+        if (userTopics.length >= 12) break
+        if (usedEntityNames.has(tag)) continue
         usedEntityNames.add(tag)
+        const label = tag.split(' ').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')
         userTopics.push({
           entity_name: tag,
-          display_title: entityMap[tag].display_title,
-          category: entityMap[tag].category,
+          display_title: label,
+          category: 'For You',
           weight,
-          type: 'personalized'
+          type: 'personalized',
+          searchTags: [tag],
         })
       }
     }
 
+    // Source 2: interest_clusters (non-suppressed) → topic per cluster
+    if (user_id) {
+      const { data: clusters } = await supabase
+        .from('user_interest_clusters')
+        .select('cluster_index, label, article_count')
+        .eq('user_id', user_id)
+        .neq('suppressed', true)
+        .order('article_count', { ascending: false })
+
+      for (const c of (clusters || [])) {
+        if (userTopics.length >= 15) break
+        const clusterTags = c.label.split('&').map(t => t.trim().toLowerCase())
+        if (clusterTags.some(t => usedEntityNames.has(t))) continue
+        for (const t of clusterTags) usedEntityNames.add(t)
+        userTopics.push({
+          entity_name: clusterTags[0],
+          display_title: c.label.split(' ').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' '),
+          category: 'For You',
+          weight: c.article_count / 10,
+          type: 'personalized',
+          searchTags: clusterTags,
+        })
+      }
+    }
+
+    // Compute behavior weight and cold-start slots
+    matchCount = userTopics.length
+    const behaviorWeight = Math.min(matchCount / BLEND_FULL_AT, MAX_BEHAVIOR_WEIGHT)
+    const coldStartSlots = Math.max(0, TARGET_TOPICS - userTopics.length)
+
     // ═══════════════════════════════════════════
     // COLD START PORTION — onboarding + country + category
-    // Always runs (even for mature users at 15% minimum)
+    // Always runs if we need more topics
     // ═══════════════════════════════════════════
 
     if (coldStartSlots > 0) {
@@ -507,7 +561,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build search terms per topic: entity_name + aliases ONLY.
+    // Build search terms per topic: entity_name + aliases + searchTags from dynamic topics.
     // NO title word splitting — "Manchester United" split into ["manchester","united"]
     // would match United Airlines, United Nations, etc.
     // NO substring matching — "art" inside "artificial intelligence" is not a match.
@@ -517,6 +571,10 @@ export default async function handler(req, res) {
       terms.add(topic.entity_name.toLowerCase())
       if (aliasMap[topic.entity_name]) {
         aliasMap[topic.entity_name].forEach(a => terms.add(a))
+      }
+      // Dynamic topics carry searchTags (tag_profile tags used to create the topic)
+      if (topic.searchTags) {
+        topic.searchTags.forEach(t => terms.add(t.toLowerCase()))
       }
       topicSearchTerms[topic.entity_name] = terms
     }
