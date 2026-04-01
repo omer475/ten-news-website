@@ -573,12 +573,16 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   let bestIdx = 0;
   let bestMMR = -Infinity;
 
-  // Check diversity against ALL selected articles (not just last 5)
+  // Check diversity against ALL selected articles
+  // Hard ceiling: reject candidates with > 0.82 similarity to any selected article
+  const DUPLICATE_CEILING = 0.82;
+
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
     const normScore = c._score / maxScore;
 
     let maxSim = 0;
+    let isDuplicate = false;
     const cEmb = embeddingCache ? embeddingCache.get(c.id) : null;
     const cTags = tagCache.get(c.id) || new Set();
 
@@ -587,10 +591,10 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
       const sEmb = embeddingCache ? embeddingCache.get(s.id) : null;
 
       if (cEmb && sEmb) {
-        // Embedding cosine similarity: detects same-story different-angle
         sim = Math.max(0, cosineSimilarityVec(cEmb, sEmb));
+        // Hard ceiling: reject if too similar to ANY already-selected article
+        if (sim > DUPLICATE_CEILING) { isDuplicate = true; break; }
       } else {
-        // Fallback: tag Jaccard
         const sTags = tagCache.get(s.id) || new Set();
         let intersection = 0;
         for (const t of cTags) {
@@ -599,10 +603,12 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
         const unionSize = new Set([...cTags, ...sTags]).size;
         sim = unionSize > 0 ? intersection / unionSize : 0;
       }
-      // Same category carries a minimum similarity penalty
       if (c.category === s.category) sim = Math.max(sim, 0.3);
       maxSim = Math.max(maxSim, sim);
     }
+
+    // Skip duplicates entirely — don't even score them
+    if (isDuplicate) continue;
 
     const mmr = lambda * normScore - (1 - lambda) * maxSim;
     if (mmr > bestMMR) {
@@ -2209,16 +2215,16 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
@@ -2236,10 +2242,10 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
@@ -2257,7 +2263,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
