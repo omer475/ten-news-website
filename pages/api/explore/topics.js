@@ -259,18 +259,30 @@ export default async function handler(req, res) {
       .filter(([tag]) => !(skipProfile[tag] && skipProfile[tag] > 0.25))
       .slice(0, 20)
 
+    // Pre-fetch recent articles (used for co-occurrence AND topic article matching)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: recentArticlesAll } = await supabase
+      .from('published_articles')
+      .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
+      .gte('published_at', sevenDaysAgo)
+      .lte('published_at', new Date().toISOString())
+      .not('interest_tags', 'is', null)
+      .order('published_at', { ascending: false })
+      .limit(1500)
+
     if (topTagsForTopics.length >= 3) {
-      // Group co-occurring tags: fetch articles for each top tag and find overlaps
+      // Build co-occurrence map from pre-fetched articles (case-insensitive)
+      const topTagSet = new Set(topTagsForTopics.slice(0, 12).map(([t]) => t.toLowerCase()))
       const tagArticleMap = {}
-      for (const [tag] of topTagsForTopics.slice(0, 12)) {
-        const { data: tagArts } = await supabase
-          .from('published_articles')
-          .select('id, interest_tags')
-          .contains('interest_tags', [tag])
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
-          .order('ai_final_score', { ascending: false })
-          .limit(20)
-        tagArticleMap[tag] = new Set((tagArts || []).map(a => a.id))
+      for (const art of (recentArticlesAll || [])) {
+        const artTags = (Array.isArray(art.interest_tags) ? art.interest_tags : [])
+          .slice(0, 6).map(t => t.toLowerCase())
+        for (const t of artTags) {
+          if (topTagSet.has(t)) {
+            if (!tagArticleMap[t]) tagArticleMap[t] = new Set()
+            tagArticleMap[t].add(art.id)
+          }
+        }
       }
 
       // Find co-occurring tag pairs
@@ -579,23 +591,11 @@ export default async function handler(req, res) {
       topicSearchTerms[topic.entity_name] = terms
     }
 
-    // Fetch recent articles and match to topics
-    // Only articles from last 7 days — older articles lack interest_tags
+    // Match pre-fetched articles to topics (reuses recentArticlesAll from earlier)
     const topicArticles = {}
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-    if (allTopicNames.length > 0) {
-      const { data: articles } = await supabase
-        .from('published_articles')
-        .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
-        .gte('published_at', sevenDaysAgo)
-        .lte('published_at', new Date().toISOString())
-        .not('interest_tags', 'is', null)
-        .order('published_at', { ascending: false })
-        .limit(1500)
-
-      if (articles) {
-        for (const article of articles) {
+    if (allTopicNames.length > 0 && recentArticlesAll) {
+      for (const article of recentArticlesAll) {
           const rawTags = Array.isArray(article.interest_tags)
             ? article.interest_tags.map(t => t.toLowerCase())
             : []
@@ -632,7 +632,6 @@ export default async function handler(req, res) {
               })
             }
           }
-        }
       }
     }
 
