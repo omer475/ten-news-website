@@ -1238,13 +1238,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
   }
 
-  // Fetch full article data in batches
+  // Fetch article data for scoring — use POOL_COLUMNS (lightweight, no embeddings)
+  // Full ARTICLE_COLUMNS fetched later only for the final 25 selected articles
+  const fetchColumns = hasAnyPersonalization ? POOL_COLUMNS : ARTICLE_COLUMNS;
   let allArticles = [];
   for (let i = 0; i < uniqueIds.length; i += 300) {
     const batch = uniqueIds.slice(i, i + 300);
     const { data, error } = await supabase
       .from('published_articles')
-      .select(ARTICLE_COLUMNS)
+      .select(fetchColumns)
       .in('id', batch);
     if (!error && data) allArticles = allArticles.concat(data);
   }
