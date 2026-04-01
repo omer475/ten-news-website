@@ -916,28 +916,28 @@ async function handleV2Feed(req, res, supabase, opts) {
   // on Vercel due to extra embedding fetches. Needs optimization before re-enabling.
   let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
 
-  const personalMatchCount = Math.min(150 + offset, 400);
+  // Fix 4: Over-fetch from pgvector — time filtering done in JS, not SQL
   let personalPromise;
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: 100, hours_window: 336,
+      p_user_id: userId, match_per_cluster: 100, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: 100, hours_window: 336,
+      p_user_id: userId, match_per_cluster: 100, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: Math.max(personalMatchCount, 300), hours_window: 336,
+      query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: Math.max(personalMatchCount, 300), hours_window: 336,
+      query_embedding: tasteVector, match_count: 500, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -1057,10 +1057,68 @@ async function handleV2Feed(req, res, supabase, opts) {
   const personalSimilarityMap = {};
   let personalIdOrder = [];
 
+  // ══════════════════════════════════════════════
+  // Fix 4: Tiered time window filtering in JS (per-cluster)
+  // pgvector returns nearest neighbors regardless of age.
+  // We filter here: prefer fresh articles, expand window if pool is thin.
+  // ══════════════════════════════════════════════
+  let personalResults = personalResult.data || [];
+
+  if (personalResults.length > 0) {
+    // Fetch created_at for all pgvector results to apply time filtering
+    const pgIds = personalResults.map(r => r.id);
+    const { data: pgDates } = await supabase
+      .from('published_articles')
+      .select('id, created_at')
+      .in('id', pgIds.slice(0, 500));
+
+    const dateMap = {};
+    for (const a of (pgDates || [])) dateMap[a.id] = new Date(a.created_at).getTime();
+
+    if (hasInterestClusters) {
+      // Per-cluster tiered filtering
+      const clusterResults = {};
+      for (const r of personalResults) {
+        const ci = r.cluster_index ?? 0;
+        if (!clusterResults[ci]) clusterResults[ci] = [];
+        clusterResults[ci].push(r);
+      }
+
+      const filteredResults = [];
+      const MIN_PER_CLUSTER = 20;
+      const tiers = [48, 168, 336]; // hours: 2 days, 7 days, 14 days
+
+      for (const [ci, results] of Object.entries(clusterResults)) {
+        let clusterFiltered = [];
+        for (const tierHours of tiers) {
+          const cutoff = now - tierHours * 3600000;
+          clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= cutoff);
+          if (clusterFiltered.length >= MIN_PER_CLUSTER) break;
+        }
+        // If still not enough after 14 days, use all results for this cluster
+        if (clusterFiltered.length < MIN_PER_CLUSTER) clusterFiltered = results;
+        filteredResults.push(...clusterFiltered);
+      }
+      personalResults = filteredResults;
+    } else {
+      // Single vector: global tiered filtering
+      const MIN_RESULTS = 80;
+      const tiers = [48, 168, 336];
+      let filtered = [];
+      for (const tierHours of tiers) {
+        const cutoff = now - tierHours * 3600000;
+        filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
+        if (filtered.length >= MIN_RESULTS) break;
+      }
+      if (filtered.length < MIN_RESULTS) filtered = personalResults; // use all
+      personalResults = filtered;
+    }
+  }
+
   if (hasInterestClusters) {
     // Group candidates by cluster
     const clusterBuckets = {};
-    for (const r of (personalResult.data || [])) {
+    for (const r of personalResults) {
       const ci = r.cluster_index ?? 0;
       if (!clusterBuckets[ci]) clusterBuckets[ci] = [];
       clusterBuckets[ci].push(r);
@@ -1092,7 +1150,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // Proportional allocation (min 1 per cluster)
     const clusterKeys = Object.keys(clusterBuckets);
-    const targetTotal = 150;
+    const targetTotal = 300; // increased from 150 — more candidates for slot filling
     const allocations = {};
     for (const ci of clusterKeys) {
       const weight = clusterWeights[ci] || (1 / clusterKeys.length);
@@ -1114,7 +1172,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   } else {
     // Single taste vector: sort by similarity
-    const sorted = (personalResult.data || []).sort((a, b) => b.similarity - a.similarity);
+    const sorted = personalResults.sort((a, b) => b.similarity - a.similarity);
     for (const r of sorted) {
       personalSimilarityMap[r.id] = r.similarity;
       personalIdOrder.push(r.id);
@@ -2154,12 +2212,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // True pagination — use bandit pool for cold-start, all scored pools for personalized
   const scoredTotal = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
-  // For personalized users: always report large pool — trending+discovery have thousands of articles.
-  // The actual pool for slot-filling may be smaller, but has_more should stay true
-  // so the app can keep requesting. The server generates fresh results each request.
-  const totalAvailable = hasAnyPersonalization
-    ? Math.max(500, scoredTotal, banditPoolTotal + selected.length)
-    : Math.max(banditPoolTotal + selected.length, scoredTotal);
+  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
