@@ -308,11 +308,18 @@ def cluster_user(user_id, dry_run=False, verbose=True):
             row['medoid_minilm'] = minilm
         supabase.table('user_interest_clusters').insert(row).execute()
 
-    # 3. Update profiles table with weighted centroid taste vector and similarity floor
+    # 3. Update taste vectors — write MiniLM centroid to BOTH profiles and personalization_profiles
+    centroid_list = weighted_centroid.tolist()
     supabase.table('profiles').update({
-        'taste_vector': weighted_centroid.tolist(),
+        'taste_vector': centroid_list,
+        'taste_vector_minilm': centroid_list,
         'similarity_floor': sim_floor,
     }).eq('id', user_id).execute()
+
+    # Also update personalization_profiles (this is what the feed reads)
+    supabase.table('personalization_profiles').update({
+        'taste_vector_minilm': centroid_list,
+    }).eq('auth_profile_id', user_id).execute()
 
     if verbose:
         print(f"  Saved {len(clusters)} clusters + taste vector + floor to DB")

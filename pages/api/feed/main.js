@@ -2224,17 +2224,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: totalAvailable,
-    _debug: {
-      personalScored: personalScored.length,
-      trendingScored: trendingScored.length,
-      discoveryScored: discoveryScored.length,
-      interestScored: interestScored.length,
-      uniqueIds: uniqueIds.length,
-      allArticles: allArticles.length,
-      personalResults: personalResults?.length || 0,
-      banditPoolTotal,
-      selected: selected.length,
-    }
   });
 }
 
