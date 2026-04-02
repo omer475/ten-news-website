@@ -1259,7 +1259,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 8 : 10;
+  const trendingCatMax = hasAnyPersonalization ? 15 : 20;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1274,8 +1274,8 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
-  const discoveryCatMax = hasAnyPersonalization ? 6 : 8;
-  const discoveryTotalMax = hasAnyPersonalization ? 150 : 200;
+  const discoveryCatMax = hasAnyPersonalization ? 12 : 15;
+  const discoveryTotalMax = hasAnyPersonalization ? 300 : 400;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
@@ -1468,9 +1468,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Hard-block only entities with very strong skip signal (weight >= 0.50).
+  // Lighter skip signals are handled by computeSkipPenalty in scoring functions,
+  // which deprioritizes without eliminating. Threshold 10 = 0.50 / 0.05.
   const globalBlocklist = new Set();
   for (const [entity, count] of Object.entries(globalEntitySkipCounts)) {
-    if (count >= 3) globalBlocklist.add(entity);
+    if (count >= 10) globalBlocklist.add(entity);
   }
 
   function isGlobalBlocked(article) {
@@ -2390,15 +2393,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
-    _d: {
-      p: personalScoredFiltered.length, t: trendingScoredFiltered.length, d: discoveryScoredFiltered.length, i: interestScoredFiltered.length,
-      seen: seenArticleIds.length, sel: selected.length,
-      rawT: (trendingResult.data||[]).length, rawD: (discoveryResult.data||[]).length,
-      tMeta: trendingArticleMeta.length, dMeta: discoveryArticleMeta.length,
-      tScored: trendingScored.length, dScored: discoveryScored.length,
-      uniqueIds: uniqueIds.length, articleMapSize: Object.keys(articleMap).length,
-      tBlocked: trendingScored.filter(a => isGlobalBlocked(a)).length,
-    },
   });
 }
 
