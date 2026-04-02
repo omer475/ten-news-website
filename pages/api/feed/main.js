@@ -1004,23 +1004,36 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score — 7d window so heavy users don't exhaust pool
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-      .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', 500)
-      .order('ai_final_score', { ascending: false })
-      .limit(400),
+    // 2. TRENDING: high editorial score — exclude seen IDs at DB level
+    //    so LIMIT returns unseen articles (not top-400 that the user already saw)
+    (() => {
+      let q = supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+        .gte('created_at', sevenDaysAgo)
+        .gte('ai_final_score', 500)
+        .order('ai_final_score', { ascending: false })
+        .limit(400);
+      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
+        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
+      return q;
+    })(),
 
-    // 3. DISCOVERY: diverse quality content, 14-day pool for depth
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-      .gte('created_at', new Date(now - 14 * 24 * 3600000).toISOString())
-      .gte('ai_final_score', 300)
-      .order('ai_final_score', { ascending: false })
-      .limit(800),
+    // 3. DISCOVERY: diverse quality content — exclude seen IDs at DB level
+    (() => {
+      let q = supabase
+        .from('published_articles')
+        .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+        .gte('created_at', new Date(now - 14 * 24 * 3600000).toISOString())
+        .gte('ai_final_score', 300)
+        .order('ai_final_score', { ascending: false })
+        .limit(800);
+      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
+        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
+      return q;
+    })(),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -1056,16 +1069,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   let interestArticles = [];
   if (interestCategories.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
-    const catPromises = allInterestCats.map(cat =>
-      supabase
+    const catPromises = allInterestCats.map(cat => {
+      let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
         .gte('created_at', sevenDaysAgo)
         .gte('ai_final_score', 300)
-        .order('ai_final_score', { ascending: false })
-        .limit(100)
-    );
+        .order('ai_final_score', { ascending: false });
+      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
+        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      }
+      return q.limit(100);
+    });
     const catResults = await Promise.all(catPromises);
     for (const r of catResults) {
       if (r.data) interestArticles.push(...r.data);
