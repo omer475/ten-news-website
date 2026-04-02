@@ -878,27 +878,24 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Fetch seen articles to exclude — only recent views/engages, not ancient history.
-    // Cap at 200 to prevent pool exhaustion for heavy users.
-    // Skipped articles (< 3s dwell) are NOT excluded — the user may have
-    // missed them and should see them again with different context.
+    // Fetch seen articles to exclude — all interaction types, 48h window.
+    // Cap at 300 to prevent pool exhaustion for heavy users.
     let seenArticleIds = [];
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id')
         .eq('user_id', userId)
-        .in('event_type', ['article_detail_view', 'article_engaged'])
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
+        .gte('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(300);
 
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
       }
     }
     // Merge client-sent seen IDs (handles races where server events haven't persisted yet)
-    // Only use the most recent 100 to avoid over-filtering
     if (clientSeenIds.length > 0) {
       const recentClientIds = clientSeenIds.slice(-100);
       seenArticleIds = [...new Set([...seenArticleIds, ...recentClientIds])];
@@ -1007,23 +1004,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score
+    // 2. TRENDING: high editorial score — 7d window so heavy users don't exhaust pool
     supabase
       .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 600)
-      .order('ai_final_score', { ascending: false })
-      .limit(200),
-
-    // 3. DISCOVERY: diverse quality content, 7-day pool
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days')
+      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
       .gte('created_at', sevenDaysAgo)
+      .gte('ai_final_score', 500)
+      .order('ai_final_score', { ascending: false })
+      .limit(400),
+
+    // 3. DISCOVERY: diverse quality content, 14-day pool for depth
+    supabase
+      .from('published_articles')
+      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+      .gte('created_at', new Date(now - 14 * 24 * 3600000).toISOString())
       .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(500),
+      .limit(800),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
