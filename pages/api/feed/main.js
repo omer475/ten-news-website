@@ -1020,12 +1020,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       return q;
     })(),
 
-    // 3. DISCOVERY: diverse quality content — exclude seen IDs at DB level
+    // 3. DISCOVERY: diverse quality content — 7d max, exclude seen IDs
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', new Date(now - 14 * 24 * 3600000).toISOString())
+        .gte('created_at', sevenDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false })
         .limit(800);
