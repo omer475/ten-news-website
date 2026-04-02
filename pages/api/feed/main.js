@@ -2330,18 +2330,20 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // True pagination — use bandit pool for cold-start, all scored pools for personalized
+  // has_more: are there more articles in the pools beyond what we selected for this page?
+  // scoredTotal represents remaining candidates AFTER excluding seen articles.
+  // If scoredTotal > selected.length, there are more to show on the next page.
   const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
-  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
+  const remainingPool = Math.max(banditPoolTotal, scoredTotal);
+  const hasMore = remainingPool > selected.length;
   const totalServed = offset + selected.length;
-  const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
 
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
-    total: totalAvailable,
+    total: remainingPool,
   });
 }
 
