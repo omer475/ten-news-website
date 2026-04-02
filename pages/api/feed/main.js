@@ -878,25 +878,30 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Always fetch seen articles to exclude (fresh candidates each request, like TikTok)
+    // Fetch seen articles to exclude — only recent views/engages, not ancient history.
+    // Cap at 200 to prevent pool exhaustion for heavy users.
+    // Skipped articles (< 3s dwell) are NOT excluded — the user may have
+    // missed them and should see them again with different context.
     let seenArticleIds = [];
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id')
         .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
-        .gte('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+        .in('event_type', ['article_detail_view', 'article_engaged'])
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(200);
 
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
       }
     }
-    // Merge client-sent seen IDs (handles guests and races where server events haven't persisted yet)
+    // Merge client-sent seen IDs (handles races where server events haven't persisted yet)
+    // Only use the most recent 100 to avoid over-filtering
     if (clientSeenIds.length > 0) {
-      seenArticleIds = [...new Set([...seenArticleIds, ...clientSeenIds])];
+      const recentClientIds = clientSeenIds.slice(-100);
+      seenArticleIds = [...new Set([...seenArticleIds, ...recentClientIds])];
     }
 
     // ==========================================
@@ -2372,15 +2377,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
-    _debug: {
-      pools: { personal: personalScoredFiltered.length, trending: trendingScoredFiltered.length, discovery: discoveryScoredFiltered.length, interest: interestScoredFiltered.length },
-      seenCount: seenArticleIds.length,
-      selected: selected.length,
-      limit,
-      offset,
-      userId,
-      ts: Date.now(),
-    },
   });
 }
 
