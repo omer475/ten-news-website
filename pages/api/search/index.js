@@ -16,26 +16,12 @@ const CATEGORY_EMOJIS = {
   'Beauty': '💄', 'Travel': '✈️'
 }
 
-const safeJsonParse = (v, fb = null) => {
-  if (!v) return fb; if (typeof v !== 'string') return v;
-  try { return JSON.parse(v); } catch { return fb; }
-}
-
-function decayMultiplier(freshnessCategory, ageHours) {
-  switch (freshnessCategory) {
-    case 'breaking': return Math.max(0.02, Math.exp(-0.115 * ageHours));
-    case 'developing': return Math.max(0.02, Math.exp(-0.015 * ageHours));
-    case 'analysis': return Math.max(0.02, Math.exp(-0.0095 * ageHours));
-    case 'evergreen': return Math.max(0.02, Math.exp(-0.004 * ageHours));
-    case 'timeless': return Math.max(0.02, Math.exp(-0.0007 * ageHours));
-    default: return Math.max(0.02, Math.exp(-0.015 * ageHours));
-  }
-}
-
 /**
  * GET /api/search?q=<query>&user_id=<uuid>&page=0&limit=40
  *
- * Three-layer search: full-text (ts_rank) + semantic (pgvector) + merge.
+ * Returns articles (ranked by engagement) + matching entities.
+ * Articles include ALL published articles regardless of shelf_life.
+ * Entities are matched by name/alias overlap with the query.
  */
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -43,12 +29,12 @@ export default async function handler(req, res) {
   }
 
   const { q, user_id, page = '0', limit = '40' } = req.query
+
   if (!q || q.trim().length < 2) {
     return res.status(400).json({ error: 'Query must be at least 2 characters' })
   }
 
-  const query = q.trim()
-  const queryLower = query.toLowerCase()
+  const query = q.trim().toLowerCase()
   const pageNum = parseInt(page, 10) || 0
   const pageSize = Math.min(parseInt(limit, 10) || 40, 100)
   const offset = pageNum * pageSize
@@ -56,300 +42,225 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey)
 
   try {
-    // ══════════════════════════════════════════════
-    // LAYER 1: Full-text search (ts_rank across title + category)
-    // Uses the search_vector GIN index for fast ranked results.
-    // Handles stemming ("films" → "film"), stop words, field weighting.
-    // ══════════════════════════════════════════════
-
-    const tsQuery = query.split(/\s+/).filter(w => w.length >= 2).join(' & ')
-
-    const fullTextPromise = tsQuery
-      ? supabase.rpc('search_articles_fulltext', { search_query: tsQuery, result_limit: 50 })
-          .then(r => r)
-          .catch(() => ({ data: null }))
-      : Promise.resolve({ data: null })
-
-    // Fallback: if RPC doesn't exist, do ILIKE search
-    const ilikeFallbackPromise = supabase
-      .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, ai_final_score, published_at, created_at, freshness_category')
-      .or(query.split(/\s+/).filter(w => w.length >= 2).map(w => `title_news.ilike.%${w}%`).join(','))
-      .order('ai_final_score', { ascending: false })
-      .limit(50)
-
-    // Also search tags
-    const tagSearchPromise = supabase
-      .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, ai_final_score, published_at, created_at, freshness_category')
-      .contains('interest_tags', [query])
-      .order('ai_final_score', { ascending: false })
-      .limit(50)
-
-    // ══════════════════════════════════════════════
-    // LAYER 2: Semantic search (pgvector cosine similarity)
-    // Find the best embedding proxy for the query, then ANN search.
-    // ══════════════════════════════════════════════
-
-    let queryEmbedding = null
-
-    // Match query against subtopic embeddings
-    const { data: subtopics } = await supabase
-      .from('subtopic_embeddings')
-      .select('subtopic_name, embedding_minilm')
-      .limit(50)
-
-    if (subtopics) {
-      const matches = subtopics.filter(s => {
-        const name = s.subtopic_name.toLowerCase()
-        return name.includes(queryLower) || queryLower.includes(name) ||
-               queryLower.split(/\s+/).some(w => w.length >= 3 && name.includes(w))
-      })
-      if (matches.length > 0) {
-        const embs = matches
-          .map(m => safeJsonParse(m.embedding_minilm, null))
-          .filter(e => e && Array.isArray(e) && e.length === 384)
-        if (embs.length > 0) {
-          queryEmbedding = new Array(384).fill(0)
-          for (const emb of embs) for (let d = 0; d < 384; d++) queryEmbedding[d] += emb[d]
-          for (let d = 0; d < 384; d++) queryEmbedding[d] /= embs.length
-        }
-      }
-    }
-
-    // Fallback: use tag-matching articles' embeddings as proxy
-    if (!queryEmbedding) {
-      const { data: tagArticles } = await supabase
-        .from('published_articles')
-        .select('embedding_minilm')
-        .contains('interest_tags', [query])
-        .not('embedding_minilm', 'is', null)
-        .limit(5)
-      if (tagArticles && tagArticles.length > 0) {
-        const embs = tagArticles.map(a => {
-          const e = safeJsonParse(a.embedding_minilm, null) || a.embedding_minilm
-          return (e && Array.isArray(e) && e.length === 384) ? e : null
-        }).filter(Boolean)
-        if (embs.length > 0) {
-          queryEmbedding = new Array(384).fill(0)
-          for (const emb of embs) for (let d = 0; d < 384; d++) queryEmbedding[d] += emb[d]
-          for (let d = 0; d < 384; d++) queryEmbedding[d] /= embs.length
-        }
-      }
-    }
-
-    const semanticPromise = queryEmbedding
-      ? supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: queryEmbedding,
-          match_count: 50,
-          hours_window: 720,
-          exclude_ids: null,
-          min_similarity: 0.20
-        })
-      : Promise.resolve({ data: [] })
-
-    // Entity search
-    const entityPromise = pageNum === 0
-      ? searchEntities(supabase, queryLower, subtopics)
-      : Promise.resolve([])
-
-    // ══════════════════════════════════════════════
-    // Execute all searches in parallel
-    // ══════════════════════════════════════════════
-
-    const [fullTextResult, ilikeFallback, tagResult, semanticResult, entities] = await Promise.all([
-      fullTextPromise, ilikeFallbackPromise, tagSearchPromise, semanticPromise, entityPromise
+    // Run article search and entity search in parallel
+    const [articlesResult, entitiesResult] = await Promise.all([
+      searchArticles(supabase, query, pageSize, offset),
+      pageNum === 0 ? searchEntities(supabase, query) : { entities: [] }
     ])
 
-    // ══════════════════════════════════════════════
-    // LAYER 3: Merge, deduplicate, score
-    // ══════════════════════════════════════════════
-
-    const articleMap = {} // id → { article, textRank, semanticSim, tagMatch, keywordMatch }
-    const now = Date.now()
-
-    // Add full-text results (if RPC worked)
-    if (fullTextResult.data && Array.isArray(fullTextResult.data)) {
-      for (const r of fullTextResult.data) {
-        articleMap[r.id] = {
-          id: r.id, article: r,
-          textRank: r.text_rank || 0.5,
-          semanticSim: 0, tagMatch: false, keywordMatch: true
-        }
-      }
-    }
-
-    // Add ILIKE fallback results
-    if (ilikeFallback.data) {
-      for (const a of ilikeFallback.data) {
-        if (articleMap[a.id]) {
-          articleMap[a.id].keywordMatch = true
-          if (!articleMap[a.id].article?.ai_final_score) articleMap[a.id].article = a
-        } else {
-          articleMap[a.id] = { id: a.id, article: a, textRank: 0.3, semanticSim: 0, tagMatch: false, keywordMatch: true }
-        }
-      }
-    }
-
-    // Add tag results
-    if (tagResult.data) {
-      for (const a of tagResult.data) {
-        if (articleMap[a.id]) {
-          articleMap[a.id].tagMatch = true
-          if (!articleMap[a.id].article?.ai_final_score) articleMap[a.id].article = a
-        } else {
-          articleMap[a.id] = { id: a.id, article: a, textRank: 0, semanticSim: 0, tagMatch: true, keywordMatch: false }
-        }
-      }
-    }
-
-    // Add semantic results
-    if (semanticResult.data) {
-      for (const r of semanticResult.data) {
-        if (articleMap[r.id]) {
-          articleMap[r.id].semanticSim = r.similarity || 0
-        } else {
-          articleMap[r.id] = { id: r.id, semanticSim: r.similarity || 0, textRank: 0, tagMatch: false, keywordMatch: false }
-        }
-      }
-    }
-
-    // Fetch article data for entries that only have semantic results (no article data)
-    const needsData = Object.values(articleMap).filter(r => !r.article).map(r => r.id)
-    if (needsData.length > 0) {
-      const { data: fullArticles } = await supabase
-        .from('published_articles')
-        .select('id, title_news, image_url, category, interest_tags, ai_final_score, published_at, created_at, freshness_category')
-        .in('id', needsData.slice(0, 100))
-      if (fullArticles) {
-        for (const a of fullArticles) {
-          if (articleMap[a.id]) articleMap[a.id].article = a
-        }
-      }
-    }
-
-    // ══════════════════════════════════════════════
-    // Compute blended search score
-    // ══════════════════════════════════════════════
-
-    const queryWords = queryLower.split(/\s+/).filter(w => w.length >= 2)
-
-    const scored = Object.values(articleMap)
-      .filter(r => r.article)
-      .map(r => {
-        const a = r.article
-        const ageHours = (now - new Date(a.created_at || a.published_at || now).getTime()) / 3600000
-
-        // Semantic similarity (0-1)
-        const semSim = r.semanticSim || 0
-
-        // Text rank (0-1, normalized)
-        const textRank = Math.min(r.textRank || 0, 1.0)
-
-        // Quality (0-1)
-        const quality = (a.ai_final_score || 0) / 1000
-
-        // Freshness decay (0-1)
-        const freshness = decayMultiplier(a.freshness_category, ageHours)
-
-        // Entity match bonus: query word exactly matches a tag
-        const tags = (Array.isArray(a.interest_tags) ? a.interest_tags : safeJsonParse(a.interest_tags, []) || [])
-          .map(t => (t || '').toLowerCase())
-        const entityMatch = queryWords.some(w => tags.includes(w)) ? 1.0 : 0.0
-
-        // Both-source multiplier
-        const inBoth = (r.semanticSim > 0.2) && (r.keywordMatch || r.tagMatch)
-        const bothBonus = inBoth ? 1.3 : 1.0
-
-        const score = (
-          semSim * 0.5 +
-          textRank * 0.3 +
-          quality * 0.1 +
-          freshness * 0.1
-        ) * bothBonus * (entityMatch > 0 ? 1.15 : 1.0)
-
-        return { ...a, _searchScore: score }
-      })
-      .sort((a, b) => b._searchScore - a._searchScore)
-
-    const paginated = scored.slice(offset, offset + pageSize)
-
-    // Fetch entity articles
-    const articleIds = new Set(paginated.map(a => a.id))
+    // For matched entities, fetch their top articles for carousels
     let entitiesWithArticles = []
-    if (entities.length > 0) {
-      entitiesWithArticles = await fetchEntityArticles(supabase, entities, articleIds)
+    if (entitiesResult.entities.length > 0) {
+      entitiesWithArticles = await fetchEntityArticles(
+        supabase,
+        entitiesResult.entities,
+        articlesResult.articleIds // exclude articles already in main results
+      )
     }
 
     return res.status(200).json({
-      articles: paginated.map(formatArticle),
+      articles: articlesResult.articles,
       entities: entitiesWithArticles,
-      total_articles: scored.length,
+      total_articles: articlesResult.total,
       page: pageNum,
-      has_more: offset + pageSize < scored.length,
+      has_more: offset + pageSize < articlesResult.total,
       query: q.trim()
     })
-
   } catch (err) {
     console.error('[search] Error:', err)
     return res.status(500).json({ error: 'Search failed' })
   }
 }
 
-async function searchEntities(supabase, query, subtopics) {
-  const { data: entities } = await supabase
+/**
+ * Search articles by title and interest_tags.
+ * Returns ALL articles (no shelf_life filter) ordered by engagement.
+ */
+async function searchArticles(supabase, query, limit, offset) {
+  const words = query.split(/\s+/).filter(w => w.length >= 2)
+
+  // Build OR filter: title matches OR any interest_tag matches
+  // We use ilike for title and cs (contains) for tags
+  const titleFilter = words.map(w => `title_news.ilike.%${w}%`).join(',')
+
+  // Query articles — search by title match
+  // We'll also do a separate tag search and merge
+  const [titleResult, tagResult] = await Promise.all([
+    supabase
+      .from('published_articles')
+      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days, author_id, author_name', { count: 'exact' })
+      .filter('published_at', 'lte', new Date().toISOString())
+      .or(titleFilter)
+      .order('like_count', { ascending: false, nullsFirst: false })
+      .order('engagement_count', { ascending: false, nullsFirst: false })
+      .order('ai_final_score', { ascending: false, nullsFirst: false })
+      .range(0, limit + offset + 50), // fetch extra to merge with tag results
+
+    // Tag-based search: find articles where interest_tags contain the query words
+    supabase
+      .from('published_articles')
+      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days, author_id, author_name')
+      .filter('published_at', 'lte', new Date().toISOString())
+      .contains('interest_tags', [query])
+      .order('like_count', { ascending: false, nullsFirst: false })
+      .order('engagement_count', { ascending: false, nullsFirst: false })
+      .range(0, 100)
+  ])
+
+  // Merge and deduplicate
+  const seen = new Set()
+  const allArticles = []
+
+  const addArticles = (articles) => {
+    if (!articles) return
+    for (const a of articles) {
+      if (!seen.has(a.id)) {
+        seen.add(a.id)
+        allArticles.push(a)
+      }
+    }
+  }
+
+  addArticles(titleResult.data)
+  addArticles(tagResult.data)
+
+  // Score and sort by engagement
+  allArticles.sort((a, b) => {
+    const scoreA = computeSearchRank(a, query)
+    const scoreB = computeSearchRank(b, query)
+    return scoreB - scoreA
+  })
+
+  // Paginate
+  const paginated = allArticles.slice(offset, offset + limit)
+
+  return {
+    articles: paginated.map(formatArticle),
+    articleIds: new Set(paginated.map(a => a.id)),
+    total: allArticles.length
+  }
+}
+
+/**
+ * Compute a search ranking score combining relevance + engagement.
+ */
+function computeSearchRank(article, query) {
+  let score = 0
+
+  // Title relevance (highest signal)
+  const title = (article.title_news || '').toLowerCase()
+  if (title.includes(query)) {
+    score += 100 // exact phrase match in title
+  } else {
+    const words = query.split(/\s+/)
+    const matched = words.filter(w => title.includes(w)).length
+    score += (matched / words.length) * 60
+  }
+
+  // Tag relevance
+  const tags = article.interest_tags || []
+  if (tags.some(t => t.toLowerCase() === query)) {
+    score += 40 // exact tag match
+  } else if (tags.some(t => t.toLowerCase().includes(query))) {
+    score += 20 // partial tag match
+  }
+
+  // Engagement signals
+  score += Math.min((article.like_count || 0) * 3, 50)
+  score += Math.min((article.engagement_count || 0) * 2, 40)
+  score += Math.min((article.ai_final_score || 0) / 20, 30)
+
+  return score
+}
+
+/**
+ * Search entities by name and aliases.
+ */
+async function searchEntities(supabase, query) {
+  // Search by entity_name prefix + display_title contains
+  const { data: entities, error } = await supabase
     .from('concept_entities')
     .select('id, entity_name, display_title, category, aliases, popularity_score')
     .or(`entity_name.ilike.%${query}%,display_title.ilike.%${query}%`)
     .order('popularity_score', { ascending: false })
     .limit(10)
 
-  let matched = (entities || []).map(e => ({
-    entity_name: e.entity_name,
-    display_title: e.display_title,
-    category: e.category,
-    emoji: CATEGORY_EMOJIS[e.category] || '📰',
-  }))
-
-  // Also suggest related subtopics
-  if (subtopics && matched.length < 8) {
-    const queryWords = query.split(/\s+/)
-    const subtopicMatches = subtopics
-      .filter(s => {
-        const name = s.subtopic_name.toLowerCase()
-        return queryWords.some(w => w.length >= 3 && name.includes(w)) &&
-               !matched.some(m => m.entity_name === s.subtopic_name)
-      })
-      .slice(0, 5)
-      .map(s => ({
-        entity_name: s.subtopic_name.toLowerCase().replace(/\s+/g, '_'),
-        display_title: s.subtopic_name,
-        category: 'Topic',
-        emoji: '🔍',
-      }))
-    matched = [...matched, ...subtopicMatches]
+  if (error) {
+    console.error('[search] Entity search error:', error)
+    return { entities: [] }
   }
 
-  return matched.slice(0, 8)
+  // Also check aliases — Supabase doesn't support ilike on array elements easily,
+  // so we filter in JS for alias matches
+  let matched = entities || []
+
+  // If few direct matches, try alias matching with a broader query
+  if (matched.length < 3) {
+    const { data: aliasEntities } = await supabase
+      .from('concept_entities')
+      .select('id, entity_name, display_title, category, aliases, popularity_score')
+      .not('aliases', 'is', null)
+      .limit(200)
+
+    if (aliasEntities) {
+      const aliasMatches = aliasEntities.filter(e => {
+        if (matched.some(m => m.id === e.id)) return false // already matched
+        return (e.aliases || []).some(alias =>
+          alias.toLowerCase().includes(query)
+        )
+      })
+      matched = [...matched, ...aliasMatches.slice(0, 5)]
+    }
+  }
+
+  return {
+    entities: matched.map(e => ({
+      id: e.id,
+      entity_name: e.entity_name,
+      display_title: e.display_title,
+      category: e.category,
+      emoji: CATEGORY_EMOJIS[e.category] || '📰',
+      popularity_score: e.popularity_score
+    }))
+  }
 }
 
+/**
+ * For each matched entity, fetch their top articles for the carousel.
+ */
 async function fetchEntityArticles(supabase, entities, excludeIds) {
   const results = await Promise.all(
     entities.slice(0, 5).map(async (entity) => {
+      // Find articles where interest_tags contain the entity name
+      // or title contains the entity name
       const { data: articles } = await supabase
         .from('published_articles')
-        .select('id, title_news, image_url, category, interest_tags, ai_final_score, published_at')
+        .select('id, title_news, image_url, category, interest_tags, like_count, engagement_count, ai_final_score, published_at, author_id, author_name')
+        .filter('published_at', 'lte', new Date().toISOString())
         .or(`title_news.ilike.%${entity.entity_name}%,interest_tags.cs.{${entity.entity_name}}`)
-        .order('ai_final_score', { ascending: false })
+        .order('like_count', { ascending: false, nullsFirst: false })
+        .order('engagement_count', { ascending: false, nullsFirst: false })
         .limit(12)
-      const filtered = (articles || []).filter(a => !excludeIds.has(a.id))
+
+      const filtered = (articles || [])
+        .filter(a => !excludeIds.has(a.id))
+
       if (filtered.length === 0) return null
-      return { ...entity, article_count: filtered.length, articles: filtered.slice(0, 8).map(formatArticle) }
+
+      return {
+        ...entity,
+        article_count: filtered.length,
+        articles: filtered.slice(0, 8).map(formatArticle)
+      }
     })
   )
+
   return results.filter(Boolean)
 }
 
+/**
+ * Format article for API response.
+ */
 function formatArticle(article) {
   return {
     id: article.id,
@@ -359,6 +270,6 @@ function formatArticle(article) {
     like_count: article.like_count || 0,
     engagement_count: article.engagement_count || 0,
     ai_score: article.ai_final_score || 0,
-    published_at: article.published_at || article.created_at
+    published_at: article.published_at
   }
 }

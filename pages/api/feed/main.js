@@ -188,6 +188,8 @@ function formatArticle(article, eventMap = {}) {
     cluster_id: article.cluster_id,
     version_number: article.version_number,
     views: article.view_count || 0,
+    author_id: article.author_id || null,
+    author_name: article.author_name || null,
   };
 
   // Add world event if available
@@ -686,6 +688,7 @@ const ARTICLE_COLUMNS = [
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'embedding_minilm',
+  'author_id', 'author_name',
 ].join(', ');
 
 // Lightweight columns for pool construction (no heavy JSONB)
@@ -693,6 +696,7 @@ const POOL_COLUMNS = [
   'id', 'title_news', 'category', 'created_at', 'published_at',
   'ai_final_score', 'interest_tags', 'cluster_id',
   'shelf_life_days', 'freshness_category',
+  'author_id',
 ].join(', ');
 
 // ==========================================
@@ -854,6 +858,23 @@ export default async function handler(req, res) {
     }
 
     // ==========================================
+    // LOAD FOLLOWED PUBLISHERS
+    // ==========================================
+
+    let followedPublisherIds = new Set();
+    if (userId) {
+      try {
+        const { data: follows } = await supabase
+          .from('user_follows')
+          .select('publisher_id')
+          .eq('user_id', userId);
+        if (follows && follows.length > 0) {
+          followedPublisherIds = new Set(follows.map(f => f.publisher_id));
+        }
+      } catch (e) {}
+    }
+
+    // ==========================================
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
@@ -902,6 +923,7 @@ export default async function handler(req, res) {
       personalizationId,
       sessionTasteVector,
       usedTempTasteVector: false,
+      followedPublisherIds,
       limit,
       offset,
     });
@@ -922,7 +944,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
-        personalizationId, sessionTasteVector, usedTempTasteVector, limit, offset } = opts;
+        personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds, limit, offset } = opts;
+  followedPublisherIds = followedPublisherIds || new Set();
   sessionEngagedIds = sessionEngagedIds || [];
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
@@ -1332,9 +1355,13 @@ async function handleV2Feed(req, res, supabase, opts) {
           sessionVecSim = cosineSimilarityVec(emb, sessionTasteVector);
         }
       }
-      const score = personalizationId
+      let score = personalizationId
         ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
+      // Boost articles from followed publishers
+      if (article.author_id && followedPublisherIds.has(article.author_id)) {
+        score *= 1.25;
+      }
       return {
         ...article,
         _score: score,

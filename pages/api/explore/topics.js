@@ -263,7 +263,7 @@ export default async function handler(req, res) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data: recentArticlesAll } = await supabase
       .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score')
+      .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score, author_id, author_name')
       .gte('published_at', sevenDaysAgo)
       .lte('published_at', new Date().toISOString())
       .not('interest_tags', 'is', null)
