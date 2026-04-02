@@ -2330,12 +2330,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // has_more: are there more articles in the pools beyond what we selected for this page?
-  // scoredTotal represents remaining candidates AFTER excluding seen articles.
-  // If scoredTotal > selected.length, there are more to show on the next page.
+  // has_more: true only when we filled a complete page AND the pool has more.
+  // - If we couldn't fill a page (selected < limit), pools are thin — signal end.
+  // - If selected is 0, all remaining articles were filtered — no infinite loop.
   const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
   const remainingPool = Math.max(banditPoolTotal, scoredTotal);
-  const hasMore = remainingPool > selected.length;
+  const requestedLimit = limit || 20;
+  const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
   const totalServed = offset + selected.length;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
 
