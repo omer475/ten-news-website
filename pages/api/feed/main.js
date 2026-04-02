@@ -1159,8 +1159,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       const filteredResults = [];
-      const MIN_PER_CLUSTER = 20;
-      const tiers = [48, 168, 336]; // hours: 2 days, 7 days, 14 days
+      const MIN_PER_CLUSTER = 10;
+      const tiers = [48, 168]; // hours: 2 days, 7 days — hard cap at 7d for personal
 
       for (const [ci, results] of Object.entries(clusterResults)) {
         let clusterFiltered = [];
@@ -1169,22 +1169,29 @@ async function handleV2Feed(req, res, supabase, opts) {
           clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= cutoff);
           if (clusterFiltered.length >= MIN_PER_CLUSTER) break;
         }
-        // If still not enough after 14 days, use all results for this cluster
-        if (clusterFiltered.length < MIN_PER_CLUSTER) clusterFiltered = results;
+        // Hard cap: never go beyond 7 days for personal pool.
+        // If still thin, accept whatever 7d has — discovery handles older content.
+        if (clusterFiltered.length === 0) {
+          const weekCutoff = now - 168 * 3600000;
+          clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= weekCutoff);
+        }
         filteredResults.push(...clusterFiltered);
       }
       personalResults = filteredResults;
     } else {
-      // Single vector: global tiered filtering
-      const MIN_RESULTS = 80;
-      const tiers = [48, 168, 336];
+      // Single vector: tiered filtering, hard cap at 7 days
+      const MIN_RESULTS = 40;
+      const tiers = [48, 168]; // 2 days, 7 days max
       let filtered = [];
       for (const tierHours of tiers) {
         const cutoff = now - tierHours * 3600000;
         filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
         if (filtered.length >= MIN_RESULTS) break;
       }
-      if (filtered.length < MIN_RESULTS) filtered = personalResults; // use all
+      if (filtered.length === 0) {
+        const weekCutoff = now - 168 * 3600000;
+        filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= weekCutoff);
+      }
       personalResults = filtered;
     }
   }
