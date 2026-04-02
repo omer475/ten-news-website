@@ -2390,7 +2390,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
-    _d: { p: personalScoredFiltered.length, t: trendingScoredFiltered.length, d: discoveryScoredFiltered.length, i: interestScoredFiltered.length, seen: seenArticleIds.length, sel: selected.length, rawT: (trendingResult.data||[]).length, rawD: (discoveryResult.data||[]).length },
+    _d: {
+      p: personalScoredFiltered.length, t: trendingScoredFiltered.length, d: discoveryScoredFiltered.length, i: interestScoredFiltered.length,
+      seen: seenArticleIds.length, sel: selected.length,
+      rawT: (trendingResult.data||[]).length, rawD: (discoveryResult.data||[]).length,
+      tMeta: trendingArticleMeta.length, dMeta: discoveryArticleMeta.length,
+      tScored: trendingScored.length, dScored: discoveryScored.length,
+      uniqueIds: uniqueIds.length, articleMapSize: Object.keys(articleMap).length,
+      tBlocked: trendingScored.filter(a => isGlobalBlocked(a)).length,
+    },
   });
 }
 
