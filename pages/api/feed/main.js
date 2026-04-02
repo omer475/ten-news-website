@@ -2372,6 +2372,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
+    _debug: {
+      pools: { personal: personalScoredFiltered.length, trending: trendingScoredFiltered.length, discovery: discoveryScoredFiltered.length, interest: interestScoredFiltered.length },
+      seenCount: seenArticleIds.length,
+      selected: selected.length,
+      limit,
+      offset,
+      userId,
+      ts: Date.now(),
+    },
   });
 }
 
