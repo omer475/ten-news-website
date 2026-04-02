@@ -886,7 +886,7 @@ export default async function handler(req, res) {
         .from('user_article_events')
         .select('article_id')
         .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
+        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
         .gte('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(300);
