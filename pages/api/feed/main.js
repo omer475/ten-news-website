@@ -443,8 +443,8 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   const netSkip = Math.max(0, skipScore - tagScore * 0.5);
   const skipPenalty = Math.min(netSkip, 0.9);
 
-  // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
+  // All components multiplied by recency — prevents old articles from dominating
+  const base = (tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250) * recency;
   return base * (1 - skipPenalty);
 }
 
@@ -492,14 +492,14 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
 
   const quality = (article.ai_final_score || 0) / 1000;
-  const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
-  const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
-  const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
   const momentum = sessionBoost || 0;
 
-  const baseScore = vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
+  // Recency decay as MULTIPLIER (not additive boost) — critical for preventing
+  // 15-day-old articles from outscoring fresh ones via high vector similarity.
+  const recencyDecay = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
 
-  // Skip penalty: iran(0.35) + iran_war(0.30) = 0.65 → score × 0.35
+  const baseScore = (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
+
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
 
