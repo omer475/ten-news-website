@@ -2390,6 +2390,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
+    _d: { p: personalScoredFiltered.length, t: trendingScoredFiltered.length, d: discoveryScoredFiltered.length, i: interestScoredFiltered.length, seen: seenArticleIds.length, sel: selected.length, rawT: (trendingResult.data||[]).length, rawD: (discoveryResult.data||[]).length },
   });
 }
 
