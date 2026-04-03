@@ -2734,17 +2734,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     feed_state: feedState,
     fresh_count: totalFreshUnseen,
     caught_up_message: caughtUpMessage,
-    _v: 'fb3',
-    _debug_pools: {
-      personal: pTiers.freshUnseen.length,
-      trending: tTiers.freshUnseen.length,
-      discovery: dTiers.freshUnseen.length,
-      interest: iTiers.freshUnseen.length,
-      fresh_best: fTiers.freshUnseen.length,
-      fresh_best_raw: (freshBestResult.data || []).length,
-      fresh_best_scored: freshBestScoredFiltered.length,
-      slot_pattern: SLOTS.join(''),
-    },
   });
 }
 
