@@ -930,32 +930,41 @@ export default async function handler(req, res) {
       if (seenEvents) {
         const nowMs = Date.now();
         const hardExcludeIds = new Set();
-        const allIds = new Set();
-        const engagedTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view']);
+        // allSeenIds = only articles the user ACTUALLY READ (engaged 6s+, liked, detail view)
+        // NOT article_exit (1s scroll-past) or article_view (appeared on screen)
+        // This ensures brief scroll-pasts stay in the "unseen" tier
+        const readIds = new Set();
+        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit']);
 
         for (const event of seenEvents) {
           const aid = event.article_id;
-          allIds.add(aid);
           const eventTime = new Date(event.created_at).getTime();
           const ageHours = (nowMs - eventTime) / 3600000;
 
-          // Track first_seen_at and was_engaged per article
-          const existing = seenMeta.get(aid);
-          if (!existing) {
-            seenMeta.set(aid, {
-              first_seen_at: event.created_at,
-              was_engaged: engagedTypes.has(event.event_type),
-            });
-          } else {
-            // Keep earliest seen time
-            if (event.created_at < existing.first_seen_at) {
-              existing.first_seen_at = event.created_at;
-            }
-            if (engagedTypes.has(event.event_type)) {
-              existing.was_engaged = true;
+          // Only count as "read" if it was a meaningful interaction
+          if (readTypes.has(event.event_type)) {
+            readIds.add(aid);
+          }
+
+          // Track first_seen_at and was_engaged per article (for badge metadata)
+          if (readTypes.has(event.event_type)) {
+            const existing = seenMeta.get(aid);
+            if (!existing) {
+              seenMeta.set(aid, {
+                first_seen_at: event.created_at,
+                was_engaged: event.event_type === 'article_engaged' || event.event_type === 'article_liked',
+              });
+            } else {
+              if (event.created_at < existing.first_seen_at) {
+                existing.first_seen_at = event.created_at;
+              }
+              if (event.event_type === 'article_engaged' || event.event_type === 'article_liked') {
+                existing.was_engaged = true;
+              }
             }
           }
 
+          // Hard exclude: recent views/skips (prevents immediate repeats)
           if (ageHours < 6) {
             hardExcludeIds.add(aid);
           } else if (ageHours < 24) {
@@ -966,7 +975,7 @@ export default async function handler(req, res) {
         }
 
         seenArticleIds = [...hardExcludeIds].filter(Boolean);
-        allSeenIds = [...allIds].filter(Boolean);
+        allSeenIds = [...readIds].filter(Boolean);
       }
     }
     // Merge client-sent seen IDs as hard excludes (within-session dedup)
