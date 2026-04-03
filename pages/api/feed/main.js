@@ -983,6 +983,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const sevenDaysAgo = new Date(now - 7 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
@@ -1034,13 +1035,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score — exclude seen IDs at DB level
-    //    so LIMIT returns unseen articles (not top-400 that the user already saw)
+    // 2. TRENDING: high editorial score — 30d window, decay scoring ranks fresh higher
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', sevenDaysAgo)
+        .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 500)
         .order('ai_final_score', { ascending: false })
         .limit(400);
@@ -1050,12 +1050,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       return q;
     })(),
 
-    // 3. DISCOVERY: diverse quality content — 7d max, exclude seen IDs
+    // 3. DISCOVERY: diverse quality content — 30d window, decay scoring ranks fresh higher
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', sevenDaysAgo)
+        .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false })
         .limit(800);
@@ -1104,7 +1104,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', sevenDaysAgo)
+        .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false });
       if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
