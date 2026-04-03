@@ -878,8 +878,10 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Fetch seen articles to exclude — all interaction types, 48h window.
-    // Cap at 300 to prevent pool exhaustion for heavy users.
+    // Fetch seen articles to exclude — 7-day window, all interaction types.
+    // 7 days ensures liked/saved/engaged articles don't reappear for a week.
+    // LIMIT 1000 handles even very heavy users (~50 articles/day = 350/week).
+    // JS deduplicates via Set to get unique article IDs.
     let seenArticleIds = [];
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
@@ -887,9 +889,9 @@ export default async function handler(req, res) {
         .select('article_id')
         .eq('user_id', userId)
         .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
-        .gte('created_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(300);
+        .limit(1000);
 
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
