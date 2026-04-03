@@ -255,6 +255,37 @@ function getRecencyDecay(createdAt, category, shelfLifeDays, freshnessCategory) 
   return decayMultiplier(contentType, ageHours);
 }
 
+// Is the article still within its peak relevance window?
+// Used to separate "fresh unseen" from "stale unseen" in three-tier slot filling.
+function isStillFresh(article) {
+  const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
+  const contentType = inferContentType(article.freshness_category, article.category, article.shelf_life_days);
+  switch (contentType) {
+    case 'breaking':   return ageHours < 36;
+    case 'developing': return ageHours < 96;
+    case 'analysis':   return ageHours < 240;
+    case 'evergreen':  return ageHours < 504;
+    case 'timeless':   return ageHours < 1080;
+    default:           return ageHours < 168;
+  }
+}
+
+// Topic saturation penalty: diminishing returns for topics the user consumed heavily in last 48h.
+// Doesn't block content — just scores it lower so other topics surface above it.
+function topicSaturationPenalty(article, recentEntityCounts) {
+  if (!recentEntityCounts) return 1.0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let maxConsumption = 0;
+  for (const tag of tags.slice(0, 3)) {
+    const count = recentEntityCounts[tag.toLowerCase()] || 0;
+    if (count > maxConsumption) maxConsumption = count;
+  }
+  if (maxConsumption >= 8) return 0.3;
+  if (maxConsumption >= 5) return 0.5;
+  if (maxConsumption >= 3) return 0.7;
+  return 1.0;
+}
+
 // ==========================================
 // USER INTEREST PROFILE (entity-level tag weights from engagement history)
 // ==========================================
@@ -468,8 +499,8 @@ function computeSkipPenalty(article, userSkipProfile) {
   return Math.min(penalty, 0.80); // cap — don't fully zero out
 }
 
-// Change 1: Blend long-term + session vectors. Now includes skip penalty.
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile) {
+// Change 1: Blend long-term + session vectors. Now includes skip + saturation penalty.
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile, recentEntityCounts) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
   const vectorScore = sessionScore > 0
@@ -502,21 +533,23 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
 
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
-  return baseScore * skipMultiplier;
+  return baseScore * skipMultiplier * saturation;
 }
 
-function scoreTrendingV3(article, userSkipProfile) {
+function scoreTrendingV3(article, userSkipProfile, recentEntityCounts) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
 
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
-  return baseScore * skipMultiplier;
+  return baseScore * skipMultiplier * saturation;
 }
 
-function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
+function scoreDiscoveryV3(article, personalCategories, userSkipProfile, recentEntityCounts) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
@@ -524,8 +557,9 @@ function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
 
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
-  return baseScore * skipMultiplier;
+  return baseScore * skipMultiplier * saturation;
 }
 
 // ==========================================
@@ -1031,7 +1065,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile] = await Promise.all([
+  const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
@@ -1067,11 +1101,43 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
+
+    // 5. RECENT ENTITY CONSUMPTION: article IDs the user engaged with in last 48h
+    //    Used for topic saturation penalty (diminishing returns on over-consumed topics)
+    (userId ? supabase
+      .from('user_article_events')
+      .select('article_id')
+      .eq('user_id', userId)
+      .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view'])
+      .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
+      .limit(500)
+    : Promise.resolve({ data: [] })),
   ]);
 
   if (personalResult.error) {
     console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
     // Continue with empty personal results — trending + discovery will fill the feed
+  }
+
+  // Build recentEntityCounts for topic saturation penalty
+  // Fetch tags for recently engaged articles (need to join with published_articles)
+  let recentEntityCounts = null;
+  const recentEngagedIds = [...new Set((recentEngagedResult?.data || []).map(e => e.article_id).filter(Boolean))];
+  if (recentEngagedIds.length > 0) {
+    const { data: recentArticleTags } = await supabase
+      .from('published_articles')
+      .select('id, interest_tags')
+      .in('id', recentEngagedIds.slice(0, 300));
+    if (recentArticleTags && recentArticleTags.length > 0) {
+      recentEntityCounts = {};
+      for (const a of recentArticleTags) {
+        const tags = safeJsonParse(a.interest_tags, []);
+        for (const tag of tags.slice(0, 3)) {
+          const t = tag.toLowerCase();
+          recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
+        }
+      }
+    }
   }
 
   // ==========================================
@@ -1412,7 +1478,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile, recentEntityCounts)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
@@ -1435,7 +1501,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], skipProfile),
+      _score: scoreTrendingV3(articleMap[a.id], skipProfile, recentEntityCounts),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1445,7 +1511,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile, recentEntityCounts),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1564,29 +1630,34 @@ async function handleV2Feed(req, res, supabase, opts) {
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
 
-  // ── TWO-TIER SLOT FILLING ──
-  // Split all scored pools into unseen (never seen) and resurfaced (seen 24h+ ago).
-  // Phase 1 fills from unseen only. Phase 2 fills remaining slots from resurfaced.
-  // This guarantees users NEVER see a repeat until ALL fresh content is exhausted.
+  // ── THREE-TIER SLOT FILLING ──
+  // Tier 1: FRESH UNSEEN — articles within their freshness window that user hasn't seen
+  // Tier 2: RESURFACED — articles user previously engaged with (can re-read)
+  // Tier 3: STALE UNSEEN — old articles user hasn't seen but are past relevance peak
+  // Never show: stale breaking/developing news (misleading on a news platform)
   const allSeenSet = new Set(allSeenIds);
 
-  function splitTiers(pool) {
-    return {
-      unseen: pool.filter(a => !allSeenSet.has(a.id)),
-      resurfaced: pool.filter(a => allSeenSet.has(a.id)),
-    };
+  function splitThreeTiers(pool) {
+    const unseen = pool.filter(a => !allSeenSet.has(a.id));
+    const resurfaced = pool.filter(a => allSeenSet.has(a.id));
+    const freshUnseen = unseen.filter(a => isStillFresh(a));
+    const staleUnseen = unseen.filter(a => !isStillFresh(a));
+    return { freshUnseen, resurfaced, staleUnseen };
   }
 
-  const pTiers = splitTiers(personalScoredFiltered);
-  const tTiers = splitTiers(trendingScoredFiltered);
-  const dTiers = splitTiers(discoveryScoredFiltered);
-  const iTiers = splitTiers(interestScoredFiltered);
+  const pTiers = splitThreeTiers(personalScoredFiltered);
+  const tTiers = splitThreeTiers(trendingScoredFiltered);
+  const dTiers = splitThreeTiers(discoveryScoredFiltered);
+  const iTiers = splitThreeTiers(interestScoredFiltered);
 
-  // Phase 1: Fill from UNSEEN candidates only
-  const pPool = [...pTiers.unseen];
-  const tPool = [...tTiers.unseen];
-  const dPool = [...dTiers.unseen];
-  const iPool = [...iTiers.unseen];
+  // Count fresh unseen for feed_state
+  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length;
+
+  // Phase 1: Fill from FRESH UNSEEN candidates only
+  const pPool = [...pTiers.freshUnseen];
+  const tPool = [...tTiers.freshUnseen];
+  const dPool = [...dTiers.freshUnseen];
+  const iPool = [...iTiers.freshUnseen];
 
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
@@ -2383,9 +2454,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // ==========================================
   // PHASE 6b: RESURFACED TIER (fill remaining slots from previously-seen articles)
-  // Only runs if Phase 6 couldn't fill all slots from unseen candidates.
-  // Resurfaced articles go through the same MMR, entity caps, and event dedup
-  // as unseen articles, ensuring quality and diversity.
+  // Tier 2: Articles user previously engaged with — better than stale unseen.
   // ==========================================
 
   if (selected.length < limit) {
@@ -2395,20 +2464,21 @@ async function handleV2Feed(req, res, supabase, opts) {
     const rdPool = dTiers.resurfaced.filter(a => !selectedIds.has(a.id));
     const riPool = iTiers.resurfaced.filter(a => !selectedIds.has(a.id));
 
-    // Fetch embeddings for resurfaced candidates (for MMR dedup against already-selected)
-    const resurfacedCandidateIds = new Set();
-    for (const pool of [rpPool, rtPool, rdPool, riPool]) {
-      for (const a of pool.slice(0, 50)) {
-        if (!embeddingCache.has(a.id)) resurfacedCandidateIds.add(a.id);
+    // Fetch embeddings for tier 2+3 candidates (for MMR dedup against already-selected)
+    const fallbackCandidateIds = new Set();
+    for (const pool of [rpPool, rtPool, rdPool, riPool,
+                         pTiers.staleUnseen, tTiers.staleUnseen, dTiers.staleUnseen, iTiers.staleUnseen]) {
+      for (const a of pool.slice(0, 30)) {
+        if (!embeddingCache.has(a.id)) fallbackCandidateIds.add(a.id);
       }
     }
-    if (resurfacedCandidateIds.size > 0) {
-      const { data: resurfEmbData } = await supabase
+    if (fallbackCandidateIds.size > 0) {
+      const { data: fallbackEmbData } = await supabase
         .from('published_articles')
         .select('id, embedding_minilm')
-        .in('id', [...resurfacedCandidateIds].slice(0, 200));
-      if (resurfEmbData) {
-        for (const a of resurfEmbData) {
+        .in('id', [...fallbackCandidateIds].slice(0, 200));
+      if (fallbackEmbData) {
+        for (const a of fallbackEmbData) {
           const emb = safeJsonParse(a.embedding_minilm, null);
           if (emb && Array.isArray(emb) && emb.length > 0) {
             embeddingCache.set(a.id, emb);
@@ -2417,7 +2487,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Fill remaining slots using same slot pattern with MMR
+    // Fill from resurfaced tier
     for (let pos = 0; selected.length < limit; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
@@ -2435,10 +2505,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
       }
-
-      // Also try interest pool for resurfaced
       if (!picked) picked = mmrSelectDeduped(riPool, selected, tagCache, 0.5);
-
       if (!picked) break;
 
       picked._resurfaced = true;
@@ -2447,6 +2514,21 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEntitySelectionShared(picked);
       selected.push(picked);
     }
+  }
+
+  // ==========================================
+  // PHASE 6c: STALE UNSEEN TIER (last resort — old articles user never saw)
+  // Only articles still within their content-type freshness window (isStillFresh).
+  // Stale breaking/developing news never appears here.
+  // ==========================================
+
+  if (selected.length < limit) {
+    const selectedIds = new Set(selected.map(a => a.id));
+    // Filter: only evergreen/analysis/timeless that are still "fresh" per their type.
+    // isStillFresh already handles this — staleUnseen are articles that FAILED isStillFresh,
+    // so this tier only adds articles from the original unseen pool that were borderline.
+    // Actually, staleUnseen already failed isStillFresh, so skip this tier entirely
+    // to avoid showing misleading old news. Resurfaced tier is the final fallback.
   }
 
   // ==========================================
@@ -2461,7 +2543,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
   }
 
   const pageIds = selected.map(a => a.id);
@@ -2507,22 +2589,33 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // has_more: true when we filled a complete page AND the combined pool (unseen + resurfaced) has more.
-  // Both tiers count toward the total — resurfaced articles prevent "all caught up" even when unseen is thin.
-  const totalUnseen = pTiers.unseen.length + tTiers.unseen.length + dTiers.unseen.length + iTiers.unseen.length;
+  // has_more: count fresh unseen + resurfaced (stale unseen excluded from feed)
+  const totalFreshUnseenRemaining = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length;
   const totalResurfaced = pTiers.resurfaced.length + tTiers.resurfaced.length + dTiers.resurfaced.length + iTiers.resurfaced.length;
-  const scoredTotal = totalUnseen + totalResurfaced;
+  const scoredTotal = totalFreshUnseenRemaining + totalResurfaced;
   const remainingPool = Math.max(banditPoolTotal, scoredTotal);
   const requestedLimit = limit || 20;
   const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
   const totalServed = offset + selected.length;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
 
+  // feed_state: tells iOS how to present the feed
+  //   normal         — plenty of fresh content
+  //   thinning       — fresh content running low, might want to show "more coming soon"
+  //   mostly_caught_up — very few fresh articles, show divider before resurfaced
+  //   caught_up      — no fresh articles at all
+  const feedState = totalFreshUnseen >= requestedLimit ? 'normal'
+    : totalFreshUnseen >= 5 ? 'thinning'
+    : totalFreshUnseen > 0 ? 'mostly_caught_up'
+    : 'caught_up';
+
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
+    feed_state: feedState,
+    fresh_count: totalFreshUnseen,
   });
 }
 
