@@ -878,15 +878,18 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Fetch seen articles to exclude — 7-day window, all interaction types.
-    // 7 days ensures liked/saved/engaged articles don't reappear for a week.
-    // LIMIT 1000 handles even very heavy users (~50 articles/day = 350/week).
-    // JS deduplicates via Set to get unique article IDs.
-    let seenArticleIds = [];
+    // ── TIME-TIERED SEEN EXCLUSION (Pinterest/Instagram style) ──
+    // Instead of excluding ALL seen articles, use time-based tiers:
+    //   <6h ago   → always exclude (prevents immediate repeats)
+    //   6-24h ago → exclude only if user skipped (they rejected it)
+    //   24h+ ago  → don't exclude (let decay scoring handle it)
+    // This prevents pool exhaustion for heavy users while avoiding jarring repeats.
+    let seenArticleIds = [];   // hard-excluded IDs (used in pool filtering)
+    let allSeenIds = [];       // all seen IDs (for softer scoring, not exclusion)
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
-        .select('article_id')
+        .select('article_id, event_type, created_at')
         .eq('user_id', userId)
         .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
@@ -894,10 +897,33 @@ export default async function handler(req, res) {
         .limit(1000);
 
       if (seenEvents) {
-        seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
+        const nowMs = Date.now();
+        const hardExcludeIds = new Set();
+        const allIds = new Set();
+
+        for (const event of seenEvents) {
+          allIds.add(event.article_id);
+          const ageMs = nowMs - new Date(event.created_at).getTime();
+          const ageHours = ageMs / 3600000;
+
+          if (ageHours < 6) {
+            // Seen in last 6 hours → always exclude (prevents immediate repeats)
+            hardExcludeIds.add(event.article_id);
+          } else if (ageHours < 24) {
+            // Seen 6-24 hours ago → only exclude if user skipped it
+            if (event.event_type === 'article_skipped') {
+              hardExcludeIds.add(event.article_id);
+            }
+            // Engaged articles can resurface — user liked it, seeing again is fine
+          }
+          // 24h+ ago → don't exclude, let decay scoring handle ranking
+        }
+
+        seenArticleIds = [...hardExcludeIds].filter(Boolean);
+        allSeenIds = [...allIds].filter(Boolean);
       }
     }
-    // Merge client-sent seen IDs (handles races where server events haven't persisted yet)
+    // Merge client-sent seen IDs as hard excludes (within-session dedup)
     if (clientSeenIds.length > 0) {
       const recentClientIds = clientSeenIds.slice(-100);
       seenArticleIds = [...new Set([...seenArticleIds, ...recentClientIds])];
@@ -921,6 +947,7 @@ export default async function handler(req, res) {
       skipProfile,
       storedTagProfile,
       seenArticleIds,
+      allSeenIds,
       sessionEngagedIds,
       sessionGlancedIds,
       sessionSkippedIds,
@@ -946,9 +973,10 @@ export default async function handler(req, res) {
 
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
+        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds, limit, offset } = opts;
+  allSeenIds = allSeenIds || [];
   followedPublisherIds = followedPublisherIds || new Set();
   sessionEngagedIds = sessionEngagedIds || [];
   sessionGlancedIds = sessionGlancedIds || [];
@@ -1146,10 +1174,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     const { data: pgDates } = await supabase
       .from('published_articles')
       .select('id, created_at')
-      .in('id', pgIds.slice(0, 500));
+      .in('id', pgIds.slice(0, 800));
 
     const dateMap = {};
     for (const a of (pgDates || [])) dateMap[a.id] = new Date(a.created_at).getTime();
+
+    // ── Tiered time window: prefer fresh, expand if pool is thin ──
+    // Decay scoring already penalizes older articles, so they only fill
+    // the feed when fresh content runs out. No hard cap needed.
+    const TIME_TIERS = [48, 168, 336, 720]; // 48h, 7d, 14d, 30d
 
     if (hasInterestClusters) {
       // Per-cluster tiered filtering
@@ -1161,38 +1194,34 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       const filteredResults = [];
-      const MIN_PER_CLUSTER = 10;
-      const tiers = [48, 168]; // hours: 2 days, 7 days — hard cap at 7d for personal
+      const MIN_PER_CLUSTER = 30;
 
       for (const [ci, results] of Object.entries(clusterResults)) {
         let clusterFiltered = [];
-        for (const tierHours of tiers) {
+        for (const tierHours of TIME_TIERS) {
           const cutoff = now - tierHours * 3600000;
           clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= cutoff);
           if (clusterFiltered.length >= MIN_PER_CLUSTER) break;
         }
-        // Hard cap: never go beyond 7 days for personal pool.
-        // If still thin, accept whatever 7d has — discovery handles older content.
-        if (clusterFiltered.length === 0) {
-          const weekCutoff = now - 168 * 3600000;
-          clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= weekCutoff);
+        // If even 30 days isn't enough, use everything pgvector returned
+        if (clusterFiltered.length < MIN_PER_CLUSTER) {
+          clusterFiltered = results;
         }
         filteredResults.push(...clusterFiltered);
       }
       personalResults = filteredResults;
     } else {
-      // Single vector: tiered filtering, hard cap at 7 days
-      const MIN_RESULTS = 40;
-      const tiers = [48, 168]; // 2 days, 7 days max
+      // Single vector: tiered filtering with 30-day fallback
+      const MIN_RESULTS = 150;
       let filtered = [];
-      for (const tierHours of tiers) {
+      for (const tierHours of TIME_TIERS) {
         const cutoff = now - tierHours * 3600000;
         filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
         if (filtered.length >= MIN_RESULTS) break;
       }
-      if (filtered.length === 0) {
-        const weekCutoff = now - 168 * 3600000;
-        filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= weekCutoff);
+      // If even 30 days isn't enough, use everything pgvector returned
+      if (filtered.length < MIN_RESULTS) {
+        filtered = personalResults;
       }
       personalResults = filtered;
     }
