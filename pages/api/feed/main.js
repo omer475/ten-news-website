@@ -964,17 +964,11 @@ export default async function handler(req, res) {
             }
           }
 
-          // Hard exclude: recent views/skips (prevents immediate repeats)
-          if (ageHours < 6) {
-            hardExcludeIds.add(aid);
-          } else if (ageHours < 24) {
-            if (event.event_type === 'article_skipped') {
-              hardExcludeIds.add(aid);
-            }
-          }
         }
 
-        seenArticleIds = [...hardExcludeIds].filter(Boolean);
+        // No server-side hard exclusion — the three-tier system + badges handle UX.
+        // Only client-sent seen_ids (within-session) are hard-excluded.
+        seenArticleIds = [];
         allSeenIds = [...readIds].filter(Boolean);
       }
     }
