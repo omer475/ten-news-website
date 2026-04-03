@@ -1436,9 +1436,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   const freshBestCatCounts = {};
   const freshBestArticleMeta = [];
   const freshBestIds = new Set();
-  const allExistingIds = new Set([...personalIds, ...trendingIds, ...discoveryArticleMeta.map(a => a.id), ...interestIds]);
+  // Don't exclude articles already in other pools — fresh_best is an independent
+  // exploration source. The slot pattern and MMR dedup prevent actual duplicates.
   for (const a of (freshBestResult.data || [])) {
-    if (allExistingIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     freshBestCatCounts[cat] = (freshBestCatCounts[cat] || 0) + 1;
     if (freshBestCatCounts[cat] > 25) continue;
