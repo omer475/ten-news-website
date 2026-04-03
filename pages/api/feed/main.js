@@ -1082,34 +1082,36 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult] = await Promise.all([
+  const fortyEightHoursAgoISO = new Date(now - 48 * 3600000).toISOString();
+
+  const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult, freshBestResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score — 30d window, decay scoring ranks fresh higher
+    // 2. TRENDING: lower threshold (400) for richer pool
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
         .gte('created_at', thirtyDaysAgo)
-        .gte('ai_final_score', 500)
+        .gte('ai_final_score', 400)
         .order('ai_final_score', { ascending: false })
-        .limit(400);
+        .limit(600);
       if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
         q = q.not('id', 'in', `(${excludeIds.join(',')})`);
       }
       return q;
     })(),
 
-    // 3. DISCOVERY: diverse quality content — 30d window, decay scoring ranks fresh higher
+    // 3. DISCOVERY: higher category cap (15), larger total limit (1500)
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
         .gte('created_at', thirtyDaysAgo)
-        .gte('ai_final_score', 300)
+        .gte('ai_final_score', 250)
         .order('ai_final_score', { ascending: false })
-        .limit(800);
+        .limit(1500);
       if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
         q = q.not('id', 'in', `(${excludeIds.join(',')})`);
       }
@@ -1129,6 +1131,16 @@ async function handleV2Feed(req, res, supabase, opts) {
       .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
       .limit(500)
     : Promise.resolve({ data: [] })),
+
+    // 6. FRESH BEST: highest quality × recency, NO taste vector, NO interest filter
+    //    TikTok-style exploration — best content from ALL categories in last 48h
+    supabase
+      .from('published_articles')
+      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
+      .gte('created_at', fortyEightHoursAgoISO)
+      .gte('ai_final_score', 400)
+      .order('ai_final_score', { ascending: false })
+      .limit(200),
   ]);
 
   if (personalResult.error) {
@@ -1395,8 +1407,9 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
-  const discoveryCatMax = hasAnyPersonalization ? 12 : 15;
-  const discoveryTotalMax = hasAnyPersonalization ? 300 : 400;
+  // Change 3: Higher discovery category cap (15) and total (600)
+  const discoveryCatMax = 15;
+  const discoveryTotalMax = 600;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
@@ -1417,6 +1430,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     interestArticleMeta.push(a);
   }
 
+  // ── FRESH BEST: TikTok-style exploration pool ──
+  // Best content from last 48h regardless of topic. No taste vector matching.
+  // Max 25 per category for breadth. Excludes articles already in other pools.
+  const freshBestCatCounts = {};
+  const freshBestArticleMeta = [];
+  const freshBestIds = new Set();
+  const allExistingIds = new Set([...personalIds, ...trendingIds, ...discoveryArticleMeta.map(a => a.id), ...interestIds]);
+  for (const a of (freshBestResult.data || [])) {
+    if (allExistingIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
+    const cat = a.category || 'Other';
+    freshBestCatCounts[cat] = (freshBestCatCounts[cat] || 0) + 1;
+    if (freshBestCatCounts[cat] > 25) continue;
+    freshBestIds.add(a.id);
+    freshBestArticleMeta.push(a);
+  }
+
   // ==========================================
   // PHASE 4: FETCH FULL ARTICLE DATA
   // ==========================================
@@ -1426,6 +1455,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     ...trendingIds,
     ...discoveryArticleMeta.map(a => a.id),
     ...interestIds,
+    ...freshBestIds,
   ];
   const uniqueIds = [...new Set(allCandidateIds)];
 
@@ -1554,6 +1584,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     })
     .sort((a, b) => b._score - a._score);
 
+  // Fresh Best bucket: quality × recency, no taste vector, with skip + saturation penalty
+  const freshBestScored = freshBestArticleMeta
+    .filter(a => articleMap[a.id])
+    .map(a => {
+      const article = articleMap[a.id];
+      const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      const skipPenalty = computeSkipPenalty(article, skipProfile);
+      const skipMult = Math.max(0.10, 1.0 - skipPenalty);
+      const saturation = topicSaturationPenalty(article, recentEntityCounts);
+      return {
+        ...article,
+        _score: (article.ai_final_score || 0) * recency * skipMult * saturation,
+        _bucket: 'fresh_best',
+      };
+    })
+    .sort((a, b) => b._score - a._score);
+
   // ==========================================
   // PHASE 5.5a: ENTITY BLOCKLIST FOR ALL USERS (not just cold-start)
   // Combines session skips + persistent skip_profile to hard-block
@@ -1616,6 +1663,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const trendingScoredFiltered = trendingScored.filter(a => !isGlobalBlocked(a));
   const discoveryScoredFiltered = discoveryScored.filter(a => !isGlobalBlocked(a));
   const interestScoredFiltered = interestScored.filter(a => !isGlobalBlocked(a));
+  const freshBestScoredFiltered = freshBestScored.filter(a => !isGlobalBlocked(a));
 
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -1666,21 +1714,38 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tTiers = splitThreeTiers(trendingScoredFiltered);
   const dTiers = splitThreeTiers(discoveryScoredFiltered);
   const iTiers = splitThreeTiers(interestScoredFiltered);
+  const fTiers = splitThreeTiers(freshBestScoredFiltered);
 
   // Count fresh unseen for feed_state
-  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length;
+  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fTiers.freshUnseen.length;
+
+  // ── Dynamic slot pattern based on personal pool depth (TikTok-style) ──
+  // When personal content is exhausted, auto-expand into fresh_best exploration
+  const personalUnseenCount = pTiers.freshUnseen.length;
+  let SLOTS;
+  if (personalUnseenCount >= 15) {
+    // Normal: enough personal content
+    SLOTS = ['P','P','T','P','P','S','P','P','T','S'];           // 60P/20T/20S
+  } else if (personalUnseenCount >= 5) {
+    // Thinning: expand trending and fresh_best
+    SLOTS = ['P','F','T','P','F','S','T','F','P','S'];           // 30P/30F/20T/20S
+  } else {
+    // Exhausted: mostly fresh_best and trending
+    SLOTS = ['F','T','F','S','F','T','F','S','F','T'];           // 50F/30T/20S
+  }
 
   // Phase 1: Fill from FRESH UNSEEN candidates only
   const pPool = [...pTiers.freshUnseen];
   const tPool = [...tTiers.freshUnseen];
   const dPool = [...dTiers.freshUnseen];
   const iPool = [...iTiers.freshUnseen];
+  const fPool = [...fTiers.freshUnseen];
 
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
   if (hasAnyPersonalization) {
     const mmrCandidateIds = new Set();
-    for (const pool of [pPool, tPool, dPool, iPool]) {
+    for (const pool of [pPool, tPool, dPool, iPool, fPool]) {
       for (const a of pool.slice(0, 50)) {
         if (!embeddingCache.has(a.id)) mmrCandidateIds.add(a.id);
       }
@@ -2407,23 +2472,27 @@ async function handleV2Feed(req, res, supabase, opts) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (slot === 'P') {
+      if (slot === 'F') {
+        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
 
-      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
@@ -2434,18 +2503,24 @@ async function handleV2Feed(req, res, supabase, opts) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (slot === 'P') {
+      if (slot === 'F') {
+        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         // SURPRISE slot: variable reward
         if (Math.random() < 0.6 && dPool.length > 0) {
           picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        } else if (fPool.length > 0) {
+          picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         } else if (pPool.length > 3) {
           const tailStart = Math.floor(pPool.length * 0.5);
           const tailEnd = pPool.length;
@@ -2455,14 +2530,14 @@ async function handleV2Feed(req, res, supabase, opts) {
             if (candidate && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) picked = candidate;
           }
         }
+        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
 
-      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
@@ -2491,11 +2566,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     const rtPool = sortResurfacedByEngagement(tTiers.resurfaced);
     const rdPool = sortResurfacedByEngagement(dTiers.resurfaced);
     const riPool = sortResurfacedByEngagement(iTiers.resurfaced);
+    const rfPool = sortResurfacedByEngagement(fTiers.resurfaced);
 
     // Fetch embeddings for tier 2+3 candidates (for MMR dedup against already-selected)
     const fallbackCandidateIds = new Set();
-    for (const pool of [rpPool, rtPool, rdPool, riPool,
-                         pTiers.staleUnseen, tTiers.staleUnseen, dTiers.staleUnseen, iTiers.staleUnseen]) {
+    for (const pool of [rpPool, rtPool, rdPool, riPool, rfPool]) {
       for (const a of pool.slice(0, 30)) {
         if (!embeddingCache.has(a.id)) fallbackCandidateIds.add(a.id);
       }
@@ -2515,23 +2590,26 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Fill from resurfaced tier
+    // Fill from resurfaced tier — try all pools including fresh_best
     for (let pos = 0; selected.length < limit; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (slot === 'P') {
+      if (slot === 'F') {
+        picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.4);
+      } else if (slot === 'P') {
         picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.5);
       } else {
         picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
         if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
       }
       if (!picked) picked = mmrSelectDeduped(riPool, selected, tagCache, 0.5);
       if (!picked) break;
@@ -2624,8 +2702,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // has_more: count fresh unseen + resurfaced (stale unseen excluded from feed)
-  const totalFreshUnseenRemaining = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length;
-  const totalResurfaced = pTiers.resurfaced.length + tTiers.resurfaced.length + dTiers.resurfaced.length + iTiers.resurfaced.length;
+  const totalFreshUnseenRemaining = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fTiers.freshUnseen.length;
+  const totalResurfaced = pTiers.resurfaced.length + tTiers.resurfaced.length + dTiers.resurfaced.length + iTiers.resurfaced.length + fTiers.resurfaced.length;
   const scoredTotal = totalFreshUnseenRemaining + totalResurfaced;
   const remainingPool = Math.max(banditPoolTotal, scoredTotal);
   const requestedLimit = limit || 20;
