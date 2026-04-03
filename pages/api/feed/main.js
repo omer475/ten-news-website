@@ -912,21 +912,18 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // ── TIME-TIERED SEEN EXCLUSION (Pinterest/Instagram style) ──
-    // Instead of excluding ALL seen articles, use time-based tiers:
-    //   <6h ago   → always exclude (prevents immediate repeats)
-    //   6-24h ago → exclude only if user skipped (they rejected it)
-    //   24h+ ago  → don't exclude (let decay scoring handle it)
-    // This prevents pool exhaustion for heavy users while avoiding jarring repeats.
+    // ── TIME-TIERED SEEN EXCLUSION + ENGAGEMENT TRACKING ──
+    // Tracks per-article: first_seen_at, was_engaged (for resurfaced badge + sorting)
     let seenArticleIds = [];   // hard-excluded IDs (used in pool filtering)
-    let allSeenIds = [];       // all seen IDs (for softer scoring, not exclusion)
+    let allSeenIds = [];       // all seen IDs (for tier splitting)
+    const seenMeta = new Map(); // article_id → { first_seen_at, was_engaged }
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id, event_type, created_at')
         .eq('user_id', userId)
         .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(1000);
 
@@ -934,23 +931,38 @@ export default async function handler(req, res) {
         const nowMs = Date.now();
         const hardExcludeIds = new Set();
         const allIds = new Set();
+        const engagedTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view']);
 
         for (const event of seenEvents) {
-          allIds.add(event.article_id);
-          const ageMs = nowMs - new Date(event.created_at).getTime();
-          const ageHours = ageMs / 3600000;
+          const aid = event.article_id;
+          allIds.add(aid);
+          const eventTime = new Date(event.created_at).getTime();
+          const ageHours = (nowMs - eventTime) / 3600000;
+
+          // Track first_seen_at and was_engaged per article
+          const existing = seenMeta.get(aid);
+          if (!existing) {
+            seenMeta.set(aid, {
+              first_seen_at: event.created_at,
+              was_engaged: engagedTypes.has(event.event_type),
+            });
+          } else {
+            // Keep earliest seen time
+            if (event.created_at < existing.first_seen_at) {
+              existing.first_seen_at = event.created_at;
+            }
+            if (engagedTypes.has(event.event_type)) {
+              existing.was_engaged = true;
+            }
+          }
 
           if (ageHours < 6) {
-            // Seen in last 6 hours → always exclude (prevents immediate repeats)
-            hardExcludeIds.add(event.article_id);
+            hardExcludeIds.add(aid);
           } else if (ageHours < 24) {
-            // Seen 6-24 hours ago → only exclude if user skipped it
             if (event.event_type === 'article_skipped') {
-              hardExcludeIds.add(event.article_id);
+              hardExcludeIds.add(aid);
             }
-            // Engaged articles can resurface — user liked it, seeing again is fine
           }
-          // 24h+ ago → don't exclude, let decay scoring handle ranking
         }
 
         seenArticleIds = [...hardExcludeIds].filter(Boolean);
@@ -982,6 +994,7 @@ export default async function handler(req, res) {
       storedTagProfile,
       seenArticleIds,
       allSeenIds,
+      seenMeta,
       sessionEngagedIds,
       sessionGlancedIds,
       sessionSkippedIds,
@@ -1007,10 +1020,11 @@ export default async function handler(req, res) {
 
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
+        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds, seenMeta,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds, limit, offset } = opts;
   allSeenIds = allSeenIds || [];
+  seenMeta = seenMeta || new Map();
   followedPublisherIds = followedPublisherIds || new Set();
   sessionEngagedIds = sessionEngagedIds || [];
   sessionGlancedIds = sessionGlancedIds || [];
@@ -2459,10 +2473,21 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   if (selected.length < limit) {
     const selectedIds = new Set(selected.map(a => a.id));
-    const rpPool = pTiers.resurfaced.filter(a => !selectedIds.has(a.id));
-    const rtPool = tTiers.resurfaced.filter(a => !selectedIds.has(a.id));
-    const rdPool = dTiers.resurfaced.filter(a => !selectedIds.has(a.id));
-    const riPool = iTiers.resurfaced.filter(a => !selectedIds.has(a.id));
+
+    // Sort resurfaced: engaged articles first (greatest hits), then by score
+    function sortResurfacedByEngagement(pool) {
+      return pool.filter(a => !selectedIds.has(a.id)).sort((a, b) => {
+        const aEng = seenMeta.get(a.id)?.was_engaged ? 1 : 0;
+        const bEng = seenMeta.get(b.id)?.was_engaged ? 1 : 0;
+        if (aEng !== bEng) return bEng - aEng;
+        return (b._score || 0) - (a._score || 0);
+      });
+    }
+
+    const rpPool = sortResurfacedByEngagement(pTiers.resurfaced);
+    const rtPool = sortResurfacedByEngagement(tTiers.resurfaced);
+    const rdPool = sortResurfacedByEngagement(dTiers.resurfaced);
+    const riPool = sortResurfacedByEngagement(iTiers.resurfaced);
 
     // Fetch embeddings for tier 2+3 candidates (for MMR dedup against already-selected)
     const fallbackCandidateIds = new Set();
@@ -2579,7 +2604,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     const formatted = formatArticle(a, eventMap);
     formatted.bucket = a.bucket;
     formatted.final_score = a._score;
-    if (a._resurfaced) formatted.resurfaced = true;
+    // Attach resurfacing metadata to every article
+    const meta = seenMeta.get(a.id);
+    formatted.is_resurfaced = !!a._resurfaced;
+    if (a._resurfaced && meta) {
+      formatted.first_seen_at = meta.first_seen_at;
+      formatted.was_engaged = meta.was_engaged || false;
+    }
     return formatted;
   });
 
@@ -2609,6 +2640,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     : totalFreshUnseen > 0 ? 'mostly_caught_up'
     : 'caught_up';
 
+  const caughtUpMessage = feedState === 'caught_up'
+    ? "You're all caught up! Here are some stories worth another look."
+    : feedState === 'mostly_caught_up'
+    ? "You've seen most of today's stories. Here are some highlights."
+    : null;
+
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
@@ -2616,6 +2653,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     total: remainingPool,
     feed_state: feedState,
     fresh_count: totalFreshUnseen,
+    caught_up_message: caughtUpMessage,
   });
 }
 
