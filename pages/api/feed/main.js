@@ -1132,13 +1132,14 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // 6. FRESH BEST: highest quality × recency, NO taste vector, NO interest filter
     //    TikTok-style exploration — best content from ALL categories in last 48h
+    //    Fetch 500 to ensure enough survive after seen-article filtering in JS
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
       .gte('created_at', fortyEightHoursAgoISO)
-      .gte('ai_final_score', 400)
+      .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(200),
+      .limit(500),
   ]);
 
   if (personalResult.error) {
@@ -1430,19 +1431,23 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // ── FRESH BEST: TikTok-style exploration pool ──
   // Best content from last 48h regardless of topic. No taste vector matching.
-  // Max 25 per category for breadth. Excludes articles already in other pools.
+  // Max 25 per category for breadth. PRIORITIZE unseen articles over seen ones.
   const freshBestCatCounts = {};
   const freshBestArticleMeta = [];
   const freshBestIds = new Set();
-  // Don't exclude articles already in other pools — fresh_best is an independent
-  // exploration source. The slot pattern and MMR dedup prevent actual duplicates.
-  for (const a of (freshBestResult.data || [])) {
-    if (sessionExcludeIds.has(a.id)) continue;
+  const allSeenSet_fb = new Set(allSeenIds);
+  // Sort: unseen articles first, then seen — both sorted by score within each group
+  const freshBestRaw = (freshBestResult.data || []).filter(a => !sessionExcludeIds.has(a.id));
+  const fbUnseen = freshBestRaw.filter(a => !allSeenSet_fb.has(a.id));
+  const fbSeen = freshBestRaw.filter(a => allSeenSet_fb.has(a.id));
+  const fbSorted = [...fbUnseen, ...fbSeen]; // unseen first
+  for (const a of fbSorted) {
     const cat = a.category || 'Other';
     freshBestCatCounts[cat] = (freshBestCatCounts[cat] || 0) + 1;
     if (freshBestCatCounts[cat] > 25) continue;
     freshBestIds.add(a.id);
     freshBestArticleMeta.push(a);
+    if (freshBestArticleMeta.length >= 200) break; // cap total
   }
 
   // ==========================================
