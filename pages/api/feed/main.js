@@ -1816,9 +1816,12 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   function getEntityCapShared(tag) {
     const freq = entityFreqInPoolShared[tag] || 0;
-    if (freq >= 20) return 2;
-    if (freq >= 10) return 3;
-    if (freq >= 5) return 4;
+    // Relaxed caps — with 1000+ articles and fresh_best exploration,
+    // tight caps (2-4) were rejecting 80%+ of candidates.
+    // MMR diversity + category spread handle repetition.
+    if (freq >= 50) return 4;
+    if (freq >= 20) return 6;
+    if (freq >= 10) return 8;
     return Infinity;
   }
 
