@@ -1563,10 +1563,30 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
-  const pPool = [...personalScoredFiltered];
-  const tPool = [...trendingScoredFiltered];
-  const dPool = [...discoveryScoredFiltered];
-  const iPool = [...interestScoredFiltered];
+
+  // ── TWO-TIER SLOT FILLING ──
+  // Split all scored pools into unseen (never seen) and resurfaced (seen 24h+ ago).
+  // Phase 1 fills from unseen only. Phase 2 fills remaining slots from resurfaced.
+  // This guarantees users NEVER see a repeat until ALL fresh content is exhausted.
+  const allSeenSet = new Set(allSeenIds);
+
+  function splitTiers(pool) {
+    return {
+      unseen: pool.filter(a => !allSeenSet.has(a.id)),
+      resurfaced: pool.filter(a => allSeenSet.has(a.id)),
+    };
+  }
+
+  const pTiers = splitTiers(personalScoredFiltered);
+  const tTiers = splitTiers(trendingScoredFiltered);
+  const dTiers = splitTiers(discoveryScoredFiltered);
+  const iTiers = splitTiers(interestScoredFiltered);
+
+  // Phase 1: Fill from UNSEEN candidates only
+  const pPool = [...pTiers.unseen];
+  const tPool = [...tTiers.unseen];
+  const dPool = [...dTiers.unseen];
+  const iPool = [...iTiers.unseen];
 
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
@@ -2362,6 +2382,74 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // ==========================================
+  // PHASE 6b: RESURFACED TIER (fill remaining slots from previously-seen articles)
+  // Only runs if Phase 6 couldn't fill all slots from unseen candidates.
+  // Resurfaced articles go through the same MMR, entity caps, and event dedup
+  // as unseen articles, ensuring quality and diversity.
+  // ==========================================
+
+  if (selected.length < limit) {
+    const selectedIds = new Set(selected.map(a => a.id));
+    const rpPool = pTiers.resurfaced.filter(a => !selectedIds.has(a.id));
+    const rtPool = tTiers.resurfaced.filter(a => !selectedIds.has(a.id));
+    const rdPool = dTiers.resurfaced.filter(a => !selectedIds.has(a.id));
+    const riPool = iTiers.resurfaced.filter(a => !selectedIds.has(a.id));
+
+    // Fetch embeddings for resurfaced candidates (for MMR dedup against already-selected)
+    const resurfacedCandidateIds = new Set();
+    for (const pool of [rpPool, rtPool, rdPool, riPool]) {
+      for (const a of pool.slice(0, 50)) {
+        if (!embeddingCache.has(a.id)) resurfacedCandidateIds.add(a.id);
+      }
+    }
+    if (resurfacedCandidateIds.size > 0) {
+      const { data: resurfEmbData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...resurfacedCandidateIds].slice(0, 200));
+      if (resurfEmbData) {
+        for (const a of resurfEmbData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+
+    // Fill remaining slots using same slot pattern with MMR
+    for (let pos = 0; selected.length < limit; pos++) {
+      const slot = SLOTS[pos % SLOTS.length];
+      let picked = null;
+
+      if (slot === 'P') {
+        picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.5);
+      } else if (slot === 'T') {
+        picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.5);
+      } else {
+        picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+      }
+
+      // Also try interest pool for resurfaced
+      if (!picked) picked = mmrSelectDeduped(riPool, selected, tagCache, 0.5);
+
+      if (!picked) break;
+
+      picked._resurfaced = true;
+      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      recordEventSelection(picked);
+      recordEntitySelectionShared(picked);
+      selected.push(picked);
+    }
+  }
+
+  // ==========================================
   // PHASE 7: ENFORCE MAX 2 CONSECUTIVE SAME CATEGORY
   // Final safety net — even if MMR allows it, never show 3+ in a row
   // ==========================================
@@ -2392,9 +2480,11 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (full) {
           const bucket = selected[i].bucket;
           const score = selected[i]._score;
+          const resurfaced = selected[i]._resurfaced;
           Object.assign(selected[i], full);
           selected[i].bucket = bucket;
           selected[i]._score = score;
+          if (resurfaced) selected[i]._resurfaced = true;
         }
       }
     }
@@ -2407,6 +2497,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     const formatted = formatArticle(a, eventMap);
     formatted.bucket = a.bucket;
     formatted.final_score = a._score;
+    if (a._resurfaced) formatted.resurfaced = true;
     return formatted;
   });
 
@@ -2416,10 +2507,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // has_more: true only when we filled a complete page AND the pool has more.
-  // - If we couldn't fill a page (selected < limit), pools are thin — signal end.
-  // - If selected is 0, all remaining articles were filtered — no infinite loop.
-  const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
+  // has_more: true when we filled a complete page AND the combined pool (unseen + resurfaced) has more.
+  // Both tiers count toward the total — resurfaced articles prevent "all caught up" even when unseen is thin.
+  const totalUnseen = pTiers.unseen.length + tTiers.unseen.length + dTiers.unseen.length + iTiers.unseen.length;
+  const totalResurfaced = pTiers.resurfaced.length + tTiers.resurfaced.length + dTiers.resurfaced.length + iTiers.resurfaced.length;
+  const scoredTotal = totalUnseen + totalResurfaced;
   const remainingPool = Math.max(banditPoolTotal, scoredTotal);
   const requestedLimit = limit || 20;
   const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
