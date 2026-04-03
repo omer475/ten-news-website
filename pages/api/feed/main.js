@@ -1691,8 +1691,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   //   ~60% personal, 20% trending, 20% surprise/discovery
   // ==========================================
 
-  const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
-
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
 
