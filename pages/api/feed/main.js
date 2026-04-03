@@ -2469,30 +2469,31 @@ async function handleV2Feed(req, res, supabase, opts) {
       catIdx++;
     }
 
-    // Fill remaining slots with standard slot-filling (diversity)
-    for (let pos = 0; selected.length < limit; pos++) {
+    // Fill remaining slots — every slot tries ALL pools before giving up
+    let consecutiveFails = 0;
+    for (let pos = 0; selected.length < limit && consecutiveFails < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
+      // Try preferred pool first, then ALL others as fallback
       if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
       } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       }
+      // Fallback chain: try every pool until something works
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
 
-      if (!picked) break;
+      if (!picked) { consecutiveFails++; continue; }
+      consecutiveFails = 0;
 
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
@@ -2501,43 +2502,30 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   } else {
     // Personalized user without topic selections: standard slot-filling
-    for (let pos = 0; selected.length < limit; pos++) {
+    let consecutiveFails2 = 0;
+    for (let pos = 0; selected.length < limit && consecutiveFails2 < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
+      // Try preferred pool first
       if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
       } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       } else {
-        // SURPRISE slot: variable reward
-        if (Math.random() < 0.6 && dPool.length > 0) {
-          picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        } else if (fPool.length > 0) {
-          picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        } else if (pPool.length > 3) {
-          const tailStart = Math.floor(pPool.length * 0.5);
-          const tailEnd = pPool.length;
-          if (tailStart < tailEnd) {
-            const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
-            const candidate = pPool.splice(tailIdx, 1)[0];
-            if (candidate && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) picked = candidate;
-          }
-        }
-        if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
       }
+      // Fallback chain: try every pool
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
 
-      if (!picked) break;
+      if (!picked) { consecutiveFails2++; continue; }
+      consecutiveFails2 = 0;
 
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
