@@ -930,11 +930,10 @@ export default async function handler(req, res) {
       if (seenEvents) {
         const nowMs = Date.now();
         const hardExcludeIds = new Set();
-        // allSeenIds = only articles the user ACTUALLY READ (engaged 6s+, liked, detail view)
-        // NOT article_exit (1s scroll-past) or article_view (appeared on screen)
-        // This ensures brief scroll-pasts stay in the "unseen" tier
+        // allSeenIds = articles the user has seen in ANY way (scrolled past, skipped, or engaged)
+        // Only article_view (appeared on screen without interaction) is excluded
         const readIds = new Set();
-        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit']);
+        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_exit', 'article_skipped']);
 
         for (const event of seenEvents) {
           const aid = event.article_id;
@@ -948,19 +947,18 @@ export default async function handler(req, res) {
 
           // Track first_seen_at and was_engaged per article (for badge metadata)
           if (readTypes.has(event.event_type)) {
+            const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
             const existing = seenMeta.get(aid);
             if (!existing) {
               seenMeta.set(aid, {
                 first_seen_at: event.created_at,
-                was_engaged: event.event_type === 'article_engaged' || event.event_type === 'article_liked',
+                was_engaged: isEngaged,
               });
             } else {
               if (event.created_at < existing.first_seen_at) {
                 existing.first_seen_at = event.created_at;
               }
-              if (event.event_type === 'article_engaged' || event.event_type === 'article_liked') {
-                existing.was_engaged = true;
-              }
+              if (isEngaged) existing.was_engaged = true;
             }
           }
 
