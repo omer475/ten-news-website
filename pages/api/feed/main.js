@@ -1716,24 +1716,25 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tTiers = splitThreeTiers(trendingScoredFiltered);
   const dTiers = splitThreeTiers(discoveryScoredFiltered);
   const iTiers = splitThreeTiers(interestScoredFiltered);
-  const fTiers = splitThreeTiers(freshBestScoredFiltered);
+  // fresh_best: skip three-tier split — already pre-filtered for freshness (48h).
+  // Directly split into unseen/resurfaced to avoid isStillFresh rejecting articles.
+  const fUnseen = freshBestScoredFiltered.filter(a => !allSeenSet.has(a.id));
+  const fResurfaced = freshBestScoredFiltered.filter(a => allSeenSet.has(a.id));
+  const fTiers = { freshUnseen: fUnseen, resurfaced: fResurfaced, staleUnseen: [] };
 
   // Count fresh unseen for feed_state
-  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fTiers.freshUnseen.length;
+  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fUnseen.length;
 
   // ── Dynamic slot pattern based on personal pool depth (TikTok-style) ──
-  // When personal content is exhausted, auto-expand into fresh_best exploration
   const personalUnseenCount = pTiers.freshUnseen.length;
   let SLOTS;
   if (personalUnseenCount >= 15) {
-    // Normal: enough personal content
     SLOTS = ['P','P','T','P','P','S','P','P','T','S'];           // 60P/20T/20S
   } else if (personalUnseenCount >= 5) {
-    // Thinning: expand trending and fresh_best
     SLOTS = ['P','F','T','P','F','S','T','F','P','S'];           // 30P/30F/20T/20S
   } else {
-    // Exhausted: mostly fresh_best and trending
-    SLOTS = ['F','T','F','S','F','T','F','S','F','T'];           // 50F/30T/20S
+    // Personal exhausted — fill primarily from fresh_best exploration
+    SLOTS = ['F','F','T','F','F','S','F','F','T','F'];           // 70F/20T/10S
   }
 
   // Phase 1: Fill from FRESH UNSEEN candidates only
@@ -1741,7 +1742,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tPool = [...tTiers.freshUnseen];
   const dPool = [...dTiers.freshUnseen];
   const iPool = [...iTiers.freshUnseen];
-  const fPool = [...fTiers.freshUnseen];
+  const fPool = [...fUnseen];
 
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
