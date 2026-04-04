@@ -963,7 +963,7 @@ export default async function handler(req, res) {
         .from('user_article_events')
         .select('article_id, event_type, created_at')
         .eq('user_id', userId)
-        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped', 'article_view'])
+        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped', 'article_view', 'article_exit'])
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
         .limit(1000);
@@ -1740,16 +1740,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Count fresh unseen for feed_state
   const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fUnseen.length;
 
-  // ── Dynamic slot pattern based on personal pool depth (TikTok-style) ──
+  // ── Dynamic slot pattern ──
+  // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
+  // Fresh_best is exploration (last resort), not primary filler.
   const personalUnseenCount = pTiers.freshUnseen.length;
   let SLOTS;
   if (personalUnseenCount >= 15) {
-    SLOTS = ['P','P','T','P','P','S','P','P','T','S'];           // 60P/20T/20S
+    SLOTS = ['P','P','T','P','P','D','P','P','T','D'];           // 60P/20T/20D
   } else if (personalUnseenCount >= 5) {
-    SLOTS = ['P','F','T','P','F','S','T','F','P','S'];           // 30P/30F/20T/20S
+    SLOTS = ['P','T','D','T','P','D','T','D','T','F'];           // 20P/40T/30D/10F
   } else {
-    // Personal exhausted — fill primarily from fresh_best exploration
-    SLOTS = ['F','F','T','F','F','S','F','F','T','F'];           // 70F/20T/10S
+    // Personal exhausted — trending + discovery first, fresh_best last resort
+    SLOTS = ['T','D','T','D','T','F','T','D','T','F'];           // 50T/30D/20F
   }
 
   // Phase 1: Fill from FRESH UNSEEN candidates only
@@ -2504,17 +2506,17 @@ async function handleV2Feed(req, res, supabase, opts) {
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
       }
-      // Fallback chain: try every pool until something works
-      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
       if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
 
       if (!picked) { consecutiveFails++; continue; }
       consecutiveFails = 0;
 
-      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
@@ -2536,17 +2538,17 @@ async function handleV2Feed(req, res, supabase, opts) {
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
       }
-      // Fallback chain: try every pool
-      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
       if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
       if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
 
       if (!picked) { consecutiveFails2++; continue; }
       consecutiveFails2 = 0;
 
-      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
