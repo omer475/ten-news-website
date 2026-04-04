@@ -30,10 +30,10 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 try:
-    from sklearn.cluster import KMeans
-    from sklearn.metrics import silhouette_score
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from scipy.spatial.distance import pdist
 except ImportError:
-    print("ERROR: scikit-learn required. Install with: pip install scikit-learn")
+    print("ERROR: scipy required. Install with: pip install scipy")
     sys.exit(1)
 
 # Load env
@@ -114,30 +114,19 @@ def get_recency_weight(created_at_str):
     return 1.0
 
 
-def find_optimal_k(embeddings, max_k=MAX_CLUSTERS):
-    """Find optimal number of clusters using silhouette score."""
+def ward_cluster(embeddings, max_distance=1.2):
+    """Ward's hierarchical clustering — discovers natural number of clusters.
+    No need to specify k. A user with 3 interests gets 3 clusters,
+    a user with 10 gets 10. No fake clusters from K-means forcing."""
     n = len(embeddings)
-    if n < 6:
-        return 1
+    if n < 4:
+        return np.zeros(n, dtype=int), 1
 
-    max_possible_k = min(max_k, n // MIN_CLUSTER_SIZE)
-    if max_possible_k < 2:
-        return 1
-
-    best_k = 1
-    best_score = -1
-
-    for k in range(2, max_possible_k + 1):
-        km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=100)
-        labels = km.fit_predict(embeddings)
-        if len(set(labels)) < 2:
-            continue
-        score = silhouette_score(embeddings, labels, sample_size=min(500, n))
-        if score > best_score:
-            best_score = score
-            best_k = k
-
-    return best_k
+    distances = pdist(embeddings, metric='cosine')
+    Z = linkage(distances, method='ward')
+    labels = fcluster(Z, t=max_distance, criterion='distance') - 1  # 0-indexed
+    n_clusters = len(set(labels))
+    return labels, n_clusters
 
 
 def compute_similarity_floor(embeddings, taste_vector):
@@ -217,16 +206,19 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     emb_matrix = np.array(embeddings)
     weight_array = np.array(weights)
 
-    # Find optimal k
-    k = find_optimal_k(emb_matrix, MAX_CLUSTERS)
+    # Ward's hierarchical clustering — discovers natural cluster count
+    labels, k = ward_cluster(emb_matrix, max_distance=1.2)
 
-    # Run k-means with sample weights for recency-aware clustering
-    km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=100)
-    labels = km.fit_predict(emb_matrix, sample_weight=weight_array)
-    centroids = km.cluster_centers_
+    # Compute centroids as weighted mean of each cluster
+    centroids = np.zeros((k, emb_matrix.shape[1]))
+    for ci in range(k):
+        mask = labels == ci
+        if mask.sum() > 0:
+            cluster_weights = weight_array[mask]
+            centroids[ci] = np.average(emb_matrix[mask], axis=0, weights=cluster_weights)
 
     if verbose:
-        print(f"  {len(embeddings)} articles → {k} clusters")
+        print(f"  {len(embeddings)} articles → {k} clusters (Ward's hierarchical)")
 
     # Build cluster metadata
     clusters = []
