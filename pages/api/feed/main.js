@@ -930,10 +930,13 @@ export default async function handler(req, res) {
       if (seenEvents) {
         const nowMs = Date.now();
         const hardExcludeIds = new Set();
-        // allSeenIds = articles the user has seen in ANY way (scrolled past, skipped, or engaged)
-        // Only article_view (appeared on screen without interaction) is excluded
+        // allSeenIds = articles the user meaningfully interacted with:
+        //   article_engaged (6s+ dwell), article_liked, article_detail_view, article_revisit
+        //   article_skipped (<3s dwell — saw title and rejected, don't show again)
+        // NOT article_exit — fires for EVERY swipe (even 0.5s), inflates seen set too fast
+        // NOT article_view — just appeared on screen
         const readIds = new Set();
-        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_exit', 'article_skipped']);
+        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped']);
 
         for (const event of seenEvents) {
           const aid = event.article_id;
@@ -1132,14 +1135,14 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     // 6. FRESH BEST: highest quality × recency, NO taste vector, NO interest filter
     //    TikTok-style exploration — best content from ALL categories in last 48h
-    //    Fetch 500 to ensure enough survive after seen-article filtering in JS
+    //    Fetch 1000 — power users can have 400+ seen articles, need headroom
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
       .gte('created_at', fortyEightHoursAgoISO)
       .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(500),
+      .limit(1000),
   ]);
 
   if (personalResult.error) {
