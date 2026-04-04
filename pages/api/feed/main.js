@@ -286,6 +286,26 @@ function topicSaturationPenalty(article, recentEntityCounts) {
   return 1.0;
 }
 
+// Tag profile boost: applies positive interest signal from tag_profile to any article.
+// Used by trending, discovery, and fresh_best so they benefit from learned preferences.
+// Range: 1.0 (no match) to 1.5 (strong match with high-weight entities).
+function tagProfileBoost(article, tagProfile) {
+  if (!tagProfile || typeof tagProfile !== 'object') return 1.0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let totalBoost = 0;
+  let matches = 0;
+  for (const tag of tags.slice(0, 5)) {
+    const weight = tagProfile[tag.toLowerCase()];
+    if (weight && typeof weight === 'number' && weight > 0) {
+      totalBoost += weight;
+      matches++;
+    }
+  }
+  if (matches === 0) return 1.0;
+  const avgWeight = totalBoost / matches;
+  return 1.0 + Math.min(avgWeight * 0.5, 0.5);
+}
+
 // ==========================================
 // USER INTEREST PROFILE (entity-level tag weights from engagement history)
 // ==========================================
@@ -538,18 +558,19 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   return baseScore * skipMultiplier * saturation;
 }
 
-function scoreTrendingV3(article, userSkipProfile, recentEntityCounts) {
+function scoreTrendingV3(article, userSkipProfile, recentEntityCounts, tagProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
 
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
+  const tagBoost = tagProfileBoost(article, tagProfile);
 
-  return baseScore * skipMultiplier * saturation;
+  return baseScore * skipMultiplier * saturation * tagBoost;
 }
 
-function scoreDiscoveryV3(article, personalCategories, userSkipProfile, recentEntityCounts) {
+function scoreDiscoveryV3(article, personalCategories, userSkipProfile, recentEntityCounts, tagProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
@@ -558,8 +579,9 @@ function scoreDiscoveryV3(article, personalCategories, userSkipProfile, recentEn
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
+  const tagBoost = tagProfileBoost(article, tagProfile);
 
-  return baseScore * skipMultiplier * saturation;
+  return baseScore * skipMultiplier * saturation * tagBoost;
 }
 
 // ==========================================
@@ -1544,7 +1566,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], skipProfile, recentEntityCounts),
+      _score: scoreTrendingV3(articleMap[a.id], skipProfile, recentEntityCounts, storedTagProfile),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1554,7 +1576,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile, recentEntityCounts),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile, recentEntityCounts, storedTagProfile),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1589,9 +1611,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       const skipPenalty = computeSkipPenalty(article, skipProfile);
       const skipMult = Math.max(0.10, 1.0 - skipPenalty);
       const saturation = topicSaturationPenalty(article, recentEntityCounts);
+      const tagBoost = tagProfileBoost(article, storedTagProfile);
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * skipMult * saturation,
+        _score: (article.ai_final_score || 0) * recency * skipMult * saturation * tagBoost,
         _bucket: 'fresh_best',
       };
     })
