@@ -929,9 +929,10 @@ export default async function handler(req, res) {
       seenArticleIds = [...new Set(clientSeenIds.slice(-300))];
     }
 
-    // Source 2: Server events from last 6h → badge classification only
-    // NOT used for exclusion — prevents double-shrinking the pool
-    let allSeenIds = [];  // only articles seen in last 6h (for badge tier)
+    // Source 2: Server events from last 7 DAYS → badge classification only
+    // NOT used for pool exclusion — only controls "Read Xd ago" badge.
+    // 7-day window ensures users never see yesterday's articles as "fresh."
+    let allSeenIds = [];
     const seenMeta = new Map();
     const sessionSeenSet = new Set(seenArticleIds);
 
@@ -940,10 +941,10 @@ export default async function handler(req, res) {
         .from('user_article_events')
         .select('article_id, event_type, created_at')
         .eq('user_id', userId)
-        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped'])
-        .gte('created_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
+        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped', 'article_view'])
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(1000);
 
       if (seenEvents) {
         const badgeIds = new Set();
