@@ -912,71 +912,58 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // ── TIME-TIERED SEEN EXCLUSION + ENGAGEMENT TRACKING ──
-    // Tracks per-article: first_seen_at, was_engaged (for resurfaced badge + sorting)
-    let seenArticleIds = [];   // hard-excluded IDs (used in pool filtering)
-    let allSeenIds = [];       // all seen IDs (for tier splitting)
-    const seenMeta = new Map(); // article_id → { first_seen_at, was_engaged }
+    // ══════════════════════════════════════════════════════════════
+    // SESSION-AWARE SEEN ARCHITECTURE (TikTok model)
+    //
+    // Two separate dedup systems:
+    //   1. SESSION DEDUP (client-sent seen_ids) → HARD EXCLUDE from pools
+    //      Prevents within-session repeats. Pool shrinks by exactly 25/page.
+    //   2. BADGE CLASSIFICATION (server events, last 6h) → badge only, no exclusion
+    //      Articles seen earlier today get "Read Xh ago" badge.
+    //      Articles seen 6h+ ago → fully fresh, no badge (like TikTok).
+    // ══════════════════════════════════════════════════════════════
+
+    // Source 1: Client-sent seen_ids → hard exclude (within-session dedup)
+    let seenArticleIds = [];
+    if (clientSeenIds.length > 0) {
+      seenArticleIds = [...new Set(clientSeenIds.slice(-300))];
+    }
+
+    // Source 2: Server events from last 6h → badge classification only
+    // NOT used for exclusion — prevents double-shrinking the pool
+    let allSeenIds = [];  // only articles seen in last 6h (for badge tier)
+    const seenMeta = new Map();
+    const sessionSeenSet = new Set(seenArticleIds);
+
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id, event_type, created_at')
         .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped'])
+        .gte('created_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(1000);
+        .limit(500);
 
       if (seenEvents) {
-        const nowMs = Date.now();
-        const hardExcludeIds = new Set();
-        // allSeenIds = articles the user meaningfully interacted with:
-        //   article_engaged (6s+ dwell), article_liked, article_detail_view, article_revisit
-        //   article_skipped (<3s dwell — saw title and rejected, don't show again)
-        // NOT article_exit — fires for EVERY swipe (even 0.5s), inflates seen set too fast
-        // NOT article_view — just appeared on screen
-        const readIds = new Set();
-        const readTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped']);
-
+        const badgeIds = new Set();
         for (const event of seenEvents) {
           const aid = event.article_id;
-          const eventTime = new Date(event.created_at).getTime();
-          const ageHours = (nowMs - eventTime) / 3600000;
+          // Skip articles already in current session (client handles those)
+          if (sessionSeenSet.has(aid)) continue;
 
-          // Only count as "read" if it was a meaningful interaction
-          if (readTypes.has(event.event_type)) {
-            readIds.add(aid);
+          badgeIds.add(aid);
+          const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
+          const existing = seenMeta.get(aid);
+          if (!existing) {
+            seenMeta.set(aid, { first_seen_at: event.created_at, was_engaged: isEngaged });
+          } else {
+            if (event.created_at < existing.first_seen_at) existing.first_seen_at = event.created_at;
+            if (isEngaged) existing.was_engaged = true;
           }
-
-          // Track first_seen_at and was_engaged per article (for badge metadata)
-          if (readTypes.has(event.event_type)) {
-            const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
-            const existing = seenMeta.get(aid);
-            if (!existing) {
-              seenMeta.set(aid, {
-                first_seen_at: event.created_at,
-                was_engaged: isEngaged,
-              });
-            } else {
-              if (event.created_at < existing.first_seen_at) {
-                existing.first_seen_at = event.created_at;
-              }
-              if (isEngaged) existing.was_engaged = true;
-            }
-          }
-
         }
-
-        // No server-side hard exclusion — the three-tier system + badges handle UX.
-        // Only client-sent seen_ids (within-session) are hard-excluded.
-        seenArticleIds = [];
-        allSeenIds = [...readIds].filter(Boolean);
+        allSeenIds = [...badgeIds].filter(Boolean);
       }
-    }
-    // Merge client-sent seen IDs as hard excludes (within-session dedup)
-    if (clientSeenIds.length > 0) {
-      const recentClientIds = clientSeenIds.slice(-100);
-      seenArticleIds = [...new Set([...seenArticleIds, ...recentClientIds])];
     }
 
     // ==========================================
