@@ -1427,7 +1427,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   const freshBestIds = new Set();
   const allSeenSet_fb = new Set(allSeenIds);
   // Sort: unseen articles first, then seen — both sorted by score within each group
-  const freshBestRaw = (freshBestResult.data || []).filter(a => !sessionExcludeIds.has(a.id));
+  const sessionExcludeSet = new Set([...sessionExcludeIds, ...seenArticleIds]);
+  const freshBestRaw = (freshBestResult.data || []).filter(a => !sessionExcludeSet.has(a.id));
   const fbUnseen = freshBestRaw.filter(a => !allSeenSet_fb.has(a.id));
   const fbSeen = freshBestRaw.filter(a => allSeenSet_fb.has(a.id));
   const fbSorted = [...fbUnseen, ...fbSeen]; // unseen first
