@@ -643,13 +643,12 @@ export default async function handler(req, res) {
       const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
                            metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
       if (event_type === 'article_engaged' && dwellSeconds > 0) {
-        // Tiers: 6-12s → 1.0x, 12-25s → 1.5x, 25-45s → 2.0x, 45s+ → 2.5x
         if (dwellSeconds >= 45) baseWeight *= 2.5
         else if (dwellSeconds >= 25) baseWeight *= 2.0
         else if (dwellSeconds >= 12) baseWeight *= 1.5
-        // 6-12s = default 1.0x (no change)
       }
 
+      // Use atomic RPC to prevent race conditions (concurrent events overwriting each other)
       admin
         .from('published_articles')
         .select('interest_tags')
@@ -660,32 +659,24 @@ export default async function handler(req, res) {
           const allTags = typeof articleData.interest_tags === 'string'
             ? JSON.parse(articleData.interest_tags || '[]')
             : (articleData.interest_tags || [])
-          // Only first 6 tags — tail tags are noise (mentioned in passing, not about)
           const tags = allTags.slice(0, 6)
           if (tags.length === 0) return
 
-          admin
-            .from('profiles')
-            .select('tag_profile')
-            .eq('id', effectiveUserId)
-            .single()
-            .then(({ data: profileData }) => {
-              const tagProfile = profileData?.tag_profile || {}
-              for (let i = 0; i < tags.length; i++) {
-                const t = tags[i].toLowerCase()
-                // Position-based weighting: tag 0 = full weight, tag 5 = ~28%
-                const positionMultiplier = 1.0 - (i * 0.12)
-                const tagWeight = baseWeight * positionMultiplier
-                tagProfile[t] = Math.min((tagProfile[t] || 0) + tagWeight, 1.0)
-              }
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile })
-                .eq('id', effectiveUserId)
-                .then(() => {})
-                .catch(() => {})
-            })
-            .catch(() => {})
+          // Build pre-computed tag weights for the atomic RPC
+          const tagWeights = {}
+          for (let i = 0; i < tags.length; i++) {
+            const t = tags[i].toLowerCase()
+            const positionMultiplier = 1.0 - (i * 0.12)
+            tagWeights[t] = baseWeight * positionMultiplier
+          }
+
+          admin.rpc('update_tag_profile_atomic', {
+            p_user_id: effectiveUserId,
+            p_tags: tagWeights,
+            p_session_id: session_id || null,
+          })
+          .then(() => {})
+          .catch((err) => { console.error('tag_profile atomic update failed:', err?.message) })
         })
         .catch(() => {})
     }
@@ -837,7 +828,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build skip_profile from skipped articles (non-blocking, auth users only)
+    // Build skip_profile from skipped articles — atomic RPC to prevent race conditions
     if (effectiveUserId && event_type === 'article_skipped' && article_id) {
       admin
         .from('published_articles')
@@ -851,34 +842,18 @@ export default async function handler(req, res) {
             : (articleData.interest_tags || [])
           if (tags.length === 0) return
 
-          // Load current skip_profile, update, and save
-          admin
-            .from('profiles')
-            .select('skip_profile')
-            .eq('id', effectiveUserId)
-            .single()
-            .then(({ data: profileData }) => {
-              const skipProfile = profileData?.skip_profile || {}
-              for (const tag of tags) {
-                const t = tag.toLowerCase()
-                skipProfile[t] = Math.min((skipProfile[t] || 0) + 0.05, 0.9)
-              }
-              admin
-                .from('profiles')
-                .update({ skip_profile: skipProfile })
-                .eq('id', effectiveUserId)
-                .then(() => {})
-                .catch(() => {
-                  // Fallback to users table
-                  admin
-                    .from('users')
-                    .update({ skip_profile: skipProfile })
-                    .eq('id', effectiveUserId)
-                    .then(() => {})
-                    .catch(() => {})
-                })
-            })
-            .catch(() => {})
+          // Build tag weights for atomic RPC (+0.05 per tag)
+          const skipWeights = {}
+          for (const tag of tags) {
+            skipWeights[tag.toLowerCase()] = 0.05
+          }
+
+          admin.rpc('update_skip_profile_atomic', {
+            p_user_id: effectiveUserId,
+            p_tags: skipWeights,
+          })
+          .then(() => {})
+          .catch((err) => { console.error('skip_profile atomic update failed:', err?.message) })
         })
         .catch(() => {})
     }
