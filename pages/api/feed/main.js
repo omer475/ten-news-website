@@ -992,7 +992,7 @@ export default async function handler(req, res) {
         .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped', 'article_view', 'article_exit'])
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(1000);
+        .limit(3000);
 
       if (seenEvents) {
         const badgeIds = new Set();
