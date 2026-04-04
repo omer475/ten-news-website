@@ -286,24 +286,55 @@ function topicSaturationPenalty(article, recentEntityCounts) {
   return 1.0;
 }
 
-// Tag profile boost: applies positive interest signal from tag_profile to any article.
-// Used by trending, discovery, and fresh_best so they benefit from learned preferences.
-// Range: 1.0 (no match) to 1.5 (strong match with high-weight entities).
-function tagProfileBoost(article, tagProfile) {
-  if (!tagProfile || typeof tagProfile !== 'object') return 1.0;
+// ══════════════════════════════════════════════════════════════
+// UNIFIED ENTITY AFFINITY (replaces dual tag_profile + skip_profile)
+//
+// Single engagement-rate-based score per entity.
+// Positive interactions / total interactions → ratio.
+// Recent behavior weighted 70%, all-time 30%.
+// Range: -1.0 (always skip) to +1.0 (always engage).
+// Multiplier: 0.2x at -1.0, 1.0x at 0, 1.8x at +1.0.
+// ══════════════════════════════════════════════════════════════
+
+function computeEntityAffinity(signal) {
+  const totalCount = (signal.pos || 0) + (signal.neg || 0);
+  const recentCount = (signal.pos_recent || 0) + (signal.neg_recent || 0);
+  if (totalCount === 0) return 0;
+
+  const allTimeRate = signal.pos / totalCount;
+  const recentRate = recentCount > 0 ? signal.pos_recent / recentCount : 0.5;
+
+  // Blend: 70% recent, 30% all-time (if enough recent data)
+  const blended = recentCount >= 3
+    ? recentRate * 0.7 + allTimeRate * 0.3
+    : allTimeRate;
+
+  // Confidence: more interactions = more confident
+  const confidence = 1 - 1 / (1 + totalCount * 0.3);
+
+  // Net affinity: -1.0 to +1.0
+  return (blended - 0.5) * 2 * confidence;
+}
+
+function entityAffinityMultiplier(article, entitySignals) {
+  if (!entitySignals) return 1.0;
   const tags = safeJsonParse(article.interest_tags, []);
-  let totalBoost = 0;
-  let matches = 0;
+  let totalAffinity = 0;
+  let matchCount = 0;
+
   for (const tag of tags.slice(0, 5)) {
-    const weight = tagProfile[tag.toLowerCase()];
-    if (weight && typeof weight === 'number' && weight > 0) {
-      totalBoost += weight;
-      matches++;
+    const signal = entitySignals[tag.toLowerCase()];
+    if (signal) {
+      totalAffinity += computeEntityAffinity(signal);
+      matchCount++;
     }
   }
-  if (matches === 0) return 1.0;
-  const avgWeight = totalBoost / matches;
-  return 1.0 + Math.min(avgWeight * 0.5, 0.5);
+
+  if (matchCount === 0) return 1.0;
+  const avgAffinity = totalAffinity / matchCount;
+
+  // Convert: -1.0 → 0.2x, 0.0 → 1.0x, +1.0 → 1.8x
+  return Math.max(0.2, 1.0 + avgAffinity * 0.8);
 }
 
 // ==========================================
@@ -520,7 +551,10 @@ function computeSkipPenalty(article, userSkipProfile) {
 }
 
 // Change 1: Blend long-term + session vectors. Now includes skip + saturation penalty.
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile, recentEntityCounts) {
+// All scoring functions now use entityAffinityMultiplier (unified engagement rate)
+// instead of separate tagProfileBoost + skipMultiplier.
+
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
   const vectorScore = sessionScore > 0
@@ -544,44 +578,36 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
 
   const quality = (article.ai_final_score || 0) / 1000;
   const momentum = sessionBoost || 0;
-
-  // Recency decay as MULTIPLIER (not additive boost) — critical for preventing
-  // 15-day-old articles from outscoring fresh ones via high vector similarity.
   const recencyDecay = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
 
   const baseScore = (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
 
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const affMult = entityAffinityMultiplier(article, entitySignals);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
-  return baseScore * skipMultiplier * saturation;
+  return baseScore * affMult * saturation;
 }
 
-function scoreTrendingV3(article, userSkipProfile, recentEntityCounts, tagProfile) {
+function scoreTrendingV3(article, entitySignals, recentEntityCounts) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
 
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const affMult = entityAffinityMultiplier(article, entitySignals);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
-  const tagBoost = tagProfileBoost(article, tagProfile);
 
-  return baseScore * skipMultiplier * saturation * tagBoost;
+  return baseScore * affMult * saturation;
 }
 
-function scoreDiscoveryV3(article, personalCategories, userSkipProfile, recentEntityCounts, tagProfile) {
+function scoreDiscoveryV3(article, personalCategories, entitySignals, recentEntityCounts) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
   const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
 
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const affMult = entityAffinityMultiplier(article, entitySignals);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
-  const tagBoost = tagProfileBoost(article, tagProfile);
 
-  return baseScore * skipMultiplier * saturation * tagBoost;
+  return baseScore * affMult * saturation;
 }
 
 // ==========================================
@@ -1132,15 +1158,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
 
-    // 5. RECENT ENTITY CONSUMPTION: article IDs the user engaged with in last 48h
-    //    Used for topic saturation penalty (diminishing returns on over-consumed topics)
+    // 5. ALL EVENTS for entity signal computation (engagement rates per entity)
+    //    Also used for topic saturation penalty
     (userId ? supabase
       .from('user_article_events')
-      .select('article_id')
+      .select('article_id, event_type, created_at')
       .eq('user_id', userId)
-      .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view'])
-      .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
-      .limit(500)
+      .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_skipped', 'article_revisit'])
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 3600000).toISOString())
+      .limit(1000)
     : Promise.resolve({ data: [] })),
 
     // 6. FRESH BEST: highest quality × recency, NO taste vector, NO interest filter
@@ -1161,21 +1187,58 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // Build recentEntityCounts for topic saturation penalty
-  // Fetch tags for recently engaged articles (need to join with published_articles)
-  let recentEntityCounts = null;
-  const recentEngagedIds = [...new Set((recentEngagedResult?.data || []).map(e => e.article_id).filter(Boolean))];
-  if (recentEngagedIds.length > 0) {
-    const { data: recentArticleTags } = await supabase
-      .from('published_articles')
-      .select('id, interest_tags')
-      .in('id', recentEngagedIds.slice(0, 300));
-    if (recentArticleTags && recentArticleTags.length > 0) {
-      recentEntityCounts = {};
-      for (const a of recentArticleTags) {
-        const tags = safeJsonParse(a.interest_tags, []);
-        for (const tag of tags.slice(0, 3)) {
-          const t = tag.toLowerCase();
-          recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
+  // ── BUILD ENTITY SIGNALS (engagement rates per entity) ──
+  // Replaces dual tag_profile/skip_profile with single ratio-based system.
+  // Positive events: engaged, liked, detail_view, revisit
+  // Negative events: skipped
+  let entitySignals = null;
+  let recentEntityCounts = null; // still used for saturation penalty
+  const positiveTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit']);
+  const negativeTypes = new Set(['article_skipped']);
+  const allEventData = recentEngagedResult?.data || [];
+  const allEventArticleIds = [...new Set(allEventData.map(e => e.article_id).filter(Boolean))];
+
+  if (allEventArticleIds.length > 0) {
+    // Fetch tags for all event articles
+    const tagBatches = [];
+    for (let i = 0; i < allEventArticleIds.length; i += 300) {
+      const batch = allEventArticleIds.slice(i, i + 300);
+      tagBatches.push(supabase.from('published_articles').select('id, interest_tags').in('id', batch));
+    }
+    const tagResults = await Promise.all(tagBatches);
+    const articleTagMap = {};
+    for (const r of tagResults) {
+      for (const a of (r.data || [])) {
+        articleTagMap[a.id] = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase()).slice(0, 5);
+      }
+    }
+
+    // Build entity signals: { entity: { pos, neg, pos_recent, neg_recent } }
+    const sevenDaysAgo = Date.now() - 7 * 24 * 3600000;
+    const fortyEightHoursAgoMs = Date.now() - 48 * 3600000;
+    entitySignals = {};
+    recentEntityCounts = {};
+
+    for (const event of allEventData) {
+      const tags = articleTagMap[event.article_id];
+      if (!tags) continue;
+      const isPositive = positiveTypes.has(event.event_type);
+      const isNegative = negativeTypes.has(event.event_type);
+      if (!isPositive && !isNegative) continue;
+      const eventTime = new Date(event.created_at).getTime();
+      const isRecent = eventTime > sevenDaysAgo;
+      const isLast48h = eventTime > fortyEightHoursAgoMs;
+
+      for (const t of tags) {
+        if (!entitySignals[t]) entitySignals[t] = { pos: 0, neg: 0, pos_recent: 0, neg_recent: 0 };
+        if (isPositive) {
+          entitySignals[t].pos++;
+          if (isRecent) entitySignals[t].pos_recent++;
+          // Saturation tracking (last 48h only)
+          if (isLast48h) recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
+        } else {
+          entitySignals[t].neg++;
+          if (isRecent) entitySignals[t].neg_recent++;
         }
       }
     }
@@ -1543,7 +1606,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile, recentEntityCounts)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
@@ -1566,7 +1629,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], skipProfile, recentEntityCounts, storedTagProfile),
+      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1576,7 +1639,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile, recentEntityCounts, storedTagProfile),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1608,13 +1671,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-      const skipPenalty = computeSkipPenalty(article, skipProfile);
-      const skipMult = Math.max(0.10, 1.0 - skipPenalty);
+      const affMult = entityAffinityMultiplier(article, entitySignals);
       const saturation = topicSaturationPenalty(article, recentEntityCounts);
-      const tagBoost = tagProfileBoost(article, storedTagProfile);
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * skipMult * saturation * tagBoost,
+        _score: (article.ai_final_score || 0) * recency * affMult * saturation,
         _bucket: 'fresh_best',
       };
     })
