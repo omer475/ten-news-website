@@ -610,8 +610,8 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   let bestMMR = -Infinity;
 
   // Check diversity against ALL selected articles
-  // Hard ceiling: reject candidates with > 0.82 similarity to any selected article
-  const DUPLICATE_CEILING = 0.82;
+  // Hard ceiling: reject candidates with very high similarity to any selected article
+  const DUPLICATE_CEILING = 0.90;
 
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
