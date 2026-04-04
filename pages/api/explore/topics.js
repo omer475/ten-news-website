@@ -218,6 +218,20 @@ export default async function handler(req, res) {
     const tagProfile = profile?.tag_profile || {}
     const skipProfile = profile?.skip_profile || {}
 
+    // Fetch seen article IDs for this user (last 7 days) to exclude from carousels
+    let seenArticleIds = new Set()
+    if (user_id) {
+      const { data: seenEvents } = await supabase
+        .from('user_article_events')
+        .select('article_id')
+        .eq('user_id', user_id)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
+        .limit(1000)
+      if (seenEvents) {
+        seenArticleIds = new Set(seenEvents.map(e => e.article_id).filter(Boolean))
+      }
+    }
+
     // Fall back to query params when DB profile is missing (guest users)
     const dbFollowed = Array.isArray(profile?.followed_topics)
       ? profile.followed_topics
@@ -622,7 +636,7 @@ export default async function handler(req, res) {
               matched = tags.some(tag => searchTerms.has(tag))
             }
 
-            if (matched) {
+            if (matched && !seenArticleIds.has(article.id)) {
               topicArticles[topicName].push({
                 id: article.id,
                 title: article.title_news,
