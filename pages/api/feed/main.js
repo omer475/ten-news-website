@@ -1682,6 +1682,60 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
+  // PHASE 5.5: TASTE VECTOR RE-RANKING (angle-aware personalization)
+  // Entity scoring can't distinguish "longevity market" from "mole rat longevity".
+  // Taste vector embeddings CAN — one is near business articles, the other near biology.
+  // Fetch embeddings for top 60 candidates per pool, compute cosine similarity
+  // to taste vector, and re-score. This is the key to solving "right entity, wrong angle."
+  // ==========================================
+
+  const userTasteVec = tasteVectorMinilm || tasteVector;
+  if (userTasteVec && hasAnyPersonalization) {
+    // Collect top 60 candidates from each non-personal pool for embedding fetch
+    const reRankPools = [
+      { pool: trendingScored, name: 'trending' },
+      { pool: discoveryScored, name: 'discovery' },
+      { pool: freshBestScored, name: 'fresh_best' },
+    ];
+
+    const idsToFetch = new Set();
+    for (const { pool } of reRankPools) {
+      for (const a of pool.slice(0, 60)) {
+        if (!embeddingCache.has(a.id)) idsToFetch.add(a.id);
+      }
+    }
+
+    if (idsToFetch.size > 0) {
+      const { data: tasteEmbData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...idsToFetch].slice(0, 200));
+      if (tasteEmbData) {
+        for (const a of tasteEmbData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+
+    // Re-score with taste vector similarity (angle-aware)
+    for (const { pool } of reRankPools) {
+      for (const a of pool) {
+        const emb = embeddingCache.get(a.id);
+        if (emb && userTasteVec.length === emb.length) {
+          const sim = cosineSimilarityVec(userTasteVec, emb);
+          // tasteMult: similarity 0.8 → 1.3x, 0.5 → 1.0x, 0.3 → 0.8x
+          const tasteMult = 0.5 + Math.max(0, sim);
+          a._score *= tasteMult;
+        }
+      }
+      pool.sort((a, b) => b._score - a._score);
+    }
+  }
+
+  // ==========================================
   // PHASE 5.5a: ENTITY BLOCKLIST FOR ALL USERS (not just cold-start)
   // Combines session skips + persistent skip_profile to hard-block
   // entities the user repeatedly skipped.
