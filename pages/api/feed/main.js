@@ -985,33 +985,45 @@ export default async function handler(req, res) {
     const sessionSeenSet = new Set(seenArticleIds);
 
     if (persUserId || userId) {
-      const { data: seenEvents } = await supabase
-        .from('user_article_events')
-        .select('article_id, event_type, created_at')
-        .eq('user_id', userId)
-        .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit', 'article_skipped', 'article_view', 'article_exit'])
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(3000);
+      // Two parallel queries: one for badge IDs (just article_id, high limit),
+      // one for badge metadata (event_type + created_at, lower limit)
+      const [seenIdsResult, seenMetaResult] = await Promise.all([
+        // Query 1: ALL article_ids the user has ANY event for (badge set)
+        supabase
+          .from('user_article_events')
+          .select('article_id')
+          .eq('user_id', userId)
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .limit(5000),
+        // Query 2: Engaged/liked events for badge metadata (smaller set)
+        supabase
+          .from('user_article_events')
+          .select('article_id, event_type, created_at')
+          .eq('user_id', userId)
+          .in('event_type', ['article_engaged', 'article_liked'])
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1000),
+      ]);
 
-      if (seenEvents) {
+      // Build badge set from ALL events (deduplicated)
+      if (seenIdsResult.data) {
         const badgeIds = new Set();
-        for (const event of seenEvents) {
-          const aid = event.article_id;
-          // Skip articles already in current session (client handles those)
-          if (sessionSeenSet.has(aid)) continue;
-
+        for (const e of seenIdsResult.data) {
+          const aid = e.article_id;
+          if (!aid || sessionSeenSet.has(aid)) continue;
           badgeIds.add(aid);
-          const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
-          const existing = seenMeta.get(aid);
-          if (!existing) {
-            seenMeta.set(aid, { first_seen_at: event.created_at, was_engaged: isEngaged });
-          } else {
-            if (event.created_at < existing.first_seen_at) existing.first_seen_at = event.created_at;
+        }
+        allSeenIds = [...badgeIds].filter(Boolean);
+      }
+
+      // Build badge metadata from engaged/liked events
+      if (seenMetaResult.data) {
+        for (const event of seenMetaResult.data) {
+          const aid = event.article_id;
             if (isEngaged) existing.was_engaged = true;
           }
         }
-        allSeenIds = [...badgeIds].filter(Boolean);
       }
     }
 
