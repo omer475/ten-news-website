@@ -1021,6 +1021,13 @@ export default async function handler(req, res) {
       if (seenMetaResult.data) {
         for (const event of seenMetaResult.data) {
           const aid = event.article_id;
+          if (sessionSeenSet.has(aid)) continue;
+          const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
+          const existing = seenMeta.get(aid);
+          if (!existing) {
+            seenMeta.set(aid, { first_seen_at: event.created_at, was_engaged: isEngaged });
+          } else {
+            if (event.created_at < existing.first_seen_at) existing.first_seen_at = event.created_at;
             if (isEngaged) existing.was_engaged = true;
           }
         }
