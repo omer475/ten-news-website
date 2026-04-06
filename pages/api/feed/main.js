@@ -923,6 +923,8 @@ export default async function handler(req, res) {
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
     let personalizationId = null;
+    let clusterLookupId = null;
+    let clusterLookupColumn = 'user_id';
     let userPhase = 1;
     let totalInteractions = 0;
     let sessionTasteVector = null; // Change 1: short-term session vector
@@ -1065,8 +1067,8 @@ export default async function handler(req, res) {
       storedTagProfile = userData?.tag_profile || null;
 
       // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
-      const clusterLookupId = personalizationId || persUserId;
-      const clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
+      clusterLookupId = personalizationId || persUserId;
+      clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
       if ((tasteVector || tasteVectorMinilm) && clusterLookupId) {
         const { count } = await supabase
           .from('user_interest_clusters')
