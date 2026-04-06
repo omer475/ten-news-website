@@ -606,6 +606,66 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // SKIP PENALTY HELPER — used by ALL scoring functions
 // Reads skip_profile to penalize content the user explicitly skipped.
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ENTITY SIGNAL SYSTEM — replaces dual tag_profile/skip_profile
+// Single ratio-based affinity per entity: -1.0 (hate) to +1.0 (love)
+// ══════════════════════════════════════════════════════════════
+
+function computeEntityAffinity(signal, isOnboardingTopic) {
+  const total7d = (signal.positive_7d || 0) + (signal.negative_7d || 0);
+  const totalAll = (signal.positive_count || 0) + (signal.negative_count || 0);
+  if (totalAll < 3) return 0; // not enough data
+
+  const recentRate = total7d >= 3
+    ? signal.positive_7d / total7d
+    : signal.positive_count / totalAll;
+  const allTimeRate = signal.positive_count / totalAll;
+  const blendedRate = total7d >= 3
+    ? recentRate * 0.8 + allTimeRate * 0.2
+    : allTimeRate;
+
+  const confidence = 1 - 1 / (1 + totalAll * 0.2);
+  let affinity = (blendedRate - 0.5) * 2 * confidence;
+
+  // Rapid rejection: 3+ skips in 24h with 0 engagements
+  if ((signal.negative_24h || 0) >= 3 && (signal.positive_24h || 0) === 0) {
+    affinity = Math.min(affinity, -0.75);
+  }
+
+  // Onboarding floor: explicit selections never go fully negative
+  if (isOnboardingTopic) {
+    affinity = Math.max(affinity, 0);
+  }
+
+  return affinity; // -1.0 to +1.0
+}
+
+function entitySignalMultiplier(article, entitySignals, onboardingTagSet) {
+  const tags = safeJsonParse(article.interest_tags, []).slice(0, 5).map(t => t.toLowerCase());
+  if (tags.length === 0 || !entitySignals || Object.keys(entitySignals).length === 0) return 1.0;
+
+  let totalAffinity = 0;
+  let matchCount = 0;
+
+  for (const tag of tags) {
+    const signal = entitySignals[tag];
+    if (signal) {
+      const isOnboarding = onboardingTagSet ? onboardingTagSet.has(tag) : false;
+      totalAffinity += computeEntityAffinity(signal, isOnboarding);
+      matchCount++;
+    }
+  }
+
+  if (matchCount === 0) return 1.0;
+  const avgAffinity = totalAffinity / matchCount;
+
+  // Map -1..+1 to 0.2x..1.8x multiplier
+  return 1.0 + avgAffinity * 0.8;
+}
+
+// ══════════════════════════════════════════════════════════════
+// LEGACY SKIP PENALTY — kept as fallback when entity_signals unavailable
+// ══════════════════════════════════════════════════════════════
 function computeSkipPenalty(article, userSkipProfile) {
   if (!userSkipProfile || typeof userSkipProfile !== 'object') return 0;
   const tags = safeJsonParse(article.interest_tags, []);
@@ -1825,8 +1885,43 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Session-reactive category suppression: build from current session signals
+  const sessionCatStats = {};
+  for (const id of sessionEngagedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+    sessionCatStats[cat].engaged++;
+  }
+  for (const id of sessionSkippedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+  }
+  for (const id of sessionGlancedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+  }
+
   function getCategorySuppression(article) {
-    return categorySuppressionMap[article.category] || 1.0;
+    const cat = article.category;
+
+    // Session-reactive: 5+ articles this session with <15% engagement → suppress NOW
+    const sessionData = sessionCatStats[cat];
+    if (sessionData && sessionData.impressions >= 5) {
+      const sessionRate = sessionData.engaged / sessionData.impressions;
+      if (sessionRate < 0.15) return 0.20;
+    }
+
+    // 7-day historical suppression (slower, more stable)
+    return categorySuppressionMap[cat] || 1.0;
   }
 
   // ==========================================
@@ -1849,6 +1944,36 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // NEW: Load entity_signals for unified affinity scoring (replaces tag_profile/skip_profile)
+  let entitySignals = {};
+  let hasEntitySignals = false;
+  if (userId) {
+    try {
+      const { data: signalRows } = await supabase
+        .from('user_entity_signals')
+        .select('entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d')
+        .eq('user_id', userId)
+        .gt('positive_count', 0)  // only entities with at least some interaction
+        .order('updated_at', { ascending: false })
+        .limit(500);
+      if (signalRows && signalRows.length > 0) {
+        hasEntitySignals = true;
+        for (const row of signalRows) {
+          entitySignals[row.entity] = row;
+        }
+      }
+    } catch (e) {
+      // Table may not exist yet — fall back to legacy skip/tag profiles
+    }
+  }
+  // Build onboarding tag set for affinity floor
+  const onboardingTagSet = new Set();
+  const followedTopicsLocal = safeJsonParse(userPrefs?.followed_topics, []) || [];
+  for (const topic of followedTopicsLocal) {
+    const mapping = ONBOARDING_TOPIC_MAP[topic];
+    if (mapping) mapping.tags.forEach(t => onboardingTagSet.add(t.toLowerCase()));
+  }
+
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
@@ -1864,8 +1989,12 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts, onboardingEntities, sessionInteractionCount)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile, sessionInteractionCount)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
+      // Apply entity signal multiplier (new system, replaces skip_profile when available)
+      if (hasEntitySignals) {
+        score *= entitySignalMultiplier(article, entitySignals, onboardingTagSet);
+      }
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
       // Boost articles from followed publishers
@@ -1884,24 +2013,26 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency x category suppression
+  // Trending bucket: editorial importance x recency x entity signal x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts, onboardingEntities) * getCategorySuppression(articleMap[a.id]),
-      _bucket: 'trending',
-    }))
+    .map(a => {
+      let score = scoreTrendingV3(articleMap[a.id], skipProfile);
+      if (hasEntitySignals) score *= entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+      score *= getCategorySuppression(articleMap[a.id]);
+      return { ...articleMap[a.id], _score: score, _bucket: 'trending' };
+    })
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration x category suppression
+  // Discovery bucket: boost unfamiliar categories x entity signal x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts, onboardingEntities) * getCategorySuppression(articleMap[a.id]),
-      _bucket: 'discovery',
-    }))
+    .map(a => {
+      let score = scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile);
+      if (hasEntitySignals) score *= entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+      score *= getCategorySuppression(articleMap[a.id]);
+      return { ...articleMap[a.id], _score: score, _bucket: 'discovery' };
+    })
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
@@ -2921,11 +3052,17 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (usePivotMode) {
-        // Fix 8: Pivot mode — only serve high-confidence content from top of personal pool
-        // This breaks the skip streak by avoiding trending/discovery slots
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+        // Fix 8+6: Pivot mode — only serve articles with POSITIVE entity signal
+        // Filter candidates by entity signal multiplier >= 1.3 (strong positive interest)
+        const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.3;
+        const pivotPPool = pPool.filter(pivotFilter);
+        const pivotTPool = tPool.filter(pivotFilter);
+        const pivotDPool = dPool.filter(pivotFilter);
+        picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.5);
+        // If nothing passes filter, fall back to unfiltered personal
+        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8);
       } else if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {

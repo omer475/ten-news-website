@@ -288,21 +288,61 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         weighted_centroid += c['centroid'] * (c['article_count'] / total_count)
     sim_floor = compute_similarity_floor(emb_matrix, weighted_centroid)
 
-    # Fix A: Validate clusters against skip_profile — suppress skip-heavy clusters
+    # NEW: Validate clusters using entity_signals (replaces broken skip_profile suppression)
+    # Only suppress if top entities have NEGATIVE net engagement rate
+    entity_signals = {}
+    try:
+        sig_result = supabase.table('user_entity_signals') \
+            .select('entity, positive_count, negative_count, positive_7d, negative_7d, positive_24h, negative_24h') \
+            .eq('user_id', user_id) \
+            .execute()
+        for row in (sig_result.data or []):
+            entity_signals[row['entity']] = row
+    except Exception:
+        pass  # Table may not exist yet
+
     for c in clusters:
-        # Get the top tags from the label (split by ' & ')
         label_tags = [t.strip().lower() for t in c['label'].split('&')]
-        avg_skip = 0
-        count = 0
-        for tag in label_tags:
-            w = skip_profile.get(tag, 0)
-            if isinstance(w, (int, float)):
-                avg_skip += w
-                count += 1
-        avg_skip = avg_skip / max(count, 1)
-        c['suppressed'] = avg_skip > 0.20
-        if c['suppressed'] and verbose:
-            print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
+        if entity_signals:
+            # Use entity_signals ratio-based affinity
+            total_affinity = 0
+            tag_count = 0
+            for tag in label_tags:
+                sig = entity_signals.get(tag)
+                if sig:
+                    total_all = (sig.get('positive_count', 0) or 0) + (sig.get('negative_count', 0) or 0)
+                    if total_all < 3:
+                        continue
+                    total_7d = (sig.get('positive_7d', 0) or 0) + (sig.get('negative_7d', 0) or 0)
+                    if total_7d >= 3:
+                        recent_rate = sig['positive_7d'] / total_7d
+                        all_rate = sig['positive_count'] / total_all
+                        blended = recent_rate * 0.8 + all_rate * 0.2
+                    else:
+                        blended = sig['positive_count'] / total_all
+                    confidence = 1 - 1 / (1 + total_all * 0.2)
+                    affinity = (blended - 0.5) * 2 * confidence
+                    total_affinity += affinity
+                    tag_count += 1
+            avg_affinity = total_affinity / max(tag_count, 1) if tag_count > 0 else 0
+            c['suppressed'] = avg_affinity < -0.4
+            if c['suppressed'] and verbose:
+                print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg affinity: {avg_affinity:.2f})")
+            elif verbose and tag_count > 0:
+                print(f"    ✅ Cluster '{c['label']}' ACTIVE (avg affinity: {avg_affinity:.2f})")
+        else:
+            # Fallback to old skip_profile if entity_signals not available
+            avg_skip = 0
+            count = 0
+            for tag in label_tags:
+                w = skip_profile.get(tag, 0)
+                if isinstance(w, (int, float)):
+                    avg_skip += w
+                    count += 1
+            avg_skip = avg_skip / max(count, 1)
+            c['suppressed'] = avg_skip > 0.20
+            if c['suppressed'] and verbose:
+                print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
 
     if verbose:
         print(f"  Similarity floor: {sim_floor:.4f}")
