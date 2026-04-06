@@ -7,12 +7,22 @@ struct FeedService {
         try await client.get("\(APIEndpoints.newsFeed)?page=\(page)&pageSize=\(pageSize)")
     }
 
+    /// Stable guest device ID for unauthenticated users (matches AnalyticsService)
+    private static var guestDeviceId: String {
+        let key = "guest_device_id"
+        if let existing = UserDefaults.standard.string(forKey: key) { return existing }
+        let id = UUID().uuidString
+        UserDefaults.standard.set(id, forKey: key)
+        return id
+    }
+
     func fetchMainFeed(
         cursor: String? = nil,
         limit: Int = 20,
         preferences: UserPreferences? = nil,
         userId: String? = nil,
         engagedIds: [String] = [],
+        glancedIds: [String] = [],
         skippedIds: [String] = [],
         seenIds: [String] = []
     ) async throws -> MainFeedResponse {
@@ -20,6 +30,9 @@ struct FeedService {
         if let cursor { params += "&cursor=\(cursor)" }
         if let uid = userId {
             params += "&user_id=\(uid)"
+        } else {
+            // CRITICAL FIX: Send guest_device_id so server can look up taste vector
+            params += "&guest_device_id=\(Self.guestDeviceId)"
         }
         if let prefs = preferences {
             if let home = prefs.homeCountry {
@@ -32,9 +45,12 @@ struct FeedService {
                 params += "&followed_topics=\(prefs.followedTopics.joined(separator: ","))"
             }
         }
-        // Session signals for V2 server-side personalization (up to 50 each)
+        // Session signals for server-side personalization (up to 50 each)
         if !engagedIds.isEmpty {
             params += "&engaged_ids=\(engagedIds.joined(separator: ","))"
+        }
+        if !glancedIds.isEmpty {
+            params += "&glanced_ids=\(glancedIds.joined(separator: ","))"
         }
         if !skippedIds.isEmpty {
             params += "&skipped_ids=\(skippedIds.joined(separator: ","))"

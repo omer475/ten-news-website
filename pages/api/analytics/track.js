@@ -643,12 +643,15 @@ export default async function handler(req, res) {
       const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
                            metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
       if (event_type === 'article_engaged' && dwellSeconds > 0) {
+        // Tiers: 6-12s → 1.0x, 12-25s → 1.5x, 25-45s → 2.0x, 45s+ → 2.5x
         if (dwellSeconds >= 45) baseWeight *= 2.5
         else if (dwellSeconds >= 25) baseWeight *= 2.0
         else if (dwellSeconds >= 12) baseWeight *= 1.5
+        // 6-12s = default 1.0x (no change)
       }
 
       // Use atomic RPC to prevent race conditions (concurrent events overwriting each other)
+
       admin
         .from('published_articles')
         .select('interest_tags')

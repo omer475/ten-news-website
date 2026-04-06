@@ -391,7 +391,9 @@ struct OnboardingFlowView: View {
                 },
                 onShowSignup: {
                     showSignIn = false
-                    viewModel.nextStep()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        showSignUp = true
+                    }
                 }
             )
             .navigationTitle("Sign In")
@@ -418,7 +420,9 @@ struct OnboardingFlowView: View {
                 },
                 onShowLogin: {
                     showSignUp = false
-                    showSignIn = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        showSignIn = true
+                    }
                 }
             )
             .navigationTitle("Create Account")

@@ -7,5 +7,16 @@
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.465407271728-t3osp3o35l4hs6ei9coddr24bbsmbkda</string>
+            </array>
+            <key>CFBundleURLName</key>
+            <string>Google OAuth Callback</string>
+        </dict>
+    </array>
 </dict>
 </plist>

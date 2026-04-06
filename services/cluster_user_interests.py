@@ -315,32 +315,59 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         return len(clusters)
 
     # Save to DB
-    # 1. Delete old clusters
+    # Fix 2: Resolve personalization_id so clusters are saved with the right key
+    pers_id = None
+    try:
+        pers_result = supabase.rpc('resolve_personalization_id', {'p_auth_id': user_id}).execute()
+        if pers_result.data and len(pers_result.data) > 0:
+            pers_id = pers_result.data[0]['personalization_id']
+    except Exception:
+        pass
+
+    # 1. Delete old clusters (both legacy user_id and V3 personalization_id)
     try:
         supabase.table('user_interest_clusters').delete().eq('user_id', user_id).execute()
     except Exception:
         pass
+    if pers_id:
+        try:
+            supabase.table('user_interest_clusters').delete().eq('personalization_id', pers_id).execute()
+        except Exception:
+            pass
 
-    # 2. Insert new clusters with both Gemini and MiniLM embeddings
+    # 2. Insert new clusters with personalization_id (V3) when available
     for c in clusters:
-        medoid_art = article_map.get(c['medoid_article_id'], {})
+        centroid_list_c = c['centroid'].tolist()
         row = {
-            'user_id': user_id,
             'cluster_index': c['cluster_index'],
-            'medoid_embedding': c['centroid'].tolist(),
+            'medoid_embedding': centroid_list_c,
+            'medoid_minilm': centroid_list_c,  # Use centroid as medoid_minilm (more accurate than nearest article)
             'medoid_article_id': c['medoid_article_id'],
             'article_count': c['article_count'],
             'label': c['label'],
             'suppressed': c.get('suppressed', False),
+            'last_engaged_at': datetime.now(timezone.utc).isoformat(),
         }
-        # Add MiniLM embedding from medoid article if available
-        minilm = medoid_art.get('embedding_minilm')
-        if minilm and isinstance(minilm, list) and len(minilm) > 0:
-            row['medoid_minilm'] = minilm
+        # Set the correct key: V3 uses personalization_id, legacy uses user_id
+        if pers_id:
+            row['personalization_id'] = pers_id
+            row['user_id'] = None
+        else:
+            row['user_id'] = user_id
+        # Compute importance_score proportional to article count
+        row['importance_score'] = c['article_count'] / total_count
+
         supabase.table('user_interest_clusters').insert(row).execute()
 
-    # 3. Update taste vectors — write MiniLM centroid to BOTH profiles and personalization_profiles
-    centroid_list = weighted_centroid.tolist()
+    # 3. Update taste vectors — write weighted centroid to BOTH profiles and personalization_profiles
+    # Fix 3A: Long-term vector is ONLY set by clustering (weighted centroid of top 3 clusters)
+    top3_clusters = sorted(clusters, key=lambda c: c['article_count'], reverse=True)[:3]
+    top3_total = sum(c['article_count'] for c in top3_clusters)
+    focused_centroid = np.zeros_like(centroids[0])
+    for c in top3_clusters:
+        focused_centroid += c['centroid'] * (c['article_count'] / top3_total)
+    centroid_list = focused_centroid.tolist()
+
     supabase.table('profiles').update({
         'taste_vector': centroid_list,
         'taste_vector_minilm': centroid_list,
@@ -348,9 +375,17 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     }).eq('id', user_id).execute()
 
     # Also update personalization_profiles (this is what the feed reads)
-    supabase.table('personalization_profiles').update({
-        'taste_vector_minilm': centroid_list,
-    }).eq('auth_profile_id', user_id).execute()
+    # Use personalization_id (V3) when available, fall back to auth_profile_id
+    if pers_id:
+        supabase.table('personalization_profiles').update({
+            'taste_vector_minilm': centroid_list,
+            'last_clustered_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('personalization_id', pers_id).execute()
+    else:
+        supabase.table('personalization_profiles').update({
+            'taste_vector_minilm': centroid_list,
+            'last_clustered_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('auth_profile_id', user_id).execute()
 
     if verbose:
         print(f"  Saved {len(clusters)} clusters + taste vector + floor to DB")

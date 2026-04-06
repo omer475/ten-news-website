@@ -8,13 +8,7 @@ struct SignupView: View {
     var onSignup: ((AuthUser, AuthSession?) -> Void)?
     var onShowLogin: (() -> Void)?
 
-    // Palette (matches onboarding)
-    private let warmBlack = Color(hex: "#1a1a2e")
-    private let warmGray = Color(hex: "#6b7280")
-    private let lightGray = Color(hex: "#9ca3af")
     private let accent = Color(hex: "#3b82f6")
-    private let fieldBg = Color.white
-    private let fieldBorder = Color.black.opacity(0.07)
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -24,7 +18,7 @@ struct SignupView: View {
                 Text("Join Today")
                     .font(.system(size: 30, weight: .bold))
                     .tracking(-0.8)
-                    .foregroundStyle(warmBlack)
+                    .foregroundStyle(.white)
                 +
                 Text("+")
                     .font(.system(size: 30, weight: .bold))
@@ -33,9 +27,47 @@ struct SignupView: View {
 
                 Text("Create your account to get\npersonalized news delivered daily.")
                     .font(.system(size: 15))
-                    .foregroundStyle(warmGray)
+                    .foregroundStyle(.white.opacity(0.5))
                     .lineSpacing(4)
                     .padding(.top, 10)
+
+                // MARK: - Google Sign Up
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        if let result = await viewModel.signInWithGoogle() {
+                            onSignup?(result.user, result.session)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "g.circle.fill")
+                            .font(.system(size: 20))
+                        Text("Continue with Google")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(AuthPressStyle())
+                .padding(.top, 28)
+
+                // Divider
+                HStack(spacing: 12) {
+                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                    Text("or")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.35))
+                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                }
+                .padding(.top, 20)
+                .padding(.bottom, 20)
 
                 // MARK: - Fields
                 VStack(spacing: 0) {
@@ -43,24 +75,24 @@ struct SignupView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "person")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(lightGray)
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(width: 20)
                         TextField("Full name", text: $viewModel.fullName)
                             .textContentType(.name)
                             .autocorrectionDisabled()
                             .font(.system(size: 16))
-                            .foregroundStyle(warmBlack)
+                            .foregroundStyle(.white)
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 54)
 
-                    Divider().padding(.leading, 50)
+                    Divider().overlay(.white.opacity(0.1)).padding(.leading, 50)
 
                     // Email
                     HStack(spacing: 14) {
                         Image(systemName: "envelope")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(lightGray)
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(width: 20)
                         TextField("Email address", text: $viewModel.email)
                             .textContentType(.emailAddress)
@@ -68,18 +100,18 @@ struct SignupView: View {
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .font(.system(size: 16))
-                            .foregroundStyle(warmBlack)
+                            .foregroundStyle(.white)
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 54)
 
-                    Divider().padding(.leading, 50)
+                    Divider().overlay(.white.opacity(0.1)).padding(.leading, 50)
 
                     // Password
                     HStack(spacing: 14) {
                         Image(systemName: "lock")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(lightGray)
+                            .foregroundStyle(.white.opacity(0.4))
                             .frame(width: 20)
 
                         Group {
@@ -91,7 +123,7 @@ struct SignupView: View {
                         }
                         .textContentType(.newPassword)
                         .font(.system(size: 16))
-                        .foregroundStyle(warmBlack)
+                        .foregroundStyle(.white)
 
                         Button {
                             showPassword.toggle()
@@ -99,7 +131,7 @@ struct SignupView: View {
                         } label: {
                             Image(systemName: showPassword ? "eye.slash" : "eye")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(lightGray)
+                                .foregroundStyle(.white.opacity(0.4))
                                 .frame(width: 28, height: 28)
                                 .contentShape(Rectangle())
                         }
@@ -107,17 +139,16 @@ struct SignupView: View {
                     .padding(.horizontal, 16)
                     .frame(height: 54)
                 }
-                .background(fieldBg, in: RoundedRectangle(cornerRadius: 16))
+                .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(fieldBorder, lineWidth: 1)
+                        .strokeBorder(.white.opacity(0.1), lineWidth: 1)
                 }
-                .padding(.top, 32)
 
                 // Password hint
                 Text("Minimum 6 characters")
                     .font(.system(size: 12))
-                    .foregroundStyle(lightGray)
+                    .foregroundStyle(.white.opacity(0.3))
                     .padding(.leading, 4)
                     .padding(.top, 8)
 
@@ -152,14 +183,14 @@ struct SignupView: View {
                                 .tracking(-0.2)
                         }
                     }
-                    .foregroundStyle(viewModel.canSignup ? .white : .white.opacity(0.35))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(
-                        viewModel.canSignup ? warmBlack : warmBlack.opacity(0.18),
-                        in: RoundedRectangle(cornerRadius: 16)
-                    )
-                    .contentShape(RoundedRectangle(cornerRadius: 16))
+                    .background {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(viewModel.canSignup ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
+                    }
+                    .contentShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(AuthPressStyle())
                 .disabled(!viewModel.canSignup || viewModel.isLoading)
@@ -168,7 +199,7 @@ struct SignupView: View {
                 // MARK: - Switch to Login
                 HStack(spacing: 4) {
                     Text("Already have an account?")
-                        .foregroundStyle(warmGray)
+                        .foregroundStyle(.white.opacity(0.5))
                     Button {
                         onShowLogin?()
                     } label: {
@@ -184,7 +215,7 @@ struct SignupView: View {
                 // MARK: - Legal
                 Text("By creating an account, you agree to our Terms of Service and Privacy Policy.")
                     .font(.system(size: 11))
-                    .foregroundStyle(lightGray)
+                    .foregroundStyle(.white.opacity(0.25))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 24)
@@ -193,8 +224,8 @@ struct SignupView: View {
             .padding(.top, 28)
             .padding(.bottom, 40)
         }
-        .background(Color(hex: "#f8f8f6").ignoresSafeArea())
-        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+        .background(Color.black.ignoresSafeArea())
+        .scrollDismissesKeyboard(.interactively)
     }
 }
 

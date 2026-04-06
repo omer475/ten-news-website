@@ -8,11 +8,23 @@ final class ReadingHistoryManager {
 
     private(set) var entries: [HistoryEntry] = []
 
+    /// Count of articles read for more than 3 seconds
+    private(set) var readCount: Int = 0
+
     private let storageKey = "reading_history_entries"
+    private let readCountKey = "articles_read_count"
+    private let readArticleIdsKey = "articles_read_ids"
     private let maxEntries = 500
+
+    /// Set of article IDs that have been counted as "read" (>3s dwell)
+    private var readArticleIds: Set<String> = []
 
     private init() {
         load()
+        readCount = UserDefaults.standard.integer(forKey: readCountKey)
+        if let ids = UserDefaults.standard.array(forKey: readArticleIdsKey) as? [String] {
+            readArticleIds = Set(ids)
+        }
     }
 
     struct HistoryEntry: Codable, Identifiable {
@@ -40,7 +52,7 @@ final class ReadingHistoryManager {
 
         let entry = HistoryEntry(
             articleId: id,
-            title: article.plainTitle,
+            title: article.displayTitle,
             source: article.source,
             category: article.category,
             topics: article.topics,
@@ -51,6 +63,14 @@ final class ReadingHistoryManager {
 
         entries.insert(entry, at: 0)
 
+        // Count every viewed article (only once per article)
+        if !readArticleIds.contains(id) {
+            readArticleIds.insert(id)
+            readCount += 1
+            UserDefaults.standard.set(readCount, forKey: readCountKey)
+            UserDefaults.standard.set(Array(readArticleIds), forKey: readArticleIdsKey)
+        }
+
         // Trim to max
         if entries.count > maxEntries {
             entries = Array(entries.prefix(maxEntries))
@@ -59,9 +79,28 @@ final class ReadingHistoryManager {
         save()
     }
 
+    /// Record that an article was actually read (dwell > 3 seconds). Only counts each article once.
+    func recordRead(articleId: String) {
+        guard !readArticleIds.contains(articleId) else { return }
+        readArticleIds.insert(articleId)
+        readCount += 1
+        UserDefaults.standard.set(readCount, forKey: readCountKey)
+        UserDefaults.standard.set(Array(readArticleIds), forKey: readArticleIdsKey)
+    }
+
+    /// Returns all article IDs the user has ever seen (persisted across restarts).
+    /// Used for dedup — send to server to prevent duplicate articles in feed.
+    func seenArticleIds(limit: Int = 500) -> [String] {
+        return Array(readArticleIds.prefix(limit))
+    }
+
     func clearHistory() {
         entries.removeAll()
+        readCount = 0
+        readArticleIds.removeAll()
         save()
+        UserDefaults.standard.set(0, forKey: readCountKey)
+        UserDefaults.standard.set([String](), forKey: readArticleIdsKey)
     }
 
     // MARK: - Persistence

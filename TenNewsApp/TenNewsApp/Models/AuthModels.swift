@@ -31,6 +31,16 @@ struct SignupResponse: Codable {
     let error: String?
 }
 
+// MARK: - Google Auth
+
+struct GoogleAuthRequest: Codable {
+    let idToken: String
+
+    enum CodingKeys: String, CodingKey {
+        case idToken = "id_token"
+    }
+}
+
 // MARK: - Forgot Password
 
 struct ForgotPasswordRequest: Codable {

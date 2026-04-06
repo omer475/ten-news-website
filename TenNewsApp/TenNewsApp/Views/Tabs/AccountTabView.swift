@@ -5,6 +5,7 @@ struct AccountTabView: View {
     @Environment(FeedViewModel.self) private var feedViewModel
     @State private var appeared = false
     @State private var showSignUp = false
+    @State private var showSignIn = false
     @State private var showCreateContent = false
     @State private var selectedTab: ProfileTab = .liked
     @State private var selectedArticle: Article?
@@ -82,6 +83,9 @@ struct AccountTabView: View {
                         },
                         onShowLogin: {
                             showSignUp = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                showSignIn = true
+                            }
                         }
                     )
                     .navigationTitle("Create Account")
@@ -89,6 +93,32 @@ struct AccountTabView: View {
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Cancel") { showSignUp = false }
+                        }
+                    }
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
+            }
+            .sheet(isPresented: $showSignIn) {
+                NavigationStack {
+                    LoginView(
+                        onLogin: { user, session in
+                            appViewModel.login(user: user, session: session)
+                            showSignIn = false
+                        },
+                        onShowSignup: {
+                            showSignIn = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                showSignUp = true
+                            }
+                        }
+                    )
+                    .navigationTitle("Sign In")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showSignIn = false }
                         }
                     }
                 }
@@ -165,16 +195,16 @@ struct AccountTabView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            statItem(count: likes.likedArticles.count, label: "Liked")
-            statItem(count: bookmarks.savedArticles.count, label: "Saved")
-            statItem(count: history.entries.count, label: "Read")
+            statItem(value: "0", label: "Followers")
+            statItem(value: "0", label: "Following")
+            statItem(value: "\(history.readCount)", label: "Read")
         }
         .padding(.horizontal, 20)
     }
 
-    private func statItem(count: Int, label: String) -> some View {
+    private func statItem(value: String, label: String) -> some View {
         VStack(spacing: 2) {
-            Text("\(count)")
+            Text(value)
                 .font(.system(size: 18, weight: .bold))
             Text(label)
                 .font(.system(size: 12))

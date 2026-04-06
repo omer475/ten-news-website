@@ -12,6 +12,8 @@ struct ExploreView: View {
     @State private var topicArticles: [Article] = []
     @State private var loadingTopicArticles = false
     @State private var appeared = false
+    @State private var lastLoadTime: Date?
+    private let staleThreshold: TimeInterval = 180 // 3 minutes
 
     // Explore tracking state
     private let analytics = AnalyticsService()
@@ -51,6 +53,12 @@ struct ExploreView: View {
             .background(Theme.Colors.backgroundPrimary)
             .task { await loadTopics() }
             .refreshable { await loadTopics() }
+            .onAppear {
+                // Auto-refresh if data is stale (3+ minutes old)
+                if let last = lastLoadTime, Date().timeIntervalSince(last) > staleThreshold {
+                    Task { await loadTopics() }
+                }
+            }
             .onChange(of: tabBarState.exploreRefreshRequested) { _, requested in
                 if requested {
                     tabBarState.exploreRefreshRequested = false
@@ -351,6 +359,10 @@ struct ExploreView: View {
         var params: [String] = []
         if let uid = userId {
             params.append("user_id=\(uid)")
+        } else {
+            // Guest users: send device ID so server can identify them
+            let guestId = UserDefaults.standard.string(forKey: "guest_device_id") ?? UUID().uuidString
+            params.append("guest_device_id=\(guestId)")
         }
         let prefs = appViewModel.preferences
         if let home = prefs.homeCountry {
@@ -367,6 +379,7 @@ struct ExploreView: View {
             // Keep existing data on refresh failure
         }
         isLoading = false
+        lastLoadTime = Date()
         withAnimation(.easeOut(duration: 0.4)) { appeared = true }
     }
 

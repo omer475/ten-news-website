@@ -622,19 +622,37 @@ function computeSkipPenalty(article, userSkipProfile) {
 // All scoring functions now use entityAffinityMultiplier (unified engagement rate)
 // instead of separate tagProfileBoost + skipMultiplier.
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts, onboardingEntities) {
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts, onboardingEntities, sessionInteractionCount) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
-  const vectorScore = sessionScore > 0
-    ? longTermScore * 0.7 + sessionScore * 0.3
-    : longTermScore;
+  // Fix 10: Adaptive weighting — more session data = more session weight
+  let vectorScore;
+  if (sessionScore > 0) {
+    const sessionCount = sessionInteractionCount || 0;
+    const sessionWeight = Math.min(0.85, 0.30 + sessionCount * 0.03);
+    // 0 interactions → 0.30 session, 10 → 0.60, 20+ → 0.85
+    vectorScore = longTermScore * (1 - sessionWeight) + sessionScore * sessionWeight;
+  } else {
+    vectorScore = longTermScore;
+  }
 
   const tags = safeJsonParse(article.interest_tags, []);
   let entityBonus = 0;
   let matchCount = 0;
   for (const tag of tags) {
     const t = tag.toLowerCase();
-    const affinity = entityAffinities[t];
+    // Exact match first
+    let affinity = entityAffinities[t];
+    // Fix 9: Fuzzy match — if no exact match, check if any affinity entity contains/is contained by this tag
+    if (!affinity || affinity <= 0) {
+      for (const [entity, score] of Object.entries(entityAffinities)) {
+        if (score <= 0) continue;
+        if ((t.length > 3 && entity.includes(t)) || (entity.length > 3 && t.includes(entity))) {
+          affinity = score * 0.6; // 60% of exact match strength
+          break;
+        }
+      }
+    }
     if (affinity && affinity > 0) {
       entityBonus += 0.10 * affinity;
       matchCount++;
@@ -653,6 +671,11 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
+  // Fix 11: Debug scoring for verification
+  if (process.env.DEBUG_SCORING) {
+    console.log(`[score] personal: "${(article.title_news || '').slice(0, 45)}" vec=${vectorScore.toFixed(3)} entity=${entityBonus.toFixed(3)} aff=${affMult.toFixed(2)} sat=${saturation.toFixed(2)} final=${(baseScore * affMult * saturation).toFixed(0)}`);
+  }
+
   return baseScore * affMult * saturation;
 }
 
@@ -662,6 +685,10 @@ function scoreTrendingV3(article, entitySignals, recentEntityCounts, onboardingE
 
   const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
+
+  if (process.env.DEBUG_SCORING) {
+    console.log(`[score] trending: "${(article.title_news || '').slice(0, 45)}" [${article.category}] aff=${affMult.toFixed(2)} sat=${saturation.toFixed(2)} final=${(baseScore * affMult * saturation).toFixed(0)}`);
+  }
 
   return baseScore * affMult * saturation;
 }
@@ -922,9 +949,73 @@ export default async function handler(req, res) {
           if (ppData?.taste_vector_minilm) {
             tasteVectorMinilm = ppData.taste_vector_minilm;
           }
-          // Session vector loaded for scoring blend (used in scoreArticleV3)
+          // Fix 3C: Contrastive session vector — compute from engagement buffer
+          // Instead of using the naive averaged session vector, build one that
+          // actively moves AWAY from skipped content (politics, crypto, etc.)
           if (ppData?.session_taste_vector_minilm) {
-            sessionTasteVector = ppData.session_taste_vector_minilm;
+            try {
+              const { data: bufferEntries } = await supabase
+                .from('engagement_buffer')
+                .select('embedding_minilm, interaction_weight')
+                .eq('personalization_id', personalizationId)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+              if (bufferEntries && bufferEntries.length >= 3) {
+                const positives = bufferEntries.filter(e => e.interaction_weight > 0 && e.embedding_minilm);
+                const negatives = bufferEntries.filter(e => e.interaction_weight < 0 && e.embedding_minilm);
+
+                if (positives.length > 0) {
+                  const dim = 384;
+                  // Weighted positive centroid
+                  const posCentroid = new Array(dim).fill(0);
+                  let totalPosW = 0;
+                  for (const entry of positives) {
+                    const emb = Array.isArray(entry.embedding_minilm) ? entry.embedding_minilm : safeJsonParse(entry.embedding_minilm, null);
+                    if (!emb || emb.length !== dim) continue;
+                    const w = Math.abs(entry.interaction_weight);
+                    totalPosW += w;
+                    for (let i = 0; i < dim; i++) posCentroid[i] += emb[i] * w;
+                  }
+                  if (totalPosW > 0) {
+                    for (let i = 0; i < dim; i++) posCentroid[i] /= totalPosW;
+                  }
+
+                  // Contrastive: subtract negative centroid if available
+                  if (negatives.length >= 2) {
+                    const negCentroid = new Array(dim).fill(0);
+                    for (const entry of negatives) {
+                      const emb = Array.isArray(entry.embedding_minilm) ? entry.embedding_minilm : safeJsonParse(entry.embedding_minilm, null);
+                      if (!emb || emb.length !== dim) continue;
+                      for (let i = 0; i < dim; i++) negCentroid[i] += emb[i];
+                    }
+                    for (let i = 0; i < dim; i++) negCentroid[i] /= negatives.length;
+
+                    // Contrastive vector: pos - 0.3 * neg, then L2 normalize
+                    const contrastive = new Array(dim);
+                    let norm = 0;
+                    for (let i = 0; i < dim; i++) {
+                      contrastive[i] = posCentroid[i] - 0.3 * negCentroid[i];
+                      norm += contrastive[i] * contrastive[i];
+                    }
+                    norm = Math.sqrt(norm);
+                    if (norm > 0) {
+                      for (let i = 0; i < dim; i++) contrastive[i] /= norm;
+                    }
+                    sessionTasteVector = contrastive;
+                  } else {
+                    sessionTasteVector = posCentroid;
+                  }
+                } else {
+                  sessionTasteVector = ppData.session_taste_vector_minilm;
+                }
+              } else {
+                sessionTasteVector = ppData.session_taste_vector_minilm;
+              }
+            } catch (bufferErr) {
+              // Fall back to stored session vector on any error
+              sessionTasteVector = ppData.session_taste_vector_minilm;
+            }
           }
         }
       } catch (e) {
@@ -973,12 +1064,14 @@ export default async function handler(req, res) {
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
 
-      // Check if user has active (non-suppressed) interest clusters
-      if ((tasteVector || tasteVectorMinilm) && persUserId) {
+      // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
+      const clusterLookupId = personalizationId || persUserId;
+      const clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
+      if ((tasteVector || tasteVectorMinilm) && clusterLookupId) {
         const { count } = await supabase
           .from('user_interest_clusters')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', persUserId)
+          .eq(clusterLookupColumn, clusterLookupId)
           .neq('suppressed', true);
         hasInterestClusters = (count || 0) > 0;
       }
@@ -1131,6 +1224,8 @@ export default async function handler(req, res) {
       sessionTasteVector,
       usedTempTasteVector: false,
       followedPublisherIds,
+      clusterLookupId,
+      clusterLookupColumn,
       limit,
       offset,
     });
@@ -1151,7 +1246,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds, seenMeta,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
-        personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds, limit, offset } = opts;
+        personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
+        clusterLookupId, clusterLookupColumn, limit, offset } = opts;
   allSeenIds = allSeenIds || [];
   seenMeta = seenMeta || new Map();
   followedPublisherIds = followedPublisherIds || new Set();
@@ -1398,16 +1494,32 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const momentum = await computeSessionMomentum(supabase, sessionEngagedIds, sessionSkippedIds);
 
+  // Fix 4: Normalize tag_profile to spread out saturated values
+  // When 25 tags are all at 1.0, log-scale normalization restores relative ranking
+  function normalizeTagProfile(tagProfile) {
+    if (!tagProfile || typeof tagProfile !== 'object') return {};
+    const entries = Object.entries(tagProfile);
+    if (entries.length === 0) return {};
+    const maxRaw = Math.max(...entries.map(([, v]) => v));
+    if (maxRaw <= 0) return tagProfile;
+    const normalized = {};
+    for (const [entity, rawWeight] of entries) {
+      normalized[entity] = Math.log1p(rawWeight) / Math.log1p(maxRaw);
+    }
+    return normalized;
+  }
+
   // Use stored tag_profile if available (incrementally updated via track.js),
   // fall back to dynamically computed interest profile
-  const baseTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
+  const rawTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
     ? storedTagProfile
     : (userInterestProfile || {});
+  const baseTagProfile = normalizeTagProfile(rawTagProfile);
 
   // Merge session boosts into tag profile (temporary, this request only)
   const effectiveTagProfile = { ...baseTagProfile };
   for (const [tag, boost] of Object.entries(momentum.boosts)) {
-    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.0);
+    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.5);
   }
 
   // Merge session skip penalties into skip profile
@@ -1511,20 +1623,34 @@ async function handleV2Feed(req, res, supabase, opts) {
       clusterBuckets[ci].sort((a, b) => b.similarity - a.similarity);
     }
 
-    // Load cluster metadata for proportional weighting
+    // Fix 1: Load cluster metadata using personalizationId (V3) for real importance scores
+    const clusterLookup = clusterLookupId || userId;
+    const clusterCol = clusterLookupColumn || 'user_id';
     const { data: clusterMeta } = await supabase
       .from('user_interest_clusters')
-      .select('cluster_index, article_count')
-      .eq('user_id', userId);
+      .select('cluster_index, article_count, importance_score')
+      .eq(clusterCol, clusterLookup);
 
-    const totalEngaged = (clusterMeta || []).reduce((s, c) => s + (c.article_count || 1), 0);
+    // Fix 1: Use importance_score (V3) when available, fall back to article_count
+    const hasImportanceScores = (clusterMeta || []).some(c => c.importance_score > 0);
     const clusterWeights = {};
-    for (const c of (clusterMeta || [])) {
-      // Cap any single cluster at 50% to prevent monoculture
-      clusterWeights[c.cluster_index] = Math.min(
-        (c.article_count || 1) / Math.max(totalEngaged, 1),
-        0.5
-      );
+    if (hasImportanceScores) {
+      const totalImportance = (clusterMeta || []).reduce((s, c) => s + (c.importance_score || 0), 0) || 1;
+      for (const c of (clusterMeta || [])) {
+        clusterWeights[c.cluster_index] = Math.min(
+          (c.importance_score || 0) / totalImportance,
+          0.5
+        );
+      }
+    } else {
+      const totalEngaged = (clusterMeta || []).reduce((s, c) => s + (c.article_count || 1), 0);
+      for (const c of (clusterMeta || [])) {
+        // Cap any single cluster at 50% to prevent monoculture
+        clusterWeights[c.cluster_index] = Math.min(
+          (c.article_count || 1) / Math.max(totalEngaged, 1),
+          0.5
+        );
+      }
     }
 
     // Proportional allocation (min 1 per cluster)
@@ -1668,6 +1794,39 @@ async function handleV2Feed(req, res, supabase, opts) {
   const tagCache = buildTagSetsCache(allArticles);
   const embeddingCache = buildEmbeddingCache(allArticles);
 
+  // Fix 10: Count session interactions for adaptive weighting
+  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
+
+  // Fix 5: Category-level engagement suppression
+  // Load per-category engagement stats (last 7 days) to suppress 0% categories
+  let categorySuppressionMap = {};
+  if (userId) {
+    try {
+      const { data: catStats } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId,
+        p_days: 7,
+      });
+      if (catStats) {
+        for (const row of catStats) {
+          const impressions = parseInt(row.impressions) || 0;
+          const engaged = parseInt(row.engaged) || 0;
+          if (impressions < 10) continue; // not enough data
+          const rate = engaged / impressions;
+          if (rate < 0.05 && impressions >= 20) categorySuppressionMap[row.category] = 0.15;
+          else if (rate < 0.10 && impressions >= 15) categorySuppressionMap[row.category] = 0.40;
+          else if (rate < 0.15 && impressions >= 10) categorySuppressionMap[row.category] = 0.70;
+        }
+      }
+    } catch (catErr) {
+      // RPC may not be deployed yet — continue without suppression
+      console.log('[feed] Category suppression stats unavailable:', catErr.message);
+    }
+  }
+
+  function getCategorySuppression(article) {
+    return categorySuppressionMap[article.category] || 1.0;
+  }
+
   // ==========================================
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
@@ -1703,8 +1862,10 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts, onboardingEntities)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts, onboardingEntities, sessionInteractionCount)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
+      // Fix 5: Category suppression
+      score *= getCategorySuppression(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -1721,22 +1882,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency
+  // Trending bucket: editorial importance x recency x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts, onboardingEntities),
+      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts, onboardingEntities) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration
+  // Discovery bucket: boost unfamiliar categories for true exploration x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts, onboardingEntities),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts, onboardingEntities) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -2734,14 +2895,36 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else {
+    // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
+    let usePivotMode = false;
+    if (sessionSkippedIds.length >= 5) {
+      const engagedSet = new Set(sessionEngagedIds);
+      const glancedSet = new Set(sessionGlancedIds);
+      let consecutiveSkips = 0;
+      for (let i = sessionSkippedIds.length - 1; i >= 0; i--) {
+        const skipId = sessionSkippedIds[i];
+        if (!engagedSet.has(skipId) && !glancedSet.has(skipId)) {
+          consecutiveSkips++;
+        } else {
+          break;
+        }
+      }
+      usePivotMode = consecutiveSkips >= 5;
+    }
+
     // Personalized user without topic selections: standard slot-filling
     let consecutiveFails2 = 0;
     for (let pos = 0; selected.length < limit && consecutiveFails2 < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      // Try preferred pool first
-      if (slot === 'F') {
+      if (usePivotMode) {
+        // Fix 8: Pivot mode — only serve high-confidence content from top of personal pool
+        // This breaks the skip streak by avoiding trending/discovery slots
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
@@ -2760,7 +2943,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) { consecutiveFails2++; continue; }
       consecutiveFails2 = 0;
 
-      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
+      picked.bucket = usePivotMode ? 'pivot' : (slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery');
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
@@ -2858,6 +3041,62 @@ async function handleV2Feed(req, res, supabase, opts) {
     // so this tier only adds articles from the original unseen pool that were borderline.
     // Actually, staleUnseen already failed isStillFresh, so skip this tier entirely
     // to avoid showing misleading old news. Resurfaced tier is the final fallback.
+  }
+
+  // ==========================================
+  // PHASE 6.5: INTEREST CATEGORY ALLOCATION FLOOR (Fix 7)
+  // Ensure historically-engaged categories aren't starved by session drift.
+  // If Science is 25% of all-time engagement but only 5% of current feed,
+  // swap in more Science articles from available pools.
+  // ==========================================
+
+  if (hasAnyPersonalization && Object.keys(categorySuppressionMap).length > 0) {
+    const selectedCatCounts = {};
+    for (const a of selected) {
+      selectedCatCounts[a.category] = (selectedCatCounts[a.category] || 0) + 1;
+    }
+
+    try {
+      const { data: allCatStats } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId,
+        p_days: 14,
+      });
+      if (allCatStats && selected.length > 0) {
+        const totalEngagedCat = allCatStats.reduce((s, c) => s + parseInt(c.engaged || 0), 0);
+        if (totalEngagedCat > 0) {
+          for (const row of allCatStats) {
+            const engaged = parseInt(row.engaged) || 0;
+            const rate = engaged / totalEngagedCat;
+            if (rate < 0.10) continue; // not a significant interest
+            if (categorySuppressionMap[row.category]) continue; // suppressed category, don't force it
+
+            const targetSlots = Math.min(Math.round(rate * selected.length), Math.round(selected.length * 0.4));
+            const currentSlots = selectedCatCounts[row.category] || 0;
+
+            if (currentSlots < targetSlots) {
+              const selectedIds = new Set(selected.map(a => a.id));
+              const allPools = [...pPool, ...tPool, ...dPool, ...iPool];
+              const candidates = allPools
+                .filter(a => a.category === row.category && !selectedIds.has(a.id))
+                .sort((a, b) => (b._score || 0) - (a._score || 0));
+
+              let replaced = 0;
+              const needed = targetSlots - currentSlots;
+              for (let i = selected.length - 1; i >= 0 && replaced < needed && candidates.length > 0; i--) {
+                if (categorySuppressionMap[selected[i].category] && categorySuppressionMap[selected[i].category] <= 0.40) {
+                  const replacement = candidates.shift();
+                  replacement.bucket = selected[i].bucket;
+                  selected[i] = replacement;
+                  replaced++;
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (catFloorErr) {
+      // Non-blocking: category allocation floor is a nice-to-have
+    }
   }
 
   // ==========================================

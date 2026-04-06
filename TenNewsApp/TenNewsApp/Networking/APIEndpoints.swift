@@ -20,6 +20,7 @@ enum APIEndpoints {
     static let signup = "/api/auth/signup"
     static let logout = "/api/auth/logout"
     static let forgotPassword = "/api/auth/forgot-password"
+    static let googleAuth = "/api/auth/google"
 
     // MARK: - User
     static let userProfile = "/api/user/profile"
