@@ -296,36 +296,104 @@ function topicSaturationPenalty(article, recentEntityCounts) {
 // Multiplier: 0.2x at -1.0, 1.0x at 0, 1.8x at +1.0.
 // ══════════════════════════════════════════════════════════════
 
-function computeEntityAffinity(signal) {
+function computeEntityAffinity(signal, onboardingEntities) {
   const totalCount = (signal.pos || 0) + (signal.neg || 0);
   const recentCount = (signal.pos_recent || 0) + (signal.neg_recent || 0);
   if (totalCount === 0) return 0;
 
+  // Rapid rejection: 3+ skips in 24h with 0 engagements → hard suppress
+  // One old deep read shouldn't keep GLP-1 appearing when user skipped 4 today
+  const skips24h = signal.neg_24h || 0;
+  const eng24h = signal.pos_24h || 0;
+  if (skips24h >= 3 && eng24h === 0) {
+    // Check onboarding floor before applying rapid rejection
+    if (onboardingEntities && onboardingEntities.has(signal.entity)) {
+      return 0.0; // onboarding floor — neutral, not negative
+    }
+    return -0.80;
+  }
+
   const allTimeRate = signal.pos / totalCount;
   const recentRate = recentCount > 0 ? signal.pos_recent / recentCount : 0.5;
 
-  // Blend: 70% recent, 30% all-time (if enough recent data)
+  // Blend: 85% recent, 15% all-time — recent skips override old engagement fast
   const blended = recentCount >= 3
-    ? recentRate * 0.7 + allTimeRate * 0.3
+    ? recentRate * 0.85 + allTimeRate * 0.15
     : allTimeRate;
 
-  // Confidence: more interactions = more confident
   const confidence = 1 - 1 / (1 + totalCount * 0.3);
+  let affinity = (blended - 0.5) * 2 * confidence;
 
-  // Net affinity: -1.0 to +1.0
-  return (blended - 0.5) * 2 * confidence;
+  // Fix 2: Onboarding floor — topics user selected can never go below neutral
+  if (onboardingEntities && onboardingEntities.has(signal.entity)) {
+    affinity = Math.max(affinity, 0.0);
+  }
+
+  return affinity;
 }
 
-function entityAffinityMultiplier(article, entitySignals) {
+// Map onboarding topic names to entity tags for the floor protection
+const ONBOARDING_ENTITY_MAP = {
+  'NBA': ['nba', 'basketball'],
+  'NFL': ['nfl', 'american football', 'quarterback'],
+  'Soccer/Football': ['soccer', 'football', 'premier league', 'la liga', 'champions league'],
+  'MLB/Baseball': ['mlb', 'baseball', 'world series'],
+  'Cricket': ['cricket', 'ipl', 'test match'],
+  'F1 & Motorsport': ['f1', 'formula one', 'formula 1', 'grand prix', 'motorsport'],
+  'Boxing & MMA/UFC': ['boxing', 'mma', 'ufc'],
+  'Olympics & Paralympics': ['olympics', 'olympic'],
+  'War & Conflict': ['war', 'conflict', 'military'],
+  'US Politics': ['us politics', 'congress', 'senate', 'white house'],
+  'European Politics': ['european politics', 'eu', 'european union'],
+  'Asian Politics': ['china', 'india', 'japan'],
+  'Middle East': ['middle east', 'iran', 'israel', 'saudi arabia'],
+  'AI & Machine Learning': ['artificial intelligence', 'machine learning', 'ai', 'llm'],
+  'Smartphones & Gadgets': ['smartphone', 'iphone', 'samsung', 'android'],
+  'Social Media': ['social media', 'tiktok', 'instagram', 'twitter'],
+  'Cybersecurity': ['cybersecurity', 'hacking', 'data breach'],
+  'Space Tech': ['spacex', 'nasa', 'rocket', 'satellite'],
+  'Movies & Film': ['movies', 'film', 'box office', 'cinema'],
+  'TV & Streaming': ['netflix', 'streaming', 'hbo', 'disney plus'],
+  'Music': ['music', 'album', 'concert'],
+  'Gaming': ['gaming', 'video games', 'playstation', 'xbox'],
+  'K-Pop & K-Drama': ['k-pop', 'k-drama', 'korean'],
+  'Stock Markets': ['stock market', 'wall street', 'nasdaq', 'stocks'],
+  'Banking & Lending': ['banking', 'interest rate', 'federal reserve'],
+  'Bitcoin': ['bitcoin', 'btc'],
+  'DeFi & Web3': ['defi', 'web3', 'blockchain'],
+  'Space & Astronomy': ['space', 'astronomy', 'mars', 'telescope'],
+  'Climate & Environment': ['climate', 'environment', 'global warming'],
+  'Medical Breakthroughs': ['medical', 'treatment', 'clinical trial'],
+  'Public Health': ['public health', 'vaccine', 'pandemic'],
+  'Oil & Energy': ['oil', 'energy', 'opec', 'natural gas'],
+  'Corporate Deals': ['merger', 'acquisition', 'ipo'],
+  'Trade & Tariffs': ['trade', 'tariffs', 'sanctions'],
+};
+
+function buildOnboardingEntities(followedTopics) {
+  if (!followedTopics || !Array.isArray(followedTopics)) return null;
+  const entities = new Set();
+  for (const topic of followedTopics) {
+    const mapped = ONBOARDING_ENTITY_MAP[topic];
+    if (mapped) {
+      for (const e of mapped) entities.add(e);
+    }
+  }
+  return entities.size > 0 ? entities : null;
+}
+
+function entityAffinityMultiplier(article, entitySignals, onboardingEntities) {
   if (!entitySignals) return 1.0;
   const tags = safeJsonParse(article.interest_tags, []);
   let totalAffinity = 0;
   let matchCount = 0;
 
   for (const tag of tags.slice(0, 5)) {
-    const signal = entitySignals[tag.toLowerCase()];
+    const t = tag.toLowerCase();
+    const signal = entitySignals[t];
     if (signal) {
-      totalAffinity += computeEntityAffinity(signal);
+      signal.entity = t; // attach entity name for onboarding check
+      totalAffinity += computeEntityAffinity(signal, onboardingEntities);
       matchCount++;
     }
   }
@@ -582,7 +650,7 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
 
   const baseScore = (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
 
-  const affMult = entityAffinityMultiplier(article, entitySignals);
+  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
   return baseScore * affMult * saturation;
@@ -592,7 +660,7 @@ function scoreTrendingV3(article, entitySignals, recentEntityCounts) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
 
-  const affMult = entityAffinityMultiplier(article, entitySignals);
+  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
   return baseScore * affMult * saturation;
@@ -604,7 +672,7 @@ function scoreDiscoveryV3(article, personalCategories, entitySignals, recentEnti
   const surprise = 1 + Math.random() * 0.4;
   const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
 
-  const affMult = entityAffinityMultiplier(article, entitySignals);
+  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
   const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
   return baseScore * affMult * saturation;
@@ -1232,9 +1300,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Build entity signals: { entity: { pos, neg, pos_recent, neg_recent } }
-    const sevenDaysAgo = Date.now() - 7 * 24 * 3600000;
-    const fortyEightHoursAgoMs = Date.now() - 48 * 3600000;
+    // Build entity signals with 24h rapid rejection tracking
+    const nowMs = Date.now();
+    const sevenDaysAgo = nowMs - 7 * 24 * 3600000;
+    const twentyFourHoursAgoMs = nowMs - 24 * 3600000;
+    const fortyEightHoursAgoMs = nowMs - 48 * 3600000;
     entitySignals = {};
     recentEntityCounts = {};
 
@@ -1246,22 +1316,28 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!isPositive && !isNegative) continue;
       const eventTime = new Date(event.created_at).getTime();
       const isRecent = eventTime > sevenDaysAgo;
+      const isLast24h = eventTime > twentyFourHoursAgoMs;
       const isLast48h = eventTime > fortyEightHoursAgoMs;
 
       for (const t of tags) {
-        if (!entitySignals[t]) entitySignals[t] = { pos: 0, neg: 0, pos_recent: 0, neg_recent: 0 };
+        if (!entitySignals[t]) entitySignals[t] = { pos: 0, neg: 0, pos_recent: 0, neg_recent: 0, pos_24h: 0, neg_24h: 0 };
         if (isPositive) {
           entitySignals[t].pos++;
           if (isRecent) entitySignals[t].pos_recent++;
-          // Saturation tracking (last 48h only)
+          if (isLast24h) entitySignals[t].pos_24h++;
           if (isLast48h) recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
         } else {
           entitySignals[t].neg++;
           if (isRecent) entitySignals[t].neg_recent++;
+          if (isLast24h) entitySignals[t].neg_24h++;
         }
       }
     }
   }
+
+  // Build onboarding entity set for affinity floor protection
+  const userFollowedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
+  const onboardingEntities = buildOnboardingEntities(userFollowedTopics);
 
   // ==========================================
   // INTEREST CATEGORY ENRICHMENT
@@ -1690,7 +1766,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-      const affMult = entityAffinityMultiplier(article, entitySignals);
+      const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
       const saturation = topicSaturationPenalty(article, recentEntityCounts);
       return {
         ...article,
@@ -1745,8 +1821,8 @@ async function handleV2Feed(req, res, supabase, opts) {
         const emb = embeddingCache.get(a.id);
         if (emb && userTasteVec.length === emb.length) {
           const sim = cosineSimilarityVec(userTasteVec, emb);
-          // tasteMult: similarity 0.8 → 1.3x, 0.5 → 1.0x, 0.3 → 0.8x
-          const tasteMult = 0.5 + Math.max(0, sim);
+          // Stronger taste weight: sim 0.8→1.42x, sim 0.5→1.0x, sim 0.3→0.72x
+          const tasteMult = 0.3 + Math.max(0, sim) * 1.4;
           a._score *= tasteMult;
         }
       }
