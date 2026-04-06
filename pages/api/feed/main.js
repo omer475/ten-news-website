@@ -1056,13 +1056,15 @@ export default async function handler(req, res) {
       // Two parallel queries: one for badge IDs (just article_id, high limit),
       // one for badge metadata (event_type + created_at, lower limit)
       const [seenIdsResult, seenMetaResult] = await Promise.all([
-        // Query 1: ALL article_ids the user has ANY event for (badge set)
+        // Query 1: ALL article_ids (deduplicated in JS). Fetch 10000 to cover
+        // power users with 500+ articles × ~10 events each = 5000+ raw events.
         supabase
           .from('user_article_events')
           .select('article_id')
           .eq('user_id', userId)
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .limit(5000),
+          .order('created_at', { ascending: false })
+          .limit(10000),
         // Query 2: Engaged/liked events for badge metadata (smaller set)
         supabase
           .from('user_article_events')
