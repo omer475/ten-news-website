@@ -622,7 +622,7 @@ function computeSkipPenalty(article, userSkipProfile) {
 // All scoring functions now use entityAffinityMultiplier (unified engagement rate)
 // instead of separate tagProfileBoost + skipMultiplier.
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts) {
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts, onboardingEntities) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
   const vectorScore = sessionScore > 0
@@ -656,7 +656,7 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   return baseScore * affMult * saturation;
 }
 
-function scoreTrendingV3(article, entitySignals, recentEntityCounts) {
+function scoreTrendingV3(article, entitySignals, recentEntityCounts, onboardingEntities) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
 
@@ -666,7 +666,7 @@ function scoreTrendingV3(article, entitySignals, recentEntityCounts) {
   return baseScore * affMult * saturation;
 }
 
-function scoreDiscoveryV3(article, personalCategories, entitySignals, recentEntityCounts) {
+function scoreDiscoveryV3(article, personalCategories, entitySignals, recentEntityCounts, onboardingEntities) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
@@ -1701,7 +1701,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, entitySignals, recentEntityCounts, onboardingEntities)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
@@ -1724,7 +1724,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts),
+      _score: scoreTrendingV3(articleMap[a.id], entitySignals, recentEntityCounts, onboardingEntities),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1734,7 +1734,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, entitySignals, recentEntityCounts, onboardingEntities),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
