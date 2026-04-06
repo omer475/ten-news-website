@@ -1,4 +1,7 @@
 import SwiftUI
+import os
+
+private let feedLog = Logger(subsystem: "com.tennews.app", category: "Feed")
 
 @MainActor @Observable
 final class FeedViewModel {
@@ -9,6 +12,10 @@ final class FeedViewModel {
     var isRefreshing = false
     var errorMessage: String?
     var hasMore = true
+    var feedState: String = "normal"
+    var freshCount: Int = 0
+    var caughtUpMessage: String?
+    private var hasMoreBecameFalseAt: Date?
     let reRanker = SessionReRanker()
 
     /// Stable article list — only rebuilt after data loads, NOT during swipe signals.
@@ -32,7 +39,6 @@ final class FeedViewModel {
     }
 
     /// Returns true if the article passes feed filters.
-    /// V2 handles recency via time-decay scoring, so no client-side age filter needed.
     private func passesFeedFilters(_ article: Article, followedSlugs: Set<String>) -> Bool {
         if let slug = article.worldEvent?.slug, followedSlugs.contains(slug) { return false }
         return true
@@ -58,23 +64,27 @@ final class FeedViewModel {
         currentUserId = userId
         reRanker.reset()
         do {
-            // Send limited reading history (100 max) to avoid immediate repeats.
-            // Sending all 300 over-filters and causes premature "all caught up".
-            let historyIds = ReadingHistoryManager.shared.entries
-                .prefix(100)
-                .map { $0.articleId }
+            // Fix 6: Send persisted reading history for dedup on first page.
+            // ReadingHistoryManager persists seen article IDs across app restarts.
+            let persistedSeenIds = ReadingHistoryManager.shared.seenArticleIds(limit: 500)
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: preferences,
                 userId: userId,
-                seenIds: Array(historyIds)
+                seenIds: persistedSeenIds
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor
             hasMore = feedResponse.hasMore
+            hasMoreBecameFalseAt = feedResponse.hasMore ? nil : Date()
+            feedState = feedResponse.feedState ?? "normal"
+            freshCount = feedResponse.freshCount ?? feedResponse.articles.count
+            caughtUpMessage = feedResponse.caughtUpMessage
             rebuildArticleList()
             isLoading = false
             lastRefreshTime = Date()
+
+            feedLog.warning("loadInitialData: \(feedResponse.articles.count) articles, hasMore=\(feedResponse.hasMore), feedState=\(self.feedState, privacy: .public), freshCount=\(self.freshCount), total=\(feedResponse.total ?? -1), cursor=\(feedResponse.nextCursor ?? "nil", privacy: .public), userId=\(userId ?? "nil", privacy: .public)")
 
             // If filters removed everything but server has more, keep fetching
             if articles.isEmpty && hasMore {
@@ -87,14 +97,27 @@ final class FeedViewModel {
                 }
             }
         } catch {
-            print("FeedViewModel loadInitialData error: \(error)")
+            feedLog.error("loadInitialData FAILED: \(error.localizedDescription, privacy: .public)")
             errorMessage = error.localizedDescription
             isLoading = false
         }
     }
 
     func loadMoreIfNeeded() async {
-        guard hasMore, !isLoading, !isRefreshing else { return }
+        guard !isLoading, !isRefreshing else { return }
+        if !hasMore {
+            // Recovery: if hasMore has been false for > 2 min, retry once.
+            // Handles stale sessions where a bad response permanently blocked pagination.
+            guard let falseAt = hasMoreBecameFalseAt,
+                  Date().timeIntervalSince(falseAt) > 120 else { return }
+            hasMoreBecameFalseAt = Date() // prevent rapid retries
+            let added = await loadMoreBatch()
+            if added == 0 && !hasMore {
+                // Server confirmed no more — don't retry again for a while
+                hasMoreBecameFalseAt = Date()
+            }
+            return
+        }
         await loadMoreBatch()
     }
 
@@ -120,7 +143,14 @@ final class FeedViewModel {
             let newArticles = response.articles.filter { !existingSet.contains($0.id.stringValue) }
             allArticles.append(contentsOf: newArticles)
             nextCursor = response.nextCursor
-            hasMore = response.hasMore
+            if response.hasMore {
+                hasMore = true
+                hasMoreBecameFalseAt = nil
+            } else if hasMore {
+                // Transition from true → false: record timestamp for recovery
+                hasMore = false
+                hasMoreBecameFalseAt = Date()
+            }
 
             // Filter and re-rank new batch among themselves (don't reorder existing articles)
             let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
@@ -152,22 +182,21 @@ final class FeedViewModel {
         isRefreshing = true
         nextCursor = nil
         hasMore = true
+        hasMoreBecameFalseAt = nil
         reRanker.reset()
         viewStartTimes.removeAll()
         isLoading = true
         errorMessage = nil
         do {
-            // Send reading history + currently displayed IDs to avoid repeats
-            let historyIds = ReadingHistoryManager.shared.entries
-                .prefix(100)
-                .map { $0.articleId }
+            // Fix 6: Merge current session IDs + persisted reading history for dedup
             let currentIds = allArticles.map { $0.id.stringValue }
-            let seenIds = Array(Set(historyIds + currentIds))
+            let persistedIds = ReadingHistoryManager.shared.seenArticleIds(limit: 500)
+            let mergedSeenIds = Array(Set(currentIds + persistedIds))
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: currentPreferences,
                 userId: currentUserId,
-                seenIds: seenIds
+                seenIds: mergedSeenIds
             )
             allArticles = feedResponse.articles
             nextCursor = feedResponse.nextCursor

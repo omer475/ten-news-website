@@ -54,8 +54,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-MAX_CLUSTERS = 5
-MIN_CLUSTER_SIZE = 5
+MAX_CLUSTERS = 8
+MIN_CLUSTER_SIZE = 3
 LOOKBACK_DAYS = 90
 MIN_INTERACTIONS = 10
 
@@ -94,9 +94,9 @@ def fetch_user_engagements(user_id, lookback_days=LOOKBACK_DAYS):
     for i in range(0, len(article_ids), 300):
         batch = article_ids[i:i+300]
         art_result = supabase.table('published_articles') \
-            .select('id, title_news, category, embedding, embedding_minilm') \
+            .select('id, title_news, category, embedding, embedding_minilm, interest_tags') \
             .in_('id', batch) \
-            .not_.is_('embedding', 'null') \
+            .not_.is_('embedding_minilm', 'null') \
             .execute()
         all_articles.extend(art_result.data or [])
 
@@ -165,6 +165,15 @@ def cluster_user(user_id, dry_run=False, verbose=True):
             print(f"  Only {len(articles)} articles with embeddings. Need {MIN_INTERACTIONS}+. Skipping.")
         return 0
 
+    # Fix A: Load skip_profile to exclude skip-heavy articles from clustering
+    skip_profile = {}
+    try:
+        sp_result = supabase.table('profiles').select('skip_profile').eq('id', user_id).single().execute()
+        if sp_result.data and sp_result.data.get('skip_profile'):
+            skip_profile = sp_result.data['skip_profile']
+    except:
+        pass
+
     # Build recency-weighted embedding matrix
     # Weight each article by its strongest event's recency * event weight
     article_weights = {}
@@ -179,8 +188,21 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     embeddings = []
     weights = []
     article_ids = []
+    skipped_out = 0
     for art in articles:
-        emb = art.get('embedding')
+        # Fix A: Skip articles whose primary tags are heavily skipped
+        tags = art.get('interest_tags', [])
+        if isinstance(tags, list) and len(tags) >= 2 and skip_profile:
+            top2_skip_weight = sum(
+                skip_profile.get(t.lower(), 0) if isinstance(skip_profile.get(t.lower()), (int, float)) else 0
+                for t in tags[:2]
+            )
+            if top2_skip_weight > 0.30:
+                skipped_out += 1
+                continue  # exclude this article from clustering
+
+        # Use MiniLM 384-dim embeddings (matches pgvector search)
+        emb = art.get('embedding_minilm') or art.get('embedding')
         if emb and isinstance(emb, list) and len(emb) > 0:
             embeddings.append(np.array(emb, dtype=np.float64))
             weights.append(article_weights.get(art['id'], 1.0))
@@ -220,7 +242,24 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         nearest_idx = cluster_indices[np.argmin(distances)]
         nearest_article_id = article_ids[nearest_idx]
 
-        label = category_counts.most_common(1)[0][0] if category_counts else f"Cluster-{ci}"
+        # Label from most common interest tags (more specific than category)
+        cluster_tags = []
+        broad_tags = {'politics','sports','business','technology','health','science',
+                      'entertainment','world','finance','energy','military','economy',
+                      'government','trade','security','lifestyle','culture'}
+        for aid in cluster_article_ids:
+            art = article_map.get(aid, {})
+            tags = art.get('interest_tags', [])
+            if isinstance(tags, list):
+                for t in tags[:3]:
+                    if t.lower() not in broad_tags:
+                        cluster_tags.append(t)
+        tag_counts = Counter(cluster_tags)
+        if tag_counts:
+            top_tags = [t for t, _ in tag_counts.most_common(2)]
+            label = ' & '.join(top_tags)
+        else:
+            label = category_counts.most_common(1)[0][0] if category_counts else f"Cluster-{ci}"
 
         clusters.append({
             'cluster_index': ci,
@@ -257,9 +296,26 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         weighted_centroid += c['centroid'] * (c['article_count'] / total_count)
     sim_floor = compute_similarity_floor(emb_matrix, weighted_centroid)
 
+    # Fix A: Validate clusters against skip_profile — suppress skip-heavy clusters
+    for c in clusters:
+        # Get the top tags from the label (split by ' & ')
+        label_tags = [t.strip().lower() for t in c['label'].split('&')]
+        avg_skip = 0
+        count = 0
+        for tag in label_tags:
+            w = skip_profile.get(tag, 0)
+            if isinstance(w, (int, float)):
+                avg_skip += w
+                count += 1
+        avg_skip = avg_skip / max(count, 1)
+        c['suppressed'] = avg_skip > 0.20
+        if c['suppressed'] and verbose:
+            print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
+
     if verbose:
         print(f"  Similarity floor: {sim_floor:.4f}")
-        print(f"  Final: {len(clusters)} clusters after merging")
+        active = sum(1 for c in clusters if not c.get('suppressed'))
+        print(f"  Final: {len(clusters)} clusters ({active} active, {len(clusters)-active} suppressed)")
 
     if dry_run:
         if verbose:
@@ -267,35 +323,76 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         return len(clusters)
 
     # Save to DB
-    # 1. Delete old clusters
+    # Fix 2: Resolve personalization_id so clusters are saved with the right key
+    pers_id = None
+    try:
+        pers_result = supabase.rpc('resolve_personalization_id', {'p_auth_id': user_id}).execute()
+        if pers_result.data and len(pers_result.data) > 0:
+            pers_id = pers_result.data[0]['personalization_id']
+    except Exception:
+        pass
+
+    # 1. Delete old clusters (both legacy user_id and V3 personalization_id)
     try:
         supabase.table('user_interest_clusters').delete().eq('user_id', user_id).execute()
     except Exception:
         pass
+    if pers_id:
+        try:
+            supabase.table('user_interest_clusters').delete().eq('personalization_id', pers_id).execute()
+        except Exception:
+            pass
 
-    # 2. Insert new clusters with both Gemini and MiniLM embeddings
+    # 2. Insert new clusters with personalization_id (V3) when available
     for c in clusters:
-        medoid_art = article_map.get(c['medoid_article_id'], {})
+        centroid_list_c = c['centroid'].tolist()
         row = {
-            'user_id': user_id,
             'cluster_index': c['cluster_index'],
-            'medoid_embedding': c['centroid'].tolist(),
+            'medoid_embedding': centroid_list_c,
+            'medoid_minilm': centroid_list_c,  # Use centroid as medoid_minilm (more accurate than nearest article)
             'medoid_article_id': c['medoid_article_id'],
             'article_count': c['article_count'],
             'label': c['label'],
-            'is_centroid': True,
+            'suppressed': c.get('suppressed', False),
+            'last_engaged_at': datetime.now(timezone.utc).isoformat(),
         }
-        # Add MiniLM embedding from medoid article if available
-        minilm = medoid_art.get('embedding_minilm')
-        if minilm and isinstance(minilm, list) and len(minilm) > 0:
-            row['medoid_minilm'] = minilm
+        # Set the correct key: V3 uses personalization_id, legacy uses user_id
+        if pers_id:
+            row['personalization_id'] = pers_id
+            row['user_id'] = None
+        else:
+            row['user_id'] = user_id
+        # Compute importance_score proportional to article count
+        row['importance_score'] = c['article_count'] / total_count
+
         supabase.table('user_interest_clusters').insert(row).execute()
 
-    # 3. Update profiles table with weighted centroid taste vector and similarity floor
+    # 3. Update taste vectors — write weighted centroid to BOTH profiles and personalization_profiles
+    # Fix 3A: Long-term vector is ONLY set by clustering (weighted centroid of top 3 clusters)
+    top3_clusters = sorted(clusters, key=lambda c: c['article_count'], reverse=True)[:3]
+    top3_total = sum(c['article_count'] for c in top3_clusters)
+    focused_centroid = np.zeros_like(centroids[0])
+    for c in top3_clusters:
+        focused_centroid += c['centroid'] * (c['article_count'] / top3_total)
+    centroid_list = focused_centroid.tolist()
+
     supabase.table('profiles').update({
-        'taste_vector': weighted_centroid.tolist(),
+        'taste_vector': centroid_list,
+        'taste_vector_minilm': centroid_list,
         'similarity_floor': sim_floor,
     }).eq('id', user_id).execute()
+
+    # Also update personalization_profiles (this is what the feed reads)
+    if pers_id:
+        supabase.table('personalization_profiles').update({
+            'taste_vector_minilm': centroid_list,
+            'last_clustered_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('personalization_id', pers_id).execute()
+    else:
+        supabase.table('personalization_profiles').update({
+            'taste_vector_minilm': centroid_list,
+            'last_clustered_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('auth_profile_id', user_id).execute()
 
     if verbose:
         print(f"  Saved {len(clusters)} clusters + taste vector + floor to DB")

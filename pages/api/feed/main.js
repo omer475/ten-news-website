@@ -188,6 +188,8 @@ function formatArticle(article, eventMap = {}) {
     cluster_id: article.cluster_id,
     version_number: article.version_number,
     views: article.view_count || 0,
+    author_id: article.author_id || null,
+    author_name: article.author_name || null,
   };
 
   // Add world event if available
@@ -199,22 +201,58 @@ function formatArticle(article, eventMap = {}) {
 }
 
 // ==========================================
-// RECENCY DECAY (shelf-life-aware)
-// Articles decay relative to their own shelf_life_days.
-// Breaking news (1-2d) dies fast. Evergreen (30-90d) stays discoverable.
+// CONTENT-TYPE DECAY CURVES
+// Reads freshness_category from DB when available.
+// Falls back to category-name inference for old articles.
+// Continuous 0.0-1.0 multiplier, no binary alive/dead.
 // ==========================================
 
-function getRecencyDecay(createdAt, category, shelfLifeDays) {
+function decayMultiplier(contentType, ageHours) {
+  switch (contentType) {
+    case 'breaking':
+      // 1.0→0.5@6h→0.2@12h→0.05@24h
+      return Math.max(0.02, Math.exp(-0.115 * ageHours));
+    case 'developing':
+      // 1.0→0.7@24h→0.4@48h→0.15@72h
+      return Math.max(0.02, Math.exp(-0.015 * ageHours));
+    case 'analysis':
+      // 1.0→0.85@24h→0.65@48h→0.4@72h→0.2@7d
+      return Math.max(0.02, Math.exp(-0.0095 * ageHours));
+    case 'evergreen':
+      // 1.0→0.9@24h→0.75@72h→0.5@7d→0.25@14d
+      return Math.max(0.02, Math.exp(-0.004 * ageHours));
+    case 'timeless':
+      // 1.0→0.95@48h→0.85@7d→0.6@30d
+      return Math.max(0.02, Math.exp(-0.0007 * ageHours));
+    default:
+      return Math.max(0.02, Math.exp(-0.015 * ageHours)); // developing default
+  }
+}
+
+function inferContentType(freshnessCategory, category, shelfLifeDays) {
+  // Use DB field when populated with valid value
+  const validTypes = new Set(['breaking', 'developing', 'analysis', 'evergreen', 'timeless']);
+  if (freshnessCategory && validTypes.has(freshnessCategory)) return freshnessCategory;
+
+  // Use shelf_life_days as hint
+  if (shelfLifeDays && shelfLifeDays <= 1) return 'breaking';
+  if (shelfLifeDays && shelfLifeDays <= 3) return 'developing';
+  if (shelfLifeDays && shelfLifeDays >= 14) return 'evergreen';
+
+  // Fallback: infer from category name (for old articles with null fields)
+  const cat = (category || '').toLowerCase();
+  if (cat === 'sports') return 'breaking';
+  if (cat === 'world' || cat === 'politics' || cat === 'finance') return 'developing';
+  if (cat === 'business' || cat === 'tech' || cat === 'entertainment') return 'developing';
+  if (cat === 'science' || cat === 'health') return 'evergreen';
+  if (cat === 'lifestyle') return 'evergreen';
+  return 'developing';
+}
+
+function getRecencyDecay(createdAt, category, shelfLifeDays, freshnessCategory) {
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
-  const shelfLifeHours = (shelfLifeDays || 7) * 24;
-  const freshnessMultiplier = Math.exp(-ageHours / shelfLifeHours);
-  // Blend: 90% freshness decay, 10% baseline.
-  // Aggressive decay ensures stale articles don't dominate the feed.
-  // shelf_life_days handles per-vertical tuning:
-  //   Breaking news (1-2d): dies fast after ~12h
-  //   Explainers (14-30d): gradual decline over weeks
-  //   Evergreen (60d+): stays discoverable but heavily penalized after shelf life
-  return freshnessMultiplier * 0.9 + 0.1;
+  const contentType = inferContentType(freshnessCategory, category, shelfLifeDays);
+  return decayMultiplier(contentType, ageHours);
 }
 
 // ==========================================
@@ -367,7 +405,7 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 
 function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
   const tags = safeJsonParse(article.interest_tags, []);
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const aiScore = article.ai_final_score || 0;
   const n = Math.max(tags.length, 1);
 
@@ -414,51 +452,110 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
 // ==========================================
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost) {
-  const vectorScore = similarity || 0;
+// ══════════════════════════════════════════════════════════════
+// SKIP PENALTY HELPER — used by ALL scoring functions
+// Reads skip_profile to penalize content the user explicitly skipped.
+// ══════════════════════════════════════════════════════════════
+function computeSkipPenalty(article, userSkipProfile) {
+  if (!userSkipProfile || typeof userSkipProfile !== 'object') return 0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let penalty = 0;
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    const w = userSkipProfile[t];
+    if (w && w > 0) penalty += w;
+  }
+  return Math.min(penalty, 0.80); // cap — don't fully zero out
+}
 
-  // Entity bonus: 0.10 × affinity × (matching/total), capped at 0.30
+// Fix 3B+10: Adaptive long-term/session vector blend.
+// Session vector has 4x better discrimination (0.152 vs 0.037 delta).
+// Weight adapts based on session interaction count.
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile, sessionInteractionCount) {
+  const longTermScore = similarity || 0;
+  const sessionScore = sessionVectorSim || 0;
+  let vectorScore;
+  if (sessionScore > 0) {
+    // Fix 10: Adaptive weighting — more session data = more session weight
+    const sessionCount = sessionInteractionCount || 0;
+    const sessionWeight = Math.min(0.85, 0.30 + sessionCount * 0.03);
+    // 0 interactions → 0.30 session, 10 → 0.60, 20+ → 0.85
+    vectorScore = longTermScore * (1 - sessionWeight) + sessionScore * sessionWeight;
+  } else {
+    vectorScore = longTermScore;
+  }
+
   const tags = safeJsonParse(article.interest_tags, []);
   let entityBonus = 0;
   let matchCount = 0;
   for (const tag of tags) {
     const t = tag.toLowerCase();
-    const affinity = entityAffinities[t];
+    // Exact match first
+    let affinity = entityAffinities[t];
+    // Fix 9: Fuzzy match — if no exact match, check if any affinity entity contains/is contained by this tag
+    if (!affinity || affinity <= 0) {
+      for (const [entity, score] of Object.entries(entityAffinities)) {
+        if (score <= 0) continue;
+        // Substring match: "space exploration" matches "space", "ai" matches "artificial intelligence"
+        if ((t.length > 3 && entity.includes(t)) || (entity.length > 3 && t.includes(entity))) {
+          affinity = score * 0.6; // 60% of exact match strength
+          break;
+        }
+      }
+    }
     if (affinity && affinity > 0) {
       entityBonus += 0.10 * affinity;
       matchCount++;
-      if (matchCount >= 3) break; // Cap at 3 entity matches per article
+      if (matchCount >= 3) break;
     }
   }
   const totalTags = Math.max(tags.length, 1);
   entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
 
-  // Quality: normalized ai_final_score (0-1)
   const quality = (article.ai_final_score || 0) / 1000;
-
-  // Freshness: 0.10 × (1 - hours_old/shelf_life_hours), min 0
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
   const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
+  const momentum = sessionBoost || 0;
 
-  // Session boost: 0.20 × cosine_sim(article, session_vector) when active
-  const sessionScore = sessionBoost || 0;
+  const baseScore = vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
 
-  return vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + sessionScore * 150;
+  // Skip penalty: iran(0.35) + iran_war(0.30) = 0.65 → score × 0.35
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  // Fix 11: Debug scoring for verification
+  if (process.env.DEBUG_SCORING) {
+    console.log(`[score] personal: "${(article.title_news || '').slice(0, 45)}" vec=${vectorScore.toFixed(3)} entity=${entityBonus.toFixed(3)} skip=${skipPenalty.toFixed(2)} final=${(baseScore * skipMultiplier).toFixed(0)}`);
+  }
+
+  return baseScore * skipMultiplier;
 }
 
-function scoreTrendingV3(article) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
-  return (article.ai_final_score || 0) * recency;
+function scoreTrendingV3(article, userSkipProfile) {
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+  const baseScore = (article.ai_final_score || 0) * recency;
+
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  if (process.env.DEBUG_SCORING) {
+    console.log(`[score] trending: "${(article.title_news || '').slice(0, 45)}" [${article.category}] skip=${skipPenalty.toFixed(2)} final=${(baseScore * skipMultiplier).toFixed(0)}`);
+  }
+
+  return baseScore * skipMultiplier;
 }
 
-function scoreDiscoveryV3(article, personalCategories) {
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days);
-  // Boost categories the user doesn't usually see (true discovery)
+function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
+  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
-  // Random factor for variable reward (surprise element)
   const surprise = 1 + Math.random() * 0.4;
-  return (article.ai_final_score || 0) * recency * categoryBoost * surprise;
+  const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
+
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+
+  return baseScore * skipMultiplier;
 }
 
 // ==========================================
@@ -508,12 +605,16 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   let bestIdx = 0;
   let bestMMR = -Infinity;
 
-  // Check diversity against ALL selected articles (not just last 5)
+  // Check diversity against ALL selected articles
+  // Hard ceiling: reject candidates with > 0.82 similarity to any selected article
+  const DUPLICATE_CEILING = 0.82;
+
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
     const normScore = c._score / maxScore;
 
     let maxSim = 0;
+    let isDuplicate = false;
     const cEmb = embeddingCache ? embeddingCache.get(c.id) : null;
     const cTags = tagCache.get(c.id) || new Set();
 
@@ -522,10 +623,10 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
       const sEmb = embeddingCache ? embeddingCache.get(s.id) : null;
 
       if (cEmb && sEmb) {
-        // Embedding cosine similarity: detects same-story different-angle
         sim = Math.max(0, cosineSimilarityVec(cEmb, sEmb));
+        // Hard ceiling: reject if too similar to ANY already-selected article
+        if (sim > DUPLICATE_CEILING) { isDuplicate = true; break; }
       } else {
-        // Fallback: tag Jaccard
         const sTags = tagCache.get(s.id) || new Set();
         let intersection = 0;
         for (const t of cTags) {
@@ -534,10 +635,12 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
         const unionSize = new Set([...cTags, ...sTags]).size;
         sim = unionSize > 0 ? intersection / unionSize : 0;
       }
-      // Same category carries a minimum similarity penalty
       if (c.category === s.category) sim = Math.max(sim, 0.3);
       maxSim = Math.max(maxSim, sim);
     }
+
+    // Skip duplicates entirely — don't even score them
+    if (isDuplicate) continue;
 
     const mmr = lambda * normScore - (1 - lambda) * maxSim;
     if (mmr > bestMMR) {
@@ -615,6 +718,15 @@ const ARTICLE_COLUMNS = [
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'embedding_minilm',
+  'author_id', 'author_name',
+].join(', ');
+
+// Lightweight columns for pool construction (no heavy JSONB)
+const POOL_COLUMNS = [
+  'id', 'title_news', 'category', 'created_at', 'published_at',
+  'ai_final_score', 'interest_tags', 'cluster_id',
+  'shelf_life_days', 'freshness_category',
+  'author_id',
 ].join(', ');
 
 // ==========================================
@@ -647,6 +759,7 @@ export default async function handler(req, res) {
 
     // Session signals from client (real-time skip/engage tracking)
     const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
+    const sessionGlancedIds = req.query.glanced_ids ? req.query.glanced_ids.split(',').map(Number).filter(Boolean) : [];
     const sessionSkippedIds = req.query.skipped_ids ? req.query.skipped_ids.split(',').map(Number).filter(Boolean) : [];
     // Client-sent seen IDs for dedup (prevents repeats even for guests without server events)
     const clientSeenIds = req.query.seen_ids ? req.query.seen_ids.split(',').map(Number).filter(Boolean) : [];
@@ -665,6 +778,7 @@ export default async function handler(req, res) {
     let personalizationId = null;
     let userPhase = 1;
     let totalInteractions = 0;
+    let sessionTasteVector = null; // Change 1: short-term session vector
 
     // Try v3 personalization_profiles first (non-blocking — falls back to profiles if fails)
     if (userId || guestDeviceId) {
@@ -679,14 +793,82 @@ export default async function handler(req, res) {
           userPhase = persData[0].phase;
           totalInteractions = persData[0].total_interactions;
 
-          // Load taste vector from personalization_profiles
+          // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
             .from('personalization_profiles')
-            .select('taste_vector_minilm')
+            .select('taste_vector_minilm, session_taste_vector_minilm')
             .eq('personalization_id', personalizationId)
             .single();
           if (ppData?.taste_vector_minilm) {
             tasteVectorMinilm = ppData.taste_vector_minilm;
+          }
+          // Fix 3C: Contrastive session vector — compute from engagement buffer
+          // Instead of using the naive averaged session vector, build one that
+          // actively moves AWAY from skipped content (politics, crypto, etc.)
+          if (ppData?.session_taste_vector_minilm) {
+            try {
+              const { data: bufferEntries } = await supabase
+                .from('engagement_buffer')
+                .select('embedding_minilm, interaction_weight')
+                .eq('personalization_id', personalizationId)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+              if (bufferEntries && bufferEntries.length >= 3) {
+                const positives = bufferEntries.filter(e => e.interaction_weight > 0 && e.embedding_minilm);
+                const negatives = bufferEntries.filter(e => e.interaction_weight < 0 && e.embedding_minilm);
+
+                if (positives.length > 0) {
+                  const dim = 384;
+                  // Weighted positive centroid
+                  const posCentroid = new Array(dim).fill(0);
+                  let totalPosW = 0;
+                  for (const entry of positives) {
+                    const emb = Array.isArray(entry.embedding_minilm) ? entry.embedding_minilm : safeJsonParse(entry.embedding_minilm, null);
+                    if (!emb || emb.length !== dim) continue;
+                    const w = Math.abs(entry.interaction_weight);
+                    totalPosW += w;
+                    for (let i = 0; i < dim; i++) posCentroid[i] += emb[i] * w;
+                  }
+                  if (totalPosW > 0) {
+                    for (let i = 0; i < dim; i++) posCentroid[i] /= totalPosW;
+                  }
+
+                  // Contrastive: subtract negative centroid if available
+                  if (negatives.length >= 2) {
+                    const negCentroid = new Array(dim).fill(0);
+                    for (const entry of negatives) {
+                      const emb = Array.isArray(entry.embedding_minilm) ? entry.embedding_minilm : safeJsonParse(entry.embedding_minilm, null);
+                      if (!emb || emb.length !== dim) continue;
+                      for (let i = 0; i < dim; i++) negCentroid[i] += emb[i];
+                    }
+                    for (let i = 0; i < dim; i++) negCentroid[i] /= negatives.length;
+
+                    // Contrastive vector: pos - 0.3 * neg, then L2 normalize
+                    const contrastive = new Array(dim);
+                    let norm = 0;
+                    for (let i = 0; i < dim; i++) {
+                      contrastive[i] = posCentroid[i] - 0.3 * negCentroid[i];
+                      norm += contrastive[i] * contrastive[i];
+                    }
+                    norm = Math.sqrt(norm);
+                    if (norm > 0) {
+                      for (let i = 0; i < dim; i++) contrastive[i] /= norm;
+                    }
+                    sessionTasteVector = contrastive;
+                  } else {
+                    sessionTasteVector = posCentroid;
+                  }
+                } else {
+                  sessionTasteVector = ppData.session_taste_vector_minilm;
+                }
+              } else {
+                sessionTasteVector = ppData.session_taste_vector_minilm;
+              }
+            } catch (bufferErr) {
+              // Fall back to stored session vector on any error
+              sessionTasteVector = ppData.session_taste_vector_minilm;
+            }
           }
         }
       } catch (e) {
@@ -735,18 +917,38 @@ export default async function handler(req, res) {
       skipProfile = userData?.skip_profile || null;
       storedTagProfile = userData?.tag_profile || null;
 
-      // Check if user has interest clusters (PinnerSage-lite)
-      if ((tasteVector || tasteVectorMinilm) && persUserId) {
+      // Check if user has active (non-suppressed) interest clusters
+      // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
+      const clusterLookupId = personalizationId || persUserId;
+      const clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
+      if ((tasteVector || tasteVectorMinilm) && clusterLookupId) {
         const { count } = await supabase
           .from('user_interest_clusters')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', persUserId);
+          .eq(clusterLookupColumn, clusterLookupId)
+          .neq('suppressed', true);
         hasInterestClusters = (count || 0) > 0;
       }
     }
 
     if (!userPrefs && homeCountry) {
       userPrefs = { home_country: homeCountry, followed_countries: followedCountries, followed_topics: followedTopics };
+    }
+
+    // Load followed publisher IDs for feed boost
+    let followedPublisherIds = new Set();
+    if (userId) {
+      try {
+        const { data: follows } = await supabase
+          .from('user_follows')
+          .select('publisher_id')
+          .eq('user_id', userId);
+        if (follows && follows.length > 0) {
+          followedPublisherIds = new Set(follows.map(f => f.publisher_id));
+        }
+      } catch (e) {
+        // Non-blocking: if user_follows table doesn't exist yet, ignore
+      }
     }
 
     // ==========================================
@@ -772,17 +974,18 @@ export default async function handler(req, res) {
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Always fetch seen articles to exclude (fresh candidates each request, like TikTok)
+    // Fix 6B: Fetch DISTINCT article_ids from last 7 days with higher limit
+    // Old: 500 events (covering ~100 unique articles). New: up to 2000 unique articles.
     let seenArticleIds = [];
     if (persUserId || userId) {
       const { data: seenEvents } = await supabase
         .from('user_article_events')
         .select('article_id')
         .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
-        .gte('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit'])
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(2000);
 
       if (seenEvents) {
         seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
@@ -812,7 +1015,13 @@ export default async function handler(req, res) {
       storedTagProfile,
       seenArticleIds,
       sessionEngagedIds,
+      sessionGlancedIds,
       sessionSkippedIds,
+      personalizationId,
+      sessionTasteVector,
+      usedTempTasteVector: false,
+      clusterLookupId,
+      clusterLookupColumn,
       limit,
       offset,
     });
@@ -832,8 +1041,11 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
-        sessionEngagedIds, sessionSkippedIds, limit, offset } = opts;
+        sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
+        personalizationId, sessionTasteVector, usedTempTasteVector,
+        clusterLookupId, clusterLookupColumn, limit, offset } = opts;
   sessionEngagedIds = sessionEngagedIds || [];
+  sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
@@ -854,32 +1066,33 @@ async function handleV2Feed(req, res, supabase, opts) {
   const useMinilm = !!tasteVectorMinilm;
 
   // Build personal candidate query (pgvector ANN search)
-  // For cold-start users without any embedding data, skip the personal query
-  // entirely — V2 will fill the feed with trending + discovery articles.
-  // IMPROVEMENT 1: Deeper pages request more candidates
-  const hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
-  const personalMatchCount = Math.min(150 + offset, 400); // Widen pool for deeper pages
+  // NOTE: Change 1 (temp taste vector) disabled — causes 504 timeouts
+  // on Vercel due to extra embedding fetches. Needs optimization before re-enabling.
+  let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
+
+  // Fix 4: Over-fetch from pgvector — time filtering done in JS, not SQL
   let personalPromise;
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
+    // Fix 1: Use clusterLookupId for V3 clusters (personalizationId when available)
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: clusterLookupId, match_per_cluster: 100, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: Math.min(50 + Math.floor(offset / 3), 100), hours_window: 72,
+      p_user_id: clusterLookupId, match_per_cluster: 100, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: personalMatchCount, hours_window: 72,
+      query_embedding: tasteVector, match_count: 500, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
@@ -888,26 +1101,23 @@ async function handleV2Feed(req, res, supabase, opts) {
     // 1. PERSONAL: pgvector similarity search
     personalPromise,
 
-    // 2. TRENDING: high editorial score, last 24h
-    // Cold-start users need more trending articles since personal pool is empty
+    // 2. TRENDING: high editorial score
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', hasAnyPersonalization ? twentyFourHoursAgo : fortyEightHoursAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 750 : 500)
+      .gte('created_at', fortyEightHoursAgo)
+      .gte('ai_final_score', 600)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 50 : 300),
+      .limit(200),
 
     // 3. DISCOVERY: diverse quality content, 7-day pool
-    // Tightened from 30 days to 7 days to prevent stale articles in feed.
-    // Cold-start: fetch larger pool to compensate for empty personal
     supabase
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days')
       .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', hasAnyPersonalization ? 400 : 300)
+      .gte('ai_final_score', 300)
       .order('ai_final_score', { ascending: false })
-      .limit(hasAnyPersonalization ? 200 : 500),
+      .limit(500),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
@@ -972,16 +1182,32 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const momentum = await computeSessionMomentum(supabase, sessionEngagedIds, sessionSkippedIds);
 
+  // Fix 4: Normalize tag_profile to spread out saturated values
+  // When 25 tags are all at 1.0, log-scale normalization restores relative ranking
+  function normalizeTagProfile(tagProfile) {
+    if (!tagProfile || typeof tagProfile !== 'object') return {};
+    const entries = Object.entries(tagProfile);
+    if (entries.length === 0) return {};
+    const maxRaw = Math.max(...entries.map(([, v]) => v));
+    if (maxRaw <= 0) return tagProfile;
+    const normalized = {};
+    for (const [entity, rawWeight] of entries) {
+      normalized[entity] = Math.log1p(rawWeight) / Math.log1p(maxRaw);
+    }
+    return normalized;
+  }
+
   // Use stored tag_profile if available (incrementally updated via track.js),
   // fall back to dynamically computed interest profile
-  const baseTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
+  const rawTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
     ? storedTagProfile
     : (userInterestProfile || {});
+  const baseTagProfile = normalizeTagProfile(rawTagProfile);
 
   // Merge session boosts into tag profile (temporary, this request only)
   const effectiveTagProfile = { ...baseTagProfile };
   for (const [tag, boost] of Object.entries(momentum.boosts)) {
-    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.0);
+    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.5);
   }
 
   // Merge session skip penalties into skip profile
@@ -1002,10 +1228,68 @@ async function handleV2Feed(req, res, supabase, opts) {
   const personalSimilarityMap = {};
   let personalIdOrder = [];
 
+  // ══════════════════════════════════════════════
+  // Fix 4: Tiered time window filtering in JS (per-cluster)
+  // pgvector returns nearest neighbors regardless of age.
+  // We filter here: prefer fresh articles, expand window if pool is thin.
+  // ══════════════════════════════════════════════
+  let personalResults = personalResult.data || [];
+
+  if (personalResults.length > 0) {
+    // Fetch created_at for all pgvector results to apply time filtering
+    const pgIds = personalResults.map(r => r.id);
+    const { data: pgDates } = await supabase
+      .from('published_articles')
+      .select('id, created_at')
+      .in('id', pgIds.slice(0, 500));
+
+    const dateMap = {};
+    for (const a of (pgDates || [])) dateMap[a.id] = new Date(a.created_at).getTime();
+
+    if (hasInterestClusters) {
+      // Per-cluster tiered filtering
+      const clusterResults = {};
+      for (const r of personalResults) {
+        const ci = r.cluster_index ?? 0;
+        if (!clusterResults[ci]) clusterResults[ci] = [];
+        clusterResults[ci].push(r);
+      }
+
+      const filteredResults = [];
+      const MIN_PER_CLUSTER = 20;
+      const tiers = [48, 168, 336]; // hours: 2 days, 7 days, 14 days
+
+      for (const [ci, results] of Object.entries(clusterResults)) {
+        let clusterFiltered = [];
+        for (const tierHours of tiers) {
+          const cutoff = now - tierHours * 3600000;
+          clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= cutoff);
+          if (clusterFiltered.length >= MIN_PER_CLUSTER) break;
+        }
+        // If still not enough after 14 days, use all results for this cluster
+        if (clusterFiltered.length < MIN_PER_CLUSTER) clusterFiltered = results;
+        filteredResults.push(...clusterFiltered);
+      }
+      personalResults = filteredResults;
+    } else {
+      // Single vector: global tiered filtering
+      const MIN_RESULTS = 80;
+      const tiers = [48, 168, 336];
+      let filtered = [];
+      for (const tierHours of tiers) {
+        const cutoff = now - tierHours * 3600000;
+        filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
+        if (filtered.length >= MIN_RESULTS) break;
+      }
+      if (filtered.length < MIN_RESULTS) filtered = personalResults; // use all
+      personalResults = filtered;
+    }
+  }
+
   if (hasInterestClusters) {
     // Group candidates by cluster
     const clusterBuckets = {};
-    for (const r of (personalResult.data || [])) {
+    for (const r of personalResults) {
       const ci = r.cluster_index ?? 0;
       if (!clusterBuckets[ci]) clusterBuckets[ci] = [];
       clusterBuckets[ci].push(r);
@@ -1020,24 +1304,36 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     // Load cluster metadata for proportional weighting
+    // Fix 1: Use clusterLookupId + correct column for V3 clusters with real importance scores
     const { data: clusterMeta } = await supabase
       .from('user_interest_clusters')
-      .select('cluster_index, article_count')
-      .eq('user_id', userId);
+      .select('cluster_index, article_count, importance_score')
+      .eq(clusterLookupColumn, clusterLookupId);
 
-    const totalEngaged = (clusterMeta || []).reduce((s, c) => s + (c.article_count || 1), 0);
+    // Fix 1: Use importance_score (V3) when available, fall back to article_count
+    const hasImportanceScores = (clusterMeta || []).some(c => c.importance_score > 0);
     const clusterWeights = {};
-    for (const c of (clusterMeta || [])) {
-      // Cap any single cluster at 50% to prevent monoculture
-      clusterWeights[c.cluster_index] = Math.min(
-        (c.article_count || 1) / Math.max(totalEngaged, 1),
-        0.5
-      );
+    if (hasImportanceScores) {
+      const totalImportance = (clusterMeta || []).reduce((s, c) => s + (c.importance_score || 0), 0) || 1;
+      for (const c of (clusterMeta || [])) {
+        clusterWeights[c.cluster_index] = Math.min(
+          (c.importance_score || 0) / totalImportance,
+          0.5
+        );
+      }
+    } else {
+      const totalEngaged = (clusterMeta || []).reduce((s, c) => s + (c.article_count || 1), 0);
+      for (const c of (clusterMeta || [])) {
+        clusterWeights[c.cluster_index] = Math.min(
+          (c.article_count || 1) / Math.max(totalEngaged, 1),
+          0.5
+        );
+      }
     }
 
     // Proportional allocation (min 1 per cluster)
     const clusterKeys = Object.keys(clusterBuckets);
-    const targetTotal = 150;
+    const targetTotal = 300; // increased from 150 — more candidates for slot filling
     const allocations = {};
     for (const ci of clusterKeys) {
       const weight = clusterWeights[ci] || (1 / clusterKeys.length);
@@ -1059,7 +1355,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   } else {
     // Single taste vector: sort by similarity
-    const sorted = (personalResult.data || []).sort((a, b) => b.similarity - a.similarity);
+    const sorted = personalResults.sort((a, b) => b.similarity - a.similarity);
     for (const r of sorted) {
       personalSimilarityMap[r.id] = r.similarity;
       personalIdOrder.push(r.id);
@@ -1072,7 +1368,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 3 : 10;
+  const trendingCatMax = hasAnyPersonalization ? 8 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1087,8 +1383,8 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
-  const discoveryCatMax = hasAnyPersonalization ? 2 : 8;
-  const discoveryTotalMax = hasAnyPersonalization ? 30 : 200;
+  const discoveryCatMax = hasAnyPersonalization ? 6 : 8;
+  const discoveryTotalMax = hasAnyPersonalization ? 150 : 200;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
@@ -1125,13 +1421,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
   }
 
-  // Fetch full article data in batches
+  // Fetch article data for scoring — use POOL_COLUMNS (lightweight, no embeddings)
+  // Full ARTICLE_COLUMNS fetched later only for the final 25 selected articles
+  const fetchColumns = hasAnyPersonalization ? POOL_COLUMNS : ARTICLE_COLUMNS;
   let allArticles = [];
   for (let i = 0; i < uniqueIds.length; i += 300) {
     const batch = uniqueIds.slice(i, i + 300);
     const { data, error } = await supabase
       .from('published_articles')
-      .select(ARTICLE_COLUMNS)
+      .select(fetchColumns)
       .in('id', batch);
     if (!error && data) allArticles = allArticles.concat(data);
   }
@@ -1170,16 +1468,62 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Fix 10: Count session interactions for adaptive weighting
+  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
+
+  // Fix 5: Category-level engagement suppression
+  // Load per-category engagement stats (last 7 days) to suppress 0% categories
+  let categorySuppressionMap = {};
+  if (userId) {
+    try {
+      const { data: catStats } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId,
+        p_days: 7,
+      });
+      if (catStats) {
+        for (const row of catStats) {
+          const impressions = parseInt(row.impressions) || 0;
+          const engaged = parseInt(row.engaged) || 0;
+          if (impressions < 10) continue; // not enough data
+          const rate = engaged / impressions;
+          if (rate < 0.05 && impressions >= 20) categorySuppressionMap[row.category] = 0.15;
+          else if (rate < 0.10 && impressions >= 15) categorySuppressionMap[row.category] = 0.40;
+          else if (rate < 0.15 && impressions >= 10) categorySuppressionMap[row.category] = 0.70;
+        }
+      }
+    } catch (catErr) {
+      // RPC may not be deployed yet — continue without suppression
+      console.log('[feed] Category suppression stats unavailable:', catErr.message);
+    }
+  }
+
+  function getCategorySuppression(article) {
+    return categorySuppressionMap[article.category] || 1.0;
+  }
+
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
-      // Use V3 scoring if personalizationId exists, else fall back to V2
-      const score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0)
+      // Compute session vector similarity if available (Change 1)
+      let sessionVecSim = 0;
+      if (sessionTasteVector && article.embedding_minilm) {
+        const emb = safeJsonParse(article.embedding_minilm, null);
+        if (emb && Array.isArray(emb) && emb.length === 384 && sessionTasteVector.length === 384) {
+          sessionVecSim = cosineSimilarityVec(emb, sessionTasteVector);
+        }
+      }
+      let score = personalizationId
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile, sessionInteractionCount)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
+      // Fix 5: Category suppression
+      score *= getCategorySuppression(article);
+      // Boost articles from followed publishers (+25%)
+      if (article.author_id && followedPublisherIds.has(article.author_id)) {
+        score *= 1.25;
+      }
       return {
         ...article,
         _score: score,
@@ -1192,22 +1536,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency
+  // Trending bucket: editorial importance x recency x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id]),
+      _score: scoreTrendingV3(articleMap[a.id], skipProfile) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration
+  // Discovery bucket: boost unfamiliar categories for true exploration x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1226,7 +1570,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days),
+        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category),
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
@@ -1234,7 +1578,67 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
-  // PHASE 5.5: WORLD-EVENT DEDUP (IMPROVEMENT 3)
+  // PHASE 5.5a: ENTITY BLOCKLIST FOR ALL USERS (not just cold-start)
+  // Combines session skips + persistent skip_profile to hard-block
+  // entities the user repeatedly skipped.
+  // ==========================================
+
+  const SKIP_GENERIC_TERMS = new Set(['politics', 'world', 'business', 'sports',
+    'entertainment', 'tech', 'science', 'health', 'finance', 'lifestyle',
+    'united states', 'china', 'europe', 'energy', 'military', 'economy',
+    'government', 'trade', 'security', 'culture']);
+
+  const globalEntitySkipCounts = {};
+
+  // From persistent skip_profile (accumulated across all sessions)
+  if (skipProfile && typeof skipProfile === 'object') {
+    for (const [entity, weight] of Object.entries(skipProfile)) {
+      if (SKIP_GENERIC_TERMS.has(entity.toLowerCase())) continue;
+      const equivalentSkips = Math.round((typeof weight === 'number' ? weight : 0) / 0.05);
+      if (equivalentSkips > 0) globalEntitySkipCounts[entity.toLowerCase()] = equivalentSkips;
+    }
+  }
+
+  // From current session skipped IDs
+  for (const id of sessionSkippedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const tags = safeJsonParse(art.interest_tags, []);
+    for (const tag of tags.slice(0, 3)) {
+      const t = tag.toLowerCase();
+      if (!SKIP_GENERIC_TERMS.has(t)) {
+        globalEntitySkipCounts[t] = (globalEntitySkipCounts[t] || 0) + 1;
+      }
+    }
+  }
+
+  const globalBlocklist = new Set();
+  for (const [entity, count] of Object.entries(globalEntitySkipCounts)) {
+    if (count >= 3) globalBlocklist.add(entity);
+  }
+
+  function isGlobalBlocked(article) {
+    if (globalBlocklist.size === 0) return false;
+    const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+    const primaryTags = tags.slice(0, 2);
+    if (primaryTags.some(t => globalBlocklist.has(t))) return true;
+    const blockedCount = tags.filter(t => globalBlocklist.has(t)).length;
+    if (blockedCount >= 2) return true;
+    const titleLower = (article.title_news || '').toLowerCase();
+    for (const blocked of globalBlocklist) {
+      if (blocked.length > 3 && titleLower.includes(blocked)) return true;
+    }
+    return false;
+  }
+
+  // Apply blocklist to ALL scored pools
+  const personalScoredFiltered = personalScored.filter(a => !isGlobalBlocked(a));
+  const trendingScoredFiltered = trendingScored.filter(a => !isGlobalBlocked(a));
+  const discoveryScoredFiltered = discoveryScored.filter(a => !isGlobalBlocked(a));
+  const interestScoredFiltered = interestScored.filter(a => !isGlobalBlocked(a));
+
+  // ==========================================
+  // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
   // Cap articles per world_event/cluster to prevent event flooding
   // (e.g., 15 Iran war articles won't all appear in the feed)
   // ==========================================
@@ -1261,10 +1665,36 @@ async function handleV2Feed(req, res, supabase, opts) {
   const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
 
   const selected = [];
-  const pPool = [...personalScored];
-  const tPool = [...trendingScored];
-  const dPool = [...discoveryScored];
-  const iPool = [...interestScored];
+  let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
+  const pPool = [...personalScoredFiltered];
+  const tPool = [...trendingScoredFiltered];
+  const dPool = [...discoveryScoredFiltered];
+  const iPool = [...interestScoredFiltered];
+
+  // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
+  // Take top 50 from each pool — these are the candidates MMR will actually score
+  if (hasAnyPersonalization) {
+    const mmrCandidateIds = new Set();
+    for (const pool of [pPool, tPool, dPool, iPool]) {
+      for (const a of pool.slice(0, 50)) {
+        if (!embeddingCache.has(a.id)) mmrCandidateIds.add(a.id);
+      }
+    }
+    if (mmrCandidateIds.size > 0) {
+      const { data: embData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...mmrCandidateIds].slice(0, 200));
+      if (embData) {
+        for (const a of embData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+  }
 
   // IMPROVEMENT 3: Track world event and cluster counts
   const eventCounts = {};
@@ -1348,6 +1778,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Proper Beta sampling via gamma distribution (Fix 6)
   // - Dynamic time window for deeper pages (Fix 5)
   // - Missing article lookup bug fix (Fix 4b)
+  // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
   if (!hasAnyPersonalization) {
@@ -1384,68 +1815,174 @@ async function handleV2Feed(req, res, supabase, opts) {
       return (x + y) > 0 ? x / (x + y) : 0.5;
     }
 
-    // ── Fix 2: Per-category normalized pool construction ──
-    // Detect page depth from seen articles count
+    // ── Fix 2+7: Subtopic-diverse pool construction ──
+    // Instead of top 30 per category (dominated by mainstream),
+    // fetch top N per SUBTOPIC within each category.
+    // Guarantees niche content (K-Drama, Cricket, etc.) exists in pool.
     const pageNum = Math.floor(seenArticleIds.length / limit) + 1;
-    // Fix 5: Expand time window for deeper pages
     const catTimeWindow = pageNum >= 3 ? sevenDaysAgo : fortyEightHoursAgo;
+    const catFallbackWindow = sevenDaysAgo; // expanded window for empty subtopics
     const catScoreThreshold = pageNum >= 3 ? 200 : 300;
-    const perCatLimit = 30;
+
+    const SUBTOPIC_MAP = {
+      'Entertainment': [
+        { name: 'Movies & Film', tags: ['movie', 'film', 'cinema', 'box office', 'director', 'oscar', 'hollywood'] },
+        { name: 'TV & Streaming', tags: ['netflix', 'hbo', 'streaming', 'series', 'television', 'disney'] },
+        { name: 'Music', tags: ['album', 'concert', 'song', 'billboard', 'grammy', 'rapper', 'singer', 'tour'] },
+        { name: 'Gaming', tags: ['game', 'playstation', 'xbox', 'nintendo', 'steam', 'esports', 'gaming'] },
+        { name: 'K-Pop & K-Drama', tags: ['kpop', 'k-pop', 'bts', 'blackpink', 'kdrama', 'k-drama', 'korean', 'hallyu', 'stray kids', 'newjeans'] },
+        { name: 'Celebrity', tags: ['celebrity', 'red carpet', 'award', 'star', 'met gala'] },
+      ],
+      'Sports': [
+        { name: 'NFL', tags: ['nfl', 'touchdown', 'quarterback', 'super bowl', 'american football'] },
+        { name: 'NBA', tags: ['nba', 'basketball', 'lakers', 'celtics', 'lebron'] },
+        { name: 'Soccer', tags: ['soccer', 'football', 'premier league', 'la liga', 'champions league', 'mls', 'fifa'] },
+        { name: 'Cricket', tags: ['cricket', 'ipl', 't20', 'ashes', 'test match', 'bcci'] },
+        { name: 'F1 & Motorsport', tags: ['formula 1', 'f1', 'grand prix', 'racing', 'nascar'] },
+        { name: 'Combat Sports', tags: ['ufc', 'mma', 'boxing', 'fight', 'knockout'] },
+        { name: 'Other Sports', tags: ['tennis', 'golf', 'olympics', 'swimming', 'rugby'] },
+      ],
+      'Politics': [
+        { name: 'US Politics', tags: ['trump', 'congress', 'senate', 'republican', 'democrat', 'white house', 'biden', 'supreme court'] },
+        { name: 'Middle East', tags: ['iran', 'israel', 'hezbollah', 'hamas', 'gaza', 'tehran', 'saudi'] },
+        { name: 'European Politics', tags: ['eu', 'european union', 'macron', 'germany', 'uk', 'nato', 'brexit'] },
+        { name: 'Asian Politics', tags: ['china', 'india', 'modi', 'japan', 'north korea', 'taiwan'] },
+        { name: 'Human Rights', tags: ['human rights', 'protest', 'democracy', 'censorship', 'war crimes'] },
+      ],
+      'Tech': [
+        { name: 'AI & ML', tags: ['ai', 'artificial intelligence', 'chatgpt', 'openai', 'llm', 'machine learning', 'deep learning'] },
+        { name: 'Consumer Tech', tags: ['iphone', 'apple', 'samsung', 'google', 'smartphone', 'gadget'] },
+        { name: 'Cybersecurity', tags: ['cybersecurity', 'hack', 'breach', 'ransomware', 'privacy'] },
+        { name: 'Space Tech', tags: ['spacex', 'nasa', 'rocket', 'satellite', 'starship'] },
+        { name: 'Social Media', tags: ['social media', 'tiktok', 'instagram', 'twitter', 'meta', 'facebook'] },
+      ],
+      'Science': [
+        { name: 'Space & Astronomy', tags: ['space', 'astronomy', 'mars', 'telescope', 'galaxy', 'planet', 'nasa'] },
+        { name: 'Climate & Environment', tags: ['climate', 'environment', 'warming', 'carbon', 'emissions', 'biodiversity'] },
+        { name: 'Biology & Nature', tags: ['biology', 'wildlife', 'evolution', 'genetics', 'species'] },
+        { name: 'Physics & Earth', tags: ['physics', 'quantum', 'earthquake', 'volcano', 'ocean'] },
+      ],
+      'Health': [
+        { name: 'Medical', tags: ['medical', 'treatment', 'surgery', 'clinical trial', 'fda'] },
+        { name: 'Public Health', tags: ['pandemic', 'vaccine', 'cdc', 'who', 'outbreak', 'covid'] },
+        { name: 'Mental Health', tags: ['mental health', 'anxiety', 'depression', 'therapy', 'wellbeing'] },
+        { name: 'Nutrition & Fitness', tags: ['nutrition', 'diet', 'fitness', 'exercise', 'obesity'] },
+      ],
+    };
 
     const ALL_CATEGORIES = [
       'Politics', 'World', 'Business', 'Sports', 'Entertainment',
       'Tech', 'Science', 'Health', 'Finance', 'Lifestyle',
     ];
 
-    // Fetch top articles per category in parallel
-    const catFetchPromises = ALL_CATEGORIES.map(cat =>
-      supabase
-        .from('published_articles')
-        .select(ARTICLE_COLUMNS)
+    const categoryPools = {};
+    const globalMaxScore = 1000;
+
+    // Fetch pools per category using POOL_COLUMNS (lightweight, no embeddings)
+    // Then partition client-side by subtopic tags
+    const generalPromises = ALL_CATEGORIES.map(cat =>
+      supabase.from('published_articles').select(POOL_COLUMNS)
         .eq('category', cat)
         .gte('created_at', catTimeWindow)
         .gte('ai_final_score', catScoreThreshold)
         .order('ai_final_score', { ascending: false })
-        .limit(perCatLimit)
+        .limit(120) // wide fetch — subtopic partitioning + decay will select the best
     );
-    const catFetchResults = await Promise.all(catFetchPromises);
-
-    // Build category pools with blended normalization
-    const categoryPools = {};
-    const globalMaxScore = 1000; // theoretical max from scoring rubric
+    const generalResults = await Promise.all(generalPromises);
 
     for (let ci = 0; ci < ALL_CATEGORIES.length; ci++) {
       const cat = ALL_CATEGORIES[ci];
-      let articles = (catFetchResults[ci].data || []).filter(a => {
-        // Exclude seen, session-excluded, and test articles
+      const allArticles_cat = (generalResults[ci].data || []).filter(a => {
         if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
-        const url = a?.url || '';
         const title = a?.title_news || a?.title || '';
-        return !(/test/i.test(url) || /test/i.test(title));
+        return !(/test/i.test(title));
       });
 
-      if (articles.length === 0) continue;
+      if (allArticles_cat.length === 0) continue;
 
-      // Within-category normalization
-      const catMax = Math.max(...articles.map(a => a.ai_final_score || 0));
-      const catMin = Math.min(...articles.map(a => a.ai_final_score || 0));
+      const subtopics = SUBTOPIC_MAP[cat];
+      const poolArticles = [];
+      const usedIds = new Set();
+
+      if (subtopics) {
+        const perSubLimit = Math.max(8, Math.floor(80 / subtopics.length));
+
+        for (const st of subtopics) {
+          const stTagSet = new Set(st.tags.map(t => t.toLowerCase()));
+          const matching = allArticles_cat.filter(a => {
+            if (usedIds.has(a.id)) return false;
+            const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+            return artTags.some(t => {
+              for (const stTag of stTagSet) {
+                if (t.includes(stTag) || stTag.includes(t)) return true;
+              }
+              return false;
+            });
+          });
+
+          let picked = matching.slice(0, perSubLimit);
+
+          // If empty, try 7-day fallback
+          if (picked.length === 0) {
+            const { data: fallbackData } = await supabase.from('published_articles')
+              .select(POOL_COLUMNS)
+              .eq('category', cat)
+              .gte('created_at', catFallbackWindow)
+              .gte('ai_final_score', 200)
+              .order('ai_final_score', { ascending: false })
+              .limit(40);
+            if (fallbackData) {
+              const fallbackFiltered = fallbackData.filter(a => {
+                if (usedIds.has(a.id) || seenArticleIds.includes(a.id)) return false;
+                const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+                return artTags.some(t => {
+                  for (const stTag of stTagSet) {
+                    if (t.includes(stTag) || stTag.includes(t)) return true;
+                  }
+                  return false;
+                });
+              });
+              picked = fallbackFiltered.slice(0, perSubLimit);
+            }
+          }
+
+          for (const a of picked) {
+            usedIds.add(a.id);
+            poolArticles.push(a);
+          }
+        }
+
+        // Fill remaining slots with general articles
+        for (const a of allArticles_cat) {
+          if (poolArticles.length >= 80) break;
+          if (!usedIds.has(a.id)) {
+            usedIds.add(a.id);
+            poolArticles.push(a);
+          }
+        }
+      } else {
+        for (const a of allArticles_cat.slice(0, 80)) {
+          poolArticles.push(a);
+        }
+      }
+
+      if (poolArticles.length === 0) continue;
+
+      // Blended normalization within the pool
+      const catMax = Math.max(...poolArticles.map(a => a.ai_final_score || 0));
+      const catMin = Math.min(...poolArticles.map(a => a.ai_final_score || 0));
       const catRange = catMax - catMin || 1;
 
-      categoryPools[cat] = articles.map(a => {
+      categoryPools[cat] = poolArticles.map(a => {
         const raw = a.ai_final_score || 0;
         const normalizedWithinCat = (raw - catMin) / catRange;
         const normalizedGlobal = raw / globalMaxScore;
-        // Blended: 70% within-category + 30% global quality
         const blendedScore = 0.7 * normalizedWithinCat + 0.3 * normalizedGlobal;
-        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days);
-        return {
-          ...a,
-          _score: blendedScore * recency * 1000, // scale for MMR compatibility
-          _bucket: 'bandit',
-        };
+        const recency = getRecencyDecay(a.created_at, a.category, a.shelf_life_days, a.freshness_category);
+        return { ...a, _score: blendedScore * recency * 1000, _bucket: 'bandit' };
       }).sort((a, b) => b._score - a._score);
 
-      // Add to articleMap and caches for MMR
+      // Add to articleMap and caches
       for (const a of categoryPools[cat]) {
         if (!articleMap[a.id]) articleMap[a.id] = a;
         if (!tagCache.has(a.id)) {
@@ -1454,9 +1991,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
         if (!embeddingCache.has(a.id)) {
           const emb = safeJsonParse(a.embedding_minilm, null);
-          if (emb && Array.isArray(emb) && emb.length > 0) {
-            embeddingCache.set(a.id, emb);
-          }
+          if (emb && Array.isArray(emb) && emb.length > 0) embeddingCache.set(a.id, emb);
         }
       }
     }
@@ -1520,29 +2055,196 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // ── Fix 4: Category + Entity level bandit state ──
-    const banditState = {};
-    for (const cat of Object.keys(categoryPools)) {
-      banditState[cat] = { alpha: 1, beta: 1 };
+    // ── Change 3: Soft entity blocklist with skip severity ──
+    // Hard block only when penalty > 0.80 AND weightedSkips >= 4
+    // Soft penalties reduce entity scoring smoothly
+    const BROAD_TAGS = new Set([
+      'politics', 'sports', 'business', 'technology', 'health', 'science',
+      'entertainment', 'world', 'finance', 'energy', 'military', 'economy',
+      'trade', 'security', 'government', 'breaking news', 'analysis',
+      'investigation', 'opinion', 'editorial', 'lifestyle', 'culture',
+    ]);
+
+    // Build soft blocklist from entity penalties (computed later in entity scoring)
+    // For now, build hard blocklist from raw skip counts as safety net
+    const entitySkipCounts = {};
+    for (const id of sessionSkippedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (!BROAD_TAGS.has(t)) entitySkipCounts[t] = (entitySkipCounts[t] || 0) + 1;
+      }
+    }
+    // Also count glanced articles — they REDUCE the skip penalty (Change 2)
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (!BROAD_TAGS.has(t)) entitySkipCounts[t] = (entitySkipCounts[t] || 0) - 0.3; // partial offset
+      }
     }
 
-    const entityBanditState = {};
+    const entityBlocklist = new Set();
+    for (const [entity, count] of Object.entries(entitySkipCounts)) {
+      if (count >= 3) entityBlocklist.add(entity); // hard threshold stays at 3
+    }
 
-    // Update priors from session signals (now using fixed articleMap)
+    function isBlockedByEntity(article) {
+      if (entityBlocklist.size === 0) return false;
+      const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
+      const primaryTags = tags.slice(0, 2);
+      if (primaryTags.some(t => entityBlocklist.has(t))) return true;
+      const blockedCount = tags.filter(t => entityBlocklist.has(t)).length;
+      if (blockedCount >= 2) return true;
+      const titleLower = (article.title_news || '').toLowerCase();
+      for (const blocked of entityBlocklist) {
+        if (titleLower.includes(blocked)) return true;
+      }
+      return false;
+    }
+
+    // Filter blocked articles from category pools and penalize categories
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      const beforeLen = pool.length;
+      categoryPools[cat] = pool.filter(a => !isBlockedByEntity(a));
+      const removedRatio = beforeLen > 0 ? (beforeLen - categoryPools[cat].length) / beforeLen : 0;
+      categoryPools[cat]._blockPenalty = removedRatio > 0.5 ? 5 : removedRatio > 0.3 ? 3 : removedRatio > 0.1 ? 1 : 0;
+    }
+
+    // ── Fix 9: Global pool topic cap (15%) ──
+    // Prevent any single topic from dominating the entire candidate pool
+    const GLOBAL_MAX_TOPIC_SHARE = 0.10; // tighter cap with larger pool
+    const globalTopicCounts = {};
+    let globalPoolSize = 0;
+    for (const [cat, pool] of Object.entries(categoryPools)) {
+      for (const a of pool) {
+        const tags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
+        // Count primary tags (first 2) for topic dominance
+        for (const t of tags.slice(0, 2)) {
+          if (!BROAD_TAGS.has(t)) {
+            globalTopicCounts[t] = (globalTopicCounts[t] || 0) + 1;
+          }
+        }
+        globalPoolSize++;
+      }
+    }
+
+    // Trim dominant topics to 15% of pool
+    for (const [topic, count] of Object.entries(globalTopicCounts)) {
+      const maxAllowed = Math.max(6, Math.floor(globalPoolSize * GLOBAL_MAX_TOPIC_SHARE));
+      if (count <= maxAllowed) continue;
+
+      let toRemove = count - maxAllowed;
+      // Remove lowest-scored articles with this topic, across all pools
+      const candidates = [];
+      for (const [cat, pool] of Object.entries(categoryPools)) {
+        for (let i = 0; i < pool.length; i++) {
+          const tags = safeJsonParse(pool[i].interest_tags, []).map(t => t.toLowerCase());
+          if (tags.slice(0, 2).includes(topic)) {
+            candidates.push({ cat, idx: i, score: pool[i]._score || pool[i].ai_final_score || 0 });
+          }
+        }
+      }
+      // Sort by score ascending (remove worst first)
+      candidates.sort((a, b) => a.score - b.score);
+      const removeSet = new Set();
+      for (const c of candidates) {
+        if (toRemove <= 0) break;
+        removeSet.add(`${c.cat}_${c.idx}`);
+        toRemove--;
+      }
+      // Apply removals (reverse index order to avoid shifting)
+      for (const [cat, pool] of Object.entries(categoryPools)) {
+        categoryPools[cat] = pool.filter((a, i) => !removeSet.has(`${cat}_${i}`));
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    // V21: UNIFIED ENTITY SCORING + GLANCE SIGNALS + SKIP SEVERITY
+    // Changes 2+3: glanced_ids count as 0.3 positive, skip severity differentiated
+    // ══════════════════════════════════════════════════════════════
+
+    // Step 1: Compute per-entity weighted engagement rate
+    // engaged=1.0, glanced=0.3, skipped=0 (counted as exposure only)
+    const entityStats = {};
     for (const id of sessionEngagedIds) {
       const art = articleMap[id];
       if (!art) continue;
-      // Category-level
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].weightedEng += 1.0;
+        entityStats[t].shown++;
+      }
+    }
+    // Change 2: Glanced articles = 0.3 positive signal
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].weightedEng += 0.3;
+        entityStats[t].shown++;
+      }
+    }
+    for (const id of sessionSkippedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      for (const tag of safeJsonParse(art.interest_tags, [])) {
+        const t = tag.toLowerCase();
+        if (BROAD_TAGS.has(t)) continue;
+        if (!entityStats[t]) entityStats[t] = { weightedEng: 0, shown: 0 };
+        entityStats[t].shown++; // exposure only, no positive weight
+      }
+    }
+
+    // Unified score with weighted engagement rate
+    const entityScores = {};
+    for (const [entity, stats] of Object.entries(entityStats)) {
+      if (stats.shown === 0) continue;
+      const rate = stats.weightedEng / stats.shown;
+      const confidence = 1 - (1 / (1 + stats.shown));
+      entityScores[entity] = 0.5 + (rate - 0.5) * confidence;
+    }
+
+    // Change 3: Soft entity blocklist (replaces hard 3-skip block)
+    // entityPenalty = weightedSkips / (weightedSkips + weightedEngages + 1)
+    // Hard block only when penalty > 0.80 AND weightedSkips >= 4
+    const entityPenalties = {};
+    for (const [entity, stats] of Object.entries(entityStats)) {
+      const weightedSkips = stats.shown - stats.weightedEng; // skips+partial_glances
+      const penalty = weightedSkips / (weightedSkips + stats.weightedEng + 1);
+      entityPenalties[entity] = { penalty, weightedSkips, hardBlock: penalty > 0.80 && weightedSkips >= 4 };
+    }
+
+    // Step 2: Category bandit with glance support
+    const banditState = {};
+    for (const cat of Object.keys(categoryPools)) {
+      banditState[cat] = { alpha: 1, beta: 1 };
+      const penalty = categoryPools[cat]._blockPenalty || 0;
+      if (penalty > 0) banditState[cat].beta += penalty;
+    }
+
+    for (const id of sessionEngagedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
       const cat = art.category || 'Other';
       if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
       banditState[cat].alpha += 2;
-      // Entity-level
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
-        entityBanditState[t].alpha += 2;
-      }
+    }
+    // Change 2: glanced articles = alpha += 0.3 (weak positive)
+    for (const id of sessionGlancedIds) {
+      const art = articleMap[id];
+      if (!art) continue;
+      const cat = art.category || 'Other';
+      if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
+      banditState[cat].alpha += 0.3;
     }
     for (const id of sessionSkippedIds) {
       const art = articleMap[id];
@@ -1550,39 +2252,37 @@ async function handleV2Feed(req, res, supabase, opts) {
       const cat = art.category || 'Other';
       if (!banditState[cat]) banditState[cat] = { alpha: 1, beta: 1 };
       banditState[cat].beta += 1;
-      const tags = safeJsonParse(art.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        if (!entityBanditState[t]) entityBanditState[t] = { alpha: 1, beta: 1 };
-        entityBanditState[t].beta += 1;
-      }
     }
 
-    // Entity bandit scoring: boost/penalize articles within a category
-    function entityBanditMultiplier(article) {
-      const tags = safeJsonParse(article.interest_tags, []);
-      let totalRate = 0;
+    // Step 3: Score articles using entity scores as the within-category signal
+    function entityScoreMultiplier(article) {
+      const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase()).filter(t => !BROAD_TAGS.has(t));
+      let totalScore = 0;
       let count = 0;
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        const state = entityBanditState[t];
-        if (state && (state.alpha + state.beta) > 2) {
-          totalRate += state.alpha / (state.alpha + state.beta);
+      for (const t of tags) {
+        if (entityScores[t] !== undefined) {
+          totalScore += entityScores[t];
           count++;
         }
       }
       if (count === 0) return 1.0; // no data → neutral
-      const avgRate = totalRate / count;
-      // Engaged entities get up to 1.5x, skipped entities get down to 0.5x
-      return 0.5 + avgRate;
+      const avgScore = totalScore / count;
+      // Map 0-1 score to 0.4-1.6 multiplier range
+      return 0.4 + avgScore * 1.2;
     }
 
-    // Apply entity bandit multiplier to pool scores
+    // Apply entity scoring to pool
     for (const [cat, pool] of Object.entries(categoryPools)) {
       for (const a of pool) {
-        a._score *= entityBanditMultiplier(a);
+        a._score *= entityScoreMultiplier(a);
       }
       pool.sort((a, b) => b._score - a._score);
+    }
+
+    // Count total bandit pool for accurate has_more calculation
+    banditPoolTotal = 0;
+    for (const pool of Object.values(categoryPools)) {
+      banditPoolTotal += (pool.length || 0);
     }
 
     // ── Fill slots via Thompson Sampling with entity cap ──
@@ -1604,6 +2304,26 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!bestCat) break;
 
       const pool = categoryPools[bestCat];
+
+      // Change 3: Lazy-fetch embeddings for MMR candidates in this category
+      // Only fetch once per category, cache for reuse
+      if (!pool._embeddingsFetched && pool.length > 0) {
+        const poolIds = pool.slice(0, 30).map(a => a.id);
+        const { data: embData } = await supabase
+          .from('published_articles')
+          .select('id, embedding_minilm')
+          .in('id', poolIds);
+        if (embData) {
+          for (const a of embData) {
+            const emb = safeJsonParse(a.embedding_minilm, null);
+            if (emb && Array.isArray(emb) && emb.length > 0) {
+              embeddingCache.set(a.id, emb);
+            }
+          }
+        }
+        pool._embeddingsFetched = true;
+      }
+
       const picked = mmrSelect(pool, selected, tagCache, 0.6, embeddingCache);
       if (!picked) {
         delete categoryPools[bestCat]; // Exhausted
@@ -1684,16 +2404,16 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
@@ -1704,17 +2424,41 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else {
+    // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
+    let usePivotMode = false;
+    if (sessionSkippedIds.length >= 5) {
+      // Check if the last 5 actions were all skips (no engaged between them)
+      const engagedSet = new Set(sessionEngagedIds);
+      const glancedSet = new Set(sessionGlancedIds);
+      let consecutiveSkips = 0;
+      for (let i = sessionSkippedIds.length - 1; i >= 0; i--) {
+        const skipId = sessionSkippedIds[i];
+        if (!engagedSet.has(skipId) && !glancedSet.has(skipId)) {
+          consecutiveSkips++;
+        } else {
+          break;
+        }
+      }
+      usePivotMode = consecutiveSkips >= 5;
+    }
+
     // Personalized user without topic selections: standard slot-filling
     for (let pos = 0; selected.length < limit; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+      if (usePivotMode) {
+        // Fix 8: Pivot mode — only serve high-confidence content from top of personal pool
+        // This breaks the skip streak by avoiding trending/discovery slots
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8); // higher lambda = more relevance
         if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+      } else if (slot === 'P') {
+        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.85);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
@@ -1732,15 +2476,77 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
         if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
         if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
+        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
 
       if (!picked) break;
 
-      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = usePivotMode ? 'pivot' : (slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery');
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
+    }
+  }
+
+  // ==========================================
+  // PHASE 6.5: INTEREST CATEGORY ALLOCATION FLOOR (Fix 7)
+  // Ensure historically-engaged categories aren't starved by session drift.
+  // If Science is 25% of all-time engagement but only 5% of current feed,
+  // swap in more Science articles from available pools.
+  // ==========================================
+
+  if (hasAnyPersonalization && Object.keys(categorySuppressionMap).length > 0) {
+    // categorySuppressionMap already has engagement rates from Fix 5
+    // Build target floors from all-time stats (categories NOT being suppressed)
+    const selectedCatCounts = {};
+    for (const a of selected) {
+      selectedCatCounts[a.category] = (selectedCatCounts[a.category] || 0) + 1;
+    }
+
+    // Identify underrepresented categories: historically engaged but below floor in current feed
+    // Use category stats that have > 15% engagement rate and are NOT suppressed
+    try {
+      const { data: allCatStats } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId,
+        p_days: 14,
+      });
+      if (allCatStats && selected.length > 0) {
+        const totalEngaged = allCatStats.reduce((s, c) => s + parseInt(c.engaged || 0), 0);
+        if (totalEngaged > 0) {
+          for (const row of allCatStats) {
+            const engaged = parseInt(row.engaged) || 0;
+            const rate = engaged / totalEngaged;
+            if (rate < 0.10) continue; // not a significant interest
+            if (categorySuppressionMap[row.category]) continue; // suppressed category, don't force it
+
+            const targetSlots = Math.min(Math.round(rate * selected.length), Math.round(selected.length * 0.4));
+            const currentSlots = selectedCatCounts[row.category] || 0;
+
+            if (currentSlots < targetSlots) {
+              // Find articles from this category in all pools (not yet selected)
+              const selectedIds = new Set(selected.map(a => a.id));
+              const allPools = [...pPool, ...tPool, ...dPool, ...iPool];
+              const candidates = allPools
+                .filter(a => a.category === row.category && !selectedIds.has(a.id))
+                .sort((a, b) => (b._score || 0) - (a._score || 0));
+
+              // Replace lowest-scoring selected articles from suppressed categories
+              let replaced = 0;
+              const needed = targetSlots - currentSlots;
+              for (let i = selected.length - 1; i >= 0 && replaced < needed && candidates.length > 0; i--) {
+                if (categorySuppressionMap[selected[i].category] && categorySuppressionMap[selected[i].category] <= 0.40) {
+                  const replacement = candidates.shift();
+                  replacement.bucket = selected[i].bucket;
+                  selected[i] = replacement;
+                  replaced++;
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (floorErr) {
+      // Non-blocking — if stats unavailable, skip floor enforcement
     }
   }
 
@@ -1760,6 +2566,29 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   const pageIds = selected.map(a => a.id);
+
+  // Fetch full article data for cold-start pool articles (they only have POOL_COLUMNS)
+  if (selected[0] && !selected[0].url) {
+    const { data: fullArticles } = await supabase
+      .from('published_articles')
+      .select(ARTICLE_COLUMNS)
+      .in('id', pageIds);
+    if (fullArticles) {
+      const fullMap = {};
+      for (const a of fullArticles) fullMap[a.id] = a;
+      for (let i = 0; i < selected.length; i++) {
+        const full = fullMap[selected[i].id];
+        if (full) {
+          const bucket = selected[i].bucket;
+          const score = selected[i]._score;
+          Object.assign(selected[i], full);
+          selected[i].bucket = bucket;
+          selected[i]._score = score;
+        }
+      }
+    }
+  }
+
   // Re-use the candidate event map we already fetched (no duplicate query)
   const eventMap = candidateEventMap;
 
@@ -1776,8 +2605,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
   }
 
-  // IMPROVEMENT 1: True pagination — encode actual offset in cursor
-  const totalAvailable = personalScored.length + trendingScored.length + discoveryScored.length + interestScored.length;
+  // True pagination — use bandit pool for cold-start, all scored pools for personalized
+  const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
+  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
   const totalServed = offset + selected.length;
   const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;

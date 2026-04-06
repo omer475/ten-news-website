@@ -52,7 +52,7 @@ final class ReadingHistoryManager {
 
         let entry = HistoryEntry(
             articleId: id,
-            title: article.plainTitle,
+            title: article.displayTitle,
             source: article.source,
             category: article.category,
             topics: article.topics,
@@ -62,6 +62,14 @@ final class ReadingHistoryManager {
         )
 
         entries.insert(entry, at: 0)
+
+        // Count every viewed article (only once per article)
+        if !readArticleIds.contains(id) {
+            readArticleIds.insert(id)
+            readCount += 1
+            UserDefaults.standard.set(readCount, forKey: readCountKey)
+            UserDefaults.standard.set(Array(readArticleIds), forKey: readArticleIdsKey)
+        }
 
         // Trim to max
         if entries.count > maxEntries {
@@ -78,6 +86,12 @@ final class ReadingHistoryManager {
         readCount += 1
         UserDefaults.standard.set(readCount, forKey: readCountKey)
         UserDefaults.standard.set(Array(readArticleIds), forKey: readArticleIdsKey)
+    }
+
+    /// Returns all article IDs the user has ever seen (persisted across restarts).
+    /// Used for dedup — send to server to prevent duplicate articles in feed.
+    func seenArticleIds(limit: Int = 500) -> [String] {
+        return Array(readArticleIds.prefix(limit))
     }
 
     func clearHistory() {
