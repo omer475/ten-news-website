@@ -956,15 +956,43 @@ export default async function handler(req, res) {
     // Try v3 personalization_profiles first (non-blocking — falls back to profiles if fails)
     if (userId || guestDeviceId) {
       try {
-        const rpcParams = userId
-          ? { p_auth_id: userId }
-          : { p_device_id: guestDeviceId };
+        // Direct query fallback: resolve_personalization_id RPC may not be deployed
+        let persResolved = false;
 
-        const { data: persData, error: persError } = await supabase.rpc('resolve_personalization_id', rpcParams);
-        if (!persError && persData && persData.length > 0) {
-          personalizationId = persData[0].personalization_id;
-          userPhase = persData[0].phase;
-          totalInteractions = persData[0].total_interactions;
+        // Try RPC first
+        try {
+          const rpcParams = userId
+            ? { p_auth_id: userId }
+            : { p_device_id: guestDeviceId };
+          const { data: persData, error: persError } = await supabase.rpc('resolve_personalization_id', rpcParams);
+          if (!persError && persData && persData.length > 0) {
+            personalizationId = persData[0].personalization_id;
+            userPhase = persData[0].phase;
+            totalInteractions = persData[0].total_interactions;
+            persResolved = true;
+          }
+        } catch (rpcErr) {
+          // RPC not available — fall back to direct query
+        }
+
+        // Direct query fallback if RPC failed
+        if (!persResolved) {
+          const lookupCol = userId ? 'auth_profile_id' : 'guest_device_id';
+          const lookupVal = userId || guestDeviceId;
+          const { data: directData } = await supabase
+            .from('personalization_profiles')
+            .select('personalization_id, phase, total_interactions')
+            .eq(lookupCol, lookupVal)
+            .limit(1);
+          if (directData && directData.length > 0) {
+            personalizationId = directData[0].personalization_id;
+            userPhase = directData[0].phase;
+            totalInteractions = directData[0].total_interactions;
+            persResolved = true;
+          }
+        }
+
+        if (persResolved) {
 
           // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
@@ -1052,28 +1080,30 @@ export default async function handler(req, res) {
 
     if (userId) {
       // Load profiles table for prefs + legacy taste vectors
-      let { data: userData } = await supabase
+      // Use limit(1) instead of .single() — some users have duplicate rows
+      const { data: profileRows } = await supabase
         .from('profiles')
         .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile')
         .eq('id', userId)
-        .single();
+        .limit(1);
+      let userData = profileRows?.[0] || null;
 
       if (!userData) {
         // Fallback: try legacy users table
-        const { data: legacyUser } = await supabase
+        const { data: legacyRows } = await supabase
           .from('users')
           .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
           .eq('id', userId)
-          .single();
-        if (!legacyUser) {
-          const { data: linkedUser } = await supabase
+          .limit(1);
+        if (!legacyRows?.[0]) {
+          const { data: linkedRows } = await supabase
             .from('users')
             .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
             .eq('auth_user_id', userId)
-            .single();
-          if (linkedUser) userData = linkedUser;
+            .limit(1);
+          if (linkedRows?.[0]) userData = linkedRows[0];
         } else {
-          userData = legacyUser;
+          userData = legacyRows[0];
         }
       }
 
