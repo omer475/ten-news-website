@@ -3346,7 +3346,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0,
+      _d: { seen: canonicalSeenIds.size, pers: hasAnyPersonalization ? 'Y' : 'N', persId: personalizationId?.slice(0,8), clusters: hasInterestClusters, persRes: (personalResult?.data||[]).length, persErr: personalResult?.error?.message?.slice(0,80), trendRes: (trendingResult?.data||[]).length, discRes: (discoveryResult?.data||[]).length, pFresh: pTiers.freshUnseen.length, tFresh: tTiers.freshUnseen.length, dFresh: dTiers.freshUnseen.length, fUns: fUnseen.length, totalFresh: totalFreshUnseen, pPool: pPool.length, tPool: tPool.length, dPool: dPool.length, fPool: fPool.length }
+    });
   }
 
   const pageIds = selected.map(a => a.id);
