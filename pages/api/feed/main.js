@@ -3319,7 +3319,23 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
+    return res.status(200).json({
+      articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0,
+      _diag: {
+        emptyFeed: true,
+        canonicalSeen: canonicalSeenIds.size,
+        hasAnyPersonalization,
+        personalizationId,
+        tasteVectorMinilm: !!tasteVectorMinilm,
+        totalFreshUnseen,
+        pFresh: pTiers.freshUnseen.length,
+        tFresh: tTiers.freshUnseen.length,
+        dFresh: dTiers.freshUnseen.length,
+        personalResultCount: (personalResult?.data || []).length,
+        trendingResultCount: (trendingResult?.data || []).length,
+        discoveryResultCount: (discoveryResult?.data || []).length,
+      },
+    });
   }
 
   const pageIds = selected.map(a => a.id);
