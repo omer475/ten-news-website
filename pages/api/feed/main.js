@@ -296,41 +296,7 @@ function topicSaturationPenalty(article, recentEntityCounts) {
 // Multiplier: 0.2x at -1.0, 1.0x at 0, 1.8x at +1.0.
 // ══════════════════════════════════════════════════════════════
 
-function computeEntityAffinity(signal, onboardingEntities) {
-  const totalCount = (signal.pos || 0) + (signal.neg || 0);
-  const recentCount = (signal.pos_recent || 0) + (signal.neg_recent || 0);
-  if (totalCount === 0) return 0;
-
-  // Rapid rejection: 3+ skips in 24h with 0 engagements → hard suppress
-  // One old deep read shouldn't keep GLP-1 appearing when user skipped 4 today
-  const skips24h = signal.neg_24h || 0;
-  const eng24h = signal.pos_24h || 0;
-  if (skips24h >= 3 && eng24h === 0) {
-    // Check onboarding floor before applying rapid rejection
-    if (onboardingEntities && onboardingEntities.has(signal.entity)) {
-      return 0.0; // onboarding floor — neutral, not negative
-    }
-    return -0.80;
-  }
-
-  const allTimeRate = signal.pos / totalCount;
-  const recentRate = recentCount > 0 ? signal.pos_recent / recentCount : 0.5;
-
-  // Blend: 85% recent, 15% all-time — recent skips override old engagement fast
-  const blended = recentCount >= 3
-    ? recentRate * 0.85 + allTimeRate * 0.15
-    : allTimeRate;
-
-  const confidence = 1 - 1 / (1 + totalCount * 0.3);
-  let affinity = (blended - 0.5) * 2 * confidence;
-
-  // Fix 2: Onboarding floor — topics user selected can never go below neutral
-  if (onboardingEntities && onboardingEntities.has(signal.entity)) {
-    affinity = Math.max(affinity, 0.0);
-  }
-
-  return affinity;
-}
+// Legacy computeEntityAffinity removed — replaced by tanh version at line 614+
 
 // Map onboarding topic names to entity tags for the floor protection
 const ONBOARDING_ENTITY_MAP = {
@@ -744,30 +710,23 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   return baseScore * affMult * saturation;
 }
 
-function scoreTrendingV3(article, entitySignals, recentEntityCounts, onboardingEntities) {
+function scoreTrendingV3(article, userSkipProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
-
-  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
-  const saturation = topicSaturationPenalty(article, recentEntityCounts);
-
-  if (process.env.DEBUG_SCORING) {
-    console.log(`[score] trending: "${(article.title_news || '').slice(0, 45)}" [${article.category}] aff=${affMult.toFixed(2)} sat=${saturation.toFixed(2)} final=${(baseScore * affMult * saturation).toFixed(0)}`);
-  }
-
-  return baseScore * affMult * saturation;
+  // Entity signal multiplier applied externally (squared) — not here
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  return baseScore * skipMultiplier;
 }
 
-function scoreDiscoveryV3(article, personalCategories, entitySignals, recentEntityCounts, onboardingEntities) {
+function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
   const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
-
-  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
-  const saturation = topicSaturationPenalty(article, recentEntityCounts);
-
-  return baseScore * affMult * saturation;
+  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
+  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  return baseScore * skipMultiplier;
 }
 
 // ==========================================
