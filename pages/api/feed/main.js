@@ -1339,7 +1339,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 1: PARALLEL DATA LOADING
   // ==========================================
 
-  const excludeIds = canonicalSeenIds.size > 0 ? [...canonicalSeenIds].slice(0, 1500) : null;
+  // Filter to valid positive integers — null/NaN/0 cause SQL errors
+  const cleanSeenArray = [...canonicalSeenIds].filter(id => Number.isFinite(id) && id > 0);
+  const excludeIds = cleanSeenArray.length > 0 ? cleanSeenArray.slice(0, 1500) : null;
   const minSim = similarityFloor || 0;
   const useMinilm = !!tasteVectorMinilm;
 
@@ -1353,13 +1355,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
+    // Cap per-cluster fetch: 26 clusters × 200 = 5200 pgvector searches → timeout
+    // Scale down dynamically: aim for ~1500 total candidates
+    const clusterCount = Math.max(1, totalInteractions > 0 ? Math.min(26, Math.ceil(totalInteractions / 50)) : 10);
+    const perCluster = Math.max(20, Math.min(100, Math.floor(1500 / clusterCount)));
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: userId, match_per_cluster: 200, hours_window: 9999,
+      p_user_id: clusterLookupId, match_per_cluster: perCluster, hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
+    const clusterCount = Math.max(1, totalInteractions > 0 ? Math.min(26, Math.ceil(totalInteractions / 50)) : 10);
+    const perCluster = Math.max(20, Math.min(100, Math.floor(1500 / clusterCount)));
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: userId, match_per_cluster: 200, hours_window: 9999,
+      p_user_id: clusterLookupId, match_per_cluster: perCluster, hours_window: 720,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -1390,7 +1398,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .order('ai_final_score', { ascending: false })
         .limit(600);
       // SQL-level exclusion — no cap, use canonicalSeenIds (up to 1500)
-      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
       if (sqlExclude.length > 0) {
         q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
@@ -1406,7 +1414,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('ai_final_score', 250)
         .order('ai_final_score', { ascending: false })
         .limit(1500);
-      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
       if (sqlExclude.length > 0) {
         q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
@@ -1543,7 +1551,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false });
-      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
       if (sqlExclude.length > 0) {
         q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
