@@ -2319,18 +2319,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fUnseen.length;
 
   // DIAGNOSTIC: Pool sizes after three-tier split
-  console.log(`[feed-diag] canonicalSeenIds=${canonicalSeenIds.size} sessionExclude=${sessionExcludeIds.size}`);
-  console.log(`[feed-diag] personalScored=${personalScored.length} filtered=${personalScoredFiltered.length}`);
-  console.log(`[feed-diag] trendingScored=${trendingScored.length} filtered=${trendingScoredFiltered.length}`);
-  console.log(`[feed-diag] discoveryScored=${discoveryScored.length} filtered=${discoveryScoredFiltered.length}`);
-  console.log(`[feed-diag] interestScored=${interestScored.length} filtered=${interestScoredFiltered.length}`);
-  console.log(`[feed-diag] freshBestScored=${freshBestScored.length} filtered=${freshBestScoredFiltered.length}`);
-  console.log(`[feed-diag] pTiers: fresh=${pTiers.freshUnseen.length} resurf=${pTiers.resurfaced.length} stale=${pTiers.staleUnseen.length}`);
-  console.log(`[feed-diag] tTiers: fresh=${tTiers.freshUnseen.length} resurf=${tTiers.resurfaced.length} stale=${tTiers.staleUnseen.length}`);
-  console.log(`[feed-diag] dTiers: fresh=${dTiers.freshUnseen.length} resurf=${dTiers.resurfaced.length} stale=${dTiers.staleUnseen.length}`);
-  console.log(`[feed-diag] iTiers: fresh=${iTiers.freshUnseen.length} resurf=${iTiers.resurfaced.length} stale=${iTiers.staleUnseen.length}`);
-  console.log(`[feed-diag] fUnseen=${fUnseen.length} fResurfaced=${fResurfaced.length}`);
-  console.log(`[feed-diag] totalFreshUnseen=${totalFreshUnseen} hasAnyPersonalization=${hasAnyPersonalization}`);
+  // console.log(`[feed-diag] canonicalSeenIds=${canonicalSeenIds.size} sessionExclude=${sessionExcludeIds.size}`);
+  // console.log(`[feed-diag] personalScored=${personalScored.length} filtered=${personalScoredFiltered.length}`);
+  // console.log(`[feed-diag] trendingScored=${trendingScored.length} filtered=${trendingScoredFiltered.length}`);
+  // console.log(`[feed-diag] discoveryScored=${discoveryScored.length} filtered=${discoveryScoredFiltered.length}`);
+  // console.log(`[feed-diag] interestScored=${interestScored.length} filtered=${interestScoredFiltered.length}`);
+  // console.log(`[feed-diag] freshBestScored=${freshBestScored.length} filtered=${freshBestScoredFiltered.length}`);
+  // console.log(`[feed-diag] pTiers: fresh=${pTiers.freshUnseen.length} resurf=${pTiers.resurfaced.length} stale=${pTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] tTiers: fresh=${tTiers.freshUnseen.length} resurf=${tTiers.resurfaced.length} stale=${tTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] dTiers: fresh=${dTiers.freshUnseen.length} resurf=${dTiers.resurfaced.length} stale=${dTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] iTiers: fresh=${iTiers.freshUnseen.length} resurf=${iTiers.resurfaced.length} stale=${iTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] fUnseen=${fUnseen.length} fResurfaced=${fResurfaced.length}`);
+  // console.log(`[feed-diag] totalFreshUnseen=${totalFreshUnseen} hasAnyPersonalization=${hasAnyPersonalization}`);
 
   // ── Dynamic slot pattern ──
   // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
@@ -2466,10 +2466,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
-  console.log(`[feed-diag] interestCategories=${[...interestCategories].join(',')} iPool=${iPool.length} pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} fPool=${fPool.length}`);
+  // console.log(`[feed-diag] interestCategories=${[...interestCategories].join(',')} iPool=${iPool.length} pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} fPool=${fPool.length}`);
 
   if (!hasAnyPersonalization) {
-    console.log('[feed-diag] BRANCH: cold-start bandit');
+    // console.log('[feed-diag] BRANCH: cold-start bandit');
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
     function normalRandom() {
@@ -3030,7 +3030,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
-    console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
+    // console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
     // ==========================================
     // QUOTA-BASED PRE-FILL for users with interest selections
     // 70% of slots guaranteed for interest categories, 30% diversity
@@ -3118,7 +3118,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else {
-    console.log('[feed-diag] BRANCH: standard personalized slot-filling');
+    // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
     let usePivotMode = false;
     if (sessionSkippedIds.length >= 5) {
@@ -3180,8 +3180,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  console.log(`[feed-diag] After phase1 slot-filling: selected=${selected.length} limit=${limit}`);
-  console.log(`[feed-diag] Remaining pools: pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} iPool=${iPool.length} fPool=${fPool.length}`);
+  // console.log(`[feed-diag] After phase1 slot-filling: selected=${selected.length} limit=${limit}`);
+  // console.log(`[feed-diag] Remaining pools: pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} iPool=${iPool.length} fPool=${fPool.length}`);
 
   // ==========================================
   // PHASE 6b: RESURFACED TIER (fill remaining slots from previously-seen articles)
@@ -3345,23 +3345,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({
-      articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0,
-      _diag: {
-        emptyFeed: true,
-        canonicalSeen: canonicalSeenIds.size,
-        hasAnyPersonalization,
-        personalizationId,
-        tasteVectorMinilm: !!tasteVectorMinilm,
-        totalFreshUnseen,
-        pFresh: pTiers.freshUnseen.length,
-        tFresh: tTiers.freshUnseen.length,
-        dFresh: dTiers.freshUnseen.length,
-        personalResultCount: (personalResult?.data || []).length,
-        trendingResultCount: (trendingResult?.data || []).length,
-        discoveryResultCount: (discoveryResult?.data || []).length,
-      },
-    });
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
   }
 
   const pageIds = selected.map(a => a.id);
@@ -3444,43 +3428,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     ? "You've seen most of today's stories. Here are some highlights."
     : null;
 
-  console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
-
-  // Temporary diagnostic — include pool sizes in response for debugging
-  const _diag = {
-    canonicalSeen: canonicalSeenIds.size,
-    sessionExclude: sessionExcludeIds.size,
-    personalScored: personalScored.length,
-    trendingScored: trendingScored.length,
-    discoveryScored: discoveryScored.length,
-    interestScored: interestScored.length,
-    freshBestScored: freshBestScored.length,
-    pFresh: pTiers.freshUnseen.length,
-    tFresh: tTiers.freshUnseen.length,
-    dFresh: dTiers.freshUnseen.length,
-    iFresh: iTiers.freshUnseen.length,
-    fUnseen: fUnseen.length,
-    pStale: pTiers.staleUnseen.length,
-    tStale: tTiers.staleUnseen.length,
-    dStale: dTiers.staleUnseen.length,
-    totalFreshUnseen,
-    hasAnyPersonalization,
-    interestCats: [...interestCategories],
-    iPoolLen: iPool.length,
-    selectedCount: selected.length,
-    personalResultCount: (personalResult?.data || []).length,
-    trendingResultCount: (trendingResult?.data || []).length,
-    discoveryResultCount: (discoveryResult?.data || []).length,
-    personalIdOrderLen: personalIdOrder.length,
-    trendingMetaLen: trendingArticleMeta.length,
-    discoveryMetaLen: discoveryArticleMeta.length,
-    allArticlesLen: allArticles.length,
-    uniqueIdsLen: uniqueIds.length,
-  };
+  // console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
 
   return res.status(200).json({
     articles: formattedArticles,
-    _diag,
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
