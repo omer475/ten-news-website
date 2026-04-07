@@ -1357,15 +1357,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
-    // Multi-cluster pgvector search times out with >10 clusters (26 clusters × 30 = 780 searches)
-    // Fall back to single taste vector when cluster count is high
+    // 10 per cluster × 26 clusters = 260 searches → 233 results in 289ms (tested)
+    // 20 per cluster × 26 = 520 searches → times out on Supabase (3s statement limit)
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: clusterLookupId, match_per_cluster: 20, hours_window: 168,
+      p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: clusterLookupId, match_per_cluster: 20, hours_window: 168,
+      p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -1454,8 +1454,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (tasteVectorMinilm && (!personalResult.data || personalResult.data.length === 0)) {
       console.log('[feed] Falling back to single taste vector...');
       try {
+        // Use 168h (7d) window — single vector with 336h returns 95% stale content
         const { data: fallbackData, error: fallbackErr } = await supabase.rpc('match_articles_personal_minilm', {
-          query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 336,
+          query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 168,
           exclude_ids: excludeIds, min_similarity: minSim,
         });
         if (!fallbackErr && fallbackData) {
