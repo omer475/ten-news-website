@@ -3374,8 +3374,41 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
 
+  // Temporary diagnostic — include pool sizes in response for debugging
+  const _diag = {
+    canonicalSeen: canonicalSeenIds.size,
+    sessionExclude: sessionExcludeIds.size,
+    personalScored: personalScored.length,
+    trendingScored: trendingScored.length,
+    discoveryScored: discoveryScored.length,
+    interestScored: interestScored.length,
+    freshBestScored: freshBestScored.length,
+    pFresh: pTiers.freshUnseen.length,
+    tFresh: tTiers.freshUnseen.length,
+    dFresh: dTiers.freshUnseen.length,
+    iFresh: iTiers.freshUnseen.length,
+    fUnseen: fUnseen.length,
+    pStale: pTiers.staleUnseen.length,
+    tStale: tTiers.staleUnseen.length,
+    dStale: dTiers.staleUnseen.length,
+    totalFreshUnseen,
+    hasAnyPersonalization,
+    interestCats: [...interestCategories],
+    iPoolLen: iPool.length,
+    selectedCount: selected.length,
+    personalResultCount: (personalResult?.data || []).length,
+    trendingResultCount: (trendingResult?.data || []).length,
+    discoveryResultCount: (discoveryResult?.data || []).length,
+    personalIdOrderLen: personalIdOrder.length,
+    trendingMetaLen: trendingArticleMeta.length,
+    discoveryMetaLen: discoveryArticleMeta.length,
+    allArticlesLen: allArticles.length,
+    uniqueIdsLen: uniqueIds.length,
+  };
+
   return res.status(200).json({
     articles: formattedArticles,
+    _diag,
     next_cursor: nextCursor,
     has_more: hasMore,
     total: remainingPool,
