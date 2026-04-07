@@ -1357,15 +1357,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
-    // 26 clusters × N per cluster = many pgvector searches
-    // Keep it under Supabase statement timeout: target ~30 per cluster max
+    // Multi-cluster pgvector search times out with >10 clusters (26 clusters × 30 = 780 searches)
+    // Fall back to single taste vector when cluster count is high
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: clusterLookupId, match_per_cluster: 30, hours_window: 336,
+      p_user_id: clusterLookupId, match_per_cluster: 20, hours_window: 168,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: clusterLookupId, match_per_cluster: 30, hours_window: 336,
+      p_user_id: clusterLookupId, match_per_cluster: 20, hours_window: 168,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -1384,8 +1384,8 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult, freshBestResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search (catch timeout → empty)
-    personalPromise.catch(err => {
-      console.error('[feed] Personal query threw:', err.message);
+    Promise.resolve(personalPromise).catch(err => {
+      console.error('[feed] Personal query threw:', err?.message || err);
       return { data: [], error: err };
     }),
 
@@ -1449,8 +1449,25 @@ async function handleV2Feed(req, res, supabase, opts) {
   ]);
 
   if (personalResult.error) {
-    console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
-    // Continue with empty personal results — trending + discovery will fill the feed
+    console.error('Personal query error:', personalResult.error?.message || personalResult.error);
+    // Multi-cluster timed out → try single taste vector as fallback
+    if (tasteVectorMinilm && (!personalResult.data || personalResult.data.length === 0)) {
+      console.log('[feed] Falling back to single taste vector...');
+      try {
+        const { data: fallbackData, error: fallbackErr } = await supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 336,
+          exclude_ids: excludeIds, min_similarity: minSim,
+        });
+        if (!fallbackErr && fallbackData) {
+          personalResult.data = fallbackData;
+          personalResult.error = null;
+          hasInterestClusters = false; // Use single-vector path downstream
+          console.log('[feed] Single vector fallback returned', fallbackData.length, 'articles');
+        }
+      } catch (fallbackErr2) {
+        console.error('[feed] Single vector fallback also failed:', fallbackErr2?.message);
+      }
+    }
   }
 
   // Build recentEntityCounts for topic saturation penalty
