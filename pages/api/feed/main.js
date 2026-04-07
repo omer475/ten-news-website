@@ -1357,19 +1357,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
-    // Cap per-cluster fetch: 26 clusters × 200 = 5200 pgvector searches → timeout
-    // Scale down dynamically: aim for ~1500 total candidates
-    const clusterCount = Math.max(1, totalInteractions > 0 ? Math.min(26, Math.ceil(totalInteractions / 50)) : 10);
-    const perCluster = Math.max(20, Math.min(100, Math.floor(1500 / clusterCount)));
+    // 26 clusters × N per cluster = many pgvector searches
+    // Keep it under Supabase statement timeout: target ~30 per cluster max
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: clusterLookupId, match_per_cluster: perCluster, hours_window: 720,
+      p_user_id: clusterLookupId, match_per_cluster: 30, hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
-    const clusterCount = Math.max(1, totalInteractions > 0 ? Math.min(26, Math.ceil(totalInteractions / 50)) : 10);
-    const perCluster = Math.max(20, Math.min(100, Math.floor(1500 / clusterCount)));
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: clusterLookupId, match_per_cluster: perCluster, hours_window: 720,
+      p_user_id: clusterLookupId, match_per_cluster: 30, hours_window: 336,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else if (useMinilm) {
@@ -1387,8 +1383,11 @@ async function handleV2Feed(req, res, supabase, opts) {
   const fortyEightHoursAgoISO = new Date(now - 48 * 3600000).toISOString();
 
   const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult, freshBestResult] = await Promise.all([
-    // 1. PERSONAL: pgvector similarity search
-    personalPromise,
+    // 1. PERSONAL: pgvector similarity search (catch timeout → empty)
+    personalPromise.catch(err => {
+      console.error('[feed] Personal query threw:', err.message);
+      return { data: [], error: err };
+    }),
 
     // 2. TRENDING: lower threshold (400) for richer pool
     (() => {
