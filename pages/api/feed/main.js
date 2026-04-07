@@ -3132,14 +3132,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (selected.length < limit) {
     const selectedIds = new Set(selected.map(a => a.id));
 
-    // Sort resurfaced: engaged articles first (greatest hits), then by score
+    // ONLY resurface articles the user previously ENGAGED with (not skipped ones).
+    // Resurfacing skipped articles = showing duplicates the user already rejected.
     function sortResurfacedByEngagement(pool) {
-      return pool.filter(a => !selectedIds.has(a.id)).sort((a, b) => {
-        const aEng = seenMeta.get(a.id)?.was_engaged ? 1 : 0;
-        const bEng = seenMeta.get(b.id)?.was_engaged ? 1 : 0;
-        if (aEng !== bEng) return bEng - aEng;
-        return (b._score || 0) - (a._score || 0);
-      });
+      return pool.filter(a => {
+        if (selectedIds.has(a.id)) return false;
+        // Only allow articles the user previously engaged with or liked
+        const meta = seenMeta.get(a.id);
+        return meta && meta.was_engaged;
+      }).sort((a, b) => (b._score || 0) - (a._score || 0));
     }
 
     const rpPool = sortResurfacedByEngagement(pTiers.resurfaced);
