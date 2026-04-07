@@ -1199,59 +1199,51 @@ export default async function handler(req, res) {
     //      Articles seen 6h+ ago → fully fresh, no badge (like TikTok).
     // ══════════════════════════════════════════════════════════════
 
-    // Source 1: Client-sent seen_ids → hard exclude (within-session dedup)
-    let seenArticleIds = [];
-    if (clientSeenIds.length > 0) {
-      seenArticleIds = [...new Set(clientSeenIds.slice(-300))];
-    }
+    // ══════════════════════════════════════════════════════════════
+    // DEDUP: 3-source union (synchronous serving log + events + client IDs)
+    // Source 0: Synchronous serving log (user_feed_impressions) — authoritative
+    // Source 1: Client-sent seen_ids — within-session dedup
+    // Source 2: Server events — badge classification + backup exclusion
+    // ══════════════════════════════════════════════════════════════
 
-    // Source 2: Server events from last 7 DAYS → badge classification only
-    // NOT used for pool exclusion — only controls "Read Xd ago" badge.
-    // 7-day window ensures users never see yesterday's articles as "fresh."
-    let allSeenIds = [];
-    const seenMeta = new Map();
-    const sessionSeenSet = new Set(seenArticleIds);
-
+    // Source 0: Serving log — every article ever served to this user (last 14 days)
+    // This is synchronous and independent of async analytics events.
+    let impressionSeenIds = new Set();
     if (persUserId || userId) {
-      // Two parallel queries: one for badge IDs (just article_id, high limit),
-      // one for badge metadata (event_type + created_at, lower limit)
-      const [seenIdsResult, seenMetaResult] = await Promise.all([
-        // Query 1: ALL article_ids (deduplicated in JS). Fetch 10000 to cover
-        // power users with 500+ articles × ~10 events each = 5000+ raw events.
-        supabase
-          .from('user_article_events')
+      try {
+        const { data: impressions } = await supabase
+          .from('user_feed_impressions')
           .select('article_id')
           .eq('user_id', userId)
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
           .order('created_at', { ascending: false })
-          .limit(10000),
-        // Query 2: Engaged/liked events for badge metadata (smaller set)
-        supabase
-          .from('user_article_events')
-          .select('article_id, event_type, created_at')
-          .eq('user_id', userId)
-          .in('event_type', ['article_engaged', 'article_liked'])
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1000),
-      ]);
-
-      // Build badge set from ALL events (deduplicated)
-      if (seenIdsResult.data) {
-        const badgeIds = new Set();
-        for (const e of seenIdsResult.data) {
-          const aid = e.article_id;
-          if (!aid || sessionSeenSet.has(aid)) continue;
-          badgeIds.add(aid);
+          .limit(3000);
+        if (impressions) {
+          for (const i of impressions) if (i.article_id) impressionSeenIds.add(i.article_id);
         }
-        allSeenIds = [...badgeIds].filter(Boolean);
+      } catch (e) {
+        // Table might not have the index yet — non-blocking
       }
+    }
 
-      // Build badge metadata from engaged/liked events
-      if (seenMetaResult.data) {
-        for (const event of seenMetaResult.data) {
+    // Source 1: Client-sent seen_ids → within-session dedup
+    const clientSeenSet = new Set(clientSeenIds.slice(-300).filter(Boolean));
+
+    // Source 2: Server events — for badge classification (engaged/liked metadata)
+    const seenMeta = new Map();
+    if (persUserId || userId) {
+      const { data: seenMetaResult } = await supabase
+        .from('user_article_events')
+        .select('article_id, event_type, created_at')
+        .eq('user_id', userId)
+        .in('event_type', ['article_engaged', 'article_liked'])
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1000);
+
+      if (seenMetaResult) {
+        for (const event of seenMetaResult) {
           const aid = event.article_id;
-          if (sessionSeenSet.has(aid)) continue;
           const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
           const existing = seenMeta.get(aid);
           if (!existing) {
@@ -1264,12 +1256,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fix 6: Merge server-seen IDs into exclusion list to kill duplicates
-    // Previously allSeenIds was badge-only. Now it's also used for pool exclusion.
-    if (allSeenIds.length > 0) {
-      const mergedSet = new Set([...seenArticleIds, ...allSeenIds]);
-      seenArticleIds = [...mergedSet];
-    }
+    // Union all 3 sources into the master exclusion list
+    let seenArticleIds = [...new Set([...impressionSeenIds, ...clientSeenSet])];
+    const allSeenIds = [...impressionSeenIds]; // For badge classification downstream
 
     // ==========================================
     // ALWAYS USE V2 FEED
@@ -3342,10 +3331,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     return formatted;
   });
 
-  // Log feed impressions for skip tracking (fire-and-forget)
+  // Synchronous serving log — must commit before response so next request sees them
   if (userId && pageIds.length > 0) {
-    const impressions = pageIds.map(aid => ({ user_id: userId, article_id: aid }));
-    supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
+    const impressions = pageIds.map((aid, idx) => ({
+      user_id: userId,
+      article_id: aid,
+      bucket: selected[idx]?.bucket || null,
+    }));
+    const { error: impError } = await supabase.from('user_feed_impressions').insert(impressions);
+    if (impError) console.error('[feed] Impression log failed:', impError.message);
   }
 
   // has_more: count fresh unseen + resurfaced (stale unseen excluded from feed)
