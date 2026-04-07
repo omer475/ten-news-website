@@ -1200,15 +1200,14 @@ export default async function handler(req, res) {
     // ══════════════════════════════════════════════════════════════
 
     // ══════════════════════════════════════════════════════════════
-    // DEDUP: 3-source union (synchronous serving log + events + client IDs)
-    // Source 0: Synchronous serving log (user_feed_impressions) — authoritative
-    // Source 1: Client-sent seen_ids — within-session dedup
-    // Source 2: Server events — badge classification + backup exclusion
+    // CANONICAL SEEN SET — ONE set, ONE source of truth for all dedup.
+    // Every pool filter, SQL exclusion, and tier classification uses this.
+    // Never create a separate seen variable. Add sources here, read from canonicalSeenIds.
     // ══════════════════════════════════════════════════════════════
 
-    // Source 0: Serving log — every article ever served to this user (last 14 days)
-    // This is synchronous and independent of async analytics events.
-    let impressionSeenIds = new Set();
+    const canonicalSeenIds = new Set();
+
+    // Source 1: Server-side impressions (last 14 days) — authoritative serving log
     if (persUserId || userId) {
       try {
         const { data: impressions } = await supabase
@@ -1217,19 +1216,35 @@ export default async function handler(req, res) {
           .eq('user_id', userId)
           .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
           .order('created_at', { ascending: false })
-          .limit(3000);
+          .limit(2000);
         if (impressions) {
-          for (const i of impressions) if (i.article_id) impressionSeenIds.add(i.article_id);
+          for (const i of impressions) if (i.article_id) canonicalSeenIds.add(Number(i.article_id));
         }
-      } catch (e) {
-        // Table might not have the index yet — non-blocking
-      }
+      } catch (e) { /* table may not exist yet */ }
     }
 
-    // Source 1: Client-sent seen_ids → within-session dedup
-    const clientSeenSet = new Set(clientSeenIds.slice(-300).filter(Boolean));
+    // Source 2: Client-sent seen IDs (current session + ReadingHistoryManager)
+    for (const id of clientSeenIds.filter(Boolean)) canonicalSeenIds.add(Number(id));
 
-    // Source 2: Server events — for badge classification (engaged/liked metadata)
+    // Source 3: Engagement events (catches articles user reacted to)
+    if (persUserId || userId) {
+      try {
+        const { data: eventIds } = await supabase
+          .from('user_article_events')
+          .select('article_id')
+          .eq('user_id', userId)
+          .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(2000);
+        if (eventIds) {
+          for (const e of eventIds) if (e.article_id) canonicalSeenIds.add(Number(e.article_id));
+        }
+      } catch (e) { /* non-blocking */ }
+    }
+
+    console.log(`[dedup] Canonical seen set: ${canonicalSeenIds.size} unique IDs`);
+
+    // Badge metadata — separate from dedup, used for "Read Xh ago" badge on resurfaced articles
     const seenMeta = new Map();
     if (persUserId || userId) {
       const { data: seenMetaResult } = await supabase
@@ -1256,9 +1271,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // Union all 3 sources into the master exclusion list
-    let seenArticleIds = [...new Set([...impressionSeenIds, ...clientSeenSet])];
-    const allSeenIds = [...impressionSeenIds]; // For badge classification downstream
+    // Legacy aliases — point to canonicalSeenIds for backward compat in handleV2Feed
+    const seenArticleIds = [...canonicalSeenIds];
+    const allSeenIds = seenArticleIds;
 
     // ==========================================
     // ALWAYS USE V2 FEED
@@ -1279,6 +1294,7 @@ export default async function handler(req, res) {
       storedTagProfile,
       seenArticleIds,
       allSeenIds,
+      canonicalSeenIds,
       seenMeta,
       sessionEngagedIds,
       sessionGlancedIds,
@@ -1307,10 +1323,12 @@ export default async function handler(req, res) {
 
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds, seenMeta,
+        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
+        canonicalSeenIds, seenMeta,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
         clusterLookupId, clusterLookupColumn, limit, offset } = opts;
+  canonicalSeenIds = canonicalSeenIds || new Set();
   allSeenIds = allSeenIds || [];
   seenMeta = seenMeta || new Map();
   followedPublisherIds = followedPublisherIds || new Set();
@@ -1332,7 +1350,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 1: PARALLEL DATA LOADING
   // ==========================================
 
-  const excludeIds = seenArticleIds.length > 0 ? seenArticleIds : null;
+  const excludeIds = canonicalSeenIds.size > 0 ? [...canonicalSeenIds].slice(0, 1500) : null;
   const minSim = similarityFloor || 0;
   const useMinilm = !!tasteVectorMinilm;
 
@@ -1382,8 +1400,10 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('ai_final_score', 400)
         .order('ai_final_score', { ascending: false })
         .limit(600);
-      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
-        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      // SQL-level exclusion — no cap, use canonicalSeenIds (up to 1500)
+      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      if (sqlExclude.length > 0) {
+        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
       return q;
     })(),
@@ -1397,8 +1417,9 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('ai_final_score', 250)
         .order('ai_final_score', { ascending: false })
         .limit(1500);
-      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
-        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      if (sqlExclude.length > 0) {
+        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
       return q;
     })(),
@@ -1533,8 +1554,9 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false });
-      if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
-        q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+      const sqlExclude = [...canonicalSeenIds].slice(0, 1500);
+      if (sqlExclude.length > 0) {
+        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
       return q.limit(100);
     });
@@ -1758,7 +1780,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const trendingIds = new Set();
   const trendingArticleMeta = [];
   for (const a of (trendingResult.data || [])) {
-    if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
     if (trendingCategoryCounts[cat] > trendingCatMax) continue;
@@ -1774,7 +1796,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
-    if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || trendingIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
@@ -1786,7 +1808,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const interestIds = new Set();
   const interestArticleMeta = [];
   for (const a of interestArticles) {
-    if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || trendingIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     interestIds.add(a.id);
     interestArticleMeta.push(a);
   }
@@ -1797,10 +1819,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   const freshBestCatCounts = {};
   const freshBestArticleMeta = [];
   const freshBestIds = new Set();
-  const allSeenSet_fb = new Set(allSeenIds);
+  const allSeenSet_fb = canonicalSeenIds; // same canonical set
   // Sort: unseen articles first, then seen — both sorted by score within each group
-  const sessionExcludeSet = new Set([...sessionExcludeIds, ...seenArticleIds]);
-  const freshBestRaw = (freshBestResult.data || []).filter(a => !sessionExcludeSet.has(a.id));
+  // fresh_best uses canonicalSeenIds — same set as everything else, no separate variable
+  const freshBestRaw = (freshBestResult.data || []).filter(a => !canonicalSeenIds.has(a.id) && !sessionExcludeIds.has(a.id));
   const fbUnseen = freshBestRaw.filter(a => !allSeenSet_fb.has(a.id));
   const fbSeen = freshBestRaw.filter(a => allSeenSet_fb.has(a.id));
   const fbSorted = [...fbUnseen, ...fbSeen]; // unseen first
@@ -2258,7 +2280,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Tier 2: RESURFACED — articles user previously engaged with (can re-read)
   // Tier 3: STALE UNSEEN — old articles user hasn't seen but are past relevance peak
   // Never show: stale breaking/developing news (misleading on a news platform)
-  const allSeenSet = new Set(allSeenIds);
+  const allSeenSet = canonicalSeenIds; // ONE set, ONE source of truth
 
   function splitThreeTiers(pool) {
     const unseen = pool.filter(a => !allSeenSet.has(a.id));
@@ -2527,7 +2549,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     for (let ci = 0; ci < ALL_CATEGORIES.length; ci++) {
       const cat = ALL_CATEGORIES[ci];
       const allArticles_cat = (generalResults[ci].data || []).filter(a => {
-        if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
+        if (canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) return false;
         const title = a?.title_news || a?.title || '';
         return !(/test/i.test(title));
       });
@@ -2567,7 +2589,7 @@ async function handleV2Feed(req, res, supabase, opts) {
               .limit(40);
             if (fallbackData) {
               const fallbackFiltered = fallbackData.filter(a => {
-                if (usedIds.has(a.id) || seenArticleIds.includes(a.id)) return false;
+                if (usedIds.has(a.id) || canonicalSeenIds.has(a.id)) return false;
                 const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
                 return artTags.some(t => {
                   for (const stTag of stTagSet) {
