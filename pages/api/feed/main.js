@@ -1993,7 +1993,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // NEW: Load entity_signals for unified affinity scoring (replaces tag_profile/skip_profile)
-  let entitySignals = {};
+  entitySignals = {};
   let hasEntitySignals = false;
   if (userId) {
     try {
