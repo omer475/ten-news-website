@@ -1301,7 +1301,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Main feed error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', _debug: error?.message || String(error), _stack: error?.stack?.split('\n').slice(0, 5) });
   }
 }
 
