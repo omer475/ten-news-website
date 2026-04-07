@@ -2205,63 +2205,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   // entities the user repeatedly skipped.
   // ==========================================
 
-  const SKIP_GENERIC_TERMS = new Set(['politics', 'world', 'business', 'sports',
-    'entertainment', 'tech', 'science', 'health', 'finance', 'lifestyle',
-    'united states', 'china', 'europe', 'energy', 'military', 'economy',
-    'government', 'trade', 'security', 'culture']);
-
-  const globalEntitySkipCounts = {};
-
-  // From persistent skip_profile (accumulated across all sessions)
-  if (skipProfile && typeof skipProfile === 'object') {
-    for (const [entity, weight] of Object.entries(skipProfile)) {
-      if (SKIP_GENERIC_TERMS.has(entity.toLowerCase())) continue;
-      const equivalentSkips = Math.round((typeof weight === 'number' ? weight : 0) / 0.05);
-      if (equivalentSkips > 0) globalEntitySkipCounts[entity.toLowerCase()] = equivalentSkips;
-    }
-  }
-
-  // From current session skipped IDs
-  for (const id of sessionSkippedIds) {
-    const art = articleMap[id];
-    if (!art) continue;
-    const tags = safeJsonParse(art.interest_tags, []);
-    for (const tag of tags.slice(0, 3)) {
-      const t = tag.toLowerCase();
-      if (!SKIP_GENERIC_TERMS.has(t)) {
-        globalEntitySkipCounts[t] = (globalEntitySkipCounts[t] || 0) + 1;
-      }
-    }
-  }
-
-  // Hard-block only entities with very strong skip signal (weight >= 0.50).
-  // Lighter skip signals are handled by computeSkipPenalty in scoring functions,
-  // which deprioritizes without eliminating. Threshold 10 = 0.50 / 0.05.
-  const globalBlocklist = new Set();
-  for (const [entity, count] of Object.entries(globalEntitySkipCounts)) {
-    if (count >= 10) globalBlocklist.add(entity);
-  }
-
-  function isGlobalBlocked(article) {
-    if (globalBlocklist.size === 0) return false;
-    const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
-    const primaryTags = tags.slice(0, 2);
-    if (primaryTags.some(t => globalBlocklist.has(t))) return true;
-    const blockedCount = tags.filter(t => globalBlocklist.has(t)).length;
-    if (blockedCount >= 2) return true;
-    const titleLower = (article.title_news || '').toLowerCase();
-    for (const blocked of globalBlocklist) {
-      if (blocked.length > 3 && titleLower.includes(blocked)) return true;
-    }
-    return false;
-  }
-
-  // Apply blocklist to ALL scored pools
-  const personalScoredFiltered = personalScored.filter(a => !isGlobalBlocked(a));
-  const trendingScoredFiltered = trendingScored.filter(a => !isGlobalBlocked(a));
-  const discoveryScoredFiltered = discoveryScored.filter(a => !isGlobalBlocked(a));
-  const interestScoredFiltered = interestScored.filter(a => !isGlobalBlocked(a));
-  const freshBestScoredFiltered = freshBestScored.filter(a => !isGlobalBlocked(a));
+  // Entity-level skip signals are handled by entitySignalMultiplier (ratio-based
+  // scoring: 0.2x-1.8x range). No hard-blocking — the old globalBlocklist was
+  // too aggressive, blocking common entities like "film", "moon", "nasa" and
+  // eliminating 97% of trending articles.
+  const personalScoredFiltered = personalScored;
+  const trendingScoredFiltered = trendingScored;
+  const discoveryScoredFiltered = discoveryScored;
+  const interestScoredFiltered = interestScored;
+  const freshBestScoredFiltered = freshBestScored;
 
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -3346,9 +3298,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0,
-      _d: { seen: canonicalSeenIds.size, pers: hasAnyPersonalization ? 'Y' : 'N', persId: personalizationId?.slice(0,8), clusters: hasInterestClusters, persRes: (personalResult?.data||[]).length, persErr: personalResult?.error?.message?.slice(0,80), trendRes: (trendingResult?.data||[]).length, discRes: (discoveryResult?.data||[]).length, trendMeta: trendingArticleMeta.length, trendScored: trendingScored.length, trendFiltered: trendingScoredFiltered.length, discMeta: discoveryArticleMeta.length, discScored: discoveryScored.length, discFiltered: discoveryScoredFiltered.length, pScored: personalScored.length, pFiltered: personalScoredFiltered.length, blocklist: [...globalBlocklist].slice(0,10), blockSize: globalBlocklist.size, pFresh: pTiers.freshUnseen.length, pResurf: pTiers.resurfaced.length, pStale: pTiers.staleUnseen.length, tFresh: tTiers.freshUnseen.length, tResurf: tTiers.resurfaced.length, tStale: tTiers.staleUnseen.length, dFresh: dTiers.freshUnseen.length, dResurf: dTiers.resurfaced.length, dStale: dTiers.staleUnseen.length, fUns: fUnseen.length, totalFresh: totalFreshUnseen, uniqueIds: uniqueIds.length, allArts: allArticles.length }
-    });
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
   }
 
   const pageIds = selected.map(a => a.id);
