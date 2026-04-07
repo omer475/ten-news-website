@@ -1285,6 +1285,7 @@ export default async function handler(req, res) {
       allSeenIds,
       canonicalSeenIds,
       seenMeta,
+      totalInteractions,
       sessionEngagedIds,
       sessionGlancedIds,
       sessionSkippedIds,
@@ -1313,10 +1314,11 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
-        canonicalSeenIds, seenMeta,
+        canonicalSeenIds, seenMeta, totalInteractions,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
         clusterLookupId, clusterLookupColumn, limit, offset } = opts;
+  totalInteractions = totalInteractions || 0;
   canonicalSeenIds = canonicalSeenIds || new Set();
   allSeenIds = allSeenIds || [];
   seenMeta = seenMeta || new Map();
