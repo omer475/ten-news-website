@@ -614,18 +614,23 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 function computeEntityAffinity(signal, isOnboardingTopic) {
   const total7d = (signal.positive_7d || 0) + (signal.negative_7d || 0);
   const totalAll = (signal.positive_count || 0) + (signal.negative_count || 0);
-  if (totalAll < 3) return 0; // not enough data
+  // Allow negative-only signals: 2 skips with 0 engagements is a clear signal
+  if (totalAll < 2) return 0;
 
-  const recentRate = total7d >= 3
+  const recentRate = total7d >= 2
     ? signal.positive_7d / total7d
     : signal.positive_count / totalAll;
   const allTimeRate = signal.positive_count / totalAll;
-  const blendedRate = total7d >= 3
+  const blendedRate = total7d >= 2
     ? recentRate * 0.8 + allTimeRate * 0.2
     : allTimeRate;
 
   const confidence = 1 - 1 / (1 + totalAll * 0.2);
-  let affinity = (blendedRate - 0.5) * 2 * confidence;
+
+  // Tanh curve: more decisive than linear. 57% → 1.20x (was 1.10x), 88% → 1.68x (was 1.52x)
+  const centered = blendedRate - 0.5;
+  const decisive = Math.tanh(centered * 4);
+  let affinity = decisive * confidence;
 
   // Rapid rejection: 3+ skips in 24h with 0 engagements
   if ((signal.negative_24h || 0) >= 3 && (signal.positive_24h || 0) === 0) {
@@ -1257,6 +1262,13 @@ export default async function handler(req, res) {
           }
         }
       }
+    }
+
+    // Fix 6: Merge server-seen IDs into exclusion list to kill duplicates
+    // Previously allSeenIds was badge-only. Now it's also used for pool exclusion.
+    if (allSeenIds.length > 0) {
+      const mergedSet = new Set([...seenArticleIds, ...allSeenIds]);
+      seenArticleIds = [...mergedSet];
     }
 
     // ==========================================
@@ -1924,6 +1936,31 @@ async function handleV2Feed(req, res, supabase, opts) {
     return categorySuppressionMap[cat] || 1.0;
   }
 
+  // Underfed winner boost: amplify categories with high engagement but low serving volume
+  // Food (50% rate, 12 served) and Travel (50% rate, 10 served) should appear more
+  let categoryStats30d = {};
+  if (userId) {
+    try {
+      const { data: stats30 } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId, p_days: 30,
+      });
+      if (stats30) {
+        for (const row of stats30) {
+          categoryStats30d[row.category] = { impressions: parseInt(row.impressions) || 0, engaged: parseInt(row.engaged) || 0 };
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+
+  function underfedWinnerBoost(article) {
+    const stats = categoryStats30d[article.category];
+    if (!stats || stats.impressions === 0) return 1.0;
+    const rate = stats.engaged / stats.impressions;
+    if (rate >= 0.40 && stats.engaged >= 5 && stats.impressions < 25) return 1.5;
+    if (rate >= 0.40 && stats.impressions < 50) return 1.2;
+    return 1.0;
+  }
+
   // ==========================================
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
@@ -1953,7 +1990,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .from('user_entity_signals')
         .select('entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d')
         .eq('user_id', userId)
-        .gt('positive_count', 0)  // only entities with at least some interaction
+        // Load ALL signals including negative-only (removed .gt('positive_count', 0) which hid 522 negative signals)
         .order('updated_at', { ascending: false })
         .limit(500);
       if (signalRows && signalRows.length > 0) {
@@ -1995,8 +2032,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (hasEntitySignals) {
         score *= entitySignalMultiplier(article, entitySignals, onboardingTagSet);
       }
-      // Fix 5: Category suppression
       score *= getCategorySuppression(article);
+      score *= underfedWinnerBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2013,24 +2050,33 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency x entity signal x category suppression
+  // Trending bucket: entity multiplier squared so penalties overcome high quality scores
+  // A 0.6x entity mult → 0.36x effective (Sports article with score 800 → 288, loses to most content)
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       let score = scoreTrendingV3(articleMap[a.id], skipProfile);
-      if (hasEntitySignals) score *= entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+      if (hasEntitySignals) {
+        const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+        score *= Math.pow(entityMult, 2);
+      }
       score *= getCategorySuppression(articleMap[a.id]);
+      score *= underfedWinnerBoost(articleMap[a.id]);
       return { ...articleMap[a.id], _score: score, _bucket: 'trending' };
     })
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories x entity signal x category suppression
+  // Discovery bucket: same squared entity multiplier
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       let score = scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile);
-      if (hasEntitySignals) score *= entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+      if (hasEntitySignals) {
+        const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
+        score *= Math.pow(entityMult, 2);
+      }
       score *= getCategorySuppression(articleMap[a.id]);
+      score *= underfedWinnerBoost(articleMap[a.id]);
       return { ...articleMap[a.id], _score: score, _bucket: 'discovery' };
     })
     .sort((a, b) => b._score - a._score);

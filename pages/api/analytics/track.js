@@ -653,16 +653,10 @@ export default async function handler(req, res) {
         }
       })
 
-      // Also keep legacy EMA update on profiles for backward compatibility during transition
-      if (effectiveUserId) {
-        admin.rpc('update_taste_vector_ema_profiles', {
-          p_user_id: effectiveUserId,
-          p_article_id: article_id,
-          p_event_type: event_type,
-        }).then(({ error: emaError }) => {
-          if (emaError) console.log('[analytics] Legacy EMA update failed:', emaError.message)
-        })
-      }
+      // REMOVED: Legacy EMA update was overwriting the cluster-computed taste vector
+      // with a naive average of ALL articles (engaged AND skipped), making the vector
+      // anti-discriminative (delta -0.079 — MORE similar to skipped articles).
+      // taste_vector_minilm is now ONLY set by the clustering service.
     }
 
     // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
