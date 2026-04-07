@@ -2262,6 +2262,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Count fresh unseen for feed_state
   const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fUnseen.length;
 
+  // DIAGNOSTIC: Pool sizes after three-tier split
+  console.log(`[feed-diag] canonicalSeenIds=${canonicalSeenIds.size} sessionExclude=${sessionExcludeIds.size}`);
+  console.log(`[feed-diag] personalScored=${personalScored.length} filtered=${personalScoredFiltered.length}`);
+  console.log(`[feed-diag] trendingScored=${trendingScored.length} filtered=${trendingScoredFiltered.length}`);
+  console.log(`[feed-diag] discoveryScored=${discoveryScored.length} filtered=${discoveryScoredFiltered.length}`);
+  console.log(`[feed-diag] interestScored=${interestScored.length} filtered=${interestScoredFiltered.length}`);
+  console.log(`[feed-diag] freshBestScored=${freshBestScored.length} filtered=${freshBestScoredFiltered.length}`);
+  console.log(`[feed-diag] pTiers: fresh=${pTiers.freshUnseen.length} resurf=${pTiers.resurfaced.length} stale=${pTiers.staleUnseen.length}`);
+  console.log(`[feed-diag] tTiers: fresh=${tTiers.freshUnseen.length} resurf=${tTiers.resurfaced.length} stale=${tTiers.staleUnseen.length}`);
+  console.log(`[feed-diag] dTiers: fresh=${dTiers.freshUnseen.length} resurf=${dTiers.resurfaced.length} stale=${dTiers.staleUnseen.length}`);
+  console.log(`[feed-diag] iTiers: fresh=${iTiers.freshUnseen.length} resurf=${iTiers.resurfaced.length} stale=${iTiers.staleUnseen.length}`);
+  console.log(`[feed-diag] fUnseen=${fUnseen.length} fResurfaced=${fResurfaced.length}`);
+  console.log(`[feed-diag] totalFreshUnseen=${totalFreshUnseen} hasAnyPersonalization=${hasAnyPersonalization}`);
+
   // ── Dynamic slot pattern ──
   // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
   // Fresh_best is exploration (last resort), not primary filler.
@@ -2396,7 +2410,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
+  console.log(`[feed-diag] interestCategories=${[...interestCategories].join(',')} iPool=${iPool.length} pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} fPool=${fPool.length}`);
+
   if (!hasAnyPersonalization) {
+    console.log('[feed-diag] BRANCH: cold-start bandit');
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
     function normalRandom() {
@@ -2957,6 +2974,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
+    console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
     // ==========================================
     // QUOTA-BASED PRE-FILL for users with interest selections
     // 70% of slots guaranteed for interest categories, 30% diversity
@@ -3044,6 +3062,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else {
+    console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
     let usePivotMode = false;
     if (sessionSkippedIds.length >= 5) {
@@ -3104,6 +3123,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   }
+
+  console.log(`[feed-diag] After phase1 slot-filling: selected=${selected.length} limit=${limit}`);
+  console.log(`[feed-diag] Remaining pools: pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} iPool=${iPool.length} fPool=${fPool.length}`);
 
   // ==========================================
   // PHASE 6b: RESURFACED TIER (fill remaining slots from previously-seen articles)
@@ -3349,6 +3371,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     : feedState === 'mostly_caught_up'
     ? "You've seen most of today's stories. Here are some highlights."
     : null;
+
+  console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
 
   return res.status(200).json({
     articles: formattedArticles,
