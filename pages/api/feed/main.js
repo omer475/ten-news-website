@@ -1411,13 +1411,14 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: [], error: err };
     }),
 
-    // 2. TRENDING: lower threshold (400) for richer pool
+    // 2. TRENDING: 7-day window (was 30d — let in 6-day-old score-350 garbage)
+    // Score floor 500 (was 400 — Kelce/Swift at 420 was trending but unwanted)
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', thirtyDaysAgo)
-        .gte('ai_final_score', 400)
+        .gte('created_at', sevenDaysAgo)
+        .gte('ai_final_score', 500)
         .order('ai_final_score', { ascending: false })
         .limit(600);
       // SQL-level exclusion — no cap, use canonicalSeenIds (up to 1500)
@@ -1428,13 +1429,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       return q;
     })(),
 
-    // 3. DISCOVERY: higher category cap (15), larger total limit (1500)
+    // 3. DISCOVERY: 7-day window (was 30d), score floor 400 (was 250)
     (() => {
       let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', thirtyDaysAgo)
-        .gte('ai_final_score', 250)
+        .gte('created_at', sevenDaysAgo)
+        .gte('ai_final_score', 400)
         .order('ai_final_score', { ascending: false })
         .limit(1500);
       const sqlExclude = cleanSeenArray.slice(0, 1500);
@@ -1681,10 +1682,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     const dateMap = {};
     for (const a of (pgDates || [])) dateMap[a.id] = new Date(a.created_at).getTime();
 
-    // ── Tiered time window: prefer fresh, expand if pool is thin ──
-    // Decay scoring already penalizes older articles, so they only fill
-    // the feed when fresh content runs out. No hard cap needed.
-    const TIME_TIERS = [48, 168, 336, 720]; // 48h, 7d, 14d, 30d
+    // ── Tiered time window: prefer fresh, expand ONLY if pool is very thin ──
+    // 92% engagement came from all-<6h content. Old personal articles kill engagement.
+    const TIME_TIERS = [24, 48, 96, 168]; // 24h, 48h, 4d, 7d (was 48h, 7d, 14d, 30d)
 
     if (hasInterestClusters) {
       // Per-cluster tiered filtering
@@ -1696,7 +1696,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       const filteredResults = [];
-      const MIN_PER_CLUSTER = 30;
+      const MIN_PER_CLUSTER = 5; // was 30 — too aggressive, pulled in 100h+ articles
 
       for (const [ci, results] of Object.entries(clusterResults)) {
         let clusterFiltered = [];
@@ -1713,15 +1713,15 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
       personalResults = filteredResults;
     } else {
-      // Single vector: tiered filtering with 30-day fallback
-      const MIN_RESULTS = 150;
+      // Single vector: tiered filtering — accept smaller pool rather than stale articles
+      const MIN_RESULTS = 10; // was 150 — too greedy, pulled in week-old articles
       let filtered = [];
       for (const tierHours of TIME_TIERS) {
         const cutoff = now - tierHours * 3600000;
         filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
         if (filtered.length >= MIN_RESULTS) break;
       }
-      // If even 30 days isn't enough, use everything pgvector returned
+      // If even 7 days isn't enough, use what we have (trending/discovery fill the rest)
       if (filtered.length < MIN_RESULTS) {
         filtered = personalResults;
       }
@@ -2109,7 +2109,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (hasEntitySignals) {
         const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
         // Hard filter: if entity multiplier < 0.5 (strong negative), skip entirely
-        if (entityMult < 0.5) return null;
+        if (entityMult < 0.65) return null;
         score *= Math.pow(entityMult, 3);
       }
       score *= getCategorySuppression(articleMap[a.id]);
@@ -2126,7 +2126,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let score = scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile);
       if (hasEntitySignals) {
         const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
-        if (entityMult < 0.5) return null;
+        if (entityMult < 0.65) return null;
         score *= Math.pow(entityMult, 3);
       }
       score *= getCategorySuppression(articleMap[a.id]);
