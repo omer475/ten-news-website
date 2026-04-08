@@ -208,24 +208,26 @@ function formatArticle(article, eventMap = {}) {
 // ==========================================
 
 function decayMultiplier(contentType, ageHours) {
+  // Steeper decay — old content was 43% of feed, killing engagement.
+  // Fresh content had 92% engagement; >48h content had <20%.
   switch (contentType) {
     case 'breaking':
-      // 1.0→0.5@6h→0.2@12h→0.05@24h
-      return Math.max(0.02, Math.exp(-0.115 * ageHours));
+      // 1.0→0.3@6h→0.08@12h→0.02@24h (was 0.5@6h)
+      return Math.max(0.02, Math.exp(-0.20 * ageHours));
     case 'developing':
-      // 1.0→0.7@24h→0.4@48h→0.15@72h
-      return Math.max(0.02, Math.exp(-0.015 * ageHours));
+      // 1.0→0.5@24h→0.15@48h→0.04@72h (was 0.7@24h)
+      return Math.max(0.02, Math.exp(-0.03 * ageHours));
     case 'analysis':
-      // 1.0→0.85@24h→0.65@48h→0.4@72h→0.2@7d
-      return Math.max(0.02, Math.exp(-0.0095 * ageHours));
+      // 1.0→0.7@24h→0.4@48h→0.15@72h (was 0.85@24h)
+      return Math.max(0.02, Math.exp(-0.015 * ageHours));
     case 'evergreen':
-      // 1.0→0.9@24h→0.75@72h→0.5@7d→0.25@14d
-      return Math.max(0.02, Math.exp(-0.004 * ageHours));
+      // 1.0→0.8@24h→0.5@72h→0.2@7d (was 0.9@24h)
+      return Math.max(0.02, Math.exp(-0.008 * ageHours));
     case 'timeless':
-      // 1.0→0.95@48h→0.85@7d→0.6@30d
-      return Math.max(0.02, Math.exp(-0.0007 * ageHours));
+      // 1.0→0.9@48h→0.7@7d→0.35@30d (was 0.95@48h)
+      return Math.max(0.02, Math.exp(-0.0015 * ageHours));
     default:
-      return Math.max(0.02, Math.exp(-0.015 * ageHours)); // developing default
+      return Math.max(0.02, Math.exp(-0.03 * ageHours)); // developing default
   }
 }
 
@@ -1197,17 +1199,28 @@ export default async function handler(req, res) {
     const canonicalSeenIds = new Set();
 
     // Source 1: Server-side impressions (last 14 days) — authoritative serving log
+    // Power users have 6000+ impression rows — fetch ALL unique IDs, not limited rows
     if (persUserId || userId) {
       try {
-        const { data: impressions } = await supabase
-          .from('user_feed_impressions')
-          .select('article_id')
-          .eq('user_id', userId)
-          .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(2000);
-        if (impressions) {
-          for (const i of impressions) if (i.article_id) canonicalSeenIds.add(Number(i.article_id));
+        // Fetch in batches to get all unique article IDs despite Supabase row limits
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data: impressions } = await supabase
+            .from('user_feed_impressions')
+            .select('article_id')
+            .eq('user_id', userId)
+            .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+            .order('created_at', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          if (impressions && impressions.length > 0) {
+            for (const i of impressions) if (i.article_id) canonicalSeenIds.add(Number(i.article_id));
+            offset += impressions.length;
+            hasMore = impressions.length === batchSize;
+          } else {
+            hasMore = false;
+          }
         }
       } catch (e) { /* table may not exist yet */ }
     }
@@ -1218,15 +1231,24 @@ export default async function handler(req, res) {
     // Source 3: Engagement events (catches articles user reacted to)
     if (persUserId || userId) {
       try {
-        const { data: eventIds } = await supabase
-          .from('user_article_events')
-          .select('article_id')
-          .eq('user_id', userId)
-          .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(2000);
-        if (eventIds) {
-          for (const e of eventIds) if (e.article_id) canonicalSeenIds.add(Number(e.article_id));
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data: eventIds } = await supabase
+            .from('user_article_events')
+            .select('article_id')
+            .eq('user_id', userId)
+            .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+            .order('created_at', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          if (eventIds && eventIds.length > 0) {
+            for (const e of eventIds) if (e.article_id) canonicalSeenIds.add(Number(e.article_id));
+            offset += eventIds.length;
+            hasMore = eventIds.length === batchSize;
+          } else {
+            hasMore = false;
+          }
         }
       } catch (e) { /* non-blocking */ }
     }
@@ -2077,35 +2099,41 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: entity multiplier squared so penalties overcome high quality scores
-  // A 0.6x entity mult → 0.36x effective (Sports article with score 800 → 288, loses to most content)
+  // Trending bucket: CUBED entity multiplier — squared wasn't enough.
+  // Basketball (0.15 ratio) → affinity -0.73 → mult 0.42 → cubed 0.074x → effectively eliminated
+  // Sports at 14% engagement rate proves squared (0.46x) was too weak.
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       let score = scoreTrendingV3(articleMap[a.id], skipProfile);
       if (hasEntitySignals) {
         const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
-        score *= Math.pow(entityMult, 2);
+        // Hard filter: if entity multiplier < 0.5 (strong negative), skip entirely
+        if (entityMult < 0.5) return null;
+        score *= Math.pow(entityMult, 3);
       }
       score *= getCategorySuppression(articleMap[a.id]);
       score *= underfedWinnerBoost(articleMap[a.id]);
       return { ...articleMap[a.id], _score: score, _bucket: 'trending' };
     })
+    .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: same squared entity multiplier
+  // Discovery bucket: same cubed entity multiplier + hard filter
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => {
       let score = scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile);
       if (hasEntitySignals) {
         const entityMult = entitySignalMultiplier(articleMap[a.id], entitySignals, onboardingTagSet);
-        score *= Math.pow(entityMult, 2);
+        if (entityMult < 0.5) return null;
+        score *= Math.pow(entityMult, 3);
       }
       score *= getCategorySuppression(articleMap[a.id]);
       score *= underfedWinnerBoost(articleMap[a.id]);
       return { ...articleMap[a.id], _score: score, _bucket: 'discovery' };
     })
+    .filter(Boolean)
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
