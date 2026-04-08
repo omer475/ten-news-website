@@ -1931,14 +1931,28 @@ async function handleV2Feed(req, res, supabase, opts) {
         p_days: 7,
       });
       if (catStats) {
+        // Compute the user's AVERAGE engagement rate across all categories
+        let totalImp = 0, totalEng = 0;
+        for (const row of catStats) {
+          totalImp += parseInt(row.impressions) || 0;
+          totalEng += parseInt(row.engaged) || 0;
+        }
+        const avgRate = totalImp > 0 ? totalEng / totalImp : 0.30;
+
         for (const row of catStats) {
           const impressions = parseInt(row.impressions) || 0;
           const engaged = parseInt(row.engaged) || 0;
-          if (impressions < 10) continue; // not enough data
+          if (impressions < 10) continue;
           const rate = engaged / impressions;
-          if (rate < 0.05 && impressions >= 20) categorySuppressionMap[row.category] = 0.15;
-          else if (rate < 0.10 && impressions >= 15) categorySuppressionMap[row.category] = 0.40;
-          else if (rate < 0.15 && impressions >= 10) categorySuppressionMap[row.category] = 0.70;
+          // Graduated suppression relative to user's average
+          // Sports at 19% vs avg 33% → 0.58 ratio → 0.50x multiplier
+          // Tech at 51% vs avg 33% → 1.55 ratio → 1.30x boost
+          const ratio = rate / Math.max(avgRate, 0.10);
+          if (ratio < 0.40) categorySuppressionMap[row.category] = 0.15;       // terrible: <40% of avg
+          else if (ratio < 0.60) categorySuppressionMap[row.category] = 0.35;  // bad: Sports (19% vs 33% avg)
+          else if (ratio < 0.80) categorySuppressionMap[row.category] = 0.60;  // below avg
+          else if (ratio > 1.30) categorySuppressionMap[row.category] = 1.30;  // BOOST above avg categories
+          // ratio 0.80-1.30: no suppression or boost (near average)
         }
       }
     } catch (catErr) {
