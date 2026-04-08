@@ -3341,6 +3341,23 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // ==========================================
+  // PHASE 6.9: GLOBAL CATEGORY CAP — max 4 articles per category in a feed page
+  // Prevents any single category from dominating (was 8 Lifestyle after per-pool caps)
+  // ==========================================
+  const GLOBAL_CAT_CAP = 4;
+  const globalCatCounts = {};
+  const capped = [];
+  for (const a of selected) {
+    const cat = a.category || 'Other';
+    globalCatCounts[cat] = (globalCatCounts[cat] || 0) + 1;
+    if (globalCatCounts[cat] <= GLOBAL_CAT_CAP) {
+      capped.push(a);
+    }
+  }
+  selected.length = 0;
+  selected.push(...capped);
+
+  // ==========================================
   // PHASE 7: ENFORCE MAX 2 CONSECUTIVE SAME CATEGORY
   // Final safety net — even if MMR allows it, never show 3+ in a row
   // ==========================================
