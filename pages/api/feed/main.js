@@ -263,12 +263,12 @@ function isStillFresh(article) {
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const contentType = inferContentType(article.freshness_category, article.category, article.shelf_life_days);
   switch (contentType) {
-    case 'breaking':   return ageHours < 36;
-    case 'developing': return ageHours < 96;
-    case 'analysis':   return ageHours < 240;
-    case 'evergreen':  return ageHours < 504;
-    case 'timeless':   return ageHours < 1080;
-    default:           return ageHours < 168;
+    case 'breaking':   return ageHours < 24;   // was 36 — breaking news stale after 1 day
+    case 'developing': return ageHours < 72;   // was 96 — 3 days max for developing stories
+    case 'analysis':   return ageHours < 168;  // was 240 — 7 days for analysis pieces
+    case 'evergreen':  return ageHours < 168;  // was 504 (21 days!) — 7 days max
+    case 'timeless':   return ageHours < 336;  // was 1080 — 14 days max
+    default:           return ageHours < 72;   // was 168 — 3 days for unknown type
   }
 }
 
@@ -779,8 +779,9 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   let bestMMR = -Infinity;
 
   // Check diversity against ALL selected articles
-  // Hard ceiling: reject candidates with very high similarity to any selected article
-  const DUPLICATE_CEILING = 0.90;
+  // Hard ceiling: reject candidates too similar to any selected article
+  // 0.90 was too lenient — Artemis articles at 0.60-0.79 similarity slipped through
+  const DUPLICATE_CEILING = 0.70;
 
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
@@ -808,7 +809,7 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
         const unionSize = new Set([...cTags, ...sTags]).size;
         sim = unionSize > 0 ? intersection / unionSize : 0;
       }
-      if (c.category === s.category) sim = Math.max(sim, 0.3);
+      if (c.category === s.category) sim = Math.max(sim, 0.45); // was 0.3 — stronger category diversity
       maxSim = Math.max(maxSim, sim);
     }
 
@@ -2407,13 +2408,13 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   function getEntityCapShared(tag) {
     const freq = entityFreqInPoolShared[tag] || 0;
-    // Relaxed caps — with 1000+ articles and fresh_best exploration,
-    // tight caps (2-4) were rejecting 80%+ of candidates.
-    // MMR diversity + category spread handle repetition.
-    if (freq >= 50) return 4;
-    if (freq >= 20) return 6;
-    if (freq >= 10) return 8;
-    return Infinity;
+    // Tight caps to prevent topic flooding (5 Artemis articles in one feed)
+    // Tags like "artemis" with freq=4-9 were getting Infinity cap (no limit)
+    if (freq >= 50) return 3;
+    if (freq >= 20) return 3;
+    if (freq >= 10) return 3;
+    if (freq >= 3) return 2; // NEW: even low-freq tags get capped at 2
+    return 3; // unknown tags: max 3 (was Infinity)
   }
 
   const entitySelectionCountsShared = {};
@@ -3124,17 +3125,17 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (usePivotMode) {
-        // Fix 8+6: Pivot mode — only serve articles with POSITIVE entity signal
-        // Filter candidates by entity signal multiplier >= 1.3 (strong positive interest)
-        const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.3;
+        // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive)
+        // Use lambda=0.5 (MORE diversity) not 0.8 — the old 0.8 caused topic flooding
+        const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.0;
         const pivotPPool = pPool.filter(pivotFilter);
         const pivotTPool = tPool.filter(pivotFilter);
         const pivotDPool = dPool.filter(pivotFilter);
-        picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.5);
-        // If nothing passes filter, fall back to unfiltered personal
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8);
+        // Use low lambda for maximum diversity — pivot is about breaking the skip streak
+        picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
+        // NO fallback to unfiltered pool — better to show fewer articles than repeat the skip pattern
       } else if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {
