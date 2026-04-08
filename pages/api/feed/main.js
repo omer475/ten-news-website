@@ -1379,16 +1379,16 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
-    // 10 per cluster × 26 clusters = 260 searches → 233 results in 289ms (tested)
-    // 20 per cluster × 26 = 520 searches → times out on Supabase (3s statement limit)
+    // Don't pass exclude_ids to multi-cluster: 1500 IDs → 2318ms (vs 427ms without)
+    // JS filter at pool construction handles dedup. SQL exclusion is redundant here.
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
       p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
-      exclude_ids: excludeIds, min_similarity: minSim,
+      exclude_ids: null, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
       p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
-      exclude_ids: excludeIds, min_similarity: minSim,
+      exclude_ids: null, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
