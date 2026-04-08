@@ -1412,38 +1412,47 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: [], error: err };
     }),
 
-    // 2. TRENDING: 7-day window (was 30d — let in 6-day-old score-350 garbage)
-    // Score floor 500 (was 400 — Kelce/Swift at 420 was trending but unwanted)
-    (() => {
-      let q = supabase
-        .from('published_articles')
-        .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', sevenDaysAgo)
-        .gte('ai_final_score', 500)
-        .order('ai_final_score', { ascending: false })
-        .limit(600);
-      // SQL-level exclusion — no cap, use canonicalSeenIds (up to 1500)
+    // 2. TRENDING: per-category fetch to guarantee diversity
+    // Old approach: top-600 globally → 98% World during war cycle. Now: top 60 per category.
+    (async () => {
+      const TRENDING_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
       const sqlExclude = cleanSeenArray.slice(0, 1500);
-      if (sqlExclude.length > 0) {
-        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
-      }
-      return q;
+      const catPromises = TRENDING_CATS.map(cat => {
+        let q = supabase.from('published_articles')
+          .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+          .eq('category', cat)
+          .gte('created_at', sevenDaysAgo)
+          .gte('ai_final_score', 400)
+          .order('ai_final_score', { ascending: false })
+          .limit(60);
+        if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
+        return q;
+      });
+      const results = await Promise.all(catPromises);
+      const all = [];
+      for (const r of results) if (r.data) all.push(...r.data);
+      return { data: all, error: null };
     })(),
 
-    // 3. DISCOVERY: 7-day window (was 30d), score floor 400 (was 250)
-    (() => {
-      let q = supabase
-        .from('published_articles')
-        .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
-        .gte('created_at', sevenDaysAgo)
-        .gte('ai_final_score', 400)
-        .order('ai_final_score', { ascending: false })
-        .limit(1500);
+    // 3. DISCOVERY: same per-category approach
+    (async () => {
+      const DISC_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
       const sqlExclude = cleanSeenArray.slice(0, 1500);
-      if (sqlExclude.length > 0) {
-        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
-      }
-      return q;
+      const catPromises = DISC_CATS.map(cat => {
+        let q = supabase.from('published_articles')
+          .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+          .eq('category', cat)
+          .gte('created_at', sevenDaysAgo)
+          .gte('ai_final_score', 300)
+          .order('ai_final_score', { ascending: false })
+          .limit(60);
+        if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
+        return q;
+      });
+      const results = await Promise.all(catPromises);
+      const all = [];
+      for (const r of results) if (r.data) all.push(...r.data);
+      return { data: all, error: null };
     })(),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
@@ -1814,7 +1823,9 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 15 : 20;
+  // Category cap per pool — prevents one dominant category from flooding
+  // War/conflict cycle: 49/50 top articles are "World". Cap at 5 forces diversity.
+  const trendingCatMax = hasAnyPersonalization ? 5 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
@@ -1830,7 +1841,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
   // Change 3: Higher discovery category cap (15) and total (600)
-  const discoveryCatMax = 15;
+  const discoveryCatMax = 5; // was 15 — same flooding issue as trending
   const discoveryTotalMax = 600;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
