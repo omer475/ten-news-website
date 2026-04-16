@@ -406,13 +406,15 @@ struct ExploreView: View {
             return
         }
 
-        // Fetch full article before showing sheet
+        // Open instantly with what we have, upgrade in background
+        let fallback = Article.from(exploreArticle: topicArticle)
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            selectedArticle = fallback
+        }
+
         Task {
             if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: topicArticle.id.stringValue)) {
                 selectedArticle = response.article
-            } else {
-                let fallback = Article.from(exploreArticle: topicArticle)
-                selectedArticle = fallback
             }
         }
     }

@@ -553,7 +553,7 @@ class GeminiComponentSelector:
                 components_list = result.get('components', [])
                 print(f"      Validated components: {components_list}")
                 if not components_list:
-                    print(f"      ⚠️  WARNING: Gemini returned ZERO components!")
+                    print(f"      ℹ️  No components selected for this article")
                 
                 return result
             

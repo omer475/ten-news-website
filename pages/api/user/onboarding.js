@@ -268,7 +268,15 @@ export default async function handler(req, res) {
       }
 
       // V3: Ensure personalization_profiles row exists for this user
-      await supabase.rpc('resolve_personalization_id', { p_auth_id: user_id }).catch(() => {});
+      const { data: persResult } = await supabase.rpc('resolve_personalization_id', { p_auth_id: user_id }).catch(() => ({ data: null }));
+
+      // Store subtopic selection order for weighted allocation
+      if (persResult && persResult.length > 0) {
+        await supabase.from('personalization_profiles')
+          .update({ subtopic_order: followed_topics })
+          .eq('personalization_id', persResult[0].personalization_id)
+          .catch(() => {});
+      }
 
       // V3: Initialize taste vector from subtopic embeddings on personalization_profiles
       await initializeTasteVector(supabase, user_id, null, followed_topics);
@@ -291,7 +299,15 @@ export default async function handler(req, res) {
       }
 
       // V3: Ensure personalization_profiles row exists
-      await supabase.rpc('resolve_personalization_id', { p_auth_id: auth_user_id }).catch(() => {});
+      const { data: persResult2 } = await supabase.rpc('resolve_personalization_id', { p_auth_id: auth_user_id }).catch(() => ({ data: null }));
+
+      // Store subtopic selection order for weighted allocation
+      if (persResult2 && persResult2.length > 0) {
+        await supabase.from('personalization_profiles')
+          .update({ subtopic_order: followed_topics })
+          .eq('personalization_id', persResult2[0].personalization_id)
+          .catch(() => {});
+      }
 
       // V3: Initialize taste vector from subtopic embeddings on personalization_profiles
       await initializeTasteVector(supabase, auth_user_id, null, followed_topics);

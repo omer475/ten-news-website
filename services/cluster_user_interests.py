@@ -30,10 +30,10 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 try:
-    from sklearn.cluster import KMeans
-    from sklearn.metrics import silhouette_score
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from scipy.spatial.distance import pdist
 except ImportError:
-    print("ERROR: scikit-learn required. Install with: pip install scikit-learn")
+    print("ERROR: scipy required. Install with: pip install scipy")
     sys.exit(1)
 
 # Load env
@@ -114,30 +114,19 @@ def get_recency_weight(created_at_str):
     return 1.0
 
 
-def find_optimal_k(embeddings, max_k=MAX_CLUSTERS):
-    """Find optimal number of clusters using silhouette score."""
+def ward_cluster(embeddings, max_distance=1.2):
+    """Ward's hierarchical clustering — discovers natural number of clusters.
+    No need to specify k. A user with 3 interests gets 3 clusters,
+    a user with 10 gets 10. No fake clusters from K-means forcing."""
     n = len(embeddings)
-    if n < 6:
-        return 1
+    if n < 4:
+        return np.zeros(n, dtype=int), 1
 
-    max_possible_k = min(max_k, n // MIN_CLUSTER_SIZE)
-    if max_possible_k < 2:
-        return 1
-
-    best_k = 1
-    best_score = -1
-
-    for k in range(2, max_possible_k + 1):
-        km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=100)
-        labels = km.fit_predict(embeddings)
-        if len(set(labels)) < 2:
-            continue
-        score = silhouette_score(embeddings, labels, sample_size=min(500, n))
-        if score > best_score:
-            best_score = score
-            best_k = k
-
-    return best_k
+    distances = pdist(embeddings, metric='cosine')
+    Z = linkage(distances, method='ward')
+    labels = fcluster(Z, t=max_distance, criterion='distance') - 1  # 0-indexed
+    n_clusters = len(set(labels))
+    return labels, n_clusters
 
 
 def compute_similarity_floor(embeddings, taste_vector):
@@ -217,16 +206,19 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     emb_matrix = np.array(embeddings)
     weight_array = np.array(weights)
 
-    # Find optimal k
-    k = find_optimal_k(emb_matrix, MAX_CLUSTERS)
+    # Ward's hierarchical clustering — discovers natural cluster count
+    labels, k = ward_cluster(emb_matrix, max_distance=1.2)
 
-    # Run k-means with sample weights for recency-aware clustering
-    km = KMeans(n_clusters=k, n_init=10, random_state=42, max_iter=100)
-    labels = km.fit_predict(emb_matrix, sample_weight=weight_array)
-    centroids = km.cluster_centers_
+    # Compute centroids as weighted mean of each cluster
+    centroids = np.zeros((k, emb_matrix.shape[1]))
+    for ci in range(k):
+        mask = labels == ci
+        if mask.sum() > 0:
+            cluster_weights = weight_array[mask]
+            centroids[ci] = np.average(emb_matrix[mask], axis=0, weights=cluster_weights)
 
     if verbose:
-        print(f"  {len(embeddings)} articles → {k} clusters")
+        print(f"  {len(embeddings)} articles → {k} clusters (Ward's hierarchical)")
 
     # Build cluster metadata
     clusters = []
@@ -296,21 +288,61 @@ def cluster_user(user_id, dry_run=False, verbose=True):
         weighted_centroid += c['centroid'] * (c['article_count'] / total_count)
     sim_floor = compute_similarity_floor(emb_matrix, weighted_centroid)
 
-    # Fix A: Validate clusters against skip_profile — suppress skip-heavy clusters
+    # NEW: Validate clusters using entity_signals (replaces broken skip_profile suppression)
+    # Only suppress if top entities have NEGATIVE net engagement rate
+    entity_signals = {}
+    try:
+        sig_result = supabase.table('user_entity_signals') \
+            .select('entity, positive_count, negative_count, positive_7d, negative_7d, positive_24h, negative_24h') \
+            .eq('user_id', user_id) \
+            .execute()
+        for row in (sig_result.data or []):
+            entity_signals[row['entity']] = row
+    except Exception:
+        pass  # Table may not exist yet
+
     for c in clusters:
-        # Get the top tags from the label (split by ' & ')
         label_tags = [t.strip().lower() for t in c['label'].split('&')]
-        avg_skip = 0
-        count = 0
-        for tag in label_tags:
-            w = skip_profile.get(tag, 0)
-            if isinstance(w, (int, float)):
-                avg_skip += w
-                count += 1
-        avg_skip = avg_skip / max(count, 1)
-        c['suppressed'] = avg_skip > 0.20
-        if c['suppressed'] and verbose:
-            print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
+        if entity_signals:
+            # Use entity_signals ratio-based affinity
+            total_affinity = 0
+            tag_count = 0
+            for tag in label_tags:
+                sig = entity_signals.get(tag)
+                if sig:
+                    total_all = (sig.get('positive_count', 0) or 0) + (sig.get('negative_count', 0) or 0)
+                    if total_all < 3:
+                        continue
+                    total_7d = (sig.get('positive_7d', 0) or 0) + (sig.get('negative_7d', 0) or 0)
+                    if total_7d >= 3:
+                        recent_rate = sig['positive_7d'] / total_7d
+                        all_rate = sig['positive_count'] / total_all
+                        blended = recent_rate * 0.8 + all_rate * 0.2
+                    else:
+                        blended = sig['positive_count'] / total_all
+                    confidence = 1 - 1 / (1 + total_all * 0.2)
+                    affinity = (blended - 0.5) * 2 * confidence
+                    total_affinity += affinity
+                    tag_count += 1
+            avg_affinity = total_affinity / max(tag_count, 1) if tag_count > 0 else 0
+            c['suppressed'] = avg_affinity < -0.4
+            if c['suppressed'] and verbose:
+                print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg affinity: {avg_affinity:.2f})")
+            elif verbose and tag_count > 0:
+                print(f"    ✅ Cluster '{c['label']}' ACTIVE (avg affinity: {avg_affinity:.2f})")
+        else:
+            # Fallback to old skip_profile if entity_signals not available
+            avg_skip = 0
+            count = 0
+            for tag in label_tags:
+                w = skip_profile.get(tag, 0)
+                if isinstance(w, (int, float)):
+                    avg_skip += w
+                    count += 1
+            avg_skip = avg_skip / max(count, 1)
+            c['suppressed'] = avg_skip > 0.20
+            if c['suppressed'] and verbose:
+                print(f"    ⛔ Cluster '{c['label']}' SUPPRESSED (avg skip weight: {avg_skip:.2f})")
 
     if verbose:
         print(f"  Similarity floor: {sim_floor:.4f}")
@@ -383,6 +415,7 @@ def cluster_user(user_id, dry_run=False, verbose=True):
     }).eq('id', user_id).execute()
 
     # Also update personalization_profiles (this is what the feed reads)
+    # Use personalization_id (V3) when available, fall back to auth_profile_id
     if pers_id:
         supabase.table('personalization_profiles').update({
             'taste_vector_minilm': centroid_list,

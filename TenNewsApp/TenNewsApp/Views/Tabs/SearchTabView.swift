@@ -1110,7 +1110,7 @@ struct SearchResultCard: View {
             Color.clear
                 .frame(width: cardWidth, height: cardHeight)
                 .glassEffect(
-                    .regular.tint(Color(white: 0.1).opacity(0.5)),
+                    .regular.tint((dominantColor ?? fallbackColor).opacity(0.5)),
                     in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                 )
                 .mask(

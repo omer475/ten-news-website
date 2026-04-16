@@ -1017,32 +1017,45 @@ def run_complete_pipeline():
     published_lock = threading.Lock()
     published_count = 0
     
-    # Duplicate title cache shared across threads (prevents parallel duplicates)
+    # Duplicate title + embedding cache shared across threads
     title_cache_lock = threading.Lock()
     published_titles_cache = []  # Populated before parallel processing
-    
-    # Pre-fetch recent titles once (shared across all workers)
+
+    # Pre-fetch recent titles + embeddings for dedup (48h window, paginated)
     try:
         from difflib import SequenceMatcher
-        cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
-        recent_articles_result = supabase.table('published_articles')\
-            .select('id, title_news')\
-            .gte('published_at', cutoff_time)\
-            .execute()
-        
+        cutoff_time = (datetime.now() - timedelta(hours=48)).isoformat()
+
         def _clean_title(t):
             if not t:
                 return ''
             t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
             t = re.sub(r'[^\w\s]', '', t.lower())
             return t.strip()
-        
-        for r in (recent_articles_result.data or []):
-            published_titles_cache.append({
-                'id': r['id'],
-                'title_news': r.get('title_news', ''),
-                'clean': _clean_title(r.get('title_news', ''))
-            })
+
+        offset = 0
+        page_size = 1000
+        while True:
+            page = supabase.table('published_articles')\
+                .select('id, title_news, embedding_minilm')\
+                .gte('published_at', cutoff_time)\
+                .order('published_at', desc=True)\
+                .range(offset, offset + page_size - 1)\
+                .execute()
+            if not page.data:
+                break
+            for r in page.data:
+                published_titles_cache.append({
+                    'id': r['id'],
+                    'title_news': r.get('title_news', ''),
+                    'clean': _clean_title(r.get('title_news', '')),
+                    'embedding': r.get('embedding_minilm')
+                })
+            if len(page.data) < page_size:
+                break
+            offset += page_size
+
+        print(f"   📋 Dedup cache: {len(published_titles_cache)} articles from last 48h")
     except Exception as e:
         print(f"   ⚠️ Could not pre-fetch recent titles: {e}")
     
@@ -1439,16 +1452,17 @@ def run_complete_pipeline():
             
             title = synthesized.get('title', synthesized.get('title_news', ''))
             
-            # CHECK FOR SIMILAR TITLES (thread-safe)
+            # CHECK FOR DUPLICATES: title similarity + embedding similarity (thread-safe)
             is_duplicate = False
             skip_reason = None
             try:
                 clean_new_title = _clean_title(title)
-                
+
                 # Check against pre-fetched cache + newly published in this run
                 with title_cache_lock:
                     all_titles_to_check = list(published_titles_cache)
-                
+
+                # 1) Title-based dedup (catches rewrites with similar wording)
                 for recent in all_titles_to_check:
                     if clean_new_title and recent['clean']:
                         similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
@@ -1459,7 +1473,29 @@ def run_complete_pipeline():
                             is_duplicate = True
                             skip_reason = "duplicate_title"
                             break
-                            
+
+                # 2) Embedding-based dedup (catches same story with different wording)
+                if not is_duplicate and article_embedding_minilm:
+                    import numpy as np
+                    new_emb = np.array(article_embedding_minilm, dtype=np.float32)
+                    new_norm = np.linalg.norm(new_emb)
+                    if new_norm > 0:
+                        new_emb_normed = new_emb / new_norm
+                        for recent in all_titles_to_check:
+                            cached_emb = recent.get('embedding')
+                            if cached_emb and isinstance(cached_emb, list) and len(cached_emb) == len(article_embedding_minilm):
+                                old_emb = np.array(cached_emb, dtype=np.float32)
+                                old_norm = np.linalg.norm(old_emb)
+                                if old_norm > 0:
+                                    cosine_sim = float(np.dot(new_emb_normed, old_emb / old_norm))
+                                    if cosine_sim >= 0.82:
+                                        print(f"   ⏭️ [Cluster {cluster_id}] DUPLICATE EMBEDDING (cosine: {cosine_sim:.2f})")
+                                        print(f"      New: {title[:60]}...")
+                                        print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
+                                        is_duplicate = True
+                                        skip_reason = "duplicate_embedding"
+                                        break
+
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Duplicate check error: {e}")
             
@@ -1551,7 +1587,7 @@ def run_complete_pipeline():
             article_embedding_minilm = None
             try:
                 from step1_5_event_clustering import get_embedding, get_embedding_minilm
-                embed_text = f"{title} {synthesized.get('category', '')} {' '.join(article_topics or [])} {' '.join(article_countries or [])}"
+                embed_text = f"{title} {' '.join(bullets) if isinstance(bullets, list) else ''}"
                 article_embedding = get_embedding(embed_text)
                 article_embedding_minilm = get_embedding_minilm(embed_text)
                 if article_embedding:
@@ -1562,23 +1598,44 @@ def run_complete_pipeline():
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
             # ANN concept entity tagging: find matching entities via embedding similarity
+            # Then validate each match by checking if entity name/alias appears in article text
             if article_embedding_minilm:
                 try:
                     emb_str = '[' + ','.join(str(x) for x in article_embedding_minilm) + ']'
                     ann_result = supabase.rpc('match_concept_entities', {
                         'query_embedding': emb_str,
-                        'match_threshold': 0.50,
-                        'match_count': 5
+                        'match_threshold': 0.60,
+                        'match_count': 8
                     }).execute()
                     if ann_result.data:
-                        concept_tags = [r['entity_name'] for r in ann_result.data]
-                        # Add to interest_tags (avoid duplicates)
+                        # Name/alias validation: only keep entities actually mentioned in the article
+                        article_text_lower = (title + ' ' + (' '.join(bullets) if isinstance(bullets, list) else '')).lower()
+                        # Fetch aliases for matched entities
+                        matched_names = [r['entity_name'] for r in ann_result.data]
+                        aliases_result = supabase.table('concept_entities').select('entity_name, aliases').in_('entity_name', matched_names).execute()
+                        aliases_map = {r['entity_name']: r.get('aliases') or [] for r in (aliases_result.data or [])}
+
+                        validated_tags = []
+                        rejected_tags = []
+                        for r in ann_result.data:
+                            ename = r['entity_name']
+                            names_to_check = [ename] + aliases_map.get(ename, [])
+                            # Check if any name/alias appears in article text
+                            if any(n.lower() in article_text_lower for n in names_to_check):
+                                validated_tags.append(ename)
+                            else:
+                                rejected_tags.append(f"{ename}({r['similarity']:.2f})")
+
+                        # Add validated tags to interest_tags
                         existing_lower = {t.lower() for t in interest_tags}
-                        for ct in concept_tags:
+                        for ct in validated_tags:
                             if ct.lower() not in existing_lower:
                                 interest_tags.append(ct)
                                 existing_lower.add(ct.lower())
-                        print(f"   🎯 [Cluster {cluster_id}] Concept entities: {concept_tags}")
+                        if validated_tags:
+                            print(f"   🎯 [Cluster {cluster_id}] Concept entities: {validated_tags}")
+                        if rejected_tags:
+                            print(f"   🚫 [Cluster {cluster_id}] Rejected (not in text): {rejected_tags}")
                 except Exception as e:
                     # Non-blocking: concept tagging is optional
                     print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
@@ -1710,12 +1767,13 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             with published_lock:
                 published_count += 1
             
-            # Add to title cache for other workers' duplicate detection
+            # Add to title + embedding cache for other workers' duplicate detection
             with title_cache_lock:
                 published_titles_cache.append({
                     'id': published_article_id,
                     'title_news': title,
-                    'clean': _clean_title(title)
+                    'clean': _clean_title(title),
+                    'embedding': article_embedding_minilm
                 })
             
             # Mark cluster as successfully published
@@ -1760,6 +1818,13 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
     print(f"   Clusters processed: {len(clusters_to_process)}")
     print(f"   Articles published: {published_count}")
     print(f"{'='*80}\n")
+
+    return {
+        'articles_processed': len(articles),
+        'articles_published': published_count,
+        'clusters_found': len(clusters_to_process),
+        'errors': []
+    }
 
 
 # ==========================================
@@ -2124,7 +2189,11 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     if attempt < 4:
                         time.sleep(3)
                         continue
-                    # On last attempt, accept what we have rather than failing
+                    # On last attempt, reject if under 150 chars — not enough for a readable card
+                    if total_bullet_chars < 150:
+                        print(f"   ❌ Bullets too short even after 5 attempts ({total_bullet_chars} chars) — rejecting")
+                        return None
+                    print(f"   ⚠️  Accepting short bullets ({total_bullet_chars} chars) after 5 attempts")
                 elif total_bullet_chars > 550:
                     print(f"   ⚠️  Bullets too long: {total_bullet_chars} chars (max 550) (attempt {attempt + 1}/5)")
                     if attempt < 4:
@@ -2201,21 +2270,21 @@ def run_single_cycle():
     Returns:
         dict with stats about the run
     """
-    stats = {
-        'articles_processed': 0,
-        'articles_published': 0,
-        'clusters_found': 0,
-        'errors': []
-    }
-    
     try:
-        run_complete_pipeline()
-        # Note: run_complete_pipeline doesn't return stats currently
-        # You can enhance it later to return detailed stats
-        return stats
+        result = run_complete_pipeline()
+        return result or {
+            'articles_processed': 0,
+            'articles_published': 0,
+            'clusters_found': 0,
+            'errors': []
+        }
     except Exception as e:
-        stats['errors'].append(str(e))
-        raise
+        return {
+            'articles_processed': 0,
+            'articles_published': 0,
+            'clusters_found': 0,
+            'errors': [str(e)]
+        }
 
 
 # ==========================================

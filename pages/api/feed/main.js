@@ -208,24 +208,26 @@ function formatArticle(article, eventMap = {}) {
 // ==========================================
 
 function decayMultiplier(contentType, ageHours) {
+  // Steeper decay — old content was 43% of feed, killing engagement.
+  // Fresh content had 92% engagement; >48h content had <20%.
   switch (contentType) {
     case 'breaking':
-      // 1.0→0.5@6h→0.2@12h→0.05@24h
-      return Math.max(0.02, Math.exp(-0.115 * ageHours));
+      // 1.0→0.3@6h→0.08@12h→0.02@24h (was 0.5@6h)
+      return Math.max(0.02, Math.exp(-0.20 * ageHours));
     case 'developing':
-      // 1.0→0.7@24h→0.4@48h→0.15@72h
-      return Math.max(0.02, Math.exp(-0.015 * ageHours));
+      // 1.0→0.5@24h→0.15@48h→0.04@72h (was 0.7@24h)
+      return Math.max(0.02, Math.exp(-0.03 * ageHours));
     case 'analysis':
-      // 1.0→0.85@24h→0.65@48h→0.4@72h→0.2@7d
-      return Math.max(0.02, Math.exp(-0.0095 * ageHours));
+      // 1.0→0.7@24h→0.4@48h→0.15@72h (was 0.85@24h)
+      return Math.max(0.02, Math.exp(-0.015 * ageHours));
     case 'evergreen':
-      // 1.0→0.9@24h→0.75@72h→0.5@7d→0.25@14d
-      return Math.max(0.02, Math.exp(-0.004 * ageHours));
+      // 1.0→0.8@24h→0.5@72h→0.2@7d (was 0.9@24h)
+      return Math.max(0.02, Math.exp(-0.008 * ageHours));
     case 'timeless':
-      // 1.0→0.95@48h→0.85@7d→0.6@30d
-      return Math.max(0.02, Math.exp(-0.0007 * ageHours));
+      // 1.0→0.9@48h→0.7@7d→0.35@30d (was 0.95@48h)
+      return Math.max(0.02, Math.exp(-0.0015 * ageHours));
     default:
-      return Math.max(0.02, Math.exp(-0.015 * ageHours)); // developing default
+      return Math.max(0.02, Math.exp(-0.03 * ageHours)); // developing default
   }
 }
 
@@ -253,6 +255,122 @@ function getRecencyDecay(createdAt, category, shelfLifeDays, freshnessCategory) 
   const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
   const contentType = inferContentType(freshnessCategory, category, shelfLifeDays);
   return decayMultiplier(contentType, ageHours);
+}
+
+// Is the article still within its peak relevance window?
+// Used to separate "fresh unseen" from "stale unseen" in three-tier slot filling.
+function isStillFresh(article) {
+  const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
+  const contentType = inferContentType(article.freshness_category, article.category, article.shelf_life_days);
+  switch (contentType) {
+    case 'breaking':   return ageHours < 24;   // was 36 — breaking news stale after 1 day
+    case 'developing': return ageHours < 72;   // was 96 — 3 days max for developing stories
+    case 'analysis':   return ageHours < 168;  // was 240 — 7 days for analysis pieces
+    case 'evergreen':  return ageHours < 168;  // was 504 (21 days!) — 7 days max
+    case 'timeless':   return ageHours < 336;  // was 1080 — 14 days max
+    default:           return ageHours < 72;   // was 168 — 3 days for unknown type
+  }
+}
+
+// Topic saturation penalty: diminishing returns for topics the user consumed heavily in last 48h.
+// Doesn't block content — just scores it lower so other topics surface above it.
+function topicSaturationPenalty(article, recentEntityCounts) {
+  if (!recentEntityCounts) return 1.0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let maxConsumption = 0;
+  for (const tag of tags.slice(0, 3)) {
+    const count = recentEntityCounts[tag.toLowerCase()] || 0;
+    if (count > maxConsumption) maxConsumption = count;
+  }
+  if (maxConsumption >= 8) return 0.3;
+  if (maxConsumption >= 5) return 0.5;
+  if (maxConsumption >= 3) return 0.7;
+  return 1.0;
+}
+
+// ══════════════════════════════════════════════════════════════
+// UNIFIED ENTITY AFFINITY (replaces dual tag_profile + skip_profile)
+//
+// Single engagement-rate-based score per entity.
+// Positive interactions / total interactions → ratio.
+// Recent behavior weighted 70%, all-time 30%.
+// Range: -1.0 (always skip) to +1.0 (always engage).
+// Multiplier: 0.2x at -1.0, 1.0x at 0, 1.8x at +1.0.
+// ══════════════════════════════════════════════════════════════
+
+// Legacy computeEntityAffinity removed — replaced by tanh version at line 614+
+
+// Map onboarding topic names to entity tags for the floor protection
+const ONBOARDING_ENTITY_MAP = {
+  'NBA': ['nba', 'basketball'],
+  'NFL': ['nfl', 'american football', 'quarterback'],
+  'Soccer/Football': ['soccer', 'football', 'premier league', 'la liga', 'champions league'],
+  'MLB/Baseball': ['mlb', 'baseball', 'world series'],
+  'Cricket': ['cricket', 'ipl', 'test match'],
+  'F1 & Motorsport': ['f1', 'formula one', 'formula 1', 'grand prix', 'motorsport'],
+  'Boxing & MMA/UFC': ['boxing', 'mma', 'ufc'],
+  'Olympics & Paralympics': ['olympics', 'olympic'],
+  'War & Conflict': ['war', 'conflict', 'military'],
+  'US Politics': ['us politics', 'congress', 'senate', 'white house'],
+  'European Politics': ['european politics', 'eu', 'european union'],
+  'Asian Politics': ['china', 'india', 'japan'],
+  'Middle East': ['middle east', 'iran', 'israel', 'saudi arabia'],
+  'AI & Machine Learning': ['artificial intelligence', 'machine learning', 'ai', 'llm'],
+  'Smartphones & Gadgets': ['smartphone', 'iphone', 'samsung', 'android'],
+  'Social Media': ['social media', 'tiktok', 'instagram', 'twitter'],
+  'Cybersecurity': ['cybersecurity', 'hacking', 'data breach'],
+  'Space Tech': ['spacex', 'nasa', 'rocket', 'satellite'],
+  'Movies & Film': ['movies', 'film', 'box office', 'cinema'],
+  'TV & Streaming': ['netflix', 'streaming', 'hbo', 'disney plus'],
+  'Music': ['music', 'album', 'concert'],
+  'Gaming': ['gaming', 'video games', 'playstation', 'xbox'],
+  'K-Pop & K-Drama': ['k-pop', 'k-drama', 'korean'],
+  'Stock Markets': ['stock market', 'wall street', 'nasdaq', 'stocks'],
+  'Banking & Lending': ['banking', 'interest rate', 'federal reserve'],
+  'Bitcoin': ['bitcoin', 'btc'],
+  'DeFi & Web3': ['defi', 'web3', 'blockchain'],
+  'Space & Astronomy': ['space', 'astronomy', 'mars', 'telescope'],
+  'Climate & Environment': ['climate', 'environment', 'global warming'],
+  'Medical Breakthroughs': ['medical', 'treatment', 'clinical trial'],
+  'Public Health': ['public health', 'vaccine', 'pandemic'],
+  'Oil & Energy': ['oil', 'energy', 'opec', 'natural gas'],
+  'Corporate Deals': ['merger', 'acquisition', 'ipo'],
+  'Trade & Tariffs': ['trade', 'tariffs', 'sanctions'],
+};
+
+function buildOnboardingEntities(followedTopics) {
+  if (!followedTopics || !Array.isArray(followedTopics)) return null;
+  const entities = new Set();
+  for (const topic of followedTopics) {
+    const mapped = ONBOARDING_ENTITY_MAP[topic];
+    if (mapped) {
+      for (const e of mapped) entities.add(e);
+    }
+  }
+  return entities.size > 0 ? entities : null;
+}
+
+function entityAffinityMultiplier(article, entitySignals, onboardingEntities) {
+  if (!entitySignals) return 1.0;
+  const tags = safeJsonParse(article.interest_tags, []);
+  let totalAffinity = 0;
+  let matchCount = 0;
+
+  for (const tag of tags.slice(0, 5)) {
+    const t = tag.toLowerCase();
+    const signal = entitySignals[t];
+    if (signal && typeof signal === 'object') {
+      signal.entity = t; // attach entity name for onboarding check
+      totalAffinity += computeEntityAffinity(signal, onboardingEntities);
+      matchCount++;
+    }
+  }
+
+  if (matchCount === 0) return 1.0;
+  const avgAffinity = totalAffinity / matchCount;
+
+  // Convert: -1.0 → 0.2x, 0.0 → 1.0x, +1.0 → 1.8x
+  return Math.max(0.2, 1.0 + avgAffinity * 0.8);
 }
 
 // ==========================================
@@ -443,8 +561,8 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
   const netSkip = Math.max(0, skipScore - tagScore * 0.5);
   const skipPenalty = Math.min(netSkip, 0.9);
 
-  // Tag match (350) + Session momentum (150) + Similarity (250) + Quality*Recency (250)
-  const base = tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250 * recency;
+  // All components multiplied by recency — prevents old articles from dominating
+  const base = (tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250) * recency;
   return base * (1 - skipPenalty);
 }
 
@@ -455,6 +573,71 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // ══════════════════════════════════════════════════════════════
 // SKIP PENALTY HELPER — used by ALL scoring functions
 // Reads skip_profile to penalize content the user explicitly skipped.
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ENTITY SIGNAL SYSTEM — replaces dual tag_profile/skip_profile
+// Single ratio-based affinity per entity: -1.0 (hate) to +1.0 (love)
+// ══════════════════════════════════════════════════════════════
+
+function computeEntityAffinity(signal, isOnboardingTopic) {
+  const total7d = (signal.positive_7d || 0) + (signal.negative_7d || 0);
+  const totalAll = (signal.positive_count || 0) + (signal.negative_count || 0);
+  // Allow negative-only signals: 2 skips with 0 engagements is a clear signal
+  if (totalAll < 2) return 0;
+
+  const recentRate = total7d >= 2
+    ? signal.positive_7d / total7d
+    : signal.positive_count / totalAll;
+  const allTimeRate = signal.positive_count / totalAll;
+  const blendedRate = total7d >= 2
+    ? recentRate * 0.8 + allTimeRate * 0.2
+    : allTimeRate;
+
+  const confidence = 1 - 1 / (1 + totalAll * 0.2);
+
+  // Tanh curve: more decisive than linear. 57% → 1.20x (was 1.10x), 88% → 1.68x (was 1.52x)
+  const centered = blendedRate - 0.5;
+  const decisive = Math.tanh(centered * 4);
+  let affinity = decisive * confidence;
+
+  // Rapid rejection: 3+ skips in 24h with 0 engagements
+  if ((signal.negative_24h || 0) >= 3 && (signal.positive_24h || 0) === 0) {
+    affinity = Math.min(affinity, -0.75);
+  }
+
+  // Onboarding floor: explicit selections never go fully negative
+  if (isOnboardingTopic) {
+    affinity = Math.max(affinity, 0);
+  }
+
+  return affinity; // -1.0 to +1.0
+}
+
+function entitySignalMultiplier(article, entitySignals, onboardingTagSet) {
+  const tags = safeJsonParse(article.interest_tags, []).slice(0, 5).map(t => t.toLowerCase());
+  if (tags.length === 0 || !entitySignals || Object.keys(entitySignals).length === 0) return 1.0;
+
+  let totalAffinity = 0;
+  let matchCount = 0;
+
+  for (const tag of tags) {
+    const signal = entitySignals[tag];
+    if (signal) {
+      const isOnboarding = onboardingTagSet ? onboardingTagSet.has(tag) : false;
+      totalAffinity += computeEntityAffinity(signal, isOnboarding);
+      matchCount++;
+    }
+  }
+
+  if (matchCount === 0) return 1.0;
+  const avgAffinity = totalAffinity / matchCount;
+
+  // Map -1..+1 to 0.2x..1.8x multiplier
+  return 1.0 + avgAffinity * 0.8;
+}
+
+// ══════════════════════════════════════════════════════════════
+// LEGACY SKIP PENALTY — kept as fallback when entity_signals unavailable
 // ══════════════════════════════════════════════════════════════
 function computeSkipPenalty(article, userSkipProfile) {
   if (!userSkipProfile || typeof userSkipProfile !== 'object') return 0;
@@ -468,15 +651,16 @@ function computeSkipPenalty(article, userSkipProfile) {
   return Math.min(penalty, 0.80); // cap — don't fully zero out
 }
 
-// Fix 3B+10: Adaptive long-term/session vector blend.
-// Session vector has 4x better discrimination (0.152 vs 0.037 delta).
-// Weight adapts based on session interaction count.
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, userSkipProfile, sessionInteractionCount) {
+// Change 1: Blend long-term + session vectors. Now includes skip + saturation penalty.
+// All scoring functions now use entityAffinityMultiplier (unified engagement rate)
+// instead of separate tagProfileBoost + skipMultiplier.
+
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts, onboardingEntities, sessionInteractionCount) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
+  // Fix 10: Adaptive weighting — more session data = more session weight
   let vectorScore;
   if (sessionScore > 0) {
-    // Fix 10: Adaptive weighting — more session data = more session weight
     const sessionCount = sessionInteractionCount || 0;
     const sessionWeight = Math.min(0.85, 0.30 + sessionCount * 0.03);
     // 0 interactions → 0.30 session, 10 → 0.60, 20+ → 0.85
@@ -496,7 +680,6 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
     if (!affinity || affinity <= 0) {
       for (const [entity, score] of Object.entries(entityAffinities)) {
         if (score <= 0) continue;
-        // Substring match: "space exploration" matches "space", "ai" matches "artificial intelligence"
         if ((t.length > 3 && entity.includes(t)) || (entity.length > 3 && t.includes(entity))) {
           affinity = score * 0.6; // 60% of exact match strength
           break;
@@ -513,36 +696,28 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
 
   const quality = (article.ai_final_score || 0) / 1000;
-  const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
-  const maxHours = article.shelf_life_hours || (article.shelf_life_days || 7) * 24;
-  const freshnessBoost = Math.max(0, 0.10 * (1 - ageHours / maxHours));
   const momentum = sessionBoost || 0;
+  const recencyDecay = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
 
-  const baseScore = vectorScore * 500 + entityBonus * 200 + quality * 200 + freshnessBoost * 100 + momentum * 150;
+  const baseScore = (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
 
-  // Skip penalty: iran(0.35) + iran_war(0.30) = 0.65 → score × 0.35
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
+  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
+  const saturation = topicSaturationPenalty(article, recentEntityCounts);
 
   // Fix 11: Debug scoring for verification
   if (process.env.DEBUG_SCORING) {
-    console.log(`[score] personal: "${(article.title_news || '').slice(0, 45)}" vec=${vectorScore.toFixed(3)} entity=${entityBonus.toFixed(3)} skip=${skipPenalty.toFixed(2)} final=${(baseScore * skipMultiplier).toFixed(0)}`);
+    console.log(`[score] personal: "${(article.title_news || '').slice(0, 45)}" vec=${vectorScore.toFixed(3)} entity=${entityBonus.toFixed(3)} aff=${affMult.toFixed(2)} sat=${saturation.toFixed(2)} final=${(baseScore * affMult * saturation).toFixed(0)}`);
   }
 
-  return baseScore * skipMultiplier;
+  return baseScore * affMult * saturation;
 }
 
 function scoreTrendingV3(article, userSkipProfile) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const baseScore = (article.ai_final_score || 0) * recency;
-
+  // Entity signal multiplier applied externally (squared) — not here
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
-
-  if (process.env.DEBUG_SCORING) {
-    console.log(`[score] trending: "${(article.title_news || '').slice(0, 45)}" [${article.category}] skip=${skipPenalty.toFixed(2)} final=${(baseScore * skipMultiplier).toFixed(0)}`);
-  }
-
   return baseScore * skipMultiplier;
 }
 
@@ -551,10 +726,8 @@ function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
   const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
-
   const skipPenalty = computeSkipPenalty(article, userSkipProfile);
   const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
-
   return baseScore * skipMultiplier;
 }
 
@@ -606,8 +779,9 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
   let bestMMR = -Infinity;
 
   // Check diversity against ALL selected articles
-  // Hard ceiling: reject candidates with > 0.82 similarity to any selected article
-  const DUPLICATE_CEILING = 0.82;
+  // Hard ceiling: reject candidates too similar to any selected article
+  // 0.90 was too lenient — Artemis articles at 0.60-0.79 similarity slipped through
+  const DUPLICATE_CEILING = 0.70;
 
   for (let i = 0; i < candidates.length; i++) {
     const c = candidates[i];
@@ -635,7 +809,7 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
         const unionSize = new Set([...cTags, ...sTags]).size;
         sim = unionSize > 0 ? intersection / unionSize : 0;
       }
-      if (c.category === s.category) sim = Math.max(sim, 0.3);
+      if (c.category === s.category) sim = Math.max(sim, 0.45); // was 0.3 — stronger category diversity
       maxSim = Math.max(maxSim, sim);
     }
 
@@ -772,6 +946,8 @@ export default async function handler(req, res) {
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
     let personalizationId = null;
+    let clusterLookupId = null;
+    let clusterLookupColumn = 'user_id';
     let userPhase = 1;
     let totalInteractions = 0;
     let sessionTasteVector = null; // Change 1: short-term session vector
@@ -779,15 +955,43 @@ export default async function handler(req, res) {
     // Try v3 personalization_profiles first (non-blocking — falls back to profiles if fails)
     if (userId || guestDeviceId) {
       try {
-        const rpcParams = userId
-          ? { p_auth_id: userId }
-          : { p_device_id: guestDeviceId };
+        // Direct query fallback: resolve_personalization_id RPC may not be deployed
+        let persResolved = false;
 
-        const { data: persData, error: persError } = await supabase.rpc('resolve_personalization_id', rpcParams);
-        if (!persError && persData && persData.length > 0) {
-          personalizationId = persData[0].personalization_id;
-          userPhase = persData[0].phase;
-          totalInteractions = persData[0].total_interactions;
+        // Try RPC first
+        try {
+          const rpcParams = userId
+            ? { p_auth_id: userId }
+            : { p_device_id: guestDeviceId };
+          const { data: persData, error: persError } = await supabase.rpc('resolve_personalization_id', rpcParams);
+          if (!persError && persData && persData.length > 0) {
+            personalizationId = persData[0].personalization_id;
+            userPhase = persData[0].phase;
+            totalInteractions = persData[0].total_interactions;
+            persResolved = true;
+          }
+        } catch (rpcErr) {
+          // RPC not available — fall back to direct query
+        }
+
+        // Direct query fallback if RPC failed
+        if (!persResolved) {
+          const lookupCol = userId ? 'auth_profile_id' : 'guest_device_id';
+          const lookupVal = userId || guestDeviceId;
+          const { data: directData } = await supabase
+            .from('personalization_profiles')
+            .select('personalization_id, phase, total_interactions')
+            .eq(lookupCol, lookupVal)
+            .limit(1);
+          if (directData && directData.length > 0) {
+            personalizationId = directData[0].personalization_id;
+            userPhase = directData[0].phase;
+            totalInteractions = directData[0].total_interactions;
+            persResolved = true;
+          }
+        }
+
+        if (persResolved) {
 
           // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
@@ -875,28 +1079,30 @@ export default async function handler(req, res) {
 
     if (userId) {
       // Load profiles table for prefs + legacy taste vectors
-      let { data: userData } = await supabase
+      // Use limit(1) instead of .single() — some users have duplicate rows
+      const { data: profileRows } = await supabase
         .from('profiles')
         .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor')
         .eq('id', userId)
-        .single();
+        .limit(1);
+      let userData = profileRows?.[0] || null;
 
       if (!userData) {
         // Fallback: try legacy users table
-        const { data: legacyUser } = await supabase
+        const { data: legacyRows } = await supabase
           .from('users')
           .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
           .eq('id', userId)
-          .single();
-        if (!legacyUser) {
-          const { data: linkedUser } = await supabase
+          .limit(1);
+        if (!legacyRows?.[0]) {
+          const { data: linkedRows } = await supabase
             .from('users')
             .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
             .eq('auth_user_id', userId)
-            .single();
-          if (linkedUser) userData = linkedUser;
+            .limit(1);
+          if (linkedRows?.[0]) userData = linkedRows[0];
         } else {
-          userData = legacyUser;
+          userData = legacyRows[0];
         }
       }
 
@@ -914,10 +1120,9 @@ export default async function handler(req, res) {
       skipProfile = null;
       storedTagProfile = null;
 
-      // Check if user has active (non-suppressed) interest clusters
       // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
-      const clusterLookupId = personalizationId || persUserId;
-      const clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
+      clusterLookupId = personalizationId || persUserId;
+      clusterLookupColumn = personalizationId ? 'personalization_id' : 'user_id';
       if ((tasteVector || tasteVectorMinilm) && clusterLookupId) {
         const { count } = await supabase
           .from('user_interest_clusters')
@@ -930,22 +1135,6 @@ export default async function handler(req, res) {
 
     if (!userPrefs && homeCountry) {
       userPrefs = { home_country: homeCountry, followed_countries: followedCountries, followed_topics: followedTopics };
-    }
-
-    // Load followed publisher IDs for feed boost
-    let followedPublisherIds = new Set();
-    if (userId) {
-      try {
-        const { data: follows } = await supabase
-          .from('user_follows')
-          .select('publisher_id')
-          .eq('user_id', userId);
-        if (follows && follows.length > 0) {
-          followedPublisherIds = new Set(follows.map(f => f.publisher_id));
-        }
-      } catch (e) {
-        // Non-blocking: if user_follows table doesn't exist yet, ignore
-      }
     }
 
     // ==========================================
@@ -968,30 +1157,132 @@ export default async function handler(req, res) {
     }
 
     // ==========================================
+    // LOAD FOLLOWED PUBLISHERS
+    // ==========================================
+
+    let followedPublisherIds = new Set();
+    if (userId) {
+      try {
+        const { data: follows } = await supabase
+          .from('user_follows')
+          .select('publisher_id')
+          .eq('user_id', userId);
+        if (follows && follows.length > 0) {
+          followedPublisherIds = new Set(follows.map(f => f.publisher_id));
+        }
+      } catch (e) {}
+    }
+
+    // ==========================================
     // GET SEEN ARTICLE IDS (for dedup across pages)
     // ==========================================
 
-    // Fix 6B: Fetch DISTINCT article_ids from last 7 days with higher limit
-    // Old: 500 events (covering ~100 unique articles). New: up to 2000 unique articles.
-    let seenArticleIds = [];
-    if (persUserId || userId) {
-      const { data: seenEvents } = await supabase
-        .from('user_article_events')
-        .select('article_id')
-        .eq('user_id', userId)
-        .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit'])
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(2000);
+    // ══════════════════════════════════════════════════════════════
+    // SESSION-AWARE SEEN ARCHITECTURE (TikTok model)
+    //
+    // Two separate dedup systems:
+    //   1. SESSION DEDUP (client-sent seen_ids) → HARD EXCLUDE from pools
+    //      Prevents within-session repeats. Pool shrinks by exactly 25/page.
+    //   2. BADGE CLASSIFICATION (server events, last 6h) → badge only, no exclusion
+    //      Articles seen earlier today get "Read Xh ago" badge.
+    //      Articles seen 6h+ ago → fully fresh, no badge (like TikTok).
+    // ══════════════════════════════════════════════════════════════
 
-      if (seenEvents) {
-        seenArticleIds = [...new Set(seenEvents.map(e => e.article_id).filter(Boolean))];
+    // ══════════════════════════════════════════════════════════════
+    // CANONICAL SEEN SET — ONE set, ONE source of truth for all dedup.
+    // Every pool filter, SQL exclusion, and tier classification uses this.
+    // Never create a separate seen variable. Add sources here, read from canonicalSeenIds.
+    // ══════════════════════════════════════════════════════════════
+
+    const canonicalSeenIds = new Set();
+
+    // Source 1: Server-side impressions (last 14 days) — authoritative serving log
+    // Power users have 6000+ impression rows — fetch ALL unique IDs, not limited rows
+    if (persUserId || userId) {
+      try {
+        // Fetch in batches to get all unique article IDs despite Supabase row limits
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data: impressions } = await supabase
+            .from('user_feed_impressions')
+            .select('article_id')
+            .eq('user_id', userId)
+            .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+            .order('created_at', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          if (impressions && impressions.length > 0) {
+            for (const i of impressions) if (i.article_id) canonicalSeenIds.add(Number(i.article_id));
+            offset += impressions.length;
+            hasMore = impressions.length === batchSize;
+          } else {
+            hasMore = false;
+          }
+        }
+      } catch (e) { /* table may not exist yet */ }
+    }
+
+    // Source 2: Client-sent seen IDs (current session + ReadingHistoryManager)
+    for (const id of clientSeenIds.filter(Boolean)) canonicalSeenIds.add(Number(id));
+
+    // Source 3: Engagement events (catches articles user reacted to)
+    if (persUserId || userId) {
+      try {
+        let offset = 0;
+        const batchSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data: eventIds } = await supabase
+            .from('user_article_events')
+            .select('article_id')
+            .eq('user_id', userId)
+            .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+            .order('created_at', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          if (eventIds && eventIds.length > 0) {
+            for (const e of eventIds) if (e.article_id) canonicalSeenIds.add(Number(e.article_id));
+            offset += eventIds.length;
+            hasMore = eventIds.length === batchSize;
+          } else {
+            hasMore = false;
+          }
+        }
+      } catch (e) { /* non-blocking */ }
+    }
+
+    console.log(`[dedup] Canonical seen set: ${canonicalSeenIds.size} unique IDs`);
+
+    // Badge metadata — separate from dedup, used for "Read Xh ago" badge on resurfaced articles
+    const seenMeta = new Map();
+    if (persUserId || userId) {
+      const { data: seenMetaResult } = await supabase
+        .from('user_article_events')
+        .select('article_id, event_type, created_at')
+        .eq('user_id', userId)
+        .in('event_type', ['article_engaged', 'article_liked'])
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1000);
+
+      if (seenMetaResult) {
+        for (const event of seenMetaResult) {
+          const aid = event.article_id;
+          const isEngaged = event.event_type === 'article_engaged' || event.event_type === 'article_liked';
+          const existing = seenMeta.get(aid);
+          if (!existing) {
+            seenMeta.set(aid, { first_seen_at: event.created_at, was_engaged: isEngaged });
+          } else {
+            if (event.created_at < existing.first_seen_at) existing.first_seen_at = event.created_at;
+            if (isEngaged) existing.was_engaged = true;
+          }
+        }
       }
     }
-    // Merge client-sent seen IDs (handles guests and races where server events haven't persisted yet)
-    if (clientSeenIds.length > 0) {
-      seenArticleIds = [...new Set([...seenArticleIds, ...clientSeenIds])];
-    }
+
+    // Legacy aliases — point to canonicalSeenIds for backward compat in handleV2Feed
+    const seenArticleIds = [...canonicalSeenIds];
+    const allSeenIds = seenArticleIds;
 
     // ==========================================
     // ALWAYS USE V2 FEED
@@ -1011,12 +1302,17 @@ export default async function handler(req, res) {
       skipProfile,
       storedTagProfile,
       seenArticleIds,
+      allSeenIds,
+      canonicalSeenIds,
+      seenMeta,
+      totalInteractions,
       sessionEngagedIds,
       sessionGlancedIds,
       sessionSkippedIds,
       personalizationId,
       sessionTasteVector,
       usedTempTasteVector: false,
+      followedPublisherIds,
       clusterLookupId,
       clusterLookupColumn,
       limit,
@@ -1037,15 +1333,22 @@ export default async function handler(req, res) {
 
 async function handleV2Feed(req, res, supabase, opts) {
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds,
+        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
+        canonicalSeenIds, seenMeta, totalInteractions,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
-        personalizationId, sessionTasteVector, usedTempTasteVector,
+        personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
         clusterLookupId, clusterLookupColumn, limit, offset } = opts;
+  totalInteractions = totalInteractions || 0;
+  canonicalSeenIds = canonicalSeenIds || new Set();
+  allSeenIds = allSeenIds || [];
+  seenMeta = seenMeta || new Map();
+  followedPublisherIds = followedPublisherIds || new Set();
   sessionEngagedIds = sessionEngagedIds || [];
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
   const now = Date.now();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const sevenDaysAgo = new Date(now - 7 * 24 * 3600000).toISOString();
   const seventyTwoHoursAgo = new Date(now - 72 * 3600000).toISOString();
   const twentyFourHoursAgo = new Date(now - 24 * 3600000).toISOString();
@@ -1058,7 +1361,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 1: PARALLEL DATA LOADING
   // ==========================================
 
-  const excludeIds = seenArticleIds.length > 0 ? seenArticleIds : null;
+  // Filter to valid positive integers — null/NaN/0 cause SQL errors
+  const cleanSeenArray = [...canonicalSeenIds].filter(id => Number.isFinite(id) && id > 0);
+  const excludeIds = cleanSeenArray.length > 0 ? cleanSeenArray.slice(0, 1500) : null;
   const minSim = similarityFloor || 0;
   const useMinilm = !!tasteVectorMinilm;
 
@@ -1072,58 +1377,195 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
   } else if (hasInterestClusters && useMinilm) {
-    // Fix 1: Use clusterLookupId for V3 clusters (personalizationId when available)
+    // Don't pass exclude_ids to multi-cluster: 1500 IDs → 2318ms (vs 427ms without)
+    // JS filter at pool construction handles dedup. SQL exclusion is redundant here.
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
-      p_user_id: clusterLookupId, match_per_cluster: 100, hours_window: 9999,
-      exclude_ids: excludeIds, min_similarity: minSim,
+      p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
+      exclude_ids: null, min_similarity: minSim,
     });
   } else if (hasInterestClusters) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
-      p_user_id: clusterLookupId, match_per_cluster: 100, hours_window: 9999,
-      exclude_ids: excludeIds, min_similarity: minSim,
+      p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
+      exclude_ids: null, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
-      query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 9999,
+      query_embedding: tasteVectorMinilm, match_count: 800, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   } else {
     personalPromise = supabase.rpc('match_articles_personal', {
-      query_embedding: tasteVector, match_count: 500, hours_window: 9999,
+      query_embedding: tasteVector, match_count: 800, hours_window: 9999,
       exclude_ids: excludeIds, min_similarity: minSim,
     });
   }
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile] = await Promise.all([
-    // 1. PERSONAL: pgvector similarity search
-    personalPromise,
+  const fortyEightHoursAgoISO = new Date(now - 48 * 3600000).toISOString();
 
-    // 2. TRENDING: high editorial score
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', fortyEightHoursAgo)
-      .gte('ai_final_score', 600)
-      .order('ai_final_score', { ascending: false })
-      .limit(200),
+  const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult, freshBestResult] = await Promise.all([
+    // 1. PERSONAL: pgvector similarity search (catch timeout → empty)
+    Promise.resolve(personalPromise).catch(err => {
+      console.error('[feed] Personal query threw:', err?.message || err);
+      return { data: [], error: err };
+    }),
 
-    // 3. DISCOVERY: diverse quality content, 7-day pool
-    supabase
-      .from('published_articles')
-      .select('id, ai_final_score, category, created_at, shelf_life_days')
-      .gte('created_at', sevenDaysAgo)
-      .gte('ai_final_score', 300)
-      .order('ai_final_score', { ascending: false })
-      .limit(500),
+    // 2. TRENDING: per-category fetch to guarantee diversity
+    // Old approach: top-600 globally → 98% World during war cycle. Now: top 60 per category.
+    (async () => {
+      const TRENDING_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      const catPromises = TRENDING_CATS.map(cat => {
+        let q = supabase.from('published_articles')
+          .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+          .eq('category', cat)
+          .gte('created_at', sevenDaysAgo)
+          .gte('ai_final_score', 400)
+          .order('ai_final_score', { ascending: false })
+          .limit(60);
+        if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
+        return q;
+      });
+      const results = await Promise.all(catPromises);
+      const all = [];
+      for (const r of results) if (r.data) all.push(...r.data);
+      return { data: all, error: null };
+    })(),
+
+    // 3. DISCOVERY: same per-category approach
+    (async () => {
+      const DISC_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      const catPromises = DISC_CATS.map(cat => {
+        let q = supabase.from('published_articles')
+          .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
+          .eq('category', cat)
+          .gte('created_at', sevenDaysAgo)
+          .gte('ai_final_score', 300)
+          .order('ai_final_score', { ascending: false })
+          .limit(60);
+        if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
+        return q;
+      });
+      const results = await Promise.all(catPromises);
+      const all = [];
+      for (const r of results) if (r.data) all.push(...r.data);
+      return { data: all, error: null };
+    })(),
 
     // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
     buildUserInterestProfile(supabase, userId),
+
+    // 5. ALL EVENTS for entity signal computation (engagement rates per entity)
+    //    Also used for topic saturation penalty
+    (userId ? supabase
+      .from('user_article_events')
+      .select('article_id, event_type, created_at')
+      .eq('user_id', userId)
+      .in('event_type', ['article_engaged', 'article_liked', 'article_detail_view', 'article_skipped', 'article_revisit'])
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 3600000).toISOString())
+      .limit(1000)
+    : Promise.resolve({ data: [] })),
+
+    // 6. FRESH BEST: highest quality × recency, NO taste vector, NO interest filter
+    //    TikTok-style exploration — best content from ALL categories in last 48h
+    //    Fetch 1000 — power users can have 400+ seen articles, need headroom
+    supabase
+      .from('published_articles')
+      .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
+      .gte('created_at', fortyEightHoursAgoISO)
+      .gte('ai_final_score', 300)
+      .order('ai_final_score', { ascending: false })
+      .limit(1000),
   ]);
 
   if (personalResult.error) {
-    console.error('Personal query error (continuing with trending+discovery):', personalResult.error);
-    // Continue with empty personal results — trending + discovery will fill the feed
+    console.error('Personal query error:', personalResult.error?.message || personalResult.error);
+    // Multi-cluster timed out → try single taste vector as fallback
+    if (tasteVectorMinilm && (!personalResult.data || personalResult.data.length === 0)) {
+      console.log('[feed] Falling back to single taste vector...');
+      try {
+        // Use 168h (7d) window — single vector with 336h returns 95% stale content
+        const { data: fallbackData, error: fallbackErr } = await supabase.rpc('match_articles_personal_minilm', {
+          query_embedding: tasteVectorMinilm, match_count: 500, hours_window: 168,
+          exclude_ids: excludeIds, min_similarity: minSim,
+        });
+        if (!fallbackErr && fallbackData) {
+          personalResult.data = fallbackData;
+          personalResult.error = null;
+          hasInterestClusters = false; // Use single-vector path downstream
+          console.log('[feed] Single vector fallback returned', fallbackData.length, 'articles');
+        }
+      } catch (fallbackErr2) {
+        console.error('[feed] Single vector fallback also failed:', fallbackErr2?.message);
+      }
+    }
   }
+
+  // Build recentEntityCounts for topic saturation penalty
+  // ── BUILD ENTITY SIGNALS (engagement rates per entity) ──
+  // Replaces dual tag_profile/skip_profile with single ratio-based system.
+  // Positive events: engaged, liked, detail_view, revisit
+  // Negative events: skipped
+  let entitySignals = null;
+  let recentEntityCounts = null; // still used for saturation penalty
+  const positiveTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit']);
+  const negativeTypes = new Set(['article_skipped']);
+  const allEventData = recentEngagedResult?.data || [];
+  const allEventArticleIds = [...new Set(allEventData.map(e => e.article_id).filter(Boolean))];
+
+  if (allEventArticleIds.length > 0) {
+    // Fetch tags for all event articles
+    const tagBatches = [];
+    for (let i = 0; i < allEventArticleIds.length; i += 300) {
+      const batch = allEventArticleIds.slice(i, i + 300);
+      tagBatches.push(supabase.from('published_articles').select('id, interest_tags').in('id', batch));
+    }
+    const tagResults = await Promise.all(tagBatches);
+    const articleTagMap = {};
+    for (const r of tagResults) {
+      for (const a of (r.data || [])) {
+        articleTagMap[a.id] = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase()).slice(0, 5);
+      }
+    }
+
+    // Build entity signals with 24h rapid rejection tracking
+    const nowMs = Date.now();
+    const sevenDaysAgo = nowMs - 7 * 24 * 3600000;
+    const twentyFourHoursAgoMs = nowMs - 24 * 3600000;
+    const fortyEightHoursAgoMs = nowMs - 48 * 3600000;
+    entitySignals = {};
+    recentEntityCounts = {};
+
+    for (const event of allEventData) {
+      const tags = articleTagMap[event.article_id];
+      if (!tags) continue;
+      const isPositive = positiveTypes.has(event.event_type);
+      const isNegative = negativeTypes.has(event.event_type);
+      if (!isPositive && !isNegative) continue;
+      const eventTime = new Date(event.created_at).getTime();
+      const isRecent = eventTime > sevenDaysAgo;
+      const isLast24h = eventTime > twentyFourHoursAgoMs;
+      const isLast48h = eventTime > fortyEightHoursAgoMs;
+
+      for (const t of tags) {
+        if (!entitySignals[t]) entitySignals[t] = { pos: 0, neg: 0, pos_recent: 0, neg_recent: 0, pos_24h: 0, neg_24h: 0 };
+        if (isPositive) {
+          entitySignals[t].pos++;
+          if (isRecent) entitySignals[t].pos_recent++;
+          if (isLast24h) entitySignals[t].pos_24h++;
+          if (isLast48h) recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
+        } else {
+          entitySignals[t].neg++;
+          if (isRecent) entitySignals[t].neg_recent++;
+          if (isLast24h) entitySignals[t].neg_24h++;
+        }
+      }
+    }
+  }
+
+  // Build onboarding entity set for affinity floor protection
+  const userFollowedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
+  const onboardingEntities = buildOnboardingEntities(userFollowedTopics);
 
   // ==========================================
   // INTEREST CATEGORY ENRICHMENT
@@ -1150,16 +1592,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   let interestArticles = [];
   if (interestCategories.size > 0) {
     const allInterestCats = [...new Set([...interestCategories, ...interestAltCategories])];
-    const catPromises = allInterestCats.map(cat =>
-      supabase
+    const catPromises = allInterestCats.map(cat => {
+      let q = supabase
         .from('published_articles')
         .select('id, ai_final_score, category, created_at, interest_tags, shelf_life_days')
         .eq('category', cat)
-        .gte('created_at', sevenDaysAgo)
+        .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
-        .order('ai_final_score', { ascending: false })
-        .limit(100)
-    );
+        .order('ai_final_score', { ascending: false });
+      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      if (sqlExclude.length > 0) {
+        q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
+      }
+      return q.limit(100);
+    });
     const catResults = await Promise.all(catPromises);
     for (const r of catResults) {
       if (r.data) interestArticles.push(...r.data);
@@ -1235,10 +1681,14 @@ async function handleV2Feed(req, res, supabase, opts) {
     const { data: pgDates } = await supabase
       .from('published_articles')
       .select('id, created_at')
-      .in('id', pgIds.slice(0, 500));
+      .in('id', pgIds.slice(0, 800));
 
     const dateMap = {};
     for (const a of (pgDates || [])) dateMap[a.id] = new Date(a.created_at).getTime();
+
+    // ── Tiered time window: prefer fresh, expand ONLY if pool is very thin ──
+    // 92% engagement came from all-<6h content. Old personal articles kill engagement.
+    const TIME_TIERS = [24, 48, 96, 168]; // 24h, 48h, 4d, 7d (was 48h, 7d, 14d, 30d)
 
     if (hasInterestClusters) {
       // Per-cluster tiered filtering
@@ -1250,32 +1700,35 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       const filteredResults = [];
-      const MIN_PER_CLUSTER = 20;
-      const tiers = [48, 168, 336]; // hours: 2 days, 7 days, 14 days
+      const MIN_PER_CLUSTER = 5; // was 30 — too aggressive, pulled in 100h+ articles
 
       for (const [ci, results] of Object.entries(clusterResults)) {
         let clusterFiltered = [];
-        for (const tierHours of tiers) {
+        for (const tierHours of TIME_TIERS) {
           const cutoff = now - tierHours * 3600000;
           clusterFiltered = results.filter(r => (dateMap[r.id] || 0) >= cutoff);
           if (clusterFiltered.length >= MIN_PER_CLUSTER) break;
         }
-        // If still not enough after 14 days, use all results for this cluster
-        if (clusterFiltered.length < MIN_PER_CLUSTER) clusterFiltered = results;
+        // If even 30 days isn't enough, use everything pgvector returned
+        if (clusterFiltered.length < MIN_PER_CLUSTER) {
+          clusterFiltered = results;
+        }
         filteredResults.push(...clusterFiltered);
       }
       personalResults = filteredResults;
     } else {
-      // Single vector: global tiered filtering
-      const MIN_RESULTS = 80;
-      const tiers = [48, 168, 336];
+      // Single vector: tiered filtering — accept smaller pool rather than stale articles
+      const MIN_RESULTS = 10; // was 150 — too greedy, pulled in week-old articles
       let filtered = [];
-      for (const tierHours of tiers) {
+      for (const tierHours of TIME_TIERS) {
         const cutoff = now - tierHours * 3600000;
         filtered = personalResults.filter(r => (dateMap[r.id] || 0) >= cutoff);
         if (filtered.length >= MIN_RESULTS) break;
       }
-      if (filtered.length < MIN_RESULTS) filtered = personalResults; // use all
+      // If even 7 days isn't enough, use what we have (trending/discovery fill the rest)
+      if (filtered.length < MIN_RESULTS) {
+        filtered = personalResults;
+      }
       personalResults = filtered;
     }
   }
@@ -1297,12 +1750,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       clusterBuckets[ci].sort((a, b) => b.similarity - a.similarity);
     }
 
-    // Load cluster metadata for proportional weighting
-    // Fix 1: Use clusterLookupId + correct column for V3 clusters with real importance scores
+    // Fix 1: Load cluster metadata using personalizationId (V3) for real importance scores
+    const clusterLookup = clusterLookupId || userId;
+    const clusterCol = clusterLookupColumn || 'user_id';
     const { data: clusterMeta } = await supabase
       .from('user_interest_clusters')
       .select('cluster_index, article_count, importance_score')
-      .eq(clusterLookupColumn, clusterLookupId);
+      .eq(clusterCol, clusterLookup);
 
     // Fix 1: Use importance_score (V3) when available, fall back to article_count
     const hasImportanceScores = (clusterMeta || []).some(c => c.importance_score > 0);
@@ -1318,6 +1772,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     } else {
       const totalEngaged = (clusterMeta || []).reduce((s, c) => s + (c.article_count || 1), 0);
       for (const c of (clusterMeta || [])) {
+        // Cap any single cluster at 50% to prevent monoculture
         clusterWeights[c.cluster_index] = Math.min(
           (c.article_count || 1) / Math.max(totalEngaged, 1),
           0.5
@@ -1362,12 +1817,14 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
-  const trendingCatMax = hasAnyPersonalization ? 8 : 10;
+  // Category cap per pool — prevents one dominant category from flooding
+  // War/conflict cycle: 49/50 top articles are "World". Cap at 5 forces diversity.
+  const trendingCatMax = hasAnyPersonalization ? 5 : 10;
   const trendingCategoryCounts = {};
   const trendingIds = new Set();
   const trendingArticleMeta = [];
   for (const a of (trendingResult.data || [])) {
-    if (personalIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     trendingCategoryCounts[cat] = (trendingCategoryCounts[cat] || 0) + 1;
     if (trendingCategoryCounts[cat] > trendingCatMax) continue;
@@ -1377,12 +1834,13 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // DISCOVERY: diverse categories, exclude personal & trending
   // Cold-start: much higher caps to fill the feed
-  const discoveryCatMax = hasAnyPersonalization ? 6 : 8;
-  const discoveryTotalMax = hasAnyPersonalization ? 150 : 200;
+  // Change 3: Higher discovery category cap (15) and total (600)
+  const discoveryCatMax = 5; // was 15 — same flooding issue as trending
+  const discoveryTotalMax = 600;
   const discoveryCategoryCounts = {};
   const discoveryArticleMeta = [];
   for (const a of (discoveryResult.data || [])) {
-    if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || trendingIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     const cat = a.category || 'Other';
     discoveryCategoryCounts[cat] = (discoveryCategoryCounts[cat] || 0) + 1;
     if (discoveryCategoryCounts[cat] > discoveryCatMax) continue;
@@ -1394,9 +1852,31 @@ async function handleV2Feed(req, res, supabase, opts) {
   const interestIds = new Set();
   const interestArticleMeta = [];
   for (const a of interestArticles) {
-    if (personalIds.has(a.id) || trendingIds.has(a.id) || seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) continue;
+    if (personalIds.has(a.id) || trendingIds.has(a.id) || canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) continue;
     interestIds.add(a.id);
     interestArticleMeta.push(a);
+  }
+
+  // ── FRESH BEST: TikTok-style exploration pool ──
+  // Best content from last 48h regardless of topic. No taste vector matching.
+  // Max 25 per category for breadth. PRIORITIZE unseen articles over seen ones.
+  const freshBestCatCounts = {};
+  const freshBestArticleMeta = [];
+  const freshBestIds = new Set();
+  const allSeenSet_fb = canonicalSeenIds; // same canonical set
+  // Sort: unseen articles first, then seen — both sorted by score within each group
+  // fresh_best uses canonicalSeenIds — same set as everything else, no separate variable
+  const freshBestRaw = (freshBestResult.data || []).filter(a => !canonicalSeenIds.has(a.id) && !sessionExcludeIds.has(a.id));
+  const fbUnseen = freshBestRaw.filter(a => !allSeenSet_fb.has(a.id));
+  const fbSeen = freshBestRaw.filter(a => allSeenSet_fb.has(a.id));
+  const fbSorted = [...fbUnseen, ...fbSeen]; // unseen first
+  for (const a of fbSorted) {
+    const cat = a.category || 'Other';
+    freshBestCatCounts[cat] = (freshBestCatCounts[cat] || 0) + 1;
+    if (freshBestCatCounts[cat] > 25) continue;
+    freshBestIds.add(a.id);
+    freshBestArticleMeta.push(a);
+    if (freshBestArticleMeta.length >= 200) break; // cap total
   }
 
   // ==========================================
@@ -1408,6 +1888,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     ...trendingIds,
     ...discoveryArticleMeta.map(a => a.id),
     ...interestIds,
+    ...freshBestIds,
   ];
   const uniqueIds = [...new Set(allCandidateIds)];
 
@@ -1441,6 +1922,113 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Pre-compute tag sets and embedding cache for MMR diversity calculations
   const tagCache = buildTagSetsCache(allArticles);
   const embeddingCache = buildEmbeddingCache(allArticles);
+
+  // Fix 10: Count session interactions for adaptive weighting
+  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
+
+  // Fix 5: Category-level engagement suppression
+  // Load per-category engagement stats (last 7 days) to suppress 0% categories
+  let categorySuppressionMap = {};
+  if (userId) {
+    try {
+      const { data: catStats } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId,
+        p_days: 7,
+      });
+      if (catStats) {
+        // Compute the user's AVERAGE engagement rate across all categories
+        let totalImp = 0, totalEng = 0;
+        for (const row of catStats) {
+          totalImp += parseInt(row.impressions) || 0;
+          totalEng += parseInt(row.engaged) || 0;
+        }
+        const avgRate = totalImp > 0 ? totalEng / totalImp : 0.30;
+
+        for (const row of catStats) {
+          const impressions = parseInt(row.impressions) || 0;
+          const engaged = parseInt(row.engaged) || 0;
+          if (impressions < 10) continue;
+          const rate = engaged / impressions;
+          // Graduated suppression relative to user's average
+          // Sports at 19% vs avg 33% → 0.58 ratio → 0.50x multiplier
+          // Tech at 51% vs avg 33% → 1.55 ratio → 1.30x boost
+          const ratio = rate / Math.max(avgRate, 0.10);
+          if (ratio < 0.40) categorySuppressionMap[row.category] = 0.15;       // terrible: <40% of avg
+          else if (ratio < 0.60) categorySuppressionMap[row.category] = 0.35;  // bad: Sports (19% vs 33% avg)
+          else if (ratio < 0.80) categorySuppressionMap[row.category] = 0.60;  // below avg
+          else if (ratio > 1.30) categorySuppressionMap[row.category] = 1.30;  // BOOST above avg categories
+          // ratio 0.80-1.30: no suppression or boost (near average)
+        }
+      }
+    } catch (catErr) {
+      // RPC may not be deployed yet — continue without suppression
+      console.log('[feed] Category suppression stats unavailable:', catErr.message);
+    }
+  }
+
+  // Session-reactive category suppression: build from current session signals
+  const sessionCatStats = {};
+  for (const id of sessionEngagedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+    sessionCatStats[cat].engaged++;
+  }
+  for (const id of sessionSkippedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+  }
+  for (const id of sessionGlancedIds) {
+    const art = articleMap[id];
+    if (!art) continue;
+    const cat = art.category || 'Other';
+    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
+    sessionCatStats[cat].impressions++;
+  }
+
+  function getCategorySuppression(article) {
+    const cat = article.category;
+
+    // Session-reactive: 5+ articles this session with <15% engagement → suppress NOW
+    const sessionData = sessionCatStats[cat];
+    if (sessionData && sessionData.impressions >= 5) {
+      const sessionRate = sessionData.engaged / sessionData.impressions;
+      if (sessionRate < 0.15) return 0.20;
+    }
+
+    // 7-day historical suppression (slower, more stable)
+    return categorySuppressionMap[cat] || 1.0;
+  }
+
+  // Underfed winner boost: amplify categories with high engagement but low serving volume
+  // Food (50% rate, 12 served) and Travel (50% rate, 10 served) should appear more
+  let categoryStats30d = {};
+  if (userId) {
+    try {
+      const { data: stats30 } = await supabase.rpc('get_category_engagement_stats', {
+        p_user_id: userId, p_days: 30,
+      });
+      if (stats30) {
+        for (const row of stats30) {
+          categoryStats30d[row.category] = { impressions: parseInt(row.impressions) || 0, engaged: parseInt(row.engaged) || 0 };
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+
+  function underfedWinnerBoost(article) {
+    const stats = categoryStats30d[article.category];
+    if (!stats || stats.impressions === 0) return 1.0;
+    const rate = stats.engaged / stats.impressions;
+    if (rate >= 0.40 && stats.engaged >= 5 && stats.impressions < 25) return 1.5;
+    if (rate >= 0.40 && stats.impressions < 50) return 1.2;
+    return 1.0;
+  }
 
   // ==========================================
   // PHASE 5: SCORE CANDIDATES
@@ -1513,32 +2101,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Fix 5: Category-level engagement suppression
   // Load per-category engagement stats (last 7 days) to suppress 0% categories
   let categorySuppressionMap = {};
-  if (userId) {
-    try {
-      const { data: catStats } = await supabase.rpc('get_category_engagement_stats', {
-        p_user_id: userId,
-        p_days: 7,
-      });
-      if (catStats) {
-        for (const row of catStats) {
-          const impressions = parseInt(row.impressions) || 0;
-          const engaged = parseInt(row.engaged) || 0;
-          if (impressions < 10) continue; // not enough data
-          const rate = engaged / impressions;
-          if (rate < 0.05 && impressions >= 20) categorySuppressionMap[row.category] = 0.15;
-          else if (rate < 0.10 && impressions >= 15) categorySuppressionMap[row.category] = 0.40;
-          else if (rate < 0.15 && impressions >= 10) categorySuppressionMap[row.category] = 0.70;
-        }
-      }
-    } catch (catErr) {
-      // RPC may not be deployed yet — continue without suppression
-      console.log('[feed] Category suppression stats unavailable:', catErr.message);
-    }
-  }
-
-  function getCategorySuppression(article) {
-    return categorySuppressionMap[article.category] || 1.0;
-  }
 
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
@@ -1561,7 +2123,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
-      // Boost articles from followed publishers (+25%)
+      score *= underfedWinnerBoost(article);
+      // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
       }
@@ -1618,68 +2181,91 @@ async function handleV2Feed(req, res, supabase, opts) {
     })
     .sort((a, b) => b._score - a._score);
 
+  // Fresh Best bucket: quality × recency, no taste vector, with skip + saturation penalty
+  const freshBestScored = freshBestArticleMeta
+    .filter(a => articleMap[a.id])
+    .map(a => {
+      const article = articleMap[a.id];
+      const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
+      const saturation = topicSaturationPenalty(article, recentEntityCounts);
+      return {
+        ...article,
+        _score: (article.ai_final_score || 0) * recency * affMult * saturation,
+        _bucket: 'fresh_best',
+      };
+    })
+    .sort((a, b) => b._score - a._score);
+
+  // ==========================================
+  // PHASE 5.5: TASTE VECTOR RE-RANKING (angle-aware personalization)
+  // Entity scoring can't distinguish "longevity market" from "mole rat longevity".
+  // Taste vector embeddings CAN — one is near business articles, the other near biology.
+  // Fetch embeddings for top 60 candidates per pool, compute cosine similarity
+  // to taste vector, and re-score. This is the key to solving "right entity, wrong angle."
+  // ==========================================
+
+  const userTasteVec = tasteVectorMinilm || tasteVector;
+  if (userTasteVec && hasAnyPersonalization) {
+    // Collect top 60 candidates from each non-personal pool for embedding fetch
+    const reRankPools = [
+      { pool: trendingScored, name: 'trending' },
+      { pool: discoveryScored, name: 'discovery' },
+      { pool: freshBestScored, name: 'fresh_best' },
+    ];
+
+    const idsToFetch = new Set();
+    for (const { pool } of reRankPools) {
+      for (const a of pool.slice(0, 60)) {
+        if (!embeddingCache.has(a.id)) idsToFetch.add(a.id);
+      }
+    }
+
+    if (idsToFetch.size > 0) {
+      const { data: tasteEmbData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...idsToFetch].slice(0, 200));
+      if (tasteEmbData) {
+        for (const a of tasteEmbData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+
+    // Re-score with taste vector similarity (angle-aware)
+    for (const { pool } of reRankPools) {
+      for (const a of pool) {
+        const emb = embeddingCache.get(a.id);
+        if (emb && userTasteVec.length === emb.length) {
+          const sim = cosineSimilarityVec(userTasteVec, emb);
+          // Stronger taste weight: sim 0.8→1.42x, sim 0.5→1.0x, sim 0.3→0.72x
+          const tasteMult = 0.3 + Math.max(0, sim) * 1.4;
+          a._score *= tasteMult;
+        }
+      }
+      pool.sort((a, b) => b._score - a._score);
+    }
+  }
+
   // ==========================================
   // PHASE 5.5a: ENTITY BLOCKLIST FOR ALL USERS (not just cold-start)
   // Combines session skips + persistent skip_profile to hard-block
   // entities the user repeatedly skipped.
   // ==========================================
 
-  const SKIP_GENERIC_TERMS = new Set(['politics', 'world', 'business', 'sports',
-    'entertainment', 'tech', 'science', 'health', 'finance', 'lifestyle',
-    'united states', 'china', 'europe', 'energy', 'military', 'economy',
-    'government', 'trade', 'security', 'culture']);
-
-  const globalEntitySkipCounts = {};
-
-  // From persistent entity signals (replaces skip_profile)
-  for (const [entity, record] of Object.entries(entitySignals)) {
-    // Only block entities with strong negative signal (3+ more negatives than positives)
-    const negativeExcess = (record.negative || 0) - (record.positive || 0);
-    if (negativeExcess < 3) continue;
-    // Extract the value part from typed signal (e.g., "person:jannik_sinner" → "jannik_sinner")
-    const parts = entity.split(':');
-    const entityName = parts.length === 2 ? parts[1].replace(/_/g, ' ') : entity;
-    if (SKIP_GENERIC_TERMS.has(entityName.toLowerCase())) continue;
-    globalEntitySkipCounts[entityName.toLowerCase()] = negativeExcess;
-  }
-
-  // From current session skipped IDs
-  for (const id of sessionSkippedIds) {
-    const art = articleMap[id];
-    if (!art) continue;
-    const tags = safeJsonParse(art.interest_tags, []);
-    for (const tag of tags.slice(0, 3)) {
-      const t = tag.toLowerCase();
-      if (!SKIP_GENERIC_TERMS.has(t)) {
-        globalEntitySkipCounts[t] = (globalEntitySkipCounts[t] || 0) + 1;
-      }
-    }
-  }
-
-  const globalBlocklist = new Set();
-  for (const [entity, count] of Object.entries(globalEntitySkipCounts)) {
-    if (count >= 3) globalBlocklist.add(entity);
-  }
-
-  function isGlobalBlocked(article) {
-    if (globalBlocklist.size === 0) return false;
-    const tags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
-    const primaryTags = tags.slice(0, 2);
-    if (primaryTags.some(t => globalBlocklist.has(t))) return true;
-    const blockedCount = tags.filter(t => globalBlocklist.has(t)).length;
-    if (blockedCount >= 2) return true;
-    const titleLower = (article.title_news || '').toLowerCase();
-    for (const blocked of globalBlocklist) {
-      if (blocked.length > 3 && titleLower.includes(blocked)) return true;
-    }
-    return false;
-  }
-
-  // Apply blocklist to ALL scored pools
-  const personalScoredFiltered = personalScored.filter(a => !isGlobalBlocked(a));
-  const trendingScoredFiltered = trendingScored.filter(a => !isGlobalBlocked(a));
-  const discoveryScoredFiltered = discoveryScored.filter(a => !isGlobalBlocked(a));
-  const interestScoredFiltered = interestScored.filter(a => !isGlobalBlocked(a));
+  // Entity-level skip signals are handled by entitySignalMultiplier (ratio-based
+  // scoring via typed_signals). No hard-blocking — the old globalBlocklist was
+  // too aggressive, blocking common entities like "film", "moon", "nasa" and
+  // eliminating 97% of trending articles.
+  const personalScoredFiltered = personalScored;
+  const trendingScoredFiltered = trendingScored;
+  const discoveryScoredFiltered = discoveryScored;
+  const interestScoredFiltered = interestScored;
+  const freshBestScoredFiltered = freshBestScored;
 
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -1706,20 +2292,77 @@ async function handleV2Feed(req, res, supabase, opts) {
   //   ~60% personal, 20% trending, 20% surprise/discovery
   // ==========================================
 
-  const SLOTS = ['P', 'P', 'T', 'P', 'P', 'S', 'P', 'P', 'T', 'S'];
-
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
-  const pPool = [...personalScoredFiltered];
-  const tPool = [...trendingScoredFiltered];
-  const dPool = [...discoveryScoredFiltered];
-  const iPool = [...interestScoredFiltered];
+
+  // ── THREE-TIER SLOT FILLING ──
+  // Tier 1: FRESH UNSEEN — articles within their freshness window that user hasn't seen
+  // Tier 2: RESURFACED — articles user previously engaged with (can re-read)
+  // Tier 3: STALE UNSEEN — old articles user hasn't seen but are past relevance peak
+  // Never show: stale breaking/developing news (misleading on a news platform)
+  const allSeenSet = canonicalSeenIds; // ONE set, ONE source of truth
+
+  function splitThreeTiers(pool) {
+    const unseen = pool.filter(a => !allSeenSet.has(a.id));
+    const resurfaced = pool.filter(a => allSeenSet.has(a.id));
+    const freshUnseen = unseen.filter(a => isStillFresh(a));
+    const staleUnseen = unseen.filter(a => !isStillFresh(a));
+    return { freshUnseen, resurfaced, staleUnseen };
+  }
+
+  const pTiers = splitThreeTiers(personalScoredFiltered);
+  const tTiers = splitThreeTiers(trendingScoredFiltered);
+  const dTiers = splitThreeTiers(discoveryScoredFiltered);
+  const iTiers = splitThreeTiers(interestScoredFiltered);
+  // fresh_best: skip three-tier split — already pre-filtered for freshness (48h).
+  // Directly split into unseen/resurfaced to avoid isStillFresh rejecting articles.
+  const fUnseen = freshBestScoredFiltered.filter(a => !allSeenSet.has(a.id));
+  const fResurfaced = freshBestScoredFiltered.filter(a => allSeenSet.has(a.id));
+  const fTiers = { freshUnseen: fUnseen, resurfaced: fResurfaced, staleUnseen: [] };
+
+  // Count fresh unseen for feed_state
+  const totalFreshUnseen = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fUnseen.length;
+
+  // DIAGNOSTIC: Pool sizes after three-tier split
+  // console.log(`[feed-diag] canonicalSeenIds=${canonicalSeenIds.size} sessionExclude=${sessionExcludeIds.size}`);
+  // console.log(`[feed-diag] personalScored=${personalScored.length} filtered=${personalScoredFiltered.length}`);
+  // console.log(`[feed-diag] trendingScored=${trendingScored.length} filtered=${trendingScoredFiltered.length}`);
+  // console.log(`[feed-diag] discoveryScored=${discoveryScored.length} filtered=${discoveryScoredFiltered.length}`);
+  // console.log(`[feed-diag] interestScored=${interestScored.length} filtered=${interestScoredFiltered.length}`);
+  // console.log(`[feed-diag] freshBestScored=${freshBestScored.length} filtered=${freshBestScoredFiltered.length}`);
+  // console.log(`[feed-diag] pTiers: fresh=${pTiers.freshUnseen.length} resurf=${pTiers.resurfaced.length} stale=${pTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] tTiers: fresh=${tTiers.freshUnseen.length} resurf=${tTiers.resurfaced.length} stale=${tTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] dTiers: fresh=${dTiers.freshUnseen.length} resurf=${dTiers.resurfaced.length} stale=${dTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] iTiers: fresh=${iTiers.freshUnseen.length} resurf=${iTiers.resurfaced.length} stale=${iTiers.staleUnseen.length}`);
+  // console.log(`[feed-diag] fUnseen=${fUnseen.length} fResurfaced=${fResurfaced.length}`);
+  // console.log(`[feed-diag] totalFreshUnseen=${totalFreshUnseen} hasAnyPersonalization=${hasAnyPersonalization}`);
+
+  // ── Dynamic slot pattern ──
+  // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
+  // Fresh_best is exploration (last resort), not primary filler.
+  const personalUnseenCount = pTiers.freshUnseen.length;
+  let SLOTS;
+  if (personalUnseenCount >= 15) {
+    SLOTS = ['P','P','T','P','P','D','P','P','T','D'];           // 60P/20T/20D
+  } else if (personalUnseenCount >= 5) {
+    SLOTS = ['P','T','D','T','P','D','T','D','T','F'];           // 20P/40T/30D/10F
+  } else {
+    // Personal exhausted — trending + discovery first, fresh_best last resort
+    SLOTS = ['T','D','T','D','T','F','T','D','T','F'];           // 50T/30D/20F
+  }
+
+  // Phase 1: Fill from FRESH UNSEEN candidates only
+  const pPool = [...pTiers.freshUnseen];
+  const tPool = [...tTiers.freshUnseen];
+  const dPool = [...dTiers.freshUnseen];
+  const iPool = [...iTiers.freshUnseen];
+  const fPool = [...fUnseen];
 
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
   if (hasAnyPersonalization) {
     const mmrCandidateIds = new Set();
-    for (const pool of [pPool, tPool, dPool, iPool]) {
+    for (const pool of [pPool, tPool, dPool, iPool, fPool]) {
       for (const a of pool.slice(0, 50)) {
         if (!embeddingCache.has(a.id)) mmrCandidateIds.add(a.id);
       }
@@ -1788,10 +2431,13 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   function getEntityCapShared(tag) {
     const freq = entityFreqInPoolShared[tag] || 0;
-    if (freq >= 20) return 2;
+    // Tight caps to prevent topic flooding (5 Artemis articles in one feed)
+    // Tags like "artemis" with freq=4-9 were getting Infinity cap (no limit)
+    if (freq >= 50) return 3;
+    if (freq >= 20) return 3;
     if (freq >= 10) return 3;
-    if (freq >= 5) return 4;
-    return Infinity;
+    if (freq >= 3) return 2; // NEW: even low-freq tags get capped at 2
+    return 3; // unknown tags: max 3 (was Infinity)
   }
 
   const entitySelectionCountsShared = {};
@@ -1825,7 +2471,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // - Also runs for personalized users with small pool (< 100 articles)
   // ==========================================
 
+  // console.log(`[feed-diag] interestCategories=${[...interestCategories].join(',')} iPool=${iPool.length} pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} fPool=${fPool.length}`);
+
   if (!hasAnyPersonalization) {
+    // console.log('[feed-diag] BRANCH: cold-start bandit');
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
     function normalRandom() {
@@ -1937,7 +2586,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     for (let ci = 0; ci < ALL_CATEGORIES.length; ci++) {
       const cat = ALL_CATEGORIES[ci];
       const allArticles_cat = (generalResults[ci].data || []).filter(a => {
-        if (seenArticleIds.includes(a.id) || sessionExcludeIds.has(a.id)) return false;
+        if (canonicalSeenIds.has(a.id) || sessionExcludeIds.has(a.id)) return false;
         const title = a?.title_news || a?.title || '';
         return !(/test/i.test(title));
       });
@@ -1977,7 +2626,7 @@ async function handleV2Feed(req, res, supabase, opts) {
               .limit(40);
             if (fallbackData) {
               const fallbackFiltered = fallbackData.filter(a => {
-                if (usedIds.has(a.id) || seenArticleIds.includes(a.id)) return false;
+                if (usedIds.has(a.id) || canonicalSeenIds.has(a.id)) return false;
                 const artTags = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase());
                 return artTags.some(t => {
                   for (const stTag of stTagSet) {
@@ -2386,6 +3035,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
+    // console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
     // ==========================================
     // QUOTA-BASED PRE-FILL for users with interest selections
     // 70% of slots guaranteed for interest categories, 30% diversity
@@ -2441,37 +3091,42 @@ async function handleV2Feed(req, res, supabase, opts) {
       catIdx++;
     }
 
-    // Fill remaining slots with standard slot-filling (diversity)
-    for (let pos = 0; selected.length < limit; pos++) {
+    // Fill remaining slots — every slot tries ALL pools before giving up
+    let consecutiveFails = 0;
+    for (let pos = 0; selected.length < limit && consecutiveFails < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (slot === 'P') {
+      // Try preferred pool first, then ALL others as fallback
+      if (slot === 'F') {
+        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
         picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
       }
+      // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
 
-      if (!picked) break;
+      if (!picked) { consecutiveFails++; continue; }
+      consecutiveFails = 0;
 
-      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   } else {
+    // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
     let usePivotMode = false;
     if (sessionSkippedIds.length >= 5) {
-      // Check if the last 5 actions were all skips (no engaged between them)
       const engagedSet = new Set(sessionEngagedIds);
       const glancedSet = new Set(sessionGlancedIds);
       let consecutiveSkips = 0;
@@ -2487,49 +3142,144 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     // Personalized user without topic selections: standard slot-filling
-    for (let pos = 0; selected.length < limit; pos++) {
+    let consecutiveFails2 = 0;
+    for (let pos = 0; selected.length < limit && consecutiveFails2 < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
       if (usePivotMode) {
-        // Fix 8: Pivot mode — only serve high-confidence content from top of personal pool
-        // This breaks the skip streak by avoiding trending/discovery slots
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.8); // higher lambda = more relevance
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.8);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
+        // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive)
+        // Use lambda=0.5 (MORE diversity) not 0.8 — the old 0.8 caused topic flooding
+        const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.0;
+        const pivotPPool = pPool.filter(pivotFilter);
+        const pivotTPool = tPool.filter(pivotFilter);
+        const pivotDPool = dPool.filter(pivotFilter);
+        // Use low lambda for maximum diversity — pivot is about breaking the skip streak
+        picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
+        // NO fallback to unfiltered pool — better to show fewer articles than repeat the skip pattern
+      } else if (slot === 'F') {
+        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else if (slot === 'T') {
         picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.5);
       } else {
-        // SURPRISE slot: variable reward
-        if (Math.random() < 0.6 && dPool.length > 0) {
-          picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        } else if (pPool.length > 3) {
-          const tailStart = Math.floor(pPool.length * 0.5);
-          const tailEnd = pPool.length;
-          if (tailStart < tailEnd) {
-            const tailIdx = tailStart + Math.floor(Math.random() * (tailEnd - tailStart));
-            const candidate = pPool.splice(tailIdx, 1)[0];
-            if (candidate && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) picked = candidate;
-          }
-        }
-        if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-        if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
       }
+      // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
 
-      if (!picked) break;
+      if (!picked) { consecutiveFails2++; continue; }
+      consecutiveFails2 = 0;
 
-      picked.bucket = usePivotMode ? 'pivot' : (slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery');
+      picked.bucket = usePivotMode ? 'pivot' : (slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery');
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
     }
+  }
+
+  // console.log(`[feed-diag] After phase1 slot-filling: selected=${selected.length} limit=${limit}`);
+  // console.log(`[feed-diag] Remaining pools: pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} iPool=${iPool.length} fPool=${fPool.length}`);
+
+  // ==========================================
+  // PHASE 6b: RESURFACED TIER (fill remaining slots from previously-seen articles)
+  // Tier 2: Articles user previously engaged with — better than stale unseen.
+  // ==========================================
+
+  if (selected.length < limit) {
+    const selectedIds = new Set(selected.map(a => a.id));
+
+    // ONLY resurface articles the user previously ENGAGED with (not skipped ones).
+    // Resurfacing skipped articles = showing duplicates the user already rejected.
+    function sortResurfacedByEngagement(pool) {
+      return pool.filter(a => {
+        if (selectedIds.has(a.id)) return false;
+        // Only allow articles the user previously engaged with or liked
+        const meta = seenMeta.get(a.id);
+        return meta && meta.was_engaged;
+      }).sort((a, b) => (b._score || 0) - (a._score || 0));
+    }
+
+    const rpPool = sortResurfacedByEngagement(pTiers.resurfaced);
+    const rtPool = sortResurfacedByEngagement(tTiers.resurfaced);
+    const rdPool = sortResurfacedByEngagement(dTiers.resurfaced);
+    const riPool = sortResurfacedByEngagement(iTiers.resurfaced);
+    const rfPool = sortResurfacedByEngagement(fTiers.resurfaced);
+
+    // Fetch embeddings for tier 2+3 candidates (for MMR dedup against already-selected)
+    const fallbackCandidateIds = new Set();
+    for (const pool of [rpPool, rtPool, rdPool, riPool, rfPool]) {
+      for (const a of pool.slice(0, 30)) {
+        if (!embeddingCache.has(a.id)) fallbackCandidateIds.add(a.id);
+      }
+    }
+    if (fallbackCandidateIds.size > 0) {
+      const { data: fallbackEmbData } = await supabase
+        .from('published_articles')
+        .select('id, embedding_minilm')
+        .in('id', [...fallbackCandidateIds].slice(0, 200));
+      if (fallbackEmbData) {
+        for (const a of fallbackEmbData) {
+          const emb = safeJsonParse(a.embedding_minilm, null);
+          if (emb && Array.isArray(emb) && emb.length > 0) {
+            embeddingCache.set(a.id, emb);
+          }
+        }
+      }
+    }
+
+    // Fill from resurfaced tier — try all pools including fresh_best
+    for (let pos = 0; selected.length < limit; pos++) {
+      const slot = SLOTS[pos % SLOTS.length];
+      let picked = null;
+
+      if (slot === 'F') {
+        picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.4);
+      } else if (slot === 'P') {
+        picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+      } else if (slot === 'T') {
+        picked = mmrSelectDeduped(rtPool, selected, tagCache, 0.70);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+      } else {
+        picked = mmrSelectDeduped(rdPool, selected, tagCache, 0.4);
+        if (!picked) picked = mmrSelectDeduped(rfPool, selected, tagCache, 0.5);
+        if (!picked) picked = mmrSelectDeduped(rpPool, selected, tagCache, 0.7);
+      }
+      if (!picked) picked = mmrSelectDeduped(riPool, selected, tagCache, 0.5);
+      if (!picked) break;
+
+      picked._resurfaced = true;
+      picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
+      recordEventSelection(picked);
+      recordEntitySelectionShared(picked);
+      selected.push(picked);
+    }
+  }
+
+  // ==========================================
+  // PHASE 6c: STALE UNSEEN TIER (last resort — old articles user never saw)
+  // Only articles still within their content-type freshness window (isStillFresh).
+  // Stale breaking/developing news never appears here.
+  // ==========================================
+
+  if (selected.length < limit) {
+    const selectedIds = new Set(selected.map(a => a.id));
+    // Filter: only evergreen/analysis/timeless that are still "fresh" per their type.
+    // isStillFresh already handles this — staleUnseen are articles that FAILED isStillFresh,
+    // so this tier only adds articles from the original unseen pool that were borderline.
+    // Actually, staleUnseen already failed isStillFresh, so skip this tier entirely
+    // to avoid showing misleading old news. Resurfaced tier is the final fallback.
   }
 
   // ==========================================
@@ -2540,26 +3290,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (hasAnyPersonalization && Object.keys(categorySuppressionMap).length > 0) {
-    // categorySuppressionMap already has engagement rates from Fix 5
-    // Build target floors from all-time stats (categories NOT being suppressed)
     const selectedCatCounts = {};
     for (const a of selected) {
       selectedCatCounts[a.category] = (selectedCatCounts[a.category] || 0) + 1;
     }
 
-    // Identify underrepresented categories: historically engaged but below floor in current feed
-    // Use category stats that have > 15% engagement rate and are NOT suppressed
     try {
       const { data: allCatStats } = await supabase.rpc('get_category_engagement_stats', {
         p_user_id: userId,
         p_days: 14,
       });
       if (allCatStats && selected.length > 0) {
-        const totalEngaged = allCatStats.reduce((s, c) => s + parseInt(c.engaged || 0), 0);
-        if (totalEngaged > 0) {
+        const totalEngagedCat = allCatStats.reduce((s, c) => s + parseInt(c.engaged || 0), 0);
+        if (totalEngagedCat > 0) {
           for (const row of allCatStats) {
             const engaged = parseInt(row.engaged) || 0;
-            const rate = engaged / totalEngaged;
+            const rate = engaged / totalEngagedCat;
             if (rate < 0.10) continue; // not a significant interest
             if (categorySuppressionMap[row.category]) continue; // suppressed category, don't force it
 
@@ -2567,14 +3313,12 @@ async function handleV2Feed(req, res, supabase, opts) {
             const currentSlots = selectedCatCounts[row.category] || 0;
 
             if (currentSlots < targetSlots) {
-              // Find articles from this category in all pools (not yet selected)
               const selectedIds = new Set(selected.map(a => a.id));
               const allPools = [...pPool, ...tPool, ...dPool, ...iPool];
               const candidates = allPools
                 .filter(a => a.category === row.category && !selectedIds.has(a.id))
                 .sort((a, b) => (b._score || 0) - (a._score || 0));
 
-              // Replace lowest-scoring selected articles from suppressed categories
               let replaced = 0;
               const needed = targetSlots - currentSlots;
               for (let i = selected.length - 1; i >= 0 && replaced < needed && candidates.length > 0; i--) {
@@ -2589,10 +3333,27 @@ async function handleV2Feed(req, res, supabase, opts) {
           }
         }
       }
-    } catch (floorErr) {
-      // Non-blocking — if stats unavailable, skip floor enforcement
+    } catch (catFloorErr) {
+      // Non-blocking: category allocation floor is a nice-to-have
     }
   }
+
+  // ==========================================
+  // PHASE 6.9: GLOBAL CATEGORY CAP — max 4 articles per category in a feed page
+  // Prevents any single category from dominating (was 8 Lifestyle after per-pool caps)
+  // ==========================================
+  const GLOBAL_CAT_CAP = 4;
+  const globalCatCounts = {};
+  const capped = [];
+  for (const a of selected) {
+    const cat = a.category || 'Other';
+    globalCatCounts[cat] = (globalCatCounts[cat] || 0) + 1;
+    if (globalCatCounts[cat] <= GLOBAL_CAT_CAP) {
+      capped.push(a);
+    }
+  }
+  selected.length = 0;
+  selected.push(...capped);
 
   // ==========================================
   // PHASE 7: ENFORCE MAX 2 CONSECUTIVE SAME CATEGORY
@@ -2606,7 +3367,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
+    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
   }
 
   const pageIds = selected.map(a => a.id);
@@ -2625,9 +3386,11 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (full) {
           const bucket = selected[i].bucket;
           const score = selected[i]._score;
+          const resurfaced = selected[i]._resurfaced;
           Object.assign(selected[i], full);
           selected[i].bucket = bucket;
           selected[i]._score = score;
+          if (resurfaced) selected[i]._resurfaced = true;
         }
       }
     }
@@ -2640,27 +3403,63 @@ async function handleV2Feed(req, res, supabase, opts) {
     const formatted = formatArticle(a, eventMap);
     formatted.bucket = a.bucket;
     formatted.final_score = a._score;
+    // Attach resurfacing metadata to every article
+    const meta = seenMeta.get(a.id);
+    formatted.is_resurfaced = !!a._resurfaced;
+    if (a._resurfaced && meta) {
+      formatted.first_seen_at = meta.first_seen_at;
+      formatted.was_engaged = meta.was_engaged || false;
+    }
     return formatted;
   });
 
-  // Log feed impressions for skip tracking (fire-and-forget)
+  // Synchronous serving log — must commit before response so next request sees them
   if (userId && pageIds.length > 0) {
-    const impressions = pageIds.map(aid => ({ user_id: userId, article_id: aid }));
-    supabase.from('user_feed_impressions').insert(impressions).then(() => {}).catch(() => {});
+    const impressions = pageIds.map((aid, idx) => ({
+      user_id: userId,
+      article_id: aid,
+      bucket: selected[idx]?.bucket || null,
+    }));
+    const { error: impError } = await supabase.from('user_feed_impressions').insert(impressions);
+    if (impError) console.error('[feed] Impression log failed:', impError.message);
   }
 
-  // True pagination — use bandit pool for cold-start, all scored pools for personalized
-  const scoredTotal = personalScoredFiltered.length + trendingScoredFiltered.length + discoveryScoredFiltered.length + interestScoredFiltered.length;
-  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
+  // has_more: count fresh unseen + resurfaced (stale unseen excluded from feed)
+  const totalFreshUnseenRemaining = pTiers.freshUnseen.length + tTiers.freshUnseen.length + dTiers.freshUnseen.length + iTiers.freshUnseen.length + fTiers.freshUnseen.length;
+  const totalResurfaced = pTiers.resurfaced.length + tTiers.resurfaced.length + dTiers.resurfaced.length + iTiers.resurfaced.length + fTiers.resurfaced.length;
+  const scoredTotal = totalFreshUnseenRemaining + totalResurfaced;
+  const remainingPool = Math.max(banditPoolTotal, scoredTotal);
+  const requestedLimit = limit || 20;
+  const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
   const totalServed = offset + selected.length;
-  const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
+
+  // feed_state: tells iOS how to present the feed
+  //   normal         — plenty of fresh content
+  //   thinning       — fresh content running low, might want to show "more coming soon"
+  //   mostly_caught_up — very few fresh articles, show divider before resurfaced
+  //   caught_up      — no fresh articles at all
+  const feedState = totalFreshUnseen >= requestedLimit ? 'normal'
+    : totalFreshUnseen >= 5 ? 'thinning'
+    : totalFreshUnseen > 0 ? 'mostly_caught_up'
+    : 'caught_up';
+
+  const caughtUpMessage = feedState === 'caught_up'
+    ? "You're all caught up! Here are some stories worth another look."
+    : feedState === 'mostly_caught_up'
+    ? "You've seen most of today's stories. Here are some highlights."
+    : null;
+
+  // console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
 
   return res.status(200).json({
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
-    total: totalAvailable,
+    total: remainingPool,
+    feed_state: feedState,
+    fresh_count: totalFreshUnseen,
+    caught_up_message: caughtUpMessage,
   });
 }
 

@@ -451,6 +451,39 @@ export default async function handler(req, res) {
           })
         }
 
+        // ============================================================
+        // NEW: Update entity_signals (replaces dual tag_profile/skip_profile)
+        // Tracks positive/negative counts with time windows per entity.
+        // One unified signal instead of two saturating counters.
+        // ============================================================
+        const ENTITY_SIGNAL_POSITIVE = ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_revisit']
+        const ENTITY_SIGNAL_NEGATIVE = ['article_skipped']
+        const isSignalPositive = ENTITY_SIGNAL_POSITIVE.includes(event_type)
+        const isSignalNegative = ENTITY_SIGNAL_NEGATIVE.includes(event_type)
+
+        if ((isSignalPositive || isSignalNegative) && article_id && effectiveUserId) {
+          admin.from('published_articles').select('interest_tags').eq('id', article_id).single()
+            .then(({ data: artData }) => {
+              if (!artData) return
+              const tags = Array.isArray(artData.interest_tags) ? artData.interest_tags
+                : (typeof artData.interest_tags === 'string' ? JSON.parse(artData.interest_tags || '[]') : [])
+              // Update first 5 tags (position-weighted: top tags are primary signals)
+              for (const tag of tags.slice(0, 5)) {
+                admin.rpc('update_entity_signal', {
+                  p_user_id: effectiveUserId,
+                  p_entity: tag.toLowerCase(),
+                  p_is_positive: isSignalPositive,
+                  p_event_at: new Date().toISOString(),
+                }).catch(err => {
+                  // Table may not exist yet — non-blocking
+                  if (!err?.message?.includes('relation') && !err?.message?.includes('does not exist')) {
+                    console.log('[analytics] entity_signal update failed:', err?.message)
+                  }
+                })
+              }
+            }).catch(() => {})
+        }
+
         // UCB TRACKING: lightweight — only match against user's own interest clusters
         if (bucket === 'personal' && article_id) {
           admin.from('published_articles').select('embedding_minilm, category').eq('id', article_id).single().then(({ data: artInfo }) => {
@@ -620,16 +653,10 @@ export default async function handler(req, res) {
         }
       })
 
-      // Also keep legacy EMA update on profiles for backward compatibility during transition
-      if (effectiveUserId) {
-        admin.rpc('update_taste_vector_ema_profiles', {
-          p_user_id: effectiveUserId,
-          p_article_id: article_id,
-          p_event_type: event_type,
-        }).then(({ error: emaError }) => {
-          if (emaError) console.log('[analytics] Legacy EMA update failed:', emaError.message)
-        })
-      }
+      // REMOVED: Legacy EMA update was overwriting the cluster-computed taste vector
+      // with a naive average of ALL articles (engaged AND skipped), making the vector
+      // anti-discriminative (delta -0.079 — MORE similar to skipped articles).
+      // taste_vector_minilm is now ONLY set by the clustering service.
     }
 
     // ============================================================
@@ -643,6 +670,8 @@ export default async function handler(req, res) {
 
     if (effectiveUserId && article_id && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
       const isPositive = POSITIVE_EVENTS.includes(event_type)
+
+      // Use atomic RPC to prevent race conditions (concurrent events overwriting each other)
 
       admin
         .from('published_articles')

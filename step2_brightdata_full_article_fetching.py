@@ -323,9 +323,9 @@ class BrightDataArticleFetcher:
     def fetch_article(self, url: str, max_retries: int = 2) -> Optional[Dict]:
         """
         Fetch single article with multi-strategy fallback:
-        1. Default proxy session (2 attempts)
-        2. Geo-targeted proxy if domain has a country mapping (1 attempt)
-        3. Direct fetch without proxy (1 attempt)
+        1. Direct fetch without proxy (free, works for most sites)
+        2. Bright Data proxy (paid, for anti-bot/paywalled sites)
+        3. Geo-targeted proxy if domain has a country mapping (paid)
 
         Args:
             url: Article URL to fetch
@@ -338,16 +338,27 @@ class BrightDataArticleFetcher:
             print(f"Invalid URL: {url}")
             return None
 
-        # Strategy 1: Default proxy (2 attempts)
+        # Strategy 1: Direct fetch (free) — most news sites work without proxy
+        try:
+            direct_session = requests.Session()
+            direct_session.verify = True
+            result = self._try_fetch(url, direct_session, "direct")
+            if result:
+                print(f"✅ Fetched (direct): {url[:50]}... ({len(result['text'])} chars)")
+                return result
+        except Exception:
+            pass
+
+        # Strategy 2: Bright Data proxy (paid) — for sites that block direct
         for attempt in range(max_retries):
             result = self._try_fetch(url, self.session, "proxy")
             if result:
-                print(f"✅ Fetched: {url[:50]}... ({len(result['text'])} chars)")
+                print(f"✅ Fetched (proxy): {url[:50]}... ({len(result['text'])} chars)")
                 return result
             if attempt < max_retries - 1:
                 time.sleep(2)
 
-        # Strategy 2: Geo-targeted proxy for known domains
+        # Strategy 3: Geo-targeted proxy for known domains
         country = self._get_country_for_url(url)
         if country:
             try:
@@ -358,17 +369,6 @@ class BrightDataArticleFetcher:
                     return result
             except Exception:
                 pass
-
-        # Strategy 3: Direct fetch (no proxy) — many news sites don't need proxy
-        try:
-            direct_session = requests.Session()
-            direct_session.verify = True
-            result = self._try_fetch(url, direct_session, "direct")
-            if result:
-                print(f"✅ Fetched (direct): {url[:50]}... ({len(result['text'])} chars)")
-                return result
-        except Exception:
-            pass
 
         print(f"❌ All strategies failed: {url[:60]}")
         return None
@@ -487,19 +487,19 @@ class JinaFallbackFetcher:
 
 def fetch_articles_parallel(urls: List[str], max_workers: int = 3) -> List[Dict]:
     """
-    Fetch multiple articles - tries Bright Data first, falls back to Jina.
-    
+    Fetch multiple articles - tries direct first, then Bright Data proxy, falls back to Jina.
+
     Args:
         urls: List of URLs to fetch
         max_workers: Number of parallel workers
-    
+
     Returns:
         List of article data dicts
     """
     results = []
     failed_urls = []
-    
-    # Try Bright Data first
+
+    # fetch_article tries: 1) direct (free), 2) proxy (paid), 3) geo-proxy (paid)
     api_key = os.getenv('BRIGHTDATA_API_KEY')
     if api_key:
         try:
