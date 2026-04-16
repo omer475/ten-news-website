@@ -1501,72 +1501,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // Build recentEntityCounts for topic saturation penalty
-  // ── BUILD ENTITY SIGNALS (engagement rates per entity) ──
-  // Replaces dual tag_profile/skip_profile with single ratio-based system.
-  // Positive events: engaged, liked, detail_view, revisit
-  // Negative events: skipped
-  let entitySignals = null;
-  let recentEntityCounts = null; // still used for saturation penalty
-  const positiveTypes = new Set(['article_engaged', 'article_liked', 'article_detail_view', 'article_revisit']);
-  const negativeTypes = new Set(['article_skipped']);
-  const allEventData = recentEngagedResult?.data || [];
-  const allEventArticleIds = [...new Set(allEventData.map(e => e.article_id).filter(Boolean))];
-
-  if (allEventArticleIds.length > 0) {
-    // Fetch tags for all event articles
-    const tagBatches = [];
-    for (let i = 0; i < allEventArticleIds.length; i += 300) {
-      const batch = allEventArticleIds.slice(i, i + 300);
-      tagBatches.push(supabase.from('published_articles').select('id, interest_tags').in('id', batch));
-    }
-    const tagResults = await Promise.all(tagBatches);
-    const articleTagMap = {};
-    for (const r of tagResults) {
-      for (const a of (r.data || [])) {
-        articleTagMap[a.id] = safeJsonParse(a.interest_tags, []).map(t => t.toLowerCase()).slice(0, 5);
-      }
-    }
-
-    // Build entity signals with 24h rapid rejection tracking
-    const nowMs = Date.now();
-    const sevenDaysAgo = nowMs - 7 * 24 * 3600000;
-    const twentyFourHoursAgoMs = nowMs - 24 * 3600000;
-    const fortyEightHoursAgoMs = nowMs - 48 * 3600000;
-    entitySignals = {};
-    recentEntityCounts = {};
-
-    for (const event of allEventData) {
-      const tags = articleTagMap[event.article_id];
-      if (!tags) continue;
-      const isPositive = positiveTypes.has(event.event_type);
-      const isNegative = negativeTypes.has(event.event_type);
-      if (!isPositive && !isNegative) continue;
-      const eventTime = new Date(event.created_at).getTime();
-      const isRecent = eventTime > sevenDaysAgo;
-      const isLast24h = eventTime > twentyFourHoursAgoMs;
-      const isLast48h = eventTime > fortyEightHoursAgoMs;
-
-      for (const t of tags) {
-        if (!entitySignals[t]) entitySignals[t] = { pos: 0, neg: 0, pos_recent: 0, neg_recent: 0, pos_24h: 0, neg_24h: 0 };
-        if (isPositive) {
-          entitySignals[t].pos++;
-          if (isRecent) entitySignals[t].pos_recent++;
-          if (isLast24h) entitySignals[t].pos_24h++;
-          if (isLast48h) recentEntityCounts[t] = (recentEntityCounts[t] || 0) + 1;
-        } else {
-          entitySignals[t].neg++;
-          if (isRecent) entitySignals[t].neg_recent++;
-          if (isLast24h) entitySignals[t].neg_24h++;
-        }
-      }
-    }
-  }
-
-  // Build onboarding entity set for affinity floor protection
-  const userFollowedTopics = safeJsonParse(userPrefs?.followed_topics, []) || [];
-  const onboardingEntities = buildOnboardingEntities(userFollowedTopics);
-
   // ==========================================
   // INTEREST CATEGORY ENRICHMENT
   // For users with onboarding topic selections, fetch articles from each
@@ -2095,13 +2029,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     entityAffinities[entity] = computeEntityAffinity(record);
   }
 
-  // Fix 10: Count session interactions for adaptive weighting
-  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
-
-  // Fix 5: Category-level engagement suppression
-  // Load per-category engagement stats (last 7 days) to suppress 0% categories
-  let categorySuppressionMap = {};
-
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
@@ -2187,11 +2114,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-      const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
-      const saturation = topicSaturationPenalty(article, recentEntityCounts);
+      const sigMult = entitySignalMultiplier(article);
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * affMult * saturation,
+        _score: (article.ai_final_score || 0) * recency * sigMult,
         _bucket: 'fresh_best',
       };
     })
@@ -3150,7 +3076,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (usePivotMode) {
         // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive)
         // Use lambda=0.5 (MORE diversity) not 0.8 — the old 0.8 caused topic flooding
-        const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.0;
+        const pivotFilter = (a) => entitySignalMultiplier(a) >= 1.0;
         const pivotPPool = pPool.filter(pivotFilter);
         const pivotTPool = tPool.filter(pivotFilter);
         const pivotDPool = dPool.filter(pivotFilter);
