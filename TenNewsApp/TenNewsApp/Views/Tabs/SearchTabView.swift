@@ -2,8 +2,21 @@ import SwiftUI
 
 struct SearchTabView: View {
     @Environment(TabBarState.self) private var tabBarState
+    @Environment(AppViewModel.self) private var appViewModel
     @State private var viewModel = SearchViewModel()
-    @State private var selectedArticleId: FlexibleID?
+    @State private var selectedArticle: Article?
+    @State private var fetchedArticles: [Article] = []
+    @State private var isLoadingArticle = false
+    @State private var searchFilter: SearchFilter = .content
+    @State private var selectedPublisherId: String?
+    @State private var showPublisherProfile = false
+
+    private let articleService = ArticleService()
+
+    enum SearchFilter: String, CaseIterable {
+        case content = "Content"
+        case profiles = "Profiles"
+    }
 
     var body: some View {
         NavigationStack {
@@ -12,12 +25,41 @@ struct SearchTabView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
+                        // Filter tabs — only show when searching
+                        if viewModel.hasSearched {
+                            HStack(spacing: 0) {
+                                ForEach(SearchFilter.allCases, id: \.self) { filter in
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.2)) { searchFilter = filter }
+                                    } label: {
+                                        Text(filter.rawValue)
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(searchFilter == filter ? .white : .white.opacity(0.4))
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 36)
+                                            .background(
+                                                searchFilter == filter ? .white.opacity(0.12) : .clear,
+                                                in: RoundedRectangle(cornerRadius: 10)
+                                            )
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+                            .padding(.bottom, 8)
+                        }
+
                         if viewModel.isLoading && !viewModel.hasSearched {
                             loadingState
                                 .padding(.top, 8)
                         } else if viewModel.hasSearched {
-                            resultsContent
-                                .padding(.top, 8)
+                            if searchFilter == .content {
+                                resultsContent
+                                    .padding(.top, 8)
+                            } else {
+                                publisherResults
+                                    .padding(.top, 8)
+                            }
                         } else {
                             emptyStateContent
                                 .padding(.top, 8)
@@ -27,9 +69,38 @@ struct SearchTabView: View {
                 }
                 .collapsesTabBarOnScroll()
                 .scrollDismissesKeyboard(.interactively)
+
+                // Article card overlay — vertical pager through search results
+                if let article = selectedArticle {
+                    ExploreArticleSheet(
+                        selectedArticle: article,
+                        allArticles: fetchedArticles,
+                        onDismiss: {
+                            selectedArticle = nil
+                            fetchedArticles = []
+                            tabBarState.forceExpandedBar = false
+                        },
+                        preserveOrder: true
+                    )
+                    .ignoresSafeArea()
+                    .zIndex(1)
+                }
+
+                // Loading overlay while fetching article
+                if isLoadingArticle {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .overlay {
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.2)
+                        }
+                        .zIndex(2)
+                }
             }
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar(selectedArticle != nil ? .hidden : .visible, for: .navigationBar)
             .task { await viewModel.loadTrending() }
             .onChange(of: tabBarState.searchText) { _, newValue in
                 guard viewModel.searchText != newValue else { return }
@@ -42,14 +113,87 @@ struct SearchTabView: View {
                     viewModel.onSearchTextChanged()
                 }
             }
-            .fullScreenCover(item: $selectedArticleId) { articleId in
-                ArticleDetailView(articleId: articleId, initialArticle: nil)
+            .navigationDestination(isPresented: $showPublisherProfile) {
+                if let pubId = selectedPublisherId {
+                    let creator = Creator(
+                        id: pubId,
+                        name: "Loading...",
+                        username: "",
+                        bio: "",
+                        avatarUrl: nil,
+                        isVerified: true,
+                        followerCount: 0,
+                        followingCount: 0,
+                        articleCount: 0,
+                        category: nil
+                    )
+                    CreatorProfileView(
+                        creator: creator,
+                        articles: [],
+                        onDismiss: { showPublisherProfile = false },
+                        onArticleTap: { article in
+                            selectedArticle = article
+                            showPublisherProfile = false
+                        },
+                        publisherId: pubId
+                    )
+                    .navigationBarHidden(true)
+                }
             }
         }
     }
 
     private func openArticle(_ article: SearchArticle) {
-        selectedArticleId = article.id
+        // Switch to icon tab bar (hide search text field)
+        withAnimation(.smooth(duration: 0.3)) {
+            tabBarState.forceExpandedBar = true
+        }
+
+        // Find the tapped article's position and get all results from that point on
+        let allResults = viewModel.articles
+        let tappedIndex = allResults.firstIndex(where: { $0.id.stringValue == article.id.stringValue }) ?? 0
+        let remainingResults = Array(allResults.suffix(from: tappedIndex))
+
+        Task {
+            isLoadingArticle = true
+
+            // Fetch the tapped article first
+            do {
+                let response = try await articleService.fetchArticle(id: article.id.stringValue)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                    selectedArticle = response.article
+                }
+            } catch {
+                withAnimation(.smooth(duration: 0.3)) {
+                    tabBarState.forceExpandedBar = false
+                }
+                isLoadingArticle = false
+                return
+            }
+            isLoadingArticle = false
+
+            // Fetch remaining search results in background (next articles after the tapped one)
+            let otherResults = remainingResults.dropFirst()
+            await withTaskGroup(of: (Int, Article?).self) { group in
+                for (offset, searchArticle) in otherResults.enumerated() {
+                    group.addTask {
+                        let resp = try? await articleService.fetchArticle(id: searchArticle.id.stringValue)
+                        return (offset, resp?.article)
+                    }
+                }
+
+                var indexed: [(Int, Article)] = []
+                for await (offset, article) in group {
+                    if let article { indexed.append((offset, article)) }
+                }
+
+                // Sort by original search order and update pager
+                let sorted = indexed.sorted { $0.0 < $1.0 }.map(\.1)
+                await MainActor.run {
+                    fetchedArticles = sorted
+                }
+            }
+        }
     }
 
     // MARK: - Empty State (before searching)
@@ -699,6 +843,91 @@ struct SearchTabView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+    }
+
+    // MARK: - Publisher Results
+
+    @ViewBuilder
+    private var publisherResults: some View {
+        let pubs = viewModel.publishers
+        let ents = viewModel.entities
+        if pubs.isEmpty && ents.isEmpty {
+            VStack(spacing: 16) {
+                Spacer().frame(height: 60)
+                Image(systemName: "person.2.slash")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.white.opacity(0.3))
+                Text("No profiles found")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+                Spacer()
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            LazyVStack(spacing: 12) {
+                // Publishers from the publishers table
+                ForEach(pubs) { pub in
+                    Button {
+                        selectedPublisherId = pub.id
+                        showPublisherProfile = true
+                    } label: {
+                        publisherCard(
+                            name: pub.displayName,
+                            category: pub.category ?? "News",
+                            emoji: "📰",
+                            articleCount: pub.articleCount ?? 0
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+                // Entities as secondary results
+                ForEach(ents) { entity in
+                    publisherCard(
+                        name: entity.displayTitle,
+                        category: entity.category,
+                        emoji: entity.emoji,
+                        articleCount: entity.articleCount ?? 0
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func publisherCard(name: String, category: String, emoji: String, articleCount: Int) -> some View {
+        HStack(spacing: 14) {
+            // Avatar circle
+            ZStack {
+                Circle()
+                    .fill(categoryColor(for: category).opacity(0.2))
+                    .frame(width: 50, height: 50)
+                Text(String(name.prefix(1)))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(categoryColor(for: category))
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Text(name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.blue)
+                }
+                Text("\(articleCount) articles · \(category)")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.3))
+        }
+        .padding(14)
+        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Loading State

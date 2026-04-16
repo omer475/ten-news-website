@@ -30,7 +30,7 @@ struct ExploreArticleSheet: View {
                 }
             }
 
-            // Back button — floating, fades in separately so it doesn't slide up
+            // Back button
             Button {
                 onDismiss()
             } label: {
@@ -43,7 +43,6 @@ struct ExploreArticleSheet: View {
             .padding(.top, 56)
             .padding(.leading, 20)
             .zIndex(10)
-            .transition(.opacity)
         }
         .ignoresSafeArea()
         .background(Color.black)
@@ -54,6 +53,19 @@ struct ExploreArticleSheet: View {
         .onChange(of: selectedArticle.id) {
             // Rebuild pages if the selected article identity changes
             articlePages = buildArticlePages()
+        }
+        .onChange(of: allArticles.count) {
+            // More articles loaded (e.g. search results fetched in background)
+            // Append new ones without disrupting current pager position
+            let currentIds = Set(articlePages.map(\.id.stringValue))
+            let newArticles = allArticles.filter { !currentIds.contains($0.id.stringValue) }
+            if !newArticles.isEmpty {
+                if preserveOrder {
+                    articlePages.append(contentsOf: newArticles)
+                } else {
+                    articlePages = buildArticlePages()
+                }
+            }
         }
         .onChange(of: selectedArticle.displayBullets.count) {
             // Full article arrived from API — update first page with bullets/content
@@ -109,3 +121,4 @@ struct ExploreArticleSheet: View {
         return Color(hex: hex)
     }
 }
+

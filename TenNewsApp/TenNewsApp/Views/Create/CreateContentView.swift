@@ -15,6 +15,18 @@ struct CreateContentView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var coverImage: UIImage?
 
+    // Multi-page support
+    @State private var currentPageIndex: Int = 0
+    @State private var contentPages: [ContentPage] = [ContentPage()]
+
+    struct ContentPage: Identifiable {
+        let id = UUID()
+        var title: String = ""
+        var bullets: [String] = [""]
+        var photo: UIImage? = nil
+        var photoItem: PhotosPickerItem? = nil
+    }
+
     // Details (3 stat boxes)
     @State private var detailLabels: [String] = ["", "", ""]
     @State private var detailValues: [String] = ["", "", ""]
@@ -75,7 +87,12 @@ struct CreateContentView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
                 coverImageSection
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 16)
+
+                // Multi-page tabs
+                pageTabsSection
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
 
                 titleSection
                     .padding(.horizontal, 20)
@@ -109,6 +126,7 @@ struct CreateContentView: View {
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button {
+                    saveCurrentPage()
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                         showPreview = true
                     }
@@ -163,9 +181,20 @@ struct CreateContentView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                // Preview card
-                previewCard
-                    .padding(.horizontal, 16)
+                // Preview card(s) — swipeable if multi-page
+                if contentPages.count > 1 {
+                    TabView {
+                        ForEach(Array(contentPages.enumerated()), id: \.element.id) { index, page in
+                            previewCardForPage(index: index)
+                                .padding(.horizontal, 16)
+                        }
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .always))
+                    .frame(height: UIScreen.main.bounds.width * 1.4)
+                } else {
+                    previewCard
+                        .padding(.horizontal, 16)
+                }
 
                 // Tags preview
                 if !tags.isEmpty {
@@ -229,6 +258,78 @@ struct CreateContentView: View {
 
     @State private var previewDominantColor: Color?
     @State private var highlightedWords: Set<String> = []
+
+    private func previewCardForPage(index: Int) -> some View {
+        let page = contentPages[index]
+        let pageImage = page.photo ?? contentPages[0].photo ?? coverImage
+        let pageTitle = page.title.isEmpty ? (index == 0 ? title : "Page \(index + 1)") : page.title
+        let pageBullets = page.bullets.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        let screenW = UIScreen.main.bounds.width - 32
+        let imageH: CGFloat = screenW * 0.65
+
+        return VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottom) {
+                if let image = pageImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: screenW, height: imageH)
+                        .clipped()
+                } else {
+                    Rectangle()
+                        .fill(LinearGradient(
+                            colors: [.blue.opacity(0.4), .blue.opacity(0.15), Color(white: 0.08)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ))
+                        .frame(width: screenW, height: imageH)
+                }
+                Rectangle()
+                    .fill(LinearGradient(
+                        stops: [
+                            .init(color: (previewBlurColor).opacity(0), location: 0),
+                            .init(color: (previewBlurColor).opacity(0.7), location: 0.55),
+                            .init(color: previewBlurColor, location: 0.8),
+                        ],
+                        startPoint: .top, endPoint: .bottom
+                    ))
+                    .frame(height: imageH * 0.7)
+            }
+            .frame(height: imageH)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(selectedCategory)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .tracking(1)
+                Text(pageTitle)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineSpacing(2)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, -50)
+            .padding(.bottom, 16)
+
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(Array(pageBullets.enumerated()), id: \.offset) { _, bullet in
+                    HStack(alignment: .top, spacing: 10) {
+                        Circle()
+                            .fill(previewDominantColor ?? .blue)
+                            .frame(width: 5, height: 5)
+                            .padding(.top, 8)
+                        Text(bullet)
+                            .font(.system(size: 16))
+                            .foregroundStyle(.white.opacity(0.75))
+                            .lineSpacing(4)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
+        }
+        .background(previewBlurColor)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+    }
 
     private var previewCard: some View {
         let screenW = UIScreen.main.bounds.width - 32
@@ -528,6 +629,101 @@ struct CreateContentView: View {
     }
 
     // MARK: - Cover Image
+
+    // MARK: - Page Tabs
+
+    private var pageTabsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Pages")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.4))
+                .textCase(.uppercase)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(contentPages.enumerated()), id: \.element.id) { index, page in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                // Save current page state
+                                saveCurrentPage()
+                                currentPageIndex = index
+                                loadPage(index)
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Page \(index + 1)")
+                                    .font(.system(size: 13, weight: .semibold))
+                                if contentPages.count > 1 && index > 0 {
+                                    Button {
+                                        removePage(at: index)
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundStyle(.white.opacity(0.5))
+                                    }
+                                }
+                            }
+                            .foregroundStyle(currentPageIndex == index ? .white : .white.opacity(0.5))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                currentPageIndex == index ? .white.opacity(0.15) : .white.opacity(0.05),
+                                in: RoundedRectangle(cornerRadius: 10)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(currentPageIndex == index ? .white.opacity(0.2) : .clear, lineWidth: 1)
+                            )
+                        }
+                    }
+
+                    // Add page button
+                    if contentPages.count < 5 {
+                        Button {
+                            saveCurrentPage()
+                            contentPages.append(ContentPage())
+                            currentPageIndex = contentPages.count - 1
+                            loadPage(currentPageIndex)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text("Add Page")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(.blue)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func saveCurrentPage() {
+        guard currentPageIndex < contentPages.count else { return }
+        contentPages[currentPageIndex].title = title
+        contentPages[currentPageIndex].bullets = bullets
+        contentPages[currentPageIndex].photo = coverImage
+    }
+
+    private func loadPage(_ index: Int) {
+        guard index < contentPages.count else { return }
+        title = contentPages[index].title
+        bullets = contentPages[index].bullets.isEmpty ? [""] : contentPages[index].bullets
+        coverImage = contentPages[index].photo
+    }
+
+    private func removePage(at index: Int) {
+        guard contentPages.count > 1, index > 0 else { return }
+        contentPages.remove(at: index)
+        if currentPageIndex >= contentPages.count {
+            currentPageIndex = contentPages.count - 1
+        }
+        loadPage(currentPageIndex)
+    }
 
     private var coverImageSection: some View {
         PhotosPicker(selection: $selectedPhoto, matching: .images) {

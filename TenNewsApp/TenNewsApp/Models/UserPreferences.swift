@@ -46,12 +46,14 @@ extension UserPreferences {
 }
 
 struct PreferencesUpdateRequest: Codable {
+    let authUserId: String?
     let homeCountry: String?
     let followedCountries: [String]?
     let followedTopics: [String]?
     let onboardingCompleted: Bool?
 
     enum CodingKeys: String, CodingKey {
+        case authUserId = "auth_user_id"
         case homeCountry = "home_country"
         case followedCountries = "followed_countries"
         case followedTopics = "followed_topics"

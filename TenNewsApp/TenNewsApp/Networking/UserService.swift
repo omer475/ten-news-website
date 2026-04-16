@@ -17,12 +17,14 @@ struct UserService {
     }
 
     func updatePreferences(
+        userId: String,
         homeCountry: String? = nil,
         followedCountries: [String]? = nil,
         followedTopics: [String]? = nil,
         onboardingCompleted: Bool? = nil
     ) async throws -> PreferencesResponse {
         let body = PreferencesUpdateRequest(
+            authUserId: userId,
             homeCountry: homeCountry,
             followedCountries: followedCountries,
             followedTopics: followedTopics,

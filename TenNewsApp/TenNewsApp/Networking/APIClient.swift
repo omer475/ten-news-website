@@ -55,11 +55,19 @@ actor APIClient {
         return try await perform(request)
     }
 
+    func delete<T: Decodable>(_ endpoint: String) async throws -> T {
+        let url = try makeURL(endpoint)
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        addAuth(&request)
+        return try await perform(request)
+    }
+
     // MARK: - Private Helpers
 
     private func perform<T: Decodable>(_ request: URLRequest) async throws -> T {
         let (data, response) = try await session.data(for: request)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
@@ -81,7 +89,14 @@ actor APIClient {
         }
     }
 
-    private func validateResponse(_ response: URLResponse) throws {
+    /// Extract a user-friendly error message from the server's JSON response
+    private func parseServerMessage(_ data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        // Try common keys: "message", "error", "detail"
+        return (json["message"] as? String) ?? (json["error"] as? String) ?? (json["detail"] as? String)
+    }
+
+    private func validateResponse(_ response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.networkError(
                 NSError(domain: "APIClient", code: -1, userInfo: [
@@ -89,19 +104,24 @@ actor APIClient {
                 ])
             )
         }
-        switch httpResponse.statusCode {
-        case 200...299:
-            return
+        let status = httpResponse.statusCode
+        guard !(200...299).contains(status) else { return }
+
+        let serverMessage = parseServerMessage(data)
+
+        switch status {
         case 400:
-            throw APIError.badRequest
+            throw APIError.badRequest(serverMessage ?? "Something went wrong. Please try again.")
         case 401:
             throw APIError.unauthorized
         case 404:
             throw APIError.notFound
+        case 409:
+            throw APIError.conflict(serverMessage ?? "This already exists.")
         case 500...599:
-            throw APIError.serverError(httpResponse.statusCode)
+            throw APIError.serverError(status, serverMessage)
         default:
-            throw APIError.serverError(httpResponse.statusCode)
+            throw APIError.serverError(status, serverMessage)
         }
     }
 }

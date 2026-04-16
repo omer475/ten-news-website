@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct AccountTabView: View {
     @Environment(AppViewModel.self) private var appViewModel
@@ -6,6 +7,7 @@ struct AccountTabView: View {
     @State private var appeared = false
     @State private var showSignUp = false
     @State private var showSignIn = false
+    @State private var showForgotPassword = false
     @State private var showCreateContent = false
     @State private var selectedTab: ProfileTab = .liked
     @State private var selectedArticle: Article?
@@ -13,6 +15,10 @@ struct AccountTabView: View {
 
     @State private var publishedArticles: [Article] = []
     @State private var isLoadingPublished = false
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var profileImage: UIImage? = ProfilePhotoManager.shared.load()
+    @State private var pickedImageForCrop: UIImage?
+    @State private var showCropView = false
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
@@ -112,6 +118,12 @@ struct AccountTabView: View {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                                 showSignUp = true
                             }
+                        },
+                        onShowForgotPassword: {
+                            showSignIn = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                showForgotPassword = true
+                            }
                         }
                     )
                     .navigationTitle("Sign In")
@@ -126,6 +138,24 @@ struct AccountTabView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(28)
             }
+            .sheet(isPresented: $showForgotPassword) {
+                NavigationStack {
+                    ForgotPasswordView(onPasswordReset: { user, session in
+                            appViewModel.login(user: user, session: session)
+                            showForgotPassword = false
+                        })
+                        .navigationTitle("Reset Password")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { showForgotPassword = false }
+                            }
+                        }
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
+            }
 
             // Article sheet overlay
             if let article = selectedArticle {
@@ -133,15 +163,31 @@ struct AccountTabView: View {
                     selectedArticle: article,
                     allArticles: feedContinuationArticles,
                     onDismiss: {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                            selectedArticle = nil
-                        }
+                        selectedArticle = nil
                     },
                     preserveOrder: true
                 )
-                .transition(.move(edge: .bottom))
                 .ignoresSafeArea()
                 .zIndex(1)
+            }
+
+            // Photo crop overlay — ZStack so it's guaranteed to have the image
+            if let cropImage = pickedImageForCrop, showCropView {
+                ProfilePhotoCropView(
+                    image: cropImage,
+                    onSave: { cropped in
+                        profileImage = cropped
+                        ProfilePhotoManager.shared.save(cropped)
+                        showCropView = false
+                        pickedImageForCrop = nil
+                    },
+                    onCancel: {
+                        showCropView = false
+                        pickedImageForCrop = nil
+                    }
+                )
+                .ignoresSafeArea()
+                .zIndex(10)
             }
         }
         .onAppear {
@@ -163,27 +209,55 @@ struct AccountTabView: View {
 
     private var profileHeader: some View {
         VStack(spacing: 10) {
-            if let avatarUrl = user?.displayAvatar {
-                AsyncCachedImage(url: avatarUrl, contentMode: .fill)
-                    .frame(width: 86, height: 86)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(.separator, lineWidth: 0.5))
-            } else {
-                Image(systemName: "person.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(.tertiary)
+            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                ZStack(alignment: .bottomTrailing) {
+                    if let profileImage {
+                        Image(uiImage: profileImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 86, height: 86)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(.separator, lineWidth: 0.5))
+                    } else if let avatarUrl = user?.displayAvatar {
+                        AsyncCachedImage(url: avatarUrl, contentMode: .fill)
+                            .frame(width: 86, height: 86)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(.separator, lineWidth: 0.5))
+                    } else {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 80))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    // Camera badge
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 24, height: 24)
+                        .background(Color.accentColor, in: Circle())
+                        .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 2))
+                }
+            }
+            .buttonStyle(.plain)
+            .onChange(of: selectedPhoto) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        pickedImageForCrop = image
+                        // Delay to let PhotosPicker dismiss first
+                        try? await Task.sleep(for: .milliseconds(500))
+                        showCropView = true
+                    }
+                }
             }
 
             VStack(spacing: 4) {
-                Text(user?.displayName ?? "News Reader")
+                Text(user?.displayName ?? "My Profile")
                     .font(.system(size: 16, weight: .semibold))
 
                 if appViewModel.isGuest {
                     Text("Browsing as Guest")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                } else if let email = user?.email {
-                    Text(email)
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
@@ -413,9 +487,13 @@ struct AccountTabView: View {
             }
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(entry.title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .lineLimit(2)
+                entry.title.coloredTitle(
+                    size: 15,
+                    weight: .semibold,
+                    baseColor: .primary,
+                    highlightColor: categoryAccent(for: entry.category)
+                )
+                .lineLimit(2)
 
                 HStack(spacing: 6) {
                     if let source = entry.source {
@@ -517,9 +595,7 @@ struct AccountTabView: View {
     private func openArticle(_ article: Article) {
         HapticManager.selection()
         let feedArticle = feedViewModel.allArticles.first { $0.id == article.id }
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-            selectedArticle = feedArticle ?? article
-        }
+        selectedArticle = feedArticle ?? article
         if (feedArticle ?? article).displayBullets.isEmpty {
             Task {
                 if let full: Article = try? await APIClient.shared.get("/api/article/\(article.id.stringValue)") {
@@ -533,9 +609,7 @@ struct AccountTabView: View {
         HapticManager.selection()
         let entryId = FlexibleID(entry.articleId)
         if let feedArticle = feedViewModel.allArticles.first(where: { $0.id == entryId }) {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                selectedArticle = feedArticle
-            }
+            selectedArticle = feedArticle
             if feedArticle.displayBullets.isEmpty {
                 Task {
                     if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
@@ -545,9 +619,7 @@ struct AccountTabView: View {
             }
         } else {
             let minArticle = articleFromHistoryEntry(entry)
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                selectedArticle = minArticle
-            }
+            selectedArticle = minArticle
             Task {
                 if let full: Article = try? await APIClient.shared.get("/api/article/\(entry.articleId)") {
                     selectedArticle = full
@@ -572,6 +644,19 @@ struct AccountTabView: View {
     }
 
     // MARK: - Helpers
+
+    private func categoryAccent(for category: String?) -> Color {
+        let colors: [String: String] = [
+            "World": "#3366CC", "Politics": "#CC3344", "Business": "#22AA66",
+            "Tech": "#7744BB", "Science": "#009999", "Health": "#CC6699",
+            "Sports": "#DD6622", "Entertainment": "#CC9922", "Finance": "#228866",
+            "Climate": "#339966", "Economy": "#228866",
+            "Food": "#E07020", "Fashion": "#BB44AA", "Travel": "#2299BB", "Lifestyle": "#66AA44",
+            "Crypto": "#F7931A",
+        ]
+        guard let category, let hex = colors[category] else { return .accentColor }
+        return Color(hex: hex)
+    }
 
     private func timeAgoString(from date: Date) -> String {
         let interval = Date().timeIntervalSince(date)

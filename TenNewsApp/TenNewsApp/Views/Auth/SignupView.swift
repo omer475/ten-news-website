@@ -11,6 +11,11 @@ struct SignupView: View {
     private let accent = Color(hex: "#3b82f6")
 
     var body: some View {
+        if viewModel.showOtpVerification {
+            OtpVerificationView(viewModel: viewModel) { user, session in
+                onSignup?(user, session)
+            }
+        } else {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
 
@@ -226,6 +231,7 @@ struct SignupView: View {
         }
         .background(Color.black.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
+        } // end else (non-OTP view)
     }
 }
 

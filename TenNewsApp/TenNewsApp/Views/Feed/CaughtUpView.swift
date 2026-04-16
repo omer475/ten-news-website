@@ -83,6 +83,37 @@ struct CompactCaughtUpBanner: View {
     }
 }
 
+/// Banner shown at top of feed when all content is resurfaced.
+struct CaughtUpDivider: View {
+    var message: String = "You're all caught up! Here are some stories worth another look."
+    @State private var appeared = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(.green)
+
+            Text(message)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(0.9))
+                .lineLimit(2)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+        .scaleEffect(appeared ? 1 : 0.9)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                appeared = true
+            }
+        }
+    }
+}
+
 #Preview {
     CaughtUpView()
 }

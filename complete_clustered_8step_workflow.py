@@ -48,6 +48,7 @@ from step11_article_tagging import tag_article
 # Event detection paused (re-enable after app launch)
 # from step6_world_event_detection import detect_world_events
 from supabase import create_client
+import unicodedata
 
 # ==========================================
 # SUBTOPIC TAGGING — appends subtopic names to interest_tags
@@ -112,6 +113,107 @@ SUBTOPIC_MAP = {
     'Celebrity Style & Red Carpet': ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'],
 }
 
+# ==========================================
+# TYPED ENTITY SIGNALS — structured entity IDs for feed personalization
+# Each signal is prefixed: org:openai, person:jannik_sinner, loc:turkiye
+# Category-level words are blocked — they belong in the diversity system
+# ==========================================
+
+SIGNAL_CATEGORY_BLOCKLIST = {
+    'tech', 'technology', 'science', 'world', 'politics', 'sports',
+    'entertainment', 'business', 'health', 'lifestyle', 'finance',
+    'news', 'breaking', 'opinion', 'culture', 'education',
+}
+
+def _slugify(s: str) -> str:
+    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode()
+    s = re.sub(r'[^a-z0-9]+', '_', s.lower()).strip('_')
+    return s
+
+def extract_named_entities_via_gemini(title, bullets, gemini_model_ref, gemini_semaphore_ref):
+    """Use Gemini to extract structured named entities from article text."""
+    bullet_text = ' | '.join(bullets) if isinstance(bullets, list) else str(bullets)
+    prompt = f"""Extract named entities from this news article. Return ONLY valid JSON, no markdown.
+
+Title: {title}
+Content: {bullet_text}
+
+Return JSON with these arrays (empty array if none found):
+{{
+  "organizations": [],
+  "people": [],
+  "events": [],
+  "products": [],
+  "cities": [],
+  "narrow_topics": []
+}}
+
+Rules:
+- organizations: companies, agencies, sports teams, political parties
+- people: full names only (e.g. "Jannik Sinner", not "Sinner")
+- events: named events like "World Cup 2026", "Artemis II", "Monte-Carlo Masters"
+- products: product/franchise names like "iPhone 17", "Spider-Man 3", "GTA 6"
+- cities: city-level locations mentioned
+- narrow_topics: 2-5 specific concepts, NEVER category names like "tech" or "sports" or "business"
+"""
+    try:
+        with gemini_semaphore_ref:
+            response = gemini_model_ref.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith('```'): text = text.split('\n', 1)[1] if '\n' in text else text[3:]
+        if text.endswith('```'): text = text[:-3]
+        if text.startswith('json'): text = text[4:]
+        return json.loads(text.strip())
+    except Exception as e:
+        print(f"   ⚠️ NER extraction failed: {e}")
+        return {}
+
+def build_typed_signals(article_countries, interest_tags, ner_result=None, language='en'):
+    """Build typed entity signals from article metadata + NER results."""
+    signals = []
+    seen = set()
+
+    def add(signal_type: str, value: str):
+        slug = _slugify(value)
+        if not slug or slug in SIGNAL_CATEGORY_BLOCKLIST or len(slug) > 64:
+            return
+        sig = f"{signal_type}:{slug}"
+        if sig not in seen:
+            seen.add(sig)
+            signals.append(sig)
+
+    # Organizations from NER
+    for org in (ner_result or {}).get('organizations', []) or []:
+        add('org', org)
+
+    # People from NER
+    for person in (ner_result or {}).get('people', []) or []:
+        add('person', person)
+
+    # Events from NER
+    for event in (ner_result or {}).get('events', []) or []:
+        add('event', event)
+
+    # Products from NER
+    for product in (ner_result or {}).get('products', []) or []:
+        add('product', product)
+
+    # Locations: from existing countries field + NER cities
+    for country in (article_countries or []):
+        add('loc', country)
+    for city in (ner_result or {}).get('cities', []) or []:
+        add('loc', city)
+
+    # Language
+    add('lang', language)
+
+    # Narrow topics from NER (skip category-level words)
+    for topic in (ner_result or {}).get('narrow_topics', []) or []:
+        add('topic', topic)
+
+    return signals
+
+
 def enrich_with_subtopics(interest_tags, title):
     """Append matching subtopic names to interest_tags list."""
     if not interest_tags:
@@ -123,6 +225,43 @@ def enrich_with_subtopics(interest_tags, title):
             if any(kw in tag_set or kw in title_lower for kw in keywords):
                 interest_tags.append(subtopic)
     return interest_tags
+
+
+def match_publisher(interest_tags, category, publishers_cache, article_id=0):
+    """Always assign a publisher. Tier 1: tag overlap. Tier 2: category round-robin. Tier 3: any publisher."""
+    if not publishers_cache:
+        return None, None
+
+    article_tags = set(t.lower() for t in (interest_tags or []))
+    cat_lower = (category or '').lower()
+
+    # Tier 1: best tag overlap (with category bonus)
+    best_pub = None
+    best_score = 0
+    for pub in publishers_cache:
+        pub_tags = set(t.lower() for t in (pub.get('interest_tags') or []))
+        overlap = len(article_tags & pub_tags)
+        score = overlap
+        if pub.get('category', '').lower() == cat_lower:
+            score += 2
+        if score > best_score:
+            best_score = score
+            best_pub = pub
+
+    if best_score >= 3 and best_pub:
+        return best_pub['id'], best_pub['display_name']
+
+    # Tier 2: round-robin within same category
+    cat_pubs = [p for p in publishers_cache if p.get('category', '').lower() == cat_lower]
+    if cat_pubs:
+        cat_pubs.sort(key=lambda p: p['id'])
+        pick = cat_pubs[article_id % len(cat_pubs)]
+        return pick['id'], pick['display_name']
+
+    # Tier 3: any publisher (round-robin across all)
+    sorted_all = sorted(publishers_cache, key=lambda p: p['id'])
+    pick = sorted_all[article_id % len(sorted_all)]
+    return pick['id'], pick['display_name']
 
 # Suppress SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -609,6 +748,15 @@ brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 component_selector = GeminiComponentSelector(api_key=gemini_key)
 component_writer = GeminiComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
 fact_verifier = FactVerifier(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
+
+# Load publisher accounts for article assignment
+publishers_cache = []
+try:
+    _pub_result = supabase.table('publishers').select('id, display_name, category, interest_tags').execute()
+    publishers_cache = _pub_result.data or []
+    print(f"📢 Loaded {len(publishers_cache)} publishers for article assignment")
+except Exception as _pub_err:
+    print(f"⚠️ Could not load publishers (will skip assignment): {_pub_err}")
 
 
 # ==========================================
@@ -1492,6 +1640,15 @@ def run_complete_pipeline():
                     # Non-blocking: concept tagging is optional
                     print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
 
+            # TYPED ENTITY SIGNALS: extract NER + build typed signals for personalization
+            article_typed_signals = []
+            try:
+                ner_result = extract_named_entities_via_gemini(title, bullets, gemini_model, gemini_semaphore)
+                article_typed_signals = build_typed_signals(article_countries, interest_tags, ner_result)
+                print(f"   🔖 [Cluster {cluster_id}] Typed signals ({len(article_typed_signals)}): {article_typed_signals[:8]}")
+            except Exception as e:
+                print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
+
             # If article has info box components, trim bullets to 450 max
             # Articles without components keep up to 550 chars
             has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
@@ -1516,6 +1673,50 @@ def run_complete_pipeline():
                             break
                     bullets = trimmed
                     print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (has components)")
+
+            # Match article to a publisher account
+            matched_author_id, matched_author_name = match_publisher(
+                interest_tags, synthesized.get('category', 'Other'), publishers_cache, article_id=cluster_id
+            )
+
+            # MULTI-PAGE: Generate a "deeper context" page 2 for articles that deserve it
+            # Only for analysis/evergreen articles with 3+ bullets and high score
+            article_pages = None
+            if article_score >= 700 and len(bullets) >= 3 and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing'):
+                try:
+                    page2_prompt = f"""This news article just published:
+Title: {title}
+Bullets: {' | '.join(bullets)}
+Category: {synthesized.get('category', 'Other')}
+
+Write a SHORT second page that gives the reader deeper context. NOT a summary of page 1.
+Instead: explain WHY this matters, the background context, or how it works in simple terms.
+
+Rules:
+- 2-3 short bullets, each a specific fact or context that helps understand the news
+- Present tense, short sentences, no academic language
+- No "Here's why this matters" — just state the context directly
+- Each bullet should make the reader go "oh, that makes more sense now"
+
+Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
+Example: ["Current solar panels max out at 25% efficiency commercially", "The theoretical limit has been 33% since 1961 — this breaks that barrier", "If scalable, this could cut solar farm sizes by half"]"""
+
+                    with gemini_semaphore:
+                        page2_response = gemini_model.generate_content(page2_prompt)
+                    page2_text = page2_response.text.strip()
+                    if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
+                    if page2_text.endswith('```'): page2_text = page2_text[:-3]
+                    if page2_text.startswith('json'): page2_text = page2_text[4:]
+                    page2_bullets = json.loads(page2_text.strip())
+
+                    if isinstance(page2_bullets, list) and len(page2_bullets) >= 2:
+                        article_pages = [
+                            {"title": title, "image_url": None, "bullets": bullets},
+                            {"title": None, "image_url": None, "bullets": page2_bullets},
+                        ]
+                        print(f"   📄 [Cluster {cluster_id}] Added context page 2 ({len(page2_bullets)} bullets)")
+                except Exception as page2_err:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Page 2 generation failed: {page2_err}")
 
             article_data = {
                 'cluster_id': cluster_id,
@@ -1548,6 +1749,10 @@ def run_complete_pipeline():
                 'freshness_category': freshness_category,
                 'embedding': article_embedding,
                 'embedding_minilm': article_embedding_minilm,
+                'author_id': matched_author_id,
+                'author_name': matched_author_name,
+                'pages': article_pages,
+                'typed_signals': article_typed_signals,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
@@ -1851,7 +2056,7 @@ HIGHLIGHT COUNTS:
     "Bullet with **2-3 highlights** — as many bullets as the story needs",
     "Min 250, max 550 chars total across all bullets"
   ],
-  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Food|Fashion|Travel|Lifestyle"
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Food|Fashion|Travel|Lifestyle",
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

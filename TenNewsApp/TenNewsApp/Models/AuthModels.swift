@@ -29,6 +29,31 @@ struct SignupResponse: Codable {
     let session: AuthSession?
     let message: String?
     let error: String?
+    let requiresVerification: Bool?
+}
+
+// MARK: - OTP Verification
+
+struct VerifyOtpRequest: Codable {
+    let email: String
+    let code: String
+}
+
+struct VerifyOtpResponse: Codable {
+    let success: Bool?
+    let user: AuthUser?
+    let session: AuthSession?
+    let message: String?
+    let error: String?
+}
+
+// MARK: - User Liked/Saved Response
+
+struct UserLikedResponse: Codable {
+    let liked: [Article]
+    let saved: [Article]
+    let liked_ids: [String]
+    let saved_ids: [String]
 }
 
 // MARK: - Google Auth
@@ -53,6 +78,20 @@ struct ForgotPasswordResponse: Codable {
     let error: String?
 }
 
+struct ResetPasswordRequest: Codable {
+    let email: String
+    let code: String
+    let newPassword: String
+}
+
+struct ResetPasswordResponse: Codable {
+    let success: Bool?
+    let message: String?
+    let error: String?
+    let user: AuthUser?
+    let session: AuthSession?
+}
+
 // MARK: - Auth User
 
 struct AuthUser: Codable, Identifiable, Hashable {
@@ -68,7 +107,7 @@ struct AuthUser: Codable, Identifiable, Hashable {
         case createdAt = "created_at"
     }
 
-    var displayName: String { name ?? email ?? "User" }
+    var displayName: String { name ?? "My Profile" }
 
     var displayAvatar: URL? {
         guard let urlString = avatarUrl, !urlString.isEmpty else { return nil }

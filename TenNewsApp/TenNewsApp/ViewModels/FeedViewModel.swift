@@ -32,6 +32,32 @@ final class FeedViewModel {
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
 
+    // MARK: - Feed Cache (instant load on app open)
+
+    private static let cacheKey = "cached_feed_articles"
+    private static let cacheTimeKey = "cached_feed_time"
+
+    /// Save current articles to disk for instant next-open.
+    private func saveFeedCache() {
+        guard !allArticles.isEmpty else { return }
+        // Cache first 20 articles only (keep it small)
+        let toCache = Array(allArticles.prefix(20))
+        if let data = try? JSONEncoder().encode(toCache) {
+            UserDefaults.standard.set(data, forKey: Self.cacheKey)
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.cacheTimeKey)
+        }
+    }
+
+    /// Load cached articles. Returns nil if cache is empty or older than 2 hours.
+    private func loadFeedCache() -> [Article]? {
+        let cachedTime = UserDefaults.standard.double(forKey: Self.cacheTimeKey)
+        guard cachedTime > 0, Date().timeIntervalSince1970 - cachedTime < 7200 else { return nil }
+        guard let data = UserDefaults.standard.data(forKey: Self.cacheKey),
+              let cached = try? JSONDecoder().decode([Article].self, from: data),
+              !cached.isEmpty else { return nil }
+        return cached
+    }
+
     /// Feed is stale if last refresh was more than 5 minutes ago (or never loaded).
     var isStale: Bool {
         guard let lastRefresh = lastRefreshTime else { return true }
@@ -58,14 +84,24 @@ final class FeedViewModel {
 
     func loadInitialData(preferences: UserPreferences? = nil, userId: String? = nil) async {
         guard !isLoading, !isRefreshing else { return }
-        isLoading = true
         errorMessage = nil
         currentPreferences = preferences
         currentUserId = userId
         reRanker.reset()
+
+        // Step 1: Show cached articles IMMEDIATELY if available
+        if let cached = loadFeedCache() {
+            allArticles = cached
+            rebuildArticleList()
+            isLoading = false
+            isRefreshing = true  // subtle indicator, not a blocking spinner
+            feedLog.warning("loadInitialData: showing \(cached.count) cached articles instantly")
+        } else {
+            isLoading = true  // first-ever load, must wait
+        }
+
+        // Step 2: Fetch fresh feed (runs regardless, replaces cache)
         do {
-            // Fix 6: Send persisted reading history for dedup on first page.
-            // ReadingHistoryManager persists seen article IDs across app restarts.
             let persistedSeenIds = ReadingHistoryManager.shared.seenArticleIds(limit: 500)
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
@@ -82,11 +118,12 @@ final class FeedViewModel {
             caughtUpMessage = feedResponse.caughtUpMessage
             rebuildArticleList()
             isLoading = false
+            isRefreshing = false
             lastRefreshTime = Date()
+            saveFeedCache()
 
             feedLog.warning("loadInitialData: \(feedResponse.articles.count) articles, hasMore=\(feedResponse.hasMore), feedState=\(self.feedState, privacy: .public), freshCount=\(self.freshCount), total=\(feedResponse.total ?? -1), cursor=\(feedResponse.nextCursor ?? "nil", privacy: .public), userId=\(userId ?? "nil", privacy: .public)")
 
-            // If filters removed everything but server has more, keep fetching
             if articles.isEmpty && hasMore {
                 await loadMoreUntilVisible()
             }
@@ -98,8 +135,13 @@ final class FeedViewModel {
             }
         } catch {
             feedLog.error("loadInitialData FAILED: \(error.localizedDescription, privacy: .public)")
-            errorMessage = error.localizedDescription
-            isLoading = false
+            // If we already showed cached articles, user has content — just stop refreshing
+            if !allArticles.isEmpty {
+                isRefreshing = false
+            } else {
+                errorMessage = error.localizedDescription
+                isLoading = false
+            }
         }
     }
 
@@ -205,6 +247,7 @@ final class FeedViewModel {
             isLoading = false
             isRefreshing = false
             lastRefreshTime = Date()
+            saveFeedCache()
 
             if articles.isEmpty && hasMore {
                 await loadMoreUntilVisible()

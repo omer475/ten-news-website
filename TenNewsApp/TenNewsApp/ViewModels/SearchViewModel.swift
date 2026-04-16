@@ -3,16 +3,29 @@ import SwiftUI
 
 // MARK: - Search API Models
 
+struct SearchPublisher: Identifiable, Decodable {
+    let id: String
+    let displayName: String
+    let username: String
+    let category: String?
+    let bio: String?
+    let avatarUrl: String?
+    let articleCount: Int?
+    let followerCount: Int?
+    let isVerified: Bool?
+}
+
 struct SearchResponse: Decodable {
     let articles: [SearchArticle]
     let entities: [SearchEntity]
+    let publishers: [SearchPublisher]?
     let totalArticles: Int?
     let page: Int?
     let hasMore: Bool?
     let query: String?
 
     enum CodingKeys: String, CodingKey {
-        case articles, entities, page, query
+        case articles, entities, publishers, page, query
         case totalArticles = "total_articles"
         case hasMore = "has_more"
     }
@@ -106,6 +119,7 @@ final class SearchViewModel {
     var searchText = ""
     var articles: [SearchArticle] = []
     var entities: [SearchEntity] = []
+    var publishers: [SearchPublisher] = []
     var trending: [TrendingEntity] = []
     var recentSearches: [String] = []
     var isLoading = false
@@ -157,6 +171,7 @@ final class SearchViewModel {
             guard !Task.isCancelled else { return }
             articles = response.articles
             entities = response.entities
+            publishers = response.publishers ?? []
             hasMore = response.hasMore ?? false
             addRecentSearch(query)
         } catch is CancellationError {

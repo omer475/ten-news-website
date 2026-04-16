@@ -43,7 +43,7 @@ struct VerticalPager<Item: Identifiable, Content: View>: View {
                     .offset(y: -height / 2 + dragOffset / 2)
                 }
             }
-            .gesture(
+            .simultaneousGesture(
                 DragGesture(minimumDistance: 20)
                     .onChanged { value in
                         let translation = value.translation.height

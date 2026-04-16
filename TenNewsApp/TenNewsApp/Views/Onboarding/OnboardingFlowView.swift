@@ -5,6 +5,7 @@ struct OnboardingFlowView: View {
     @State private var viewModel = OnboardingViewModel()
     @State private var showSignIn = false
     @State private var showSignUp = false
+    @State private var showForgotPassword = false
     @State private var contentRevealed = false
 
     private var accent: Color { .blue }
@@ -29,6 +30,25 @@ struct OnboardingFlowView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showSignIn) { signInSheet }
         .sheet(isPresented: $showSignUp) { signUpSheet }
+        .sheet(isPresented: $showForgotPassword) {
+            NavigationStack {
+                ForgotPasswordView(onPasswordReset: { user, session in
+                        appViewModel.login(user: user, session: session)
+                        appViewModel.completeOnboarding(with: appViewModel.preferences)
+                        showForgotPassword = false
+                    })
+                    .navigationTitle("Reset Password")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showForgotPassword = false }
+                        }
+                    }
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(28)
+        }
         .onChange(of: viewModel.currentStep) {
             contentRevealed = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
@@ -47,8 +67,6 @@ struct OnboardingFlowView: View {
             goNext()
         }, onSignIn: {
             showSignIn = true
-        }, onGuest: {
-            goNext()
         })
     }
 
@@ -311,31 +329,19 @@ struct OnboardingFlowView: View {
                     HapticManager.medium()
                 } label: {
                     Text(ctaLabel)
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 16, weight: .semibold))
+                        .tracking(-0.2)
+                        .foregroundStyle(.black)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
                         .background {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(canProceed ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
+                            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                .fill(canProceed ? AnyShapeStyle(.white) : AnyShapeStyle(Color.white.opacity(0.15)))
                         }
                 }
                 .disabled(!canProceed)
                 .buttonStyle(CTAPressStyle())
                 .animation(.spring(response: 0.22), value: canProceed)
-
-                if isLastStep {
-                    Button {
-                        HapticManager.light()
-                        let prefs = viewModel.buildPreferences()
-                        appViewModel.continueAsGuest(with: prefs)
-                    } label: {
-                        Text("Continue as Guest")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.4))
-                    }
-                    .frame(height: 24)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 4)
@@ -394,6 +400,12 @@ struct OnboardingFlowView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         showSignUp = true
                     }
+                },
+                onShowForgotPassword: {
+                    showSignIn = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        showForgotPassword = true
+                    }
                 }
             )
             .navigationTitle("Sign In")
@@ -441,134 +453,175 @@ struct OnboardingFlowView: View {
 
 // MARK: - Welcome Scene
 
+// MARK: - Animated Welcome Scene
+
+private struct FloatingElement: Identifiable {
+    let id = UUID()
+    let symbol: String
+    let size: CGFloat
+    let x: CGFloat        // 0-1 relative position
+    let y: CGFloat
+    let radius: CGFloat   // drift radius in points
+    let speed: Double     // seconds per full orbit
+    let phase: Double     // 0-1 starting phase offset
+    let opacity: Double
+    let rotationSpeed: Double // degrees per second
+}
+
 private struct WelcomeScene: View {
     let accent: Color
     let onContinue: () -> Void
     let onSignIn: () -> Void
-    var onGuest: (() -> Void)? = nil
 
-    @State private var phase = 0
+    @State private var logoVisible = false
+    @State private var buttonsVisible = false
+
+    private let elements: [FloatingElement] = [
+        // News & content symbols
+        FloatingElement(symbol: "newspaper.fill", size: 18, x: 0.12, y: 0.15, radius: 25, speed: 12, phase: 0.0, opacity: 0.25, rotationSpeed: 3),
+        FloatingElement(symbol: "book.fill", size: 14, x: 0.85, y: 0.20, radius: 20, speed: 14, phase: 0.3, opacity: 0.20, rotationSpeed: -2),
+        FloatingElement(symbol: "quote.opening", size: 16, x: 0.75, y: 0.72, radius: 22, speed: 11, phase: 0.7, opacity: 0.18, rotationSpeed: 4),
+        // Globe & connectivity
+        FloatingElement(symbol: "globe.americas.fill", size: 22, x: 0.88, y: 0.42, radius: 18, speed: 16, phase: 0.1, opacity: 0.20, rotationSpeed: 1),
+        FloatingElement(symbol: "antenna.radiowaves.left.and.right", size: 13, x: 0.18, y: 0.68, radius: 20, speed: 10, phase: 0.5, opacity: 0.15, rotationSpeed: -3),
+        // Paper planes
+        FloatingElement(symbol: "paperplane.fill", size: 16, x: 0.70, y: 0.12, radius: 28, speed: 9, phase: 0.2, opacity: 0.30, rotationSpeed: 5),
+        FloatingElement(symbol: "paperplane.fill", size: 12, x: 0.22, y: 0.82, radius: 22, speed: 13, phase: 0.8, opacity: 0.22, rotationSpeed: -4),
+        // Stars — scattered, different sizes
+        FloatingElement(symbol: "star.fill", size: 8, x: 0.92, y: 0.08, radius: 15, speed: 7, phase: 0.0, opacity: 0.45, rotationSpeed: 8),
+        FloatingElement(symbol: "star.fill", size: 5, x: 0.05, y: 0.30, radius: 12, speed: 8, phase: 0.4, opacity: 0.40, rotationSpeed: -6),
+        FloatingElement(symbol: "star.fill", size: 6, x: 0.48, y: 0.06, radius: 14, speed: 9, phase: 0.6, opacity: 0.35, rotationSpeed: 5),
+        FloatingElement(symbol: "star.fill", size: 4, x: 0.35, y: 0.92, radius: 10, speed: 6, phase: 0.2, opacity: 0.30, rotationSpeed: -10),
+        FloatingElement(symbol: "star.fill", size: 7, x: 0.65, y: 0.88, radius: 16, speed: 10, phase: 0.9, opacity: 0.28, rotationSpeed: 7),
+        FloatingElement(symbol: "star.fill", size: 3, x: 0.95, y: 0.60, radius: 8, speed: 5, phase: 0.1, opacity: 0.35, rotationSpeed: 12),
+        // Sparkles
+        FloatingElement(symbol: "sparkle", size: 14, x: 0.55, y: 0.20, radius: 20, speed: 8, phase: 0.3, opacity: 0.35, rotationSpeed: 6),
+        FloatingElement(symbol: "sparkle", size: 10, x: 0.08, y: 0.50, radius: 18, speed: 11, phase: 0.7, opacity: 0.28, rotationSpeed: -5),
+        FloatingElement(symbol: "sparkle", size: 12, x: 0.42, y: 0.75, radius: 16, speed: 9, phase: 0.5, opacity: 0.25, rotationSpeed: 4),
+        FloatingElement(symbol: "sparkle", size: 8, x: 0.82, y: 0.85, radius: 14, speed: 7, phase: 0.1, opacity: 0.30, rotationSpeed: -8),
+        // Rockets
+        FloatingElement(symbol: "location.north.fill", size: 14, x: 0.60, y: 0.28, radius: 30, speed: 10, phase: 0.4, opacity: 0.28, rotationSpeed: -3),
+        FloatingElement(symbol: "location.north.fill", size: 10, x: 0.15, y: 0.45, radius: 24, speed: 12, phase: 0.8, opacity: 0.22, rotationSpeed: 2),
+        // Tech/AI
+        FloatingElement(symbol: "cpu.fill", size: 13, x: 0.78, y: 0.55, radius: 18, speed: 14, phase: 0.6, opacity: 0.18, rotationSpeed: 2),
+        FloatingElement(symbol: "waveform", size: 15, x: 0.30, y: 0.35, radius: 20, speed: 11, phase: 0.2, opacity: 0.15, rotationSpeed: -1),
+        // Moon & space
+        FloatingElement(symbol: "moon.fill", size: 16, x: 0.40, y: 0.90, radius: 15, speed: 18, phase: 0.3, opacity: 0.22, rotationSpeed: 1),
+        FloatingElement(symbol: "moon.stars.fill", size: 12, x: 0.92, y: 0.75, radius: 12, speed: 15, phase: 0.9, opacity: 0.18, rotationSpeed: -1),
+        // Dots — ambient
+        FloatingElement(symbol: "circle.fill", size: 5, x: 0.25, y: 0.55, radius: 12, speed: 13, phase: 0.1, opacity: 0.18, rotationSpeed: 0),
+        FloatingElement(symbol: "circle.fill", size: 3, x: 0.68, y: 0.40, radius: 10, speed: 11, phase: 0.6, opacity: 0.15, rotationSpeed: 0),
+        FloatingElement(symbol: "circle.fill", size: 4, x: 0.50, y: 0.62, radius: 8, speed: 9, phase: 0.4, opacity: 0.12, rotationSpeed: 0),
+        FloatingElement(symbol: "circle.fill", size: 6, x: 0.10, y: 0.90, radius: 14, speed: 15, phase: 0.7, opacity: 0.16, rotationSpeed: 0),
+        FloatingElement(symbol: "circle.fill", size: 3, x: 0.58, y: 0.48, radius: 6, speed: 8, phase: 0.9, opacity: 0.10, rotationSpeed: 0),
+    ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+        // TimelineView drives continuous animation — never freezes
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            GeometryReader { geo in
+                ZStack {
+                    // Floating elements
+                    ForEach(elements) { e in
+                        let angle = (t / e.speed + e.phase) * .pi * 2
+                        let dx = cos(angle) * e.radius
+                        let dy = sin(angle * 0.7) * e.radius // elliptical path
+                        let rot = t * e.rotationSpeed
 
-            VStack(spacing: 12) {
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    if phase >= 1 {
-                        TypingTextView(fullText: "Today", typingSpeed: 0.07, startDelay: 0)
-                            .font(.system(size: 58, weight: .heavy, design: .serif))
-                            .foregroundStyle(.white)
-                            .tracking(-2)
-                    }
-                    if phase >= 2 {
-                        Text("+")
-                            .font(.system(size: 58, weight: .heavy, design: .serif))
-                            .foregroundStyle(accent)
-                            .tracking(-2)
-                    }
-                }
-
-                if phase >= 3 {
-                    TypingTextView(fullText: "News, reimagined.", typingSpeed: 0.04, startDelay: 0.1)
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .tracking(1)
-                }
-            }
-
-            Spacer()
-
-            if phase >= 4 {
-                VStack(spacing: 14) {
-                    HStack(spacing: 8) {
-                        welcomeBadge(icon: "brain", text: "AI-Powered")
-                        welcomeBadge(icon: "person.fill", text: "Personalized")
-                        welcomeBadge(icon: "bolt.fill", text: "Real-time")
-                    }
-                    .padding(.bottom, 6)
-
-                    Button {
-                        HapticManager.medium()
-                        onContinue()
-                    } label: {
-                        Text("Get Started")
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 54)
-                            .background(accent.gradient, in: Capsule())
+                        Image(systemName: e.symbol)
+                            .font(.system(size: e.size, weight: .medium))
+                            .foregroundStyle(.white.opacity(e.opacity))
+                            .rotationEffect(.degrees(rot))
+                            .position(
+                                x: geo.size.width * e.x + dx,
+                                y: geo.size.height * e.y + dy
+                            )
                     }
 
-                    Button {
-                        HapticManager.light()
-                        onGuest?()
-                    } label: {
-                        Text("Continue as Guest")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(.white.opacity(0.08), in: Capsule())
-                            .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 1))
-                    }
+                    // Subtle glow behind logo
+                    let glowPulse = 0.03 + sin(t * 0.5) * 0.01
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [.white.opacity(glowPulse), .clear],
+                                center: .center,
+                                startRadius: 30,
+                                endRadius: 220
+                            )
+                        )
+                        .frame(width: 440, height: 440)
+                        .position(x: geo.size.width / 2, y: geo.size.height * 0.4)
 
-                    Button {
-                        HapticManager.light()
-                        onSignIn()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text("Already have an account?")
-                                .foregroundStyle(.white.opacity(0.3))
-                            Text("Sign In")
-                                .foregroundStyle(.white.opacity(0.65))
-                                .fontWeight(.semibold)
+                    VStack(spacing: 0) {
+                        Spacer()
+
+                        // Logo
+                        HStack(alignment: .firstTextBaseline, spacing: 0) {
+                            Text("today")
+                                .font(.system(size: 48, weight: .bold))
+                                .foregroundStyle(.white)
+                                .tracking(-1.5)
+                            Text("+")
+                                .font(.system(size: 48, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.35))
+                                .tracking(-1.5)
                         }
-                        .font(.system(size: 14))
-                        .frame(height: 40)
+                        .opacity(logoVisible ? 1 : 0)
+                        .scaleEffect(logoVisible ? 1 : 0.92)
+
+                        Spacer()
+
+                        // Buttons
+                        VStack(spacing: 12) {
+                            Button {
+                                HapticManager.medium()
+                                onContinue()
+                            } label: {
+                                Text("Create Account")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .tracking(-0.2)
+                                    .foregroundStyle(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 52)
+                                    .background(.white, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+                            }
+
+                            Button {
+                                HapticManager.light()
+                                onSignIn()
+                            } label: {
+                                Text("Sign In")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .tracking(-0.2)
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 52)
+                                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                            .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                                    )
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 50)
+                        .opacity(buttonsVisible ? 1 : 0)
+                        .offset(y: buttonsVisible ? 0 : 24)
                     }
                 }
-                .padding(.horizontal, 28)
-                .padding(.bottom, 44)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .onAppear { run() }
-    }
-
-    private func welcomeBadge(icon: String, text: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 9, weight: .bold))
-            Text(text)
-                .font(.system(size: 11, weight: .semibold))
-        }
-        .foregroundStyle(.white.opacity(0.45))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.white.opacity(0.08), in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 1))
-    }
-
-    private func run() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) { phase = 1 }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { phase = 2 }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            withAnimation(.spring(response: 0.4)) { phase = 3 }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.2) {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { phase = 4 }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.7).delay(0.15)) { logoVisible = true }
+            withAnimation(.easeOut(duration: 0.5).delay(0.5)) { buttonsVisible = true }
         }
     }
 }
 
 // MARK: - Flow Layout
 
-private struct FlowLayoutView: Layout {
+struct FlowLayoutView: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
