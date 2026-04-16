@@ -21,9 +21,6 @@ struct SettingsView: View {
                 VStack(spacing: Theme.Spacing.lg) {
                     profileHeader
                     contentPreferencesSection
-                    notificationsSection
-                    displaySection
-                    dataStorageSection
                     supportSection
                     aboutSection
                     accountSection
@@ -35,9 +32,6 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         let prefs = viewModel.save()
@@ -47,13 +41,14 @@ struct SettingsView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .confirmationDialog("Sign Out", isPresented: $showSignOutConfirm) {
+            .alert("Sign Out", isPresented: $showSignOutConfirm) {
+                Button("Cancel", role: .cancel) { }
                 Button("Sign Out", role: .destructive) {
                     onSignOut?()
                     dismiss()
                 }
             } message: {
-                Text("Are you sure you want to sign out?")
+                Text("Are you sure you want to sign out of your account?")
             }
             .confirmationDialog("Clear Reading History", isPresented: $showClearHistoryConfirm) {
                 Button("Clear All", role: .destructive) {
@@ -93,14 +88,8 @@ struct SettingsView: View {
             }
 
             VStack(spacing: 4) {
-                Text(appViewModel.currentUser?.displayName ?? "News Reader")
+                Text(appViewModel.currentUser?.displayName ?? "My Profile")
                     .font(.system(size: 18, weight: .bold))
-
-                if let email = appViewModel.currentUser?.email {
-                    Text(email)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                }
             }
         }
         .frame(maxWidth: .infinity)
@@ -129,25 +118,6 @@ struct SettingsView: View {
                 if viewModel.homeCountryExpanded {
                     Divider().padding(.leading, 52)
                     homeCountryPicker
-                }
-
-                Divider().padding(.leading, 52)
-
-                // Followed Countries
-                expandableRow(
-                    icon: "globe",
-                    iconColor: .green,
-                    label: "Followed Countries",
-                    value: "\(viewModel.followedCountries.count) selected",
-                    isExpanded: viewModel.followedCountriesExpanded
-                ) {
-                    viewModel.followedCountriesExpanded.toggle()
-                    HapticManager.light()
-                }
-
-                if viewModel.followedCountriesExpanded {
-                    Divider().padding(.leading, 52)
-                    followedCountriesPicker
                 }
 
                 Divider().padding(.leading, 52)
@@ -489,43 +459,87 @@ struct SettingsView: View {
     }
 
     private var followedTopicsPicker: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-        ], spacing: 8) {
-            ForEach(viewModel.availableTopics) { topic in
-                let selected = viewModel.followedTopics.contains(topic.id)
-                Button {
-                    viewModel.toggleTopic(topic.id)
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: topic.icon)
-                            .font(.system(size: 14))
-                            .frame(width: 20)
-                        Text(topic.name)
-                            .font(.system(size: 13, weight: .medium))
-                            .lineLimit(1)
-                        Spacer()
-                        if selected {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(Theme.Colors.accent)
-                        }
-                    }
-                    .foregroundStyle(selected ? Theme.Colors.accent : Theme.Colors.primaryText)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(
-                        selected ? Theme.Colors.accent.opacity(0.08) : Color.clear,
-                        in: RoundedRectangle(cornerRadius: Theme.CornerRadius.small)
-                    )
-                    .contentShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.small))
-                }
-                .buttonStyle(SettingsRowButtonStyle())
+        VStack(alignment: .leading, spacing: 20) {
+            ForEach(TopicCategories.all) { category in
+                settingsTopicCategory(category)
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
+    }
+
+    private func settingsTopicCategory(_ category: TopicCategory) -> some View {
+        let tint = settingsCategoryTint(for: category.id)
+        let count = category.subtopics.filter { viewModel.followedTopics.contains($0.id) }.count
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: category.icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 24, height: 24)
+                    .background(tint.gradient, in: RoundedRectangle(cornerRadius: 6))
+
+                Text(category.name)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(tint)
+
+                if count > 0 {
+                    Text("\(count)")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(tint.opacity(0.15), in: Capsule())
+                }
+            }
+
+            FlowLayoutView(spacing: 6) {
+                ForEach(category.subtopics) { topic in
+                    settingsTopicChip(topic, tint: tint)
+                }
+            }
+        }
+    }
+
+    private func settingsTopicChip(_ topic: Topic, tint: Color) -> some View {
+        let isOn = viewModel.followedTopics.contains(topic.id)
+
+        return Button {
+            viewModel.toggleTopic(topic.id)
+            HapticManager.selection()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: isOn ? "checkmark" : topic.icon)
+                    .font(.system(size: isOn ? 9 : 10, weight: .semibold))
+                Text(topic.name)
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .foregroundStyle(isOn ? .white : .white.opacity(0.6))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(isOn ? tint.opacity(0.5) : .white.opacity(0.06), in: Capsule())
+            .overlay(Capsule().strokeBorder(isOn ? tint.opacity(0.5) : .white.opacity(0.08), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .animation(.spring(response: 0.25, dampingFraction: 0.75), value: isOn)
+    }
+
+    private func settingsCategoryTint(for id: String) -> Color {
+        switch id {
+        case "news_politics":  return Color(hex: "#5856D6")
+        case "sports":         return Color(hex: "#FF9500")
+        case "business":       return Color(hex: "#34C759")
+        case "entertainment":  return Color(hex: "#FF2D55")
+        case "tech":           return Color(hex: "#007AFF")
+        case "science":        return Color(hex: "#AF52DE")
+        case "health":         return Color(hex: "#FF3B30")
+        case "finance":        return Color(hex: "#30B0C7")
+        case "crypto":         return Color(hex: "#F7931A")
+        case "lifestyle":      return Color(hex: "#A2845E")
+        case "fashion":        return Color(hex: "#E91E8C")
+        default:               return .gray
+        }
     }
 
     // MARK: - Reusable Row Components

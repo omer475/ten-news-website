@@ -61,7 +61,18 @@ struct FeedArticleCardView: View {
         }
         .buttonStyle(.plain)
         .fullScreenCover(isPresented: $showDetail) {
-            ArticleDetailView(articleId: article.id, initialArticle: article)
+            NavigationStack {
+                ArticleDetailView(articleId: article.id, initialArticle: article)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button { showDetail = false } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+            }
         }
     }
 

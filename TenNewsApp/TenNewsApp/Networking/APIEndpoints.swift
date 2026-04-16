@@ -18,13 +18,16 @@ enum APIEndpoints {
     // MARK: - Auth
     static let login = "/api/auth/login"
     static let signup = "/api/auth/signup"
+    static let verifyOtp = "/api/auth/verify-otp"
     static let logout = "/api/auth/logout"
     static let forgotPassword = "/api/auth/forgot-password"
+    static let resetPassword = "/api/auth/reset-password"
     static let googleAuth = "/api/auth/google"
 
     // MARK: - User
     static let userProfile = "/api/user/profile"
     static let userPreferences = "/api/user/preferences"
+    static func userLiked(userId: String) -> String { "/api/user/liked?user_id=\(userId)" }
 
     // MARK: - Search
     static func search(query: String, page: Int = 0, limit: Int = 40) -> String {
@@ -35,6 +38,13 @@ enum APIEndpoints {
     // MARK: - Content Creation
     static let contentCreate = "/api/content/create"
     static let contentUploadImage = "/api/content/upload-image"
+
+    // MARK: - Publishers
+    static func publisher(id: String) -> String { "/api/publishers/\(id)" }
+    static func publisherArticles(id: String, page: Int = 0) -> String { "/api/publishers/\(id)/articles?page=\(page)&limit=20" }
+    static func publisherFollow(id: String) -> String { "/api/publishers/\(id)/follow" }
+    static let discoverPublishers = "/api/publishers/discover"
+    static func searchPublishers(query: String) -> String { "/api/publishers/discover?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)" }
 
     // MARK: - Analytics
     static let analyticsTrack = "/api/analytics/track"

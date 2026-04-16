@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let feedLog = Logger(subsystem: "com.tennews.app", category: "FeedAPI")
 
 struct FeedService {
     private let client = APIClient.shared
@@ -59,7 +62,11 @@ struct FeedService {
         if !seenIds.isEmpty {
             params += "&seen_ids=\(seenIds.suffix(300).joined(separator: ","))"
         }
-        return try await client.get("\(APIEndpoints.mainFeed)\(params)")
+        let fullURL = "\(APIEndpoints.mainFeed)\(params)"
+        feedLog.warning("API CALL: \(fullURL.prefix(200), privacy: .public)")
+        let result: MainFeedResponse = try await client.get(fullURL)
+        feedLog.warning("API RESULT: \(result.articles.count) articles, hasMore=\(result.hasMore), ids=\(result.articles.prefix(5).map { $0.id.stringValue }.joined(separator: ","), privacy: .public)")
+        return result
     }
 
     func fetchForYouFeed(

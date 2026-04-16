@@ -170,6 +170,7 @@ final class SettingsViewModel {
         errorMessage = nil
         do {
             _ = try await userService.updatePreferences(
+                userId: userId ?? "",
                 homeCountry: homeCountry,
                 followedCountries: Array(followedCountries),
                 followedTopics: Array(followedTopics)

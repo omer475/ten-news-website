@@ -6,9 +6,12 @@ final class AuthViewModel {
     var email: String = ""
     var password: String = ""
     var fullName: String = ""
+    var otpCode: String = ""
     var isLoading = false
     var errorMessage: String?
     var successMessage: String?
+    var showOtpVerification = false
+    var pendingSignupEmail: String?
 
     private let authService = AuthService()
     private let googleClientId = "465407271728-t3osp3o35l4hs6ei9coddr24bbsmbkda.apps.googleusercontent.com"
@@ -61,11 +64,38 @@ final class AuthViewModel {
                 name: fullName.trimmingCharacters(in: .whitespaces)
             )
             isLoading = false
-            if let user = response.user {
-                let session = response.session
-                return (user, session)
+            if response.requiresVerification == true {
+                // OTP verification needed — show code entry screen
+                pendingSignupEmail = email
+                showOtpVerification = true
+                successMessage = response.message
+                return nil
+            } else if let user = response.user {
+                return (user, response.session)
             } else {
                 errorMessage = response.error ?? response.message ?? "Signup failed"
+                return nil
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return nil
+        }
+    }
+
+    func verifyOtp() async -> (user: AuthUser, session: AuthSession?)? {
+        guard let verifyEmail = pendingSignupEmail, !otpCode.isEmpty, !isLoading else { return nil }
+        isLoading = true
+        errorMessage = nil
+        do {
+            let response = try await authService.verifyOtp(email: verifyEmail, code: otpCode.trimmingCharacters(in: .whitespaces))
+            isLoading = false
+            if let user = response.user {
+                showOtpVerification = false
+                pendingSignupEmail = nil
+                return (user, response.session)
+            } else {
+                errorMessage = response.error ?? response.message ?? "Verification failed"
                 return nil
             }
         } catch {
@@ -142,6 +172,11 @@ final class AuthViewModel {
         }
     }
 
+    var showResetCodeEntry = false
+    var resetCode: String = ""
+    var newPassword: String = ""
+    var pendingResetEmail: String?
+
     func forgotPassword() async {
         guard isEmailValid, !isLoading else { return }
         isLoading = true
@@ -150,10 +185,50 @@ final class AuthViewModel {
         do {
             let response = try await authService.forgotPassword(email: email)
             isLoading = false
-            successMessage = response.message ?? "Password reset email sent"
+            if response.success == true {
+                pendingResetEmail = email
+                showResetCodeEntry = true
+                successMessage = "Check your email for the 6-digit code."
+            } else {
+                successMessage = response.message ?? "If an account exists, you'll receive a code."
+            }
         } catch {
             errorMessage = error.localizedDescription
             isLoading = false
+        }
+    }
+
+    func resetPassword() async -> (user: AuthUser, session: AuthSession?)? {
+        guard let resetEmail = pendingResetEmail,
+              !resetCode.isEmpty,
+              newPassword.count >= 6,
+              !isLoading else { return nil }
+        isLoading = true
+        errorMessage = nil
+        do {
+            let response = try await authService.resetPassword(
+                email: resetEmail,
+                code: resetCode.trimmingCharacters(in: .whitespaces),
+                newPassword: newPassword
+            )
+            isLoading = false
+            if response.success == true {
+                successMessage = response.message ?? "Password updated!"
+                showResetCodeEntry = false
+                pendingResetEmail = nil
+                // User + session returned — auto sign in
+                if let user = response.user, let session = response.session {
+                    return (user, session)
+                }
+                return nil
+            } else {
+                errorMessage = response.error ?? response.message ?? "Reset failed"
+                return nil
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return nil
         }
     }
 

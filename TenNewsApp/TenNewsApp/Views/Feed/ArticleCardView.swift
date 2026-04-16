@@ -19,13 +19,57 @@ struct ArticleCardView: View {
     @State private var imageIsLight = false
     @State private var showSafari = false
     @State private var showCreatorProfile = false
+    @State private var showShareSheet = false
 
     // Double-tap like animation
     @State private var showHeartAnimation = false
 
+    // Multi-page carousel
+    @State private var currentPage: Int = 0
+
     // Engagement tracking (exit event only — engagement signals sent by FeedViewModel)
     @State private var viewStartTime: Date?
     private let analytics = AnalyticsService()
+
+    /// Total page count for this article (1 if no pages array)
+    private var pageCount: Int {
+        guard let pages = article.pages, pages.count > 1 else { return 1 }
+        return pages.count
+    }
+
+    /// Whether this is a multi-page carousel article
+    private var isMultiPage: Bool { pageCount > 1 }
+
+    /// Current page's title — empty if the page has no title (don't fall back to page 1's title)
+    private var currentPageTitle: String {
+        guard let pages = article.pages, currentPage < pages.count else {
+            return article.displayTitle
+        }
+        // Page 0 with no title: use the article's main title
+        // Other pages with no title: leave empty
+        if currentPage == 0 {
+            return pages[currentPage].title ?? article.displayTitle
+        }
+        return pages[currentPage].title ?? ""
+    }
+
+    /// Current page's bullets
+    private var currentPageBullets: [String] {
+        guard let pages = article.pages, currentPage < pages.count,
+              let bullets = pages[currentPage].bullets, !bullets.isEmpty else {
+            return article.displayBullets
+        }
+        return bullets
+    }
+
+    /// Current page's image URL (falls back to first page's / article's image)
+    private var currentPageImage: URL? {
+        if let pages = article.pages, currentPage < pages.count,
+           let imgStr = pages[currentPage].imageUrl, let url = URL(string: imgStr) {
+            return url
+        }
+        return article.displayImage
+    }
 
     private var effectiveColor: Color { dominantColor ?? accentColor }
     private var overlayIconColor: Color { imageIsLight ? Color(white: 0.15) : .white }
@@ -77,7 +121,7 @@ struct ArticleCardView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // IMAGE — flexible height, shrinks when content is long
                     GeometryReader { imgGeo in
-                        if let imageUrl = article.displayImage {
+                        if let imageUrl = currentPageImage {
                             AsyncCachedImage(url: imageUrl, contentMode: .fill, onLoaded: { img in
                                 extractDominantColor(from: imageUrl, loadedImage: img)
                             })
@@ -137,8 +181,10 @@ struct ArticleCardView: View {
                     // TITLE — flows naturally, overlaps into blur gradient
                     VStack(alignment: .leading, spacing: 4) {
                         TimeAgoText(article.publishedAt ?? article.createdAt, color: .white.opacity(0.5))
-                        highlightedTitle(article.displayTitle)
-                            .padding(.trailing, 36)
+                        if !currentPageTitle.isEmpty {
+                            highlightedTitle(currentPageTitle)
+                                .padding(.trailing, 36)
+                        }
                     }
                     .padding(.horizontal, padding)
                     .padding(.top, -80)
@@ -147,7 +193,7 @@ struct ArticleCardView: View {
                     Spacer().frame(height: 22)
 
                     // BULLETS — natural height, fixed spacing
-                    let bullets = article.displayBullets
+                    let bullets = currentPageBullets
                     let hasInfoBox = !article.availableInfoModes.isEmpty
                     let maxBullets = hasInfoBox ? 3 : 4
                     if !bullets.isEmpty {
@@ -176,6 +222,22 @@ struct ArticleCardView: View {
                     Spacer().frame(height: hasInfoBox ? (85 + 16 + 80) : 93)
                 }
 
+                // Double-tap like — behind buttons so they get hit-test priority
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            LikeManager.shared.like(article)
+                            showHeartAnimation = true
+                        }
+                        HapticManager.medium()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                showHeartAnimation = false
+                            }
+                        }
+                    }
+
                 // Floating badges on image (top-right)
                 floatingOverlays
 
@@ -192,6 +254,32 @@ struct ArticleCardView: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
+            // Multi-page horizontal swipe gesture
+            .gesture(isMultiPage ? DragGesture(minimumDistance: 30, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width < -50 && currentPage < pageCount - 1 {
+                        withAnimation(.easeInOut(duration: 0.25)) { currentPage += 1 }
+                    } else if value.translation.width > 50 && currentPage > 0 {
+                        withAnimation(.easeInOut(duration: 0.25)) { currentPage -= 1 }
+                    }
+                } : nil)
+            // Page indicator dots
+            .overlay(alignment: .bottom) {
+                if isMultiPage {
+                    HStack(spacing: 6) {
+                        ForEach(0..<pageCount, id: \.self) { i in
+                            Circle()
+                                .fill(i == currentPage ? .white : .white.opacity(0.35))
+                                .frame(width: i == currentPage ? 8 : 6, height: i == currentPage ? 8 : 6)
+                                .animation(.easeInOut(duration: 0.2), value: currentPage)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(.black.opacity(0.3), in: Capsule())
+                    .padding(.bottom, 12)
+                }
+            }
             .overlay {
                 // Double-tap heart animation
                 if showHeartAnimation {
@@ -200,19 +288,7 @@ struct ArticleCardView: View {
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.3), radius: 10, y: 4)
                         .transition(.scale(scale: 0.3).combined(with: .opacity))
-                }
-            }
-            .onTapGesture(count: 2) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                    LikeManager.shared.like(article)
-                    showHeartAnimation = true
-                }
-                HapticManager.medium()
-                // Dismiss after delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        showHeartAnimation = false
-                    }
+                        .allowsHitTesting(false)
                 }
             }
         }
@@ -241,8 +317,12 @@ struct ArticleCardView: View {
             CreatorProfileView(
                 creator: creator,
                 articles: [],
-                onDismiss: { showCreatorProfile = false }
+                onDismiss: { showCreatorProfile = false },
+                publisherId: article.authorId
             )
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareArticleSheet(article: article)
         }
         .fullScreenCover(isPresented: $showEventDetail) {
             if let event = article.worldEvent {
@@ -348,7 +428,7 @@ struct ArticleCardView: View {
         VStack(alignment: .leading, spacing: 8) {
             Spacer()
             sourcePill
-            highlightedTitle(article.displayTitle)
+            highlightedTitle(currentPageTitle)
         }
         .padding(.horizontal, padding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -599,7 +679,7 @@ struct ArticleCardView: View {
 
     @ViewBuilder
     private func bulletsList(availableHeight: CGFloat) -> some View {
-        let bullets = article.displayBullets
+        let bullets = currentPageBullets
 
         if !bullets.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
@@ -1518,34 +1598,8 @@ struct ArticleCardView: View {
                 Spacer()
                 VStack(spacing: 28) {
                     // Creator profile button (TikTok-style)
-                    Button {
-                        showCreatorProfile = true
-                        HapticManager.light()
-                    } label: {
-                        let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
-                        let logoColor = logoColors[abs((article.source ?? "").hashValue) % logoColors.count]
-                        ZStack(alignment: .bottom) {
-                            Text(String((article.source ?? "N").prefix(1)).uppercased())
-                                .font(.system(size: 14, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .frame(width: 44, height: 44)
-                                .background(logoColor)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(.white.opacity(0.2), lineWidth: 1.5)
-                                )
-
-                            // "+" follow badge
-                            Image(systemName: "plus")
-                                .font(.system(size: 8, weight: .black))
-                                .foregroundStyle(.white)
-                                .frame(width: 18, height: 18)
-                                .background(.red, in: Circle())
-                                .overlay(Circle().stroke(.black, lineWidth: 1.5))
-                                .offset(y: 8)
-                        }
-                    }
+                    // Creator avatar + follow badge
+                    creatorFollowButton
 
                     // Like
                     Button {
@@ -1594,9 +1648,10 @@ struct ArticleCardView: View {
                     }
 
                     // Share
-                    ShareLink(item: URL(string: article.url ?? "https://tennews.ai")!,
-                              subject: Text(article.plainTitle),
-                              message: Text(article.displaySummary)) {
+                    Button {
+                        showShareSheet = true
+                        HapticManager.light()
+                    } label: {
                         VStack(spacing: 2) {
                             Image(systemName: "arrowshape.turn.up.right")
                                 .font(.system(size: 24, weight: .medium))
@@ -1606,11 +1661,50 @@ struct ArticleCardView: View {
                                 .foregroundStyle(.white.opacity(0.5))
                         }
                     }
-                    .simultaneousGesture(TapGesture().onEnded { HapticManager.light() })
                 }
                 .padding(.trailing, 18)
             }
             .padding(.bottom, 200)
+        }
+    }
+
+    private var creatorFollowButton: some View {
+        let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
+        let creatorName = article.authorName ?? article.source ?? ""
+        let logoColor = logoColors[abs(creatorName.hashValue) % logoColors.count]
+        let following = FollowManager.shared.isFollowing(article.authorId)
+
+        return ZStack(alignment: .bottom) {
+            Button {
+                showCreatorProfile = true
+                HapticManager.light()
+            } label: {
+                Text(String((creatorName.isEmpty ? "N" : creatorName).prefix(1)).uppercased())
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(logoColor)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(.white.opacity(0.2), lineWidth: 1.5)
+                    )
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    FollowManager.shared.toggle(article.authorId, userId: nil)
+                }
+                HapticManager.medium()
+            } label: {
+                Image(systemName: following ? "checkmark" : "plus")
+                    .font(.system(size: 8, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(width: 18, height: 18)
+                    .background(following ? .green : .red, in: Circle())
+                    .overlay(Circle().stroke(.black, lineWidth: 1.5))
+            }
+            .offset(y: 8)
         }
     }
 
@@ -1838,18 +1932,21 @@ struct ArticleCardView: View {
                     let freq = CGFloat(bucket.bottomCount) / maxBottomCount
                     var score = freq * 0.4 + (hsl.s / 100) * 0.45 + (CGFloat(bucket.positions.count) / maxCoverage) * 0.15
 
-                    // Penalize muddy brown/olive (hue 20-55, sat < 50) unless very dominant
-                    let isBrownish = hsl.h >= 20 && hsl.h <= 55 && hsl.s < 50
-                    if isBrownish && freq < 0.7 { score *= 0.3 }
+                    // Penalize only truly muddy brown/olive (low saturation warm hues)
+                    // Saturated yellows/oranges (S >= 50) should be KEPT — they look great as blur colors
+                    let isMuddyBrown = hsl.h >= 20 && hsl.h <= 55 && hsl.s < 35
+                    if isMuddyBrown && freq < 0.7 { score *= 0.3 }
 
                     // Penalize very dark desaturated (gray/black)
                     if hsl.s < 15 && hsl.l < 30 { score *= 0.4 }
 
-                    // Boost vibrant colors (blues, purples, reds, greens, teals)
+                    // Boost vibrant colors across the spectrum
                     if hsl.s >= 40 {
-                        if (hsl.h >= 180 && hsl.h <= 300) { score *= 1.3 } // blue-purple range
-                        if (hsl.h >= 330 || hsl.h <= 15) { score *= 1.2 }  // red range
-                        if (hsl.h >= 100 && hsl.h <= 170) { score *= 1.15 } // green-teal range
+                        if (hsl.h >= 180 && hsl.h <= 300) { score *= 1.3 }  // blue-purple
+                        if (hsl.h >= 330 || hsl.h <= 15) { score *= 1.25 }  // red
+                        if (hsl.h >= 100 && hsl.h <= 170) { score *= 1.2 }  // green-teal
+                        if (hsl.h >= 40 && hsl.h <= 70) { score *= 1.2 }    // yellow-gold (was penalized!)
+                        if (hsl.h >= 15 && hsl.h <= 40) { score *= 1.15 }   // orange-amber
                     }
 
                     if score > bestBlurScore {
@@ -1862,15 +1959,54 @@ struct ArticleCardView: View {
                     CGFloat(bestBlurBucket.rKey) / 255, CGFloat(bestBlurBucket.gKey) / 255, CGFloat(bestBlurBucket.bKey) / 255
                 )
 
-                // If the best blur color is still muddy/desaturated, use the accent color hue instead
-                let isMuddy = blurHSL.s < 25 || (blurHSL.h >= 20 && blurHSL.h <= 55 && blurHSL.s < 45)
-                let finalH = isMuddy ? accentWinner.h : blurHSL.h
-                let finalS = isMuddy
-                    ? max(30.0, min(50.0, accentWinner.s * 0.5))
-                    : max(25.0, min(55.0, blurHSL.s * 0.55))
-                let finalL: CGFloat = max(8.0, min(16.0, blurHSL.l * 0.22))
+                // ── Rich dark tone from image color ──
+                // Keep the image's actual hue so the background feels connected to the photo.
+                // Make it deeply dark and well-saturated — no muddy, washed-out, or light results.
+                // Only nudge hues that genuinely can't look good dark (pure bright yellow → amber).
 
-                let blurCol = ArticleCardView.colorFromHSL(h: finalH, s: finalS, l: finalL)
+                let sourceH = blurHSL.s >= 15 ? blurHSL.h : accentWinner.h
+                let sourceS = blurHSL.s >= 15 ? blurHSL.s : accentWinner.s
+
+                let finalH: CGFloat
+                let finalS: CGFloat
+                let finalL: CGFloat
+
+                if blurHSL.s < 10 && accentWinner.s < 15 {
+                    // Truly achromatic (B&W, gray) → near-black
+                    finalH = 0; finalS = 0; finalL = 5
+                } else if sourceH >= 50 && sourceH <= 65 {
+                    // Pure bright yellow → shift to warm amber (yellow looks sick when dark)
+                    finalH = 35; finalS = 70; finalL = 10
+                } else if sourceH >= 65 && sourceH <= 85 {
+                    // Yellow-green → shift to warm olive-gold
+                    finalH = 45; finalS = 55; finalL = 9
+                } else {
+                    // Everything else: keep the actual hue, just make it dark and saturated
+                    finalH = sourceH
+                    // Boost saturation so the color reads clearly even at low lightness
+                    finalS = max(50.0, min(80.0, sourceS * 1.1))
+                    finalL = 10
+                }
+
+                // Per-hue lightness tuning: some hues need slightly different lightness to look rich
+                let adjustedL: CGFloat
+                if finalS == 0 {
+                    adjustedL = finalL // achromatic
+                } else if finalH >= 200 && finalH <= 260 {
+                    adjustedL = 12   // Blues can go slightly lighter — deep navy
+                } else if finalH >= 260 && finalH <= 320 {
+                    adjustedL = 11   // Purples — dark plum
+                } else if finalH >= 320 || finalH <= 15 {
+                    adjustedL = 10   // Reds — rich burgundy
+                } else if finalH >= 15 && finalH <= 50 {
+                    adjustedL = 9    // Brown/amber/orange — deep chocolate
+                } else if finalH >= 80 && finalH <= 170 {
+                    adjustedL = 9    // Greens/teals — keep very dark to avoid looking sickly
+                } else {
+                    adjustedL = 10   // Default
+                }
+
+                let blurCol = ArticleCardView.colorFromHSL(h: finalH, s: finalS, l: adjustedL)
 
                 // Compute average brightness of top-right region (where icons sit)
                 let isLight: Bool = {

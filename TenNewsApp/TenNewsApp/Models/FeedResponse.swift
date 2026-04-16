@@ -15,11 +15,17 @@ struct MainFeedResponse: Codable {
     let nextCursor: String?
     let hasMore: Bool
     let total: Int?
+    let feedState: String?
+    let freshCount: Int?
+    let caughtUpMessage: String?
 
     enum CodingKeys: String, CodingKey {
         case articles, total
         case nextCursor = "next_cursor"
         case hasMore = "has_more"
+        case feedState = "feed_state"
+        case freshCount = "fresh_count"
+        case caughtUpMessage = "caught_up_message"
     }
 
     init(from decoder: Decoder) throws {
@@ -28,6 +34,9 @@ struct MainFeedResponse: Codable {
         nextCursor = try container.decodeIfPresent(String.self, forKey: .nextCursor)
         hasMore = try container.decodeIfPresent(Bool.self, forKey: .hasMore) ?? false
         total = try container.decodeIfPresent(Int.self, forKey: .total)
+        feedState = try container.decodeIfPresent(String.self, forKey: .feedState)
+        freshCount = try container.decodeIfPresent(Int.self, forKey: .freshCount)
+        caughtUpMessage = try container.decodeIfPresent(String.self, forKey: .caughtUpMessage)
     }
 }
 

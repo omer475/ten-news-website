@@ -74,6 +74,14 @@ struct AsyncCachedImage: View {
         }
     }
 
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 30
+        config.urlCache = nil // Don't cache HTTP responses (we cache UIImages ourselves)
+        return URLSession(configuration: config)
+    }()
+
     private func loadImage() async {
         guard let url else {
             isLoading = false
@@ -90,16 +98,29 @@ struct AsyncCachedImage: View {
 
         isLoading = true
 
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let uiImage = UIImage(data: data) {
-                let cost = data.count
-                Self.cache.setObject(uiImage, forKey: url as NSURL, cost: cost)
-                image = uiImage
-                onLoaded?(uiImage)
+        // Try up to 2 times (initial + 1 retry)
+        for attempt in 0..<2 {
+            if attempt > 0 {
+                try? await Task.sleep(for: .milliseconds(500))
             }
-        } catch {
-            // Silently fail - show placeholder
+            do {
+                var request = URLRequest(url: url)
+                request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+                request.setValue("image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
+                request.setValue(url.host.map { "https://\($0)/" } ?? "", forHTTPHeaderField: "Referer")
+                let (data, response) = try await Self.session.data(for: request)
+                let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 200
+                if statusCode < 400, let uiImage = UIImage(data: data) {
+                    let cost = data.count
+                    Self.cache.setObject(uiImage, forKey: url as NSURL, cost: cost)
+                    image = uiImage
+                    onLoaded?(uiImage)
+                    isLoading = false
+                    return
+                }
+            } catch {
+                continue
+            }
         }
 
         isLoading = false

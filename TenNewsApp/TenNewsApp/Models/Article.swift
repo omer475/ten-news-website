@@ -59,6 +59,20 @@ struct FlexibleDouble: Codable, Hashable {
     }
 }
 
+// MARK: - Article Page (for multi-page carousel articles)
+
+struct ArticlePage: Codable, Hashable {
+    let title: String?
+    let imageUrl: String?
+    let bullets: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case imageUrl = "image_url"
+        case bullets
+    }
+}
+
 // MARK: - Article
 
 struct Article: Codable, Identifiable, Hashable {
@@ -103,15 +117,25 @@ struct Article: Codable, Identifiable, Hashable {
     let topics: [String]?
     let interestTags: [String]?
     let bucket: String?
+    let resurfaced: Bool?
+    let isResurfaced: Bool?
+    let firstSeenAt: String?
+    let wasEngaged: Bool?
     let countryRelevance: [String: Int]?
     let topicRelevance: [String: Int]?
     let matchReasons: [String]?
     let scorecard: Scorecard?
     let articleType: String?
+    let authorId: String?
+    let authorName: String?
+    let pages: [ArticlePage]?
 
     enum CodingKeys: String, CodingKey {
         case id, title, summary, url, source, category, emoji, timeline, graph, map
-        case components, citations, rank, details, bucket
+        case components, citations, rank, details, bucket, resurfaced
+        case isResurfaced = "is_resurfaced"
+        case firstSeenAt = "first_seen_at"
+        case wasEngaged = "was_engaged"
         case titleNews = "title_news"
         case summaryText = "summary_text"
         case summaryTextB2 = "summary_text_b2"
@@ -142,9 +166,30 @@ struct Article: Codable, Identifiable, Hashable {
         case matchReasons = "match_reasons"
         case scorecard
         case articleType = "article_type"
+        case authorId = "author_id"
+        case authorName = "author_name"
+        case pages
     }
 
     // MARK: - Computed Display Properties
+
+    /// Whether this article was previously seen by the user
+    var isResurfacedArticle: Bool { isResurfaced == true || resurfaced == true }
+
+    /// Badge text for resurfaced articles, e.g. "Read 2d ago" or "You liked this"
+    var resurfacedBadge: String? {
+        guard isResurfacedArticle else { return nil }
+        if wasEngaged == true { return "You liked this" }
+        guard let seenAt = firstSeenAt,
+              let date = ISO8601DateFormatter().date(from: seenAt) else {
+            return "Read before"
+        }
+        let hours = Int(Date().timeIntervalSince(date) / 3600)
+        if hours < 1 { return "Read recently" }
+        if hours < 24 { return "Read \(hours)h ago" }
+        let days = hours / 24
+        return "Read \(days)d ago"
+    }
 
     var displayTitle: String { titleNews ?? title ?? "Untitled" }
 

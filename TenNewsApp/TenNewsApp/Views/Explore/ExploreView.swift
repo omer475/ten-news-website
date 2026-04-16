@@ -13,6 +13,7 @@ struct ExploreView: View {
     @State private var loadingTopicArticles = false
     @State private var appeared = false
     @State private var lastLoadTime: Date?
+    @State private var hasLoadedOnce = false
     private let staleThreshold: TimeInterval = 180 // 3 minutes
 
     // Explore tracking state
@@ -42,20 +43,30 @@ struct ExploreView: View {
     var body: some View {
         ZStack {
             Group {
-                if isLoading && topics.isEmpty {
+                if topics.isEmpty {
                     loadingState
-                } else if topics.isEmpty {
-                    emptyState
                 } else {
                     mainContent
                 }
             }
             .background(Theme.Colors.backgroundPrimary)
-            .task { await loadTopics() }
+            .task {
+                // Wait briefly for user state to load before first fetch
+                if userId == nil {
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                }
+                await loadTopics()
+            }
             .refreshable { await loadTopics() }
             .onAppear {
                 // Auto-refresh if data is stale (3+ minutes old)
                 if let last = lastLoadTime, Date().timeIntervalSince(last) > staleThreshold {
+                    Task { await loadTopics() }
+                }
+            }
+            .onChange(of: appViewModel.currentUser?.id) { oldId, newId in
+                // Reload when user becomes available or changes
+                if oldId != newId {
                     Task { await loadTopics() }
                 }
             }
@@ -72,11 +83,8 @@ struct ExploreView: View {
                     selectedArticle: article,
                     allArticles: feedViewModel.allArticles
                 ) {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                        selectedArticle = nil
-                    }
+                    selectedArticle = nil
                 }
-                .transition(.move(edge: .bottom))
                 .ignoresSafeArea()
                 .zIndex(1)
             }
@@ -116,39 +124,11 @@ struct ExploreView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 28)
 
-                // Personalized section
-                if !personalizedTopics.isEmpty {
-                    sectionHeader("For You", icon: "sparkles")
-                        .padding(.bottom, 16)
-
-                    ForEach(Array(personalizedTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                        entitySection(topic)
-                            .sectionAppear(appeared: appeared, index: tIndex)
-                            .padding(.bottom, 32)
-                    }
-                }
-
-                // Trending section
-                if !trendingTopics.isEmpty {
-                    sectionHeader("Trending", icon: "flame.fill")
-                        .padding(.top, personalizedTopics.isEmpty ? 0 : 8)
-                        .padding(.bottom, 16)
-
-                    let offset = personalizedTopics.count
-                    ForEach(Array(trendingTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                        entitySection(topic)
-                            .sectionAppear(appeared: appeared, index: offset + tIndex)
-                            .padding(.bottom, 32)
-                    }
-                }
-
-                // Fallback: if no type distinction, show all
-                if personalizedTopics.isEmpty && trendingTopics.isEmpty {
-                    ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                        entitySection(topic)
-                            .sectionAppear(appeared: appeared, index: tIndex)
-                            .padding(.bottom, 32)
-                    }
+                // Topics — already interleaved (2 personalized, 1 trending) from API
+                ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                    entitySection(topic)
+                        .sectionAppear(appeared: appeared, index: tIndex)
+                        .padding(.bottom, 32)
                 }
 
                 Spacer(minLength: 100)
@@ -269,8 +249,13 @@ struct ExploreView: View {
             } action: { _, newOffset in
                 let page = Int(round(newOffset / (cardWidth + 12)))
                 let clamped = max(0, min(page, topic.articles.count - 1))
-                if scrolledIndices[topic.entityName] != clamped {
+                let previousIndex = scrolledIndices[topic.entityName] ?? 0
+                if clamped != previousIndex {
                     scrolledIndices[topic.entityName] = clamped
+                    // Track swipe-right as interest signal (stronger than scroll, weaker than tap)
+                    if clamped > previousIndex {
+                        trackEntitySwipe(topic: topic, depth: clamped)
+                    }
                 }
             }
 
@@ -371,12 +356,28 @@ struct ExploreView: View {
         if !prefs.followedTopics.isEmpty {
             params.append("followed_topics=\(prefs.followedTopics.joined(separator: ","))")
         }
+        // Exclude articles already shown in the feed
+        let feedIds = feedViewModel.allArticles.prefix(30).compactMap { Int($0.id.stringValue) }
+        if !feedIds.isEmpty {
+            params.append("exclude_ids=\(feedIds.map(String.init).joined(separator: ","))")
+        }
         let endpoint = "/api/explore/topics" + (params.isEmpty ? "" : "?\(params.joined(separator: "&"))")
-        do {
-            let response: ExploreTopicsResponse = try await APIClient.shared.get(endpoint)
-            topics = response.topics
-        } catch {
-            // Keep existing data on refresh failure
+        // Retry up to 3 times if empty (handles cold CDN cache, slow auth, etc.)
+        for attempt in 1...3 {
+            do {
+                let response: ExploreTopicsResponse = try await APIClient.shared.get(endpoint)
+                topics = response.topics
+            } catch {
+                // Keep existing data on refresh failure
+            }
+            if !topics.isEmpty { break }
+            if attempt < 3 {
+                try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000)
+                // On retry, re-check userId in case it loaded late
+                if userId != nil && !endpoint.contains("user_id") {
+                    break // URL is stale, will reload via onChange
+                }
+            }
         }
         isLoading = false
         lastLoadTime = Date()
@@ -401,24 +402,17 @@ struct ExploreView: View {
 
         // Check feed cache first
         if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == topicArticle.id.stringValue }) {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                selectedArticle = cached
-            }
+            selectedArticle = cached
             return
         }
 
-        // Fetch full article from API, then open
+        // Fetch full article before showing sheet
         Task {
-            if let full: Article = try? await APIClient.shared.get("/api/article/\(topicArticle.id.stringValue)") {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                    selectedArticle = full
-                }
+            if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: topicArticle.id.stringValue)) {
+                selectedArticle = response.article
             } else {
-                // API failed — open with minimal data
                 let fallback = Article.from(exploreArticle: topicArticle)
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                    selectedArticle = fallback
-                }
+                selectedArticle = fallback
             }
         }
     }
@@ -437,8 +431,8 @@ struct ExploreView: View {
             let loaded = await withTaskGroup(of: (Int, Article?).self) { group in
                 for (index, topicArticle) in topic.articles.enumerated() {
                     group.addTask {
-                        let article: Article? = try? await APIClient.shared.get("/api/article/\(topicArticle.id.stringValue)")
-                        return (index, article)
+                        let response: ArticleDetailResponse? = try? await APIClient.shared.get(APIEndpoints.article(id: topicArticle.id.stringValue))
+                        return (index, response?.article)
                     }
                 }
                 var results: [(Int, Article)] = []
@@ -504,6 +498,18 @@ struct ExploreView: View {
                 category: topic.category,
                 source: "explore",
                 metadata: ["entity_name": topic.entityName]
+            )
+        }
+    }
+
+    /// Track swipe-right within entity carousel — interest signal
+    private func trackEntitySwipe(topic: ExploreTopic, depth: Int) {
+        Task {
+            try? await analytics.track(
+                event: "explore_entity_swipe",
+                category: topic.category,
+                source: "explore",
+                metadata: ["entity_name": topic.entityName, "depth": String(depth)]
             )
         }
     }

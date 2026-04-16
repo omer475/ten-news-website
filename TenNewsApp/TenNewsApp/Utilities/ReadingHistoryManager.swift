@@ -94,6 +94,14 @@ final class ReadingHistoryManager {
         return Array(readArticleIds.prefix(limit))
     }
 
+    /// Sync read count from server if local is lower (e.g. after account switch or data loss)
+    func syncReadCount(serverCount: Int) {
+        if serverCount > readCount {
+            readCount = serverCount
+            UserDefaults.standard.set(readCount, forKey: readCountKey)
+        }
+    }
+
     func clearHistory() {
         entries.removeAll()
         readCount = 0

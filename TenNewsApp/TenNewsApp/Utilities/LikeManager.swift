@@ -9,10 +9,33 @@ final class LikeManager {
     private(set) var likedArticleIDs: Set<String> = []
     private(set) var likedArticles: [Article] = []
 
-    private let idsKey = "liked_article_ids"
-    private let articlesKey = "liked_articles_data"
+    private var idsKey: String { "liked_article_ids_\(currentUserId)" }
+    private var articlesKey: String { "liked_articles_data_\(currentUserId)" }
+    private var currentUserId: String = "guest"
 
     private init() {
+        load()
+    }
+
+    /// Switch to a different user's data
+    func switchUser(_ userId: String?) {
+        let newId = userId ?? "guest"
+        guard newId != currentUserId else { return }
+        // Migrate old non-prefixed data to this user's keys (one-time)
+        if userId != nil {
+            let oldIds = UserDefaults.standard.stringArray(forKey: "liked_article_ids")
+            let newKey = "liked_article_ids_\(newId)"
+            if oldIds != nil && !oldIds!.isEmpty && UserDefaults.standard.stringArray(forKey: newKey) == nil {
+                UserDefaults.standard.set(oldIds, forKey: newKey)
+                if let oldData = UserDefaults.standard.data(forKey: "liked_articles_data") {
+                    UserDefaults.standard.set(oldData, forKey: "liked_articles_data_\(newId)")
+                }
+                // Clear old keys after migration
+                UserDefaults.standard.removeObject(forKey: "liked_article_ids")
+                UserDefaults.standard.removeObject(forKey: "liked_articles_data")
+            }
+        }
+        currentUserId = newId
         load()
     }
 
@@ -52,6 +75,23 @@ final class LikeManager {
         likedArticleIDs.removeAll()
         likedArticles.removeAll()
         save()
+    }
+
+    /// Restore from server if local is empty
+    func restoreFromServer(userId: String) {
+        guard likedArticleIDs.isEmpty else { return }
+        Task {
+            do {
+                let response: UserLikedResponse = try await APIClient.shared.get(
+                    APIEndpoints.userLiked(userId: userId)
+                )
+                if !response.liked.isEmpty {
+                    likedArticles = response.liked
+                    likedArticleIDs = Set(response.liked_ids)
+                    save()
+                }
+            } catch { }
+        }
     }
 
     // MARK: - Persistence

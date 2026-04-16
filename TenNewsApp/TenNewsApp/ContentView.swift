@@ -9,6 +9,7 @@ final class TabBarState {
     var lastRevealedAt: Date = .distantPast
     var searchText = ""
     var hideBottomBar = false
+    var forceExpandedBar = false
     var feedRefreshRequested = false
     var exploreRefreshRequested = false
 }
@@ -99,15 +100,9 @@ struct ContentView: View {
                     tabBarState.lastRevealedAt = Date()
                 }
             }
-            // Auto-refresh feed when switching back to Feed tab (if stale)
-            if newTab == 0 && oldTab != 0 {
-                Task {
-                    await feedViewModel.refreshIfStale(
-                        preferences: appViewModel.preferences,
-                        userId: appViewModel.currentUser?.id
-                    )
-                }
-            }
+            // Feed tab: preserve state when switching tabs — no auto-refresh.
+            // User's scroll position and loaded articles stay intact.
+            // Refresh only happens on pull-to-refresh or app foreground after 5+ min.
         }
         // Auto-refresh when app returns to foreground after being backgrounded
         .onChange(of: scenePhase) { _, newPhase in
@@ -127,7 +122,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var bottomBar: some View {
-        if tabBarExpanded {
+        if tabBarExpanded || tabBarState.forceExpandedBar {
             expandedBar
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
@@ -167,6 +162,19 @@ struct ContentView: View {
                                     in: .capsule
                                 )
                                 .glassEffectID(tab.label, in: tabNS)
+                                // Unread badge on Chat tab (index 2)
+                                .overlay(alignment: .topTrailing) {
+                                    if index == 2 && ChatService.shared.unreadCount > 0 {
+                                        let count = ChatService.shared.unreadCount
+                                        Text(count > 9 ? "9+" : "\(count)")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, count > 9 ? 4 : 5)
+                                            .padding(.vertical, 2)
+                                            .background(.red, in: Capsule())
+                                            .offset(x: 8, y: -4)
+                                    }
+                                }
                         }
                         .buttonStyle(.plain)
                     }
@@ -175,10 +183,11 @@ struct ContentView: View {
                 .padding(.vertical, 4)
                 .glassEffect(.regular.tint(Color.black.opacity(0.2)), in: .capsule)
 
-                // Explore circle
+                // Search circle
                 Button {
                     withAnimation(.bouncy) {
                         selectedTab = 99
+                        tabBarState.forceExpandedBar = false
                         collapseBar()
                     }
                     HapticManager.light()

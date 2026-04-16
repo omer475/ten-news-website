@@ -88,7 +88,7 @@ async function searchArticles(supabase, query, limit, offset) {
   const [titleResult, tagResult] = await Promise.all([
     supabase
       .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days', { count: 'exact' })
+      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days, author_id, author_name', { count: 'exact' })
       .filter('published_at', 'lte', new Date().toISOString())
       .or(titleFilter)
       .order('like_count', { ascending: false, nullsFirst: false })
@@ -99,7 +99,7 @@ async function searchArticles(supabase, query, limit, offset) {
     // Tag-based search: find articles where interest_tags contain the query words
     supabase
       .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days')
+      .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, shelf_life_days, author_id, author_name')
       .filter('published_at', 'lte', new Date().toISOString())
       .contains('interest_tags', [query])
       .order('like_count', { ascending: false, nullsFirst: false })
@@ -235,7 +235,7 @@ async function fetchEntityArticles(supabase, entities, excludeIds) {
       // or title contains the entity name
       const { data: articles } = await supabase
         .from('published_articles')
-        .select('id, title_news, image_url, category, interest_tags, like_count, engagement_count, ai_final_score, published_at')
+        .select('id, title_news, image_url, category, interest_tags, like_count, engagement_count, ai_final_score, published_at, author_id, author_name')
         .filter('published_at', 'lte', new Date().toISOString())
         .or(`title_news.ilike.%${entity.entity_name}%,interest_tags.cs.{${entity.entity_name}}`)
         .order('like_count', { ascending: false, nullsFirst: false })
