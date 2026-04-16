@@ -48,6 +48,7 @@ from step11_article_tagging import tag_article
 # Event detection paused (re-enable after app launch)
 # from step6_world_event_detection import detect_world_events
 from supabase import create_client
+import unicodedata
 
 # ==========================================
 # SUBTOPIC TAGGING — appends subtopic names to interest_tags
@@ -111,6 +112,107 @@ SUBTOPIC_MAP = {
     'Sneakers & Streetwear': ['sneakers', 'streetwear', 'nike', 'adidas', 'jordan', 'yeezy', 'drop'],
     'Celebrity Style & Red Carpet': ['celebrity style', 'red carpet', 'outfit', 'best dressed', 'met gala', 'fashion'],
 }
+
+# ==========================================
+# TYPED ENTITY SIGNALS — structured entity IDs for feed personalization
+# Each signal is prefixed: org:openai, person:jannik_sinner, loc:turkiye
+# Category-level words are blocked — they belong in the diversity system
+# ==========================================
+
+SIGNAL_CATEGORY_BLOCKLIST = {
+    'tech', 'technology', 'science', 'world', 'politics', 'sports',
+    'entertainment', 'business', 'health', 'lifestyle', 'finance',
+    'news', 'breaking', 'opinion', 'culture', 'education',
+}
+
+def _slugify(s: str) -> str:
+    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode()
+    s = re.sub(r'[^a-z0-9]+', '_', s.lower()).strip('_')
+    return s
+
+def extract_named_entities_via_gemini(title, bullets, gemini_model_ref, gemini_semaphore_ref):
+    """Use Gemini to extract structured named entities from article text."""
+    bullet_text = ' | '.join(bullets) if isinstance(bullets, list) else str(bullets)
+    prompt = f"""Extract named entities from this news article. Return ONLY valid JSON, no markdown.
+
+Title: {title}
+Content: {bullet_text}
+
+Return JSON with these arrays (empty array if none found):
+{{
+  "organizations": [],
+  "people": [],
+  "events": [],
+  "products": [],
+  "cities": [],
+  "narrow_topics": []
+}}
+
+Rules:
+- organizations: companies, agencies, sports teams, political parties
+- people: full names only (e.g. "Jannik Sinner", not "Sinner")
+- events: named events like "World Cup 2026", "Artemis II", "Monte-Carlo Masters"
+- products: product/franchise names like "iPhone 17", "Spider-Man 3", "GTA 6"
+- cities: city-level locations mentioned
+- narrow_topics: 2-5 specific concepts, NEVER category names like "tech" or "sports" or "business"
+"""
+    try:
+        with gemini_semaphore_ref:
+            response = gemini_model_ref.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith('```'): text = text.split('\n', 1)[1] if '\n' in text else text[3:]
+        if text.endswith('```'): text = text[:-3]
+        if text.startswith('json'): text = text[4:]
+        return json.loads(text.strip())
+    except Exception as e:
+        print(f"   ⚠️ NER extraction failed: {e}")
+        return {}
+
+def build_typed_signals(article_countries, interest_tags, ner_result=None, language='en'):
+    """Build typed entity signals from article metadata + NER results."""
+    signals = []
+    seen = set()
+
+    def add(signal_type: str, value: str):
+        slug = _slugify(value)
+        if not slug or slug in SIGNAL_CATEGORY_BLOCKLIST or len(slug) > 64:
+            return
+        sig = f"{signal_type}:{slug}"
+        if sig not in seen:
+            seen.add(sig)
+            signals.append(sig)
+
+    # Organizations from NER
+    for org in (ner_result or {}).get('organizations', []) or []:
+        add('org', org)
+
+    # People from NER
+    for person in (ner_result or {}).get('people', []) or []:
+        add('person', person)
+
+    # Events from NER
+    for event in (ner_result or {}).get('events', []) or []:
+        add('event', event)
+
+    # Products from NER
+    for product in (ner_result or {}).get('products', []) or []:
+        add('product', product)
+
+    # Locations: from existing countries field + NER cities
+    for country in (article_countries or []):
+        add('loc', country)
+    for city in (ner_result or {}).get('cities', []) or []:
+        add('loc', city)
+
+    # Language
+    add('lang', language)
+
+    # Narrow topics from NER (skip category-level words)
+    for topic in (ner_result or {}).get('narrow_topics', []) or []:
+        add('topic', topic)
+
+    return signals
+
 
 def enrich_with_subtopics(interest_tags, title):
     """Append matching subtopic names to interest_tags list."""
@@ -1481,6 +1583,15 @@ def run_complete_pipeline():
                     # Non-blocking: concept tagging is optional
                     print(f"   ⚠️ [Cluster {cluster_id}] Concept entity tagging skipped: {str(e)[:80]}")
 
+            # TYPED ENTITY SIGNALS: extract NER + build typed signals for personalization
+            article_typed_signals = []
+            try:
+                ner_result = extract_named_entities_via_gemini(title, bullets, gemini_model, gemini_semaphore)
+                article_typed_signals = build_typed_signals(article_countries, interest_tags, ner_result)
+                print(f"   🔖 [Cluster {cluster_id}] Typed signals ({len(article_typed_signals)}): {article_typed_signals[:8]}")
+            except Exception as e:
+                print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
+
             # If article has info box components, trim bullets to 450 max
             # Articles without components keep up to 550 chars
             has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
@@ -1584,6 +1695,7 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'author_id': matched_author_id,
                 'author_name': matched_author_name,
                 'pages': article_pages,
+                'typed_signals': article_typed_signals,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()

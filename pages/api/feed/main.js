@@ -686,13 +686,9 @@ function calculateTagScore(article, userPrefs) {
   const articleCountries = safeJsonParse(article.countries, []);
   const articleTopics = safeJsonParse(article.topics, []);
 
-  if (articleCountries.includes(userPrefs.home_country)) score += 150;
-
-  const countryMatches = articleCountries.filter(
-    c => (userPrefs.followed_countries || []).includes(c)
-  );
-  if (countryMatches.length >= 2) score += 100;
-  else if (countryMatches.length === 1) score += 75;
+  // home_country and followed_countries bonuses removed.
+  // Country affinity is now handled by typed entity signals (loc:turkiye, etc.)
+  // Onboarding seeds initial location signals; engagement accumulates real ones.
 
   const topicMatches = articleTopics.filter(
     t => (userPrefs.followed_topics || []).includes(t)
@@ -881,7 +877,7 @@ export default async function handler(req, res) {
       // Load profiles table for prefs + legacy taste vectors
       let { data: userData } = await supabase
         .from('profiles')
-        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor, skip_profile, tag_profile')
+        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor')
         .eq('id', userId)
         .single();
 
@@ -889,13 +885,13 @@ export default async function handler(req, res) {
         // Fallback: try legacy users table
         const { data: legacyUser } = await supabase
           .from('users')
-          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
+          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
           .eq('id', userId)
           .single();
         if (!legacyUser) {
           const { data: linkedUser } = await supabase
             .from('users')
-            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, skip_profile')
+            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
             .eq('auth_user_id', userId)
             .single();
           if (linkedUser) userData = linkedUser;
@@ -914,8 +910,9 @@ export default async function handler(req, res) {
       if (!tasteVectorMinilm) {
         tasteVectorMinilm = userData?.taste_vector_minilm || null;
       }
-      skipProfile = userData?.skip_profile || null;
-      storedTagProfile = userData?.tag_profile || null;
+      // skip_profile and tag_profile removed — replaced by typed entity signals
+      skipProfile = null;
+      storedTagProfile = null;
 
       // Check if user has active (non-suppressed) interest clusters
       // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
@@ -1210,11 +1207,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.5);
   }
 
-  // Merge session skip penalties into skip profile
-  const effectiveSkipProfile = { ...(skipProfile || {}) };
-  for (const [tag, pen] of Object.entries(momentum.skipPenalties)) {
-    effectiveSkipProfile[tag] = Math.min((effectiveSkipProfile[tag] || 0) + pen, 0.9);
-  }
+  // Skip profile removed — entity signals handle negative learning.
+  // Session skip penalties are still tracked via session momentum for within-session diversity.
 
   const sessionExcludeIds = new Set([...sessionEngagedIds, ...sessionSkippedIds]);
 
@@ -1452,20 +1446,65 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // V3: Load entity affinities for scoring (if personalization_profiles exists)
-  let entityAffinities = {};
-  if (personalizationId) {
-    const { data: affinityRows } = await supabase
-      .from('user_entity_affinity')
-      .select('entity, affinity_score')
-      .eq('personalization_id', personalizationId)
-      .order('affinity_score', { ascending: false })
-      .limit(100);
-    if (affinityRows) {
-      for (const row of affinityRows) {
-        entityAffinities[row.entity] = row.affinity_score;
+  // Load typed entity signals for scoring (unified behavioral signal store)
+  // Replaces both entity_affinity and skip_profile with one system.
+  let entitySignals = {};
+  if (userId) {
+    const { data: signalRows } = await supabase
+      .from('user_entity_signals')
+      .select('entity, positive_count, negative_count')
+      .eq('user_id', userId)
+      .or('positive_count.gt.0,negative_count.gt.0')
+      .limit(500);
+    if (signalRows) {
+      for (const row of signalRows) {
+        entitySignals[row.entity] = {
+          positive: row.positive_count || 0,
+          negative: row.negative_count || 0,
+        };
       }
     }
+  }
+
+  // Compute entity affinity from signals: (positive - negative) / (positive + negative)
+  // Returns -1 to +1
+  function computeEntityAffinity(record) {
+    const total = (record.positive || 0) + (record.negative || 0);
+    if (total === 0) return 0;
+    return ((record.positive || 0) - (record.negative || 0)) / total;
+  }
+
+  // Typed entity signal multiplier: replaces skip_profile AND tag_profile scoring.
+  // Reads typed_signals from article, computes average affinity, returns multiplier.
+  // Squared exponent (not cubed) — cubed overpenalizes mixed signals.
+  function entitySignalMultiplier(article) {
+    const signals = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(signals) || signals.length === 0) return 1.0;
+
+    let affinitySum = 0;
+    let matchCount = 0;
+
+    for (const sig of signals) {
+      const record = entitySignals[sig];
+      if (!record) continue;
+      const affinity = computeEntityAffinity(record);
+      affinitySum += affinity;
+      matchCount++;
+    }
+
+    if (matchCount === 0) return 1.0;
+
+    const avgAffinity = affinitySum / matchCount;
+    const raw = 1.0 + avgAffinity; // 0.0 to 2.0
+
+    // Squared, not cubed. Cubed overpenalized mixed signals.
+    return Math.pow(raw, 2);
+  }
+
+  // Legacy entityAffinities for backward compat during transition
+  const entityAffinities = {};
+  for (const [entity, record] of Object.entries(entitySignals)) {
+    entityAffinities[entity] = computeEntityAffinity(record);
   }
 
   // Fix 10: Count session interactions for adaptive weighting
@@ -1516,8 +1555,10 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, skipProfile, sessionInteractionCount)
-        : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, effectiveSkipProfile);
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, null, sessionInteractionCount)
+        : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, null);
+      // Apply typed entity signal multiplier (replaces skip_profile penalty)
+      score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
       // Boost articles from followed publishers (+25%)
@@ -1536,22 +1577,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Track personal categories for discovery diversity boost
   const personalCategories = new Set(personalScored.map(a => a.category));
 
-  // Trending bucket: editorial importance x recency x category suppression
+  // Trending bucket: editorial importance x recency x entity signal x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], skipProfile) * getCategorySuppression(articleMap[a.id]),
+      _score: scoreTrendingV3(articleMap[a.id], null) * entitySignalMultiplier(articleMap[a.id]) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'trending',
     }))
     .sort((a, b) => b._score - a._score);
 
-  // Discovery bucket: boost unfamiliar categories for true exploration x category suppression
+  // Discovery bucket: boost unfamiliar categories x entity signal x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .map(a => ({
       ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, skipProfile) * getCategorySuppression(articleMap[a.id]),
+      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, null) * entitySignalMultiplier(articleMap[a.id]) * getCategorySuppression(articleMap[a.id]),
       _bucket: 'discovery',
     }))
     .sort((a, b) => b._score - a._score);
@@ -1590,13 +1631,16 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const globalEntitySkipCounts = {};
 
-  // From persistent skip_profile (accumulated across all sessions)
-  if (skipProfile && typeof skipProfile === 'object') {
-    for (const [entity, weight] of Object.entries(skipProfile)) {
-      if (SKIP_GENERIC_TERMS.has(entity.toLowerCase())) continue;
-      const equivalentSkips = Math.round((typeof weight === 'number' ? weight : 0) / 0.05);
-      if (equivalentSkips > 0) globalEntitySkipCounts[entity.toLowerCase()] = equivalentSkips;
-    }
+  // From persistent entity signals (replaces skip_profile)
+  for (const [entity, record] of Object.entries(entitySignals)) {
+    // Only block entities with strong negative signal (3+ more negatives than positives)
+    const negativeExcess = (record.negative || 0) - (record.positive || 0);
+    if (negativeExcess < 3) continue;
+    // Extract the value part from typed signal (e.g., "person:jannik_sinner" → "jannik_sinner")
+    const parts = entity.split(':');
+    const entityName = parts.length === 2 ? parts[1].replace(/_/g, ' ') : entity;
+    if (SKIP_GENERIC_TERMS.has(entityName.toLowerCase())) continue;
+    globalEntitySkipCounts[entityName.toLowerCase()] = negativeExcess;
   }
 
   // From current session skipped IDs

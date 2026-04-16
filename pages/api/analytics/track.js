@@ -632,258 +632,94 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build tag_profile from engagement events (entity-level interest tracking, non-blocking)
-    // Only runs for authenticated users (guests use entity_affinity via personalization_profiles)
-    const TAG_PROFILE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
-    const TAG_PROFILE_WEIGHTS = { article_liked: 0.20, article_shared: 0.18, article_saved: 0.15, article_engaged: 0.10, article_detail_view: 0.05 }
-    if (effectiveUserId && TAG_PROFILE_EVENTS.includes(event_type) && article_id) {
-      let baseWeight = TAG_PROFILE_WEIGHTS[event_type] || 0.05
+    // ============================================================
+    // TYPED ENTITY SIGNALS — unified behavioral signal store
+    // Replaces tag_profile (positive) and skip_profile (negative).
+    // Reads typed_signals from the article, writes to user_entity_signals.
+    // ============================================================
 
-      // Tiered dwell amplifier for engaged events — longer reads = stronger learning
-      const dwellSeconds = metadata?.dwell ? parseFloat(metadata.dwell) :
-                           metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0
-      if (event_type === 'article_engaged' && dwellSeconds > 0) {
-        // Tiers: 6-12s → 1.0x, 12-25s → 1.5x, 25-45s → 2.0x, 45s+ → 2.5x
-        if (dwellSeconds >= 45) baseWeight *= 2.5
-        else if (dwellSeconds >= 25) baseWeight *= 2.0
-        else if (dwellSeconds >= 12) baseWeight *= 1.5
-        // 6-12s = default 1.0x (no change)
-      }
+    const POSITIVE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
+    const NEGATIVE_EVENTS = ['article_skipped']
+
+    if (effectiveUserId && article_id && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
+      const isPositive = POSITIVE_EVENTS.includes(event_type)
 
       admin
         .from('published_articles')
-        .select('interest_tags')
+        .select('typed_signals')
         .eq('id', article_id)
         .single()
         .then(({ data: articleData }) => {
           if (!articleData) return
-          const allTags = typeof articleData.interest_tags === 'string'
-            ? JSON.parse(articleData.interest_tags || '[]')
-            : (articleData.interest_tags || [])
-          // Only first 6 tags — tail tags are noise (mentioned in passing, not about)
-          const tags = allTags.slice(0, 6)
-          if (tags.length === 0) return
+          const typed = typeof articleData.typed_signals === 'string'
+            ? JSON.parse(articleData.typed_signals || '[]')
+            : (articleData.typed_signals || [])
+          if (!Array.isArray(typed) || typed.length === 0) return
 
-          admin
-            .from('profiles')
-            .select('tag_profile')
-            .eq('id', effectiveUserId)
-            .single()
-            .then(({ data: profileData }) => {
-              const tagProfile = profileData?.tag_profile || {}
-              for (let i = 0; i < tags.length; i++) {
-                const t = tags[i].toLowerCase()
-                // Position-based weighting: tag 0 = full weight, tag 5 = ~28%
-                const positionMultiplier = 1.0 - (i * 0.12)
-                // Fix 4: Diminishing returns — heavily-engaged entities grow slower
-                const currentWeight = tagProfile[t] || 0
-                const diminishingIncrement = (baseWeight * positionMultiplier) / (1 + currentWeight * 2)
-                // At 0.0: full increment. At 0.5: ~1/2 increment. At 0.9: ~1/3 increment.
-                tagProfile[t] = Math.min(currentWeight + diminishingIncrement, 1.5)
-              }
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile })
-                .eq('id', effectiveUserId)
-                .then(() => {})
-                .catch(() => {})
-            })
-            .catch(() => {})
+          // Filter to valid typed signals (type:value format, not category words)
+          const validSignals = typed.filter(s => {
+            if (typeof s !== 'string') return false
+            const parts = s.split(':')
+            if (parts.length !== 2) return false
+            return parts[1].length > 0 && parts[1].length <= 64
+          })
+          if (validSignals.length === 0) return
+
+          admin.rpc('bulk_update_entity_signals', {
+            p_user_id: effectiveUserId,
+            p_signals: validSignals,
+            p_is_positive: isPositive,
+          }).then(({ error: sigError }) => {
+            if (sigError) console.log('[analytics] entity signal update failed:', sigError.message)
+          })
         })
         .catch(() => {})
     }
 
-    // ============================================================
-    // EXPLORE PAGE SIGNALS → tag_profile updates
-    //
-    // Three events from Explore browsing:
-    //   explore_topic_tap    → +0.02 per entity_name (card tap)
-    //   explore_topic_dwell  → min(dwell_seconds * 0.008, 0.12) (time on expanded card)
-    //   explore_article_tap  → +0.06 per entity_name + ALL article interest_tags
-    //
-    // Daily cap: max 0.40 total Explore boost per day to prevent inflation.
-    // Debounce: explore_topic_dwell fires once per topic per session (enforced client-side).
-    // ============================================================
-
+    // Explore page signals → typed entity signals
     const EXPLORE_EVENTS = ['explore_topic_tap', 'explore_topic_dwell', 'explore_article_tap']
     if (effectiveUserId && EXPLORE_EVENTS.includes(event_type)) {
-      const entityName = (metadata?.entity_name || '').toLowerCase().trim()
-      if (!entityName) {
-        console.log('[analytics] Explore event missing entity_name in metadata')
-      } else {
-        admin
-          .from('profiles')
-          .select('tag_profile, explore_daily_boost')
-          .eq('id', effectiveUserId)
-          .single()
-          .then(({ data: profileData }) => {
-            const tagProfile = profileData?.tag_profile || {}
-
-            // Daily cap tracking: { date: "2026-03-12", total: 0.23 }
-            const today = new Date().toISOString().slice(0, 10)
-            let dailyBoost = profileData?.explore_daily_boost || {}
-            if (dailyBoost.date !== today) {
-              dailyBoost = { date: today, total: 0 }
-            }
-            const DAILY_CAP = 0.40
-            const remaining = Math.max(0, DAILY_CAP - (dailyBoost.total || 0))
-            if (remaining <= 0) {
-              console.log('[analytics] Explore daily cap reached for user:', user.id?.substring(0, 8))
-              return
-            }
-
-            // Calculate boost based on event type
-            let boost = 0
-            if (event_type === 'explore_topic_tap') {
-              boost = 0.02
-            } else if (event_type === 'explore_topic_dwell') {
-              const dwellSeconds = parseFloat(metadata?.dwell_seconds || '0')
-              boost = Math.min(dwellSeconds * 0.008, 0.12)
-            } else if (event_type === 'explore_article_tap') {
-              boost = 0.06
-            }
-
-            // Clamp to remaining daily budget
-            boost = Math.min(boost, remaining)
-            if (boost <= 0) return
-
-            // Update entity_name in tag_profile
-            tagProfile[entityName] = Math.min((tagProfile[entityName] || 0) + boost, 1.0)
-            dailyBoost.total = (dailyBoost.total || 0) + boost
-
-            // For explore_article_tap: ALSO boost all of the article's interest_tags
-            // This helps cold-start users build a richer profile faster
-            if (event_type === 'explore_article_tap' && article_id) {
-              admin
-                .from('published_articles')
-                .select('interest_tags')
-                .eq('id', article_id)
-                .single()
-                .then(({ data: articleData }) => {
-                  if (!articleData) {
-                    // No article found, just save the entity_name boost
-                    admin
-                      .from('profiles')
-                      .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                      .eq('id', effectiveUserId)
-                      .then(() => {})
-                      .catch(() => {})
-                    return
-                  }
-                  const tags = typeof articleData.interest_tags === 'string'
-                    ? JSON.parse(articleData.interest_tags || '[]')
-                    : (articleData.interest_tags || [])
-
-                  // Boost each article tag at half the entity boost (0.03)
-                  const articleTagBoost = Math.min(boost * 0.5, remaining - boost)
-                  for (const tag of tags) {
-                    const t = tag.toLowerCase()
-                    if (t === entityName) continue // already boosted above
-                    tagProfile[t] = Math.min((tagProfile[t] || 0) + articleTagBoost, 1.0)
-                  }
-                  dailyBoost.total += articleTagBoost * tags.length
-
-                  admin
-                    .from('profiles')
-                    .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                    .eq('id', effectiveUserId)
-                    .then(() => console.log('[analytics] Explore article_tap tag_profile updated'))
-                    .catch(() => {})
-                })
-                .catch(() => {})
-            } else {
-              // topic_tap or topic_dwell: just save the entity_name boost
-              admin
-                .from('profiles')
-                .update({ tag_profile: tagProfile, explore_daily_boost: dailyBoost })
-                .eq('id', effectiveUserId)
-                .then(() => console.log('[analytics] Explore', event_type, 'tag_profile updated'))
-                .catch(() => {})
-            }
-          })
-          .catch(() => {})
-      }
-    }
-
-    // ============================================================
-    // SEARCH QUERY SIGNALS → tag_profile updates
-    // When a user searches, their query terms reveal strong interest.
-    // Boost matching tags in tag_profile.
-    // ============================================================
-    if (effectiveUserId && event_type === 'search_query' && metadata?.query) {
-      const queryTerms = metadata.query.toLowerCase().trim().split(/\s+/).filter(t => t.length >= 2)
-      if (queryTerms.length > 0) {
-        admin
-          .from('profiles')
-          .select('tag_profile')
-          .eq('id', effectiveUserId)
-          .single()
-          .then(({ data: profileData }) => {
-            const tagProfile = profileData?.tag_profile || {}
-            for (const term of queryTerms) {
-              // Search terms get moderate boost — explicit intent signal
-              tagProfile[term] = Math.min((tagProfile[term] || 0) + 0.08, 1.0)
-            }
-            // Also boost the full query as a phrase if multi-word
-            if (queryTerms.length >= 2) {
-              const phrase = queryTerms.join(' ')
-              tagProfile[phrase] = Math.min((tagProfile[phrase] || 0) + 0.12, 1.0)
-            }
-            admin
-              .from('profiles')
-              .update({ tag_profile: tagProfile })
-              .eq('id', effectiveUserId)
-              .then(() => console.log('[analytics] Search query boosted tag_profile:', metadata.query))
-              .catch(() => {})
-          })
-          .catch(() => {})
-      }
-    }
-
-    // Build skip_profile from skipped articles (non-blocking, auth users only)
-    if (effectiveUserId && event_type === 'article_skipped' && article_id) {
-      admin
-        .from('published_articles')
-        .select('interest_tags')
-        .eq('id', article_id)
-        .single()
-        .then(({ data: articleData }) => {
-          if (!articleData) return
-          const tags = typeof articleData.interest_tags === 'string'
-            ? JSON.parse(articleData.interest_tags || '[]')
-            : (articleData.interest_tags || [])
-          if (tags.length === 0) return
-
-          // Load current skip_profile, update, and save
+      const entityName = (metadata?.entity_name || '').trim()
+      if (entityName) {
+        // Treat explore interactions as positive signals
+        // For article_tap, also read the article's typed_signals
+        if (event_type === 'explore_article_tap' && article_id) {
           admin
-            .from('profiles')
-            .select('skip_profile')
-            .eq('id', effectiveUserId)
+            .from('published_articles')
+            .select('typed_signals')
+            .eq('id', article_id)
             .single()
-            .then(({ data: profileData }) => {
-              const skipProfile = profileData?.skip_profile || {}
-              for (const tag of tags) {
-                const t = tag.toLowerCase()
-                skipProfile[t] = Math.min((skipProfile[t] || 0) + 0.05, 0.9)
+            .then(({ data: articleData }) => {
+              const typed = typeof articleData?.typed_signals === 'string'
+                ? JSON.parse(articleData.typed_signals || '[]')
+                : (articleData?.typed_signals || [])
+              const validSignals = (typed || []).filter(s => typeof s === 'string' && s.includes(':'))
+              if (validSignals.length > 0) {
+                admin.rpc('bulk_update_entity_signals', {
+                  p_user_id: effectiveUserId,
+                  p_signals: validSignals,
+                  p_is_positive: true,
+                }).then(() => {}).catch(() => {})
               }
-              admin
-                .from('profiles')
-                .update({ skip_profile: skipProfile })
-                .eq('id', effectiveUserId)
-                .then(() => {})
-                .catch(() => {
-                  // Fallback to users table
-                  admin
-                    .from('users')
-                    .update({ skip_profile: skipProfile })
-                    .eq('id', effectiveUserId)
-                    .then(() => {})
-                    .catch(() => {})
-                })
             })
             .catch(() => {})
-        })
-        .catch(() => {})
+        }
+      }
+    }
+
+    // Search query signals: treat search terms as positive topic signals
+    if (effectiveUserId && event_type === 'search_query' && metadata?.query) {
+      const query = metadata.query.toLowerCase().trim()
+      if (query.length >= 2) {
+        const slug = query.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+        if (slug.length > 0 && slug.length <= 64) {
+          admin.rpc('bulk_update_entity_signals', {
+            p_user_id: effectiveUserId,
+            p_signals: [`topic:${slug}`],
+            p_is_positive: true,
+          }).then(() => {}).catch(() => {})
+        }
+      }
     }
 
     return res.status(200).json({ ok: true })
