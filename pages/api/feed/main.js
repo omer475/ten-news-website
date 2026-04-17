@@ -3289,6 +3289,46 @@ async function handleV2Feed(req, res, supabase, opts) {
   enforceConsecutiveLimit(selected, 2);
 
   // ==========================================
+  // PHASE 7.5: QUALITY FLOOR — "You're all caught up"
+  // After the good content is served, stop before serving dregs.
+  // Only applies to page 2+ for users with sufficient history.
+  // ==========================================
+
+  if (offset > 0 && totalInteractions >= 50 && selected.length > 0) {
+    const topScore = Math.max(...selected.map(a => a._score || 0));
+    const FLOOR_RATIO = 0.15;
+    const CONSECUTIVE_FLOOR_LIMIT = 3;
+    let consecutiveBelowFloor = 0;
+    const qualityFiltered = [];
+
+    for (const candidate of selected) {
+      const ratio = topScore > 0 ? (candidate._score || 0) / topScore : 0;
+      if (ratio < FLOOR_RATIO) {
+        consecutiveBelowFloor++;
+        if (consecutiveBelowFloor >= CONSECUTIVE_FLOOR_LIMIT) break;
+      } else {
+        consecutiveBelowFloor = 0;
+      }
+      qualityFiltered.push(candidate);
+    }
+
+    const caughtUpByQuality = qualityFiltered.length < selected.length;
+    if (caughtUpByQuality) {
+      console.log('[feed:quality-floor]', {
+        topScore: topScore.toFixed(1),
+        selectedBefore: selected.length,
+        selectedAfter: qualityFiltered.length,
+        cutReason: `${selected.length - qualityFiltered.length} articles below ${(FLOOR_RATIO * 100).toFixed(0)}% of top score`,
+        lastKeptRatio: qualityFiltered.length > 0
+          ? ((qualityFiltered[qualityFiltered.length - 1]._score || 0) / topScore).toFixed(3)
+          : null,
+      });
+      selected.length = 0;
+      selected.push(...qualityFiltered);
+    }
+  }
+
+  // ==========================================
   // PHASE 8: FORMAT & RESPOND
   // ==========================================
 
