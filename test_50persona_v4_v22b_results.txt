@@ -1,0 +1,207 @@
+═══════════════════════════════════════════════════════════════
+  50-PERSONA TEST v4 — ENTITY-LEVEL INTERESTS
+  Users select subtopics, algorithm learns entity preferences
+  Measures: entity match %, high-entity %, alignment score
+═══════════════════════════════════════════════════════════════
+Started: 2026-03-22T21:14:15.849Z
+
+
+[1/50] Maria (brazil)
+  Onboard: [soccer, movies_film, ai_ml]
+  Top entities: premier league(0.95), liverpool(0.9), movies(0.8), film(0.75), soccer(0.7)
+
+[2/50] Jake (usa)
+  Onboard: [nfl, ai_ml, gaming]
+  Top entities: nfl(0.9), football(0.85), video games(0.85), nfl draft(0.8), artificial intelligence(0.8)
+
+[3/50] Emre (turkiye)
+  Onboard: [soccer, f1, middle_east]
+  Top entities: soccer(0.9), turkey(0.85), premier league(0.8), formula one(0.8), liverpool(0.7)
+
+[4/50] Fatima (turkiye)
+  Onboard: [middle_east, movies_film, kpop_kdrama]
+  Top entities: iran(0.9), middle east(0.85), israel(0.8), movies(0.75), military(0.7)
+
+[5/50] Raj (india)
+  Onboard: [ai_ml, cybersecurity, cricket]
+  Top entities: artificial intelligence(0.95), tech(0.8), cybersecurity(0.7), cricket(0.6), india(0.5)
+  Taste vector from 0 subtopics: [NFL, AI & Machine Learning, Gaming]
+  Taste vector from 0 subtopics: [Soccer/Football, F1 & Motorsport, Middle East]
+  Taste vector from 0 subtopics: [Soccer/Football, Movies & Film, AI & Machine Learning]
+  Taste vector from 0 subtopics: [AI & Machine Learning, Cybersecurity, Cricket]
+  Taste vector from 0 subtopics: [Middle East, Movies & Film, K-Pop & K-Drama]
+  P1:   5% match   5% high ✗ | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P1:  15% match  10% high · | deep:0% skip:85% | 2 ents | L:0 E:0 S:17
+  P1:   5% match   0% high ✗ | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P1:  30% match  30% high ▲ | deep:15% skip:75% | 1 ents | L:0 E:3 S:15
+  P1:  55% match  45% high ★ | deep:20% skip:65% | 4 ents | L:1 E:3 S:13
+  P2:  20% match   0% high · | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  P2:  20% match   0% high · | deep:0% skip:100% | 1 ents | L:0 E:0 S:20
+  P2:  20% match  20% high · | deep:15% skip:80% | 1 ents | L:1 E:2 S:16
+  P2:  80% match  70% high ★ | deep:50% skip:35% | 3 ents | L:4 E:6 S:7
+  P2:  90% match  90% high ★ | deep:35% skip:35% | 4 ents | L:2 E:5 S:7
+  P3:  20% match  10% high · | deep:10% skip:80% | 2 ents | L:2 E:0 S:16
+  P3:  20% match  10% high · | deep:5% skip:80% | 2 ents | L:1 E:0 S:16
+  P3:  20% match  20% high · | deep:10% skip:75% | 2 ents | L:0 E:2 S:15
+  P3:  65% match  55% high ★ | deep:25% skip:55% | 2 ents | L:1 E:4 S:11
+  P3:  70% match  70% high ★ | deep:35% skip:35% | 3 ents | L:2 E:5 S:7
+  P4:  15% match   0% high · | deep:0% skip:100% | 1 ents | L:0 E:0 S:20
+  P4:  15% match   0% high · | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P4:  15% match  15% high · | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  P4:  60% match  60% high ★ | deep:20% skip:70% | 1 ents | L:2 E:2 S:14
+  P5:  30% match   0% high ▲ | deep:0% skip:100% | 1 ents | L:0 E:0 S:20
+  🔄 PIVOT | Any: 13→23 (+10) | High: 0→0 (0) | Align: 2%
+  P5:  40% match   0% high ▲ | deep:10% skip:85% | 2 ents | L:0 E:2 S:17
+  🔄 PIVOT | Any: 18→28 (+10) | High: 5→0 (-5) | Align: 3%
+  P4:  70% match  70% high ★ | deep:40% skip:50% | 2 ents | L:3 E:5 S:10
+  P5:  30% match  30% high ▲ | deep:25% skip:70% | 1 ents | L:1 E:4 S:14
+  ✅ LEARNED | Any: 13→23 (+10) | High: 13→23 (+10) | Align: 10%
+  P5:  80% match  80% high ★ | deep:35% skip:50% | 1 ents | L:4 E:3 S:10
+  ✅ LEARNED | Any: 55→70 (+15) | High: 50→70 (+20) | Align: 6%
+  P5:  90% match  90% high ★ | deep:35% skip:30% | 3 ents | L:2 E:5 S:6
+  ✅ LEARNED | Any: 73→80 (+8) | High: 68→80 (+13) | Align: 9%
+
+[6/50] Sophie (france)
+  Onboard: [movies_film, climate_environment, food_cooking]
+  Top entities: movies(0.9), food(0.9), film(0.85), cooking(0.85), environment(0.8)
+
+[7/50] Tom (usa)
+  Onboard: [nba, nfl, stock_markets]
+  Top entities: nba(0.95), basketball(0.9), march madness(0.85), college basketball(0.8), nfl(0.7)
+
+[8/50] Sarah (usa)
+  Onboard: [ai_ml, mental_health, tv_streaming]
+  Top entities: artificial intelligence(0.9), mental health(0.85), television(0.8), tech(0.75), netflix(0.75)
+
+[9/50] Viktor (germany)
+  Onboard: [war_conflict, european_politics, climate_environment]
+  Top entities: russia(0.9), ukraine(0.9), putin(0.85), ukraine war(0.85), military(0.7)
+
+[10/50] James (usa)
+  Onboard: [us_politics, stock_markets, war_conflict]
+  Top entities: donald trump(0.9), politics(0.85), united states(0.8), government(0.7), finance(0.6)
+  Taste vector from 0 subtopics: [NBA, NFL, Stock Markets]
+  Taste vector from 0 subtopics: [Movies & Film, Climate & Environment, Food & Cooking]
+  Taste vector from 0 subtopics: [War & Conflict, European Politics, Climate & Environment]
+  Taste vector from 0 subtopics: [AI & Machine Learning, Mental Health, TV & Streaming]
+  Taste vector from 0 subtopics: [US Politics, Stock Markets, War & Conflict]
+  P1:  20% match  10% high · | deep:0% skip:90% | 3 ents | L:0 E:0 S:18
+  P1:   5% match   0% high ✗ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  P1:   5% match   5% high ✗ | deep:5% skip:70% | 1 ents | L:0 E:1 S:14
+  P1:  55% match  35% high ★ | deep:15% skip:75% | 5 ents | L:1 E:2 S:15
+  P1:  55% match  40% high ★ | deep:25% skip:70% | 4 ents | L:2 E:3 S:14
+  P2:  25% match   5% high · | deep:10% skip:85% | 2 ents | L:0 E:2 S:17
+  P2:  20% match   5% high · | deep:5% skip:85% | 2 ents | L:0 E:1 S:17
+  P2:  20% match  20% high · | deep:15% skip:75% | 1 ents | L:1 E:2 S:15
+  P2:  65% match  40% high ★ | deep:35% skip:60% | 4 ents | L:1 E:6 S:12
+  P2:  85% match  55% high ★ | deep:40% skip:50% | 6 ents | L:0 E:8 S:10
+  P3:  10% match   0% high ✗ | deep:5% skip:80% | 1 ents | L:0 E:1 S:16
+  P3:  25% match  10% high · | deep:10% skip:85% | 3 ents | L:1 E:1 S:17
+  P3:  10% match  10% high ✗ | deep:5% skip:85% | 1 ents | L:0 E:1 S:17
+  P3:  70% match  40% high ★ | deep:20% skip:75% | 4 ents | L:1 E:3 S:15
+  P3:  70% match  50% high ★ | deep:35% skip:50% | 6 ents | L:3 E:4 S:10
+  P4:  15% match   0% high · | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P4:  20% match   0% high · | deep:0% skip:95% | 2 ents | L:0 E:0 S:19
+  P4:  15% match  15% high · | deep:5% skip:90% | 1 ents | L:0 E:1 S:18
+  P4:  45% match  35% high ▲ | deep:20% skip:60% | 5 ents | L:1 E:3 S:12
+  P4:  80% match  25% high ★ | deep:10% skip:85% | 5 ents | L:1 E:1 S:17
+  P5:  30% match   0% high ▲ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  🔄 PIVOT | Any: 13→23 (+10) | High: 3→0 (-3) | Align: 1%
+  P5:  30% match   0% high ▲ | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  ❌ FLAT | Any: 23→25 (+3) | High: 8→0 (-8) | Align: 4%
+  P5:  35% match  35% high ▲ | deep:15% skip:65% | 1 ents | L:1 E:2 S:13
+  ✅ LEARNED | Any: 13→25 (+13) | High: 13→25 (+13) | Align: 8%
+  P5:  70% match  35% high ★ | deep:30% skip:50% | 3 ents | L:1 E:5 S:10
+  ❌ FLAT | Any: 60→58 (-3) | High: 40→35 (-5) | Align: 7%
+  P5:  80% match  60% high ★ | deep:20% skip:55% | 4 ents | L:2 E:2 S:11
+  🔄 PIVOT | Any: 70→80 (+10) | High: 45→43 (-3) | Align: 8%
+
+[11/50] Kenji (japan)
+  Onboard: [anime_manga, gaming, robotics_hardware]
+  Top entities: video games(0.9), science fiction(0.8), japan(0.7), tech(0.65), entertainment(0.6)
+
+[12/50] Tyler (usa)
+  Onboard: [movies_film, gaming, nba]
+  Top entities: movies(0.9), film(0.85), video games(0.85), science fiction(0.8), entertainment(0.6)
+
+[13/50] Nadia (turkiye)
+  Onboard: [middle_east, war_conflict, oil_energy]
+  Top entities: iran(0.95), middle east(0.9), military(0.85), israel(0.8), oil prices(0.8)
+
+[14/50] Pedro (brazil)
+  Onboard: [soccer, f1, boxing_mma]
+  Top entities: soccer(0.95), premier league(0.8), champions league(0.75), formula one(0.7), mclaren(0.5)
+
+[15/50] Yara (turkiye)
+  Onboard: [movies_film, kpop_kdrama, beauty_skincare]
+  Top entities: television(0.9), movies(0.85), film(0.8), bts(0.7), entertainment(0.6)
+  Taste vector from 0 subtopics: [Movies & Film, Gaming, NBA]
+  Taste vector from 0 subtopics: [Middle East, War & Conflict, Oil & Energy]
+  Taste vector from 0 subtopics: [Soccer/Football, F1 & Motorsport, Boxing & MMA/UFC]
+  Taste vector from 0 subtopics: [Anime & Manga, Gaming, Robotics & Hardware]
+  Taste vector from 0 subtopics: [Movies & Film, K-Pop & K-Drama, Beauty & Skincare]
+  P1:  10% match   0% high ✗ | deep:5% skip:80% | 1 ents | L:0 E:1 S:16
+  P1:   5% match   0% high ✗ | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P1:  15% match   0% high · | deep:5% skip:90% | 2 ents | L:1 E:0 S:18
+  P1:  40% match  10% high ▲ | deep:15% skip:85% | 2 ents | L:0 E:3 S:17
+  P1:  55% match  45% high ★ | deep:25% skip:60% | 3 ents | L:1 E:4 S:12
+  P2:  20% match   0% high · | deep:0% skip:85% | 1 ents | L:0 E:0 S:17
+  P2:   0% match   0% high ✗ | deep:0% skip:85% | 0 ents | L:0 E:0 S:17
+  P2:  20% match   0% high · | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P2:  40% match   0% high ▲ | deep:10% skip:90% | 1 ents | L:1 E:1 S:18
+  P2:  90% match  90% high ★ | deep:25% skip:40% | 4 ents | L:2 E:3 S:8
+  P3:  10% match   0% high ✗ | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P3:   0% match   0% high ✗ | deep:0% skip:85% | 0 ents | L:0 E:0 S:17
+  P3:  20% match   0% high · | deep:5% skip:70% | 2 ents | L:0 E:1 S:14
+  P3:  35% match   0% high ▲ | deep:10% skip:85% | 1 ents | L:1 E:1 S:17
+  P3:  80% match  70% high ★ | deep:45% skip:45% | 4 ents | L:4 E:5 S:9
+  P4:  15% match   0% high · | deep:0% skip:80% | 1 ents | L:0 E:0 S:16
+  P4:   5% match   0% high ✗ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  P4:  15% match   0% high · | deep:5% skip:95% | 1 ents | L:1 E:0 S:19
+  P4:  10% match   0% high ✗ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  P5:  30% match   0% high ▲ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  🔄 PIVOT | Any: 13→23 (+10) | High: 0→0 (0) | Align: 1%
+  P5:   0% match   0% high ✗ | deep:0% skip:85% | 0 ents | L:0 E:0 S:17
+  ❌ FLAT | Any: 5→3 (-3) | High: 0→0 (0) | Align: 5%
+  P5:  30% match   0% high ▲ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  ❌ FLAT | Any: 18→23 (+5) | High: 0→0 (0) | Align: 2%
+  P5:  45% match   0% high ▲ | deep:0% skip:95% | 1 ents | L:0 E:0 S:19
+  ❌ FLAT | Any: 40→28 (-13) | High: 5→0 (-5) | Align: 3%
+  P4:  75% match  70% high ★ | deep:45% skip:40% | 3 ents | L:3 E:6 S:8
+  P5:  85% match  85% high ★ | deep:45% skip:25% | 2 ents | L:3 E:6 S:5
+  ✅ LEARNED | Any: 73→80 (+8) | High: 68→78 (+10) | Align: 9%
+
+[16/50] Ahmed (turkiye)
+  Onboard: [soccer, middle_east, bitcoin]
+  Top entities: soccer(0.9), turkey(0.85), iran(0.75), premier league(0.7), middle east(0.7)
+
+[17/50] Carlos (spain)
+  Onboard: [soccer, tennis, movies_film]
+  Top entities: soccer(0.95), premier league(0.85), champions league(0.8), movies(0.65), film(0.6)
+
+[18/50] David (usa)
+  Onboard: [ai_ml, space_tech, gaming]
+  Top entities: artificial intelligence(0.9), video games(0.85), tech(0.8), science fiction(0.6), entertainment(0.4)
+
+[19/50] Anna (germany)
+  Onboard: [climate_environment, european_politics, food_cooking]
+  Top entities: environment(0.9), climate change(0.85), food(0.85), cooking(0.8), politics(0.7)
+
+[20/50] Michael (usa)
+  Onboard: [stock_markets, bitcoin, ai_ml]
+  Top entities: finance(0.9), cryptocurrency(0.8), artificial intelligence(0.75), economics(0.7), business(0.65)
+  Taste vector from 0 subtopics: [Soccer/Football, Tennis, Movies & Film]
+  Taste vector from 0 subtopics: [Climate & Environment, European Politics, Food & Cooking]
+  Taste vector from 0 subtopics: [AI & Machine Learning, Space Tech, Gaming]
+  Taste vector from 0 subtopics: [Stock Markets, Bitcoin, AI & Machine Learning]
+  Taste vector from 0 subtopics: [Soccer/Football, Middle East, Bitcoin]
+  P1:   5% match   0% high ✗ | deep:0% skip:85% | 1 ents | L:0 E:0 S:17
+  P1:   5% match   0% high ✗ | deep:0% skip:85% | 1 ents | L:0 E:0 S:17
+  P1:  40% match  30% high ▲ | deep:10% skip:75% | 3 ents | L:0 E:2 S:15
+  P1:  15% match   0% high · | deep:5% skip:90% | 2 ents | L:0 E:1 S:18
+  P1:  35% match  30% high ▲ | deep:20% skip:65% | 2 ents | L:2 E:2 S:13
+  P2:  20% match   0% high · | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P2:  20% match   0% high · | deep:0% skip:90% | 1 ents | L:0 E:0 S:18
+  P2:  25% match   0% high · | deep:10% skip:85% | 2 ents | L:1 E:1 S:17
+  P2:  50% match  40% high ★ | deep:15% skip:70% | 4 ents | L:1 E:2 S:14
+  P2:  80% match  80% high ★ | deep:40% skip:40% | 3 ents | L:5 E:3 S:8

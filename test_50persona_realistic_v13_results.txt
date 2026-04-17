@@ -1,0 +1,479 @@
+═══════════════════════════════════════════
+  50-PERSONA REALISTIC FEED LEARNING TEST
+═══════════════════════════════════════════
+Started: 2026-03-21T15:44:36.892Z
+Signals: search, like, save, engage, skip
+Pages per persona: 3 (60 articles total)
+
+
+[1/50] Maria (São Paulo, brazil)
+  Onboarding: [sports, entertainment, business]
+  Actual interests: [soccer, brazilian, flamengo, neymar, premier league]
+
+[2/50] Takeshi (Osaka, japan)
+  Onboarding: [sports, tech, gaming]
+  Actual interests: [f1, formula one, formula 1, grand prix, verstappen]
+
+[3/50] Carlos (Madrid, spain)
+  Onboarding: [sports, politics, business]
+  Actual interests: [tennis, nadal, djokovic, wimbledon, atp]
+
+[4/50] Aiden (Melbourne, australia)
+  Onboarding: [sports, science, health]
+  Actual interests: [cricket, ipl, ashes, test match, t20]
+
+[5/50] Jake (Dallas, usa)
+  Onboarding: [sports, finance, tech]
+  Actual interests: [nfl, quarterback, super bowl, touchdown, football]
+  Searched: [nfl draft, super bowl predictions, patrick mahomes]
+  Searched: [formula 1 standings, max verstappen, japanese grand prix]
+  Searched: [flamengo, neymar psg, champions league]
+  Searched: [ipl auction, ashes results, cricket world cup]
+  Searched: [atp rankings, nadal retirement, wimbledon draw]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 1: 20 articles, 3 matches (15%), 0 likes, 2 engages, 13 skips
+  Page 1: 20 articles, 7 matches (35%), 4 likes, 3 engages, 8 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 11 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 13 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 2: 20 articles, 4 matches (20%), 0 likes, 3 engages, 11 skips
+  Page 2: 20 articles, 8 matches (40%), 2 likes, 6 engages, 11 skips
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:10 skips:202
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:10 skips:220
+  Page 3: 20 articles, 4 matches (20%), 2 likes, 0 engages, 11 skips
+  Result: 0% → 20% (+20%) | LEARNED | tags:18 skips:202
+  Page 3: 20 articles, 7 matches (35%), 4 likes, 3 engages, 11 skips
+  Result: 15% → 35% (+20%) | LEARNED | tags:52 skips:167
+  Page 3: 20 articles, 7 matches (35%), 1 likes, 6 engages, 12 skips
+  Result: 35% → 35% (0%) | NO CHANGE | tags:47 skips:166
+
+[6/50] Yuki (Tokyo, japan)
+  Onboarding: [sports, entertainment, tech]
+  Actual interests: [boxing, mma, ufc, knockout, fight]
+
+[7/50] Henrik (Stockholm, germany)
+  Onboarding: [sports, business, science]
+  Actual interests: [golf, pga, masters, ryder cup, tiger woods]
+
+[8/50] Priya (Delhi, india)
+  Onboarding: [entertainment, tech, business]
+  Actual interests: [bollywood, indian cinema, shah rukh khan, alia bhatt]
+
+[9/50] Soo-jin (Seoul, south korea)
+  Onboarding: [entertainment, fashion, tech]
+  Actual interests: [k-pop, bts, blackpink, kdrama, korean]
+
+[10/50] Chioma (Lagos, nigeria)
+  Onboarding: [entertainment, fashion, business]
+  Actual interests: [afrobeats, burna boy, wizkid, davido, amapiano]
+  ERROR creating user: new row for relation "users" violates check constraint "valid_home_country"
+  ERROR creating user: new row for relation "users" violates check constraint "valid_home_country"
+  Searched: [pga tour standings, masters tournament, tiger woods comeback]
+  Searched: [ufc results, boxing heavyweight, conor mcgregor]
+  Searched: [bollywood movies 2026, shah rukh khan, indian film awards]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 18 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 2: 20 articles, 4 matches (20%), 0 likes, 4 engages, 12 skips
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:9 skips:256
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:12 skips:214
+  Page 3: 20 articles, 2 matches (10%), 2 likes, 0 engages, 15 skips
+  Result: 0% → 10% (+10%) | SOFT PIVOT | tags:29 skips:211
+
+[11/50] Diego (Mexico City, mexico)
+  Onboarding: [entertainment, sports, lifestyle]
+  Actual interests: [reggaeton, latin music, bad bunny, latin pop]
+
+[12/50] Tyler (Atlanta, usa)
+  Onboarding: [entertainment, sports, tech]
+  Actual interests: [hip-hop, rap, drake, kendrick, travis scott]
+
+[13/50] Kenji (Tokyo, japan)
+  Onboarding: [gaming, entertainment, tech]
+  Actual interests: [anime, manga, one piece, naruto, studio ghibli]
+
+[14/50] Liam (Dublin, uk)
+  Onboarding: [entertainment, sports, politics]
+  Actual interests: [comedy, humor, standup, comedian, funny]
+
+[15/50] Raj (Mumbai, india)
+  Onboarding: [tech, cricket, finance]
+  Actual interests: [ai, artificial intelligence, chatgpt, openai, machine learning]
+  Searched: [chatgpt update, openai gpt-5, ai regulation]
+  Searched: [kendrick lamar, hip hop album, rap beef]
+  Searched: [bad bunny album, reggaeton new releases, latin grammy]
+  Searched: [comedy special netflix, standup comedian tour, best comedy movies]
+  Searched: [one piece manga, anime new season, studio ghibli]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 1: 20 articles, 1 matches (5%), 0 likes, 1 engages, 17 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 13 skips
+  Page 1: 20 articles, 12 matches (60%), 5 likes, 7 engages, 7 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 16 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 3: 15 articles, 0 matches (0%), 0 likes, 0 engages, 13 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:11 skips:217
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:11 skips:235
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Result: 0% → 0% (0%) | NO CHANGE | tags:11 skips:242
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Result: 5% → 0% (-5%) | NO CHANGE | tags:16 skips:242
+  Page 2: 20 articles, 16 matches (80%), 2 likes, 13 engages, 3 skips
+  Page 3: 20 articles, 16 matches (80%), 4 likes, 11 engages, 3 skips
+  Result: 60% → 80% (+20%) | LEARNED | tags:129 skips:75
+
+[16/50] Sarah (San Francisco, usa)
+  Onboarding: [tech, business, health]
+  Actual interests: [cybersecurity, hacking, data breach, ransomware, encryption]
+
+[17/50] Dmitri (Berlin, germany)
+  Onboarding: [tech, science, politics]
+  Actual interests: [space tech, spacex, nasa, rocket, starship]
+
+[18/50] Wei (Singapore, singapore)
+  Onboarding: [tech, finance, business]
+  Actual interests: [robotics, semiconductor, nvidia, chip, processor]
+
+[19/50] Omar (Istanbul, turkiye)
+  Onboarding: [tech, sports, entertainment]
+  Actual interests: [smartphone, iphone, samsung, android, gadget]
+
+[20/50] Emma (London, uk)
+  Onboarding: [politics, health, science]
+  Actual interests: [climate, environment, global warming, carbon, emissions]
+  ERROR creating user: new row for relation "users" violates check constraint "valid_home_country"
+  Searched: [spacex launch, starship update, nasa mars mission]
+  Searched: [ransomware attack, cybersecurity trends, data breach news]
+  Searched: [climate change report, renewable energy, carbon emissions]
+  Searched: [iphone 18, samsung galaxy, best smartwatch]
+  Page 1: 20 articles, 1 matches (5%), 1 likes, 0 engages, 14 skips
+  Page 1: 20 articles, 2 matches (10%), 1 likes, 1 engages, 11 skips
+  Page 1: 20 articles, 6 matches (30%), 5 likes, 1 engages, 9 skips
+  Page 1: 20 articles, 7 matches (35%), 3 likes, 4 engages, 11 skips
+  Page 2: 20 articles, 3 matches (15%), 0 likes, 3 engages, 15 skips
+  Page 2: 20 articles, 10 matches (50%), 1 likes, 8 engages, 6 skips
+  Page 2: 20 articles, 6 matches (30%), 1 likes, 4 engages, 11 skips
+  Page 2: 20 articles, 8 matches (40%), 3 likes, 5 engages, 10 skips
+  Page 3: 20 articles, 2 matches (10%), 1 likes, 0 engages, 14 skips
+  Result: 10% → 10% (0%) | NO CHANGE | tags:34 skips:213
+  Page 3: 20 articles, 5 matches (25%), 1 likes, 4 engages, 12 skips
+  Result: 35% → 25% (-10%) | NO CHANGE | tags:50 skips:182
+  Page 3: 20 articles, 7 matches (35%), 4 likes, 3 engages, 13 skips
+  Result: 5% → 35% (+30%) | LEARNED | tags:58 skips:153
+  Page 3: 20 articles, 7 matches (35%), 3 likes, 4 engages, 10 skips
+  Result: 30% → 35% (+5%) | NO CHANGE | tags:53 skips:148
+
+[21/50] James (Washington, usa)
+  Onboarding: [politics, finance, business]
+  Actual interests: [us politics, congress, senate, white house, trump]
+
+[22/50] Fatima (Istanbul, turkiye)
+  Onboarding: [politics, entertainment, lifestyle]
+  Actual interests: [middle east, iran, israel, palestine, gulf]
+
+[23/50] Chen (Singapore, singapore)
+  Onboarding: [politics, tech, finance]
+  Actual interests: [asian politics, china, taiwan, asean, southeast asia]
+
+[24/50] Michael (New York, usa)
+  Onboarding: [finance, tech, business]
+  Actual interests: [stock market, wall street, nasdaq, trading, shares]
+
+[25/50] Alex (London, uk)
+  Onboarding: [crypto, tech, finance]
+  Actual interests: [bitcoin, btc, mining, halving, cryptocurrency]
+  ERROR creating user: new row for relation "users" violates check constraint "valid_home_country"
+  Searched: [nasdaq today, stock market crash, best stocks 2026]
+  Searched: [congress vote, supreme court ruling, presidential election]
+  Searched: [bitcoin price, crypto bull run, btc halving]
+  Searched: [iran nuclear deal, israel palestine, middle east peace]
+  Page 1: 20 articles, 1 matches (5%), 1 likes, 0 engages, 16 skips
+  Page 1: 20 articles, 2 matches (10%), 1 likes, 1 engages, 12 skips
+  Page 1: 20 articles, 7 matches (35%), 3 likes, 4 engages, 10 skips
+  Page 1: 20 articles, 12 matches (60%), 3 likes, 8 engages, 7 skips
+  Page 2: 20 articles, 5 matches (25%), 1 likes, 3 engages, 12 skips
+  Page 2: 20 articles, 7 matches (35%), 1 likes, 6 engages, 9 skips
+  Page 2: 20 articles, 13 matches (65%), 4 likes, 9 engages, 6 skips
+  Page 2: 20 articles, 18 matches (90%), 3 likes, 13 engages, 2 skips
+  Page 3: 20 articles, 2 matches (10%), 1 likes, 1 engages, 14 skips
+  Result: 10% → 10% (0%) | NO CHANGE | tags:43 skips:156
+  Page 3: 20 articles, 11 matches (55%), 4 likes, 7 engages, 7 skips
+  Result: 5% → 55% (+50%) | LEARNED | tags:63 skips:174
+  Page 3: 20 articles, 14 matches (70%), 4 likes, 9 engages, 6 skips
+  Result: 35% → 70% (+35%) | LEARNED | tags:82 skips:109
+  Page 3: 20 articles, 16 matches (80%), 6 likes, 10 engages, 3 skips
+  Result: 60% → 80% (+20%) | LEARNED | tags:99 skips:66
+
+[26/50] Viktor (Berlin, germany)
+  Onboarding: [finance, politics, business]
+  Actual interests: [defi, web3, blockchain, smart contract, dao]
+
+[27/50] Sophie (Paris, france)
+  Onboarding: [lifestyle, entertainment, health]
+  Actual interests: [food, cooking, restaurant, recipe, chef]
+
+[28/50] Anna (Barcelona, spain)
+  Onboarding: [lifestyle, sports, entertainment]
+  Actual interests: [travel, adventure, tourism, vacation, destination]
+
+[29/50] Jessica (Los Angeles, usa)
+  Onboarding: [lifestyle, entertainment, health]
+  Actual interests: [fitness, workout, gym, exercise, running]
+
+[30/50] Kim (Seoul, south korea)
+  Onboarding: [lifestyle, fashion, entertainment]
+  Actual interests: [beauty, skincare, makeup, cosmetics, skincare routine]
+  ERROR creating user: new row for relation "users" violates check constraint "valid_home_country"
+  Searched: [best travel destinations, adventure travel, cheap flights europe]
+  Searched: [michelin star restaurants, cooking recipes italian, best chef]
+  Searched: [defi yields, web3 gaming, blockchain adoption]
+  Searched: [best workout routine, marathon training, home gym]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 18 skips
+  Page 1: 20 articles, 2 matches (10%), 1 likes, 1 engages, 13 skips
+  Page 1: 20 articles, 5 matches (25%), 1 likes, 4 engages, 10 skips
+  Page 2: 20 articles, 2 matches (10%), 0 likes, 2 engages, 15 skips
+  Page 2: 20 articles, 1 matches (5%), 0 likes, 1 engages, 13 skips
+  Page 2: 20 articles, 1 matches (5%), 0 likes, 0 engages, 19 skips
+  Page 2: 20 articles, 1 matches (5%), 0 likes, 1 engages, 16 skips
+  Page 3: 20 articles, 2 matches (10%), 0 likes, 2 engages, 13 skips
+  Result: 0% → 10% (+10%) | SOFT PIVOT | tags:29 skips:228
+  Page 3: 20 articles, 1 matches (5%), 1 likes, 0 engages, 17 skips
+  Result: 10% → 5% (-5%) | NO CHANGE | tags:27 skips:216
+  Page 3: 20 articles, 3 matches (15%), 0 likes, 3 engages, 16 skips
+  Result: 0% → 15% (+15%) | LEARNED | tags:30 skips:259
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Result: 25% → 5% (-20%) | NO CHANGE | tags:32 skips:219
+
+[31/50] Lisa (Sydney, australia)
+  Onboarding: [lifestyle, health, science]
+  Actual interests: [pets, animals, dog, cat, veterinary]
+
+[32/50] Rachel (Toronto, usa)
+  Onboarding: [lifestyle, health, entertainment]
+  Actual interests: [parenting, family, children, baby, motherhood]
+
+[33/50] Mia (Milan, france)
+  Onboarding: [fashion, entertainment, lifestyle]
+  Actual interests: [sneakers, streetwear, nike, adidas, jordan]
+
+[34/50] David (Boston, usa)
+  Onboarding: [health, science, tech]
+  Actual interests: [mental health, anxiety, depression, therapy, mindfulness]
+
+[35/50] Laura (Munich, germany)
+  Onboarding: [health, lifestyle, science]
+  Actual interests: [medical, breakthrough, treatment, cure, clinical trial]
+  Searched: [anxiety treatment, therapy online, mindfulness meditation]
+  Searched: [cancer treatment breakthrough, new clinical trial, medical innovation]
+  Searched: [toddler activities, baby sleep training, parenting tips]
+  Searched: [dog adoption tips, best cat food, pet health]
+  Searched: [nike air jordan release, streetwear brands, sneaker drop]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 18 skips
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 1: 20 articles, 1 matches (5%), 0 likes, 1 engages, 15 skips
+  Page 1: 20 articles, 2 matches (10%), 0 likes, 2 engages, 15 skips
+  Page 1: 20 articles, 3 matches (15%), 0 likes, 3 engages, 13 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 14 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 15 skips
+  Page 2: 20 articles, 1 matches (5%), 1 likes, 0 engages, 16 skips
+  Page 2: 20 articles, 2 matches (10%), 0 likes, 2 engages, 13 skips
+  Page 3: 20 articles, 2 matches (10%), 1 likes, 1 engages, 14 skips
+  Result: 0% → 10% (+10%) | SOFT PIVOT | tags:21 skips:242
+  Page 3: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 3: 20 articles, 1 matches (5%), 0 likes, 1 engages, 17 skips
+  Result: 15% → 5% (-10%) | NO CHANGE | tags:32 skips:236
+  Result: 0% → 5% (+5%) | NO CHANGE | tags:12 skips:238
+  Page 3: 20 articles, 1 matches (5%), 1 likes, 0 engages, 12 skips
+  Result: 10% → 5% (-5%) | NO CHANGE | tags:22 skips:217
+  Page 3: 20 articles, 5 matches (25%), 1 likes, 4 engages, 13 skips
+  Result: 5% → 25% (+20%) | LEARNED | tags:41 skips:215
+
+[36/50] Neil (Houston, usa)
+  Onboarding: [science, tech, health]
+  Actual interests: [space, astronomy, mars, telescope, galaxy]
+
+[37/50] Greta (Stockholm, germany)
+  Onboarding: [science, politics, health]
+  Actual interests: [biology, nature, wildlife, evolution, genetics]
+
+[38/50] Robert (Detroit, usa)
+  Onboarding: [business, tech, finance]
+  Actual interests: [automotive, cars, tesla, ford, electric vehicles]
+
+[39/50] Tina (San Jose, usa)
+  Onboarding: [business, tech, entertainment]
+  Actual interests: [startup, venture capital, funding, unicorn, vc]
+
+[40/50] Marco (Rome, france)
+  Onboarding: [business, politics, finance]
+  Actual interests: [real estate, property, housing, mortgage, commercial real estate]
+  Searched: [startup funding news, unicorn valuation, vc deals 2026]
+  Searched: [tesla model y, electric vehicle sales, ford ev]
+  Searched: [endangered species, genetics breakthrough, wildlife conservation]
+  Searched: [james webb telescope, mars rover, asteroid discovery]
+  Searched: [housing market crash, commercial real estate, mortgage rates]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 1: 20 articles, 1 matches (5%), 0 likes, 1 engages, 17 skips
+  Page 1: 20 articles, 4 matches (20%), 0 likes, 4 engages, 15 skips
+  Page 1: 20 articles, 5 matches (25%), 2 likes, 3 engages, 14 skips
+  Page 1: 20 articles, 5 matches (25%), 4 likes, 1 engages, 12 skips
+  Page 2: 20 articles, 1 matches (5%), 0 likes, 1 engages, 16 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 13 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 2: 20 articles, 7 matches (35%), 3 likes, 4 engages, 12 skips
+  Page 2: 20 articles, 13 matches (65%), 5 likes, 7 engages, 5 skips
+  Page 3: 20 articles, 1 matches (5%), 0 likes, 1 engages, 15 skips
+  Result: 0% → 5% (+5%) | NO CHANGE | tags:22 skips:194
+  Page 3: 20 articles, 1 matches (5%), 0 likes, 1 engages, 16 skips
+  Result: 5% → 5% (0%) | NO CHANGE | tags:19 skips:242
+  Page 3: 20 articles, 2 matches (10%), 0 likes, 2 engages, 15 skips
+  Result: 20% → 10% (-10%) | NO CHANGE | tags:36 skips:229
+  Page 3: 20 articles, 12 matches (60%), 3 likes, 8 engages, 8 skips
+  Result: 25% → 60% (+35%) | LEARNED | tags:80 skips:159
+  Page 3: 20 articles, 9 matches (45%), 1 likes, 7 engages, 9 skips
+  Result: 25% → 45% (+20%) | LEARNED | tags:103 skips:142
+
+[41/50] Nadia (Dubai, turkiye)
+  Onboarding: [business, entertainment, lifestyle]
+  Actual interests: [oil, energy, opec, renewable energy, petroleum]
+
+[42/50] Lucas (Amsterdam, germany)
+  Onboarding: [tech, entertainment, sports]
+  Actual interests: [gaming, video games, playstation, xbox, nintendo]
+
+[43/50] Yara (Cairo, turkiye)
+  Onboarding: [entertainment, politics, health]
+  Actual interests: [movies, film, box office, hollywood, cinema]
+
+[44/50] Tom (Chicago, usa)
+  Onboarding: [sports, entertainment, finance]
+  Actual interests: [nba, basketball, lakers, celtics, lebron]
+
+[45/50] Ines (Lisbon, spain)
+  Onboarding: [entertainment, lifestyle, tech]
+  Actual interests: [tv, streaming, netflix, hbo, disney plus]
+  Searched: [opec meeting, oil prices today, renewable energy investment]
+  Searched: [oscar nominations, best movies 2026, box office weekend]
+  Searched: [netflix new releases, hbo max series, best streaming shows]
+  Searched: [ps5 pro games, xbox game pass, esports tournament]
+  Searched: [nba standings, lebron james, nba playoffs bracket]
+  Page 1: 20 articles, 1 matches (5%), 1 likes, 0 engages, 17 skips
+  Page 1: 20 articles, 2 matches (10%), 2 likes, 0 engages, 16 skips
+  Page 1: 20 articles, 2 matches (10%), 1 likes, 1 engages, 17 skips
+  Page 1: 20 articles, 5 matches (25%), 1 likes, 4 engages, 13 skips
+  Page 1: 20 articles, 9 matches (45%), 4 likes, 4 engages, 10 skips
+  Page 2: 20 articles, 7 matches (35%), 4 likes, 3 engages, 12 skips
+  Page 2: 20 articles, 7 matches (35%), 3 likes, 4 engages, 9 skips
+  Page 2: 20 articles, 4 matches (20%), 0 likes, 4 engages, 11 skips
+  Page 2: 20 articles, 8 matches (40%), 1 likes, 5 engages, 8 skips
+  Page 2: 20 articles, 16 matches (80%), 3 likes, 12 engages, 3 skips
+  Page 3: 20 articles, 1 matches (5%), 1 likes, 0 engages, 15 skips
+  Result: 25% → 5% (-20%) | NO CHANGE | tags:47 skips:190
+  Page 3: 20 articles, 6 matches (30%), 3 likes, 2 engages, 14 skips
+  Result: 5% → 30% (+25%) | LEARNED | tags:56 skips:209
+  Page 3: 20 articles, 9 matches (45%), 2 likes, 7 engages, 11 skips
+  Page 3: 20 articles, 7 matches (35%), 3 likes, 3 engages, 10 skips
+  Result: 10% → 45% (+35%) | LEARNED | tags:49 skips:211
+  Result: 10% → 35% (+25%) | LEARNED | tags:53 skips:180
+  Page 3: 20 articles, 15 matches (75%), 3 likes, 12 engages, 4 skips
+  Result: 45% → 75% (+30%) | LEARNED | tags:89 skips:89
+
+[46/50] Ahmed (Riyadh, turkiye)
+  Onboarding: [sports, politics, business]
+  Actual interests: [soccer, football, premier league, champions league, la liga]
+
+[47/50] Nina (Moscow, germany)
+  Onboarding: [science, health, politics]
+  Actual interests: [earth science, earthquake, volcano, ocean, weather]
+
+[48/50] Pedro (Buenos Aires, brazil)
+  Onboarding: [sports, entertainment, politics]
+  Actual interests: [soccer, football, messi, world cup, copa america]
+
+[49/50] Hana (Kyoto, japan)
+  Onboarding: [lifestyle, entertainment, health]
+  Actual interests: [food, cooking, restaurant, recipe, japanese cuisine]
+
+[50/50] Emre (Ankara, turkiye)
+  Onboarding: [sports, tech, business]
+  Actual interests: [f1, formula one, galatasaray, soccer, turkish super league]
+  Searched: [ramen recipe, sushi restaurant, japanese cooking]
+  Searched: [premier league standings, champions league draw, la liga results]
+  Searched: [messi inter miami, copa america, world cup qualifiers]
+  Searched: [earthquake today, volcanic eruption, ocean temperature]
+  Searched: [galatasaray transfer, f1 race results, turkish super league]
+  Page 1: 20 articles, 0 matches (0%), 0 likes, 0 engages, 18 skips
+  Page 1: 20 articles, 2 matches (10%), 0 likes, 2 engages, 13 skips
+  Page 1: 20 articles, 2 matches (10%), 0 likes, 2 engages, 12 skips
+  Page 1: 20 articles, 4 matches (20%), 1 likes, 3 engages, 12 skips
+  Page 1: 20 articles, 4 matches (20%), 1 likes, 3 engages, 12 skips
+  Page 2: 20 articles, 2 matches (10%), 0 likes, 2 engages, 16 skips
+  Page 2: 20 articles, 0 matches (0%), 0 likes, 0 engages, 17 skips
+  Page 2: 20 articles, 7 matches (35%), 0 likes, 7 engages, 11 skips
+  Page 2: 20 articles, 7 matches (35%), 3 likes, 3 engages, 12 skips
+  Page 2: 20 articles, 7 matches (35%), 0 likes, 7 engages, 8 skips
+  Page 3: 20 articles, 1 matches (5%), 0 likes, 0 engages, 15 skips
+  Result: 0% → 5% (+5%) | NO CHANGE | tags:23 skips:251
+  Page 3: 20 articles, 1 matches (5%), 0 likes, 1 engages, 16 skips
+  Result: 10% → 5% (-5%) | NO CHANGE | tags:25 skips:233
+  Page 3: 20 articles, 7 matches (35%), 1 likes, 6 engages, 7 skips
+  Result: 10% → 35% (+25%) | LEARNED | tags:53 skips:129
+  Page 3: 20 articles, 7 matches (35%), 2 likes, 4 engages, 13 skips
+  Page 3: 20 articles, 7 matches (35%), 2 likes, 5 engages, 9 skips
+  Result: 20% → 35% (+15%) | LEARNED | tags:44 skips:191
+  Result: 20% → 35% (+15%) | LEARNED | tags:51 skips:147
+
+
+═══════════════════════════════════════════
+  FINAL RESULTS
+═══════════════════════════════════════════
+
+Total personas: 50
+Valid results: 45
+Learned (>10pt improvement): 18 (40%)
+Soft pivot (>5pt improvement): 21 (47%)
+No change: 24 (53%)
+
+Avg early match: 13.3%
+Avg late match: 22.6%
+Avg improvement: +9.2 pts
+Avg tag_profile size: 41 tags
+Avg skip_profile size: 194 tags
+
+  GRADE: C (40% learned)
+
+Top 5 learners:
+  Michael      5.0% → 55.0% (+50.0) | likes:6 engages:10 tags:63
+  James        35.0% → 70.0% (+35.0) | likes:11 engages:22 tags:82
+  Neil         25.0% → 60.0% (+35.0) | likes:10 engages:13 tags:80
+  Lucas        10.0% → 45.0% (+35.0) | likes:8 engages:10 tags:49
+  Emma         5.0% → 35.0% (+30.0) | likes:6 engages:11 tags:58
+
+Bottom 5:
+  Dmitri       35.0% → 25.0% (-10.0) | likes:5 skips:34 tags:50
+  Mia          15.0% → 5.0% (-10.0) | likes:1 skips:46 tags:32
+  Greta        20.0% → 10.0% (-10.0) | likes:0 skips:47 tags:36
+  Anna         25.0% → 5.0% (-20.0) | likes:1 skips:41 tags:32
+  Tom          25.0% → 5.0% (-20.0) | likes:2 skips:39 tags:47
+
+Errors:
+  Soo-jin: new row for relation "users" violates check constraint "valid_home_country"
+  Chioma: new row for relation "users" violates check constraint "valid_home_country"
+  Wei: new row for relation "users" violates check constraint "valid_home_country"
+  Chen: new row for relation "users" violates check constraint "valid_home_country"
+  Kim: new row for relation "users" violates check constraint "valid_home_country"
+
+Done at 2026-03-21T15:56:19.855Z

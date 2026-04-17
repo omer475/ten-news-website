@@ -1,0 +1,536 @@
+═══════════════════════════════════════════════════════════════
+  50-PERSONA TEST v4 — ENTITY-LEVEL INTERESTS
+  Users select subtopics, algorithm learns entity preferences
+  Measures: entity match %, high-entity %, alignment score
+═══════════════════════════════════════════════════════════════
+Started: 2026-03-22T16:51:21.644Z
+
+
+[1/50] Maria (brazil)
+  Onboard: [soccer, movies_film, ai_ml]
+  Top entities: premier league(0.95), liverpool(0.9), movies(0.8), film(0.75), soccer(0.7)
+
+[2/50] Jake (usa)
+  Onboard: [nfl, ai_ml, gaming]
+  Top entities: nfl(0.9), football(0.85), video games(0.85), nfl draft(0.8), artificial intelligence(0.8)
+
+[3/50] Emre (turkiye)
+  Onboard: [soccer, f1, middle_east]
+  Top entities: soccer(0.9), turkey(0.85), premier league(0.8), formula one(0.8), liverpool(0.7)
+
+[4/50] Fatima (turkiye)
+  Onboard: [middle_east, movies_film, kpop_kdrama]
+  Top entities: iran(0.9), middle east(0.85), israel(0.8), movies(0.75), military(0.7)
+
+[5/50] Raj (india)
+  Onboard: [ai_ml, cybersecurity, cricket]
+  Top entities: artificial intelligence(0.95), tech(0.8), cybersecurity(0.7), cricket(0.6), india(0.5)
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P1:  25% any   5% high ✗ | 2 entities | L:1 E:0 S:18
+  P1:  45% any  45% high ▲ | 2 entities | L:2 E:1 S:12
+  P1:  60% any  55% high ★ | 4 entities | L:2 E:3 S:13
+  P1:  20% any  20% high · | 1 entities | L:1 E:3 S:14
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P2:  15% any  15% high · | 1 entities | L:0 E:1 S:16
+  P2:  80% any  70% high ★ | 2 entities | L:3 E:3 S:10
+  P2:  80% any  80% high ★ | 2 entities | L:3 E:5 S:8
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  10% any  10% high ✗ | 1 entities | L:1 E:1 S:16
+  P3:  55% any  50% high ★ | 2 entities | L:2 E:3 S:12
+  P3:  65% any  65% high ★ | 3 entities | L:4 E:6 S:8
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P4:  30% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  P4:  30% any  30% high ▲ | 1 entities | L:1 E:3 S:14
+  P4:  80% any  80% high ★ | 1 entities | L:3 E:6 S:11
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  ❌ FLAT | Any: 18→20 (+3) | High: 0→0 (0) | Align: 1%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  ❌ FLAT | Any: 20→18 (-3) | High: 3→0 (-3) | Align: 1%
+  P4:  85% any  85% high ★ | 2 entities | L:7 E:5 S:7
+  P5:  10% any   5% high ✗ | 2 entities | L:0 E:1 S:18
+  ❌ FLAT | Any: 18→20 (+3) | High: 18→18 (0) | Align: 10%
+  P5:  75% any  70% high ★ | 2 entities | L:3 E:3 S:10
+  ✅ LEARNED | Any: 63→78 (+15) | High: 58→75 (+18) | Align: 6%
+  P5:  70% any  70% high ★ | 1 entities | L:3 E:2 S:11
+  ✅ LEARNED | Any: 70→78 (+8) | High: 68→78 (+10) | Align: 9%
+
+[6/50] Sophie (france)
+  Onboard: [movies_film, climate_environment, food_cooking]
+  Top entities: movies(0.9), food(0.9), film(0.85), cooking(0.85), environment(0.8)
+
+[7/50] Tom (usa)
+  Onboard: [nba, nfl, stock_markets]
+  Top entities: nba(0.95), basketball(0.9), march madness(0.85), college basketball(0.8), nfl(0.7)
+
+[8/50] Sarah (usa)
+  Onboard: [ai_ml, mental_health, tv_streaming]
+  Top entities: artificial intelligence(0.9), mental health(0.85), television(0.8), tech(0.75), netflix(0.75)
+
+[9/50] Viktor (germany)
+  Onboard: [war_conflict, european_politics, climate_environment]
+  Top entities: russia(0.9), ukraine(0.9), putin(0.85), ukraine war(0.85), military(0.7)
+
+[10/50] James (usa)
+  Onboard: [us_politics, stock_markets, war_conflict]
+  Top entities: donald trump(0.9), politics(0.85), united states(0.8), government(0.7), finance(0.6)
+  P1:  35% any  10% high ✗ | 4 entities | L:1 E:0 S:17
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P1:  20% any  20% high · | 1 entities | L:1 E:0 S:19
+  P1:  50% any  35% high ▲ | 3 entities | L:2 E:4 S:11
+  P1:  65% any  35% high ▲ | 5 entities | L:4 E:5 S:11
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P2:  15% any   5% high ✗ | 2 entities | L:0 E:0 S:16
+  P2:  15% any  15% high · | 1 entities | L:1 E:1 S:13
+  P2:  70% any  40% high ▲ | 5 entities | L:6 E:5 S:9
+  P2:  75% any  50% high ★ | 5 entities | L:3 E:2 S:9
+  P3:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:17
+  P3:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  10% any  10% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  50% any  40% high ▲ | 6 entities | L:2 E:3 S:13
+  P3:  75% any  30% high ▲ | 5 entities | L:4 E:2 S:13
+  P4:  25% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P4:  30% any  30% high ▲ | 1 entities | L:1 E:3 S:14
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  ❌ FLAT | Any: 18→15 (-3) | High: 3→0 (-3) | Align: 1%
+  P5:   5% any   0% high ✗ | 1 entities | L:1 E:0 S:12
+  P4:  65% any  35% high ▲ | 2 entities | L:1 E:5 S:12
+  ❌ FLAT | Any: 25→18 (-8) | High: 5→0 (-5) | Align: 2%
+  P4:  80% any  55% high ★ | 4 entities | L:5 E:3 S:9
+  P5:  10% any  10% high ✗ | 2 entities | L:0 E:1 S:15
+  ❌ FLAT | Any: 18→20 (+3) | High: 18→20 (+3) | Align: 8%
+  P5:  55% any  30% high ▲ | 5 entities | L:1 E:1 S:16
+  ❌ FLAT | Any: 60→60 (0) | High: 38→33 (-5) | Align: 7%
+  P5:  85% any  50% high ★ | 5 entities | L:3 E:4 S:9
+  ✅ LEARNED | Any: 70→83 (+13) | High: 43→53 (+10) | Align: 8%
+
+[11/50] Kenji (japan)
+  Onboard: [anime_manga, gaming, robotics_hardware]
+  Top entities: video games(0.9), science fiction(0.8), japan(0.7), tech(0.65), entertainment(0.6)
+
+[12/50] Tyler (usa)
+  Onboard: [movies_film, gaming, nba]
+  Top entities: movies(0.9), film(0.85), video games(0.85), science fiction(0.8), entertainment(0.6)
+
+[13/50] Nadia (turkiye)
+  Onboard: [middle_east, war_conflict, oil_energy]
+  Top entities: iran(0.95), middle east(0.9), military(0.85), israel(0.8), oil prices(0.8)
+
+[14/50] Pedro (brazil)
+  Onboard: [soccer, f1, boxing_mma]
+  Top entities: soccer(0.95), premier league(0.8), champions league(0.75), formula one(0.7), mclaren(0.5)
+
+[15/50] Yara (turkiye)
+  Onboard: [movies_film, kpop_kdrama, beauty_skincare]
+  Top entities: television(0.9), movies(0.85), film(0.8), bts(0.7), entertainment(0.6)
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P1:   5% any   0% high ✗ | 1 entities | L:0 E:1 S:17
+  P1:  25% any   0% high ✗ | 2 entities | L:1 E:0 S:14
+  P1:  30% any   5% high ✗ | 2 entities | L:2 E:0 S:18
+  P1:  65% any  55% high ★ | 3 entities | L:5 E:4 S:10
+  P2:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:16
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:1 S:16
+  P2:  35% any   0% high ✗ | 1 entities | L:0 E:1 S:16
+  P2:  90% any  80% high ★ | 3 entities | L:6 E:5 S:5
+  P3:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  P3:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:1 S:19
+  P3:  15% any   0% high ✗ | 1 entities | L:0 E:1 S:17
+  P3:  70% any  65% high ★ | 4 entities | L:3 E:2 S:13
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:16
+  P4:  25% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P4:  35% any   0% high ✗ | 2 entities | L:0 E:0 S:17
+  P4:  45% any   0% high ✗ | 1 entities | L:1 E:0 S:18
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  ❌ FLAT | Any: 3→3 (0) | High: 0→0 (0) | Align: 5%
+  P5:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:16
+  ❌ FLAT | Any: 20→20 (0) | High: 0→0 (0) | Align: 1%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:20
+  ❌ FLAT | Any: 18→20 (+3) | High: 0→0 (0) | Align: 1%
+  P5:  40% any   0% high ✗ | 1 entities | L:1 E:0 S:15
+  🔄 PIVOT | Any: 33→43 (+10) | High: 3→0 (-3) | Align: 2%
+  P4:  85% any  85% high ★ | 2 entities | L:4 E:7 S:5
+  P5:  70% any  70% high ★ | 1 entities | L:7 E:3 S:8
+  🔄 PIVOT | Any: 78→78 (0) | High: 68→78 (+10) | Align: 9%
+
+[16/50] Ahmed (turkiye)
+  Onboard: [soccer, middle_east, bitcoin]
+  Top entities: soccer(0.9), turkey(0.85), iran(0.75), premier league(0.7), middle east(0.7)
+
+[17/50] Carlos (spain)
+  Onboard: [soccer, tennis, movies_film]
+  Top entities: soccer(0.95), premier league(0.85), champions league(0.8), movies(0.65), film(0.6)
+
+[18/50] David (usa)
+  Onboard: [ai_ml, space_tech, gaming]
+  Top entities: artificial intelligence(0.9), video games(0.85), tech(0.8), science fiction(0.6), entertainment(0.4)
+
+[19/50] Anna (germany)
+  Onboard: [climate_environment, european_politics, food_cooking]
+  Top entities: environment(0.9), climate change(0.85), food(0.85), cooking(0.8), politics(0.7)
+
+[20/50] Michael (usa)
+  Onboard: [stock_markets, bitcoin, ai_ml]
+  Top entities: finance(0.9), cryptocurrency(0.8), artificial intelligence(0.75), economics(0.7), business(0.65)
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P1:  25% any   0% high ✗ | 2 entities | L:1 E:1 S:15
+  P1:  40% any  25% high · | 3 entities | L:0 E:0 S:14
+  P1:  50% any  45% high ▲ | 3 entities | L:3 E:3 S:9
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P2:  15% any   0% high ✗ | 1 entities | L:1 E:1 S:15
+  P2:  20% any   5% high ✗ | 3 entities | L:2 E:1 S:15
+  P2:  45% any  35% high ▲ | 3 entities | L:2 E:2 S:15
+  P2:  80% any  80% high ★ | 2 entities | L:4 E:3 S:8
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  30% any   5% high ✗ | 3 entities | L:1 E:1 S:14
+  P3:  30% any  15% high · | 3 entities | L:1 E:2 S:14
+  P3:  55% any  55% high ★ | 2 entities | L:1 E:2 S:13
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P4:  45% any   0% high ✗ | 2 entities | L:1 E:1 S:15
+  P4:  65% any  45% high ▲ | 2 entities | L:2 E:1 S:12
+  P5:   5% any   0% high ✗ | 1 entities | L:1 E:0 S:18
+  ❌ FLAT | Any: 18→20 (+3) | High: 0→0 (0) | Align: 1%
+  P4:  80% any  80% high ★ | 1 entities | L:4 E:4 S:7
+  P5:  10% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  ❌ FLAT | Any: 18→23 (+5) | High: 0→0 (0) | Align: 2%
+  P5:  15% any   0% high ✗ | 3 entities | L:2 E:0 S:15
+  🔄 PIVOT | Any: 23→30 (+8) | High: 3→0 (-3) | Align: 4%
+  P5:  50% any  40% high ▲ | 2 entities | L:3 E:2 S:13
+  ✅ LEARNED | Any: 43→58 (+15) | High: 30→43 (+13) | Align: 5%
+  P5:  75% any  70% high ★ | 2 entities | L:1 E:5 S:11
+  ✅ LEARNED | Any: 65→78 (+13) | High: 63→75 (+13) | Align: 8%
+
+[21/50] Alex (uk)
+  Onboard: [bitcoin, defi_web3, soccer]
+  Top entities: cryptocurrency(0.9), premier league(0.7), soccer(0.65), finance(0.6), liverpool(0.6)
+
+[22/50] Omar (turkiye)
+  Onboard: [oil_energy, middle_east, soccer]
+  Top entities: oil prices(0.9), iran(0.85), middle east(0.8), strait of hormuz(0.7), military(0.65)
+
+[23/50] Neil (usa)
+  Onboard: [space_astronomy, space_tech, climate_environment]
+  Top entities: astronomy(0.9), science(0.8), environment(0.7), climate change(0.65), artificial intelligence(0.5)
+
+[24/50] Laura (germany)
+  Onboard: [medical_breakthroughs, ai_ml, biology_nature]
+  Top entities: health(0.9), cancer(0.8), artificial intelligence(0.75), science(0.7), environment(0.5)
+
+[25/50] Jessica (usa)
+  Onboard: [fitness_workout, mental_health, tv_streaming]
+  Top entities: health(0.9), mental health(0.85), television(0.75), exercise(0.7), netflix(0.7)
+  P1:  25% any   0% high ✗ | 2 entities | L:0 E:0 S:17
+  P1:  30% any   0% high ✗ | 2 entities | L:1 E:0 S:17
+  P1:  35% any  15% high · | 3 entities | L:1 E:1 S:16
+  P1:  40% any  10% high ✗ | 3 entities | L:0 E:2 S:17
+  P1:  55% any  45% high ▲ | 3 entities | L:4 E:4 S:11
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  P2:  20% any   0% high ✗ | 2 entities | L:1 E:1 S:17
+  P2:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:15
+  P2:  45% any   0% high ✗ | 2 entities | L:0 E:1 S:18
+  P2:  80% any  80% high ★ | 3 entities | L:2 E:2 S:10
+  P3:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  P3:  30% any   0% high ✗ | 2 entities | L:0 E:0 S:16
+  P3:  15% any   5% high ✗ | 2 entities | L:0 E:0 S:16
+  P3:  30% any   5% high ✗ | 3 entities | L:1 E:0 S:19
+  P3:  65% any  55% high ★ | 4 entities | L:2 E:6 S:10
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P4:  45% any   0% high ✗ | 2 entities | L:1 E:1 S:17
+  P4:  65% any   0% high ✗ | 2 entities | L:0 E:0 S:20
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:3 S:17
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:20
+  ❌ FLAT | Any: 23→18 (-5) | High: 0→0 (0) | Align: 2%
+  P5:  15% any   0% high ✗ | 3 entities | L:0 E:0 S:17
+  🔄 PIVOT | Any: 23→30 (+8) | High: 0→0 (0) | Align: 2%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P5:  45% any   0% high ✗ | 2 entities | L:0 E:2 S:16
+  ❌ FLAT | Any: 25→20 (-5) | High: 8→0 (-8) | Align: 3%
+  🔄 PIVOT | Any: 43→55 (+13) | High: 5→0 (-5) | Align: 3%
+  P4:  85% any  80% high ★ | 3 entities | L:4 E:6 S:8
+  P5:  70% any  70% high ★ | 2 entities | L:2 E:4 S:6
+  ✅ LEARNED | Any: 68→78 (+10) | High: 63→75 (+13) | Align: 9%
+
+[26/50] Wei (japan)
+  Onboard: [robotics_hardware, ai_ml, asian_politics]
+  Top entities: tech(0.9), artificial intelligence(0.85), nvidia(0.7), japan(0.6), china(0.5)
+
+[27/50] Mia (france)
+  Onboard: [movies_film, european_politics, food_cooking]
+  Top entities: movies(0.9), film(0.85), food(0.85), cooking(0.8), politics(0.7)
+
+[28/50] Robert (usa)
+  Onboard: [automotive, us_politics, stock_markets]
+  Top entities: donald trump(0.85), automotive(0.8), politics(0.8), business(0.7), united states(0.7)
+
+[29/50] Liam (uk)
+  Onboard: [soccer, comedy, music]
+  Top entities: premier league(0.95), liverpool(0.9), soccer(0.8), champions league(0.7), music(0.7)
+
+[30/50] Diego (mexico)
+  Onboard: [soccer, us_politics, food_cooking]
+  Top entities: soccer(0.9), food(0.8), donald trump(0.75), premier league(0.7), cooking(0.7)
+  P1:  25% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  P1:  25% any  25% high · | 1 entities | L:0 E:1 S:19
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  P1:  40% any  35% high ▲ | 4 entities | L:2 E:0 S:17
+  P1:  35% any   5% high ✗ | 3 entities | L:2 E:0 S:16
+  P2:  20% any   0% high ✗ | 2 entities | L:0 E:0 S:17
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P2:  45% any  20% high · | 4 entities | L:0 E:2 S:14
+  P2:  55% any  40% high ▲ | 5 entities | L:1 E:2 S:11
+  P2:  35% any  35% high ▲ | 2 entities | L:2 E:2 S:16
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:13
+  P3:  15% any  15% high · | 1 entities | L:1 E:0 S:16
+  P3:  30% any  20% high · | 3 entities | L:1 E:3 S:13
+  P3:  50% any  30% high ▲ | 5 entities | L:1 E:1 S:13
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P4:  45% any  45% high ▲ | 1 entities | L:3 E:1 S:12
+  P4:  55% any  30% high ▲ | 3 entities | L:1 E:3 S:14
+  P4:  70% any  60% high ★ | 4 entities | L:5 E:2 S:11
+  P5:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  ❌ FLAT | Any: 20→20 (0) | High: 0→0 (0) | Align: 1%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  ❌ FLAT | Any: 20→18 (-3) | High: 0→0 (0) | Align: 1%
+  P5:  55% any  25% high · | 4 entities | L:1 E:2 S:13
+  P5:  40% any  40% high ▲ | 1 entities | L:3 E:1 S:15
+  ✅ LEARNED | Any: 40→55 (+15) | High: 13→28 (+15) | Align: 7%
+  ✅ LEARNED | Any: 30→43 (+13) | High: 30→43 (+13) | Align: 8%
+  P5:  55% any  50% high ★ | 4 entities | L:4 E:2 S:12
+  ✅ LEARNED | Any: 48→63 (+15) | High: 38→55 (+18) | Align: 8%
+
+[31/50] Marco (france)
+  Onboard: [oil_energy, european_politics, soccer]
+  Top entities: oil prices(0.85), politics(0.8), energy(0.7), soccer(0.7), business(0.6)
+
+[32/50] Rachel (usa)
+  Onboard: [us_politics, mental_health, tv_streaming]
+  Top entities: mental health(0.9), politics(0.85), donald trump(0.8), television(0.75), united states(0.7)
+
+[33/50] Lisa (australia)
+  Onboard: [pets_animals, travel_adventure, cricket]
+  Top entities: travel(0.8), cricket(0.7), tourism(0.7), australia(0.6), sports(0.5)
+
+[34/50] Eric (usa)
+  Onboard: [war_conflict, nfl, ai_ml]
+  Top entities: iran(0.85), military(0.8), nfl(0.8), middle east(0.75), israel(0.7)
+
+[35/50] Nina (germany)
+  Onboard: [war_conflict, european_politics, soccer]
+  Top entities: ukraine(0.9), russia(0.85), ukraine war(0.85), putin(0.8), politics(0.7)
+  P1:  40% any  10% high ✗ | 4 entities | L:0 E:1 S:17
+  P1:  30% any  25% high · | 3 entities | L:0 E:2 S:9
+  P1:  40% any  35% high ▲ | 4 entities | L:2 E:2 S:13
+  P1:  55% any  55% high ★ | 2 entities | L:0 E:3 S:14
+  P1:  50% any  50% high ★ | 5 entities | L:1 E:5 S:7
+  P2:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  P2:  50% any  45% high ▲ | 3 entities | L:0 E:1 S:15
+  P2:  45% any  45% high ▲ | 2 entities | L:1 E:2 S:14
+  P2:  65% any  55% high ★ | 4 entities | L:2 E:6 S:10
+  P2:  80% any  80% high ★ | 2 entities | L:4 E:4 S:8
+  P3:  15% any   0% high ✗ | 2 entities | L:0 E:0 S:19
+  P3:  40% any  30% high ▲ | 3 entities | L:2 E:2 S:14
+  P3:  45% any  35% high ▲ | 5 entities | L:1 E:1 S:14
+  P3:  35% any  25% high · | 5 entities | L:0 E:1 S:18
+  P3:  65% any  65% high ★ | 2 entities | L:5 E:4 S:7
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P4:  70% any  50% high ★ | 4 entities | L:4 E:1 S:12
+  P4:  55% any  55% high ★ | 3 entities | L:1 E:4 S:11
+  P4:  70% any  45% high ▲ | 2 entities | L:1 E:3 S:13
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  ❌ FLAT | Any: 28→18 (-10) | High: 5→0 (-5) | Align: 2%
+  P4:  85% any  85% high ★ | 2 entities | L:4 E:4 S:9
+  P5:  50% any  45% high ▲ | 4 entities | L:4 E:1 S:12
+  ✅ LEARNED | Any: 40→60 (+20) | High: 35→48 (+13) | Align: 7%
+  P5:  55% any  50% high ★ | 4 entities | L:3 E:2 S:13
+  🔄 PIVOT | Any: 48→55 (+8) | High: 48→53 (+5) | Align: 9%
+  P5:  50% any  45% high ▲ | 4 entities | L:1 E:4 S:10
+  🔄 PIVOT | Any: 53→60 (+8) | High: 45→45 (0) | Align: 7%
+  P5:  75% any  75% high ★ | 2 entities | L:3 E:5 S:9
+  ✅ LEARNED | Any: 68→80 (+13) | High: 68→80 (+13) | Align: 9%
+
+[36/50] Priya (india)
+  Onboard: [soccer, nba, ai_ml]
+  Top entities: basketball(0.8), nba(0.75), soccer(0.7), premier league(0.65), march madness(0.6)
+
+[37/50] Hana (japan)
+  Onboard: [food_cooking, anime_manga, travel_adventure]
+  Top entities: food(0.95), cooking(0.9), recipe(0.8), japan(0.7), travel(0.6)
+
+[38/50] Soo-jin (japan)
+  Onboard: [kpop_kdrama, beauty_skincare, anime_manga]
+  Top entities: bts(0.95), music(0.8), entertainment(0.7), beauty(0.7), fashion(0.65)
+
+[39/50] Aisha (turkiye)
+  Onboard: [soccer, middle_east, beauty_skincare]
+  Top entities: soccer(0.85), turkey(0.8), premier league(0.7), iran(0.6), middle east(0.55)
+
+[40/50] Lucas (germany)
+  Onboard: [gaming, soccer, ai_ml]
+  Top entities: video games(0.9), soccer(0.8), artificial intelligence(0.75), premier league(0.7), champions league(0.6)
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P1:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:14
+  P1:  15% any   0% high ✗ | 3 entities | L:0 E:1 S:14
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P1:  50% any   5% high ✗ | 3 entities | L:1 E:1 S:15
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P2:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:14
+  P2:   5% any   5% high ✗ | 1 entities | L:0 E:1 S:19
+  P2:  75% any   0% high ✗ | 2 entities | L:1 E:3 S:14
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P3:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:18
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P3:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:18
+  P3:  65% any   0% high ✗ | 2 entities | L:0 E:3 S:15
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:20
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:1 S:17
+  P4:  40% any   0% high ✗ | 2 entities | L:0 E:1 S:19
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:14
+  P4:  80% any   0% high ✗ | 2 entities | L:3 E:5 S:8
+  P5:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  ❌ FLAT | Any: 3→0 (-3) | High: 0→0 (0) | Align: 7%
+  P5:   5% any   0% high ✗ | 1 entities | L:1 E:0 S:16
+  ❌ FLAT | Any: 18→20 (+3) | High: 0→0 (0) | Align: 1%
+  P5:  10% any   5% high ✗ | 2 entities | L:0 E:0 S:14
+  🔄 PIVOT | Any: 18→25 (+8) | High: 0→3 (+3) | Align: 2%
+  P5:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:15
+  ❌ FLAT | Any: 10→0 (-10) | High: 3→0 (-3) | Align: 7%
+  P5:  70% any   0% high ✗ | 1 entities | L:4 E:3 S:10
+  🔄 PIVOT | Any: 63→75 (+13) | High: 3→0 (-3) | Align: 6%
+
+[41/50] Henrik (germany)
+  Onboard: [soccer, f1, european_politics]
+  Top entities: soccer(0.9), premier league(0.8), formula one(0.7), politics(0.65), mclaren(0.5)
+
+[42/50] Chioma (usa)
+  Onboard: [afrobeats, celebrity_news, nba]
+  Top entities: music(0.85), entertainment(0.8), basketball(0.6), nba(0.55), television(0.5)
+
+[43/50] Greta (germany)
+  Onboard: [climate_environment, biology_nature, european_politics]
+  Top entities: environment(0.95), climate change(0.9), science(0.8), politics(0.6), health(0.5)
+
+[44/50] Ines (spain)
+  Onboard: [tv_streaming, latin_music, soccer]
+  Top entities: television(0.9), netflix(0.85), streaming(0.8), music(0.75), entertainment(0.7)
+
+[45/50] Tina (usa)
+  Onboard: [ai_ml, startups_vc, movies_film]
+  Top entities: artificial intelligence(0.9), tech(0.8), business(0.7), movies(0.6), film(0.55)
+  P1:  25% any   5% high ✗ | 2 entities | L:0 E:0 S:17
+  P1:  10% any   0% high ✗ | 2 entities | L:0 E:0 S:18
+  P1:  20% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P1:  40% any   0% high ✗ | 3 entities | L:1 E:1 S:15
+  P1:  30% any   0% high ✗ | 2 entities | L:0 E:2 S:15
+  P2:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  P2:  15% any   0% high ✗ | 1 entities | L:1 E:0 S:18
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:16
+  P2:  45% any   0% high ✗ | 2 entities | L:2 E:0 S:13
+  P2:  40% any   0% high ✗ | 2 entities | L:1 E:2 S:15
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P3:  30% any   0% high ✗ | 2 entities | L:0 E:0 S:18
+  P3:  30% any   0% high ✗ | 3 entities | L:0 E:2 S:16
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:2 S:18
+  P4:  30% any   0% high ✗ | 1 entities | L:0 E:1 S:19
+  P4:  65% any   0% high ✗ | 2 entities | L:1 E:1 S:16
+  P4:  70% any   0% high ✗ | 2 entities | L:0 E:2 S:14
+  P5:  10% any   0% high ✗ | 2 entities | L:0 E:0 S:16
+  ❌ FLAT | Any: 5→5 (0) | High: 0→0 (0) | Align: 4%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  ❌ FLAT | Any: 20→18 (-3) | High: 3→0 (-3) | Align: 1%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:14
+  ❌ FLAT | Any: 18→18 (0) | High: 0→0 (0) | Align: 2%
+  P5:  45% any   0% high ✗ | 2 entities | L:1 E:2 S:12
+  🔄 PIVOT | Any: 43→58 (+15) | High: 0→0 (0) | Align: 5%
+  P5:  55% any   0% high ✗ | 3 entities | L:1 E:4 S:12
+  🔄 PIVOT | Any: 35→60 (+25) | High: 0→0 (0) | Align: 5%
+
+[46/50] Dmitri (germany)
+  Onboard: [war_conflict, asian_politics, ai_ml]
+  Top entities: russia(0.9), putin(0.85), ukraine(0.8), artificial intelligence(0.8), ukraine war(0.75)
+
+[47/50] Kim (japan)
+  Onboard: [beauty_skincare, kpop_kdrama, food_cooking]
+  Top entities: beauty(0.9), bts(0.85), fashion(0.8), food(0.8), cooking(0.7)
+
+[48/50] Yuki (japan)
+  Onboard: [baseball, anime_manga, robotics_hardware]
+  Top entities: baseball(0.9), mlb(0.85), japan(0.7), video games(0.6), tech(0.5)
+
+[49/50] Aiden (australia)
+  Onboard: [cricket, climate_environment, movies_film]
+  Top entities: cricket(0.9), australia(0.7), movies(0.7), environment(0.65), climate change(0.6)
+  P1:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:16
+  P1:  20% any   0% high ✗ | 1 entities | L:1 E:0 S:17
+  P1:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:18
+  P1:  50% any  15% high · | 3 entities | L:4 E:3 S:10
+  P2:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:13
+  P2:  15% any   0% high ✗ | 1 entities | L:0 E:0 S:19
+  P2:   5% any   5% high ✗ | 1 entities | L:0 E:1 S:17
+  P2:  65% any  35% high ▲ | 5 entities | L:5 E:1 S:11
+  P3:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:15
+  P3:  10% any   0% high ✗ | 1 entities | L:0 E:0 S:15
+  P3:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:15
+  P3:  45% any  20% high · | 4 entities | L:1 E:3 S:14
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:17
+  P4:  35% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  P4:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:19
+  P4:  65% any   0% high ✗ | 2 entities | L:1 E:1 S:13
+  P5:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:15
+  ❌ FLAT | Any: 0→0 (0) | High: 0→0 (0) | Align: 0%
+  P5:   5% any   0% high ✗ | 1 entities | L:0 E:0 S:17
+  ❌ FLAT | Any: 18→20 (+3) | High: 0→0 (0) | Align: 1%
+  P5:   0% any   0% high ✗ | 0 entities | L:0 E:0 S:18
+  ❌ FLAT | Any: 5→0 (-5) | High: 3→0 (-3) | Align: 7%
+  P5:  50% any  10% high ✗ | 4 entities | L:1 E:7 S:10
+  ❌ FLAT | Any: 58→58 (0) | High: 25→5 (-20) | Align: 7%
+
+
+═══════════════════════════════════════════════════════════════
+  RESULTS
+═══════════════════════════════════════════════════════════════
+
+Valid: 49 | Learned: 11 (22%) | Pivot: 11 (22%) | Flat: 27 (55%)
+Avg early ANY: 32.1% → late: 36.8%
+Avg early HIGH: 16.4% → late: 18.4%
+Avg alignment: 4.6%
+Avg tag_profile: 47 tags
+
+  GRADE: C (45% improved)
+
+TOP 10:
+  Emre       Any:62.5→77.5(15.0) High:57.5→75.0(17.5) Align:6.3%
+  Robert     Any:47.5→62.5(15.0) High:37.5→55.0(17.5) Align:8.1%
+  Diego      Any:40.0→55.0(15.0) High:12.5→27.5(15.0) Align:7.2%
+  Ahmed      Any:65.0→77.5(12.5) High:62.5→75.0(12.5) Align:8.1%
+  Anna       Any:42.5→57.5(15.0) High:30.0→42.5(12.5) Align:5.3%
+  Omar       Any:67.5→77.5(10.0) High:62.5→75.0(12.5) Align:9.3%
+  Mia        Any:30.0→42.5(12.5) High:30.0→42.5(12.5) Align:7.8%
+  Marco      Any:40.0→60.0(20.0) High:35.0→47.5(12.5) Align:7.4%
+  Eric       Any:67.5→80.0(12.5) High:67.5→80.0(12.5) Align:9.3%
+  Fatima     Any:70.0→77.5(7.5) High:67.5→77.5(10.0) Align:8.8%
+
+BOTTOM 10:
+  Hana       Any:10.0→0.0(-10.0) High:2.5→0.0(-2.5) Align:6.5%
+  Aisha      Any:62.5→75.0(12.5) High:2.5→0.0(-2.5) Align:6.5%
+  Ines       Any:20.0→17.5(-2.5) High:2.5→0.0(-2.5) Align:1.1%
+  Kim        Any:5.0→0.0(-5.0) High:2.5→0.0(-2.5) Align:6.7%
+  Sarah      Any:25.0→17.5(-7.5) High:5.0→0.0(-5.0) Align:2.5%
+  Viktor     Any:60.0→60.0(0.0) High:37.5→32.5(-5.0) Align:6.8%
+  Laura      Any:42.5→55.0(12.5) High:5.0→0.0(-5.0) Align:3.2%
+  Lisa       Any:27.5→17.5(-10.0) High:5.0→0.0(-5.0) Align:1.8%
+  Jessica    Any:25.0→20.0(-5.0) High:7.5→0.0(-7.5) Align:3.0%
+  Dmitri     Any:57.5→57.5(0.0) High:25.0→5.0(-20.0) Align:7.3%
+
+Done at 2026-03-22T17:10:27.521Z

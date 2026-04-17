@@ -1,0 +1,357 @@
+FEED ALGORITHM CHANGES — April 2-3, 2026
+==========================================
+Session: Main brain terminal (algorithm + iOS)
+All changes to: pages/api/feed/main.js unless noted
+
+CONTEXT: User reported "all caught up" after few articles, then seeing
+repeated/old articles they'd already viewed. Multiple root causes found
+and fixed through deep debugging.
+
+
+====================================================================
+CHANGE 1: has_more pagination fix (professor-reviewed)
+====================================================================
+FILE: pages/api/feed/main.js (response section)
+
+PROBLEM: The old has_more logic compared cumulative offset (grows: 20, 40, 60...)
+against pool size (shrinks as seen articles are excluded). After ~5 pages these
+numbers crossed, returning has_more=false even with 100+ articles remaining.
+
+OLD CODE:
+  const totalAvailable = Math.max(banditPoolTotal + selected.length, scoredTotal);
+  const totalServed = offset + selected.length;
+  const hasMore = totalAvailable > selected.length && totalServed < totalAvailable;
+
+NEW CODE (with professor's safety checks):
+  const remainingPool = Math.max(banditPoolTotal, scoredTotal);
+  const requestedLimit = limit || 20;
+  const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
+
+WHY THIS IS SAFE: has_more is true ONLY when:
+  1. We filled a complete page (selected >= limit) — prevents tiny tail pages
+  2. The remaining pool has more than what we served — prevents infinite loops
+  3. If selected=0 (all filtered), hasMore=false — prevents empty page loops
+
+RISK: None. This is strictly more correct than the old logic.
+
+
+====================================================================
+CHANGE 2: iOS hasMore recovery mechanism
+====================================================================
+FILE: TenNewsApp/ViewModels/FeedViewModel.swift
+
+PROBLEM: Once hasMore was set to false (from any API response — including
+transient errors), loadMoreIfNeeded() was permanently blocked for the rest
+of that session. Only fix was killing the app.
+
+CHANGE: Added `hasMoreBecameFalseAt` timestamp. If hasMore has been false
+for > 2 minutes and the user is still scrolling, makes one retry call to
+the server. If server says has_more=true, pagination resumes.
+
+  func loadMoreIfNeeded() async {
+      guard !isLoading, !isRefreshing else { return }
+      if !hasMore {
+          guard let falseAt = hasMoreBecameFalseAt,
+                Date().timeIntervalSince(falseAt) > 120 else { return }
+          hasMoreBecameFalseAt = Date() // prevent rapid retries
+          let added = await loadMoreBatch()
+          if added == 0 && !hasMore { hasMoreBecameFalseAt = Date() }
+          return
+      }
+      await loadMoreBatch()
+  }
+
+Also tracks transition from true→false with timestamp in loadMoreBatch().
+refresh() and loadInitialData() clear the timestamp (full reset).
+
+RISK: Low. Worst case: one extra API call every 2 minutes when at end of feed.
+Does NOT change any scoring, pool construction, or article selection.
+
+
+====================================================================
+CHANGE 3: Seen exclusion event types — CRITICAL BUG FIX
+====================================================================
+FILE: pages/api/feed/main.js (seen articles query)
+
+PROBLEM: The seen exclusion query only checked for event types:
+  article_view, article_detail_view, article_skipped, article_engaged
+
+But the iOS app's PRIMARY swipe-away event is `article_exit` (134 of 241
+events for test user = 60%). These were never excluded, so articles the
+user already swiped past kept reappearing in the feed.
+
+OLD: .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged'])
+NEW: .in('event_type', ['article_view', 'article_detail_view', 'article_skipped', 'article_engaged', 'article_exit', 'article_revisit', 'article_liked'])
+
+RISK: None. This is a pure bug fix — we were missing the most common event type.
+
+
+====================================================================
+CHANGE 4: Seen exclusion window — 72h/500 → 48h/300
+====================================================================
+FILE: pages/api/feed/main.js (seen articles query)
+
+PROBLEM: Heavy users accumulated 335 seen events in 72h. With pools of
+~200 articles, excluding 335 left almost nothing (1 article for test user).
+
+OLD: 72h window, 500 event limit
+NEW: 48h window, 300 event limit
+
+Also: client-sent seen_ids capped at last 100 (was 300).
+
+WHY 48h IS SAFE: Articles published more than 48h ago are already decayed
+by the recency scoring. Users won't recognize 2-day-old articles as "repeats"
+if they haven't seen them in the current session.
+
+RISK: Very low. Users who scrolled 300+ articles in 48h might see a repeat
+from 2 days ago, but this is extremely unlikely in production (test artifact).
+
+
+====================================================================
+CHANGE 5: DB-level seen exclusion in trending/discovery/interest queries
+====================================================================
+FILE: pages/api/feed/main.js (pool construction queries)
+
+PROBLEM: Trending query fetched TOP 400 articles by score. But the user had
+already seen the top articles. After JS-side filtering, only ~15 unseen remained
+out of 400. The LIMIT returned seen articles that were then discarded.
+
+OLD: Fetch top 400, filter seen in JS
+NEW: Add NOT IN (seen_ids) to the SQL query so LIMIT returns 400 UNSEEN articles
+
+  if (excludeIds && excludeIds.length > 0 && excludeIds.length <= 300) {
+    q = q.not('id', 'in', `(${excludeIds.join(',')})`);
+  }
+
+Applied to: trending, discovery, and interest category queries.
+The <= 300 guard prevents excessively long SQL queries.
+
+RISK: Low. Same articles are excluded, just at DB level instead of JS level.
+Results are identical but the LIMIT now returns useful articles.
+
+
+====================================================================
+CHANGE 6: Global blocklist threshold — 3 → 10 equivalent skips
+====================================================================
+FILE: pages/api/feed/main.js (entity blocklist construction)
+
+PROBLEM: Skip_profile with 410 entities at threshold 3 (weight >= 0.15)
+created a blocklist of hundreds of entities. isGlobalBlocked() rejected
+33 of 35 trending articles (94% kill rate). Test user had broad skips
+like "stock market" (0.6), "united states" (0.6), "health" (0.45).
+
+OLD: if (count >= 3) globalBlocklist.add(entity);  // weight >= 0.15
+NEW: if (count >= 10) globalBlocklist.add(entity); // weight >= 0.50
+
+WHY THIS IS SAFE: The scoring functions already apply computeSkipPenalty()
+which reduces scores proportionally to skip weights. A 0.30 skip weight
+reduces the score by 30%. The hard block is only needed for truly hated
+content (weight >= 0.50 = 10+ skips of that entity).
+
+Affected entities at old threshold (3): hundreds (stock market, health, etc.)
+Affected entities at new threshold (10): only ~5 (iran, oil prices, etc.)
+
+RISK: Users might see slightly more content with 0.15-0.49 skip weights.
+But these articles are already scored 15-49% lower, so they appear near
+the bottom of the feed, not at the top.
+
+
+====================================================================
+CHANGE 7: Category caps increased
+====================================================================
+FILE: pages/api/feed/main.js (pool construction)
+
+OLD: trendingCatMax = 8, discoveryCatMax = 6, discoveryTotalMax = 150
+NEW: trendingCatMax = 15, discoveryCatMax = 12, discoveryTotalMax = 300
+
+PROBLEM: With 8 articles per category cap, 400 raw trending articles
+were reduced to ~35 after seen exclusion + category cap. Too aggressive.
+
+RISK: Slightly less category diversity in pools. But MMR handles diversity
+during selection, so the final feed is still diverse.
+
+
+====================================================================
+CHANGE 8: Recency decay as MULTIPLIER in personal scoring — CRITICAL
+====================================================================
+FILE: pages/api/feed/main.js (scoreArticleV3 and scorePersonalV3)
+
+PROBLEM: scoreArticleV3 used recency as a tiny additive boost:
+  freshnessBoost = max(0, 0.10 * (1 - ageHours / maxHours))
+  baseScore = vectorScore*500 + quality*200 + freshnessBoost*100
+
+For a 15-day article: freshnessBoost = 0, score = 450 (vector+quality alone)
+For a 6-hour article: freshnessBoost = 0.097, score = 459 (+9 points)
+
+Meanwhile scoreTrendingV3 used recency as a MULTIPLIER:
+  score = aiScore * recencyDecay  →  15-day: 600 * 0.004 = 2.4
+
+Result: 15-day personal articles (450) outscored fresh trending (2.4).
+Feed showed 0 articles from last 24h, 23 articles older than 2 days.
+
+NEW CODE (scoreArticleV3):
+  const recencyDecay = getRecencyDecay(article.created_at, ...);
+  const baseScore = (vectorScore*500 + entityBonus*200 + quality*200 + momentum*150) * recencyDecay;
+
+NEW CODE (scorePersonalV3):
+  const base = (tagScore*350 + momentumBoost*150 + similarity*250 + (aiScore/1000)*250) * recency;
+
+15-day developing article: 450 * 0.004 = 1.8 (was 450)
+6-hour article: 450 * 0.835 = 375 (was 459)
+Fresh articles now score 200x higher than 15-day articles.
+
+RISK: This is the most impactful change. Articles lose score rapidly:
+  - 6h: 84% of score retained
+  - 24h: 70%
+  - 48h: 49%
+  - 7d: 8%
+
+For "evergreen" content type (science, health): decay is much slower:
+  - 24h: 91%, 7d: 52%, 14d: 26%
+
+The decay curves were already defined in the codebase (decayMultiplier function
+with breaking/developing/analysis/evergreen/timeless types). This change just
+applies them to personal scoring, matching how trending/discovery already worked.
+
+
+====================================================================
+CHANGE 9: Personal pool hard-capped at 7 days
+====================================================================
+FILE: pages/api/feed/main.js (tiered time filtering)
+
+PROBLEM: Tiered filter had tiers [48h, 7d, 14d] with fallback to ALL results
+if not enough articles per cluster. This let 19-day-old articles into the
+personal pool when cluster centroids were stale.
+
+OLD: tiers = [48, 168, 336], fallback: clusterFiltered = results (all ages)
+NEW: tiers = [48, 168], no fallback beyond 7 days
+
+Also reduced MIN_PER_CLUSTER from 20 to 10 (accept thinner fresh pools).
+
+RISK: Personal pool may be smaller for users with stale cluster centroids.
+But trending/discovery pools provide backup via slot filling fallbacks.
+
+
+====================================================================
+CHANGE 10: All pools capped at 7 days
+====================================================================
+FILE: pages/api/feed/main.js (pool construction queries)
+
+PROBLEM: Discovery pool had a 14d window. Old articles from discovery leaked
+into the feed through personal slot fallbacks (P slot tries pPool → tPool → dPool).
+
+OLD: Discovery .gte('created_at', 14 days ago)
+NEW: Discovery .gte('created_at', sevenDaysAgo)
+
+Trending was already 7d. Interest categories were already 7d.
+
+RISK: Pools are smaller (7d vs 14d). With 2176 articles/day and 7d window,
+that's ~15,000 candidates. After seen exclusion (300 max), still ~14,700.
+More than enough for any user.
+
+
+====================================================================
+CHANGE 11: Publisher/creator feature merge (from design terminal)
+====================================================================
+FILE: pages/api/feed/main.js, search/index.js, explore/topics.js, publishers/*
+
+Added author_id and author_name fields throughout:
+- ARTICLE_COLUMNS: added 'author_id', 'author_name'
+- POOL_COLUMNS: added 'author_id'
+- formatArticle(): added author_id, author_name to response
+- search queries: added author_id, author_name to select
+- explore topics: added author_id, author_name to article select
+
+New publisher API endpoints (4 files):
+- pages/api/publishers/discover.js
+- pages/api/publishers/[id].js
+- pages/api/publishers/[id]/articles.js
+- pages/api/publishers/[id]/follow.js
+
+Followed publisher boost in personal scoring:
+  if (article.author_id && followedPublisherIds.has(article.author_id)) {
+    score *= 1.25;
+  }
+
+RISK: None for algorithm — author fields are null for now (no publishers yet).
+The 1.25x boost only activates when a user follows a publisher AND the article
+has an author_id set. Both conditions are false for all current content.
+
+
+====================================================================
+CHANGE 12: Explore article sheet — fetch full article before showing
+====================================================================
+FILE: TenNewsApp/Views/Explore/ExploreView.swift
+
+PROBLEM: Explore articles opened with minimal data (title + image only),
+then tried to upgrade via onChange. But Article.== only checks id, so
+SwiftUI never detected the upgrade. Bullets/content never appeared.
+
+FIX: Fetch full article from /api/news/{id} BEFORE showing the sheet.
+Falls back to minimal data only if API fails.
+
+RISK: ~300ms delay between tap and sheet appearing. Acceptable tradeoff.
+
+
+====================================================================
+CHANGE 13: Explore topics interleaving
+====================================================================
+FILE: pages/api/explore/topics.js (response section)
+FILE: TenNewsApp/Views/Explore/ExploreView.swift (section headers)
+
+Instead of "For You" section then "Trending" section, topics are now
+interleaved 2:1 (2 personalized, 1 trending, repeat). Section headers
+("For You", "Trending") removed from iOS.
+
+RISK: None. Same content, different order.
+
+
+====================================================================
+CHANGE 14: AsyncCachedImage retry + Referer header
+====================================================================
+FILE: TenNewsApp/Components/AsyncCachedImage.swift
+
+Added retry logic (1 retry after 500ms) and Referer header for CDNs
+that require it. Custom URLSession with urlCache=nil to prevent
+caching failed 403 responses.
+
+RISK: None. Only affects image loading resilience.
+
+
+====================================================================
+SUMMARY OF CURRENT STATE (after all changes)
+====================================================================
+
+Pool construction:
+  - Personal: pgvector ANN search, 7-day hard cap, 10+ per cluster
+  - Trending: 7d window, score >= 500, limit 400, DB-level seen exclusion
+  - Discovery: 7d window, score >= 300, limit 800, DB-level seen exclusion
+  - Interest: 7d window, score >= 300, limit 100/category, DB-level seen exclusion
+
+Seen exclusion:
+  - Server: 48h window, 300 limit, ALL event types including article_exit
+  - Client: last 100 IDs from current session
+  - Applied at DB level (NOT IN) so LIMIT returns unseen articles
+
+Scoring:
+  - Personal (scoreArticleV3): (vector*500 + entity*200 + quality*200 + momentum*150) * recencyDecay * skipMultiplier
+  - Personal (scorePersonalV3): (tagScore*350 + momentum*150 + similarity*250 + quality*250) * recencyDecay * (1 - skipPenalty)
+  - Trending: aiScore * recencyDecay * skipMultiplier
+  - Discovery: aiScore * recencyDecay * categoryBoost * surprise * skipMultiplier
+
+Global blocklist:
+  - Threshold: weight >= 0.50 (10 equivalent skips)
+  - Only hard-blocks truly hated entities
+  - Lighter skip signals handled by scoring penalty
+
+Category caps:
+  - Trending: 15 per category
+  - Discovery: 12 per category, 300 total
+
+has_more:
+  - True only when: full page filled AND remaining pool > page size
+  - iOS recovery: retries after 2 minutes if stuck at false
+
+Slot pattern: P P T P P S P P T S (unchanged)
+MMR: lambda 0.7 personal, 0.70 trending, 0.4-0.5 discovery (unchanged)
+Duplicate ceiling: 0.82 cosine similarity (unchanged)

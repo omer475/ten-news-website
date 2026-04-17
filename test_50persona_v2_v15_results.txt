@@ -1,0 +1,635 @@
+═══════════════════════════════════════════════════════
+  50-PERSONA FEED LEARNING TEST v2
+  Tags chosen from actual content pool (20+ articles)
+  5 pages per persona, full engagement simulation
+═══════════════════════════════════════════════════════
+Started: 2026-03-21T22:04:17.619Z
+
+
+[1/50] Maria (brazil)
+  Onboarding: [sports, entertainment, politics]
+  Wants: [soccer, premier league, liverpool, atletico madrid]
+
+[2/50] Jake (usa)
+  Onboarding: [sports, business, tech]
+  Wants: [nfl, football, super bowl]
+
+[3/50] Tom (usa)
+  Onboarding: [sports, entertainment, finance]
+  Wants: [nba, basketball, march madness, college basketball]
+
+[4/50] Aiden (australia)
+  Onboarding: [sports, science, health]
+  Wants: [baseball, mlb, world baseball classic]
+
+[5/50] Takeshi (japan)
+  Onboarding: [sports, tech, entertainment]
+  Wants: [formula one, mclaren, chinese grand prix]
+  Searched: [premier league, liverpool transfer, soccer results]
+  Searched: [mlb standings, baseball trades, world baseball classic]
+  Searched: [nfl draft, football highlights, super bowl]
+  Searched: [nba standings, march madness bracket, basketball playoffs]
+  Searched: [formula one standings, mclaren, chinese grand prix]
+  P1:   5% match (1/20) ✗ | L:0 E:1 S:13 | Sports:4 Tech:4 Entertainment:4
+  P1:   5% match (1/20) ✗ | L:1 E:0 S:16 | Science:4 Sports:3 Tech:3
+  P1:  15% match (3/20) · | L:1 E:2 S:14 | Sports:6 Politics:3 Entertainment:3
+  P1:  10% match (2/20) · | L:0 E:2 S:15 | Sports:5 Business:3 Entertainment:3
+  P1:  20% match (4/20) ▲ | L:4 E:0 S:15 | Sports:8 Science:5 Health:3
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:16 | Politics:7 Sports:3 Entertainment:3
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:19 | Sports:5 Business:3 Entertainment:3
+  P2:  10% match (2/20) · | L:0 E:1 S:15 | Sports:4 Business:4 Finance:4
+  P2:  15% match (3/20) · | L:1 E:2 S:16 | Sports:6 Politics:5 Entertainment:3
+  P2:  25% match (5/20) ▲ | L:1 E:4 S:13 | Sports:8 Science:4 Health:4
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:18 | Entertainment:5 Tech:4 Politics:3
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:18 | Sports:6 Finance:4 Entertainment:3
+  P3:  10% match (2/20) · | L:1 E:1 S:15 | Business:5 Politics:4 Tech:3
+  P3:  30% match (6/20) ▲ | L:3 E:2 S:11 | Sports:7 Politics:4 Entertainment:3
+  P3:  30% match (6/20) ▲ | L:4 E:2 S:13 | Sports:8 Health:5 Science:4
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:17 | Politics:6 Entertainment:4 Sports:4
+  P4:  10% match (2/20) · | L:1 E:1 S:14 | Sports:8 Politics:3 Health:2
+  P4:  20% match (4/20) ▲ | L:2 E:2 S:13 | Finance:6 Politics:5 Business:3
+  P4:  15% match (3/20) · | L:1 E:2 S:13 | Science:8 Sports:7 Health:2
+  P4:  25% match (5/20) ▲ | L:1 E:4 S:14 | Sports:8 Politics:4 Entertainment:4
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:16 | Sports:6 Entertainment:5 Politics:3
+  ❌ NO CHANGE | P1→P5: 5%→0% (avg 3→0, -3) | tags:15 skips:275 | search:3/3
+  P5:  25% match (5/20) ▲ | L:2 E:2 S:13 | Sports:8 World:4 Science:3
+  ✅ LEARNED | P1→P5: 10%→25% (avg 5→18, +13) | tags:45 skips:310 | search:3/3
+  P5:  20% match (4/20) ▲ | L:3 E:1 S:15 | Politics:5 Finance:5 Business:3
+  ✅ LEARNED | P1→P5: 5%→20% (avg 8→20, +13) | tags:54 skips:320 | search:3/3
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:16 | Sports:8 Science:6 Business:1
+  ❌ NO CHANGE | P1→P5: 20%→15% (avg 23→8, -15) | tags:41 skips:305 | search:3/3
+  P5:  30% match (6/20) ▲ | L:5 E:1 S:10 | Sports:8 World:5 Science:3
+  ✅ LEARNED | P1→P5: 15%→30% (avg 15→28, +13) | tags:67 skips:303 | search:2/3
+
+[6/50] Henrik (germany)
+  Onboarding: [sports, politics, business]
+  Wants: [nhl hockey]
+
+[7/50] Pedro (brazil)
+  Onboarding: [sports, lifestyle, entertainment]
+  Wants: [soccer, atletico madrid, real betis, bundesliga]
+
+[8/50] Ahmed (turkiye)
+  Onboarding: [sports, politics, business]
+  Wants: [soccer, turkey, premier league, world cup 2026]
+
+[9/50] James (usa)
+  Onboarding: [politics, finance, business]
+  Wants: [donald trump, united states, government, politics]
+
+[10/50] Fatima (turkiye)
+  Onboarding: [politics, entertainment, lifestyle]
+  Wants: [iran, middle east, israel, war]
+  Searched: [nhl playoffs, hockey standings, nhl trade deadline]
+  Searched: [turkey football, premier league table, world cup 2026]
+  Searched: [trump news, us government, congress vote]
+  Searched: [iran news, middle east conflict, israel gaza]
+  Searched: [atletico madrid, bundesliga results, la liga]
+  P1:   0% match (0/20) ✗ | L:0 E:0 S:16 | Politics:7 Sports:3 Business:3
+  P1:  15% match (3/20) · | L:0 E:3 S:15 | Politics:5 Sports:4 Business:4
+  P1:  20% match (4/20) ▲ | L:0 E:3 S:14 | Politics:5 Health:4 Science:4
+  P1:  30% match (6/20) ▲ | L:1 E:4 S:11 | Sports:7 Entertainment:3 Lifestyle:3
+  P1:  30% match (6/20) ▲ | L:2 E:3 S:12 | Politics:4 Science:3 Business:3
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:16 | Politics:7 Business:4 Sports:3
+  P2:  15% match (3/20) · | L:1 E:2 S:14 | Sports:6 Finance:4 Politics:4
+  P2:  30% match (6/20) ▲ | L:3 E:3 S:8 | Business:5 Finance:4 Science:3
+  P2:  15% match (3/20) · | L:0 E:3 S:14 | Entertainment:5 Business:4 Politics:4
+  P2:  35% match (7/20) ▲ | L:2 E:5 S:12 | Sports:8 Health:3 Tech:2
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:17 | Politics:5 Sports:4 Finance:4
+  P3:  15% match (3/20) · | L:0 E:3 S:13 | Sports:5 Business:5 Politics:4
+  P3:  35% match (7/20) ▲ | L:0 E:6 S:10 | Business:6 Politics:4 Health:3
+  P3:  35% match (7/20) ▲ | L:1 E:6 S:10 | Business:5 Entertainment:4 Lifestyle:3
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:18 | Business:6 Sports:5 Finance:4
+  P3:  30% match (6/20) ▲ | L:1 E:5 S:13 | Sports:8 Tech:3 Health:2
+  P4:  20% match (4/20) ▲ | L:2 E:2 S:15 | Sports:8 Business:4 Politics:3
+  P5:   5% match (1/20) ✗ | L:0 E:0 S:12 | Sports:8 Science:4 World:2
+  ❌ NO CHANGE | P1→P5: 0%→5% (avg 0→3, +3) | tags:15 skips:314 | search:3/3
+  P4:  40% match (8/20) ★ | L:3 E:5 S:12 | Politics:5 Business:5 Finance:5
+  P4:  30% match (6/20) ▲ | L:3 E:3 S:11 | Sports:8 Entertainment:5 Lifestyle:3
+  P4:  45% match (9/20) ★ | L:3 E:6 S:11 | Entertainment:5 Politics:5 Lifestyle:4
+  P5:  25% match (5/20) ▲ | L:1 E:4 S:14 | Sports:8 World:4 Science:3
+  🔄 PIVOT | P1→P5: 15%→25% (avg 15→23, +8) | tags:72 skips:294 | search:3/3
+  P5:  30% match (6/20) ▲ | L:1 E:5 S:13 | Business:8 Finance:5 Politics:2
+  🔄 PIVOT | P1→P5: 20%→30% (avg 25→35, +10) | tags:112 skips:248 | search:3/3
+  P5:  40% match (8/20) ★ | L:4 E:4 S:11 | Sports:8 World:4 Lifestyle:3
+  ❌ NO CHANGE | P1→P5: 30%→40% (avg 33→35, +3) | tags:91 skips:272 | search:3/3
+  P5:  40% match (8/20) ★ | L:2 E:6 S:12 | Finance:8 Business:4 Entertainment:3
+  ✅ LEARNED | P1→P5: 30%→40% (avg 23→43, +20) | tags:120 skips:284 | search:3/3
+
+[11/50] Chen (japan)
+  Onboarding: [politics, tech, finance]
+  Wants: [china, japan, geopolitics, international relations]
+
+[12/50] Viktor (germany)
+  Onboarding: [politics, sports, business]
+  Wants: [russia, putin, ukraine, ukraine war]
+
+[13/50] Nadia (turkiye)
+  Onboarding: [politics, business, entertainment]
+  Wants: [turkey, middle east, iran, military]
+
+[14/50] Emma (uk)
+  Onboarding: [politics, health, science]
+  Wants: [european union, geopolitics, international relations]
+
+[15/50] Yara (turkiye)
+  Onboarding: [entertainment, politics, health]
+  Wants: [oscars, movies, film, academy awards, awards]
+  Searched: [turkey politics, middle east military, iran turkey]
+  Searched: [china japan relations, geopolitics asia, international relations]
+  Searched: [european union policy, eu geopolitics, international summit]
+  Searched: [russia ukraine, putin news, ukraine war update]
+  Searched: [oscar nominations, best movies, academy awards]
+  P1:  10% match (2/20) · | L:1 E:1 S:14 | Politics:4 Health:4 Sports:3
+  P1:  15% match (3/20) · | L:1 E:1 S:16 | Business:6 Politics:5 Science:4
+  P1:  25% match (5/20) ▲ | L:1 E:4 S:14 | Entertainment:7 Politics:3 Health:3
+  P1:  30% match (6/20) ▲ | L:0 E:6 S:13 | Science:5 Business:4 Politics:4
+  P1:  35% match (7/20) ▲ | L:2 E:5 S:11 | Politics:7 Entertainment:3 Business:2
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:16 | Business:8 Politics:5 Science:2
+  P2:  20% match (4/20) ▲ | L:2 E:2 S:13 | Business:8 Politics:5 Science:4
+  P2:  10% match (2/20) · | L:0 E:2 S:17 | Science:5 Politics:4 Business:4
+  P2:  30% match (6/20) ▲ | L:4 E:2 S:11 | Entertainment:8 Politics:4 Health:3
+  P2:  15% match (3/20) · | L:0 E:3 S:16 | Finance:6 Politics:3 Entertainment:3
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:15 | Politics:5 Finance:4 Business:3
+  P3:  10% match (2/20) · | L:0 E:1 S:17 | Science:5 Health:5 Politics:5
+  P3:   5% match (1/20) ✗ | L:1 E:0 S:17 | Business:4 Science:4 Politics:3
+  P3:  25% match (5/20) ▲ | L:1 E:4 S:15 | Business:5 Finance:5 Politics:3
+  P3:  35% match (7/20) ▲ | L:3 E:4 S:12 | Entertainment:8 Health:5 Tech:3
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:17 | Politics:6 Sports:4 Health:3
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:19 | Health:6 Science:6 Politics:6
+  P4:  25% match (5/20) ▲ | L:1 E:3 S:12 | Politics:8 Tech:7 Science:2
+  P5:   5% match (1/20) ✗ | L:1 E:0 S:14 | Sports:7 Politics:5 Finance:4
+  ❌ NO CHANGE | P1→P5: 10%→5% (avg 5→3, -3) | tags:24 skips:333 | search:3/3
+  P4:  30% match (6/20) ▲ | L:2 E:3 S:13 | Entertainment:8 Business:4 Science:3
+  P4:  50% match (10/20) ★ | L:3 E:6 S:7 | Business:7 Finance:5 Entertainment:3
+  P5:   5% match (1/20) ✗ | L:1 E:0 S:16 | Politics:8 Health:5 Science:3
+  ❌ NO CHANGE | P1→P5: 15%→5% (avg 18→3, -15) | tags:43 skips:341 | search:3/3
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:17 | Tech:8 Politics:8 Entertainment:1
+  ❌ NO CHANGE | P1→P5: 30%→25% (avg 20→13, -8) | tags:61 skips:307 | search:3/3
+  P5:  40% match (8/20) ★ | L:2 E:6 S:12 | Entertainment:8 World:3 Politics:2
+  🔄 PIVOT | P1→P5: 25%→40% (avg 28→35, +8) | tags:105 skips:273 | search:3/3
+  P5:  40% match (8/20) ★ | L:0 E:8 S:11 | Finance:7 Business:5 Entertainment:3
+  ✅ LEARNED | P1→P5: 35%→40% (avg 25→45, +20) | tags:101 skips:274 | search:3/3
+
+[16/50] Ines (spain)
+  Onboarding: [entertainment, lifestyle, tech]
+  Wants: [television, streaming, netflix, series]
+
+[17/50] Kenji (japan)
+  Onboarding: [entertainment, tech, sports]
+  Wants: [video games, gaming]
+
+[18/50] Liam (uk)
+  Onboarding: [entertainment, sports, politics]
+  Wants: [celebrities, fashion, entertainment]
+
+[19/50] Sophie (france)
+  Onboarding: [entertainment, lifestyle, health]
+  Wants: [music, entertainment, awards]
+
+[20/50] Sarah (usa)
+  Onboarding: [tech, business, health]
+  Wants: [artificial intelligence, video games]
+  Searched: [video games releases, gaming news, ps5 games]
+  Searched: [celebrity news, fashion week, entertainment gossip]
+  Searched: [netflix new releases, streaming shows, tv series]
+  Searched: [music awards, new album releases, grammy]
+  Searched: [artificial intelligence news, ai regulation, chatgpt]
+  P1:   0% match (0/20) ✗ | L:0 E:0 S:16 | Sports:3 Science:3 Politics:3
+  P1:  10% match (2/20) · | L:1 E:1 S:16 | Politics:3 Science:3 Health:3
+  P1:  15% match (3/20) · | L:1 E:2 S:15 | Entertainment:6 Tech:3 Science:3
+  P1:  15% match (3/20) · | L:1 E:1 S:16 | Entertainment:6 Health:4 Tech:2
+  P1:  30% match (6/20) ▲ | L:2 E:4 S:10 | Tech:4 Politics:4 Science:3
+  P2:   5% match (1/20) ✗ | L:0 E:1 S:15 | Tech:4 Business:4 Sports:3
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:16 | Politics:4 Lifestyle:4 Science:3
+  P2:  25% match (5/20) ▲ | L:2 E:2 S:12 | Entertainment:6 Tech:5 Health:3
+  P2:  10% match (2/20) · | L:0 E:2 S:16 | Tech:5 Politics:4 Health:4
+  P2:  15% match (3/20) · | L:1 E:2 S:16 | Entertainment:8 Health:5 Lifestyle:2
+  P3:  20% match (4/20) ▲ | L:1 E:2 S:14 | Entertainment:6 Tech:6 Sports:3
+  P3:   5% match (1/20) ✗ | L:1 E:0 S:14 | Politics:3 Lifestyle:3 Business:3
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:15 | Lifestyle:8 Tech:4 Entertainment:3
+  P3:  15% match (3/20) · | L:1 E:2 S:15 | Tech:6 Health:5 Business:3
+  P3:  30% match (6/20) ▲ | L:4 E:2 S:12 | Entertainment:8 Health:3 Lifestyle:2
+  P4:   5% match (1/20) ✗ | L:1 E:0 S:16 | Tech:6 Entertainment:5 Lifestyle:5
+  P4:  10% match (2/20) · | L:1 E:1 S:16 | Lifestyle:7 Business:3 Sports:2
+  P4:  20% match (4/20) ▲ | L:1 E:3 S:16 | Tech:7 Entertainment:4 Sports:4
+  P4:  30% match (6/20) ▲ | L:1 E:5 S:11 | Tech:8 Politics:5 Health:4
+  P4:  25% match (5/20) ▲ | L:2 E:3 S:14 | Entertainment:8 Lifestyle:4 World:4
+  P5:  10% match (2/20) · | L:1 E:1 S:16 | Lifestyle:8 Entertainment:6 Science:2
+  ❌ NO CHANGE | P1→P5: 15%→10% (avg 20→8, -13) | tags:51 skips:331 | search:3/3
+  P5:  10% match (2/20) · | L:1 E:1 S:15 | Sports:6 Entertainment:4 Lifestyle:3
+  ❌ NO CHANGE | P1→P5: 10%→10% (avg 5→10, +5) | tags:34 skips:348 | search:3/3
+  P5:  25% match (5/20) ▲ | L:3 E:2 S:14 | Sports:7 Entertainment:5 Tech:3
+  ✅ LEARNED | P1→P5: 0%→25% (avg 3→23, +20) | tags:48 skips:304 | search:3/3
+  P5:  30% match (6/20) ▲ | L:1 E:4 S:11 | Tech:8 Health:4 Business:3
+  🔄 PIVOT | P1→P5: 30%→30% (avg 20→30, +10) | tags:99 skips:291 | search:3/3
+  P5:  25% match (5/20) ▲ | L:2 E:3 S:14 | Entertainment:8 Lifestyle:5 Sports:2
+  🔄 PIVOT | P1→P5: 15%→25% (avg 15→25, +10) | tags:80 skips:339 | search:3/3
+
+[21/50] Raj (india)
+  Onboarding: [sports, entertainment, lifestyle]
+  Wants: [artificial intelligence, china, geopolitics]
+
+[22/50] Diego (mexico)
+  Onboarding: [entertainment, sports, lifestyle]
+  Wants: [politics, donald trump, united states, government]
+
+[23/50] Priya (india)
+  Onboarding: [tech, finance, crypto]
+  Wants: [soccer, premier league, basketball, nba]
+
+[24/50] Omar (turkiye)
+  Onboarding: [business, finance, crypto]
+  Wants: [iran, middle east, military, war]
+
+[25/50] Lucas (germany)
+  Onboarding: [politics, science, health]
+  Wants: [nfl, football, basketball, nba]
+  Searched: [trump policy, us politics, government shutdown]
+  Searched: [iran military, middle east war, strait of hormuz]
+  Searched: [ai breakthrough, china tech, geopolitics ai]
+  Searched: [premier league scores, nba results, soccer transfer]
+  Searched: [nfl scores, football highlights, nba game]
+  P1:  30% match (6/20) ▲ | L:2 E:4 S:12 | Sports:7 Science:3 Business:2
+  P1:  30% match (6/20) ▲ | L:2 E:4 S:12 | Entertainment:4 Politics:3 Sports:3
+  P1:  30% match (6/20) ▲ | L:2 E:4 S:13 | Sports:5 Politics:5 Science:4
+  P1:  50% match (10/20) ★ | L:3 E:7 S:7 | Finance:6 Politics:5 Business:4
+  P1:  45% match (9/20) ★ | L:4 E:5 S:11 | Politics:5 Tech:3 Sports:2
+  P2:  15% match (3/20) · | L:1 E:2 S:6 | Entertainment:5 Sports:4 Politics:4
+  P2:  25% match (5/20) ▲ | L:0 E:3 S:12 | Finance:6 Business:5 Politics:3
+  P2:  30% match (6/20) ▲ | L:2 E:4 S:12 | Sports:6 Science:3 Business:3
+  P2:  30% match (6/20) ▲ | L:1 E:5 S:11 | Sports:8 Politics:3 Science:3
+  P2:  30% match (6/20) ▲ | L:0 E:6 S:12 | Politics:4 Tech:3 Health:3
+  P3:  35% match (7/20) ▲ | L:2 E:5 S:12 | Politics:6 Entertainment:4 Sports:3
+  P3:  15% match (3/20) · | L:0 E:3 S:15 | Finance:6 Sports:3 Tech:3
+  P3:   5% match (1/20) ✗ | L:0 E:1 S:17 | Politics:6 Health:4 Science:3
+  P3:  35% match (7/20) ▲ | L:1 E:6 S:12 | Business:8 Finance:8 Politics:2
+  P3:  25% match (5/20) ▲ | L:2 E:3 S:15 | Lifestyle:6 Tech:5 Entertainment:4
+  P4:   5% match (1/20) ✗ | L:0 E:0 S:15 | Politics:6 Health:4 Sports:4
+  P4:  35% match (7/20) ▲ | L:3 E:4 S:12 | Politics:6 Business:6 Sports:4
+  P4:  25% match (5/20) ▲ | L:3 E:2 S:14 | Sports:5 Tech:4 Finance:4
+  P4:  25% match (5/20) ▲ | L:1 E:3 S:11 | Lifestyle:5 Tech:4 Sports:4
+  P4:  55% match (11/20) ★ | L:2 E:8 S:8 | Finance:8 Politics:3 Business:3
+  P5:  25% match (5/20) ▲ | L:2 E:3 S:14 | Politics:5 Science:5 Sports:5
+  ❌ NO CHANGE | P1→P5: 30%→25% (avg 30→15, -15) | tags:80 skips:299 | search:3/3
+  P5:  30% match (6/20) ▲ | L:2 E:3 S:13 | Sports:7 Tech:4 Finance:3
+  ❌ NO CHANGE | P1→P5: 30%→30% (avg 30→28, -3) | tags:100 skips:262 | search:3/3
+  P5:  45% match (9/20) ★ | L:5 E:3 S:9 | Politics:6 Business:5 Sports:4
+  ✅ LEARNED | P1→P5: 30%→45% (avg 23→40, +18) | tags:127 skips:245 | search:3/3
+  P5:  25% match (5/20) ▲ | L:1 E:4 S:14 | Tech:6 Entertainment:4 Sports:2
+  ❌ NO CHANGE | P1→P5: 45%→25% (avg 38→25, -13) | tags:117 skips:295 | search:3/3
+  P5:  50% match (10/20) ★ | L:3 E:7 S:8 | Business:7 Politics:6 Finance:3
+  ✅ LEARNED | P1→P5: 50%→50% (avg 38→53, +15) | tags:121 skips:215 | search:3/3
+
+[26/50] Nina (germany)
+  Onboarding: [politics, sports, entertainment]
+  Wants: [russia, ukraine war, putin, military]
+
+[27/50] Alex (uk)
+  Onboarding: [finance, tech, crypto]
+  Wants: [oil prices, energy, business]
+
+[28/50] David (usa)
+  Onboarding: [health, science, tech]
+  Wants: [artificial intelligence, video games, television]
+
+[29/50] Laura (germany)
+  Onboarding: [health, lifestyle, entertainment]
+  Wants: [politics, european union, international relations]
+
+[30/50] Michael (usa)
+  Onboarding: [finance, business, tech]
+  Wants: [basketball, nba, march madness, college basketball]
+  Searched: [oil prices today, energy crisis, opec meeting]
+  Searched: [ai news, video game releases, tv shows]
+  Searched: [nba playoffs, march madness, college basketball rankings]
+  Searched: [eu news, european politics, international summit]
+  Searched: [russia news, ukraine war update, putin speech]
+  P1:   5% match (1/20) ✗ | L:0 E:1 S:16 | Sports:3 Politics:3 Science:3
+  P1:  20% match (4/20) ▲ | L:2 E:2 S:12 | Science:4 Sports:4 Business:3
+  P1:  20% match (4/20) ▲ | L:0 E:4 S:14 | Entertainment:3 Health:3 Science:3
+  P1:  20% match (4/20) ▲ | L:1 E:2 S:14 | Science:4 Politics:4 Tech:3
+  P1:  35% match (7/20) ▲ | L:1 E:6 S:8 | Business:7 Science:4 Tech:3
+  P2:   0% match (0/20) ✗ | L:0 E:0 S:18 | Politics:5 Sports:3 Tech:3
+  P2:  20% match (4/20) ▲ | L:0 E:4 S:13 | Sports:4 Tech:4 Finance:4
+  P2:  20% match (4/20) ▲ | L:2 E:1 S:13 | Business:6 Politics:4 Health:4
+  P2:  15% match (3/20) · | L:3 E:0 S:15 | Tech:5 Science:4 Business:3
+  P2:  40% match (8/20) ★ | L:2 E:6 S:12 | Business:6 Finance:5 Science:3
+  P3:  15% match (3/20) · | L:0 E:3 S:15 | Politics:5 Tech:3 Sports:3
+  P3:   5% match (1/20) ✗ | L:0 E:1 S:16 | Tech:5 Business:5 Finance:4
+  P3:  20% match (4/20) ▲ | L:1 E:3 S:12 | Tech:5 Health:4 Politics:3
+  P3:  25% match (5/20) ▲ | L:3 E:1 S:12 | Business:6 Entertainment:4 Health:3
+  P3:  20% match (4/20) ▲ | L:3 E:1 S:14 | Tech:6 Politics:5 Business:4
+  P4:   5% match (1/20) ✗ | L:0 E:1 S:16 | Business:6 Sports:4 Entertainment:4
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:19 | Business:6 Tech:5 Finance:4
+  P4:  25% match (5/20) ▲ | L:2 E:2 S:14 | Tech:7 Politics:4 Health:4
+  P4:  30% match (6/20) ▲ | L:2 E:4 S:12 | Entertainment:6 Politics:4 Health:2
+  P4:  30% match (6/20) ▲ | L:2 E:4 S:11 | Finance:6 Tech:5 Politics:5
+  P5:   0% match (0/18) ✗ | L:0 E:0 S:15 | Politics:3 Sports:3 Finance:2
+  ❌ NO CHANGE | P1→P5: 20%→0% (avg 20→0, -20) | tags:47 skips:320 | search:3/3
+  P5:  15% match (3/20) · | L:2 E:1 S:14 | Sports:8 Business:3 Science:3
+  🔄 PIVOT | P1→P5: 5%→15% (avg 3→10, +8) | tags:42 skips:337 | search:3/3
+  P5:  25% match (5/20) ▲ | L:2 E:3 S:12 | Tech:8 Science:5 Health:3
+  🔄 PIVOT | P1→P5: 20%→25% (avg 18→25, +8) | tags:96 skips:327 | search:3/3
+  P5:  30% match (6/20) ▲ | L:0 E:6 S:12 | Politics:5 Entertainment:4 Lifestyle:3
+  🔄 PIVOT | P1→P5: 20%→30% (avg 20→30, +10) | tags:97 skips:290 | search:3/3
+  P5:  20% match (4/20) ▲ | L:0 E:4 S:15 | Finance:8 Tech:4 Politics:3
+  ❌ NO CHANGE | P1→P5: 35%→20% (avg 38→25, -13) | tags:103 skips:258 | search:3/3
+
+[31/50] Hana (japan)
+  Onboarding: [entertainment, lifestyle, tech]
+  Wants: [japan, television, movies, film]
+
+[32/50] Marco (france)
+  Onboarding: [business, politics, finance]
+  Wants: [oil prices, energy, european union, geopolitics]
+
+[33/50] Robert (usa)
+  Onboarding: [business, tech, finance]
+  Wants: [donald trump, politics, government, united states]
+
+[34/50] Tina (usa)
+  Onboarding: [business, tech, entertainment]
+  Wants: [artificial intelligence, china, japan, geopolitics]
+
+[35/50] Emre (turkiye)
+  Onboarding: [sports, tech, business]
+  Wants: [soccer, turkey, formula one, premier league]
+  Searched: [oil prices, energy market, eu energy policy]
+  Searched: [japanese movies, japan entertainment, tokyo film]
+  Searched: [galatasaray, formula one race, premier league]
+  Searched: [trump business, us politics, government regulation]
+  Searched: [ai china, japan technology, geopolitics tech]
+  P1:  25% match (5/20) ▲ | L:0 E:5 S:10 | Entertainment:7 Science:3 Tech:2
+  P1:  20% match (4/20) ▲ | L:1 E:3 S:15 | Sports:5 Science:4 Tech:3
+  P1:  30% match (6/20) ▲ | L:1 E:5 S:11 | Business:8 Politics:5 Finance:3
+  P1:  35% match (7/20) ▲ | L:1 E:6 S:9 | Science:5 Business:3 Politics:3
+  P1:  30% match (6/20) ▲ | L:3 E:3 S:13 | Politics:5 Tech:4 Business:3
+  P2:  15% match (3/20) · | L:1 E:2 S:15 | Sports:6 Business:4 Tech:3
+  P2:  35% match (7/20) ▲ | L:0 E:7 S:8 | Politics:7 Business:7 Finance:3
+  P2:  30% match (6/20) ▲ | L:1 E:5 S:12 | Entertainment:8 Science:5 Health:2
+  P2:  30% match (6/20) ▲ | L:3 E:1 S:12 | Business:5 Finance:4 Politics:3
+  P2:  40% match (8/20) ★ | L:4 E:4 S:11 | Tech:6 Business:5 Politics:4
+  P3:  30% match (6/20) ▲ | L:3 E:3 S:10 | Entertainment:8 Tech:4 Science:3
+  P3:  30% match (6/20) ▲ | L:2 E:4 S:14 | Sports:8 Tech:2 Business:2
+  P3:  35% match (7/20) ▲ | L:4 E:3 S:12 | Finance:7 Politics:6 Business:3
+  P3:  30% match (6/20) ▲ | L:3 E:3 S:13 | Business:5 Entertainment:4 Politics:4
+  P3:  45% match (9/20) ★ | L:1 E:8 S:11 | Politics:6 Tech:5 Business:4
+  P4:  40% match (8/20) ★ | L:1 E:6 S:9 | Entertainment:8 Politics:3 Tech:2
+  P4:  35% match (7/20) ▲ | L:1 E:6 S:12 | Sports:8 Business:4 Tech:3
+  P4:  40% match (8/20) ★ | L:2 E:6 S:10 | Finance:8 Politics:6 Business:4
+  P4:  40% match (8/20) ★ | L:2 E:6 S:11 | Tech:7 Science:4 Entertainment:3
+  P4:  35% match (7/20) ▲ | L:1 E:6 S:12 | Finance:6 Politics:4 Tech:4
+  P5:  25% match (5/20) ▲ | L:1 E:4 S:12 | Entertainment:8 Science:3 World:3
+  ❌ NO CHANGE | P1→P5: 25%→25% (avg 28→33, +5) | tags:103 skips:230 | search:3/3
+  P5:  10% match (2/20) · | L:0 E:2 S:14 | Science:6 Tech:4 Business:4
+  ❌ NO CHANGE | P1→P5: 35%→10% (avg 33→25, -8) | tags:124 skips:242 | search:3/3
+  P5:  35% match (7/20) ▲ | L:4 E:2 S:13 | Sports:8 Business:3 Tech:2
+  ✅ LEARNED | P1→P5: 20%→35% (avg 18→35, +18) | tags:81 skips:319 | search:3/3
+  P5:  40% match (8/20) ★ | L:0 E:7 S:11 | Finance:7 Business:6 Politics:3
+  🔄 PIVOT | P1→P5: 30%→40% (avg 33→40, +8) | tags:114 skips:218 | search:3/3
+  P5:  35% match (7/20) ▲ | L:5 E:2 S:12 | Business:7 Politics:4 Finance:4
+  ❌ NO CHANGE | P1→P5: 30%→35% (avg 35→35, 0) | tags:132 skips:246 | search:3/3
+
+[36/50] Carlos (spain)
+  Onboarding: [sports, entertainment, business]
+  Wants: [basketball, nba, march madness]
+
+[37/50] Yuki (japan)
+  Onboarding: [sports, entertainment, tech]
+  Wants: [baseball, mlb, japan]
+
+[38/50] Aisha (turkiye)
+  Onboarding: [sports, politics, entertainment]
+  Wants: [soccer, turkey, atletico madrid, world cup 2026]
+
+[39/50] Eric (usa)
+  Onboarding: [politics, sports, entertainment]
+  Wants: [iran, israel, middle east, war, military]
+
+[40/50] Anna (germany)
+  Onboarding: [politics, lifestyle, health]
+  Wants: [ukraine, russia, putin, ukraine war]
+  Searched: [mlb results, japanese baseball, world baseball]
+  Searched: [nba trade, march madness upset, basketball highlights]
+  Searched: [turkey soccer, world cup qualifiers, atletico madrid]
+  Searched: [ukraine update, russia sanctions, putin]
+  Searched: [iran news, israel conflict, middle east war]
+  P1:  20% match (4/20) ▲ | L:1 E:1 S:12 | Sports:6 Tech:3 Entertainment:3
+  P1:   5% match (1/20) ✗ | L:1 E:0 S:18 | Politics:4 Health:4 Entertainment:3
+  P1:  20% match (4/20) ▲ | L:1 E:3 S:15 | Sports:7 Entertainment:2 Business:2
+  P1:  25% match (5/20) ▲ | L:2 E:3 S:14 | Sports:8 Politics:3 Entertainment:2
+  P1:  25% match (5/20) ▲ | L:1 E:4 S:13 | Politics:4 Health:4 Science:3
+  P2:   5% match (1/20) ✗ | L:0 E:1 S:15 | Politics:8 Health:4 Business:3
+  P2:  15% match (3/20) · | L:1 E:1 S:16 | Sports:8 Entertainment:3 Politics:3
+  P2:  20% match (4/20) ▲ | L:3 E:1 S:14 | Sports:6 Tech:3 Business:3
+  P2:  30% match (6/20) ▲ | L:1 E:5 S:11 | Sports:8 Politics:4 Tech:3
+  P2:  25% match (5/20) ▲ | L:0 E:5 S:15 | Entertainment:5 Politics:4 Business:3
+  P3:   0% match (0/20) ✗ | L:0 E:0 S:15 | Business:6 Politics:5 Health:3
+  P3:  25% match (5/20) ▲ | L:5 E:0 S:11 | Sports:8 Tech:4 Entertainment:3
+  P3:   5% match (1/20) ✗ | L:0 E:1 S:17 | Entertainment:5 Sports:4 Business:4
+  P3:  30% match (6/20) ▲ | L:4 E:1 S:11 | Sports:8 Politics:4 Tech:3
+  P3:  35% match (7/20) ▲ | L:1 E:5 S:10 | Politics:6 Business:4 Sports:4
+  P4:   0% match (0/20) ✗ | L:0 E:0 S:17 | Politics:8 Lifestyle:6 Health:3
+  P4:   0% match (0/0) ✗ | L:0 E:0 S:0 | 
+  P4:  10% match (2/20) · | L:0 E:2 S:15 | Entertainment:6 Tech:5 Sports:5
+  P5:   7% match (1/14) ✗ | L:0 E:1 S:9 | Lifestyle:6 Politics:3 Health:2
+  ❌ NO CHANGE | P1→P5: 5%→7% (avg 5→4, -1) | tags:20 skips:321 | search:3/3
+  P4:  40% match (8/20) ★ | L:2 E:4 S:8 | Sports:8 Politics:4 Entertainment:4
+  P4:  40% match (8/20) ★ | L:1 E:7 S:8 | Business:6 Sports:4 Entertainment:4
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:16 | Sports:8 Business:6 Politics:2
+  ❌ NO CHANGE | P1→P5: 20%→0% (avg 20→0, -20) | tags:48 skips:276 | search:3/3
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:17 | Sports:8 Tech:7 Science:2
+  ❌ NO CHANGE | P1→P5: 20%→10% (avg 18→5, -13) | tags:40 skips:318 | search:3/3
+  P5:  35% match (7/20) ▲ | L:2 E:3 S:12 | Sports:8 Entertainment:4 Science:3
+  🔄 PIVOT | P1→P5: 25%→35% (avg 28→38, +10) | tags:86 skips:257 | search:3/3
+  P5:  30% match (6/20) ▲ | L:2 E:3 S:11 | Finance:8 Business:4 Sports:4
+  🔄 PIVOT | P1→P5: 25%→30% (avg 25→35, +10) | tags:116 skips:261 | search:3/3
+
+[41/50] Dmitri (germany)
+  Onboarding: [politics, tech, science]
+  Wants: [china, geopolitics, international relations, japan]
+
+[42/50] Tyler (usa)
+  Onboarding: [entertainment, sports, politics]
+  Wants: [oscars, film, movies, academy awards, science fiction]
+
+[43/50] Jessica (usa)
+  Onboarding: [entertainment, health, lifestyle]
+  Wants: [television, netflix, streaming, celebrities]
+
+[44/50] Kim2 (japan)
+  Onboarding: [entertainment, tech, lifestyle]
+  Wants: [video games, japan, television]
+
+[45/50] Rachel (usa)
+  Onboarding: [lifestyle, health, science]
+  Wants: [politics, donald trump, government, crime]
+  Searched: [video games japan, gaming reviews, japanese tv]
+  Searched: [trump latest, government news, crime news]
+  Searched: [china politics, asian geopolitics, japan china]
+  Searched: [netflix top 10, streaming new releases, celebrity news]
+  Searched: [oscar winners, best films, science fiction movies]
+  P1:   0% match (0/20) ✗ | L:0 E:0 S:18 | Science:4 Tech:3 Entertainment:3
+  P1:  15% match (3/20) · | L:2 E:1 S:14 | Entertainment:6 Sports:3 Politics:3
+  P1:  15% match (3/20) · | L:2 E:1 S:14 | Politics:5 Science:4 Health:3
+  P1:  10% match (2/20) · | L:0 E:2 S:17 | Entertainment:5 Health:3 Science:3
+  P1:  30% match (6/20) ▲ | L:1 E:2 S:13 | Science:8 Politics:5 Tech:4
+  P2:  10% match (2/20) · | L:0 E:1 S:13 | Entertainment:5 Lifestyle:5 Tech:4
+  P2:   5% match (1/20) ✗ | L:0 E:1 S:18 | Health:6 Science:4 Lifestyle:4
+  P2:  10% match (2/20) · | L:0 E:2 S:17 | Business:8 Politics:4 Science:4
+  P2:  25% match (5/20) ▲ | L:0 E:5 S:13 | Entertainment:7 Health:3 Science:3
+  P2:  30% match (6/20) ▲ | L:0 E:3 S:13 | Entertainment:8 Politics:4 Tech:3
+  P3:  20% match (4/20) ▲ | L:0 E:4 S:14 | Tech:7 Lifestyle:4 Entertainment:3
+  P3:  15% match (3/20) · | L:0 E:3 S:17 | Science:6 Lifestyle:5 Health:5
+  P3:  20% match (4/20) ▲ | L:3 E:1 S:15 | Politics:5 Business:4 Tech:4
+  P3:  20% match (4/20) ▲ | L:2 E:2 S:15 | Lifestyle:6 Entertainment:6 Health:4
+  P3:  35% match (7/20) ▲ | L:2 E:5 S:10 | Entertainment:8 Politics:6 Sports:2
+  P4:  15% match (3/20) · | L:1 E:2 S:12 | Entertainment:6 Politics:5 Tech:4
+  P4:   5% match (1/20) ✗ | L:0 E:1 S:14 | Lifestyle:8 Entertainment:5 Health:3
+  P4:   5% match (1/20) ✗ | L:0 E:1 S:17 | Business:6 Science:5 Tech:4
+  P4:  45% match (9/20) ★ | L:1 E:7 S:11 | Politics:7 Health:5 Entertainment:4
+  P4:  40% match (8/20) ★ | L:3 E:5 S:11 | Entertainment:8 Science:3 World:3
+  P5:  20% match (4/20) ▲ | L:3 E:1 S:13 | Entertainment:8 Lifestyle:4 Tech:4
+  ✅ LEARNED | P1→P5: 0%→20% (avg 5→18, +13) | tags:52 skips:320 | search:3/3
+  P5:   0% match (0/20) ✗ | L:0 E:0 S:17 | Lifestyle:6 Politics:4 Science:3
+  ❌ NO CHANGE | P1→P5: 10%→5% (avg 18→3, -15) | tags:57 skips:353 | search:3/3
+  P5:  15% match (3/20) · | L:0 E:3 S:15 | Science:7 Business:6 Politics:3
+  ❌ NO CHANGE | P1→P5: 30%→15% (avg 20→10, -10) | tags:61 skips:322 | search:3/3
+  P5:  50% match (10/20) ★ | L:3 E:7 S:9 | Politics:8 World:4 Science:3
+  P5:  35% match (7/20) ▲ | L:3 E:3 S:11 | Entertainment:8 Sports:5 World:3
+  ✅ LEARNED | P1→P5: 15%→50% (avg 10→48, +38) | tags:101 skips:309 | search:3/3
+  ✅ LEARNED | P1→P5: 15%→35% (avg 23→38, +15) | tags:106 skips:266 | search:3/3
+
+[46/50] Mia (france)
+  Onboarding: [fashion, entertainment, lifestyle]
+  Wants: [iran, middle east, war, military]
+
+[47/50] Lisa (australia)
+  Onboarding: [lifestyle, health, science]
+  Wants: [basketball, nba, nfl, football]
+  Searched: [nba scores, nfl news, basketball game]
+  Searched: [iran crisis, middle east news, military conflict]
+  P1:  25% match (5/20) ▲ | L:3 E:2 S:10 | Sports:4 Science:3 Health:3
+  P1:  35% match (7/20) ▲ | L:3 E:4 S:11 | Health:4 Politics:3 Entertainment:3
+  P2:  20% match (4/20) ▲ | L:1 E:3 S:12 | Politics:4 Sports:3 Science:3
+  P2:  25% match (5/20) ▲ | L:3 E:2 S:12 | Entertainment:5 Lifestyle:4 Politics:4
+  P3:  30% match (6/20) ▲ | L:5 E:1 S:12 | Health:4 Sports:3 Business:3
+  P3:  25% match (5/20) ▲ | L:2 E:2 S:12 | Business:6 Entertainment:5 Politics:3
+  P4:   5% match (1/20) ✗ | L:0 E:1 S:15 | Health:6 Lifestyle:4 Science:3
+  P4:  60% match (12/20) ★ | L:1 E:11 S:6 | Entertainment:7 Business:5 Politics:4
+  P5:  20% match (4/20) ▲ | L:2 E:2 S:14 | Lifestyle:6 Politics:5 Science:4
+  ❌ NO CHANGE | P1→P5: 25%→20% (avg 23→13, -10) | tags:93 skips:294 | search:3/3
+  P5:  70% match (14/20) ★ | L:7 E:7 S:6 | Business:6 Entertainment:6 Politics:3
+  ✅ LEARNED | P1→P5: 35%→70% (avg 30→65, +35) | tags:151 skips:235 | search:3/3
+
+
+═══════════════════════════════════════════════════════
+  DEEP ANALYSIS
+═══════════════════════════════════════════════════════
+
+── OVERALL ──
+  Valid: 47/47
+  Learned (>10pt avg improvement): 13 (28%)
+  Soft pivot (5-10pt): 11 (23%)
+  No change: 23 (49%)
+  Got worse (>5pt drop): 14 (30%)
+
+── MATCH RATES ──
+  Avg early (P1-P2): 19.7%
+  Avg late (P4-P5): 23.3%
+  Avg improvement: +3.5 pts
+  Avg best page: 31.2%
+
+── ENGAGEMENT ──
+  Avg engagement rate: 21.3%
+  Avg skip rate: 66.9%
+  Avg tag_profile size: 79 tags
+  Avg skip_profile size: 292 tags
+
+── SEARCH SIGNAL ──
+  Avg search terms stored: 3.0/3.0 (99%)
+
+── CROSS-DOMAIN vs SAME-DOMAIN ──
+  Cross-domain (40): avg improvement +4.2 pts
+  Same-domain (7): avg improvement 0.0 pts
+
+══════════════════════════════
+  GRADE: B (51% showed improvement)
+══════════════════════════════
+
+── TOP 10 LEARNERS ──
+  Rachel     15% → 5% → 15% → 45% → 50% | avg 10.0→47.5 (37.5) | L:6 E:19 S:69
+  Mia        35% → 25% → 25% → 60% → 70% | avg 30.0→65.0 (35.0) | L:16 E:26 S:47
+  Fatima     30% → 15% → 35% → 45% → 40% | avg 22.5→42.5 (20.0) | L:8 E:24 S:59
+  Nadia      35% → 15% → 25% → 50% → 40% | avg 25.0→45.0 (20.0) | L:6 E:26 S:60
+  Kenji      0% → 5% → 20% → 20% → 25% | avg 2.5→22.5 (20.0) | L:5 E:8 S:75
+  Diego      30% → 15% → 35% → 35% → 45% | avg 22.5→40.0 (17.5) | L:13 E:18 S:51
+  Emre       20% → 15% → 30% → 35% → 35% | avg 17.5→35.0 (17.5) | L:9 E:17 S:69
+  Omar       50% → 25% → 35% → 55% → 50% | avg 37.5→52.5 (15.0) | L:9 E:31 S:47
+  Tyler      15% → 30% → 35% → 40% → 35% | avg 22.5→37.5 (15.0) | L:10 E:17 S:59
+  Maria      15% → 15% → 30% → 25% → 30% | avg 15.0→27.5 (12.5) | L:11 E:11 S:65
+
+── BOTTOM 10 ──
+  Ines       15% → 25% → 0% → 5% → 10% | avg 20.0→7.5 (-12.5) | L:5 E:5 S:74
+  Raj        45% → 30% → 25% → 25% → 25% | avg 37.5→25.0 (-12.5) | L:8 E:21 S:63
+  Alex       35% → 40% → 20% → 30% → 20% | avg 37.5→25.0 (-12.5) | L:8 E:21 S:60
+  Yuki       20% → 15% → 25% → 10% → 0% | avg 17.5→5.0 (-12.5) | L:7 E:4 S:71
+  Aiden      20% → 25% → 30% → 15% → 0% | avg 22.5→7.5 (-15.0) | L:10 E:8 S:70
+  Emma       15% → 20% → 10% → 0% → 5% | avg 17.5→2.5 (-15.0) | L:4 E:4 S:81
+  Lucas      30% → 30% → 5% → 5% → 25% | avg 30.0→15.0 (-15.0) | L:5 E:13 S:70
+  Jessica    10% → 25% → 20% → 5% → 0% | avg 17.5→2.5 (-15.0) | L:2 E:10 S:76
+  Michael    20% → 20% → 5% → 0% → 0% | avg 20.0→0.0 (-20.0) | L:2 E:7 S:75
+  Carlos     20% → 20% → 5% → 0% → 0% | avg 20.0→0.0 (-20.0) | L:4 E:5 S:62
+
+── ALL PERSONAS ──
+Name      P1→P2→P3→P4→P5                EarlyAvg→LateAvg    Δ       Result
+Rachel    15% → 5% → 15% → 45% → 50%    10.0→47.5           +37.5LEARNED
+Mia       35% → 25% → 25% → 60% → 70%   30.0→65.0           +35.0LEARNED
+Fatima    30% → 15% → 35% → 45% → 40%   22.5→42.5           +20.0LEARNED
+Nadia     35% → 15% → 25% → 50% → 40%   25.0→45.0           +20.0LEARNED
+Kenji     0% → 5% → 20% → 20% → 25%     2.5→22.5            +20.0LEARNED
+Diego     30% → 15% → 35% → 35% → 45%   22.5→40.0           +17.5LEARNED
+Emre      20% → 15% → 30% → 35% → 35%   17.5→35.0           +17.5LEARNED
+Omar      50% → 25% → 35% → 55% → 50%   37.5→52.5           +15.0LEARNED
+Tyler     15% → 30% → 35% → 40% → 35%   22.5→37.5           +15.0LEARNED
+Maria     15% → 15% → 30% → 25% → 30%   15.0→27.5           +12.5LEARNED
+Jake      5% → 10% → 10% → 20% → 20%    7.5→20.0            +12.5LEARNED
+Tom       10% → 0% → 0% → 10% → 25%     5.0→17.5            +12.5LEARNED
+Kim2      0% → 10% → 20% → 15% → 20%    5.0→17.5            +12.5LEARNED
+James     20% → 30% → 35% → 40% → 30%   25.0→35.0           +10.0PIVOT
+Sophie    15% → 15% → 30% → 25% → 25%   15.0→25.0           +10.0PIVOT
+Sarah     30% → 10% → 15% → 30% → 30%   20.0→30.0           +10.0PIVOT
+Laura     20% → 20% → 25% → 30% → 30%   20.0→30.0           +10.0PIVOT
+Aisha     25% → 30% → 30% → 40% → 35%   27.5→37.5           +10.0PIVOT
+Eric      25% → 25% → 35% → 40% → 30%   25.0→35.0           +10.0PIVOT
+Ahmed     15% → 15% → 15% → 20% → 25%   15.0→22.5           +7.5PIVOT
+Yara      25% → 30% → 35% → 30% → 40%   27.5→35.0           +7.5PIVOT
+Nina      5% → 0% → 15% → 5% → 15%      2.5→10.0            +7.5PIVOT
+David     20% → 15% → 20% → 25% → 25%   17.5→25.0           +7.5PIVOT
+Marco     30% → 35% → 35% → 40% → 40%   32.5→40.0           +7.5PIVOT
+Liam      10% → 0% → 5% → 10% → 10%     5.0→10.0            +5.0FLAT
+Hana      25% → 30% → 30% → 40% → 25%   27.5→32.5           +5.0FLAT
+Henrik    0% → 0% → 0% → 0% → 5%        0.0→2.5             +2.5FLAT
+Pedro     30% → 35% → 30% → 30% → 40%   32.5→35.0           +2.5FLAT
+Robert    30% → 40% → 45% → 35% → 35%   35.0→35.0           0.0FLAT
+Anna      5% → 5% → 0% → 0% → 7%        5.0→3.6             -1.4FLAT
+Takeshi   5% → 0% → 0% → 0% → 0%        2.5→0.0             -2.5FLAT
+Viktor    10% → 0% → 0% → 0% → 5%       5.0→2.5             -2.5FLAT
+Priya     30% → 30% → 15% → 25% → 30%   30.0→27.5           -2.5FLAT
+Chen      30% → 10% → 5% → 25% → 0%     20.0→12.5           -7.5WORSE
+Tina      35% → 30% → 30% → 40% → 10%   32.5→25.0           -7.5WORSE
+Dmitri    30% → 10% → 20% → 5% → 15%    20.0→10.0           -10.0WORSE
+Lisa      25% → 20% → 30% → 5% → 20%    22.5→12.5           -10.0WORSE
+Ines      15% → 25% → 0% → 5% → 10%     20.0→7.5            -12.5WORSE
+Raj       45% → 30% → 25% → 25% → 25%   37.5→25.0           -12.5WORSE
+Alex      35% → 40% → 20% → 30% → 20%   37.5→25.0           -12.5WORSE
+Yuki      20% → 15% → 25% → 10% → 0%    17.5→5.0            -12.5WORSE
+Aiden     20% → 25% → 30% → 15% → 0%    22.5→7.5            -15.0WORSE
+Emma      15% → 20% → 10% → 0% → 5%     17.5→2.5            -15.0WORSE
+Lucas     30% → 30% → 5% → 5% → 25%     30.0→15.0           -15.0WORSE
+Jessica   10% → 25% → 20% → 5% → 0%     17.5→2.5            -15.0WORSE
+Michael   20% → 20% → 5% → 0% → 0%      20.0→0.0            -20.0WORSE
+Carlos    20% → 20% → 5% → 0% → 0%      20.0→0.0            -20.0WORSE
+
+Done at 2026-03-21T22:23:02.643Z

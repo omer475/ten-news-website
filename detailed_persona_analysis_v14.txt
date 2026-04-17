@@ -1,0 +1,325 @@
+═══════════════════════════════════════════════════════════════════════════════════════
+  DETAILED 50-PERSONA ANALYSIS — v14 (Multi-Interest Interleaving)
+═══════════════════════════════════════════════════════════════════════════════════════
+
+⬜ Takeshi (japan) — NO CHANGE
+  Onboarding: [sports, tech, entertainment]
+  Actual interests: [formula one, mclaren, chinese grand prix]
+  Searches: [mlb standings, baseball trades, world baseball classic]
+  Page progression: 0% → 20% → 15% → 20% → 30% → 5% → 20% → 20% → 30% → 25% → 0% → 10% → 20% → 15% → 30% → 0% → 0% → 8% → 20% → 0% → 35% → 0% → 20% → 25%
+  Articles seen: 459 | Relevant: 73 (15.9%) | Liked: 19 | Engaged: 52 | Skipped: 324
+  Engagement rate: 15.5% | Skip rate: 70.6% | Like-when-relevant: 26.0%
+  Profile: 74 tag_profile tags, 209 skip_profile tags | Search stored: 3/3
+    P1: ░░░░░░░░░░░░░░░░░░░░   0% | Entertainment:4 Tech:4 Sports:4
+    P1: ████░░░░░░░░░░░░░░░░  20% | Sports:5 Business:3 Science:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Sports:5 Business:4 Entertainment:3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Health:4 Science:3
+    P1: ██████░░░░░░░░░░░░░░  30% | Sports:7 Entertainment:4 Tech:2
+    P2: █░░░░░░░░░░░░░░░░░░░   5% | Entertainment:5 Tech:5 Sports:5
+    P2: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Science:4 Health:4
+    P2: ████░░░░░░░░░░░░░░░░  20% | Sports:7 Business:4 Tech:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Sports:7 Business:4 Tech:2
+    P2: █████░░░░░░░░░░░░░░░  25% | Entertainment:7 Sports:6 Politics:3
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Tech:7 Sports:6 Entertainment:3
+    P3: ██░░░░░░░░░░░░░░░░░░  10% | Sports:8 Entertainment:3 World:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Science:7 World:3
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Business:5 Sports:4 Tech:3
+    P3: ██████░░░░░░░░░░░░░░  30% | Sports:8 Entertainment:5 Politics:4
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:4 Politics:2 War:1
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 Politics:4 Science:2
+    P4: ██░░░░░░░░░░░░░░░░░░   8% | Sports:6 Politics:2 World:2
+    P4: ████░░░░░░░░░░░░░░░░  20% | Sports:6 Tech:4 Business:4
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Business:3 Finance:3 Entertainment:3
+    P4: ███████░░░░░░░░░░░░░  35% | Sports:8 Politics:3 World:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Entertainment:3 Politics:3 Tech:3
+    P5: ████░░░░░░░░░░░░░░░░  20% | Finance:6 Business:4 World:3
+    P5: █████░░░░░░░░░░░░░░░  25% | Sports:8 Politics:3 Entertainment:3
+
+✅ Fatima (turkiye) — LEARNED
+  Onboarding: [politics, entertainment, lifestyle]
+  Actual interests: [iran, middle east, israel, war]
+  Searches: [turkey football, premier league table, world cup 2026]
+  Page progression: 0% → 15% → 25% → 35% → 40% → 0% → 15% → 30% → 30% → 30% → 0% → 20% → 20% → 35% → 0% → 30% → 20% → 0% → 30% → 35% → 45% → 20% → 30% → 55% → 60%
+  Articles seen: 500 | Relevant: 124 (24.8%) | Liked: 42 | Engaged: 78 | Skipped: 324
+  Engagement rate: 24.0% | Skip rate: 64.8% | Like-when-relevant: 33.9%
+  Profile: 132 tag_profile tags, 262 skip_profile tags | Search stored: 3/3
+    P1: ░░░░░░░░░░░░░░░░░░░░   0% | Business:5 Politics:4 Sports:4
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Sports:4 Politics:4 Business:4
+    P1: █████░░░░░░░░░░░░░░░  25% | Sports:7 Entertainment:3 Tech:3
+    P1: ███████░░░░░░░░░░░░░  35% | Politics:6 Business:4 Science:3
+    P1: ████████░░░░░░░░░░░░  40% | Business:6 Politics:4 Entertainment:3
+    P2: ░░░░░░░░░░░░░░░░░░░░   0% | Politics:8 Business:3 Sports:3
+    P2: ███░░░░░░░░░░░░░░░░░  15% | Sports:7 Politics:5 Business:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Sports:8 Politics:2 Entertainment:2
+    P2: ██████░░░░░░░░░░░░░░  30% | Politics:5 Business:4 Tech:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Business:5 Politics:4 Finance:4
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:5 Finance:5 Business:4
+    P3: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Business:4 Finance:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Finance:7 Business:5 Science:4
+    P3: ███████░░░░░░░░░░░░░  35% | Sports:8 World:3 Science:3
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 World:3 Politics:2
+    P3: ██████░░░░░░░░░░░░░░  30% | Business:6 Entertainment:3 Science:3
+    P4: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Science:4 World:4
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 Politics:4 Science:3
+    P4: ██████░░░░░░░░░░░░░░  30% | Sports:8 Entertainment:4 Lifestyle:2
+    P4: ███████░░░░░░░░░░░░░  35% | Business:8 Politics:5 Finance:3
+    P4: █████████░░░░░░░░░░░  45% | Business:6 Lifestyle:4 Politics:4
+    P5: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Science:4 World:3
+    P5: ██████░░░░░░░░░░░░░░  30% | Sports:8 Science:4 Lifestyle:3
+    P5: ███████████░░░░░░░░░  55% | Business:7 Politics:5 Finance:3
+    P5: ████████████░░░░░░░░  60% | Business:5 Politics:5 Lifestyle:3
+
+✅ Yara (turkiye) — LEARNED
+  Onboarding: [entertainment, politics, health]
+  Actual interests: [oscars, movies, film, academy awards, awards]
+  Searches: [china japan relations, geopolitics asia, international relations]
+  Page progression: 15% → 25% → 15% → 40% → 40% → 0% → 0% → 5% → 40% → 25% → 0% → 15% → 20% → 30% → 25% → 10% → 10% → 20% → 35% → 50% → 5% → 5% → 10% → 30% → 40%
+  Articles seen: 500 | Relevant: 102 (20.4%) | Liked: 29 | Engaged: 66 | Skipped: 339
+  Engagement rate: 19.0% | Skip rate: 67.8% | Like-when-relevant: 28.4%
+  Profile: 106 tag_profile tags, 272 skip_profile tags | Search stored: 3/3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Entertainment:6 Politics:4 Business:3
+    P1: █████░░░░░░░░░░░░░░░  25% | Business:7 Politics:6 Health:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Politics:6 Business:4 Science:2
+    P1: ████████░░░░░░░░░░░░  40% | Business:6 Politics:4 Science:3
+    P1: ████████░░░░░░░░░░░░  40% | Politics:5 Finance:3 Business:3
+    P2: ░░░░░░░░░░░░░░░░░░░░   0% | Politics:4 Business:4 Finance:4
+    P2: ░░░░░░░░░░░░░░░░░░░░   0% | Business:8 Science:4 Health:3
+    P2: █░░░░░░░░░░░░░░░░░░░   5% | Tech:5 Science:4 Business:4
+    P2: ████████░░░░░░░░░░░░  40% | Entertainment:8 Health:4 Politics:3
+    P2: █████░░░░░░░░░░░░░░░  25% | Finance:7 Politics:5 Business:3
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Business:6 Sports:4 Science:3
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Business:6 Science:5 Health:4
+    P3: ████░░░░░░░░░░░░░░░░  20% | Business:7 Finance:5 Politics:3
+    P3: ██████░░░░░░░░░░░░░░  30% | Entertainment:8 World:3 Health:2
+    P3: █████░░░░░░░░░░░░░░░  25% | Business:8 Tech:4 Entertainment:3
+    P4: ██░░░░░░░░░░░░░░░░░░  10% | Sports:8 Science:3 World:3
+    P4: ██░░░░░░░░░░░░░░░░░░  10% | Politics:8 Health:4 Science:3
+    P4: ████░░░░░░░░░░░░░░░░  20% | Business:7 Tech:4 Finance:3
+    P4: ███████░░░░░░░░░░░░░  35% | Entertainment:8 Health:3 World:3
+    P4: ██████████░░░░░░░░░░  50% | Business:7 Finance:4 Entertainment:3
+    P5: █░░░░░░░░░░░░░░░░░░░   5% | Science:8 Politics:8 Business:1
+    P5: █░░░░░░░░░░░░░░░░░░░   5% | Politics:6 Finance:5 Sports:2
+    P5: ██░░░░░░░░░░░░░░░░░░  10% | Business:7 Finance:4 Politics:3
+    P5: ██████░░░░░░░░░░░░░░  30% | Entertainment:8 Science:4 World:3
+    P5: ████████░░░░░░░░░░░░  40% | Business:6 Finance:5 Politics:3
+
+✅ Sarah (usa) — LEARNED
+  Onboarding: [tech, business, health]
+  Actual interests: [artificial intelligence, video games]
+  Searches: [netflix new releases, streaming shows, tv series]
+  Page progression: 10% → 15% → 15% → 20% → 40% → 5% → 10% → 10% → 25% → 10% → 10% → 15% → 5% → 20% → 20% → 0% → 15% → 0% → 35% → 20% → 0% → 55% → 0% → 15% → 35%
+  Articles seen: 465 | Relevant: 81 (17.4%) | Liked: 26 | Engaged: 50 | Skipped: 333
+  Engagement rate: 16.3% | Skip rate: 71.6% | Like-when-relevant: 32.1%
+  Profile: 127 tag_profile tags, 270 skip_profile tags | Search stored: 3/3
+    P1: ██░░░░░░░░░░░░░░░░░░  10% | Tech:3 Entertainment:3 Health:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Entertainment:5 Health:4 Tech:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Entertainment:3 Business:3 Lifestyle:3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Entertainment:8 Business:3 Health:2
+    P1: ████████░░░░░░░░░░░░  40% | Tech:4 Business:3 Science:3
+    P2: █░░░░░░░░░░░░░░░░░░░   5% | Entertainment:8 Science:3 Tech:3
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Tech:6 Entertainment:4 Business:3
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Lifestyle:4 Business:4 Politics:2
+    P2: █████░░░░░░░░░░░░░░░  25% | Entertainment:8 Health:3 Business:2
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Tech:7 Health:4 Business:3
+    P3: ██░░░░░░░░░░░░░░░░░░  10% | Entertainment:8 Tech:6 Lifestyle:2
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Tech:7 Entertainment:4 Sports:3
+    P3: █░░░░░░░░░░░░░░░░░░░   5% | Sports:5 Business:5 Entertainment:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Entertainment:8 Health:4 Science:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Tech:8 Health:6 Business:2
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 World:4 Politics:2
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Lifestyle:8 Entertainment:4 Science:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:1 Politics:1
+    P4: ███████░░░░░░░░░░░░░  35% | Entertainment:7 Sports:7 Tech:2
+    P4: ████░░░░░░░░░░░░░░░░  20% | Entertainment:8 World:3 Politics:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Lifestyle:5 Entertainment:2 World:2
+    P4: ███████████░░░░░░░░░  55% | Tech:8 Health:3 Politics:2
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:5 World:2 War:1
+    P5: ███░░░░░░░░░░░░░░░░░  15% | Lifestyle:7 Entertainment:4 Politics:4
+    P5: ███████░░░░░░░░░░░░░  35% | Politics:8 Tech:6 Science:3
+
+⬜ Lucas (germany) — NO CHANGE
+  Onboarding: [politics, science, health]
+  Actual interests: [nfl, football, basketball, nba]
+  Searches: [ai breakthrough, china tech, geopolitics ai]
+  Page progression: 25% → 35% → 35% → 50% → 55% → 20% → 25% → 20% → 15% → 35% → 0% → 25% → 20% → 20% → 0% → 40% → 0% → 10% → 30% → 45% → 35% → 15% → 20% → 40% → 55%
+  Articles seen: 479 | Relevant: 134 (28.0%) | Liked: 37 | Engaged: 89 | Skipped: 298
+  Engagement rate: 26.3% | Skip rate: 62.2% | Like-when-relevant: 27.6%
+  Profile: 123 tag_profile tags, 224 skip_profile tags | Search stored: 3/3
+    P1: █████░░░░░░░░░░░░░░░  25% | Sports:5 Business:4 Tech:3
+    P1: ███████░░░░░░░░░░░░░  35% | Sports:6 Politics:3 Science:3
+    P1: ███████░░░░░░░░░░░░░  35% | Sports:4 Tech:4 Politics:3
+    P1: ██████████░░░░░░░░░░  50% | Tech:4 Entertainment:3 Politics:3
+    P1: ███████████░░░░░░░░░  55% | Finance:5 Politics:5 Business:4
+    P2: ████░░░░░░░░░░░░░░░░  20% | Sports:4 Business:4 Finance:4
+    P2: █████░░░░░░░░░░░░░░░  25% | Sports:6 Politics:5 Business:4
+    P2: ████░░░░░░░░░░░░░░░░  20% | Politics:6 Entertainment:4 Sports:3
+    P2: ███░░░░░░░░░░░░░░░░░  15% | Politics:5 Business:5 Entertainment:3
+    P2: ███████░░░░░░░░░░░░░  35% | Finance:8 Business:5 Politics:2
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Tech:8 Finance:7 Business:1
+    P3: █████░░░░░░░░░░░░░░░  25% | Politics:6 Sports:4 Entertainment:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Sports:6 Politics:5 Health:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Business:4 Lifestyle:4 Entertainment:3
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Finance:1 Politics:1
+    P3: ████████░░░░░░░░░░░░  40% | Business:8 Finance:4 Tech:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:3 World:3 Tech:3
+    P4: ██░░░░░░░░░░░░░░░░░░  10% | Business:5 Lifestyle:4 Tech:2
+    P4: ██████░░░░░░░░░░░░░░  30% | Sports:6 Politics:6 Science:3
+    P4: █████████░░░░░░░░░░░  45% | Business:8 Politics:3 Entertainment:2
+    P4: ███████░░░░░░░░░░░░░  35% | Business:7 Politics:3 Finance:3
+    P5: ███░░░░░░░░░░░░░░░░░  15% | Finance:8 Science:5 World:3
+    P5: ████░░░░░░░░░░░░░░░░  20% | Business:6 Lifestyle:5 Sports:3
+    P5: ████████░░░░░░░░░░░░  40% | Business:6 Sports:5 Lifestyle:3
+    P5: ███████████░░░░░░░░░  55% | Business:7 Finance:4 Politics:3
+
+⬜ Michael (usa) — NO CHANGE
+  Onboarding: [finance, business, tech]
+  Actual interests: [basketball, nba, march madness, college basketball]
+  Searches: [eu news, european politics, international summit]
+  Page progression: 20% → 35% → 40% → 35% → 35% → 10% → 10% → 15% → 40% → 15% → 0% → 0% → 20% → 25% → 20% → 0% → 15% → 15% → 30% → 0% → 20% → 5% → 40% → 45% → 30%
+  Articles seen: 497 | Relevant: 104 (20.9%) | Liked: 33 | Engaged: 69 | Skipped: 334
+  Engagement rate: 20.5% | Skip rate: 67.2% | Like-when-relevant: 31.7%
+  Profile: 104 tag_profile tags, 327 skip_profile tags | Search stored: 3/3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Politics:6 Entertainment:4 Business:3
+    P1: ███████░░░░░░░░░░░░░  35% | Politics:4 Entertainment:3 Health:3
+    P1: ████████░░░░░░░░░░░░  40% | Business:8 Science:4 Tech:2
+    P1: ███████░░░░░░░░░░░░░  35% | Sports:7 Business:3 Science:2
+    P1: ███████░░░░░░░░░░░░░  35% | Politics:5 Business:4 Science:3
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Entertainment:4 Business:4 Politics:3
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Science:4 Finance:4 Business:3
+    P2: ███░░░░░░░░░░░░░░░░░  15% | Entertainment:6 Business:4 Politics:3
+    P2: ████████░░░░░░░░░░░░  40% | Business:8 Finance:5 Science:2
+    P2: ███░░░░░░░░░░░░░░░░░  15% | Tech:6 Science:5 Business:3
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:6 Business:4 Health:3
+    P3: ░░░░░░░░░░░░░░░░░░░░   0% | Business:7 Tech:5 Finance:4
+    P3: ████░░░░░░░░░░░░░░░░  20% | Politics:5 Health:4 Entertainment:4
+    P3: █████░░░░░░░░░░░░░░░  25% | Business:8 Finance:7 Tech:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Tech:8 Science:5 Health:3
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Tech:8 Business:4 World:2
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Business:8 Sports:3 World:3
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Business:5 Finance:5 Tech:3
+    P4: ██████░░░░░░░░░░░░░░  30% | Politics:8 Lifestyle:4 Entertainment:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Science:3 Finance:3 Politics:3
+    P4: ████░░░░░░░░░░░░░░░░  20% | Tech:7 Health:5 Science:3
+    P5: █░░░░░░░░░░░░░░░░░░░   5% | Business:8 Sports:4 Entertainment:2
+    P5: ████████░░░░░░░░░░░░  40% | Finance:7 Tech:4 Politics:4
+    P5: █████████░░░░░░░░░░░  45% | Politics:8 Lifestyle:5 World:2
+    P5: ██████░░░░░░░░░░░░░░  30% | Tech:6 Politics:5 Entertainment:3
+
+✅ Emre (turkiye) — LEARNED
+  Onboarding: [sports, tech, business]
+  Actual interests: [soccer, turkey, formula one, premier league]
+  Searches: [japanese movies, japan entertainment, tokyo film]
+  Page progression: 20% → 30% → 30% → 40% → 50% → 25% → 25% → 20% → 30% → 20% → 20% → 30% → 20% → 15% → 30% → 25% → 15% → 25% → 30% → 45% → 40% → 25% → 30% → 35% → 50%
+  Articles seen: 500 | Relevant: 145 (29.0%) | Liked: 38 | Engaged: 96 | Skipped: 305
+  Engagement rate: 26.8% | Skip rate: 61.0% | Like-when-relevant: 26.2%
+  Profile: 125 tag_profile tags, 241 skip_profile tags | Search stored: 3/3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Business:5 Finance:4 Science:3
+    P1: ██████░░░░░░░░░░░░░░  30% | Entertainment:5 Lifestyle:3 Politics:3
+    P1: ██████░░░░░░░░░░░░░░  30% | Sports:6 Business:4 Science:2
+    P1: ████████░░░░░░░░░░░░  40% | Business:8 Politics:5 Finance:3
+    P1: ██████████░░░░░░░░░░  50% | Business:5 Tech:4 Science:3
+    P2: █████░░░░░░░░░░░░░░░  25% | Business:5 Politics:4 Finance:4
+    P2: █████░░░░░░░░░░░░░░░  25% | Entertainment:8 Science:4 Lifestyle:2
+    P2: ████░░░░░░░░░░░░░░░░  20% | Business:7 Finance:5 Politics:4
+    P2: ██████░░░░░░░░░░░░░░  30% | Sports:8 Business:3 Politics:2
+    P2: ████░░░░░░░░░░░░░░░░  20% | Tech:5 Business:4 Science:3
+    P3: ████░░░░░░░░░░░░░░░░  20% | Politics:5 Business:5 Tech:4
+    P3: ██████░░░░░░░░░░░░░░  30% | Business:6 Politics:5 Finance:5
+    P3: ████░░░░░░░░░░░░░░░░  20% | Entertainment:6 Lifestyle:5 Science:2
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Science:4 Politics:4 Entertainment:3
+    P3: ██████░░░░░░░░░░░░░░  30% | Sports:8 Business:4 Tech:3
+    P4: █████░░░░░░░░░░░░░░░  25% | Business:5 Tech:4 Finance:4
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Sports:5 Business:4 World:3
+    P4: █████░░░░░░░░░░░░░░░  25% | Tech:5 Business:5 Finance:3
+    P4: ██████░░░░░░░░░░░░░░  30% | Entertainment:8 Tech:4 Lifestyle:3
+    P4: █████████░░░░░░░░░░░  45% | Business:7 Finance:5 Politics:3
+    P5: ████████░░░░░░░░░░░░  40% | Business:8 Politics:4 Finance:3
+    P5: █████░░░░░░░░░░░░░░░  25% | Sports:8 Politics:3 Business:3
+    P5: ██████░░░░░░░░░░░░░░  30% | Entertainment:8 Lifestyle:3 Tech:3
+    P5: ███████░░░░░░░░░░░░░  35% | Business:5 Finance:4 World:3
+    P5: ██████████░░░░░░░░░░  50% | Politics:8 Finance:4 Business:3
+
+✅ Anna (germany) — LEARNED
+  Onboarding: [politics, lifestyle, health]
+  Actual interests: [ukraine, russia, putin, ukraine war]
+  Searches: [mlb results, japanese baseball, world baseball]
+  Page progression: 20% → 15% → 15% → 30% → 35% → 0% → 5% → 5% → 25% → 20% → 30% → 30% → 25% → 20% → 35% → 40% → 0% → 35% → 30% → 40% → 0% → 15% → 25% → 50%
+  Articles seen: 480 | Relevant: 109 (22.7%) | Liked: 38 | Engaged: 68 | Skipped: 317
+  Engagement rate: 22.1% | Skip rate: 66.0% | Like-when-relevant: 34.9%
+  Profile: 131 tag_profile tags, 287 skip_profile tags | Search stored: 3/3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Sports:6 Entertainment:3 Tech:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Sports:5 Business:4 Entertainment:3
+    P1: ███░░░░░░░░░░░░░░░░░  15% | Politics:6 Business:4 Health:3
+    P1: ██████░░░░░░░░░░░░░░  30% | Sports:8 Politics:3 Entertainment:2
+    P1: ███████░░░░░░░░░░░░░  35% | Business:4 Politics:4 Entertainment:3
+    P2: ░░░░░░░░░░░░░░░░░░░░   0% | Business:6 Politics:4 Health:4
+    P4: █░░░░░░░░░░░░░░░░░░░   5% | Politics:8 Health:5 Lifestyle:3
+    P5: █░░░░░░░░░░░░░░░░░░░   5% | Lifestyle:8 Politics:8 Entertainment:1
+    P2: █████░░░░░░░░░░░░░░░  25% | Sports:8 Entertainment:5 Tech:3
+    P2: ████░░░░░░░░░░░░░░░░  20% | Sports:6 Entertainment:3 Business:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Sports:8 Politics:4 Entertainment:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Business:5 Entertainment:4 Politics:3
+    P3: █████░░░░░░░░░░░░░░░  25% | Sports:8 Tech:4 Politics:2
+    P3: ████░░░░░░░░░░░░░░░░  20% | Sports:8 Business:3 Politics:2
+    P3: ███████░░░░░░░░░░░░░  35% | Sports:8 Entertainment:4 Politics:3
+    P3: ████████░░░░░░░░░░░░  40% | Business:5 Entertainment:5 Politics:3
+    P4: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 Entertainment:5 Business:5
+    P4: ███████░░░░░░░░░░░░░  35% | Sports:8 World:4 Tech:3
+    P4: ██████░░░░░░░░░░░░░░  30% | Sports:8 Entertainment:3 World:3
+    P4: ████████░░░░░░░░░░░░  40% | Entertainment:7 Business:4 Politics:4
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Sports:8 Politics:4 World:3
+    P5: ███░░░░░░░░░░░░░░░░░  15% | Sports:8 Politics:4 Entertainment:3
+    P5: █████░░░░░░░░░░░░░░░  25% | Sports:8 Entertainment:5 Politics:3
+    P5: ██████████░░░░░░░░░░  50% | Sports:7 Business:4 Science:3
+
+✅ Rachel (usa) — LEARNED
+  Onboarding: [lifestyle, health, science]
+  Actual interests: [politics, donald trump, government, crime]
+  Searches: [video games japan, gaming reviews, japanese tv]
+  Page progression: 20% → 20% → 20% → 40% → 30% → 35% → 5% → 10% → 15% → 30% → 15% → 25% → 30% → 10% → 35% → 11% → 15% → 15% → 30% → 35% → 0% → 15% → 20% → 35% → 40%
+  Articles seen: 486 | Relevant: 111 (22.8%) | Liked: 32 | Engaged: 73 | Skipped: 315
+  Engagement rate: 21.6% | Skip rate: 64.8% | Like-when-relevant: 28.8%
+  Profile: 115 tag_profile tags, 271 skip_profile tags | Search stored: 3/3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Entertainment:6 Politics:4 Sports:3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Lifestyle:3 Entertainment:3 Health:3
+    P1: ████░░░░░░░░░░░░░░░░  20% | Entertainment:5 Politics:4 Business:3
+    P1: ████████░░░░░░░░░░░░  40% | Politics:7 Science:6 Tech:3
+    P1: ██████░░░░░░░░░░░░░░  30% | Politics:5 Business:3 Entertainment:3
+    P2: ███████░░░░░░░░░░░░░  35% | Entertainment:8 Politics:4 Sports:2
+    P2: █░░░░░░░░░░░░░░░░░░░   5% | Entertainment:8 Science:3 Health:3
+    P2: ██░░░░░░░░░░░░░░░░░░  10% | Science:8 Business:6 Politics:3
+    P2: ███░░░░░░░░░░░░░░░░░  15% | Politics:6 Business:4 Science:3
+    P2: ██████░░░░░░░░░░░░░░  30% | Entertainment:6 Politics:5 Lifestyle:3
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Science:5 Business:5 Politics:5
+    P3: █████░░░░░░░░░░░░░░░  25% | Entertainment:7 Lifestyle:4 Health:3
+    P3: ██████░░░░░░░░░░░░░░  30% | Politics:6 Science:5 Entertainment:3
+    P3: ██░░░░░░░░░░░░░░░░░░  10% | Entertainment:6 Lifestyle:5 Health:3
+    P3: ███████░░░░░░░░░░░░░  35% | Entertainment:8 Sports:3 Politics:3
+    P4: ██░░░░░░░░░░░░░░░░░░  11% | Lifestyle:8 Entertainment:4 Politics:2
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Business:8 Tech:4 Politics:4
+    P4: ███░░░░░░░░░░░░░░░░░  15% | Entertainment:5 Lifestyle:5 Tech:5
+    P4: ██████░░░░░░░░░░░░░░  30% | Entertainment:8 Sports:4 World:3
+    P4: ███████░░░░░░░░░░░░░  35% | Politics:7 Lifestyle:3 Science:3
+    P5: ░░░░░░░░░░░░░░░░░░░░   0% | Lifestyle:3 Entertainment:2 World:1
+    P5: ███░░░░░░░░░░░░░░░░░  15% | Tech:7 Business:7 Politics:2
+    P5: ████░░░░░░░░░░░░░░░░  20% | Tech:6 Entertainment:5 Lifestyle:5
+    P5: ███████░░░░░░░░░░░░░  35% | Entertainment:8 Sports:3 Politics:3
+    P5: ████████░░░░░░░░░░░░  40% | Politics:8 Science:3 Lifestyle:3
+
+✅ Lisa (australia) — LEARNED
+  Onboarding: [lifestyle, health, science]
+  Actual interests: [basketball, nba, nfl, football]
+  Searches: [iran crisis, middle east news, military conflict]
+  Page progression: 30% → 40% → 35% → 30% → 15% → 30% → 10% → 15% → 70%
+  Articles seen: 180 | Relevant: 55 (30.6%) | Liked: 13 | Engaged: 38 | Skipped: 103
+  Engagement rate: 28.3% | Skip rate: 57.2% | Like-when-relevant: 23.6%
+  Profile: 119 tag_profile tags, 198 skip_profile tags | Search stored: 3/3
+    P1: ██████░░░░░░░░░░░░░░  30% | Sports:5 Science:3 Business:3
+    P1: ████████░░░░░░░░░░░░  40% | Business:5 Politics:4 Tech:3
+    P2: ███████░░░░░░░░░░░░░  35% | Sports:5 Business:4 Politics:4
+    P2: ██████░░░░░░░░░░░░░░  30% | Entertainment:6 Business:5 Politics:5
+    P3: ███░░░░░░░░░░░░░░░░░  15% | Business:5 Politics:3 Science:3
+    P4: ██████░░░░░░░░░░░░░░  30% | Politics:6 Business:5 Entertainment:4
+    P4: ██░░░░░░░░░░░░░░░░░░  10% | Science:5 Politics:4 Lifestyle:4
+    P5: ███░░░░░░░░░░░░░░░░░  15% | Politics:8 Lifestyle:3 World:3
+    P5: ██████████████░░░░░░  70% | Business:8 Politics:4 Lifestyle:3

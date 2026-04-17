@@ -1,0 +1,518 @@
+[dotenv@17.3.1] injecting env (8) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+FULL DETAIL V20 TEST — EVERY ARTICLE, EVERY REACTION, EVERY SIGNAL
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+HOW THE ALGORITHM WORKS (V20):
+  1. User opens app → API called with NO user_id (cold start)
+  2. Server builds candidate pools: top 30 articles PER CATEGORY (subtopic-diverse)
+     Categories: Politics, World, Business, Sports, Entertainment, Tech, Science, Health, Finance, Lifestyle
+  3. Scores normalized: 0.7 × within-category-rank + 0.3 × global-quality
+  4. Entity blocklist: if user skipped 3+ articles with entity X → X is hard-blocked
+  5. Global topic cap: no entity can exceed 15% of total pool
+  6. Thompson Sampling bandit picks which CATEGORY to draw from (proper Beta distribution)
+  7. Within category: articles scored by entity engagement rate × confidence
+     entityScore = 0.5 + (engagementRate - 0.5) × confidence
+     confidence = 1 - 1/(1+timesShown) → smooth, no hard thresholds
+  8. MMR selection with embedding cosine similarity prevents duplicate stories
+  9. Entity frequency cap: dominant entities limited to 2-4 per page
+  10. Result: 20 articles sent to user
+  11. User reactions (engaged/skipped IDs) sent back as URL params on next request
+
+HOW THE TEST SIMULATES USERS:
+  - Each persona has: primary interests (90% engage), secondary (45%), curiosity (30%)
+  - Also has AVOID list (hard skip) and category preferences
+  - Article tags are matched against these lists to determine tier
+  - Engagement probability = base_rate × quality_bonus × fatigue_penalty × random_noise
+  - Quality bonus: score≥950 → 2.0x, ≥900 → 1.6x, ≥850 → 1.3x
+  - CRITICAL: 'irrelevant' articles with score≥950 get 45% engage chance (curiosity)
+  - Dwell times: primary=20s, secondary=14s, curiosity=5s, skip=1.5s
+
+RATING SCALE (honest):
+  satisfaction = engaged% + glanced% × 0.3
+  10=80%+ | 9=70% | 8=60% | 7=50% | 6=40% | 5=30% | 4=20% | 3=15% | 2=10% | 1=<10%
+  Penalties: avoids>25% → -2, >15% → -1.5, >8% → -1
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+🇺🇸 PERSONA: Jake — US Politics
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  Primary interests:   donald trump, congress, supreme court, republican, democrat, white house, senate, legislation, marco rubio, immigration
+  Secondary interests: government shutdown, department of homeland security, national security, election, policy
+  Curiosity:           iran, china, nato, stock market, spacex
+  Avoids:              gaming, k-pop, anime, cricket, fashion, yoga
+  Preferred categories: Politics
+
+  ┌─ PAGE 1 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=0, skipped_ids=0, seen_ids=0
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ 👀 PEEK │ CURIOSITY      │ Science       │   880 │   5.9s │ Climate Change Costs **Trillions** to Global Econo [matched: china]
+  │  2  │ ✅ READ │ CURIOSITY      │ Finance       │   780 │   8.2s │ **Turkey** Sells Gold Reserves Amid Currency Crisi [matched: iran]
+  │  3  │ 👀 PEEK │ PRIMARY        │ Politics      │   860 │   4.8s │ **Trump's** Approval **Falls** Amidst Month-Long I [matched: donald trump]
+  │  4  │ ✅ READ │ PRIMARY        │ Science       │   840 │  25.4s │ **NASA** Races to Build **Moon Base**, Challenges  [matched: donald trump]
+  │  5  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.8s │ Scientists Detect Possible **Exploding Black Hole*
+  │  6  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   880 │   1.7s │ **One Battle After Another** Wins **Best Picture**
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   830 │   1.9s │ **Meta** Fined **$375 Million** for Child Safety V
+  │  8  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.8s │ **Taos Pueblo** Still Anchors **Indigenous** Tradi
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   910 │   1.7s │ **Dodgers** Celebrate Back-to-Back **World Series*
+  │ 10  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   840 │   1.7s │ **Reddick** Wins **Daytona 500**, Jordan Changes N
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.8s │ **Parents'** Phone Use Sparks Debate on Child Beha
+  │ 12  │ 👀 PEEK │ CURIOSITY      │ Tech          │   840 │   4.1s │ **Chinese** Battery **Doubles** EV Range, Works at [matched: china]
+  │ 13  │ ✅ READ │ SECONDARY      │ Politics      │   860 │  11.6s │ **Fentanyl** Crisis: **China** Fuels US National S [matched: national security]
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   780 │   1.7s │ **Malinin** Claims 3rd World Title After **Olympic
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Health        │   840 │   1.2s │ **Alzheimer's** Treatment: New **Drugs** Offer Hop
+  │ 16  │ ✅ READ │ CURIOSITY      │ Finance       │   780 │   6.1s │ **Oil** Hits **$100** as Stocks, Bonds Both Fall [matched: stock market]
+  │ 17  │ ✅ READ │ PRIMARY        │ Politics      │   840 │  20.6s │ **Trump** Admin Revives 'God Squad' to Bypass **ES [matched: donald trump]
+  │ 18  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   580 │   1.4s │ **Fast-Growing** Fruit Trees **Thrive** in Many US
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   840 │   1.1s │ **Europe** Moves to **Ban** Social Media for Teens
+  │ 20  │ 👀 PEEK │ SECONDARY      │ Tech          │   840 │   3.8s │ **Pentagon** Taps **Palantir** for AI-Powered Warf [matched: national security]
+  │
+  │ PAGE 1 RESULT: 5 engaged, 4 glanced, 11 skipped → 25% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 2 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=5, skipped_ids=11, seen_ids=20
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ CURIOSITY      │ Finance       │   840 │   8.7s │ **FTSE 100** Dips Amid **Iran War** Deadlock, Oil  [matched: iran,stock market]
+  │  2  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.6s │ **Social Security** Uncertainty **Impacts** Retire
+  │  3  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   830 │  29.3s │ **Clean Air Act** Faces Challenges Amid **EPA** Re [matched: donald trump,supreme court]
+  │  4  │ ✅ READ │ PRIMARY        │ Politics      │   830 │  23.4s │ **Trump** Shields Farmers with **$12 Billion** Rel [matched: donald trump]
+  │  5  │ 👀 PEEK │ CURIOSITY      │ Finance       │   880 │   4.6s │ **S&P 500** Retreats After **Iran** Attacks Energy [matched: iran,stock market]
+  │  6  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   820 │  31.5s │ **Trump** Agenda Faces Court Roadblocks on Immigra [matched: donald trump,immigration]
+  │  7  │ ✅ READ │ CURIOSITY      │ Politics      │   860 │   6.4s │ **FBI Director's** Email **Hacked**; Iran-Linked G [matched: iran]
+  │  8  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.7s │ **IRS** Paper Check Phaseout Delays **1.4 Million*
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.2s │ **Ross 'The Boss' Friedman** Dies at **72**
+  │ 10  │ ✅ READ │ SECONDARY      │ Finance       │   780 │  11.8s │ **Germany** Grapples with **Pension** System Chall [matched: government shutdown]
+  │ 11  │ ✅ READ │ SECONDARY      │ Politics      │   870 │  13.7s │ **Erdoğan** Appoints **Şaban Kazdal** to Constitut [matched: government shutdown]
+  │ 12  │ ✅ READ │ PRIMARY        │ Politics      │   850 │  18.1s │ **Supreme Court** Flags Law Breaches on Assault Su [matched: supreme court]
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.1s │ **Buffett** Warns Investors: Avoid Costly **Mistak
+  │ 14  │ ❌ SKIP │ CAT_ONLY       │ Politics      │   830 │   1.6s │ **Canada** Boosts Defence Spending to **5%** of GD
+  │ 15  │ ✅ READ │ PRIMARY        │ Politics      │   780 │  22.5s │ **Execution** of Ex-Cop **Duckett** Halted by Cour [matched: supreme court]
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.7s │ **Credit Card** Debt Crisis Impacts **111 Million*
+  │ 17  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   820 │  31.9s │ **Democrats** Lead in **4** Senate Races, Eyeing C [matched: democrat,senate]
+  │ 18  │ ❌ SKIP │ CAT_ONLY       │ Politics      │   830 │   2.1s │ **Education Department** Orders New Student Loan P
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   760 │   1.3s │ **Investors** Brace for **Stagflation** Risk in **
+  │ 20  │ ✅ READ │ PRIMARY        │ Politics      │   780 │  19.7s │ **Goa** Sex Scandal: Over **100** Victims, Council [matched: congress]
+  │
+  │ PAGE 2 RESULT: 11 engaged, 1 glanced, 8 skipped → 55% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 3 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=16, skipped_ids=19, seen_ids=40
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY        │ Politics      │   860 │  20.4s │ **Millions** Protest **Trump's** Policies in 'No K [matched: donald trump]
+  │  2  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   850 │  29.5s │ **Supreme Court** Weighs **Trump's** Migrant Borde [matched: donald trump,supreme court,immigration]
+  │  3  │ 👀 PEEK │ CURIOSITY      │ Science       │   860 │   5.0s │ **China** Turns Coal to Medicine, Solves **160**-Y [matched: china]
+  │  4  │ ✅ READ │ PRIMARY        │ Politics      │   850 │  16.1s │ **Supreme Court** Affirms Land Acquisition **Payou [matched: supreme court]
+  │  5  │ ✅ READ │ PRIMARY        │ Politics      │   850 │  19.3s │ **Supreme Court** Addresses **Unequal** Playing Fi [matched: supreme court]
+  │  6  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.2s │ **Scarlet Monkeyflower** Evolves Rapidly to Surviv
+  │  7  │ ❌ SKIP │ CAT_ONLY       │ Politics      │   830 │   1.7s │ **EU** Rejects Chat Control, Bans AI Porn Deepfake
+  │  8  │ ✅ READ │ CURIOSITY      │ Politics      │   860 │   8.4s │ **Fuel Crisis** Grips Australia Amid **Iran** Conf [matched: iran]
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.9s │ **Gut Bacteria** Injects Proteins, **Controls** Im
+  │ 10  │ 👀 PEEK │ CURIOSITY      │ Politics      │   840 │   3.8s │ **US** Easing Sanctions Could Net **Russia** $2 Bi [matched: china]
+  │ 11  │ 👀 PEEK │ IRRELEVANT     │ Health        │   840 │   2.7s │ **Erythritol** Linked to **Brain Damage** and Stro
+  │ 12  │ 👀 PEEK │ CURIOSITY      │ Science       │   840 │   4.3s │ **NASA** Outlines Plan for Permanent **Moon Base** [matched: spacex]
+  │ 13  │ ✅ READ │ CURIOSITY      │ Finance       │   830 │   5.5s │ **Iran War** Slashes **$100 Billion** From Luxury  [matched: iran,stock market]
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.4s │ **Earth** Splits! **2.5-Meter** Fault Slip Caught 
+  │ 15  │ 👀 PEEK │ CURIOSITY      │ Finance       │   840 │   6.2s │ **Lagarde** Warns of **Energy Shock** Amid Gulf Wa [matched: iran]
+  │ 16  │ 👀 PEEK │ IRRELEVANT     │ Science       │   840 │   3.8s │ **CERN** Reveals New Particle **4x** Heavier Than 
+  │ 17  │ 👀 PEEK │ CURIOSITY      │ Business      │   840 │   5.6s │ **Magnificent Seven** Stocks Plunge, Erasing **$85 [matched: stock market]
+  │ 18  │ 👀 PEEK │ CURIOSITY      │ Finance       │   830 │   4.9s │ **Global** Private Credit Faces **Meltdown**, Hits [matched: china]
+  │ 19  │ 👀 PEEK │ CURIOSITY      │ Business      │   910 │   5.7s │ **SpaceX** Set to Launch **IPO**, Valued at **$1.7 [matched: stock market,spacex]
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Science       │   860 │   1.2s │ **US** Caused **$10 Trillion** in Climate Damage: 
+  │
+  │ PAGE 3 RESULT: 6 engaged, 9 glanced, 5 skipped → 30% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 4 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=22, skipped_ids=24, seen_ids=60
+  │ Server returned: 15 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY        │ Politics      │   910 │  15.2s │ **Trump** Holds Cabinet Meeting Amid **Iran** War, [matched: donald trump]
+  │  2  │ ✅ READ │ PRIMARY        │ Politics      │   840 │  24.8s │ **Harvard** Faces DOJ Suit Over **Antisemitism** C [matched: donald trump]
+  │  3  │ ✅ READ │ CURIOSITY      │ World         │   950 │   8.9s │ **Iran** Warns Regional Rivals: Don't Aid **Enemie [matched: iran]
+  │  4  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   840 │  27.7s │ **GOP Senator** Seeks Vote to Authorize **Iran War [matched: congress,republican]
+  │  5  │ ✅ READ │ PRIMARY        │ Politics      │   850 │  24.2s │ **CDU** Ousts **SPD** in Historic Rheinland-Pfalz  [matched: democrat]
+  │  6  │ 👀 PEEK │ IRRELEVANT     │ Health        │   870 │   4.1s │ **Meningitis** Deaths Hit **250,000**; Experts Urg
+  │  7  │ 👀 PEEK │ CURIOSITY      │ Finance       │   870 │   5.0s │ **US Bond Market** Strains as **Iran War** Sparks  [matched: iran]
+  │  8  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.7s │ **UK's FCA** Bans **Garipoğlu** Over Financial Mis
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Health        │   840 │   1.7s │ **Pfizer** Unveils Lyme Disease Vaccine with **70%
+  │ 10  │ 👀 PEEK │ CURIOSITY      │ Finance       │   780 │   5.7s │ **Israeli** Stock Market **Plunges** to Prewar Lev [matched: iran,stock market]
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   860 │   1.6s │ **Bitcoin** Climbs to **$70,352** as Gulf Allies J
+  │ 12  │ ❌ SKIP │ IRRELEVANT     │ Health        │   830 │   1.8s │ **NHS** Errors Surge: **661** Wrong Surgeries in 5
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   810 │   1.1s │ **MARA** Sells **$1.1B** in Bitcoin, Buys Back Deb
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.3s │ **Crypto Stocks** Plunge as **Nasdaq** Enters Corr
+  │ 15  │ ✅ READ │ CURIOSITY      │ Finance       │   780 │   9.6s │ **GameStop** Pledged **$325M** in Bitcoin, Ending  [matched: stock market]
+  │
+  │ PAGE 4 RESULT: 6 engaged, 3 glanced, 6 skipped → 40% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 5 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=28, skipped_ids=30, seen_ids=75
+  │ Server returned: 16 articles, has_more=false
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY        │ Politics      │   860 │  21.0s │ **Trump** Reshapes US Historical, Cultural Institu [matched: donald trump]
+  │  2  │ 👀 PEEK │ CURIOSITY      │ Business      │   940 │   6.0s │ **Global Markets** Plunge **$11.5 Trillion** Amid  [matched: iran,stock market]
+  │  3  │ ✅ READ │ PRIMARY        │ Politics      │   860 │  23.4s │ **Supreme Court** Rules on **Dalit** Reservation C [matched: supreme court]
+  │  4  │ 👀 PEEK │ CURIOSITY      │ Business      │   880 │   4.7s │ **Oil Shock** Builds as **Iran War** Threatens Hor [matched: iran]
+  │  5  │ ✅ READ │ PRIMARY_STRONG │ Politics      │   860 │  37.6s │ **Trump** Detains Parents of Over **11,000** Citiz [matched: donald trump,immigration]
+  │  6  │ ✅ READ │ CURIOSITY      │ Business      │   930 │   5.5s │ **Iran War** Sends Fuel Prices Soaring; Ships Fore [matched: iran]
+  │  7  │ ✅ READ │ CURIOSITY      │ Business      │   860 │   7.3s │ **Iran War** Squeezes **Bangladesh** Garment Expor [matched: iran]
+  │  8  │ 👀 PEEK │ SECONDARY_STRONG │ Politics      │   840 │   4.0s │ **England** Mandates Solar Panels on All New Homes [matched: government shutdown,policy]
+  │  9  │ ✅ READ │ CURIOSITY      │ Business      │   930 │   5.5s │ **IEA** to Release **412M** Barrels Amid Iran War [matched: iran]
+  │ 10  │ ✅ READ │ PRIMARY        │ Tech          │   860 │  20.4s │ **Supreme Court** Shields **ISPs** From User Pirac [matched: supreme court]
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.6s │ Sheets **Disrupt** Sleep, Cause **Micro-Overheatin
+  │ 12  │ ❌ SKIP │ IRRELEVANT     │ Health        │   850 │   1.6s │ New **Peptide** May Replace **Insulin** Injections
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   830 │   1.4s │ **Social Media** Faces Reckoning Over Youth Mental
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.4s │ **Midnight** Inks **£250M** Tokenisation Deal with
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.5s │ **Fannie Mae** Backs **Crypto** Mortgages via **Co
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.7s │ **Freshwater Fish** Populations **Plunge 81%** Sin
+  │
+  │ PAGE 5 RESULT: 7 engaged, 3 glanced, 6 skipped → 44% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  PERSONA SUMMARY: Jake — US Politics
+  Total seen: 91 | Engaged: 35 (38.5%) | Glanced: 20 (22.0%) | Skipped: 36
+  Satisfaction: 45.1% | Avoid violations: 0
+  Cumulative signals sent to server: 35 engaged_ids, 36 skipped_ids
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+📈 PERSONA: Linda — Markets
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  Primary interests:   stock market, oil prices, inflation, bitcoin, cryptocurrency, finance, economics, trade, economy
+  Secondary interests: energy, oil, sanctions, china, european union, business
+  Curiosity:           artificial intelligence, electric vehicles, spacex
+  Avoids:              gaming, anime, k-pop, fashion, yoga, cricket
+  Preferred categories: Finance, Business
+
+  ┌─ PAGE 1 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=0, skipped_ids=0, seen_ids=0
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   910 │   1.6s │ **Dodgers** Celebrate Back-to-Back **World Series*
+  │  2  │ ✅ READ │ SECONDARY_STRONG │ Science       │   880 │  13.4s │ Climate Change Costs **Trillions** to Global Econo [matched: china,european union]
+  │  3  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   830 │   1.8s │ **Meta** Fined **$375 Million** for Child Safety V
+  │  4  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.2s │ **Taos Pueblo** Still Anchors **Indigenous** Tradi
+  │  5  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   840 │   1.6s │ **Reddick** Wins **Daytona 500**, Jordan Changes N
+  │  6  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  23.5s │ **Turkey** Sells Gold Reserves Amid Currency Crisi [matched: economy]
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.1s │ **Parents'** Phone Use Sparks Debate on Child Beha
+  │  8  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   880 │   1.3s │ **One Battle After Another** Wins **Best Picture**
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   580 │   1.2s │ **Fast-Growing** Fruit Trees **Thrive** in Many US
+  │ 10  │ ❌ SKIP │ IRRELEVANT     │ Health        │   840 │   1.1s │ **Alzheimer's** Treatment: New **Drugs** Offer Hop
+  │ 11  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  22.8s │ **Oil** Hits **$100** as Stocks, Bonds Both Fall [matched: stock market,oil prices]
+  │ 12  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  23.4s │ **Social Security** Uncertainty **Impacts** Retire [matched: finance,economics]
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Politics      │   860 │   1.1s │ **Trump's** Approval **Falls** Amidst Month-Long I
+  │ 14  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  21.1s │ **IRS** Paper Check Phaseout Delays **1.4 Million* [matched: finance]
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   580 │   1.7s │ **Free** Park Pass** Available** for People with D
+  │ 16  │ ✅ READ │ SECONDARY_STRONG │ Tech          │   840 │  14.9s │ **Chinese** Battery **Doubles** EV Range, Works at [matched: energy,china]
+  │ 17  │ ✅ READ │ SECONDARY      │ Politics      │   860 │  14.2s │ **Fentanyl** Crisis: **China** Fuels US National S [matched: china]
+  │ 18  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   780 │   2.1s │ **Germany** Grapples with **Pension** System Chall
+  │ 19  │ 👀 PEEK │ SECONDARY      │ Science       │   840 │   5.7s │ **NASA** Races to Build **Moon Base**, Challenges  [matched: china]
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Politics      │   840 │   1.8s │ **Trump** Admin Revives 'God Squad' to Bypass **ES
+  │
+  │ PAGE 1 RESULT: 7 engaged, 1 glanced, 12 skipped → 35% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 2 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=7, skipped_ids=12, seen_ids=20
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ❌ SKIP │ IRRELEVANT     │ World         │   950 │   1.9s │ **Iran** Warns Regional Rivals: Don't Aid **Enemie
+  │  2  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.6s │ **Scarlet Monkeyflower** Evolves Rapidly to Surviv
+  │  3  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   840 │  30.3s │ **FTSE 100** Dips Amid **Iran War** Deadlock, Oil  [matched: stock market,oil prices,finance]
+  │  4  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.3s │ Scientists Detect Possible **Exploding Black Hole*
+  │  5  │ 👀 PEEK │ PRIMARY        │ Finance       │   780 │   3.6s │ **UK's FCA** Bans **Garipoğlu** Over Financial Mis [matched: finance]
+  │  6  │ ✅ READ │ PRIMARY        │ Finance       │   880 │  20.4s │ **S&P 500** Retreats After **Iran** Attacks Energy [matched: stock market]
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.9s │ **Gut Bacteria** Injects Proteins, **Controls** Im
+  │  8  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  26.0s │ **Credit Card** Debt Crisis Impacts **111 Million* [matched: finance,economy]
+  │  9  │ 👀 PEEK │ CURIOSITY      │ Tech          │   840 │   6.2s │ **Pentagon** Taps **Palantir** for AI-Powered Warf [matched: artificial intelligence]
+  │ 10  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.3s │ **Earth** Splits! **2.5-Meter** Fault Slip Caught 
+  │ 11  │ ✅ READ │ CURIOSITY      │ Science       │   840 │   6.2s │ **NASA** Outlines Plan for Permanent **Moon Base** [matched: spacex]
+  │ 12  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  17.2s │ **Buffett** Warns Investors: Avoid Costly **Mistak [matched: finance]
+  │ 13  │ 👀 PEEK │ IRRELEVANT     │ Science       │   840 │   4.5s │ **Freshwater Fish** Populations **Plunge 81%** Sin
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.6s │ **NASA** Rover Finds Ancient **Mars** River Delta
+  │ 15  │ 👀 PEEK │ IRRELEVANT     │ Sports        │   800 │   2.9s │ **Tennessee** Battles **Michigan** in Elite Eight 
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Science       │   810 │   1.4s │ **Saturn's Rings** Formed From Shattered **Moon**,
+  │ 17  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.7s │ **NASA** Gears Up for **Artemis II** Moon Rocket L
+  │ 18  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   760 │   1.9s │ **Investors** Brace for **Stagflation** Risk in **
+  │ 19  │ 👀 PEEK │ IRRELEVANT     │ Science       │   840 │   3.4s │ **CERN** Reveals New Particle **4x** Heavier Than 
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.1s │ **NASA** Abandons Lunar Station, Aims for **2028**
+  │
+  │ PAGE 2 RESULT: 5 engaged, 5 glanced, 10 skipped → 25% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 3 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=12, skipped_ids=22, seen_ids=40
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ SECONDARY      │ Tech          │   840 │  13.0s │ **Europe** Moves to **Ban** Social Media for Teens [matched: european union]
+  │  2  │ ✅ READ │ PRIMARY        │ Finance       │   830 │  16.8s │ **Iran War** Slashes **$100 Billion** From Luxury  [matched: stock market]
+  │  3  │ ✅ READ │ PRIMARY        │ Finance       │   840 │  24.6s │ **Lagarde** Warns of **Energy Shock** Amid Gulf Wa [matched: economics]
+  │  4  │ ✅ READ │ PRIMARY_STRONG │ Business      │   940 │  36.8s │ **Global Markets** Plunge **$11.5 Trillion** Amid  [matched: stock market,finance,economy]
+  │  5  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   840 │  27.6s │ **Nasdaq** Plunges into Correction Amid Iran Tensi [matched: stock market,finance]
+  │  6  │ 👀 PEEK │ PRIMARY        │ Finance       │   830 │   4.2s │ **Global** Private Credit Faces **Meltdown**, Hits [matched: economy]
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.6s │ **Ross 'The Boss' Friedman** Dies at **72**
+  │  8  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   860 │   2.2s │ **Gold**, **Silver** Plunge as Investors Dump Safe
+  │  9  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   840 │   2.1s │ **US Debt** Surges Past **$39 Trillion**, Sparks A
+  │ 10  │ 👀 PEEK │ IRRELEVANT     │ Tech          │   830 │   3.7s │ **Social Media** Faces Reckoning Over Youth Mental
+  │ 11  │ ✅ READ │ PRIMARY        │ Finance       │   850 │  15.9s │ **Dollar** Drops **10%** During Trump's Second Ter [matched: economics]
+  │ 12  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  27.0s │ **European** Borrowing Costs Hit **15-Year** Highs [matched: inflation,finance,economy]
+  │ 13  │ 👀 PEEK │ CURIOSITY      │ Tech          │   840 │   5.2s │ **AI Pioneer** Warns **All Jobs** at Risk Within 5 [matched: artificial intelligence]
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   860 │   1.2s │ **Supreme Court** Shields **ISPs** From User Pirac
+  │ 15  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   860 │  31.5s │ **Bitcoin** Climbs to **$70,352** as Gulf Allies J [matched: bitcoin,cryptocurrency]
+  │ 16  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  38.9s │ **Crypto Stocks** Plunge as **Nasdaq** Enters Corr [matched: bitcoin,cryptocurrency]
+  │ 17  │ ❌ SKIP │ MILD_AVOID     │ Entertainment │   780 │   1.2s │ **BTS** Tops UK Charts with Comeback Album **Arira
+  │ 18  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  17.9s │ **Japan** Bond Yields Hit Highest Since **1999** [matched: economy]
+  │ 19  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   840 │  36.2s │ **Gold** Plunges **10%**, Worst Drop Since 2011 [matched: inflation,economy]
+  │ 20  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   840 │   2.0s │ **FTSE 100** Plunges as **UK** Gilts Hit **2008** 
+  │
+  │ PAGE 3 RESULT: 11 engaged, 3 glanced, 6 skipped → 55% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 4 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=23, skipped_ids=28, seen_ids=60
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY        │ Finance       │   870 │  14.0s │ **US Bond Market** Strains as **Iran War** Sparks  [matched: finance]
+  │  2  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   860 │  27.4s │ **Trump** Pauses Iran Strikes; **Bitcoin** Rebound [matched: stock market,bitcoin,cryptocurrency]
+  │  3  │ ✅ READ │ CURIOSITY      │ Tech          │   830 │   5.8s │ **Meta** Faces Setback in AI Industry Lawsuit Figh [matched: artificial intelligence]
+  │  4  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  29.2s │ **Fannie Mae** Backs **Crypto** Mortgages via **Co [matched: bitcoin,cryptocurrency,finance]
+  │  5  │ ✅ READ │ PRIMARY        │ Business      │   880 │  25.1s │ **Oil Shock** Builds as **Iran War** Threatens Hor [matched: oil prices]
+  │  6  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   810 │  26.1s │ **MARA** Sells **$1.1B** in Bitcoin, Buys Back Deb [matched: bitcoin,finance]
+  │  7  │ ❌ SKIP │ CAT_ONLY       │ Business      │   930 │   1.5s │ **Iran War** Sends Fuel Prices Soaring; Ships Fore
+  │  8  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   780 │   2.1s │ **Online Scams** Surge; **73%** of Americans Affec
+  │  9  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  29.0s │ **Israeli** Stock Market **Plunges** to Prewar Lev [matched: stock market,economy]
+  │ 10  │ ✅ READ │ PRIMARY_STRONG │ Business      │   840 │  26.5s │ **Magnificent Seven** Stocks Plunge, Erasing **$85 [matched: stock market,inflation]
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   820 │   1.8s │ **Apple** Releases iOS 26.4, Announces **WWDC 2026
+  │ 12  │ ✅ READ │ PRIMARY_STRONG │ Business      │   860 │  38.8s │ **Iran War** Squeezes **Bangladesh** Garment Expor [matched: trade,economy]
+  │ 13  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  24.0s │ **1.4 Million** Aussies Face **Mortgage Stress** A [matched: finance]
+  │ 14  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  25.5s │ **7 Million** Face Student Loan Payment Plan Probl [matched: finance]
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   840 │   1.1s │ **Meta**, **YouTube** Liable for Social Media Addi
+  │ 16  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  21.6s │ **Gold** Jumps as **Oil** Slump Eases Inflation Fe [matched: oil prices,inflation]
+  │ 17  │ 👀 PEEK │ CURIOSITY      │ Tech          │   780 │   5.8s │ Ominous Surveillance **"Scarecrows"** Appear Acros [matched: artificial intelligence]
+  │ 18  │ ❌ SKIP │ IRRELEVANT     │ Politics      │   870 │   1.4s │ **Erdoğan** Appoints **Şaban Kazdal** to Constitut
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   840 │   1.9s │ **Meta** to Fight Verdicts, Faces Liability for Ad
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Health        │   860 │   1.6s │ **Flesh-Eating** Parasite Threatens to Reinvade th
+  │
+  │ PAGE 4 RESULT: 12 engaged, 1 glanced, 7 skipped → 60% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 5 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=35, skipped_ids=35, seen_ids=80
+  │ Server returned: 20 articles, has_more=false
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY_STRONG │ Business      │   860 │  23.8s │ **Iran War** Threatens **Petrochemicals**, Sparks  [matched: inflation,economy]
+  │  2  │ ✅ READ │ PRIMARY        │ Finance       │   830 │  21.5s │ **Stocks** Slide as **Iran** Conflict Fears Intens [matched: stock market]
+  │  3  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  22.9s │ **Retirement** Crisis: Millions Face **$0** in Sav [matched: finance]
+  │  4  │ ✅ READ │ PRIMARY        │ Business      │   910 │  23.8s │ **SpaceX** Set to Launch **IPO**, Valued at **$1.7 [matched: stock market]
+  │  5  │ 👀 PEEK │ PRIMARY        │ Finance       │   840 │   3.9s │ **Iran War** Fears Push **EU** Bond Yields Higher [matched: finance]
+  │  6  │ ✅ READ │ PRIMARY        │ Finance       │   780 │  22.7s │ **Europe** Pensions: **20** Nations Fail to Cover  [matched: finance]
+  │  7  │ 👀 PEEK │ CURIOSITY      │ Tech          │   840 │   5.5s │ **AI** Child Abuse Imagery **Surges** by **14%** i [matched: artificial intelligence]
+  │  8  │ ✅ READ │ PRIMARY_STRONG │ Finance       │   780 │  35.8s │ **GameStop** Pledged **$325M** in Bitcoin, Ending  [matched: stock market,bitcoin,cryptocurrency]
+  │  9  │ ❌ SKIP │ CAT_ONLY       │ Finance       │   780 │   2.2s │ **SEC** Probes Ratings Agency Amid Private Credit 
+  │ 10  │ 👀 PEEK │ CURIOSITY      │ Tech          │   840 │   4.3s │ **Pentagon** Invests **$13 Billion** in Palantir's [matched: artificial intelligence]
+  │ 11  │ ✅ READ │ PRIMARY        │ Finance       │   860 │  21.3s │ **Iran War** Fears Trigger **Treasury** Auction Tr [matched: finance]
+  │ 12  │ ✅ READ │ PRIMARY        │ Business      │   860 │  16.8s │ **Kuwait** Slashes Oil Output Amid **Hormuz** Disr [matched: oil prices]
+  │ 13  │ ✅ READ │ PRIMARY        │ Business      │   860 │  18.5s │ **Oil** Supply Faces Shock as **Russian** Exports  [matched: oil prices]
+  │ 14  │ ✅ READ │ CURIOSITY      │ Tech          │   840 │   8.7s │ **Apple** iOS 27: **Siri** to Integrate 3rd-Party  [matched: artificial intelligence]
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Health        │   840 │   1.2s │ **Erythritol** Linked to **Brain Damage** and Stro
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   840 │   1.8s │ **Yamaha** Launches World's First Scooter Airbag
+  │ 17  │ 👀 PEEK │ IRRELEVANT     │ Politics      │   850 │   4.3s │ **Supreme Court** Weighs **Trump's** Migrant Borde
+  │ 18  │ 👀 PEEK │ IRRELEVANT     │ Tech          │   840 │   3.4s │ **FCC** **Bans** Foreign-Made Wi-Fi Routers in the
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   780 │   1.7s │ **Google** Sets **2029** Deadline for Post-Quantum
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Tech          │   820 │   1.2s │ **Neuralink** Patient Plays **WoW** Hands-Free Aft
+  │
+  │ PAGE 5 RESULT: 10 engaged, 5 glanced, 5 skipped → 50% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  PERSONA SUMMARY: Linda — Markets
+  Total seen: 100 | Engaged: 45 (45.0%) | Glanced: 15 (15.0%) | Skipped: 40
+  Satisfaction: 49.5% | Avoid violations: 1
+  Cumulative signals sent to server: 45 engaged_ids, 40 skipped_ids
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+🤖 PERSONA: Priya — AI & Tech
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  Primary interests:   artificial intelligence, meta, apple, google, cybersecurity, social media, machine learning, openai, chatgpt
+  Secondary interests: consumer electronics, drones, electric vehicles, spacex, tesla
+  Curiosity:           cryptocurrency, bitcoin, stock market, climate change
+  Avoids:              iran, military, war, hezbollah, cricket, nfl, soccer
+  Preferred categories: Tech
+
+  ┌─ PAGE 1 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=0, skipped_ids=0, seen_ids=0
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ CURIOSITY      │ Science       │   880 │   8.4s │ Climate Change Costs **Trillions** to Global Econo [matched: climate change]
+  │  2  │ ❌ SKIP │ MILD_AVOID     │ Entertainment │   880 │   1.0s │ **One Battle After Another** Wins **Best Picture**
+  │  3  │ ❌ SKIP │ AVOID          │ Politics      │   860 │   0.6s │ **Trump's** Approval **Falls** Amidst Month-Long I
+  │  4  │ ❌ SKIP │ AVOID          │ Entertainment │   780 │   0.6s │ **BTS** Tops UK Charts with Comeback Album **Arira
+  │  5  │ 👀 PEEK │ IRRELEVANT     │ Health        │   840 │   3.9s │ **Alzheimer's** Treatment: New **Drugs** Offer Hop
+  │  6  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.4s │ **NASA** Races to Build **Moon Base**, Challenges 
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   910 │   1.1s │ **Dodgers** Celebrate Back-to-Back **World Series*
+  │  8  │ ❌ SKIP │ AVOID          │ World         │   950 │   0.6s │ **Iran** Warns Regional Rivals: Don't Aid **Enemie
+  │  9  │ 👀 PEEK │ CURIOSITY      │ Finance       │   780 │   4.1s │ **Oil** Hits **$100** as Stocks, Bonds Both Fall [matched: stock market]
+  │ 10  │ ✅ READ │ PRIMARY        │ Entertainment │   780 │  22.3s │ **Ross 'The Boss' Friedman** Dies at **72** [matched: meta]
+  │ 11  │ 👀 PEEK │ IRRELEVANT     │ Health        │   840 │   3.7s │ **Pfizer** Unveils Lyme Disease Vaccine with **70%
+  │ 12  │ ✅ READ │ PRIMARY        │ Entertainment │   760 │  14.6s │ **AI Doc** Raises Chilling Questions About the Fut [matched: artificial intelligence]
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   840 │   1.5s │ **Reddick** Wins **Daytona 500**, Jordan Changes N
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.2s │ Scientists Detect Possible **Exploding Black Hole*
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Politics      │   860 │   1.5s │ **Fentanyl** Crisis: **China** Fuels US National S
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Politics      │   840 │   1.1s │ **Trump** Admin Revives 'God Squad' to Bypass **ES
+  │ 17  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   0.9s │ **Taos Pueblo** Still Anchors **Indigenous** Tradi
+  │ 18  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.2s │ **Back to the Future** Actor James Tolkan **Dies**
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   780 │   0.9s │ **Malinin** Claims 3rd World Title After **Olympic
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.5s │ **Podcast Host** Recalls Final Texts with **Jessi 
+  │
+  │ PAGE 1 RESULT: 3 engaged, 3 glanced, 14 skipped → 15% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 2 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=3, skipped_ids=14, seen_ids=20
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.4s │ **Social Security** Uncertainty **Impacts** Retire
+  │  2  │ ❌ SKIP │ AVOID          │ Business      │   940 │   0.6s │ **Global Markets** Plunge **$11.5 Trillion** Amid 
+  │  3  │ ✅ READ │ PRIMARY        │ Business      │   840 │  20.2s │ **Magnificent Seven** Stocks Plunge, Erasing **$85 [matched: meta]
+  │  4  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.5s │ **IRS** Paper Check Phaseout Delays **1.4 Million*
+  │  5  │ ❌ SKIP │ AVOID          │ Business      │   930 │   0.6s │ **Iran War** Sends Fuel Prices Soaring; Ships Fore
+  │  6  │ 👀 PEEK │ IRRELEVANT     │ Health        │   840 │   4.4s │ **Erythritol** Linked to **Brain Damage** and Stro
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Finance       │   780 │   1.3s │ **Germany** Grapples with **Pension** System Chall
+  │  8  │ 👀 PEEK │ CURIOSITY      │ Science       │   840 │   4.2s │ **Scarlet Monkeyflower** Evolves Rapidly to Surviv [matched: climate change]
+  │  9  │ ❌ SKIP │ AVOID          │ World         │   950 │   0.6s │ **US**, **Israel** War Against **Iran** Enters Sec
+  │ 10  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   830 │  24.8s │ **Meta** Fined **$375 Million** for Child Safety V [matched: meta,social media]
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.3s │ **Parents'** Phone Use Sparks Debate on Child Beha
+  │ 12  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  21.4s │ **Europe** Moves to **Ban** Social Media for Teens [matched: meta,google,social media]
+  │ 13  │ 👀 PEEK │ SECONDARY      │ Tech          │   840 │   4.8s │ **Chinese** Battery **Doubles** EV Range, Works at [matched: electric vehicles]
+  │ 14  │ ✅ READ │ PRIMARY        │ Science       │   840 │  15.9s │ **Gut Bacteria** Injects Proteins, **Controls** Im [matched: meta]
+  │ 15  │ ❌ SKIP │ AVOID          │ Business      │   860 │   0.6s │ **Iran War** Squeezes **Bangladesh** Garment Expor
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Health        │   830 │   1.1s │ **NHS** Errors Surge: **661** Wrong Surgeries in 5
+  │ 17  │ ❌ SKIP │ AVOID          │ Tech          │   840 │   0.6s │ **Pentagon** Taps **Palantir** for AI-Powered Warf
+  │ 18  │ ❌ SKIP │ AVOID          │ Business      │   840 │   0.6s │ **Housing Shortage** Worsens, **Prices** Jump **20
+  │ 19  │ ❌ SKIP │ AVOID          │ Finance       │   780 │   0.6s │ **Buffett** Warns Investors: Avoid Costly **Mistak
+  │ 20  │ ✅ READ │ PRIMARY        │ Lifestyle     │   580 │  21.4s │ Man 'Dates' **AI** Companion for **Two Years** [matched: artificial intelligence]
+  │
+  │ PAGE 2 RESULT: 5 engaged, 3 glanced, 12 skipped → 25% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 3 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=8, skipped_ids=26, seen_ids=40
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   0.9s │ **Earth** Splits! **2.5-Meter** Fault Slip Caught 
+  │  2  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   680 │   1.0s │ Sheets **Disrupt** Sleep, Cause **Micro-Overheatin
+  │  3  │ ✅ READ │ CURIOSITY      │ Science       │   860 │   7.7s │ **US** Caused **$10 Trillion** in Climate Damage:  [matched: climate change]
+  │  4  │ ❌ SKIP │ IRRELEVANT     │ Health        │   850 │   1.5s │ New **Peptide** May Replace **Insulin** Injections
+  │  5  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   660 │   0.9s │ **Peptides** and **Rosemary Oil** Boost Hair Growt
+  │  6  │ ❌ SKIP │ CAT_ONLY       │ Tech          │   860 │   1.1s │ **Supreme Court** Shields **ISPs** From User Pirac
+  │  7  │ ✅ READ │ CURIOSITY      │ Science       │   840 │   9.2s │ **Climate Change** Slows Earth's Rotation, Extends [matched: climate change]
+  │  8  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.1s │ **CERN** Reveals New Particle **4x** Heavier Than 
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Lifestyle     │   580 │   1.4s │ **Free** Park Pass** Available** for People with D
+  │ 10  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.4s │ **Freshwater Fish** Populations **Plunge 81%** Sin
+  │ 11  │ ✅ READ │ PRIMARY        │ Tech          │   830 │  16.2s │ **Social Media** Faces Reckoning Over Youth Mental [matched: social media]
+  │ 12  │ ❌ SKIP │ IRRELEVANT     │ Science       │   860 │   1.2s │ **China** Turns Coal to Medicine, Solves **160**-Y
+  │ 13  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  19.7s │ **Meta** to Fight Verdicts, Faces Liability for Ad [matched: meta,google,social media]
+  │ 14  │ ✅ READ │ PRIMARY        │ Tech          │   840 │  15.8s │ **AI Pioneer** Warns **All Jobs** at Risk Within 5 [matched: artificial intelligence]
+  │ 15  │ ✅ READ │ SECONDARY      │ Entertainment │   780 │   8.9s │ **PlayStation 5** Price **Jumps** $100 Amid Game S [matched: consumer electronics]
+  │ 16  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  30.9s │ **Meta**, **YouTube** Liable for Social Media Addi [matched: meta,social media]
+  │ 17  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.2s │ **Scientists** Flip Brain's 'Death Switch', **Memo
+  │ 18  │ 👀 PEEK │ PRIMARY_STRONG │ Tech          │   830 │   4.0s │ **Meta** Faces Setback in AI Industry Lawsuit Figh [matched: artificial intelligence,meta]
+  │ 19  │ ✅ READ │ SECONDARY      │ Science       │   840 │  10.9s │ **NASA** Outlines Plan for Permanent **Moon Base** [matched: spacex]
+  │ 20  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  24.4s │ **Apple** iOS 27: **Siri** to Integrate 3rd-Party  [matched: artificial intelligence,apple,google,chatgpt]
+  │
+  │ PAGE 3 RESULT: 9 engaged, 1 glanced, 10 skipped → 45% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 4 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=17, skipped_ids=36, seen_ids=60
+  │ Server returned: 20 articles, has_more=true
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ✅ READ │ PRIMARY        │ Tech          │   820 │  15.8s │ **Apple** Releases iOS 26.4, Announces **WWDC 2026 [matched: apple]
+  │  2  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   820 │  27.0s │ **Instagram**, **YouTube** Face Lawsuit Over Addic [matched: meta,social media]
+  │  3  │ ✅ READ │ PRIMARY        │ Entertainment │   820 │  14.9s │ **Matt Brittin** Named **BBC** Director-General [matched: social media]
+  │  4  │ ✅ READ │ PRIMARY        │ Tech          │   780 │  14.2s │ Ominous Surveillance **"Scarecrows"** Appear Acros [matched: artificial intelligence]
+  │  5  │ 👀 PEEK │ CAT_ONLY       │ Tech          │   820 │   3.3s │ **Neuralink** Patient Plays **WoW** Hands-Free Aft
+  │  6  │ 👀 PEEK │ CURIOSITY      │ Science       │   820 │   5.3s │ Heat Deaths **Disproportionately** Impact Poor Nat [matched: climate change]
+  │  7  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   780 │  32.3s │ **Google** Sets **2029** Deadline for Post-Quantum [matched: google,cybersecurity]
+  │  8  │ ✅ READ │ PRIMARY        │ Tech          │   840 │  23.0s │ **AI** Child Abuse Imagery **Surges** by **14%** i [matched: artificial intelligence]
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.1s │ **2001: A Space Odyssey** Redefines Sci-Fi Genre
+  │ 10  │ ❌ SKIP │ CAT_ONLY       │ Tech          │   840 │   1.9s │ **Yamaha** Launches World's First Scooter Airbag
+  │ 11  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   820 │  26.8s │ **Meta** Platforms Found Harmful to Children by Ju [matched: meta,social media]
+  │ 12  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.6s │ **Netflix** Hikes Subscription Prices; Premium Now
+  │ 13  │ ✅ READ │ PRIMARY        │ Tech          │   840 │  22.3s │ **FBI** Warns: **Russian** Hackers Target Messagin [matched: cybersecurity]
+  │ 14  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  20.3s │ **Meta** to Pay **$375M** in Child Safety Case in  [matched: meta,social media]
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.2s │ **Valve** Veteran **Faliszek** Slams **Epic** Layo
+  │ 16  │ 👀 PEEK │ PRIMARY        │ Tech          │   840 │   4.4s │ **Security** Flaw Exposes Credentials on Thousands [matched: cybersecurity]
+  │ 17  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   830 │  22.1s │ **Meta** Found Liable for Harming Children's Menta [matched: meta,social media]
+  │ 18  │ ❌ SKIP │ IRRELEVANT     │ Entertainment │   780 │   1.3s │ **Paul McCartney** Unveils New Album, **'Dungeon L
+  │ 19  │ ✅ READ │ PRIMARY        │ Tech          │   840 │  13.6s │ **Pentagon** Invests **$13 Billion** in Palantir's [matched: artificial intelligence]
+  │ 20  │ ✅ READ │ PRIMARY_STRONG │ Tech          │   840 │  22.4s │ **iPhone** Hack Tool Leak Puts Millions at **Risk* [matched: apple,cybersecurity]
+  │
+  │ PAGE 4 RESULT: 12 engaged, 3 glanced, 5 skipped → 60% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─ PAGE 5 ────────────────────────────────────────────────────────────────────────────────────┐
+  │ API called with: engaged_ids=29, skipped_ids=41, seen_ids=80
+  │ Server returned: 20 articles, has_more=false
+  │
+  │  #  │ ACTION  │ TIER           │ CATEGORY      │ SCORE │ DWELL │ TITLE
+  │─────┼─────────┼────────────────┼───────────────┼───────┼───────┼────────────────────────────────────────────
+  │  1  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.0s │ **NASA** Gears Up for **Artemis II** Moon Rocket L
+  │  2  │ 👀 PEEK │ CURIOSITY      │ Science       │   780 │   4.8s │ Climate Change **Threatens** Natural Wonders' **Ex [matched: climate change]
+  │  3  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   800 │   1.2s │ **Tennessee** Battles **Michigan** in Elite Eight 
+  │  4  │ 👀 PEEK │ CURIOSITY      │ Science       │   780 │   5.6s │ **Carbon** Material **Redesign** Cuts Capture Cost [matched: climate change]
+  │  5  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.0s │ **NASA** Abandons Lunar Station, Aims for **2028**
+  │  6  │ ❌ SKIP │ IRRELEVANT     │ Sports        │   780 │   1.1s │ **Semenya** Battles **IOC** Over Eligibility Rules
+  │  7  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.2s │ **Ancient** Handprint Rewrites History of **Human 
+  │  8  │ ❌ SKIP │ MILD_AVOID     │ Science       │   840 │   1.0s │ **XRISM** Mission **Solves** Gamma Cas X-Ray Myste
+  │  9  │ ❌ SKIP │ IRRELEVANT     │ Science       │   830 │   1.4s │ **EU** Eyes Broad Ban on **PFAS** 'Forever Chemica
+  │ 10  │ ✅ READ │ PRIMARY        │ Science       │   840 │  19.1s │ **Deepfake X-rays** Fool Radiologists, **Medical C [matched: artificial intelligence]
+  │ 11  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.4s │ **Glass** Transforms into **Quantum** Security Dev
+  │ 12  │ 👀 PEEK │ CURIOSITY      │ Science       │   860 │   4.4s │ **Arctic** Ice Shrinks to Record Low, **Climate**  [matched: climate change]
+  │ 13  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.5s │ **Record** Heatwave **Spreads** Across Entire Unit
+  │ 14  │ ❌ SKIP │ IRRELEVANT     │ Science       │   860 │   1.4s │ **Deep Brain Stimulation** Reverses **Schizophreni
+  │ 15  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.5s │ **NASA** Rover Finds Ancient **Mars** River Delta
+  │ 16  │ ❌ SKIP │ IRRELEVANT     │ Science       │   860 │   1.3s │ **Scientists** Create 'Zombie' Cells via Genome Tr
+  │ 17  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   0.9s │ **CERN** Transports Antimatter Outside Lab for Fir
+  │ 18  │ ❌ SKIP │ IRRELEVANT     │ Science       │   820 │   1.5s │ **NASA** Pauses Lunar Station, Focuses on **Moon**
+  │ 19  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.2s │ **Colorado River** Talks Stall, Threatening **40M*
+  │ 20  │ ❌ SKIP │ IRRELEVANT     │ Science       │   840 │   1.1s │ **Chinese** Scientists Develop **Alloy** Near Abso
+  │
+  │ PAGE 5 RESULT: 1 engaged, 3 glanced, 16 skipped → 5% engagement
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  PERSONA SUMMARY: Priya — AI & Tech
+  Total seen: 100 | Engaged: 30 (30.0%) | Glanced: 13 (13.0%) | Skipped: 57
+  Satisfaction: 33.9% | Avoid violations: 12
+  Cumulative signals sent to server: 30 engaged_ids, 57 skipped_ids

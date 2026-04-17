@@ -1,0 +1,172 @@
+HANDOFF DOCUMENT — Feed Algorithm Terminal
+==========================================
+Date: April 3, 2026
+Project: Today+ (TodayPlus) — text-based social platform
+Main repo: /Users/omersogancioglu/Ten News Website
+iOS app: /Users/omersogancioglu/Ten News Website/.claude/worktrees/awesome-merkle/TenNewsApp
+
+
+YOUR ROLE
+=========
+You are the MAIN BRAIN for the algorithm. You own:
+- pages/api/feed/main.js (~2500 lines) — the core feed algorithm
+- pages/api/analytics/track.js — event tracking + taste vector updates
+- pages/api/explore/topics.js — explore page topic generation
+- pages/api/search/index.js — search API
+- services/cluster_user_interests.py — K-means user interest clustering
+- iOS app feed logic (FeedViewModel.swift, FeedService.swift, MainFeedView.swift)
+
+There are other terminals for UI/design and Cloud Run pipeline. You handle algorithm + iOS.
+
+
+THE PROFESSOR
+=============
+The user works with an external algorithm professor who has TikTok/Instagram expertise.
+The user relays the professor's analysis and instructions. When the professor says something,
+treat it as authoritative guidance. The professor reviews changes and catches edge cases.
+When stuck, the user can ask the professor for guidance — prepare clear questions with
+specific data (pool sizes, event counts, article ages, etc.) so the professor can diagnose.
+
+
+CURRENT STATE OF THE BUGS (UNSOLVED)
+=====================================
+
+TWO PERSISTENT PROBLEMS that we could NOT solve despite ~15 commits of attempts:
+
+1. "YOU'RE ALL CAUGHT UP" — shows after scrolling a few articles or on first load.
+2. "SEEING ARTICLES I'VE ALREADY READ" — previously viewed articles reappear in feed.
+
+These feel like they should be simple but have multiple interacting root causes.
+
+
+WHAT WE TRIED AND WHY IT DIDN'T FULLY WORK
+============================================
+
+Attempt 1: has_more calculation was wrong
+  - Old: compared cumulative offset vs shrinking pool → crossed after 5 pages
+  - Fix: has_more = selected.length >= limit && remainingPool > selected.length
+  - Status: FIXED on server. API returns has_more=true with curl.
+  - BUT: user still sees "all caught up" on the simulator app.
+
+Attempt 2: iOS hasMore recovery
+  - Added hasMoreBecameFalseAt timestamp, retries after 2 min
+  - Status: IMPLEMENTED but doesn't solve the root cause.
+
+Attempt 3: Seen exclusion missing article_exit events
+  - 60% of events were article_exit type, not in the exclusion filter
+  - Fix: added article_exit, article_revisit, article_liked to the query
+  - Status: FIXED. But articles still repeat.
+
+Attempt 4: Pool exhaustion from too many seen IDs
+  - User had 335 seen events, pools only had ~200 articles
+  - Tried: reducing seen window, widening pools, DB-level exclusion
+  - Status: PARTIALLY FIXED. Pools are bigger but still thin for heavy test user.
+
+Attempt 5: Old articles dominating feed (15-19 days old)
+  - Personal scoring used recency as additive boost, not multiplier
+  - Fix: recency decay now multiplies entire score
+  - Also: hard-capped all pools at 7 days
+  - Status: FIXED. No articles >7d appear now.
+
+Attempt 6: Seen query LIMIT overflow
+  - 366 events in 48h, LIMIT 300 missed events at position 301+
+  - Fix: extended to 7d window, LIMIT 1000
+  - Status: FIXED on server. curl shows 0 overlap.
+
+Attempt 7: iOS sending stale seen_ids from ReadingHistoryManager
+  - ReadingHistoryManager persists 500 entries in UserDefaults across all sessions
+  - Initial load sent 100 of these as seen_ids, permanently shrinking pools
+  - Fix (professor's instruction): initial load sends NO seen_ids (clean session)
+  - Only page 2+ sends within-session seen_ids
+  - Status: IMPLEMENTED. API call logs show no seen_ids on initial load.
+
+
+THE DISCONNECT
+==============
+When testing via curl (same user_id, same endpoint), the API returns:
+  - 25 articles, has_more=true, 0 overlap with user history
+
+But the user reports the simulator STILL shows:
+  - "All caught up" message
+  - Previously seen articles
+
+This means either:
+  A) The app isn't calling the API we think it's calling
+  B) The app has additional client-side logic we haven't found
+  C) The Vercel deployment is stale/cached for the app but not for curl
+  D) There's a race condition or timing issue
+  E) The user is looking at a different screen than we think (explore vs feed)
+
+
+KEY TECHNICAL DETAILS
+=====================
+
+Simulator user: 5082a1df-24e4-4a39-a0c0-639c4de70627
+  - Has 4 interest clusters: mergers/berkshire, china/fentanyl, gen-z/AI, nasa/artemis
+  - Has 174 total article interactions (all-time)
+  - Has ~150 unique seen articles in 7d window
+  - ReadingHistoryManager was cleared (UserDefaults wiped for testing)
+
+Feed API: https://www.tennews.ai/api/feed/main
+  - Vercel serverless, deployed via git push to main branch
+  - Base URL in app: https://www.tennews.ai (hardcoded in APIClient.swift:7)
+  - No caching: urlCache = nil, reloadIgnoringLocalCacheData
+
+iOS "all caught up" triggers:
+  - MainFeedView.swift:29 → CaughtUpView() when sortedArticles.isEmpty
+  - MainFeedView.swift:117 → CompactCaughtUpBanner() when currentIndex >= count-1 && !hasMore
+
+Pagination:
+  - loadMoreIfNeeded() triggers when user is within 5 articles of end
+  - guard hasMore, !isLoading, !isRefreshing (blocks if any are wrong)
+  - hasMore recovery: retries after 2 min if stuck at false
+
+Debug logging already in place:
+  - FeedService.swift: logs API URL and response (subsystem: com.tennews.app, category: FeedAPI)
+  - FeedViewModel.swift: logs article count, hasMore, userId (category: Feed)
+  - Read logs: xcrun simctl spawn booted log show --predicate 'subsystem == "com.tennews.app"' --last 30s --style compact
+
+
+WHAT TO INVESTIGATE FIRST
+==========================
+
+1. Take a screenshot of the simulator to see EXACTLY what the user sees.
+   Maybe it's the explore page, not the feed. Maybe it's a loading state.
+
+2. Check the os_log output on fresh launch — does loadInitialData even run?
+   Does it get 25 articles? Does hasMore come back true?
+
+3. If the API returns 25 articles with hasMore=true (confirmed via logs),
+   but user still sees "all caught up", the problem is in the VIEW LAYER:
+   - Is sortedArticles empty despite allArticles having 25 items?
+   - Is passesFeedFilters() removing everything?
+   - Is rebuildArticleList() or the reRanker returning empty?
+
+4. If the user sees previously read articles despite 0 overlap in curl,
+   check whether the TITLES look similar (same-story duplicates from different
+   sources) vs literally the same article ID.
+
+5. Check if Vercel actually deployed the latest code:
+   Add a version string to the API response: _version: "v20260403a"
+   and verify the app receives it.
+
+
+FILES TO READ FIRST
+===================
+- pages/api/feed/main.js (the algorithm — start at line 880 for seen exclusion)
+- TenNewsApp/ViewModels/FeedViewModel.swift (iOS feed logic)
+- TenNewsApp/Views/Feed/MainFeedView.swift (where "caught up" shows)
+- TenNewsApp/Networking/FeedService.swift (API call construction)
+- TenNewsApp/Networking/APIClient.swift (base URL, no caching)
+- docs/algorithm_changes_april2_3.txt (detailed log of all changes made)
+
+
+IMPORTANT RULES
+===============
+- NEVER simctl uninstall the app — it wipes user data. Only terminate + install over.
+- User views app ONLY in iOS Simulator (iPhone 17 Pro, AF8E60D4-FB69-4B1B-9BAF-8D0908DEAEFF)
+- Build: cd TenNewsApp && xcodebuild -scheme TenNewsApp -destination 'id=AF8E60D4...' -configuration Debug build
+- Bundle ID: com.tennews.app (NOT com.omersogancioglu.TenNewsApp)
+- The user wants FEED ALGORITHM improvements, not UI/social features
+- Don't add features beyond what's asked. Don't refactor surrounding code.
+- Ask the professor (via the user) when stuck — provide specific data.

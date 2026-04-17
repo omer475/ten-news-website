@@ -1,0 +1,570 @@
+═══════════════════════════════════════════════════════════════
+  50-PERSONA FEED TEST v3 — REALISTIC MULTI-INTEREST
+  Users select 5-8 SUBTOPICS, have 3 favorites
+  Measures: match rate, favorite rate, topic diversity
+═══════════════════════════════════════════════════════════════
+Started: 2026-03-22T01:26:38.306Z
+
+
+[1/50] Maria (brazil)
+  Subtopics: soccer(0.9), movies_film(0.8), ai_ml(0.7), music(0.5), bitcoin(0.4), travel_adventure(0.3)
+  Top interests (≥0.7): [soccer, movies_film, ai_ml]
+
+[2/50] Jake (usa)
+  Subtopics: nfl(0.9), gaming(0.85), ai_ml(0.8), stock_markets(0.5), comedy(0.4), space_astronomy(0.3)
+  Top interests (≥0.7): [nfl, gaming, ai_ml]
+
+[3/50] Priya (india)
+  Subtopics: cricket(0.9), food_cooking(0.8), bollywood(0.7), startups_vc(0.6), cybersecurity(0.4), mental_health(0.3)
+  Top interests (≥0.7): [cricket, food_cooking, bollywood]
+
+[4/50] Emre (turkiye)
+  Subtopics: soccer(0.95), f1(0.85), gaming(0.7), middle_east(0.6), automotive(0.5), space_tech(0.3)
+  Top interests (≥0.7): [soccer, f1, gaming]
+
+[5/50] Sophie (france)
+  Subtopics: food_cooking(0.9), movies_film(0.85), climate_environment(0.8), fashion(0.6), european_politics(0.5), music(0.4)
+  Top interests (≥0.7): [food_cooking, movies_film, climate_environment]
+  P1:  40% any,   0% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:1 S:14
+  P1:  65% any,  55% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:0 S:14
+  P1:  84% any,  32% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:5 S:10
+  P1:  84% any,  79% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:2 S:9
+  P1:  90% any,  65% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:4 S:8
+  P2:  25% any,   0% high · | ◆◆◇◇◇◇ 2 topics | L:1 E:0 S:15
+  P2:  75% any,  55% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:4 S:12
+  P2:  70% any,  35% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:3 S:8
+  P2:  55% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:5 S:9
+  P2:  75% any,  50% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:8 S:9
+  P3:  25% any,   0% high · | ◆◆◆◇◇◇ 3 topics | L:1 E:1 S:17
+  P3:  75% any,  75% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:4 S:9
+  P3:  75% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:12
+  P3:  65% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:2 S:14
+  P3:  60% any,  60% high ★ | ◆◆◇◇◇◇ 2 topics | L:1 E:5 S:11
+  P4:  15% any,   5% high · | ◆◆◆◇◇◇ 3 topics | L:0 E:0 S:16
+  P4:  65% any,  60% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:4 S:9
+  P4:  60% any,  10% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:1 S:9
+  P4:  65% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:3 S:9
+  P4:  75% any,  75% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:4 S:10
+  P5:  15% any,   5% high · | ◆◆◆◇◇◇ 3 topics | L:1 E:1 S:13
+  ❌ FLAT | Any: 33→15 (-18) | High: 0→5 (+5) | Diversity: 2.8 topics/page | Alignment: 8%
+  P5:  60% any,  60% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:4 S:10
+  ❌ FLAT | Any: 70→63 (-8) | High: 55→60 (+5) | Diversity: 3.4 topics/page | Alignment: 13%
+  P5:  65% any,  20% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:3 S:9
+  ❌ FLAT | Any: 77→63 (-15) | High: 33→15 (-18) | Diversity: 4.2 topics/page | Alignment: 11%
+  P5:  60% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:3 S:12
+  ❌ FLAT | Any: 83→63 (-20) | High: 58→53 (-5) | Diversity: 4.2 topics/page | Alignment: 13%
+  P5:  70% any,  70% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:3 S:10
+  🔄 PIVOT | Any: 70→73 (+3) | High: 67→73 (+6) | Diversity: 2.8 topics/page | Alignment: 13%
+
+[6/50] Kenji (japan)
+  Subtopics: anime_manga(0.9), gaming(0.85), robotics_hardware(0.7), space_astronomy(0.6), baseball(0.5), food_cooking(0.4)
+  Top interests (≥0.7): [anime_manga, gaming, robotics_hardware]
+
+[7/50] Ahmed (turkiye)
+  Subtopics: soccer(0.9), middle_east(0.8), boxing_mma(0.7), oil_energy(0.6), bitcoin(0.5), travel_adventure(0.3)
+  Top interests (≥0.7): [soccer, middle_east, boxing_mma]
+
+[8/50] Sarah (usa)
+  Subtopics: ai_ml(0.9), fitness_workout(0.8), mental_health(0.7), tv_streaming(0.6), cybersecurity(0.5), pets_animals(0.4)
+  Top interests (≥0.7): [ai_ml, fitness_workout, mental_health]
+
+[9/50] Carlos (spain)
+  Subtopics: soccer(0.9), latin_music(0.8), tennis(0.75), movies_film(0.6), european_politics(0.5), oil_energy(0.3)
+  Top interests (≥0.7): [soccer, latin_music, tennis]
+
+[10/50] Fatima (turkiye)
+  Subtopics: middle_east(0.9), human_rights_civil(0.8), kpop_kdrama(0.7), tv_streaming(0.6), beauty_skincare(0.5), public_health(0.4)
+  Top interests (≥0.7): [middle_east, human_rights_civil, kpop_kdrama]
+  P1:  70% any,  15% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:3 S:10
+  P1:  75% any,  50% high ★ | ◆◆◆◆◆◆ 6 topics | L:3 E:4 S:11
+  P1:  74% any,  53% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:5 S:7
+  P1:  79% any,  47% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:2 S:10
+  P1:  90% any,  60% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:5 S:9
+  P2:  60% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:3 S:14
+  P2:  55% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:4 S:12
+  P2:  40% any,  35% high ▲ | ◆◆◇◇◇◇ 2 topics | L:0 E:4 S:13
+  P2:  80% any,  10% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:4 S:8
+  P2:  60% any,  35% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:2 S:14
+  P3:  65% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:0 E:2 S:12
+  P3:  55% any,  30% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:1 S:12
+  P3:  65% any,  15% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:11
+  P3:  55% any,  40% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:4 S:12
+  P3:  45% any,  40% high ▲ | ◆◆◇◇◇◇ 2 topics | L:3 E:0 S:13
+  P4:  50% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:2 S:14
+  P4:  45% any,  45% high ▲ | ◆◇◇◇◇◇ 1 topics | L:3 E:2 S:12
+  P4:  55% any,   0% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:5 S:10
+  P4:  65% any,  30% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:6 S:9
+  P4:  60% any,  40% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:4 S:8
+  P5:  60% any,  30% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:1 S:13
+  ❌ FLAT | Any: 65→55 (-10) | High: 48→33 (-15) | Diversity: 3.8 topics/page | Alignment: 12%
+  P5:  65% any,   5% high ★ | ◆◆◆◇◇◇ 3 topics | L:0 E:3 S:12
+  ❌ FLAT | Any: 75→60 (-15) | High: 13→3 (-10) | Diversity: 3.4 topics/page | Alignment: 9%
+  P5:  55% any,  50% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:2 S:12
+  🔄 PIVOT | Any: 59→50 (-9) | High: 41→48 (+6) | Diversity: 2.4 topics/page | Alignment: 13%
+  P5:  85% any,  60% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:8 S:6
+  🔄 PIVOT | Any: 67→75 (+8) | High: 54→45 (-9) | Diversity: 4.0 topics/page | Alignment: 13%
+  P5:  75% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:7 S:6
+  ❌ FLAT | Any: 75→68 (-8) | High: 48→48 (0) | Diversity: 2.8 topics/page | Alignment: 12%
+
+[11/50] Raj (india)
+  Subtopics: ai_ml(0.95), cybersecurity(0.8), startups_vc(0.7), cricket(0.6), space_tech(0.5), stock_markets(0.4)
+  Top interests (≥0.7): [ai_ml, cybersecurity, startups_vc]
+
+[12/50] Wei (japan)
+  Subtopics: robotics_hardware(0.9), ai_ml(0.85), smartphones_gadgets(0.7), gaming(0.6), asian_politics(0.4), stock_markets(0.3)
+  Top interests (≥0.7): [robotics_hardware, ai_ml, smartphones_gadgets]
+
+[13/50] David (usa)
+  Subtopics: gaming(0.9), ai_ml(0.85), space_tech(0.8), nba(0.5), social_media(0.4), mental_health(0.3)
+  Top interests (≥0.7): [gaming, ai_ml, space_tech]
+
+[14/50] Tom (usa)
+  Subtopics: nba(0.95), nfl(0.8), baseball(0.7), comedy(0.5), ai_ml(0.4), stock_markets(0.3)
+  Top interests (≥0.7): [nba, nfl, baseball]
+
+[15/50] Pedro (brazil)
+  Subtopics: soccer(0.95), f1(0.8), boxing_mma(0.75), music(0.5), gaming(0.4), travel_adventure(0.3)
+  Top interests (≥0.7): [soccer, f1, boxing_mma]
+  P1:  75% any,  35% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:2 S:12
+  P1:  80% any,  55% high ★ | ◆◆◆◆◆◆ 6 topics | L:3 E:2 S:12
+  P1:  90% any,  50% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:2 S:11
+  P1:  70% any,  45% high ★ | ◆◆◆◆◆◆ 6 topics | L:2 E:5 S:12
+  P1:  75% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:10
+  P2:  75% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:3 S:13
+  P2:  70% any,  20% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:2 S:16
+  P2:  60% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:2 S:13
+  P2:  65% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:12
+  P2:  75% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:7 S:9
+  P3:  50% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:3 S:10
+  P3:  80% any,  30% high ★ | ◆◆◆◆◇◇ 4 topics | L:0 E:6 S:8
+  P3:  70% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:3 S:10
+  P3:  60% any,  50% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:5 S:11
+  P3:  75% any,  60% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:1 S:10
+  P4:  50% any,  40% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:2 S:9
+  P4:  80% any,  30% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:3 S:12
+  P4:  55% any,  55% high ★ | ◆◇◇◇◇◇ 1 topics | L:2 E:5 S:7
+  P4:  60% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:4 S:11
+  P4:  80% any,  65% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:4 S:9
+  P5:  55% any,  40% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:3 S:13
+  ❌ FLAT | Any: 75→53 (-23) | High: 40→40 (0) | Diversity: 3.6 topics/page | Alignment: 12%
+  P5:  85% any,  35% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:3 S:12
+  ❌ FLAT | Any: 80→83 (+3) | High: 35→33 (-3) | Diversity: 4.8 topics/page | Alignment: 9%
+  P5:  50% any,  45% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:2 S:8
+  🔄 PIVOT | Any: 68→53 (-15) | High: 43→50 (+8) | Diversity: 3.0 topics/page | Alignment: 13%
+  P5:  70% any,  60% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:2 S:9
+  ❌ FLAT | Any: 73→65 (-8) | High: 55→55 (-0) | Diversity: 4.6 topics/page | Alignment: 13%
+  P5:  65% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:0 E:5 S:11
+  🔄 PIVOT | Any: 73→73 (0) | High: 45→55 (+10) | Diversity: 5.2 topics/page | Alignment: 12%
+
+[16/50] Aisha (turkiye)
+  Subtopics: soccer(0.85), middle_east(0.8), tennis(0.7), movies_film(0.6), beauty_skincare(0.5), food_cooking(0.4)
+  Top interests (≥0.7): [soccer, middle_east, tennis]
+
+[17/50] Henrik (germany)
+  Subtopics: soccer(0.9), f1(0.75), european_politics(0.7), automotive(0.6), climate_environment(0.5), golf(0.4)
+  Top interests (≥0.7): [soccer, f1, european_politics]
+
+[18/50] James (usa)
+  Subtopics: us_politics(0.95), war_conflict(0.8), stock_markets(0.7), nfl(0.6), ai_ml(0.5), oil_energy(0.4)
+  Top interests (≥0.7): [us_politics, war_conflict, stock_markets]
+
+[19/50] Nadia (turkiye)
+  Subtopics: middle_east(0.9), war_conflict(0.85), oil_energy(0.7), human_rights_civil(0.6), soccer(0.5), food_cooking(0.3)
+  Top interests (≥0.7): [middle_east, war_conflict, oil_energy]
+
+[20/50] Viktor (germany)
+  Subtopics: war_conflict(0.9), european_politics(0.85), climate_environment(0.7), soccer(0.5), automotive(0.4), biology_nature(0.3)
+  Top interests (≥0.7): [war_conflict, european_politics, climate_environment]
+  P1:  63% any,  47% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:4 S:11
+  P1:  84% any,  42% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:6 S:11
+  P1:  95% any,  53% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:5 S:10
+  P1:  95% any,  79% high ★ | ◆◆◆◆◆◇ 5 topics | L:6 E:4 S:7
+  P1:  89% any,  47% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:3 S:8
+  P2:  70% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:3 S:11
+  P2:  95% any,  80% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:4 S:8
+  P2:  65% any,  60% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:9
+  P2:  90% any,  60% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:1 S:12
+  P2:  75% any,  70% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:6 S:7
+  P3:  75% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:6 E:1 S:10
+  P3:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:0 E:6 S:12
+  P3:  75% any,  55% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:2 S:9
+  P3:  70% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:6 E:1 S:9
+  P3:  75% any,  75% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:5 S:9
+  P4:  60% any,  25% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:3 S:14
+  P4:  75% any,  70% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:6 S:9
+  P4:  55% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:3 S:11
+  P4:  95% any,  50% high ★ | ◆◆◆◆◆◇ 5 topics | L:5 E:4 S:9
+  P4:  80% any,  80% high ★ | ◆◆◇◇◇◇ 2 topics | L:6 E:4 S:7
+  P5:  70% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:1 S:13
+  ❌ FLAT | Any: 67→65 (-2) | High: 46→38 (-9) | Diversity: 4.0 topics/page | Alignment: 12%
+  P5:  75% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:3 S:8
+  ❌ FLAT | Any: 95→75 (-20) | High: 66→68 (+1) | Diversity: 4.4 topics/page | Alignment: 13%
+  P5:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:3 S:10
+  ❌ FLAT | Any: 75→55 (-20) | High: 51→48 (-4) | Diversity: 4.2 topics/page | Alignment: 12%
+  P5:  90% any,  55% high ★ | ◆◆◆◆◆◆ 6 topics | L:1 E:6 S:9
+  ❌ FLAT | Any: 90→93 (+3) | High: 54→53 (-1) | Diversity: 5.4 topics/page | Alignment: 11%
+  P5:  80% any,  75% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:2 S:11
+  ❌ FLAT | Any: 85→80 (-5) | High: 74→78 (+3) | Diversity: 3.4 topics/page | Alignment: 14%
+
+[21/50] Chen (japan)
+  Subtopics: asian_politics(0.9), ai_ml(0.8), anime_manga(0.7), robotics_hardware(0.6), baseball(0.5), space_astronomy(0.4)
+  Top interests (≥0.7): [asian_politics, ai_ml, anime_manga]
+
+[22/50] Tyler (usa)
+  Subtopics: movies_film(0.9), gaming(0.85), tv_streaming(0.7), hip_hop(0.6), nba(0.5), celebrity_news(0.4)
+  Top interests (≥0.7): [movies_film, gaming, tv_streaming]
+
+[23/50] Yara (turkiye)
+  Subtopics: kpop_kdrama(0.9), movies_film(0.8), beauty_skincare(0.7), food_cooking(0.6), middle_east(0.5), travel_adventure(0.4)
+  Top interests (≥0.7): [kpop_kdrama, movies_film, beauty_skincare]
+
+[24/50] Ines (spain)
+  Subtopics: tv_streaming(0.85), latin_music(0.8), soccer(0.7), food_cooking(0.6), celebrity_news(0.5), travel_adventure(0.4)
+  Top interests (≥0.7): [tv_streaming, latin_music, soccer]
+
+[25/50] Liam (uk)
+  Subtopics: soccer(0.9), music(0.8), comedy(0.7), gaming(0.6), celebrity_news(0.5), us_politics(0.4)
+  Top interests (≥0.7): [soccer, music, comedy]
+  P1:  42% any,  32% high ▲ | ◆◆◆◆◇◇ 4 topics | L:3 E:2 S:13
+  P1:  95% any,  53% high ★ | ◆◆◆◆◆◆ 6 topics | L:3 E:3 S:11
+  P1:  74% any,  53% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:10
+  P1:  74% any,  53% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:5 S:9
+  P1:  74% any,  63% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:6 S:7
+  P2:  30% any,  25% high ▲ | ◆◆◆◇◇◇ 3 topics | L:0 E:3 S:15
+  P2:  75% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:3 S:12
+  P2:  55% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:2 S:13
+  P2:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:10
+  P2:  55% any,  40% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:4 S:12
+  P3:  50% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:3 S:13
+  P3:  50% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:10
+  P3:  70% any,  40% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:1 S:11
+  P3:  40% any,  40% high ▲ | ◆◆◆◇◇◇ 3 topics | L:1 E:1 S:13
+  P3:  55% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:2 S:10
+  P4:  30% any,  25% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:1 S:13
+  P4:  70% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:3 S:14
+  P4:  60% any,  30% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:1 S:13
+  P4:  40% any,  40% high ▲ | ◆◆◇◇◇◇ 2 topics | L:2 E:2 S:12
+  P4:  85% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:5 S:11
+  P5:  35% any,  30% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:14
+  ❌ FLAT | Any: 36→33 (-4) | High: 28→28 (-1) | Diversity: 3.2 topics/page | Alignment: 12%
+  P5:  55% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:4 S:12
+  ❌ FLAT | Any: 85→63 (-22) | High: 49→35 (-14) | Diversity: 4.2 topics/page | Alignment: 11%
+  P5:  65% any,  40% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:2 S:8
+  ❌ FLAT | Any: 64→63 (-2) | High: 44→35 (-9) | Diversity: 4.6 topics/page | Alignment: 12%
+  P5:  50% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:4 S:9
+  ❌ FLAT | Any: 64→45 (-19) | High: 49→43 (-6) | Diversity: 3.2 topics/page | Alignment: 14%
+  P5:  80% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:5 S:12
+  🔄 PIVOT | Any: 64→83 (+18) | High: 52→55 (+3) | Diversity: 3.4 topics/page | Alignment: 12%
+
+[26/50] Jessica (usa)
+  Subtopics: fitness_workout(0.9), food_cooking(0.85), mental_health(0.8), tv_streaming(0.6), pets_animals(0.5), beauty_skincare(0.4)
+  Top interests (≥0.7): [fitness_workout, food_cooking, mental_health]
+
+[27/50] Kim (japan)
+  Subtopics: beauty_skincare(0.9), kpop_kdrama(0.85), food_cooking(0.8), fashion(0.7), anime_manga(0.6), travel_adventure(0.5)
+  Top interests (≥0.7): [beauty_skincare, kpop_kdrama, food_cooking, fashion]
+
+[28/50] Anna (germany)
+  Subtopics: parenting_family(0.9), food_cooking(0.8), climate_environment(0.7), pets_animals(0.6), european_politics(0.5), mental_health(0.4)
+  Top interests (≥0.7): [parenting_family, food_cooking, climate_environment]
+
+[29/50] Lisa (australia)
+  Subtopics: pets_animals(0.85), travel_adventure(0.8), food_cooking(0.75), cricket(0.7), biology_nature(0.6), fitness_workout(0.5)
+  Top interests (≥0.7): [pets_animals, travel_adventure, food_cooking, cricket]
+
+[30/50] Michael (usa)
+  Subtopics: stock_markets(0.9), bitcoin(0.8), ai_ml(0.7), real_estate(0.6), nfl(0.5), automotive(0.3)
+  Top interests (≥0.7): [stock_markets, bitcoin, ai_ml]
+  P1:  68% any,  47% high ★ | ◆◆◆◆◆◆ 6 topics | L:0 E:6 S:11
+  P1:  58% any,  26% high ★ | ◆◆◆◆◆◆ 6 topics | L:2 E:3 S:13
+  P1:  79% any,  53% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:5 S:7
+  P1:  95% any,  79% high ★ | ◆◆◆◆◇◇ 4 topics | L:6 E:3 S:6
+  P1:  79% any,  37% high ★ | ◆◆◆◆◆◇ 5 topics | L:5 E:4 S:7
+  P2:  35% any,  35% high ▲ | ◆◆◇◇◇◇ 2 topics | L:3 E:2 S:10
+  P2:  55% any,  30% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:3 S:11
+  P2:  45% any,  25% high ▲ | ◆◆◆◇◇◇ 3 topics | L:0 E:4 S:14
+  P2:  75% any,  40% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:5 S:7
+  P2:  65% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:9
+  P3:  35% any,  35% high ▲ | ◆◆◇◇◇◇ 2 topics | L:3 E:1 S:12
+  P3:  45% any,  20% high ▲ | ◆◆◆◆◇◇ 4 topics | L:0 E:2 S:14
+  P3:  55% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:5 S:11
+  P3:  65% any,  30% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:3 S:12
+  P3:  65% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:6 S:11
+  P4:  30% any,  30% high ▲ | ◆◆◆◇◇◇ 3 topics | L:1 E:2 S:13
+  P4:  45% any,  25% high ▲ | ◆◆◆◇◇◇ 3 topics | L:3 E:1 S:13
+  P4:  50% any,  25% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:3 S:11
+  P4:  70% any,  45% high ★ | ◆◆◆◆◆◆ 6 topics | L:5 E:2 S:11
+  P4:  85% any,  70% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:4 S:10
+  P5:  30% any,  30% high ▲ | ◆◆◆◆◇◇ 4 topics | L:1 E:2 S:14
+  ❌ FLAT | Any: 52→30 (-22) | High: 41→30 (-11) | Diversity: 3.4 topics/page | Alignment: 14%
+  P5:  40% any,  20% high ▲ | ◆◆◆◆◇◇ 4 topics | L:1 E:0 S:15
+  ❌ FLAT | Any: 67→43 (-24) | High: 41→23 (-19) | Diversity: 3.8 topics/page | Alignment: 12%
+  P5:  20% any,  10% high · | ◆◆◆◇◇◇ 3 topics | L:0 E:1 S:14
+  ❌ FLAT | Any: 77→35 (-42) | High: 38→18 (-21) | Diversity: 4.2 topics/page | Alignment: 11%
+  P5:  35% any,  25% high ▲ | ◆◆◆◆◇◇ 4 topics | L:0 E:3 S:13
+  🔄 PIVOT | Any: 51→53 (+1) | High: 26→35 (+9) | Diversity: 4.6 topics/page | Alignment: 10%
+  P5:  60% any,  40% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:13
+  ❌ FLAT | Any: 80→73 (-7) | High: 62→55 (-7) | Diversity: 3.4 topics/page | Alignment: 12%
+
+[31/50] Alex (uk)
+  Subtopics: bitcoin(0.9), defi_web3(0.85), stock_markets(0.7), ai_ml(0.6), soccer(0.5), oil_energy(0.4)
+  Top interests (≥0.7): [bitcoin, defi_web3, stock_markets]
+
+[32/50] Omar (turkiye)
+  Subtopics: oil_energy(0.9), middle_east(0.85), soccer(0.7), bitcoin(0.6), real_estate(0.4), automotive(0.3)
+  Top interests (≥0.7): [oil_energy, middle_east, soccer]
+
+[33/50] Neil (usa)
+  Subtopics: space_astronomy(0.95), space_tech(0.85), ai_ml(0.7), climate_environment(0.6), biology_nature(0.5), movies_film(0.4)
+  Top interests (≥0.7): [space_astronomy, space_tech, ai_ml]
+
+[34/50] Greta (germany)
+  Subtopics: climate_environment(0.95), biology_nature(0.85), earth_science(0.7), european_politics(0.6), food_cooking(0.5), public_health(0.4)
+  Top interests (≥0.7): [climate_environment, biology_nature, earth_science]
+
+[35/50] Laura (germany)
+  Subtopics: medical_breakthroughs(0.9), biology_nature(0.8), ai_ml(0.7), food_cooking(0.6), mental_health(0.5), european_politics(0.4)
+  Top interests (≥0.7): [medical_breakthroughs, biology_nature, ai_ml]
+  P1:  63% any,  26% high ★ | ◆◆◆◆◆◇ 5 topics | L:0 E:4 S:12
+  P1:  84% any,  58% high ★ | ◆◆◆◆◆◇ 5 topics | L:0 E:10 S:7
+  P1:  84% any,  32% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:6 S:8
+  P1:  79% any,  63% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:6 S:3
+  P1:  95% any,  89% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:6 S:5
+  P2:  75% any,  65% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:1 S:11
+  P2:  75% any,  25% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:2 S:12
+  P2:  70% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:6
+  P2:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:1 S:11
+  P2:  65% any,  65% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:4 S:11
+  P3:  70% any,  65% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:4 S:12
+  P3:  80% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:6 E:2 S:11
+  P3:  60% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:4 S:10
+  P3:  60% any,  40% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:2 S:8
+  P3:  60% any,  60% high ★ | ◆◆◇◇◇◇ 2 topics | L:4 E:4 S:10
+  P4:  75% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:4 S:11
+  P4:  85% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:7 S:12
+  P4:  70% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:2 S:12
+  P4:  60% any,  40% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:4 S:10
+  P4:  75% any,  70% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:7 S:9
+  P5:  70% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:12
+  P5:  70% any,  40% high ★ | ◆◆◆◆◆◇ 5 topics | L:0 E:4 S:7
+  ❌ FLAT | Any: 67→70 (+3) | High: 41→43 (+2) | Diversity: 4.6 topics/page | Alignment: 13%
+  ❌ FLAT | Any: 80→73 (-7) | High: 61→60 (-1) | Diversity: 3.8 topics/page | Alignment: 13%
+  P5:  80% any,  25% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:4 S:12
+  🔄 PIVOT | Any: 80→83 (+3) | High: 28→38 (+9) | Diversity: 4.8 topics/page | Alignment: 11%
+  P5:  65% any,  40% high ★ | ◆◆◆◆◆◇ 5 topics | L:3 E:4 S:11
+  ❌ FLAT | Any: 67→63 (-4) | High: 54→40 (-14) | Diversity: 4.2 topics/page | Alignment: 11%
+  P5:  75% any,  65% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:7 S:7
+  ❌ FLAT | Any: 80→75 (-5) | High: 77→68 (-10) | Diversity: 2.8 topics/page | Alignment: 14%
+
+[36/50] Diego (mexico)
+  Subtopics: latin_music(0.9), soccer(0.85), food_cooking(0.8), movies_film(0.7), us_politics(0.6), bitcoin(0.5)
+  Top interests (≥0.7): [latin_music, soccer, food_cooking, movies_film]
+
+[37/50] Mia (france)
+  Subtopics: movies_film(0.9), food_cooking(0.85), fashion(0.8), european_politics(0.7), climate_environment(0.6), ai_ml(0.5)
+  Top interests (≥0.7): [movies_film, food_cooking, fashion, european_politics]
+
+[38/50] Robert (usa)
+  Subtopics: automotive(0.85), us_politics(0.8), stock_markets(0.7), nfl(0.6), space_tech(0.5), real_estate(0.4)
+  Top interests (≥0.7): [automotive, us_politics, stock_markets]
+
+[39/50] Tina (usa)
+  Subtopics: ai_ml(0.9), startups_vc(0.8), social_media(0.7), movies_film(0.6), fitness_workout(0.5), asian_politics(0.4)
+  Top interests (≥0.7): [ai_ml, startups_vc, social_media]
+
+[40/50] Marco (france)
+  Subtopics: food_cooking(0.9), oil_energy(0.85), european_politics(0.8), soccer(0.7), climate_environment(0.6), real_estate(0.5)
+  Top interests (≥0.7): [food_cooking, oil_energy, european_politics, soccer]
+  P1:  63% any,  42% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:4 S:12
+  P1:  74% any,  32% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:2 S:8
+  P1:  89% any,  63% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:6 S:9
+  P1:  84% any,  68% high ★ | ◆◆◆◆◆◇ 5 topics | L:5 E:3 S:9
+  P1:  74% any,  68% high ★ | ◆◆◆◆◇◇ 4 topics | L:4 E:4 S:7
+  P2:  65% any,  50% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:1 S:12
+  P2:  65% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:3 S:14
+  P2:  70% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:4 S:8
+  P2:  70% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:3 S:12
+  P2:  70% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:10
+  P3:  70% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:3 S:13
+  P3:  75% any,  50% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:3 S:10
+  P3:  80% any,  50% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:4 S:7
+  P3:  80% any,  75% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:3 S:10
+  P3:  75% any,  60% high ★ | ◆◆◇◇◇◇ 2 topics | L:5 E:3 S:9
+  P4:  60% any,  50% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:12
+  P4:  55% any,  30% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:3 S:10
+  P4:  60% any,  50% high ★ | ◆◆◆◇◇◇ 3 topics | L:5 E:4 S:10
+  P4:  60% any,  60% high ★ | ◆◆◇◇◇◇ 2 topics | L:2 E:7 S:9
+  P4:  65% any,  40% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:5 S:9
+  P5:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:0 E:4 S:12
+  ❌ FLAT | Any: 77→58 (-20) | High: 59→48 (-12) | Diversity: 4.0 topics/page | Alignment: 12%
+  P5:  50% any,  45% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:4 S:11
+  ❌ FLAT | Any: 64→55 (-9) | High: 46→48 (+1) | Diversity: 3.4 topics/page | Alignment: 12%
+  P5:  65% any,  30% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:4 S:12
+  ❌ FLAT | Any: 72→60 (-12) | High: 38→30 (-8) | Diversity: 3.8 topics/page | Alignment: 12%
+  P5:  60% any,  55% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:4 S:13
+  ❌ FLAT | Any: 72→60 (-12) | High: 62→58 (-4) | Diversity: 3.2 topics/page | Alignment: 13%
+  P5:  70% any,  65% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:9 S:7
+  ❌ FLAT | Any: 77→68 (-10) | High: 67→53 (-14) | Diversity: 3.6 topics/page | Alignment: 14%
+
+[41/50] Rachel (usa)
+  Subtopics: parenting_family(0.9), mental_health(0.85), us_politics(0.8), tv_streaming(0.7), food_cooking(0.6), pets_animals(0.5)
+  Top interests (≥0.7): [parenting_family, mental_health, us_politics, tv_streaming]
+
+[42/50] Hana (japan)
+  Subtopics: food_cooking(0.95), anime_manga(0.8), travel_adventure(0.7), movies_film(0.6), biology_nature(0.5), baseball(0.4)
+  Top interests (≥0.7): [food_cooking, anime_manga, travel_adventure]
+
+[43/50] Eric (usa)
+  Subtopics: war_conflict(0.9), gaming(0.85), nfl(0.8), ai_ml(0.7), space_tech(0.6), stock_markets(0.5)
+  Top interests (≥0.7): [war_conflict, gaming, nfl, ai_ml]
+
+[44/50] Nina (germany)
+  Subtopics: european_politics(0.9), war_conflict(0.85), soccer(0.7), pets_animals(0.6), earth_science(0.5), mental_health(0.4)
+  Top interests (≥0.7): [european_politics, war_conflict, soccer]
+
+[45/50] Dmitri (germany)
+  Subtopics: war_conflict(0.9), ai_ml(0.85), asian_politics(0.8), space_astronomy(0.6), movies_film(0.5), european_politics(0.4)
+  Top interests (≥0.7): [war_conflict, ai_ml, asian_politics]
+  P1:  89% any,  42% high ★ | ◆◆◆◆◆◆ 6 topics | L:3 E:4 S:12
+  P1:  74% any,  68% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:3 S:8
+  P1:  53% any,  32% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:2 S:9
+  P1:  79% any,  63% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:7 S:9
+  P1:  89% any,  79% high ★ | ◆◆◆◆◆◆ 6 topics | L:4 E:9 S:5
+  P2:  35% any,  30% high ▲ | ◆◆◆◆◇◇ 4 topics | L:2 E:1 S:16
+  P2:  40% any,   5% high ▲ | ◆◆◆◇◇◇ 3 topics | L:3 E:1 S:11
+  P2:  75% any,  50% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:5 S:13
+  P2:  60% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:2 S:10
+  P2:  65% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:4 S:9
+  P3:  45% any,  10% high ▲ | ◆◆◇◇◇◇ 2 topics | L:1 E:3 S:14
+  P3:  50% any,  50% high ★ | ◆◆◆◇◇◇ 3 topics | L:4 E:2 S:12
+  P3:  45% any,  45% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:2 S:14
+  P3:  70% any,  55% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:5 S:12
+  P3:  55% any,  55% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:2 S:12
+  P4:  35% any,   0% high ▲ | ◆◆◇◇◇◇ 2 topics | L:3 E:2 S:13
+  P4:  50% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:1 E:5 S:9
+  P4:  55% any,  45% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:4 S:14
+  P4:  55% any,  45% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:3 S:11
+  P4:  70% any,  60% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:2 S:11
+  P5:  35% any,   0% high ▲ | ◆◆◇◇◇◇ 2 topics | L:1 E:1 S:16
+  ❌ FLAT | Any: 46→35 (-11) | High: 18→0 (-18) | Diversity: 2.8 topics/page | Alignment: 10%
+  P5:  60% any,  60% high ★ | ◆◆◆◇◇◇ 3 topics | L:3 E:2 S:14
+  ❌ FLAT | Any: 54→55 (+1) | High: 49→53 (+3) | Diversity: 3.8 topics/page | Alignment: 13%
+  P5:  45% any,  40% high ▲ | ◆◆◆◆◇◇ 4 topics | L:2 E:2 S:12
+  ❌ FLAT | Any: 82→50 (-32) | High: 46→43 (-4) | Diversity: 4.6 topics/page | Alignment: 12%
+  P5:  65% any,  55% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:3 S:9
+  ❌ FLAT | Any: 77→68 (-10) | High: 62→58 (-4) | Diversity: 4.2 topics/page | Alignment: 13%
+  P5:  70% any,  65% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:3 S:6
+  ❌ FLAT | Any: 69→63 (-7) | High: 54→55 (+1) | Diversity: 4.6 topics/page | Alignment: 13%
+
+[46/50] Aiden (australia)
+  Subtopics: cricket(0.9), travel_adventure(0.8), climate_environment(0.7), movies_film(0.6), biology_nature(0.5), food_cooking(0.4)
+  Top interests (≥0.7): [cricket, travel_adventure, climate_environment]
+
+[47/50] Soo-jin (japan)
+  Subtopics: kpop_kdrama(0.95), beauty_skincare(0.85), fashion(0.8), anime_manga(0.7), food_cooking(0.6), gaming(0.5)
+  Top interests (≥0.7): [kpop_kdrama, beauty_skincare, fashion, anime_manga]
+
+[48/50] Lucas (germany)
+  Subtopics: gaming(0.9), ai_ml(0.85), soccer(0.8), space_tech(0.7), movies_film(0.6), automotive(0.5)
+  Top interests (≥0.7): [gaming, ai_ml, soccer, space_tech]
+
+[49/50] Chioma (usa)
+  Subtopics: beauty_skincare(0.9), afrobeats(0.8), celebrity_news(0.7), food_cooking(0.6), us_politics(0.5), nba(0.4)
+  Top interests (≥0.7): [beauty_skincare, afrobeats, celebrity_news]
+
+[50/50] Yuki (japan)
+  Subtopics: anime_manga(0.9), baseball(0.85), gaming(0.8), robotics_hardware(0.7), food_cooking(0.6), space_astronomy(0.5)
+  Top interests (≥0.7): [anime_manga, baseball, gaming, robotics_hardware]
+  P1:  68% any,  32% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:3 S:9
+  P1:  68% any,  32% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:3 S:9
+  P1:  79% any,  79% high ★ | ◆◆◆◆◇◇ 4 topics | L:5 E:4 S:8
+  P1:  79% any,  47% high ★ | ◆◆◆◆◆◆ 6 topics | L:5 E:5 S:8
+  P1:  42% any,  32% high ▲ | ◆◆◆◆◇◇ 4 topics | L:2 E:3 S:11
+  P2:  65% any,  15% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:1 S:14
+  P2:  40% any,  30% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:1 S:10
+  P2:  60% any,  15% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:3 S:11
+  P2:  40% any,  40% high ▲ | ◆◆◇◇◇◇ 2 topics | L:2 E:1 S:13
+  P2:  70% any,  60% high ★ | ◆◆◆◆◆◇ 5 topics | L:2 E:5 S:9
+  P3:  45% any,  10% high ▲ | ◆◆◆◇◇◇ 3 topics | L:1 E:4 S:13
+  P3:  55% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:2 S:15
+  P3:  55% any,  10% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:4 S:13
+  P3:  50% any,  35% high ★ | ◆◆◆◇◇◇ 3 topics | L:1 E:2 S:15
+  P3:  75% any,  65% high ★ | ◆◆◆◆◆◇ 5 topics | L:4 E:5 S:8
+  P4:  35% any,  10% high ▲ | ◆◆◆◇◇◇ 3 topics | L:1 E:0 S:14
+  P4:  35% any,  15% high ▲ | ◆◆◇◇◇◇ 2 topics | L:0 E:3 S:13
+  P4:  55% any,  15% high ★ | ◆◆◇◇◇◇ 2 topics | L:3 E:1 S:13
+  P4:  50% any,  35% high ★ | ◆◆◆◆◇◇ 4 topics | L:3 E:2 S:11
+  P4:  85% any,  80% high ★ | ◆◆◆◆◆◇ 5 topics | L:1 E:11 S:3
+  P5:  35% any,  20% high ▲ | ◆◆◆◇◇◇ 3 topics | L:2 E:1 S:12
+  ❌ FLAT | Any: 59→35 (-24) | High: 39→18 (-21) | Diversity: 3.4 topics/page | Alignment: 12%
+  P5:  35% any,   5% high ▲ | ◆◆◆◇◇◇ 3 topics | L:0 E:4 S:15
+  ❌ FLAT | Any: 67→35 (-32) | High: 23→8 (-16) | Diversity: 3.8 topics/page | Alignment: 10%
+  P5:  65% any,  25% high ★ | ◆◆◆◇◇◇ 3 topics | L:2 E:3 S:15
+  ❌ FLAT | Any: 64→60 (-4) | High: 23→20 (-3) | Diversity: 3.2 topics/page | Alignment: 10%
+  P5:  45% any,  35% high ▲ | ◆◆◆◆◇◇ 4 topics | L:4 E:2 S:10
+  🔄 PIVOT | Any: 41→48 (+6) | High: 36→35 (-1) | Diversity: 3.4 topics/page | Alignment: 12%
+  P5:  65% any,  60% high ★ | ◆◆◆◆◇◇ 4 topics | L:2 E:7 S:8
+  ❌ FLAT | Any: 74→75 (+1) | High: 69→70 (+1) | Diversity: 4.6 topics/page | Alignment: 13%
+
+
+═══════════════════════════════════════════════════════════════
+  DEEP ANALYSIS
+═══════════════════════════════════════════════════════════════
+
+── OVERALL ──
+  Valid: 50/50
+  Learned: 0 (0%)
+  Soft pivot: 9 (18%)
+  Flat/worse: 41 (82%)
+
+── MATCH RATES ──
+  Avg early ANY match:      69.2%
+  Avg late ANY match:       59.5%
+  Avg ANY improvement:      -9.7 pts
+  Avg early HIGH match:     46.2%
+  Avg late HIGH match:      41.8%
+  Avg HIGH improvement:     -4.4 pts
+  Avg weight alignment:     12.1%
+  (Alignment = do high-weight subtopics get more feed share?)
+  (Higher = algorithm correctly prioritizes user's stronger interests)
+
+── DIVERSITY ──
+  Avg topics per page:      3.8
+  (Target: 3-5 different subtopics per page of 20)
+
+── ENGAGEMENT ──
+  Avg likes:  12.4 per persona
+  Avg engages: 16.9 per persona
+  Avg skips:  53.7 per persona
+  Avg tags:   126
+  Avg skips profile: 0
+
+══════════════════════════════
+  GRADE: D (18% improved)
+══════════════════════════════
+
+── TOP 10 ──
+  Wei        Any: 72.5→72.5 (0.0) | High: 45.0→55.0 (10.0) | Div: 5.2 | Align: 11.9%
+  Anna       Any: 51.4→52.5 (1.1) | High: 25.7→35.0 (9.3) | Div: 4.6 | Align: 10.4%
+  Alex       Any: 79.6→82.5 (2.9) | High: 28.3→37.5 (9.2) | Div: 4.8 | Align: 10.5%
+  Raj        Any: 67.5→52.5 (-15.0) | High: 42.5→50.0 (7.5) | Div: 3.0 | Align: 13.4%
+  Fatima     Any: 59.5→50.0 (-9.5) | High: 41.2→47.5 (6.3) | Div: 2.4 | Align: 13.4%
+  Maria      Any: 69.6→72.5 (2.9) | High: 67.0→72.5 (5.5) | Div: 2.8 | Align: 12.7%
+  Priya      Any: 32.5→15.0 (-17.5) | High: 0.0→5.0 (5.0) | Div: 2.8 | Align: 7.9%
+  Sophie     Any: 70.0→62.5 (-7.5) | High: 55.0→60.0 (5.0) | Div: 3.4 | Align: 13.4%
+  Chen       Any: 64.3→82.5 (18.2) | High: 51.6→55.0 (3.4) | Div: 3.4 | Align: 12.0%
+  Rachel     Any: 54.3→55.0 (0.7) | High: 49.2→52.5 (3.3) | Div: 3.8 | Align: 12.7%
+
+── BOTTOM 10 ──
+  Yara       Any: 84.9→62.5 (-22.4) | High: 48.8→35.0 (-13.8) | Div: 4.2 | Align: 11.4%
+  Laura      Any: 67.0→62.5 (-4.5) | High: 54.1→40.0 (-14.1) | Div: 4.2 | Align: 11.1%
+  Tina       Any: 77.1→67.5 (-9.6) | High: 66.7→52.5 (-14.2) | Div: 3.6 | Align: 13.5%
+  Kenji      Any: 65.0→55.0 (-10.0) | High: 47.5→32.5 (-15.0) | Div: 3.8 | Align: 11.9%
+  Chioma     Any: 66.7→35.0 (-31.7) | High: 23.3→7.5 (-15.8) | Div: 3.8 | Align: 9.7%
+  Emre       Any: 77.1→62.5 (-14.6) | High: 33.3→15.0 (-18.3) | Div: 4.2 | Align: 11.0%
+  Hana       Any: 46.3→35.0 (-11.3) | High: 18.3→0.0 (-18.3) | Div: 2.8 | Align: 10.4%
+  Jessica    Any: 67.0→42.5 (-24.5) | High: 41.3→22.5 (-18.8) | Div: 3.8 | Align: 12.2%
+  Lisa       Any: 77.0→35.0 (-42.0) | High: 38.4→17.5 (-20.9) | Div: 4.2 | Align: 11.3%
+  Soo-jin    Any: 59.5→35.0 (-24.5) | High: 38.7→17.5 (-21.2) | Div: 3.4 | Align: 12.4%
+
+Done at 2026-03-22T01:48:55.618Z
