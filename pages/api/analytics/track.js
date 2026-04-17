@@ -439,18 +439,6 @@ export default async function handler(req, res) {
           else console.log('[analytics] Buffer:', persId.substring(0, 8), bucket, event_type, 'x' + effectiveMultiplier.toFixed(2))
         })
 
-        // Update entity affinity for ALL engagements (not just personal bucket)
-        // Strong signals from any bucket should update entity preferences
-        if (effectiveMultiplier >= 0.2 && ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_revisit', 'article_skipped'].includes(event_type)) {
-          admin.rpc('update_entity_affinity', {
-            p_pers_id: persId,
-            p_article_id: article_id,
-            p_event_type: event_type,
-          }).then(({ error: eaError }) => {
-            if (eaError) console.log('[analytics] Entity affinity update failed:', eaError.message)
-          })
-        }
-
         // ============================================================
         // NEW: Update entity_signals (replaces dual tag_profile/skip_profile)
         // Tracks positive/negative counts with time windows per entity.

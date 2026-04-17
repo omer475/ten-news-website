@@ -1082,7 +1082,7 @@ export default async function handler(req, res) {
       // Use limit(1) instead of .single() — some users have duplicate rows
       const { data: profileRows } = await supabase
         .from('profiles')
-        .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm, similarity_floor')
+        .select('id, followed_topics, taste_vector, taste_vector_minilm, similarity_floor')
         .eq('id', userId)
         .limit(1);
       let userData = profileRows?.[0] || null;
@@ -1091,13 +1091,13 @@ export default async function handler(req, res) {
         // Fallback: try legacy users table
         const { data: legacyRows } = await supabase
           .from('users')
-          .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
+          .select('id, followed_topics, taste_vector, taste_vector_minilm')
           .eq('id', userId)
           .limit(1);
         if (!legacyRows?.[0]) {
           const { data: linkedRows } = await supabase
             .from('users')
-            .select('id, home_country, followed_countries, followed_topics, taste_vector, taste_vector_minilm')
+            .select('id, followed_topics, taste_vector, taste_vector_minilm')
             .eq('auth_user_id', userId)
             .limit(1);
           if (linkedRows?.[0]) userData = linkedRows[0];
