@@ -19,6 +19,7 @@ Step 11: Article Tagging (countries + topics for personalization)
 
 import time
 import re
+import sys
 from datetime import datetime, timedelta
 import feedparser
 import requests
@@ -157,59 +158,67 @@ Rules:
 - narrow_topics: 2-5 specific concepts, NEVER category names like "tech" or "sports" or "business"
 """
     try:
+        import json as _ner_json
         with gemini_semaphore_ref:
             response = gemini_model_ref.generate_content(prompt)
         text = response.text.strip()
         if text.startswith('```'): text = text.split('\n', 1)[1] if '\n' in text else text[3:]
         if text.endswith('```'): text = text[:-3]
         if text.startswith('json'): text = text[4:]
-        return json.loads(text.strip())
+        return _ner_json.loads(text.strip())
     except Exception as e:
         print(f"   ⚠️ NER extraction failed: {e}")
         return {}
 
 def build_typed_signals(article_countries, interest_tags, ner_result=None, language='en'):
-    """Build typed entity signals from article metadata + NER results."""
+    """Build typed entity signals from article metadata + NER results.
+
+    A slug emitted under a specific type (org/person/event/product) is NOT
+    re-emitted as `topic:<slug>`. This prevents double-counting in the
+    multiplier's denominator (see feed/main.js entitySignalMultiplier).
+    """
     signals = []
     seen = set()
+    seen_slugs_specific = set()  # slugs emitted under org/person/event/product
 
     def add(signal_type: str, value: str):
         slug = _slugify(value)
         if not slug or slug in SIGNAL_CATEGORY_BLOCKLIST or len(slug) > 64:
             return
         sig = f"{signal_type}:{slug}"
-        if sig not in seen:
-            seen.add(sig)
-            signals.append(sig)
+        if sig in seen:
+            return
+        if signal_type == 'topic' and slug in seen_slugs_specific:
+            return  # already emitted as org/person/event/product — skip
+        seen.add(sig)
+        if signal_type in ('org', 'person', 'event', 'product'):
+            seen_slugs_specific.add(slug)
+        signals.append(sig)
 
-    # Organizations from NER
+    # Specific types first — so the topic-dedup set is populated before topics run
     for org in (ner_result or {}).get('organizations', []) or []:
         add('org', org)
-
-    # People from NER
     for person in (ner_result or {}).get('people', []) or []:
         add('person', person)
-
-    # Events from NER
     for event in (ner_result or {}).get('events', []) or []:
         add('event', event)
-
-    # Products from NER
     for product in (ner_result or {}).get('products', []) or []:
         add('product', product)
 
-    # Locations: from existing countries field + NER cities
+    # Locations: countries + NER cities (loc: is not deduped against topic: on purpose —
+    # a country can legitimately also be a topic in an article about that country)
     for country in (article_countries or []):
         add('loc', country)
     for city in (ner_result or {}).get('cities', []) or []:
         add('loc', city)
 
-    # Language
     add('lang', language)
 
-    # Narrow topics from NER (skip category-level words)
+    # Topics last — will skip any slug already emitted under a specific type
     for topic in (ner_result or {}).get('narrow_topics', []) or []:
         add('topic', topic)
+    for tag in (interest_tags or []):
+        add('topic', tag)
 
     return signals
 
@@ -1016,6 +1025,8 @@ def run_complete_pipeline():
     # Thread-safe counter for published articles
     published_lock = threading.Lock()
     published_count = 0
+    # Per-run typed_signals audit: (id, signal_count, rich_count)
+    published_signal_audit = []
     
     # Duplicate title + embedding cache shared across threads
     title_cache_lock = threading.Lock()
@@ -1643,7 +1654,10 @@ def run_complete_pipeline():
             # TYPED ENTITY SIGNALS: extract NER + build typed signals for personalization
             article_typed_signals = []
             try:
-                ner_result = extract_named_entities_via_gemini(title, bullets, gemini_model, gemini_semaphore)
+                import google.generativeai as _ts_genai
+                _ts_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+                _ts_model = _ts_genai.GenerativeModel('gemini-2.0-flash')
+                ner_result = extract_named_entities_via_gemini(title, bullets, _ts_model, gemini_semaphore)
                 article_typed_signals = build_typed_signals(article_countries, interest_tags, ner_result)
                 print(f"   🔖 [Cluster {cluster_id}] Typed signals ({len(article_typed_signals)}): {article_typed_signals[:8]}")
             except Exception as e:
@@ -1702,7 +1716,10 @@ Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
 Example: ["Current solar panels max out at 25% efficiency commercially", "The theoretical limit has been 33% since 1961 — this breaks that barrier", "If scalable, this could cut solar farm sizes by half"]"""
 
                     with gemini_semaphore:
-                        page2_response = gemini_model.generate_content(page2_prompt)
+                        import google.generativeai as _p2_genai
+                        _p2_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+                        _p2_model = _p2_genai.GenerativeModel('gemini-2.0-flash')
+                        page2_response = _p2_model.generate_content(page2_prompt)
                     page2_text = page2_response.text.strip()
                     if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
                     if page2_text.endswith('```'): page2_text = page2_text[:-3]
@@ -1764,8 +1781,17 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 for st in source_titles:
                     print(f"      • [{st['source']}] {st['title'][:70]}...")
             
+            _rich_signal_count = sum(
+                1 for s in article_typed_signals
+                if not (s.startswith('lang:') or s.startswith('loc:'))
+            )
             with published_lock:
                 published_count += 1
+                published_signal_audit.append({
+                    'id': published_article_id,
+                    'total': len(article_typed_signals),
+                    'rich': _rich_signal_count,
+                })
             
             # Add to title + embedding cache for other workers' duplicate detection
             with title_cache_lock:
@@ -1818,6 +1844,22 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
     print(f"   Clusters processed: {len(clusters_to_process)}")
     print(f"   Articles published: {published_count}")
     print(f"{'='*80}\n")
+
+    # ── NER health check ──
+    # If <80% of published articles have ≥3 rich signals (non-lang/loc), NER is
+    # silently failing (today's Gemini-model / json scope bugs both produced this
+    # exact signature). Fail the job so the next Cloud Run execution retries clean.
+    total_audited = len(published_signal_audit)
+    if total_audited >= 5:
+        rich_articles = sum(1 for a in published_signal_audit if a['rich'] >= 3)
+        rich_ratio = rich_articles / total_audited
+        print(f"   Typed-signal health: {rich_articles}/{total_audited} articles with ≥3 rich signals ({rich_ratio*100:.0f}%)")
+        if rich_ratio < 0.80:
+            print(f"\n🚨 CRITICAL: Only {rich_articles}/{total_audited} articles got rich typed_signals ({rich_ratio*100:.0f}%). NER is likely failing silently.")
+            print(f"   Sample audit (first 5):")
+            for a in published_signal_audit[:5]:
+                print(f"     article {a['id']}: total={a['total']} rich={a['rich']}")
+            sys.exit(1)  # fail the Cloud Run job so it retries fresh
 
     return {
         'articles_processed': len(articles),

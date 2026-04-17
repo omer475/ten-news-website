@@ -272,22 +272,6 @@ function isStillFresh(article) {
   }
 }
 
-// Topic saturation penalty: diminishing returns for topics the user consumed heavily in last 48h.
-// Doesn't block content — just scores it lower so other topics surface above it.
-function topicSaturationPenalty(article, recentEntityCounts) {
-  if (!recentEntityCounts) return 1.0;
-  const tags = safeJsonParse(article.interest_tags, []);
-  let maxConsumption = 0;
-  for (const tag of tags.slice(0, 3)) {
-    const count = recentEntityCounts[tag.toLowerCase()] || 0;
-    if (count > maxConsumption) maxConsumption = count;
-  }
-  if (maxConsumption >= 8) return 0.3;
-  if (maxConsumption >= 5) return 0.5;
-  if (maxConsumption >= 3) return 0.7;
-  return 1.0;
-}
-
 // ══════════════════════════════════════════════════════════════
 // UNIFIED ENTITY AFFINITY (replaces dual tag_profile + skip_profile)
 //
@@ -337,41 +321,6 @@ const ONBOARDING_ENTITY_MAP = {
   'Corporate Deals': ['merger', 'acquisition', 'ipo'],
   'Trade & Tariffs': ['trade', 'tariffs', 'sanctions'],
 };
-
-function buildOnboardingEntities(followedTopics) {
-  if (!followedTopics || !Array.isArray(followedTopics)) return null;
-  const entities = new Set();
-  for (const topic of followedTopics) {
-    const mapped = ONBOARDING_ENTITY_MAP[topic];
-    if (mapped) {
-      for (const e of mapped) entities.add(e);
-    }
-  }
-  return entities.size > 0 ? entities : null;
-}
-
-function entityAffinityMultiplier(article, entitySignals, onboardingEntities) {
-  if (!entitySignals) return 1.0;
-  const tags = safeJsonParse(article.interest_tags, []);
-  let totalAffinity = 0;
-  let matchCount = 0;
-
-  for (const tag of tags.slice(0, 5)) {
-    const t = tag.toLowerCase();
-    const signal = entitySignals[t];
-    if (signal && typeof signal === 'object') {
-      signal.entity = t; // attach entity name for onboarding check
-      totalAffinity += computeEntityAffinity(signal, onboardingEntities);
-      matchCount++;
-    }
-  }
-
-  if (matchCount === 0) return 1.0;
-  const avgAffinity = totalAffinity / matchCount;
-
-  // Convert: -1.0 → 0.2x, 0.0 → 1.0x, +1.0 → 1.8x
-  return Math.max(0.2, 1.0 + avgAffinity * 0.8);
-}
 
 // ==========================================
 // USER INTEREST PROFILE (entity-level tag weights from engagement history)
@@ -573,68 +522,10 @@ function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipPro
 // ══════════════════════════════════════════════════════════════
 // SKIP PENALTY HELPER — used by ALL scoring functions
 // Reads skip_profile to penalize content the user explicitly skipped.
-// ══════════════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════════════
-// ENTITY SIGNAL SYSTEM — replaces dual tag_profile/skip_profile
-// Single ratio-based affinity per entity: -1.0 (hate) to +1.0 (love)
-// ══════════════════════════════════════════════════════════════
-
-function computeEntityAffinity(signal, isOnboardingTopic) {
-  const total7d = (signal.positive_7d || 0) + (signal.negative_7d || 0);
-  const totalAll = (signal.positive_count || 0) + (signal.negative_count || 0);
-  // Allow negative-only signals: 2 skips with 0 engagements is a clear signal
-  if (totalAll < 2) return 0;
-
-  const recentRate = total7d >= 2
-    ? signal.positive_7d / total7d
-    : signal.positive_count / totalAll;
-  const allTimeRate = signal.positive_count / totalAll;
-  const blendedRate = total7d >= 2
-    ? recentRate * 0.8 + allTimeRate * 0.2
-    : allTimeRate;
-
-  const confidence = 1 - 1 / (1 + totalAll * 0.2);
-
-  // Tanh curve: more decisive than linear. 57% → 1.20x (was 1.10x), 88% → 1.68x (was 1.52x)
-  const centered = blendedRate - 0.5;
-  const decisive = Math.tanh(centered * 4);
-  let affinity = decisive * confidence;
-
-  // Rapid rejection: 3+ skips in 24h with 0 engagements
-  if ((signal.negative_24h || 0) >= 3 && (signal.positive_24h || 0) === 0) {
-    affinity = Math.min(affinity, -0.75);
-  }
-
-  // Onboarding floor: explicit selections never go fully negative
-  if (isOnboardingTopic) {
-    affinity = Math.max(affinity, 0);
-  }
-
-  return affinity; // -1.0 to +1.0
-}
-
-function entitySignalMultiplier(article, entitySignals, onboardingTagSet) {
-  const tags = safeJsonParse(article.interest_tags, []).slice(0, 5).map(t => t.toLowerCase());
-  if (tags.length === 0 || !entitySignals || Object.keys(entitySignals).length === 0) return 1.0;
-
-  let totalAffinity = 0;
-  let matchCount = 0;
-
-  for (const tag of tags) {
-    const signal = entitySignals[tag];
-    if (signal) {
-      const isOnboarding = onboardingTagSet ? onboardingTagSet.has(tag) : false;
-      totalAffinity += computeEntityAffinity(signal, isOnboarding);
-      matchCount++;
-    }
-  }
-
-  if (matchCount === 0) return 1.0;
-  const avgAffinity = totalAffinity / matchCount;
-
-  // Map -1..+1 to 0.2x..1.8x multiplier
-  return 1.0 + avgAffinity * 0.8;
-}
+// entitySignalMultiplier consolidated to single closure in handleV2Feed
+// (reads typed_signals, squared formula). Module-level computeEntityAffinity
+// (tanh version reading positive_7d/negative_24h) removed — superseded by
+// closure at handleV2Feed which uses positive_count/negative_count directly.
 
 // ══════════════════════════════════════════════════════════════
 // LEGACY SKIP PENALTY — kept as fallback when entity_signals unavailable
@@ -651,11 +542,10 @@ function computeSkipPenalty(article, userSkipProfile) {
   return Math.min(penalty, 0.80); // cap — don't fully zero out
 }
 
-// Change 1: Blend long-term + session vectors. Now includes skip + saturation penalty.
-// All scoring functions now use entityAffinityMultiplier (unified engagement rate)
-// instead of separate tagProfileBoost + skipMultiplier.
+// Change 1: Blend long-term + session vectors.
+// Typed-signal multiplier applied externally (see handleV2Feed closure).
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, entitySignals, recentEntityCounts, onboardingEntities, sessionInteractionCount) {
+function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, sessionInteractionCount) {
   const longTermScore = similarity || 0;
   const sessionScore = sessionVectorSim || 0;
   // Fix 10: Adaptive weighting — more session data = more session weight
@@ -699,17 +589,7 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   const momentum = sessionBoost || 0;
   const recencyDecay = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
 
-  const baseScore = (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
-
-  const affMult = entityAffinityMultiplier(article, entitySignals, onboardingEntities);
-  const saturation = topicSaturationPenalty(article, recentEntityCounts);
-
-  // Fix 11: Debug scoring for verification
-  if (process.env.DEBUG_SCORING) {
-    console.log(`[score] personal: "${(article.title_news || '').slice(0, 45)}" vec=${vectorScore.toFixed(3)} entity=${entityBonus.toFixed(3)} aff=${affMult.toFixed(2)} sat=${saturation.toFixed(2)} final=${(baseScore * affMult * saturation).toFixed(0)}`);
-  }
-
-  return baseScore * affMult * saturation;
+  return (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
 }
 
 function scoreTrendingV3(article, userSkipProfile) {
@@ -2044,7 +1924,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         }
       }
       let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, null, sessionInteractionCount)
+        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, sessionInteractionCount)
         : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, null);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
