@@ -1,0 +1,101 @@
+-- ============================================================
+-- V3 ALGORITHM — PART 2: Sliding Window RPC
+-- Run this SECOND in Supabase SQL Editor (after Part 1)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION update_sliding_window(
+  p_pers_id UUID,
+  p_article_id BIGINT,
+  p_event_type TEXT
+)
+RETURNS VOID AS $$
+DECLARE
+  article_emb JSONB;
+  interaction_w FLOAT;
+  buffer_count INT;
+  new_taste FLOAT[];
+  dim INT := 384;
+  i INT;
+  total_weight FLOAT;
+BEGIN
+  -- Calculate interaction weight from spec
+  interaction_w := CASE p_event_type
+    WHEN 'article_saved' THEN 3.0
+    WHEN 'article_shared' THEN 2.0
+    WHEN 'article_liked' THEN 1.5
+    WHEN 'article_engaged' THEN 1.0
+    WHEN 'article_detail_view' THEN 1.0
+    WHEN 'article_skipped' THEN -0.5
+    ELSE 1.0
+  END;
+
+  -- Get article embedding
+  SELECT embedding_minilm INTO article_emb
+  FROM published_articles WHERE id = p_article_id;
+
+  IF article_emb IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Insert into engagement buffer
+  INSERT INTO engagement_buffer (personalization_id, article_id, embedding_minilm, interaction_weight, event_type)
+  VALUES (p_pers_id, p_article_id, article_emb, interaction_w, p_event_type);
+
+  -- Trim buffer to last 50 entries
+  DELETE FROM engagement_buffer
+  WHERE id IN (
+    SELECT id FROM engagement_buffer
+    WHERE personalization_id = p_pers_id
+    ORDER BY created_at DESC
+    OFFSET 50
+  );
+
+  -- Compute weighted average of last 30 positive engagements as taste vector
+  SELECT COUNT(*) INTO buffer_count
+  FROM (
+    SELECT 1 FROM engagement_buffer
+    WHERE personalization_id = p_pers_id AND interaction_weight > 0
+    ORDER BY created_at DESC
+    LIMIT 30
+  ) sub;
+
+  IF buffer_count = 0 THEN
+    RETURN;
+  END IF;
+
+  -- Compute total weight
+  SELECT SUM(eb.interaction_weight) INTO total_weight
+  FROM (
+    SELECT interaction_weight FROM engagement_buffer
+    WHERE personalization_id = p_pers_id AND interaction_weight > 0
+    ORDER BY created_at DESC
+    LIMIT 30
+  ) eb;
+
+  IF total_weight <= 0 THEN
+    RETURN;
+  END IF;
+
+  -- Weighted average across all 384 dimensions
+  new_taste := ARRAY[]::FLOAT[];
+  FOR i IN 0..dim-1 LOOP
+    new_taste := array_append(new_taste, (
+      SELECT SUM((eb.embedding_minilm->>i)::FLOAT * eb.interaction_weight) / total_weight
+      FROM (
+        SELECT embedding_minilm, interaction_weight FROM engagement_buffer
+        WHERE personalization_id = p_pers_id AND interaction_weight > 0
+        ORDER BY created_at DESC
+        LIMIT 30
+      ) eb
+    ));
+  END LOOP;
+
+  -- Update taste vector and increment interactions
+  UPDATE personalization_profiles
+  SET taste_vector_minilm = to_jsonb(new_taste),
+      total_interactions = total_interactions + 1,
+      updated_at = NOW()
+  WHERE personalization_id = p_pers_id;
+
+END;
+$$ LANGUAGE plpgsql;

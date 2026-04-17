@@ -561,6 +561,7 @@ struct ExploreArticleCard: View {
     let cardWidth: CGFloat
     let cardHeight: CGFloat
     var relatedEntities: [String] = []
+    var onDominantColorChanged: ((Color) -> Void)? = nil
 
     @State private var dominantColor: Color?
 
@@ -700,7 +701,9 @@ struct ExploreArticleCard: View {
     private func extractColor(from url: URL) {
         // Use cached result if available
         if let cached = ArticleCardView.colorCache.object(forKey: url as NSURL) {
-            dominantColor = Color(cached)
+            let color = Color(cached)
+            dominantColor = color
+            onDominantColorChanged?(color)
             return
         }
 
@@ -835,6 +838,7 @@ struct ExploreArticleCard: View {
                 withAnimation(.easeOut(duration: 0.3)) {
                     dominantColor = accentCol
                 }
+                onDominantColorChanged?(accentCol)
             }
         }
     }

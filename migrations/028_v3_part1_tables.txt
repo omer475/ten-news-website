@@ -1,0 +1,108 @@
+-- ============================================================
+-- V3 ALGORITHM — PART 1: Tables + Columns
+-- Run this FIRST in Supabase SQL Editor
+-- ============================================================
+
+-- 1. PERSONALIZATION_PROFILES — Unified user identity
+CREATE TABLE IF NOT EXISTS personalization_profiles (
+  personalization_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_profile_id UUID UNIQUE,
+  guest_device_id TEXT UNIQUE,
+  phase INT NOT NULL DEFAULT 1 CHECK (phase IN (1, 2, 3)),
+  total_interactions INT NOT NULL DEFAULT 0,
+  taste_vector_minilm JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT at_least_one_identity CHECK (
+    auth_profile_id IS NOT NULL OR guest_device_id IS NOT NULL
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_pp_auth ON personalization_profiles(auth_profile_id) WHERE auth_profile_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pp_guest ON personalization_profiles(guest_device_id) WHERE guest_device_id IS NOT NULL;
+
+-- 2. ENGAGEMENT_BUFFER — Sliding window of last 50 embeddings
+CREATE TABLE IF NOT EXISTS engagement_buffer (
+  id BIGSERIAL PRIMARY KEY,
+  personalization_id UUID NOT NULL REFERENCES personalization_profiles(personalization_id) ON DELETE CASCADE,
+  article_id BIGINT NOT NULL,
+  embedding_minilm JSONB NOT NULL,
+  interaction_weight FLOAT NOT NULL DEFAULT 1.0,
+  event_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_eb_pers_created ON engagement_buffer(personalization_id, created_at DESC);
+
+-- 3. USER_ENTITY_AFFINITY — Entity-level interest with decay
+CREATE TABLE IF NOT EXISTS user_entity_affinity (
+  personalization_id UUID NOT NULL REFERENCES personalization_profiles(personalization_id) ON DELETE CASCADE,
+  entity TEXT NOT NULL,
+  affinity_score FLOAT NOT NULL DEFAULT 0.0,
+  decay_rate FLOAT NOT NULL DEFAULT 0.99,
+  entity_type TEXT NOT NULL DEFAULT 'evergreen' CHECK (entity_type IN ('time_sensitive', 'evergreen')),
+  last_engaged_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  engagement_count INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (personalization_id, entity)
+);
+
+CREATE INDEX IF NOT EXISTS idx_uea_pers ON user_entity_affinity(personalization_id);
+
+-- 4. USER_SESSIONS — Session vector tracking
+CREATE TABLE IF NOT EXISTS user_sessions (
+  session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  personalization_id UUID NOT NULL REFERENCES personalization_profiles(personalization_id) ON DELETE CASCADE,
+  session_vector_minilm JSONB,
+  is_activated BOOLEAN NOT NULL DEFAULT FALSE,
+  engagement_count INT NOT NULL DEFAULT 0,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_activity_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_us_pers_start ON user_sessions(personalization_id, started_at DESC);
+
+-- 5. EXTEND user_interest_clusters
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS importance_score FLOAT DEFAULT 0.0;
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS cluster_type TEXT DEFAULT 'mixed';
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS decay_lambda FLOAT DEFAULT 0.0231;
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS personalization_id UUID;
+ALTER TABLE user_interest_clusters ADD COLUMN IF NOT EXISTS last_engaged_at TIMESTAMPTZ;
+
+-- 6. EXTEND published_articles
+ALTER TABLE published_articles ADD COLUMN IF NOT EXISTS entity_tags TEXT[] DEFAULT '{}';
+ALTER TABLE published_articles ADD COLUMN IF NOT EXISTS shelf_life_category TEXT DEFAULT 'recent';
+ALTER TABLE published_articles ADD COLUMN IF NOT EXISTS shelf_life_hours INT;
+
+-- Backfill shelf_life_hours from existing shelf_life_days
+UPDATE published_articles
+SET shelf_life_hours = CASE
+  WHEN shelf_life_days IS NOT NULL THEN (shelf_life_days * 24)::INT
+  ELSE 168
+END
+WHERE shelf_life_hours IS NULL;
+
+-- 7. BACKFILL: Migrate existing profiles to personalization_profiles
+INSERT INTO personalization_profiles (auth_profile_id, taste_vector_minilm, phase, total_interactions)
+SELECT
+  p.id,
+  p.taste_vector_minilm,
+  CASE
+    WHEN COALESCE(event_counts.cnt, 0) >= 50 THEN 3
+    WHEN COALESCE(event_counts.cnt, 0) >= 30 THEN 2
+    ELSE 1
+  END,
+  COALESCE(event_counts.cnt, 0)
+FROM profiles p
+LEFT JOIN (
+  SELECT user_id, COUNT(*) as cnt
+  FROM user_article_events
+  WHERE event_type IN ('article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared')
+  GROUP BY user_id
+) event_counts ON event_counts.user_id = p.id
+WHERE p.id IS NOT NULL
+ON CONFLICT (auth_profile_id) DO NOTHING;
+
+-- Verify:
+SELECT COUNT(*) as personalization_profiles_count FROM personalization_profiles;

@@ -1,0 +1,155 @@
+-- ============================================================
+-- V3 ALGORITHM — PART 3: Entity Affinity + Resolve RPCs
+-- Run this THIRD in Supabase SQL Editor (after Parts 1 & 2)
+-- ============================================================
+
+-- Entity affinity update with time-aware decay
+CREATE OR REPLACE FUNCTION update_entity_affinity(
+  p_pers_id UUID,
+  p_article_id BIGINT,
+  p_event_type TEXT
+)
+RETURNS VOID AS $$
+DECLARE
+  tags TEXT[];
+  tag TEXT;
+  interaction_w FLOAT;
+  tag_count INT := 0;
+  existing_score FLOAT;
+  existing_decay FLOAT;
+  existing_last TIMESTAMPTZ;
+  days_elapsed FLOAT;
+  decayed_score FLOAT;
+  e_type TEXT;
+  article_cat TEXT;
+BEGIN
+  -- Calculate interaction weight
+  interaction_w := CASE p_event_type
+    WHEN 'article_saved' THEN 3.0
+    WHEN 'article_shared' THEN 2.0
+    WHEN 'article_liked' THEN 1.5
+    WHEN 'article_engaged' THEN 1.0
+    WHEN 'article_detail_view' THEN 1.0
+    WHEN 'article_skipped' THEN -0.5
+    ELSE 1.0
+  END;
+
+  -- Skip negative signals for entity affinity
+  IF interaction_w < 0 THEN
+    RETURN;
+  END IF;
+
+  -- Get article tags and category
+  SELECT
+    COALESCE(
+      CASE WHEN entity_tags IS NOT NULL AND array_length(entity_tags, 1) > 0
+           THEN entity_tags
+           ELSE NULL
+      END,
+      CASE WHEN interest_tags IS NOT NULL
+           THEN ARRAY(SELECT jsonb_array_elements_text(
+             CASE WHEN jsonb_typeof(interest_tags) = 'array' THEN interest_tags
+                  ELSE '[]'::jsonb
+             END
+           ))
+           ELSE '{}'::TEXT[]
+      END
+    ),
+    category
+  INTO tags, article_cat
+  FROM published_articles WHERE id = p_article_id;
+
+  IF tags IS NULL OR array_length(tags, 1) IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Determine entity type based on article category
+  -- Sports/Entertainment/Politics = time_sensitive (0.95 decay, ~14 day half-life)
+  -- Everything else = evergreen (0.99 decay, ~69 day half-life)
+  e_type := CASE
+    WHEN article_cat IN ('Sports', 'Entertainment', 'Politics') THEN 'time_sensitive'
+    ELSE 'evergreen'
+  END;
+
+  -- Process first 6 tags only
+  FOREACH tag IN ARRAY tags[1:LEAST(6, array_length(tags, 1))]
+  LOOP
+    tag := lower(trim(tag));
+    IF tag = '' THEN CONTINUE; END IF;
+
+    -- Check existing affinity
+    SELECT affinity_score, decay_rate, last_engaged_at
+    INTO existing_score, existing_decay, existing_last
+    FROM user_entity_affinity
+    WHERE personalization_id = p_pers_id AND entity = tag;
+
+    IF existing_score IS NOT NULL THEN
+      -- Apply decay since last engagement, then add new weight
+      days_elapsed := EXTRACT(EPOCH FROM (NOW() - existing_last)) / 86400.0;
+      decayed_score := existing_score * POWER(existing_decay, days_elapsed);
+
+      UPDATE user_entity_affinity
+      SET affinity_score = LEAST(decayed_score + interaction_w, 10.0),
+          last_engaged_at = NOW(),
+          engagement_count = engagement_count + 1
+      WHERE personalization_id = p_pers_id AND entity = tag;
+    ELSE
+      -- New entity
+      INSERT INTO user_entity_affinity (personalization_id, entity, affinity_score, decay_rate, entity_type, last_engaged_at, engagement_count)
+      VALUES (p_pers_id, tag, interaction_w, CASE WHEN e_type = 'time_sensitive' THEN 0.95 ELSE 0.99 END, e_type, NOW(), 1);
+    END IF;
+
+    tag_count := tag_count + 1;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Resolve personalization_id (find or create)
+CREATE OR REPLACE FUNCTION resolve_personalization_id(
+  p_auth_id UUID DEFAULT NULL,
+  p_device_id TEXT DEFAULT NULL
+)
+RETURNS TABLE (personalization_id UUID, phase INT, total_interactions INT) AS $$
+DECLARE
+  found_id UUID;
+  found_phase INT;
+  found_interactions INT;
+BEGIN
+  -- Try to find existing
+  IF p_auth_id IS NOT NULL THEN
+    SELECT pp.personalization_id, pp.phase, pp.total_interactions
+    INTO found_id, found_phase, found_interactions
+    FROM personalization_profiles pp
+    WHERE pp.auth_profile_id = p_auth_id;
+  ELSIF p_device_id IS NOT NULL THEN
+    SELECT pp.personalization_id, pp.phase, pp.total_interactions
+    INTO found_id, found_phase, found_interactions
+    FROM personalization_profiles pp
+    WHERE pp.guest_device_id = p_device_id;
+  ELSE
+    RETURN;
+  END IF;
+
+  -- Create if not found
+  IF found_id IS NULL THEN
+    INSERT INTO personalization_profiles (auth_profile_id, guest_device_id)
+    VALUES (p_auth_id, p_device_id)
+    RETURNING personalization_profiles.personalization_id, personalization_profiles.phase, personalization_profiles.total_interactions
+    INTO found_id, found_phase, found_interactions;
+  END IF;
+
+  personalization_id := found_id;
+  phase := found_phase;
+  total_interactions := found_interactions;
+  RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Verify everything works:
+SELECT 'Tables' as check_type, COUNT(*) as count FROM personalization_profiles
+UNION ALL
+SELECT 'Columns on engagement_buffer', COUNT(*) FROM information_schema.columns WHERE table_name = 'engagement_buffer'
+UNION ALL
+SELECT 'Columns on user_entity_affinity', COUNT(*) FROM information_schema.columns WHERE table_name = 'user_entity_affinity'
+UNION ALL
+SELECT 'Columns on user_sessions', COUNT(*) FROM information_schema.columns WHERE table_name = 'user_sessions';

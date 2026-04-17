@@ -4,11 +4,11 @@ import SwiftUI
 final class OnboardingViewModel {
     enum Step: Int, CaseIterable {
         case welcome = 0
-        case country = 1
-        case topics = 2
+        case topics = 1
+        case signup = 2
 
         var stepNumber: Int { rawValue }
-        var totalSelectionSteps: Int { 2 }
+        var totalSelectionSteps: Int { 1 }
     }
 
     var currentStep: Step = .welcome
@@ -25,18 +25,18 @@ final class OnboardingViewModel {
         switch currentStep {
         case .welcome:
             return true
-        case .country:
-            return selectedCountry != nil
         case .topics:
             return selectedTopics.count >= 3
+        case .signup:
+            return true
         }
     }
 
-    var isLastStep: Bool { currentStep == .topics }
+    var isLastStep: Bool { currentStep == .signup }
 
     var selectionProgress: Double {
         guard currentStep != .welcome else { return 0 }
-        return Double(currentStep.rawValue) / 2.0
+        return 1.0
     }
 
     // MARK: - Actions
@@ -112,8 +112,6 @@ final class OnboardingViewModel {
 
     /// Debug: jump to a specific step with mock data
     func debugJumpTo(_ step: Step) {
-        selectedCountry = "US"
-        selectedCountries = ["US", "GB", "JP"]
         selectedTopics = ["ai", "tech_industry", "science", "space", "politics"]
         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
             currentStep = step

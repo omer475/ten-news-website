@@ -42,21 +42,20 @@ struct FeedbackView: View {
                     HStack(spacing: 8) {
                         if isSending {
                             ProgressView()
-                                .tint(.white)
+                                .tint(.green)
                         } else {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 14, weight: .semibold))
                         }
                         Text("Send Feedback")
-                            .font(.system(size: 17, weight: .bold))
+                            .font(.system(size: 16, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(canSend ? .green : .secondary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(
-                        canSend ? Color.blue : Color.blue.opacity(0.4),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    )
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
                 }
                 .disabled(!canSend || isSending)
                 .padding(.top, 8)

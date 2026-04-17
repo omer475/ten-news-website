@@ -1,0 +1,1131 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║      5-PERSONA DETAILED FEED SIMULATION — V2 FEED ANALYSIS                 ║
+║      Testing with 48h articles, 3 pages per persona (75 articles each)      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+Date: 2026-03-09T15:58:16.396Z
+
+════════════════════════════════════════════════════════════════════════════════
+PERSONA 1: Sarah
+Bio: Tech worker in San Francisco. AI researcher. Loves gaming and Apple products.
+Interests: artificial intelligence, tech, apple, video games, gaming, science, space exploration, nasa
+Preferred categories: Tech, Science
+Avoids: Sports, World
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 1 (cold start - no signals)
+────────────────────────────────────────────────────────────────────────────────
+  🔴 # 1 | SKIP    |   2.7s | Entertainment  | Netflix Unveils Spectacular Dinosaur Docuseries
+  🔴 # 2 | SKIP    |   2.4s | UK             | Vape Shop Fire Shuts Glasgow Central Station
+  🟡 # 3 | NEUTRAL |   3.4s | Business       | Nike CEO Elliott Hill Races to Rebuild Sports Ties
+  🟡 # 4 | NEUTRAL |   3.8s | Finance        | Permian Resources Posts $1.94 Free Cash Flow Per Share
+  🟢 # 5 | ENGAGE  |   9.2s | Tech           | MIT's AlterEgo Wearable Detects Silent Speech
+  🔴 # 6 | SKIP    |   2.3s | Politics       | Coalition Backs Australia Joining Iran War Defensively
+       Matched avoids: iran
+  🟡 # 7 | NEUTRAL |   3.6s | Finance        | GE Vernova Gains 3 Analyst Upgrades on Energy Boom
+  🟡 # 8 | NEUTRAL |   3.4s | Finance        | Oklo Faces Price Target Cuts from Barclays, Goldman
+  🟢 # 9 | ENGAGE  |  10.3s | Tech           | AI Data Centers Spark Power Line Battles Across US
+       Matched interests: artificial intelligence
+  🔴 #10 | SKIP    |   1.9s | Finance        | Oil Tops $100 as Middle East Producers Cut Output
+       Matched avoids: iran
+  🟡 #11 | NEUTRAL |   3.7s | Finance        | Riskified Posts First GAAP Profit on $99.3M Revenue
+       Matched interests: artificial intelligence
+  🟡 #12 | NEUTRAL |   3.1s | Politics       | Switzerland Votes to End Marriage Penalty in Tax Reform
+  🔴 #13 | SKIP    |   2.5s | Business       | Vestas Builds Wind Turbine Factory in Japan by 2029
+  🟡 #14 | NEUTRAL |   3.9s | Politics       | Jeffries Won't Block Iran War Funding Request Yet
+  🟢 #15 | ENGAGE  |   7.4s | Science        | Meteorite Strikes Homes in Rheinland-Pfalz, Germany
+  🔴 #16 | SKIP    |   1.6s | World          | US Service Member Dies from Iran Attack, Toll Hits 7
+       Matched avoids: iran
+  🔴 #17 | SKIP    |   1.9s | Sports         | Japan Rallies Past Australia 4-3, Clinches WBC Pool
+       Matched avoids: baseball
+  🟡 #18 | NEUTRAL |   3.7s | Business       | California Targets Montana License Plates in Tax Crackdown
+  🟡 #19 | NEUTRAL |   3.1s | Business       | Childcare Costs Surge as Providers Face 68% Insurance Hike
+  🟡 #20 | NEUTRAL |   3.6s | Entertainment  | Nolan's Odyssey Faces Tough Cuts from 600-Page Epic
+  🔴 #21 | SKIP    |   2.3s | Business       | Europe's Economic Center Shifts East Since 1950
+  🟡 #22 | NEUTRAL |   4.0s | Entertainment  | BBC's The Capture Returns with Deepfake Conspiracy Twist
+  🟢 #23 | ENGAGE  |  14.3s | Tech           | UK Government Slams Grok Posts on Football Disasters
+       Matched interests: artificial intelligence
+  🟡 #24 | NEUTRAL |   3.6s | Politics       | Guinea Dissolves Main Opposition Parties in Crackdown
+  🔴 #25 | SKIP    |   1.0s | World          | Iran Retaliates After Israel Strikes Fuel Facility
+       Matched avoids: iran
+
+  PAGE 1 SUMMARY:
+    Engaged: 4/25 (16%)
+    Skipped: 9/25 (36%)
+    Neutral: 12/25 (48%)
+    Categories: Business(5), Finance(5), Politics(4), Entertainment(3), Tech(3), World(2), UK(1), Science(1), Sports(1)
+
+  → Sending 4 engaged + 9 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 2 (with 4 engaged + 9 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |  14.0s | Tech           | OpenAI Robotics Leader Quits Over Pentagon Deal Concerns
+       Matched interests: artificial intelligence, tech
+  🔴 # 2 | SKIP    |   2.6s | Politics       | SPD Falls to Historic Low in Baden-Württemberg Vote
+  🟢 # 3 | ENGAGE  |   6.2s | Science        | Germany Plans Biomethane Push for Home Heating
+  🟢 # 4 | ENGAGE  |   7.5s | Tech           | Apple Develops 3D-Printed Aluminum for iPhones
+       Matched interests: apple, tech
+  🟡 # 5 | NEUTRAL |   3.5s | Entertainment  | Pixar's Hoppers Tops Box Office with $88M Global Launch
+  🟢 # 6 | ENGAGE  |  13.1s | Tech           | Vodafone Partners Amazon Leo for Satellite 4G/5G
+  🔴 # 7 | SKIP    |   1.7s | Business       | Iran Crisis Sparks UK Farmer Fertiliser Cost Fears
+       Matched avoids: iran
+  🟢 # 8 | ENGAGE  |  10.6s | Science        | Scientists Create Magic Mushroom Drug Without Hallucinations
+  🟡 # 9 | NEUTRAL |   3.3s | Finance        | Constellation Energy Faces Mixed Analyst Calls
+  🔴 #10 | SKIP    |   2.0s | Business       | Frontier Airlines Beats Q4 Earnings with $0.23 EPS
+  🔴 #11 | SKIP    |   1.6s | World          | Israeli Strikes Blanket Tehran in Toxic Black Rain
+       Matched avoids: iran
+  🟢 #12 | ENGAGE  |  11.4s | Science        | Brain Cells Called Tanycytes May Block Alzheimer's Tau
+  🟡 #13 | NEUTRAL |   3.2s | Entertainment  | Academy Awards Spotlight 5 Animated Short Nominees
+  🟢 #14 | ENGAGE  |  10.6s | Entertainment  | New Browser Game Lets Players Respond to Real AI Prompts
+       Matched interests: artificial intelligence, gaming, tech
+  🔴 #15 | SKIP    |   1.3s | World          | Iran's Next Leader Faces Shrinking Loyalist Base
+       Matched avoids: iran
+  🔴 #16 | SKIP    |   1.8s | Sports         | England Suffers Historic Six Nations Loss to Italy
+  🟡 #17 | NEUTRAL |   3.8s | Entertainment  | Super Mario Galaxy Movie Draws from 38-Year-Old Game
+  🔴 #18 | SKIP    |   3.0s | Finance        | Aussie Dollar Holds Strong at US70¢ Despite Volatility
+  🔴 #19 | SKIP    |   1.1s | World          | US Faces Catastrophe After Iran Aggression
+       Matched avoids: iran
+  🟢 #20 | ENGAGE  |   8.3s | Tech           | Ericsson, Intel Expand Partnership for AI-Native 6G
+       Matched interests: artificial intelligence
+  🔴 #21 | SKIP    |   1.0s | Sports         | Yoshida Homer Lifts Japan to 4-3 WBC Victory
+       Matched avoids: baseball
+  🟡 #22 | NEUTRAL |   3.3s | Entertainment  | Pixar's Pete Docter Defends Cutting LGBTQ Content
+  🟢 #23 | ENGAGE  |  10.4s | Science        | Satellites Detect Millimeter Movements in Weak Bridges
+       Matched interests: technology
+  🟢 #24 | ENGAGE  |   6.8s | Tech           | Age-Verification Tools Spread Across US, Surveilling Adults
+       Matched interests: tech
+  🔴 #25 | SKIP    |   2.2s | Crypto         | Stablecoins Surge to $300B, Gobble Up US Treasuries
+
+  PAGE 2 SUMMARY:
+    Engaged: 10/25 (40%)
+    Skipped: 10/25 (40%)
+    Neutral: 5/25 (20%)
+    Categories: Tech(5), Entertainment(5), Science(4), World(3), Business(2), Finance(2), Sports(2), Politics(1), Crypto(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 14 articles
+    Total skipped: 19 articles
+    Top engaged tags: artificial intelligence(5), tech(4), germany(2), social media(2), telecommunications(2), mit(1), alterego(1), silent speech(1)
+    Top skipped tags: iran(8), middle east(6), australia(4), finance(4), international relations(3), japan(3), sports(3), israel(3)
+
+  → Sending 14 engaged + 19 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 3 (with 14 engaged + 19 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟡 # 1 | NEUTRAL |   3.1s | Politics       | NYPD Probes ISIS-Style IED Attack Near Gracie Mansion
+  🔴 # 2 | SKIP    |   2.2s | Business       | Nano Nuclear Energy Partners with UAE Firm on Reactors
+  🔴 # 3 | SKIP    |   1.9s | Sports         | Oxford United Footballer, 15, Dies During Match
+       Matched avoids: football, soccer
+  🔴 # 4 | SKIP    |   2.9s | Entertainment  | Pixar's Hoppers Soars to $46M, The Bride Bombs
+  🔴 # 5 | SKIP    |   2.5s | Entertainment  | Knight of Seven Kingdoms Wins Fans with Scaled-Back Approach
+  🟡 # 6 | NEUTRAL |   3.3s | Business       | Telefônica Brasil Beats EPS with BRL 15.6B Q4 Revenue
+  🟡 # 7 | NEUTRAL |   3.3s | Health         | Young People Disadvantaged by Early School Start Times
+  🟢 # 8 | ENGAGE  |   9.9s | Tech           | ECARX Hits $305M Q4 Revenue, Swings to Profit
+  🟡 # 9 | NEUTRAL |   3.8s | Entertainment  | Lily Collins Cast as Audrey Hepburn in Biopic
+  🔴 #10 | SKIP    |   1.7s | World          | Iran War Targets Widen to Civilian Sites, Saudi Reports Deat
+       Matched avoids: iran
+  🔴 #11 | SKIP    |   3.0s | Business       | RDIF Chief Dmitriev Calls Europe's Energy Shift Strategic Er
+  🔴 #12 | SKIP    |   2.4s | Entertainment  | I May Destroy You Emerges as Forgotten 2020s Gem
+  🔴 #13 | SKIP    |   2.7s | Health         | Amsterdam Concert Hall Offers Singing Circle for Dementia Pa
+  🔴 #14 | SKIP    |   2.1s | Entertainment  | Prince Harry and Meghan Markle Head to Australia
+  🔴 #15 | SKIP    |   2.8s | Politics       | Italian PM Meloni Attacks Judges, Pushes Justice Reform
+  🔴 #16 | SKIP    |   2.1s | Business       | Sydney Developers Bypass Councils, Supersize 325 Projects
+  🟡 #17 | NEUTRAL |   3.7s | Politics       | CDU Election Loss Threatens Merz Government Agenda
+  🔴 #18 | SKIP    |   1.4s | World          | Israel Claims Strike Kills Iranian Military Aide
+       Matched avoids: iran
+  🔴 #19 | SKIP    |   2.2s | Business       | Victoria's Secret Ends Subscription Service After $400M Deal
+  🔴 #20 | SKIP    |   1.2s | World          | Israel Strikes Iran Revolutionary Guards Space HQ
+       Matched avoids: iran
+  🔴 #21 | SKIP    |   2.8s | Politics       | German Greens Win 32% in Baden-Wuerttemberg Vote
+  🔴 #22 | SKIP    |   2.5s | Business       | Denison Mines Approves Canada's First ISR Uranium Mine
+  🔴 #23 | SKIP    |   1.6s | World          | Gulf Oil Giants Cut Output as Iran War Chokes Exports
+  🟢 #24 | ENGAGE  |   5.3s | Science        | Ancient DNA Reveals Neolithic Farmer-Hunter Marriages
+  🟡 #25 | NEUTRAL |   3.4s | Business       | Trump Turns Venezuela into Major US Oil Supplier
+
+  PAGE 3 SUMMARY:
+    Engaged: 2/25 (8%)
+    Skipped: 17/25 (68%)
+    Neutral: 6/25 (24%)
+    Categories: Business(7), Entertainment(5), Politics(4), World(4), Health(2), Sports(1), Tech(1), Science(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 16 articles
+    Total skipped: 36 articles
+    Top engaged tags: artificial intelligence(5), tech(4), germany(2), social media(2), europe(2), telecommunications(2), mit(1), alterego(1)
+    Top skipped tags: iran(11), middle east(10), australia(5), international relations(5), finance(5), israel(5), politics(5), geopolitics(5)
+
+════════════════════════════════════════════════════════════════════════════════
+OVERALL ANALYSIS: Sarah
+════════════════════════════════════════════════════════════════════════════════
+
+  Total articles seen: 75
+  Engaged: 16 (21.3%)
+  Skipped: 36 (48.0%)
+  Neutral: 23 (30.7%)
+  Average dwell: 4.1s
+
+  CATEGORY BREAKDOWN:
+  Category          Seen  Engaged  Skipped  Neutral    Eng%
+  Business            14        0        9        5      0%
+  Crypto               1        0        1        0      0%
+  Entertainment       13        1        5        7      8%
+  Finance              7        0        2        5      0%
+  Health               2        0        1        1      0%
+  Politics             9        0        4        5      0%
+  Science              6        6        0        0    100%
+  Sports               4        0        4        0      0%
+  Tech                 9        9        0        0    100%
+  UK                   1        0        1        0      0%
+  World                9        0        9        0      0%
+
+  FEED ADAPTATION (engagement rate per page):
+    Page 1: 16.0% engagement, avg 4.1s dwell | Business(5), Finance(5), Politics(4), Entertainment(3), Tech(3), World(2), UK(1), Science(1), Sports(1)
+    Page 2: 40.0% engagement, avg 5.4s dwell | Tech(5), Entertainment(5), Science(4), World(3), Business(2), Finance(2), Sports(2), Politics(1), Crypto(1)
+    Page 3: 8.0% engagement, avg 3.0s dwell | Business(7), Entertainment(5), Politics(4), World(4), Health(2), Sports(1), Tech(1), Science(1)
+
+  BUCKET DISTRIBUTION: bandit(75)
+
+  FINAL INTEREST PROFILE (engaged tags):
+    artificial intelligence: 5
+    tech: 4
+    germany: 2
+    social media: 2
+    europe: 2
+    telecommunications: 2
+    mit: 1
+    alterego: 1
+    silent speech: 1
+    wearable technology: 1
+
+  FINAL SKIP PROFILE (skipped tags):
+    iran: 11
+    middle east: 10
+    australia: 5
+    international relations: 5
+    finance: 5
+    israel: 5
+    politics: 5
+    geopolitics: 5
+    sports: 4
+    energy: 3
+
+════════════════════════════════════════════════════════════════════════════════
+PERSONA 2: Marco
+Bio: Italian sports journalist. Lives and breathes football, F1, and basketball.
+Interests: sports, soccer, football, formula 1, motorsport, basketball, nfl, baseball
+Preferred categories: Sports
+Avoids: Finance, World, Politics
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 1 (cold start - no signals)
+────────────────────────────────────────────────────────────────────────────────
+  🔴 # 1 | SKIP    |   2.6s | Business       | Nike CEO Elliott Hill Races to Rebuild Sports Ties
+  🔴 # 2 | SKIP    |   2.8s | UK             | Vape Shop Fire Shuts Glasgow Central Station
+  🟢 # 3 | ENGAGE  |  11.4s | Sports         | England Suffers Historic Six Nations Loss to Italy
+       Matched interests: italy, sports
+  🟡 # 4 | NEUTRAL |   3.1s | Entertainment  | Pixar's Hoppers Soars to $46M, The Bride Bombs
+  🔴 # 5 | SKIP    |   1.7s | Crypto         | Stablecoins Surge to $300B, Gobble Up US Treasuries
+       Matched avoids: donald trump
+  🔴 # 6 | SKIP    |   1.8s | World          | Iran Retaliates After Israel Strikes Fuel Facility
+       Matched avoids: iran, middle east, geopolitics
+  🟡 # 7 | NEUTRAL |   4.0s | Entertainment  | Knight of Seven Kingdoms Wins Fans with Scaled-Back Approach
+  🟢 # 8 | ENGAGE  |  11.2s | Sports         | Oxford United Footballer, 15, Dies During Match
+       Matched interests: football, sports, soccer
+  🟢 # 9 | ENGAGE  |  10.7s | Sports         | Sharma Blasts Quickfire Fifty in T20 Final Opener
+       Matched interests: sports
+  🔴 #10 | SKIP    |   1.7s | Politics       | Coalition Backs Australia Joining Iran War Defensively
+       Matched avoids: iran, international relations
+  🔴 #11 | SKIP    |   2.9s | Health         | Woman, 31, Ignores Shoulder Pain, Learns She Has Stage 4 Can
+  🟡 #12 | NEUTRAL |   3.4s | Health         | Telangana Launches HPV Vaccination Drive for Women
+  🔴 #13 | SKIP    |   2.0s | Business       | Childcare Costs Surge as Providers Face 68% Insurance Hike
+       Matched avoids: inflation
+  🟡 #14 | NEUTRAL |   3.7s | Tech           | AI Data Centers Spark Power Line Battles Across US
+  🔴 #15 | SKIP    |   2.6s | Science        | Meteorite Strikes Homes in Rheinland-Pfalz, Germany
+  🟢 #16 | ENGAGE  |  14.4s | Sports         | Women's Football Surges in South America Before 2027 World C
+       Matched interests: sports, soccer
+  🔴 #17 | SKIP    |   2.0s | World          | Israeli Strikes Blanket Tehran in Toxic Black Rain
+       Matched avoids: iran, middle east
+  🔴 #18 | SKIP    |   2.5s | Science        | Germany Plans Biomethane Push for Home Heating
+  🟡 #19 | NEUTRAL |   3.7s | Tech           | Vodafone Partners Amazon Leo for Satellite 4G/5G
+  🔴 #20 | SKIP    |   2.9s | Science        | Scientists Create Magic Mushroom Drug Without Hallucinations
+  🔴 #21 | SKIP    |   2.5s | Tech           | Age-Verification Tools Spread Across US, Surveilling Adults
+  🟢 #22 | ENGAGE  |   7.1s | Sports         | Iraq Requests World Cup Playoff Delay Amid War
+       Matched interests: soccer, sports
+       Matched avoids: iran, international relations
+  🟡 #23 | NEUTRAL |   3.8s | Tech           | Apple Plans More Mac Refreshes Through 2026
+  🔴 #24 | SKIP    |   1.7s | Politics       | Switzerland Votes to End Marriage Penalty in Tax Reform
+  🟢 #25 | ENGAGE  |   5.0s | Sports         | Japan Rallies Past Australia 4-3, Clinches WBC Pool
+       Matched interests: baseball, sports
+
+  PAGE 1 SUMMARY:
+    Engaged: 6/25 (24%)
+    Skipped: 13/25 (52%)
+    Neutral: 6/25 (24%)
+    Categories: Sports(6), Tech(4), Science(3), Business(2), Entertainment(2), World(2), Politics(2), Health(2), UK(1), Crypto(1)
+
+  → Sending 6 engaged + 13 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 2 (with 6 engaged + 13 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🔴 # 1 | SKIP    |   2.3s | Health         | Amsterdam Concert Hall Offers Singing Circle for Dementia Pa
+  🔴 # 2 | SKIP    |   2.8s | Tech           | Apple Unveils New iMac Colors for 2026 Launch
+  🔴 # 3 | SKIP    |   2.6s | Science        | Brain Cells Called Tanycytes May Block Alzheimer's Tau
+  🟡 # 4 | NEUTRAL |   3.3s | Science        | Satellites Detect Millimeter Movements in Weak Bridges
+  🔴 # 5 | SKIP    |   2.7s | Business       | Vestas Builds Wind Turbine Factory in Japan by 2029
+  🟢 # 6 | ENGAGE  |   9.4s | Sports         | Cécile Hernandez Wins First Paralympic Gold at 51
+  🟡 # 7 | NEUTRAL |   3.9s | Entertainment  | Netflix Unveils Spectacular Dinosaur Docuseries
+  🔴 # 8 | SKIP    |   2.6s | Entertainment  | New Browser Game Lets Players Respond to Real AI Prompts
+  🔴 # 9 | SKIP    |   1.6s | Finance        | Permian Resources Posts $1.94 Free Cash Flow Per Share
+  🔴 #10 | SKIP    |   1.2s | Finance        | Riskified Posts First GAAP Profit on $99.3M Revenue
+  🔴 #11 | SKIP    |   2.1s | Science        | Ancient DNA Reveals Neolithic Farmer-Hunter Marriages
+  🔴 #12 | SKIP    |   1.4s | Politics       | Guinea Dissolves Main Opposition Parties in Crackdown
+  🔴 #13 | SKIP    |   1.9s | Politics       | NYPD Probes ISIS-Style IED Attack Near Gracie Mansion
+  🔴 #14 | SKIP    |   1.4s | World          | US Service Member Dies from Iran Attack, Toll Hits 7
+       Matched avoids: iran, middle east, international relations
+  🔴 #15 | SKIP    |   1.1s | Finance        | Oklo Faces Price Target Cuts from Barclays, Goldman
+       Matched avoids: stock market
+  🟡 #16 | NEUTRAL |   3.2s | Science        | US Approves TerraPower Natrium Gen IV Reactor
+  🔴 #17 | SKIP    |   2.5s | Entertainment  | Pixar's Hoppers Tops Box Office with $88M Global Launch
+  🔴 #18 | SKIP    |   1.1s | World          | Iran War Targets Widen to Civilian Sites, Saudi Reports Deat
+       Matched avoids: iran, middle east, geopolitics
+  🔴 #19 | SKIP    |   2.1s | Entertainment  | BBC's The Capture Returns with Deepfake Conspiracy Twist
+  🔴 #20 | SKIP    |   2.5s | Science        | Finnish Researchers Develop Wood-Based Resins
+  🟡 #21 | NEUTRAL |   3.6s | Tech           | MIT's AlterEgo Wearable Detects Silent Speech
+  🔴 #22 | SKIP    |   1.5s | World          | Israel Claims Strike Kills Iranian Military Aide
+       Matched avoids: iran, middle east, international relations
+  🟡 #23 | NEUTRAL |   3.4s | Entertainment  | Academy Awards Spotlight 5 Animated Short Nominees
+  🔴 #24 | SKIP    |   2.7s | Entertainment  | Pixar's Pete Docter Defends Cutting LGBTQ Content
+  🟡 #25 | NEUTRAL |   3.0s | Tech           | ECARX Hits $305M Q4 Revenue, Swings to Profit
+
+  PAGE 2 SUMMARY:
+    Engaged: 1/25 (4%)
+    Skipped: 18/25 (72%)
+    Neutral: 6/25 (24%)
+    Categories: Entertainment(6), Science(5), Tech(3), Finance(3), World(3), Politics(2), Health(1), Business(1), Sports(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 7 articles
+    Total skipped: 31 articles
+    Top engaged tags: sports(6), soccer(3), england(1), italy(1), six nations(1), rugby(1), steve borthwick(1), coaching(1)
+    Top skipped tags: iran(6), middle east(5), politics(4), finance(3), israel(3), international relations(3), renewable energy(3), tech(3)
+
+  → Sending 7 engaged + 31 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 3 (with 7 engaged + 31 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |   6.6s | Sports         | Emanuel Perathoner Wins Italy's First Gold at Paralympics
+       Matched interests: italy, sports
+  🔴 # 2 | SKIP    |   2.9s | Business       | Frontier Airlines Beats Q4 Earnings with $0.23 EPS
+  🟡 # 3 | NEUTRAL |   3.7s | Health         | Young People Disadvantaged by Early School Start Times
+  🔴 # 4 | SKIP    |   1.3s | Finance        | Constellation Energy Faces Mixed Analyst Calls
+  🟢 # 5 | ENGAGE  |   7.9s | Sports         | Russell Wins Australian GP as Ferrari Strategy Fails Hamilto
+       Matched interests: formula 1, motorsport
+  🔴 # 6 | SKIP    |   2.7s | Entertainment  | Super Mario Galaxy Movie Draws from 38-Year-Old Game
+  🔴 # 7 | SKIP    |   1.7s | Politics       | Texas Footage Contradicts DHS Shooting Claims
+  🟡 # 8 | NEUTRAL |   3.5s | Tech           | OpenAI Robotics Leader Quits Over Pentagon Deal Concerns
+  🟢 # 9 | ENGAGE  |   7.6s | Sports         | Castillo Wins First PGA Title After Brown Collapses
+       Matched interests: sports
+  🟢 #10 | ENGAGE  |  11.7s | Sports         | India Openers Smash 17-Year T20 World Cup Record
+       Matched interests: sports
+  🔴 #11 | SKIP    |   1.8s | Business       | Iran Crisis Sparks UK Farmer Fertiliser Cost Fears
+       Matched avoids: iran, geopolitics
+  🟢 #12 | ENGAGE  |  12.5s | Sports         | Yoshida Homer Lifts Japan to 4-3 WBC Victory
+       Matched interests: baseball, sports
+  🟢 #13 | ENGAGE  |  14.0s | Sports         | Milan Cortina Hosts 50th Winter Paralympics
+       Matched interests: sports, italy
+  🟡 #14 | NEUTRAL |   3.9s | Entertainment  | I May Destroy You Emerges as Forgotten 2020s Gem
+  🟢 #15 | ENGAGE  |  14.9s | Sports         | Ben Tudhope Wins Silver, Australia's First Medal
+  🔴 #16 | SKIP    |   1.5s | World          | Lebanon Reports 83 Children Killed in Israeli Strikes
+  🟢 #17 | ENGAGE  |   8.4s | Sports         | Celtic Wins Shootout as 8,000 Fans Storm Pitch
+       Matched interests: soccer, sports
+  🟢 #18 | ENGAGE  |   8.0s | Sports         | India Claims Third Straight ICC Trophy with T20 Win
+       Matched interests: sports
+  🟡 #19 | NEUTRAL |   3.9s | Science        | US Space Power Faces Risk from SpaceX Dominance
+  🔴 #20 | SKIP    |   2.6s | Tech           | PS5 Owner Transforms Console Into Linux Machine
+  🟡 #21 | NEUTRAL |   3.4s | Entertainment  | Lily Collins Cast as Audrey Hepburn in Biopic
+  🟢 #22 | ENGAGE  |   5.2s | Sports         | India Defends T20 World Cup Title, Claims Record Third Crown
+       Matched interests: sports
+  🟢 #23 | ENGAGE  |   6.1s | Sports         | Iranian Women's Soccer Team Flashes SOS Signal on Bus
+       Matched interests: sports
+  🔴 #24 | SKIP    |   3.0s | Tech           | Apple Develops 3D-Printed Aluminum for iPhones
+  🔴 #25 | SKIP    |   1.3s | Politics       | Jeffries Won't Block Iran War Funding Request Yet
+       Matched avoids: donald trump, middle east
+
+  PAGE 3 SUMMARY:
+    Engaged: 11/25 (44%)
+    Skipped: 9/25 (36%)
+    Neutral: 5/25 (20%)
+    Categories: Sports(11), Entertainment(3), Tech(3), Business(2), Politics(2), Health(1), Finance(1), World(1), Science(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 18 articles
+    Total skipped: 40 articles
+    Top engaged tags: sports(15), soccer(4), india(4), cricket(4), paralympics(4), italy(3), australia(3), t20 world cup(3)
+    Top skipped tags: iran(7), middle east(6), politics(6), finance(5), tech(5), israel(4), geopolitics(3), international relations(3)
+
+════════════════════════════════════════════════════════════════════════════════
+OVERALL ANALYSIS: Marco
+════════════════════════════════════════════════════════════════════════════════
+
+  Total articles seen: 75
+  Engaged: 18 (24.0%)
+  Skipped: 40 (53.3%)
+  Neutral: 17 (22.7%)
+  Average dwell: 4.2s
+
+  CATEGORY BREAKDOWN:
+  Category          Seen  Engaged  Skipped  Neutral    Eng%
+  Business             5        0        5        0      0%
+  Crypto               1        0        1        0      0%
+  Entertainment       11        0        5        6      0%
+  Finance              4        0        4        0      0%
+  Health               4        0        2        2      0%
+  Politics             6        0        6        0      0%
+  Science              9        0        6        3      0%
+  Sports              18       18        0        0    100%
+  Tech                10        0        4        6      0%
+  UK                   1        0        1        0      0%
+  World                6        0        6        0      0%
+
+  FEED ADAPTATION (engagement rate per page):
+    Page 1: 24.0% engagement, avg 4.4s dwell | Sports(6), Tech(4), Science(3), Business(2), Entertainment(2), World(2), Politics(2), Health(2), UK(1), Crypto(1)
+    Page 2: 4.0% engagement, avg 2.6s dwell | Entertainment(6), Science(5), Tech(3), Finance(3), World(3), Politics(2), Health(1), Business(1), Sports(1)
+    Page 3: 44.0% engagement, avg 5.6s dwell | Sports(11), Entertainment(3), Tech(3), Business(2), Politics(2), Health(1), Finance(1), World(1), Science(1)
+
+  BUCKET DISTRIBUTION: bandit(75)
+
+  FINAL INTEREST PROFILE (engaged tags):
+    sports: 15
+    soccer: 4
+    india: 4
+    cricket: 4
+    paralympics: 4
+    italy: 3
+    australia: 3
+    t20 world cup: 3
+    new zealand: 3
+    japan: 2
+
+  FINAL SKIP PROFILE (skipped tags):
+    iran: 7
+    middle east: 6
+    politics: 6
+    finance: 5
+    tech: 5
+    israel: 4
+    geopolitics: 3
+    international relations: 3
+    renewable energy: 3
+    donald trump: 2
+
+════════════════════════════════════════════════════════════════════════════════
+PERSONA 3: Elena
+Bio: Political science professor in Berlin. Follows global affairs, conflicts, diplomacy.
+Interests: politics, international relations, geopolitics, iran, middle east, russia, ukraine, israel
+Preferred categories: World, Politics
+Avoids: Sports, Entertainment
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 1 (cold start - no signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟡 # 1 | NEUTRAL |   3.2s | Tech           | Ericsson, Intel Expand Partnership for AI-Native 6G
+  🟡 # 2 | NEUTRAL |   3.2s | Health         | Telangana Launches HPV Vaccination Drive for Women
+  🟢 # 3 | ENGAGE  |   9.7s | Politics       | Jeffries Won't Block Iran War Funding Request Yet
+       Matched interests: middle east, politics
+  🟡 # 4 | NEUTRAL |   3.2s | Crypto         | Stablecoins Surge to $300B, Gobble Up US Treasuries
+  🟡 # 5 | NEUTRAL |   5.0s | Science        | Meteorite Strikes Homes in Rheinland-Pfalz, Germany
+       Matched interests: germany
+  🔴 # 6 | SKIP    |   2.6s | UK             | Vape Shop Fire Shuts Glasgow Central Station
+  🟡 # 7 | NEUTRAL |   3.5s | Business       | Nike CEO Elliott Hill Races to Rebuild Sports Ties
+  🟡 # 8 | NEUTRAL |   3.8s | Science        | Germany Plans Biomethane Push for Home Heating
+       Matched interests: germany
+  🔴 # 9 | SKIP    |   1.5s | Entertainment  | Pixar's Hoppers Soars to $46M, The Bride Bombs
+       Matched avoids: film
+  🟡 #10 | NEUTRAL |   3.1s | Science        | Scientists Create Magic Mushroom Drug Without Hallucinations
+  🟡 #11 | NEUTRAL |   3.4s | Science        | Brain Cells Called Tanycytes May Block Alzheimer's Tau
+  🔴 #12 | SKIP    |   2.6s | Business       | California Targets Montana License Plates in Tax Crackdown
+  🟡 #13 | NEUTRAL |   3.6s | Tech           | UK Government Slams Grok Posts on Football Disasters
+  🟢 #14 | ENGAGE  |   9.3s | World          | US Service Member Dies from Iran Attack, Toll Hits 7
+       Matched interests: iran, military, middle east, international relations
+  🔴 #15 | SKIP    |   1.9s | Entertainment  | Netflix Unveils Spectacular Dinosaur Docuseries
+       Matched avoids: netflix, streaming
+  🟡 #16 | NEUTRAL |   4.3s | Health         | Young People Disadvantaged by Early School Start Times
+       Matched interests: germany
+  🔴 #17 | SKIP    |   1.7s | Sports         | Oxford United Footballer, 15, Dies During Match
+       Matched avoids: football, sports, soccer
+  🔴 #18 | SKIP    |   2.6s | Business       | Vestas Builds Wind Turbine Factory in Japan by 2029
+  🟡 #19 | NEUTRAL |   3.2s | Tech           | MIT's AlterEgo Wearable Detects Silent Speech
+  🔴 #20 | SKIP    |   1.5s | Sports         | Sharma Blasts Quickfire Fifty in T20 Final Opener
+       Matched avoids: sports
+  🔴 #21 | SKIP    |   2.2s | Finance        | BWX Technologies Lifts Target to $235 After Earnings Beat
+  🟢 #22 | ENGAGE  |   6.4s | World          | Iran War Targets Widen to Civilian Sites, Saudi Reports Deat
+       Matched interests: iran, middle east, geopolitics
+  🟢 #23 | ENGAGE  |  13.8s | Politics       | Guinea Dissolves Main Opposition Parties in Crackdown
+       Matched interests: politics
+  🔴 #24 | SKIP    |   2.4s | Tech           | Age-Verification Tools Spread Across US, Surveilling Adults
+  🔴 #25 | SKIP    |   1.8s | Entertainment  | Nolan's Odyssey Faces Tough Cuts from 600-Page Epic
+       Matched avoids: film
+
+  PAGE 1 SUMMARY:
+    Engaged: 4/25 (16%)
+    Skipped: 10/25 (40%)
+    Neutral: 11/25 (44%)
+    Categories: Tech(4), Science(4), Business(3), Entertainment(3), Health(2), Politics(2), World(2), Sports(2), Crypto(1), UK(1), Finance(1)
+
+  → Sending 4 engaged + 10 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 2 (with 4 engaged + 10 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🔴 # 1 | SKIP    |   1.3s | Sports         | England Suffers Historic Six Nations Loss to Italy
+       Matched avoids: sports
+  🔴 # 2 | SKIP    |   1.2s | Sports         | Japan Rallies Past Australia 4-3, Clinches WBC Pool
+       Matched avoids: baseball, sports
+  🔴 # 3 | SKIP    |   2.2s | Health         | Woman, 31, Ignores Shoulder Pain, Learns She Has Stage 4 Can
+  🔴 # 4 | SKIP    |   2.8s | Health         | Amsterdam Concert Hall Offers Singing Circle for Dementia Pa
+  🔴 # 5 | SKIP    |   1.7s | Entertainment  | BBC's The Capture Returns with Deepfake Conspiracy Twist
+  🟢 # 6 | ENGAGE  |   8.5s | World          | Israeli Strikes Blanket Tehran in Toxic Black Rain
+       Matched interests: israel, iran, middle east
+  🔴 # 7 | SKIP    |   2.2s | Finance        | Constellation Energy Faces Mixed Analyst Calls
+  🔴 # 8 | SKIP    |   2.4s | Health         | Fiber Transforms Gut Health, Scientists Say
+  🔴 # 9 | SKIP    |   2.0s | Science        | Satellites Detect Millimeter Movements in Weak Bridges
+  🟢 #10 | ENGAGE  |   7.8s | World          | US Faces Catastrophe After Iran Aggression
+       Matched interests: iran, middle east, israel, international relations, politics
+  🔴 #11 | SKIP    |   2.5s | Health         | 10-Minute Exercise Eases Depression for Weeks
+  🟡 #12 | NEUTRAL |   4.6s | Business       | Europe's Economic Center Shifts East Since 1950
+       Matched interests: europe
+  🟢 #13 | ENGAGE  |   9.3s | World          | Israel Claims Strike Kills Iranian Military Aide
+       Matched interests: israel, iran, middle east, politics, international relations
+  🟡 #14 | NEUTRAL |   4.0s | Tech           | Apple Unveils New iMac Colors for 2026 Launch
+  🔴 #15 | SKIP    |   1.6s | Sports         | Women's Football Surges in South America Before 2027 World C
+       Matched avoids: sports, soccer
+  🟡 #16 | NEUTRAL |   3.1s | Finance        | Permian Resources Posts $1.94 Free Cash Flow Per Share
+  🟢 #17 | ENGAGE  |  14.1s | World          | Iran's Next Leader Faces Shrinking Loyalist Base
+       Matched interests: iran, middle east, politics
+  🔴 #18 | SKIP    |   1.7s | Sports         | Milan Cortina Hosts 50th Winter Paralympics
+       Matched avoids: sports
+  🟢 #19 | ENGAGE  |  12.3s | Business       | RDIF Chief Dmitriev Calls Europe's Energy Shift Strategic Er
+       Matched interests: europe, geopolitics, russia
+  🔴 #20 | SKIP    |   1.3s | Sports         | Emanuel Perathoner Wins Italy's First Gold at Paralympics
+       Matched avoids: sports
+  🟢 #21 | ENGAGE  |  11.2s | World          | Iran Retaliates After Israel Strikes Fuel Facility
+       Matched interests: iran, israel, middle east, politics, geopolitics
+  🟡 #22 | NEUTRAL |   3.1s | Science        | Ancient DNA Reveals Neolithic Farmer-Hunter Marriages
+  🟢 #23 | ENGAGE  |   8.1s | Business       | Iran Crisis Sparks UK Farmer Fertiliser Cost Fears
+       Matched interests: iran, geopolitics
+  🟢 #24 | ENGAGE  |  12.1s | World          | Lebanon Reports 83 Children Killed in Israeli Strikes
+       Matched interests: israel, politics
+  🟡 #25 | NEUTRAL |   4.0s | Tech           | Vodafone Partners Amazon Leo for Satellite 4G/5G
+       Matched interests: europe
+
+  PAGE 2 SUMMARY:
+    Engaged: 8/25 (32%)
+    Skipped: 12/25 (48%)
+    Neutral: 5/25 (20%)
+    Categories: World(6), Sports(5), Health(4), Business(3), Finance(2), Science(2), Tech(2), Entertainment(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 12 articles
+    Total skipped: 22 articles
+    Top engaged tags: middle east(8), iran(8), politics(7), israel(5), geopolitics(4), international relations(3), conflict(3), saudi arabia(2)
+    Top skipped tags: sports(7), health(4), entertainment(3), finance(3), italy(3), film(2), soccer(2), japan(2)
+
+  → Sending 12 engaged + 22 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 3 (with 12 engaged + 22 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟡 # 1 | NEUTRAL |   3.2s | Science        | Finnish Researchers Develop Wood-Based Resins
+  🟡 # 2 | NEUTRAL |   3.4s | Finance        | Riskified Posts First GAAP Profit on $99.3M Revenue
+  🟢 # 3 | ENGAGE  |  10.8s | World          | Gulf Oil Giants Cut Output as Iran War Chokes Exports
+       Matched interests: middle east, geopolitics
+  🟢 # 4 | ENGAGE  |  11.1s | World          | Israel Strikes Iran Revolutionary Guards Space HQ
+       Matched interests: israel, iran, middle east
+  🔴 # 5 | SKIP    |   1.3s | Sports         | Cécile Hernandez Wins First Paralympic Gold at 51
+  🔴 # 6 | SKIP    |   2.8s | Finance        | GE Vernova Gains 3 Analyst Upgrades on Energy Boom
+  🔴 # 7 | SKIP    |   2.2s | Business       | Childcare Costs Surge as Providers Face 68% Insurance Hike
+  🟢 # 8 | ENGAGE  |  10.2s | World          | Pope Leo XIV Calls for End to Mideast Violence
+       Matched interests: middle east, iran, international relations
+  🟡 # 9 | NEUTRAL |   3.7s | Tech           | PS5 Owner Transforms Console Into Linux Machine
+  🟢 #10 | ENGAGE  |   8.3s | World          | US and Israel Strike Iranian Oil Refinery in Capital
+       Matched interests: iran, israel, middle east, politics
+  🔴 #11 | SKIP    |   1.4s | Sports         | Ben Tudhope Wins Silver, Australia's First Medal
+  🟢 #12 | ENGAGE  |  12.8s | Politics       | NYPD Probes ISIS-Style IED Attack Near Gracie Mansion
+  🟢 #13 | ENGAGE  |  12.0s | World          | Trump Demands Approval of Iran's Next Supreme Leader
+       Matched interests: iran, politics
+  🟢 #14 | ENGAGE  |  11.2s | Sports         | Iraq Requests World Cup Playoff Delay Amid War
+       Matched interests: iran, international relations
+       Matched avoids: soccer, sports
+  🔴 #15 | SKIP    |   2.1s | Science        | US Approves TerraPower Natrium Gen IV Reactor
+  🟡 #16 | NEUTRAL |   3.6s | Science        | US Space Power Faces Risk from SpaceX Dominance
+       Matched interests: national security
+  🟢 #17 | ENGAGE  |  10.4s | World          | Iran Expands Target List to Include US Economic Assets
+       Matched interests: iran, middle east, international relations
+  🔴 #18 | SKIP    |   1.7s | Sports         | India Openers Smash 17-Year T20 World Cup Record
+       Matched avoids: sports
+  🔴 #19 | SKIP    |   1.3s | Sports         | Yoshida Homer Lifts Japan to 4-3 WBC Victory
+       Matched avoids: baseball, sports
+  🔴 #20 | SKIP    |   1.5s | Entertainment  | Academy Awards Spotlight 5 Animated Short Nominees
+       Matched avoids: film
+  🟢 #21 | ENGAGE  |   6.0s | World          | US Submarine Sinks Iranian Frigate, Kills 104
+       Matched interests: international relations
+  🟢 #22 | ENGAGE  |   5.6s | World          | Iraq Becomes Proxy Battleground in US-Iran War
+       Matched interests: iran, middle east, international relations, politics
+  🔴 #23 | SKIP    |   1.1s | Sports         | Celtic Wins Shootout as 8,000 Fans Storm Pitch
+       Matched avoids: soccer, sports
+  🔴 #24 | SKIP    |   2.0s | Entertainment  | Super Mario Galaxy Movie Draws from 38-Year-Old Game
+  🟡 #25 | NEUTRAL |   3.9s | Tech           | Norway Blasts Tech 'Enshittification' in Report
+
+  PAGE 3 SUMMARY:
+    Engaged: 10/25 (40%)
+    Skipped: 10/25 (40%)
+    Neutral: 5/25 (20%)
+    Categories: World(8), Sports(6), Science(3), Finance(2), Tech(2), Entertainment(2), Business(1), Politics(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 22 articles
+    Total skipped: 32 articles
+    Top engaged tags: iran(15), middle east(14), politics(10), international relations(8), israel(7), khamenei(5), geopolitics(5), donald trump(3)
+    Top skipped tags: sports(10), entertainment(4), finance(4), health(4), paralympics(4), film(3), soccer(3), japan(3)
+
+════════════════════════════════════════════════════════════════════════════════
+OVERALL ANALYSIS: Elena
+════════════════════════════════════════════════════════════════════════════════
+
+  Total articles seen: 75
+  Engaged: 22 (29.3%)
+  Skipped: 32 (42.7%)
+  Neutral: 21 (28.0%)
+  Average dwell: 4.8s
+
+  CATEGORY BREAKDOWN:
+  Category          Seen  Engaged  Skipped  Neutral    Eng%
+  Business             7        2        3        2     29%
+  Crypto               1        0        0        1      0%
+  Entertainment        6        0        6        0      0%
+  Finance              5        0        3        2      0%
+  Health               6        0        4        2      0%
+  Politics             3        3        0        0    100%
+  Science              9        0        2        7      0%
+  Sports              13        1       12        0      8%
+  Tech                 8        0        1        7      0%
+  UK                   1        0        1        0      0%
+  World               16       16        0        0    100%
+
+  FEED ADAPTATION (engagement rate per page):
+    Page 1: 16.0% engagement, avg 4.0s dwell | Tech(4), Science(4), Business(3), Entertainment(3), Health(2), Politics(2), World(2), Sports(2), Crypto(1), UK(1), Finance(1)
+    Page 2: 32.0% engagement, avg 5.0s dwell | World(6), Sports(5), Health(4), Business(3), Finance(2), Science(2), Tech(2), Entertainment(1)
+    Page 3: 40.0% engagement, avg 5.3s dwell | World(8), Sports(6), Science(3), Finance(2), Tech(2), Entertainment(2), Business(1), Politics(1)
+
+  BUCKET DISTRIBUTION: bandit(75)
+
+  FINAL INTEREST PROFILE (engaged tags):
+    iran: 15
+    middle east: 14
+    politics: 10
+    international relations: 8
+    israel: 7
+    khamenei: 5
+    geopolitics: 5
+    donald trump: 3
+    conflict: 3
+    tehran: 3
+
+  FINAL SKIP PROFILE (skipped tags):
+    sports: 10
+    entertainment: 4
+    finance: 4
+    health: 4
+    paralympics: 4
+    film: 3
+    soccer: 3
+    japan: 3
+    nuclear energy: 3
+    italy: 3
+
+════════════════════════════════════════════════════════════════════════════════
+PERSONA 4: James
+Bio: Wall Street trader. Watches markets, crypto, business news obsessively.
+Interests: finance, stock market, oil prices, inflation, federal reserve, business, crypto, cryptocurrency
+Preferred categories: Finance, Business, Crypto
+Avoids: Sports, Entertainment
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 1 (cold start - no signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |   5.5s | Crypto         | Stablecoins Surge to $300B, Gobble Up US Treasuries
+       Matched interests: stablecoins, federal reserve, cryptocurrency, finance
+  🔴 # 2 | SKIP    |   1.9s | Sports         | Japan Rallies Past Australia 4-3, Clinches WBC Pool
+       Matched avoids: sports
+  🟡 # 3 | NEUTRAL |   3.4s | UK             | Vape Shop Fire Shuts Glasgow Central Station
+  🟢 # 4 | ENGAGE  |  14.9s | Finance        | Riskified Posts First GAAP Profit on $99.3M Revenue
+  🟢 # 5 | ENGAGE  |  11.9s | Finance        | Constellation Energy Faces Mixed Analyst Calls
+       Matched interests: nuclear energy, finance
+  🔴 # 6 | SKIP    |   1.6s | Sports         | Iraq Requests World Cup Playoff Delay Amid War
+       Matched avoids: soccer, sports
+  🟢 # 7 | ENGAGE  |   6.4s | Business       | California Targets Montana License Plates in Tax Crackdown
+       Matched interests: finance
+  🔴 # 8 | SKIP    |   1.8s | Entertainment  | Nolan's Odyssey Faces Tough Cuts from 600-Page Epic
+       Matched avoids: film
+  🟡 # 9 | NEUTRAL |   3.6s | Science        | Meteorite Strikes Homes in Rheinland-Pfalz, Germany
+  🟢 #10 | ENGAGE  |   8.6s | Finance        | BWX Technologies Lifts Target to $235 After Earnings Beat
+       Matched interests: stock market, nuclear energy, finance
+  🟡 #11 | NEUTRAL |   3.2s | Politics       | Jeffries Won't Block Iran War Funding Request Yet
+  🟡 #12 | NEUTRAL |   3.9s | Tech           | Ericsson, Intel Expand Partnership for AI-Native 6G
+  🟢 #13 | ENGAGE  |  10.4s | Business       | Nike CEO Elliott Hill Races to Rebuild Sports Ties
+       Matched interests: ceo
+  🟢 #14 | ENGAGE  |   7.3s | Finance        | Permian Resources Posts $1.94 Free Cash Flow Per Share
+       Matched interests: energy
+  🔴 #15 | SKIP    |   2.7s | Health         | Woman, 31, Ignores Shoulder Pain, Learns She Has Stage 4 Can
+  🔴 #16 | SKIP    |   1.9s | Sports         | Women's Football Surges in South America Before 2027 World C
+       Matched avoids: sports, soccer
+  🟢 #17 | ENGAGE  |  12.5s | Finance        | GE Vernova Gains 3 Analyst Upgrades on Energy Boom
+       Matched interests: finance, stock market
+  🔴 #18 | SKIP    |   1.7s | Sports         | Oxford United Footballer, 15, Dies During Match
+       Matched avoids: football, sports, soccer
+  🔴 #19 | SKIP    |   2.1s | Politics       | Guinea Dissolves Main Opposition Parties in Crackdown
+  🟡 #20 | NEUTRAL |   3.1s | Science        | Germany Plans Biomethane Push for Home Heating
+  🟢 #21 | ENGAGE  |  14.8s | Business       | Europe's Economic Center Shifts East Since 1950
+  🔴 #22 | SKIP    |   1.1s | Sports         | England Suffers Historic Six Nations Loss to Italy
+       Matched avoids: sports
+  🔴 #23 | SKIP    |   2.3s | Health         | Telangana Launches HPV Vaccination Drive for Women
+  🟢 #24 | ENGAGE  |   8.1s | Finance        | Oil Tops $100 as Middle East Producers Cut Output
+       Matched interests: oil prices, inflation, finance, energy
+  🔴 #25 | SKIP    |   1.2s | Entertainment  | Pixar's Pete Docter Defends Cutting LGBTQ Content
+       Matched avoids: film
+
+  PAGE 1 SUMMARY:
+    Engaged: 10/25 (40%)
+    Skipped: 10/25 (40%)
+    Neutral: 5/25 (20%)
+    Categories: Finance(6), Sports(5), Business(3), Entertainment(2), Science(2), Politics(2), Health(2), Crypto(1), UK(1), Tech(1)
+
+  → Sending 10 engaged + 10 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 2 (with 10 engaged + 10 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |   9.5s | Finance        | NY Oil Futures Surge Past $100 Per Barrel
+       Matched interests: oil prices, energy
+  🔴 # 2 | SKIP    |   1.1s | Sports         | Sharma Blasts Quickfire Fifty in T20 Final Opener
+       Matched avoids: sports
+  🔴 # 3 | SKIP    |   2.4s | Science        | Scientists Create Magic Mushroom Drug Without Hallucinations
+  🔴 # 4 | SKIP    |   1.9s | Sports         | Yoshida Homer Lifts Japan to 4-3 WBC Victory
+       Matched avoids: sports
+  🔴 # 5 | SKIP    |   1.6s | Entertainment  | Academy Awards Spotlight 5 Animated Short Nominees
+       Matched avoids: film
+  🔴 # 6 | SKIP    |   2.1s | World          | Israeli Strikes Blanket Tehran in Toxic Black Rain
+  🔴 # 7 | SKIP    |   1.6s | Entertainment  | New Browser Game Lets Players Respond to Real AI Prompts
+  🔴 # 8 | SKIP    |   2.1s | World          | Iran Retaliates After Israel Strikes Fuel Facility
+  🟡 # 9 | NEUTRAL |   3.6s | World          | Israel Claims Strike Kills Iranian Military Aide
+  🔴 #10 | SKIP    |   1.3s | Entertainment  | Interstellar Surpasses 2001 as Sci-Fi's New Standard
+       Matched avoids: film
+  🟡 #11 | NEUTRAL |   3.4s | Science        | Brain Cells Called Tanycytes May Block Alzheimer's Tau
+  🔴 #12 | SKIP    |   2.6s | World          | US Faces Catastrophe After Iran Aggression
+  🟢 #13 | ENGAGE  |  11.9s | Finance        | Oklo Faces Price Target Cuts from Barclays, Goldman
+       Matched interests: nuclear energy, finance, stock market
+  🔴 #14 | SKIP    |   2.6s | World          | US Service Member Dies from Iran Attack, Toll Hits 7
+  🔴 #15 | SKIP    |   2.7s | Health         | Amsterdam Concert Hall Offers Singing Circle for Dementia Pa
+  🟡 #16 | NEUTRAL |   3.7s | Health         | Young People Disadvantaged by Early School Start Times
+  🔴 #17 | SKIP    |   1.7s | Entertainment  | Pixar's Hoppers Soars to $46M, The Bride Bombs
+       Matched avoids: film
+  🟢 #18 | ENGAGE  |  14.0s | Finance        | Aussie Dollar Holds Strong at US70¢ Despite Volatility
+       Matched interests: inflation, finance
+  🟡 #19 | NEUTRAL |   3.7s | Tech           | UK Government Slams Grok Posts on Football Disasters
+  🔴 #20 | SKIP    |   2.3s | Politics       | Italian PM Meloni Attacks Judges, Pushes Justice Reform
+  🟢 #21 | ENGAGE  |  10.7s | Finance        | 'Iranflation' Threatens BOJ and Asian Central Banks
+       Matched interests: inflation, finance
+  🔴 #22 | SKIP    |   1.4s | Sports         | Russell Wins Australian GP as Ferrari Strategy Fails Hamilto
+  🔴 #23 | SKIP    |   2.7s | World          | Iran War Targets Widen to Civilian Sites, Saudi Reports Deat
+  🟢 #24 | ENGAGE  |  13.2s | Finance        | Markets Face Iran Tensions, CPI Data This Week
+       Matched interests: federal reserve, inflation
+  🔴 #25 | SKIP    |   2.5s | Tech           | OpenAI Robotics Leader Quits Over Pentagon Deal Concerns
+
+  PAGE 2 SUMMARY:
+    Engaged: 5/25 (20%)
+    Skipped: 16/25 (64%)
+    Neutral: 4/25 (16%)
+    Categories: World(6), Finance(5), Entertainment(4), Sports(3), Science(2), Health(2), Tech(2), Politics(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 15 articles
+    Total skipped: 26 articles
+    Top engaged tags: finance(9), iran(4), inflation(4), nuclear energy(3), stock market(3), energy(3), donald trump(2), federal reserve(2)
+    Top skipped tags: sports(7), iran(6), film(5), middle east(5), entertainment(4), politics(4), soccer(3), international relations(3)
+
+  → Sending 15 engaged + 26 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 3 (with 15 engaged + 26 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟡 # 1 | NEUTRAL |   4.0s | Politics       | Switzerland Votes to End Marriage Penalty in Tax Reform
+       Matched interests: finance
+  🟢 # 2 | ENGAGE  |  13.1s | Business       | Vestas Builds Wind Turbine Factory in Japan by 2029
+       Matched interests: energy
+  🟢 # 3 | ENGAGE  |  10.8s | Finance        | Wall Street Plunges as Oil Surges, Jobs Data Shocks
+       Matched interests: oil prices, stock market, finance
+  🔴 # 4 | SKIP    |   1.2s | Sports         | Cécile Hernandez Wins First Paralympic Gold at 51
+  🟡 # 5 | NEUTRAL |   4.8s | Science        | Satellites Detect Millimeter Movements in Weak Bridges
+       Matched interests: infrastructure
+  🔴 # 6 | SKIP    |   2.5s | Tech           | Vodafone Partners Amazon Leo for Satellite 4G/5G
+  🔴 # 7 | SKIP    |   1.6s | Sports         | Celtic Wins Shootout as 8,000 Fans Storm Pitch
+       Matched avoids: soccer, sports
+  🟢 # 8 | ENGAGE  |  12.9s | Finance        | Oil Prices Could Hit $100 Within Days on Iran Crisis
+       Matched interests: oil prices, finance
+  🟢 # 9 | ENGAGE  |  10.6s | Finance        | Morgan Stanley Warns 7 Political Risks Hit Markets
+       Matched interests: federal reserve, finance
+  🔴 #10 | SKIP    |   2.4s | Politics       | NYPD Probes ISIS-Style IED Attack Near Gracie Mansion
+  🟡 #11 | NEUTRAL |   3.5s | Tech           | ECARX Hits $305M Q4 Revenue, Swings to Profit
+       Matched interests: finance
+  🔴 #12 | SKIP    |   2.6s | Tech           | Age-Verification Tools Spread Across US, Surveilling Adults
+  🟢 #13 | ENGAGE  |  13.2s | Business       | Victoria's Secret Ends Subscription Service After $400M Deal
+       Matched interests: retail
+  🟡 #14 | NEUTRAL |   3.1s | Science        | Ancient DNA Reveals Neolithic Farmer-Hunter Marriages
+  🟢 #15 | ENGAGE  |  14.2s | Science        | US Approves TerraPower Natrium Gen IV Reactor
+       Matched interests: nuclear energy, energy
+  🔴 #16 | SKIP    |   2.7s | World          | Iran's Next Leader Faces Shrinking Loyalist Base
+  🟢 #17 | ENGAGE  |   9.1s | Business       | Childcare Costs Surge as Providers Face 68% Insurance Hike
+       Matched interests: inflation
+  🔴 #18 | SKIP    |   2.9s | Politics       | SPD Falls to Historic Low in Baden-Württemberg Vote
+  🟢 #19 | ENGAGE  |  10.2s | Finance        | Lemonade Stock Plunges 40% After Q4 Earnings Miss
+       Matched interests: stock market, finance
+  🔴 #20 | SKIP    |   2.1s | Science        | Finnish Researchers Develop Wood-Based Resins
+  🟡 #21 | NEUTRAL |   3.7s | World          | Pope Leo XIV Calls for End to Mideast Violence
+  🟡 #22 | NEUTRAL |   3.6s | Science        | US Space Power Faces Risk from SpaceX Dominance
+  🔴 #23 | SKIP    |   1.1s | Entertainment  | BBC's The Capture Returns with Deepfake Conspiracy Twist
+  🔴 #24 | SKIP    |   2.8s | Tech           | MIT's AlterEgo Wearable Detects Silent Speech
+  🔴 #25 | SKIP    |   1.1s | Sports         | F1 Debuts New Regulations at Australian Grand Prix
+
+  PAGE 3 SUMMARY:
+    Engaged: 8/25 (32%)
+    Skipped: 11/25 (44%)
+    Neutral: 6/25 (24%)
+    Categories: Science(5), Finance(4), Tech(4), Politics(3), Business(3), Sports(3), World(2), Entertainment(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 23 articles
+    Total skipped: 37 articles
+    Top engaged tags: finance(13), iran(6), stock market(5), energy(5), inflation(5), nuclear energy(4), oil prices(4), federal reserve(3)
+    Top skipped tags: sports(8), iran(7), middle east(6), film(5), politics(5), soccer(4), entertainment(4), international relations(3)
+
+════════════════════════════════════════════════════════════════════════════════
+OVERALL ANALYSIS: James
+════════════════════════════════════════════════════════════════════════════════
+
+  Total articles seen: 75
+  Engaged: 23 (30.7%)
+  Skipped: 37 (49.3%)
+  Neutral: 15 (20.0%)
+  Average dwell: 5.1s
+
+  CATEGORY BREAKDOWN:
+  Category          Seen  Engaged  Skipped  Neutral    Eng%
+  Business             6        6        0        0    100%
+  Crypto               1        1        0        0    100%
+  Entertainment        7        0        7        0      0%
+  Finance             15       15        0        0    100%
+  Health               4        0        3        1      0%
+  Politics             6        0        4        2      0%
+  Science              9        1        2        6     11%
+  Sports              11        0       11        0      0%
+  Tech                 7        0        4        3      0%
+  UK                   1        0        0        1      0%
+  World                8        0        6        2      0%
+
+  FEED ADAPTATION (engagement rate per page):
+    Page 1: 40.0% engagement, avg 5.4s dwell | Finance(6), Sports(5), Business(3), Entertainment(2), Science(2), Politics(2), Health(2), Crypto(1), UK(1), Tech(1)
+    Page 2: 20.0% engagement, avg 4.3s dwell | World(6), Finance(5), Entertainment(4), Sports(3), Science(2), Health(2), Tech(2), Politics(1)
+    Page 3: 32.0% engagement, avg 5.6s dwell | Science(5), Finance(4), Tech(4), Politics(3), Business(3), Sports(3), World(2), Entertainment(1)
+
+  BUCKET DISTRIBUTION: bandit(75)
+
+  FINAL INTEREST PROFILE (engaged tags):
+    finance: 13
+    iran: 6
+    stock market: 5
+    energy: 5
+    inflation: 5
+    nuclear energy: 4
+    oil prices: 4
+    federal reserve: 3
+    donald trump: 2
+    ecommerce: 2
+
+  FINAL SKIP PROFILE (skipped tags):
+    sports: 8
+    iran: 7
+    middle east: 6
+    film: 5
+    politics: 5
+    soccer: 4
+    entertainment: 4
+    international relations: 3
+    health: 3
+    israel: 3
+
+════════════════════════════════════════════════════════════════════════════════
+PERSONA 5: Priya
+Bio: Film critic and culture writer in Mumbai. Loves movies, TV, music, gaming.
+Interests: entertainment, film, streaming, television, movies, netflix, music, concert
+Preferred categories: Entertainment, Tech
+Avoids: World, Politics, Finance
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 1 (cold start - no signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |   5.8s | Tech           | AI Data Centers Spark Power Line Battles Across US
+  🔴 # 2 | SKIP    |   1.4s | Finance        | Riskified Posts First GAAP Profit on $99.3M Revenue
+  🟡 # 3 | NEUTRAL |   3.8s | Business       | Nike CEO Elliott Hill Races to Rebuild Sports Ties
+  🔴 # 4 | SKIP    |   1.9s | Politics       | Guinea Dissolves Main Opposition Parties in Crackdown
+  🔴 # 5 | SKIP    |   1.9s | Finance        | GE Vernova Gains 3 Analyst Upgrades on Energy Boom
+       Matched avoids: stock market
+  🔴 # 6 | SKIP    |   1.1s | World          | US Service Member Dies from Iran Attack, Toll Hits 7
+       Matched avoids: iran, military, middle east, international relations
+  🟢 # 7 | ENGAGE  |   9.7s | Tech           | UK Government Slams Grok Posts on Football Disasters
+  🟡 # 8 | NEUTRAL |   4.8s | Sports         | Sharma Blasts Quickfire Fifty in T20 Final Opener
+       Matched interests: india
+  🔴 # 9 | SKIP    |   1.3s | World          | Israel Claims Strike Kills Iranian Military Aide
+       Matched avoids: iran, middle east, international relations
+  🟡 #10 | NEUTRAL |   3.3s | Sports         | Oxford United Footballer, 15, Dies During Match
+  🔴 #11 | SKIP    |   1.9s | Business       | Childcare Costs Surge as Providers Face 68% Insurance Hike
+       Matched avoids: inflation
+  🔴 #12 | SKIP    |   2.7s | Business       | California Targets Montana License Plates in Tax Crackdown
+  🟢 #13 | ENGAGE  |   7.1s | Entertainment  | Netflix Unveils Spectacular Dinosaur Docuseries
+       Matched interests: netflix, streaming, entertainment
+  🔴 #14 | SKIP    |   2.9s | Business       | Vestas Builds Wind Turbine Factory in Japan by 2029
+  🟢 #15 | ENGAGE  |   9.6s | Tech           | OpenAI Robotics Leader Quits Over Pentagon Deal Concerns
+  🔴 #16 | SKIP    |   2.0s | Politics       | Coalition Backs Australia Joining Iran War Defensively
+       Matched avoids: iran, international relations
+  🔴 #17 | SKIP    |   1.3s | Politics       | NYPD Probes ISIS-Style IED Attack Near Gracie Mansion
+  🔴 #18 | SKIP    |   1.3s | Finance        | Constellation Energy Faces Mixed Analyst Calls
+  🟡 #19 | NEUTRAL |   3.7s | Health         | Woman, 31, Ignores Shoulder Pain, Learns She Has Stage 4 Can
+  🔴 #20 | SKIP    |   1.8s | Business       | RDIF Chief Dmitriev Calls Europe's Energy Shift Strategic Er
+       Matched avoids: geopolitics
+  🟢 #21 | ENGAGE  |  10.4s | Tech           | Age-Verification Tools Spread Across US, Surveilling Adults
+  🟡 #22 | NEUTRAL |   3.1s | Sports         | Japan Rallies Past Australia 4-3, Clinches WBC Pool
+  🔴 #23 | SKIP    |   1.7s | World          | Israeli Strikes Blanket Tehran in Toxic Black Rain
+       Matched avoids: iran, middle east
+  🔴 #24 | SKIP    |   1.3s | Politics       | Switzerland Votes to End Marriage Penalty in Tax Reform
+  🔴 #25 | SKIP    |   1.0s | World          | US Faces Catastrophe After Iran Aggression
+       Matched avoids: iran, middle east, international relations
+
+  PAGE 1 SUMMARY:
+    Engaged: 5/25 (20%)
+    Skipped: 15/25 (60%)
+    Neutral: 5/25 (20%)
+    Categories: Business(5), Tech(4), Politics(4), World(4), Finance(3), Sports(3), Entertainment(1), Health(1)
+
+  → Sending 5 engaged + 15 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 2 (with 5 engaged + 15 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟡 # 1 | NEUTRAL |   3.9s | Business       | Nano Nuclear Energy Partners with UAE Firm on Reactors
+  🟢 # 2 | ENGAGE  |   9.3s | Tech           | Apple Plans More Mac Refreshes Through 2026
+  🔴 # 3 | SKIP    |   2.2s | UK             | Vape Shop Fire Shuts Glasgow Central Station
+  🔴 # 4 | SKIP    |   1.3s | Finance        | BWX Technologies Lifts Target to $235 After Earnings Beat
+       Matched avoids: stock market
+  🟢 # 5 | ENGAGE  |  10.8s | Tech           | Vodafone Partners Amazon Leo for Satellite 4G/5G
+  🟢 # 6 | ENGAGE  |  12.9s | Tech           | Ericsson, Intel Expand Partnership for AI-Native 6G
+  🟢 # 7 | ENGAGE  |  13.9s | Entertainment  | Pixar's Hoppers Soars to $46M, The Bride Bombs
+       Matched interests: film, entertainment
+  🟢 # 8 | ENGAGE  |   7.6s | Tech           | MIT's AlterEgo Wearable Detects Silent Speech
+  🟢 # 9 | ENGAGE  |   8.9s | Tech           | Apple Unveils New iMac Colors for 2026 Launch
+  🔴 #10 | SKIP    |   1.1s | World          | Lebanon Reports 83 Children Killed in Israeli Strikes
+  🔴 #11 | SKIP    |   2.9s | Sports         | Women's Football Surges in South America Before 2027 World C
+  🔴 #12 | SKIP    |   2.6s | Business       | Europe's Economic Center Shifts East Since 1950
+  🔴 #13 | SKIP    |   2.6s | Crypto         | Stablecoins Surge to $300B, Gobble Up US Treasuries
+  🔴 #14 | SKIP    |   2.0s | Science        | Meteorite Strikes Homes in Rheinland-Pfalz, Germany
+  🔴 #15 | SKIP    |   1.3s | World          | Iran Retaliates After Israel Strikes Fuel Facility
+       Matched avoids: iran, middle east, geopolitics
+  🟡 #16 | NEUTRAL |   4.0s | Sports         | Ben Tudhope Wins Silver, Australia's First Medal
+  🔴 #17 | SKIP    |   2.6s | Health         | Young People Disadvantaged by Early School Start Times
+  🔴 #18 | SKIP    |   1.4s | Politics       | SPD Falls to Historic Low in Baden-Württemberg Vote
+  🟡 #19 | NEUTRAL |   3.2s | Sports         | England Suffers Historic Six Nations Loss to Italy
+  🟢 #20 | ENGAGE  |   5.6s | Entertainment  | Pixar's Hoppers Tops Box Office with $88M Global Launch
+       Matched interests: film, entertainment
+  🔴 #21 | SKIP    |   2.9s | Health         | Telangana Launches HPV Vaccination Drive for Women
+  🔴 #22 | SKIP    |   2.7s | Science        | Germany Plans Biomethane Push for Home Heating
+  🟡 #23 | NEUTRAL |   3.2s | Health         | Amsterdam Concert Hall Offers Singing Circle for Dementia Pa
+  🔴 #24 | SKIP    |   1.8s | World          | Iran War Targets Widen to Civilian Sites, Saudi Reports Deat
+       Matched avoids: iran, middle east, geopolitics
+  🟡 #25 | NEUTRAL |   3.2s | Health         | Fiber Transforms Gut Health, Scientists Say
+
+  PAGE 2 SUMMARY:
+    Engaged: 7/25 (28%)
+    Skipped: 13/25 (52%)
+    Neutral: 5/25 (20%)
+    Categories: Tech(5), Health(4), World(3), Sports(3), Business(2), Entertainment(2), Science(2), UK(1), Finance(1), Crypto(1), Politics(1)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 12 articles
+    Total skipped: 28 articles
+    Top engaged tags: artificial intelligence(4), tech(4), entertainment(3), social media(2), apple(2), imac(2), telecommunications(2), pixar(2)
+    Top skipped tags: iran(7), politics(6), finance(6), middle east(6), israel(5), international relations(4), geopolitics(3), conflict(3)
+
+  → Sending 12 engaged + 28 skipped signals to next page...
+
+────────────────────────────────────────────────────────────────────────────────
+PAGE 3 (with 12 engaged + 28 skipped signals)
+────────────────────────────────────────────────────────────────────────────────
+  🟢 # 1 | ENGAGE  |  10.3s | Entertainment  | Nolan's Odyssey Faces Tough Cuts from 600-Page Epic
+       Matched interests: film, entertainment
+  🔴 # 2 | SKIP    |   2.5s | Sports         | Milan Cortina Hosts 50th Winter Paralympics
+  🟢 # 3 | ENGAGE  |  13.2s | Tech           | ECARX Hits $305M Q4 Revenue, Swings to Profit
+  🟢 # 4 | ENGAGE  |   5.6s | Tech           | Apple Keeps Larger iMac Plans Alive Despite Rumors
+  🟢 # 5 | ENGAGE  |  13.9s | Entertainment  | Interstellar Surpasses 2001 as Sci-Fi's New Standard
+       Matched interests: film
+  🟢 # 6 | ENGAGE  |  14.4s | Tech           | PS5 Owner Transforms Console Into Linux Machine
+       Matched interests: video games
+  🟢 # 7 | ENGAGE  |   5.7s | Tech           | Apple Develops 3D-Printed Aluminum for iPhones
+  🟢 # 8 | ENGAGE  |   6.0s | Entertainment  | New Browser Game Lets Players Respond to Real AI Prompts
+  🟢 # 9 | ENGAGE  |  14.9s | Tech           | Norway Blasts Tech 'Enshittification' in Report
+  🟢 #10 | ENGAGE  |  13.9s | Tech           | Capcom Removes Enigma DRM from Resident Evil 4
+       Matched interests: video games
+  🟢 #11 | ENGAGE  |  10.2s | Entertainment  | Super Mario Galaxy Movie Draws from 38-Year-Old Game
+  🔴 #12 | SKIP    |   2.5s | Health         | 10-Minute Exercise Eases Depression for Weeks
+  🟢 #13 | ENGAGE  |   5.2s | Tech           | Wix.com Stock Plunges 18.9% on AI Disruption Fears
+       Matched avoids: stock market
+  🟢 #14 | ENGAGE  |  12.6s | Tech           | Supreme Court Rejects Copyright for AI-Generated Art
+  🔴 #15 | SKIP    |   1.0s | Politics       | Texas Footage Contradicts DHS Shooting Claims
+  🟢 #16 | ENGAGE  |  13.2s | Tech           | Meta Smart Glasses Expose Intimate Footage to AI Trainers
+  🟢 #17 | ENGAGE  |  13.5s | Tech           | Japan Targets 30% Global AI Robot Market Share
+  🔴 #18 | SKIP    |   2.5s | Health         | AtaiBeckley Launches Phase 3 Depression Drug Trial
+  🟢 #19 | ENGAGE  |   8.2s | Tech           | Australia Launches New Online Safety Rules for Children
+  🔴 #20 | SKIP    |   3.0s | Health         | UK Health Agency Investigates London Legionnaires' Outbreak
+  🟡 #21 | NEUTRAL |   3.5s | Sports         | India Openers Smash 17-Year T20 World Cup Record
+       Matched interests: india
+  🟢 #22 | ENGAGE  |   8.0s | Tech           | Middle East War Disrupts Mobile World Congress 2026
+       Matched avoids: middle east, iran
+  🟢 #23 | ENGAGE  |   5.2s | Tech           | Palmer Luckey's ModRetro Seeks Funding at $1B Valuation
+       Matched interests: video games
+  🔴 #24 | SKIP    |   1.9s | Politics       | Greens Edge CDU in Baden-Württemberg Election
+  🟢 #25 | ENGAGE  |  11.6s | Tech           | Trump Bans Claude AI, Sparking Control Battle
+
+  PAGE 3 SUMMARY:
+    Engaged: 18/25 (72%)
+    Skipped: 6/25 (24%)
+    Neutral: 1/25 (4%)
+    Categories: Tech(14), Entertainment(4), Health(3), Sports(2), Politics(2)
+
+  SIGNAL ACCUMULATION:
+    Total engaged: 30 articles
+    Total skipped: 34 articles
+    Top engaged tags: tech(12), artificial intelligence(10), entertainment(4), apple(4), film(4), social media(3), imac(3), video games(3)
+    Top skipped tags: iran(7), politics(6), finance(6), middle east(6), israel(5), international relations(4), health(4), geopolitics(3)
+
+════════════════════════════════════════════════════════════════════════════════
+OVERALL ANALYSIS: Priya
+════════════════════════════════════════════════════════════════════════════════
+
+  Total articles seen: 75
+  Engaged: 30 (40.0%)
+  Skipped: 34 (45.3%)
+  Neutral: 11 (14.7%)
+  Average dwell: 5.4s
+
+  CATEGORY BREAKDOWN:
+  Category          Seen  Engaged  Skipped  Neutral    Eng%
+  Business             7        0        5        2      0%
+  Crypto               1        0        1        0      0%
+  Entertainment        7        7        0        0    100%
+  Finance              4        0        4        0      0%
+  Health               8        0        5        3      0%
+  Politics             7        0        7        0      0%
+  Science              2        0        2        0      0%
+  Sports               8        0        2        6      0%
+  Tech                23       23        0        0    100%
+  UK                   1        0        1        0      0%
+  World                7        0        7        0      0%
+
+  FEED ADAPTATION (engagement rate per page):
+    Page 1: 20.0% engagement, avg 3.5s dwell | Business(5), Tech(4), Politics(4), World(4), Finance(3), Sports(3), Entertainment(1), Health(1)
+    Page 2: 28.0% engagement, avg 4.6s dwell | Tech(5), Health(4), World(3), Sports(3), Business(2), Entertainment(2), Science(2), UK(1), Finance(1), Crypto(1), Politics(1)
+    Page 3: 72.0% engagement, avg 8.1s dwell | Tech(14), Entertainment(4), Health(3), Sports(2), Politics(2)
+
+  BUCKET DISTRIBUTION: bandit(75)
+
+  FINAL INTEREST PROFILE (engaged tags):
+    tech: 12
+    artificial intelligence: 10
+    entertainment: 4
+    apple: 4
+    film: 4
+    social media: 3
+    imac: 3
+    video games: 3
+    gaming: 3
+    robotics: 2
+
+  FINAL SKIP PROFILE (skipped tags):
+    iran: 7
+    politics: 6
+    finance: 6
+    middle east: 6
+    israel: 5
+    international relations: 4
+    health: 4
+    geopolitics: 3
+    conflict: 3
+    germany: 3
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    CROSS-PERSONA COMPARISON                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Persona     Seen  Engaged  Skipped  EngRate  AvgDwell
+  ─────────────────────────────────────────────────────
+  Sarah         75       16       36    21.3%      4.1s
+  Marco         75       18       40    24.0%      4.2s
+  Elena         75       22       32    29.3%      4.8s
+  James         75       23       37    30.7%      5.1s
+  Priya         75       30       34    40.0%      5.4s
+
+  FEED ADAPTATION — Engagement rate per page:
+  Persona       Page 1    Page 2    Page 3    Change
+  ──────────────────────────────────────────────────
+  Sarah          16.0%     40.0%      8.0%    -8.0pp
+  Marco          24.0%      4.0%     44.0%    20.0pp
+  Elena          16.0%     32.0%     40.0%    24.0pp
+  James          40.0%     20.0%     32.0%    -8.0pp
+  Priya          20.0%     28.0%     72.0%    52.0pp
+
+  CATEGORY DIVERSITY per persona (how many distinct categories seen):
+    Sarah: 11 categories — Entertainment, UK, Business, Finance, Tech, Politics, Science, World, Sports, Crypto, Health
+    Marco: 11 categories — Business, UK, Sports, Entertainment, Crypto, World, Politics, Health, Tech, Science, Finance
+    Elena: 11 categories — Tech, Health, Politics, Crypto, Science, UK, Business, Entertainment, World, Sports, Finance
+    James: 11 categories — Crypto, Sports, UK, Finance, Business, Entertainment, Science, Politics, Tech, Health, World
+    Priya: 11 categories — Tech, Finance, Business, Politics, World, Sports, Entertainment, Health, UK, Crypto, Science
+
+  CONTENT FLOODING ANALYSIS (World category exposure):
+    Sarah: 9/75 articles are World (12.0%) — engaged 0, skipped 9
+    Marco: 6/75 articles are World (8.0%) — engaged 0, skipped 6
+    Elena: 16/75 articles are World (21.3%) — engaged 16, skipped 0
+    James: 8/75 articles are World (10.7%) — engaged 0, skipped 6
+    Priya: 7/75 articles are World (9.3%) — engaged 0, skipped 7
+
+  IRAN-SPECIFIC TAG EXPOSURE:
+    Sarah: 11 Iran articles encountered — engaged 0, skipped 11
+    Marco: 8 Iran articles encountered — engaged 1, skipped 7
+    Elena: 15 Iran articles encountered — engaged 15, skipped 0
+    James: 13 Iran articles encountered — engaged 6, skipped 7
+    Priya: 8 Iran articles encountered — engaged 1, skipped 7
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           KEY FINDINGS                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Average engagement rate: 29.1%
+  Average World category exposure: 12.3%
+  Personas where feed adapted (P3 > P1): 3/5
+  Average dwell time: 4.7s
