@@ -49,9 +49,11 @@
 		65FA954B15EBB1059F2B1CA4 /* FeedResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468D1B58E2F07B147E7E07A0 /* FeedResponse.swift */; };
 		679C55CA63311A819940821E /* VerticalPager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF9842AEF08B21C4B2169D03 /* VerticalPager.swift */; };
 		69065BD0A55D2AF3C7F6AAB5 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3214E7F65E936CF2A39F234 /* SignupView.swift */; };
+		CP01COMPLETEPROFBF0001AA /* CompleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */; };
 		6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F129A9689C3124330A2529 /* HapticManager.swift */; };
 		6F263CDE4FCCB7DF57F26C4C /* EventWhatToWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B837F3F530355509B049B4 /* EventWhatToWatchView.swift */; };
 		705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D0EF3C215540E9B1A3556E /* FollowManager.swift */; };
+		77871AD6EB5C5E102DDAF4F0 /* ProfileAvatarPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */; };
 		78140DAB193698E9C4025989 /* TypingTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18437D9B26100FAFB13A8B23 /* TypingTextView.swift */; };
 		7A96C15F94AD7952818655E7 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2823BB660358D39EE6C12C6D /* SettingsViewModel.swift */; };
 		84BC8170FB2C1B81EAF7F084 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 764DA643F7D0ED1D250E31CD /* Assets.xcassets */; };
@@ -219,9 +221,11 @@
 		CR01CREATORMODELSFRF01 /* CreatorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorModels.swift; sourceTree = "<group>"; };
 		CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorProfileView.swift; sourceTree = "<group>"; };
 		D3214E7F65E936CF2A39F234 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteProfileView.swift; sourceTree = "<group>"; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* EventDataAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDataAnalyticsView.swift; sourceTree = "<group>"; };
 		D5F37BE28BA17571197C7F3E /* CategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBadge.swift; sourceTree = "<group>"; };
 		D76A59784FD3A3CADE2298CA /* ResponseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseModels.swift; sourceTree = "<group>"; };
+		D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileAvatarPickerView.swift; sourceTree = "<group>"; };
 		D961AE3EB689D735359F2BD0 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		D9B2C3E4F5A617B8C9D0E1F2 /* ScrollAnimationModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollAnimationModifiers.swift; sourceTree = "<group>"; };
 		DC98594924413D0477F76ACB /* SearchViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
@@ -485,6 +489,7 @@
 				B1E85BE4D21483F705F328B1 /* LoginView.swift */,
 				D3214E7F65E936CF2A39F234 /* SignupView.swift */,
 				BA002B1A302B94447DEFA8D4 /* OtpVerificationView.swift */,
+				CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -552,6 +557,7 @@
 			children = (
 				CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */,
 				E5B34C7A3E004DC6A24A9CF1 /* ProfilePhotoCropView.swift */,
+				D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -726,6 +732,7 @@
 				F3DA73EF3ECF79984215FFEF /* ForgotPasswordView.swift in Sources */,
 				05BFE0B65ACA7EB600BB55C3 /* LoginView.swift in Sources */,
 				69065BD0A55D2AF3C7F6AAB5 /* SignupView.swift in Sources */,
+				CP01COMPLETEPROFBF0001AA /* CompleteProfileView.swift in Sources */,
 				E52953D8ECCA15B0968A19F7 /* EventCardView.swift in Sources */,
 				3705C27B4E20FE0A6AC95DA6 /* EventDetailView.swift in Sources */,
 				2DD01E7F332B2A1F2D665223 /* EventGeographicImpactView.swift in Sources */,
@@ -791,6 +798,7 @@
 				705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */,
 				B726BB54C2ADB724A2195571 /* OtpVerificationView.swift in Sources */,
 				55FB04E4DF717C883199F3AE /* ShareArticleSheet.swift in Sources */,
+				77871AD6EB5C5E102DDAF4F0 /* ProfileAvatarPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

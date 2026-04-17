@@ -8,9 +8,14 @@ struct AuthService {
         return try await client.post(APIEndpoints.login, body: body)
     }
 
-    func signup(email: String, password: String, name: String? = nil) async throws -> SignupResponse {
-        let body = SignupRequest(email: email, password: password, name: name)
+    func signup(email: String, password: String, name: String? = nil, username: String? = nil, dateOfBirth: String? = nil) async throws -> SignupResponse {
+        let body = SignupRequest(email: email, password: password, name: name, username: username, dateOfBirth: dateOfBirth)
         return try await client.post(APIEndpoints.signup, body: body)
+    }
+
+    func completeProfile(username: String?, dateOfBirth: String?, name: String? = nil) async throws -> CompleteProfileResponse {
+        let body = CompleteProfileRequest(username: username, dateOfBirth: dateOfBirth, name: name)
+        return try await client.post(APIEndpoints.completeProfile, body: body)
     }
 
     func verifyOtp(email: String, code: String) async throws -> VerifyOtpResponse {
