@@ -615,6 +615,41 @@ export default async function handler(req, res) {
           }).catch(() => {})
         }
 
+        // Fix 1D: persistent Thompson Sampling posterior per (user × cluster).
+        // Source: Chapelle & Li NeurIPS 2011. Fires on both positive events
+        // (α += w) and skips (β += w). Does not modify cluster medoids — that
+        // stays in the block above, gated by positive event types.
+        if (effectiveUserId && article_id) {
+          const isPositive = !['article_skipped', 'article_glance', 'article_view'].includes(event_type)
+          const isNegative = event_type === 'article_skipped'
+          if (isPositive || isNegative) {
+            admin.from('published_articles').select('embedding_minilm').eq('id', article_id).single().then(({ data: artBandit }) => {
+              if (!artBandit?.embedding_minilm || !Array.isArray(artBandit.embedding_minilm)) return
+              const artEmb2 = artBandit.embedding_minilm
+              admin.from('user_interest_clusters')
+                .select('cluster_index, medoid_minilm')
+                .or(`personalization_id.eq.${persId},and(user_id.eq.${effectiveUserId})`)
+                .eq('is_archived', false)
+                .then(({ data: bClusters }) => {
+                  if (!bClusters || bClusters.length === 0) return
+                  let bestIdx = -1, bestSim = -1
+                  for (const c of bClusters) {
+                    if (!c.medoid_minilm || !Array.isArray(c.medoid_minilm)) continue
+                    const sim = cosineSim(artEmb2, c.medoid_minilm)
+                    if (sim > bestSim) { bestSim = sim; bestIdx = c.cluster_index }
+                  }
+                  if (bestIdx < 0) return
+                  admin.rpc('update_bandit_arm', {
+                    p_user_id: effectiveUserId,
+                    p_arm_key: `cluster:${bestIdx}`,
+                    p_is_positive: isPositive,
+                    p_weight: isPositive ? (signalWeight || 1.0) : 1.0,
+                  }).catch(() => {})
+                }).catch(() => {})
+            }).catch(() => {})
+          }
+        }
+
         // ============================================================
         // BUCKET ENGAGEMENT STATS — for adaptive budget allocation
         // Tracks how well trending/exploration performs for this user

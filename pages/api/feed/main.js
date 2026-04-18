@@ -760,22 +760,26 @@ function calculateTagScore(article, userPrefs) {
 
 const ARTICLE_COLUMNS = [
   'id', 'title_news', 'url', 'source', 'category', 'emoji',
-  'image_url', 'image_source', 'published_at', 'created_at',
+  'image_url', 'image_source', 'image_score', 'image_ai_generated',
+  'published_at', 'created_at',
   'ai_final_score', 'summary_bullets_news',
   'five_ws', 'timeline', 'graph', 'map', 'details',
   'components_order', 'components', 'countries', 'topics',
-  'country_relevance', 'topic_relevance', 'interest_tags',
+  'country_relevance', 'topic_relevance', 'interest_tags', 'typed_signals',
   'num_sources', 'cluster_id', 'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'embedding_minilm',
   'author_id', 'author_name',
 ].join(', ');
 
-// Lightweight columns for pool construction (no heavy JSONB)
+// Lightweight columns for pool construction (no heavy JSONB).
+// typed_signals included for Fix 1C (empty-signal filter) + 1A (dispersion).
+// image_score / image_ai_generated included for Fix 1E (Pinterest-style image feature).
 const POOL_COLUMNS = [
   'id', 'title_news', 'category', 'created_at', 'published_at',
-  'ai_final_score', 'interest_tags', 'cluster_id',
-  'shelf_life_days', 'freshness_category',
+  'ai_final_score', 'interest_tags', 'typed_signals',
+  'image_score', 'image_ai_generated',
+  'cluster_id', 'shelf_life_days', 'freshness_category',
   'author_id',
 ].join(', ');
 
@@ -1129,6 +1133,25 @@ export default async function handler(req, res) {
           }
         }
       } catch (e) { /* non-blocking */ }
+    }
+
+    // Source 4 (Fix 1B): Twitter-style 10-min / 100-ID rolling exclusion.
+    // Recently-served articles are hard-excluded even if they never hit the
+    // impression log (race with async insert) or the event table (user didn't
+    // react yet). Keeps feed responses independent across rapid pagination.
+    if (userId) {
+      try {
+        const { data: recent } = await supabase
+          .from('user_recent_impressions')
+          .select('article_id')
+          .eq('user_id', userId)
+          .gte('served_at', new Date(Date.now() - 10 * 60 * 1000).toISOString())
+          .order('served_at', { ascending: false })
+          .limit(100);
+        if (recent) {
+          for (const r of recent) if (r.article_id) canonicalSeenIds.add(Number(r.article_id));
+        }
+      } catch (e) { /* table may not exist yet */ }
     }
 
     console.log(`[dedup] Canonical seen set: ${canonicalSeenIds.size} unique IDs`);
@@ -1572,6 +1595,48 @@ async function handleV2Feed(req, res, supabase, opts) {
       .select('cluster_index, article_count, importance_score')
       .eq(clusterCol, clusterLookup);
 
+    // Fix 1D: Thompson Sampling from persistent Beta posterior per cluster arm.
+    // Source: Chapelle & Li, NeurIPS 2011. Arms are cluster:N keys. One sample
+    // per cluster per request; blended 50/50 with the importance-score baseline.
+    let banditSamples = {};
+    if (userId) {
+      const { data: arms } = await supabase
+        .from('user_bandit_arms')
+        .select('arm_key, alpha, beta')
+        .eq('user_id', userId)
+        .like('arm_key', 'cluster:%');
+      if (arms) {
+        const sampleGammaLocal = (shape) => {
+          if (shape < 1) return sampleGammaLocal(shape + 1) * Math.pow(Math.random() || 1e-9, 1 / shape);
+          const d = shape - 1 / 3;
+          const c = 1 / Math.sqrt(9 * d);
+          for (;;) {
+            let x, v;
+            do {
+              const u1 = Math.random(), u2 = Math.random();
+              x = Math.sqrt(-2 * Math.log(u1 || 1e-9)) * Math.cos(2 * Math.PI * u2);
+              v = 1 + c * x;
+            } while (v <= 0);
+            v = v * v * v;
+            const u = Math.random() || 1e-9;
+            if (u < 1 - 0.0331 * x * x * x * x) return d * v;
+            if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+          }
+        };
+        const sampleBetaLocal = (alpha, beta) => {
+          const x = sampleGammaLocal(alpha);
+          const y = sampleGammaLocal(beta);
+          return (x + y) > 0 ? x / (x + y) : 0.5;
+        };
+        for (const a of arms) {
+          const ci = Number(a.arm_key.slice(8));  // strip "cluster:"
+          if (Number.isFinite(ci)) {
+            banditSamples[ci] = sampleBetaLocal(a.alpha || 1, a.beta || 1);
+          }
+        }
+      }
+    }
+
     // Fix 1: Use importance_score (V3) when available, fall back to article_count
     const hasImportanceScores = (clusterMeta || []).some(c => c.importance_score > 0);
     const clusterWeights = {};
@@ -1591,6 +1656,25 @@ async function handleV2Feed(req, res, supabase, opts) {
           (c.article_count || 1) / Math.max(totalEngaged, 1),
           0.5
         );
+      }
+    }
+
+    // Fix 1D: blend the Thompson sample with the importance-score baseline.
+    // 50/50 keeps the exploration/exploitation balance mild at first; can be
+    // pushed higher later if posteriors concentrate faster than expected.
+    if (Object.keys(banditSamples).length > 0) {
+      const BANDIT_BLEND = 0.5;
+      const sampleKeys = Object.keys(clusterWeights);
+      let totalBandit = 0;
+      for (const ci of sampleKeys) totalBandit += banditSamples[ci] || 0.5;
+      if (totalBandit > 0) {
+        for (const ci of sampleKeys) {
+          const sampleShare = (banditSamples[ci] || 0.5) / totalBandit;
+          clusterWeights[ci] = Math.min(
+            (1 - BANDIT_BLEND) * clusterWeights[ci] + BANDIT_BLEND * sampleShare,
+            0.5
+          );
+        }
       }
     }
 
@@ -1912,6 +1996,30 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // Personal bucket: V3 scoring with entity affinity + vector similarity
+  // Fix 1E: image_score as additive Pinterest-style feature. Scale is 0-100 in DB
+  // (Gemini Flash), normalize to [0,1] and center at 0.5 so average images are
+  // neutral, good images boost, bad images penalize.
+  // Source: Pinterest Engineering Dec 2025 "Improving Quality of Recommended Content
+  // through Pinner Surveys"; image-quality feature consumed as continuous [0,1] input.
+  const IMAGE_WEIGHT = 0.10; // A/B range 0.05-0.15 (flagged inferred)
+  function imageQualityFeature(article) {
+    const raw = article.image_score;
+    if (raw == null) return 0.5;
+    return Math.max(0, Math.min(1, raw / 100));
+  }
+  function applyImageFeature(score, article, pool) {
+    const q = imageQualityFeature(article);
+    let next = score + score * IMAGE_WEIGHT * (q - 0.5);
+    if (pool === 'discovery') {
+      // Floor gate: bottom 5% images don't appear in Discovery (exploration pool
+      // is most sensitive to image quality per Pinterest).
+      if (q < 0.05) return 0;
+      // AI-generated images: soft negative in Discovery only (A/B 0.75-1.0, inferred)
+      if (article.image_ai_generated === true) next *= 0.85;
+    }
+    return next;
+  }
+
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
@@ -1937,6 +2045,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
       }
+      score = applyImageFeature(score, article, 'personal');
       return {
         ...article,
         _score: score,
@@ -1952,21 +2061,24 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Trending bucket: editorial importance x recency x entity signal x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: scoreTrendingV3(articleMap[a.id], null) * entitySignalMultiplier(articleMap[a.id]) * getCategorySuppression(articleMap[a.id]),
-      _bucket: 'trending',
-    }))
+    .map(a => {
+      const article = articleMap[a.id];
+      let s = scoreTrendingV3(article, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      s = applyImageFeature(s, article, 'trending');
+      return { ...article, _score: s, _bucket: 'trending' };
+    })
     .sort((a, b) => b._score - a._score);
 
   // Discovery bucket: boost unfamiliar categories x entity signal x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
-    .map(a => ({
-      ...articleMap[a.id],
-      _score: scoreDiscoveryV3(articleMap[a.id], personalCategories, null) * entitySignalMultiplier(articleMap[a.id]) * getCategorySuppression(articleMap[a.id]),
-      _bucket: 'discovery',
-    }))
+    .map(a => {
+      const article = articleMap[a.id];
+      let s = scoreDiscoveryV3(article, personalCategories, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      s = applyImageFeature(s, article, 'discovery');
+      return { ...article, _score: s, _bucket: 'discovery' };
+    })
+    .filter(a => a._score > 0)  // drop discovery articles zeroed by image floor
     .sort((a, b) => b._score - a._score);
 
   // Interest bucket: articles from user's followed topic categories
@@ -1981,9 +2093,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Base score + category boost + subtopic tag match boost
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
+      let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category),
+        _score: s,
         _tagMatches: tagMatches,
         _bucket: 'interest',
       };
@@ -1997,9 +2111,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
+      let s = (article.ai_final_score || 0) * recency * sigMult;
+      s = applyImageFeature(s, article, 'fresh_best');
       return {
         ...article,
-        _score: (article.ai_final_score || 0) * recency * sigMult,
+        _score: s,
         _bucket: 'fresh_best',
       };
     })
@@ -2069,11 +2185,24 @@ async function handleV2Feed(req, res, supabase, opts) {
   // scoring via typed_signals). No hard-blocking — the old globalBlocklist was
   // too aggressive, blocking common entities like "film", "moon", "nasa" and
   // eliminating 97% of trending articles.
-  const personalScoredFiltered = personalScored;
-  const trendingScoredFiltered = trendingScored;
-  const discoveryScoredFiltered = discoveryScored;
-  const interestScoredFiltered = interestScored;
-  const freshBestScoredFiltered = freshBestScored;
+
+  // Fix 1C: drop articles from the April 15-17 pipeline-bug window that carry
+  // no signals. typed_signals length < 3 AND created after 2026-04-15 = bug
+  // artifact that bypasses the multiplier (returns 1.0 for empty arrays).
+  // Pre-signal-system articles (created before 2026-04-15) are kept.
+  const PIPELINE_SIGNAL_CUTOFF_MS = Date.parse('2026-04-15T00:00:00Z');
+  function passesSignalFilter(article) {
+    const sigs = safeJsonParse(article.typed_signals, []);
+    if (Array.isArray(sigs) && sigs.length >= 3) return true;
+    const created = Date.parse(article.created_at);
+    return Number.isFinite(created) && created < PIPELINE_SIGNAL_CUTOFF_MS;
+  }
+
+  const personalScoredFiltered   = personalScored.filter(passesSignalFilter);
+  const trendingScoredFiltered   = trendingScored.filter(passesSignalFilter);
+  const discoveryScoredFiltered  = discoveryScored.filter(passesSignalFilter);
+  const interestScoredFiltered   = interestScored.filter(passesSignalFilter);
+  const freshBestScoredFiltered  = freshBestScored.filter(passesSignalFilter);
 
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -3181,6 +3310,43 @@ async function handleV2Feed(req, res, supabase, opts) {
   enforceConsecutiveLimit(selected, 2);
 
   // ==========================================
+  // PHASE 7.25 (Fix 1A): ENTITY-DISPERSION RE-RANK
+  // Source: Twitter DiversityDiscountProvider.scala in the-algorithm repo.
+  // For each article in slate order, for each typed_signal, apply geometric
+  // decay based on prior occurrence of that signal earlier in the slate.
+  //   discount = (1 - Floor) * Decay^count + Floor
+  // Decay=0.5, Floor=0.25 → first repeat halves contribution, steady state 0.25×.
+  // Skips lang:* and loc:usa — those appear on nearly every article and would
+  // over-penalize every slot after the first.
+  // ==========================================
+  {
+    const ENTITY_DECAY = 0.5;
+    const ENTITY_FLOOR = 0.25;
+    const entitySeenCount = new Map();
+    for (const article of selected) {
+      const signals = safeJsonParse(article.typed_signals, []);
+      if (!Array.isArray(signals)) continue;
+      let totalDiscount = 1.0;
+      for (const sig of signals) {
+        if (typeof sig !== 'string') continue;
+        if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
+        const count = entitySeenCount.get(sig) || 0;
+        if (count > 0) {
+          const d = (1 - ENTITY_FLOOR) * Math.pow(ENTITY_DECAY, count) + ENTITY_FLOOR;
+          totalDiscount *= d;
+        }
+      }
+      article._score = (article._score || 0) * totalDiscount;
+      for (const sig of signals) {
+        if (typeof sig !== 'string') continue;
+        if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
+        entitySeenCount.set(sig, (entitySeenCount.get(sig) || 0) + 1);
+      }
+    }
+    selected.sort((a, b) => (b._score || 0) - (a._score || 0));
+  }
+
+  // ==========================================
   // PHASE 7.5: QUALITY FLOOR — "You're all caught up"
   // After the good content is served, stop before serving dregs.
   // Only applies to page 2+ for users with sufficient history.
@@ -3280,6 +3446,38 @@ async function handleV2Feed(req, res, supabase, opts) {
     }));
     const { error: impError } = await supabase.from('user_feed_impressions').insert(impressions);
     if (impError) console.error('[feed] Impression log failed:', impError.message);
+
+    // Fix 1B: also write to the rolling 10-min exclusion table. Upsert because
+    // the same article can be served, excluded for 10 min, and (after cleanup)
+    // become eligible again — we want served_at to track the LATEST serve.
+    try {
+      const recentRows = pageIds.map(aid => ({
+        user_id: userId,
+        article_id: aid,
+        served_at: new Date().toISOString(),
+      }));
+      const { error: recentErr } = await supabase
+        .from('user_recent_impressions')
+        .upsert(recentRows, { onConflict: 'user_id,article_id' });
+      if (recentErr) console.error('[feed] Recent impressions log failed:', recentErr.message);
+
+      // Enforce 100-row cap per user: delete oldest beyond the top 100. The
+      // 5-minute pg_cron also sweeps rows past 10 min, so this is a soft cap.
+      const { data: overflow } = await supabase
+        .from('user_recent_impressions')
+        .select('article_id')
+        .eq('user_id', userId)
+        .order('served_at', { ascending: false })
+        .range(100, 999);
+      if (overflow && overflow.length > 0) {
+        const oldIds = overflow.map(r => r.article_id);
+        await supabase
+          .from('user_recent_impressions')
+          .delete()
+          .eq('user_id', userId)
+          .in('article_id', oldIds);
+      }
+    } catch (e) { /* non-blocking */ }
   }
 
   // has_more: count fresh unseen + resurfaced (stale unseen excluded from feed)
