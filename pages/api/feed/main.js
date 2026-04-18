@@ -1313,7 +1313,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     }),
 
     // 2. TRENDING: per-category fetch to guarantee diversity
-    // Old approach: top-600 globally → 98% World during war cycle. Now: top 60 per category.
+    // Hotfix: limit raised 60 → 200 per category. For power users with 5k+ seen
+    // articles, the top-60-per-cat was being dominated by already-seen top scorers,
+    // collapsing the effective unseen pool to < 20 articles across all categories.
     (async () => {
       const TRENDING_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
       const sqlExclude = cleanSeenArray.slice(0, 1500);
@@ -1324,7 +1326,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .gte('created_at', sevenDaysAgo)
           .gte('ai_final_score', 400)
           .order('ai_final_score', { ascending: false })
-          .limit(60);
+          .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
         return q;
       });
@@ -1334,7 +1336,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: all, error: null };
     })(),
 
-    // 3. DISCOVERY: same per-category approach
+    // 3. DISCOVERY: same per-category approach with matching limit bump
     (async () => {
       const DISC_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
       const sqlExclude = cleanSeenArray.slice(0, 1500);
@@ -1345,7 +1347,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .gte('created_at', sevenDaysAgo)
           .gte('ai_final_score', 300)
           .order('ai_final_score', { ascending: false })
-          .limit(60);
+          .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
         return q;
       });
