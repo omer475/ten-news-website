@@ -3354,8 +3354,11 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   if (offset > 0 && totalInteractions >= 50 && selected.length > 0) {
     const topScore = Math.max(...selected.map(a => a._score || 0));
-    const FLOOR_RATIO = 0.15;
-    const CONSECUTIVE_FLOOR_LIMIT = 3;
+    // Fix β: loosened post-Phase 1. Entity-dispersion re-rank + image feature
+    // compress the score distribution enough that the pre-Phase-1 calibration
+    // (0.15 / 3) was tripping mid-page on normal sessions.
+    const FLOOR_RATIO = 0.10;
+    const CONSECUTIVE_FLOOR_LIMIT = 4;
     let consecutiveBelowFloor = 0;
     const qualityFiltered = [];
 
@@ -3372,17 +3375,32 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     const caughtUpByQuality = qualityFiltered.length < selected.length;
     if (caughtUpByQuality) {
-      console.log('[feed:quality-floor]', {
-        topScore: topScore.toFixed(1),
-        selectedBefore: selected.length,
-        selectedAfter: qualityFiltered.length,
-        cutReason: `${selected.length - qualityFiltered.length} articles below ${(FLOOR_RATIO * 100).toFixed(0)}% of top score`,
-        lastKeptRatio: qualityFiltered.length > 0
-          ? ((qualityFiltered[qualityFiltered.length - 1]._score || 0) / topScore).toFixed(3)
-          : null,
-      });
-      selected.length = 0;
-      selected.push(...qualityFiltered);
+      // Fix γ: the quality floor is meant to prevent catastrophic tails (the
+      // April-18 9-skip-streak failure mode), not to shave pages with mild
+      // tail compression. If the cut would leave fewer than MIN_PAGE_SIZE
+      // articles, keep the full pre-cut slate instead.
+      const MIN_PAGE_SIZE = 15;
+      if (qualityFiltered.length < MIN_PAGE_SIZE) {
+        console.log('[feed:quality-floor] rescue — cut would leave too few articles', {
+          topScore: topScore.toFixed(1),
+          wouldCutTo: qualityFiltered.length,
+          restoredTo: selected.length,
+          minPageSize: MIN_PAGE_SIZE,
+        });
+        // Leave `selected` unchanged — the original slate is preserved.
+      } else {
+        console.log('[feed:quality-floor]', {
+          topScore: topScore.toFixed(1),
+          selectedBefore: selected.length,
+          selectedAfter: qualityFiltered.length,
+          cutReason: `${selected.length - qualityFiltered.length} articles below ${(FLOOR_RATIO * 100).toFixed(0)}% of top score`,
+          lastKeptRatio: qualityFiltered.length > 0
+            ? ((qualityFiltered[qualityFiltered.length - 1]._score || 0) / topScore).toFixed(3)
+            : null,
+        });
+        selected.length = 0;
+        selected.push(...qualityFiltered);
+      }
     }
   }
 
