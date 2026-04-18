@@ -531,94 +531,10 @@ export default async function handler(req, res) {
           }).catch(() => {})
         }
 
-        // INCREMENTAL CLUSTERING — from the very first engagement
-        // No phases, no triggers. Clusters form and evolve with every positive engagement.
-        if (event_type !== 'article_skipped' && event_type !== 'article_glance') {
-          admin.from('published_articles').select('embedding_minilm').eq('id', article_id).single().then(({ data: artData }) => {
-            if (!artData?.embedding_minilm || !Array.isArray(artData.embedding_minilm)) return
-            const artEmb = artData.embedding_minilm
-
-            // Include both user_id and personalization_id matches — the cluster_user_interests
-            // RPC writes with user_id set, track.js historically wrote with user_id=null.
-            // Either record counts toward the cap.
-            admin.from('user_interest_clusters')
-              .select('id, cluster_index, medoid_minilm, article_count, importance_score, user_id, personalization_id')
-              .or(`personalization_id.eq.${persId},and(user_id.eq.${effectiveUserId || '00000000-0000-0000-0000-000000000000'})`)
-              .eq('is_archived', false)
-              .then(({ data: clusters }) => {
-                if (!clusters || clusters.length === 0) {
-                  // First engagement — create first cluster
-                  admin.from('user_interest_clusters').insert({
-                    user_id: effectiveUserId || null, cluster_index: 0,
-                    medoid_embedding: artEmb, medoid_minilm: artEmb,
-                    article_count: 1, importance_score: 1.0,
-                    personalization_id: persId,
-                    last_engaged_at: new Date().toISOString()
-                  }).then(() => console.log('[analytics] First cluster created for', persId.substring(0, 8))).catch(() => {})
-                  return
-                }
-
-                // Find nearest cluster
-                let bestIdx = -1, bestSim = -1
-                for (let i = 0; i < clusters.length; i++) {
-                  const centroid = clusters[i].medoid_minilm
-                  if (!centroid || !Array.isArray(centroid)) continue
-                  const sim = cosineSim(artEmb, centroid)
-                  if (sim > bestSim) { bestSim = sim; bestIdx = i; }
-                }
-
-                const MERGE_THRESHOLD = 0.70
-                const atCap = clusters.length >= MAX_CLUSTERS
-                const closeEnough = bestIdx >= 0 && bestSim >= MERGE_THRESHOLD
-                // Merge when close OR when at cap — never exceed MAX_CLUSTERS
-                const shouldMerge = closeEnough || atCap
-
-                if (shouldMerge && bestIdx >= 0) {
-                  const cluster = clusters[bestIdx]
-                  const count = cluster.article_count || 1
-                  const centroid = cluster.medoid_minilm
-                  const learningRate = 1.0 / (count + 1)
-                  const newCentroid = centroid.map((v, i) => (1 - learningRate) * v + learningRate * artEmb[i])
-                  const newCount = count + 1
-                  const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
-
-                  admin.from('user_interest_clusters').update({
-                    medoid_minilm: newCentroid, medoid_embedding: newCentroid,
-                    article_count: newCount, importance_score: newCount / totalCount,
-                    last_engaged_at: new Date().toISOString()
-                  }).eq('id', cluster.id).then(() => {
-                    for (const c of clusters) {
-                      if (c.id === cluster.id) continue
-                      admin.from('user_interest_clusters')
-                        .update({ importance_score: (c.article_count || 0) / totalCount })
-                        .eq('id', c.id).then(() => {}).catch(() => {})
-                    }
-                    if (atCap && !closeEnough) {
-                      console.log(`[analytics] Cap reached (${MAX_CLUSTERS}), force-merged into cluster ${cluster.cluster_index} (sim=${bestSim.toFixed(2)}) for ${persId.substring(0, 8)}`)
-                    }
-                  }).catch(() => {})
-                } else {
-                  // Below cap + no close match → create new cluster
-                  const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
-                  const newIdx = clusters.length > 0 ? Math.max(...clusters.map(c => c.cluster_index)) + 1 : 0
-                  admin.from('user_interest_clusters').insert({
-                    user_id: effectiveUserId || null, cluster_index: newIdx,
-                    medoid_embedding: artEmb, medoid_minilm: artEmb,
-                    article_count: 1, importance_score: 1 / totalCount,
-                    personalization_id: persId,
-                    last_engaged_at: new Date().toISOString()
-                  }).then(() => {
-                    console.log('[analytics] New interest cluster #' + newIdx + ' for', persId.substring(0, 8))
-                  }).catch(() => {})
-                }
-              }).catch(() => {})
-          }).catch(() => {})
-        }
-
-        // Fix 1D bandit update: MOVED out of this callback to an awaited block
-        // below, before the response is sent. The fire-and-forget chain here
-        // was getting terminated by Vercel before the 3-level-deep async
-        // resolution completed — user_bandit_arms was staying empty.
+        // INCREMENTAL CLUSTERING: moved to awaited block below, calling the
+        // atomic `insert_or_merge_cluster` RPC. The prior fire-and-forget
+        // version raced under rapid engagement and blew past MAX_CLUSTERS=7.
+        // Fix 1D bandit update: also awaited, below, for the same reason.
 
         // ============================================================
         // BUCKET ENGAGEMENT STATS — for adaptive budget allocation
@@ -756,8 +672,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fix 1D bandit posterior — awaited path (prior fire-and-forget version was
-    // getting killed by Vercel mid-chain). Runs synchronously before response.
+    // Awaited block: atomic cluster maintenance (positive events) + bandit
+    // posterior update (positive or negative). Runs synchronously before the
+    // response so Vercel doesn't kill mid-chain.
     if (effectiveUserId && article_id
         && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
       const isPositive = POSITIVE_EVENTS.includes(event_type)
@@ -776,55 +693,61 @@ export default async function handler(req, res) {
           const bPersId = persResolved?.[0]?.personalization_id
 
           if (bPersId) {
-            const { data: bClusters } = await admin
-              .from('user_interest_clusters')
-              .select('cluster_index, medoid_minilm')
-              .or(`personalization_id.eq.${bPersId},user_id.eq.${effectiveUserId}`)
-              .eq('is_archived', false)
+            let bestIdx = -1
 
-            if (bClusters && bClusters.length > 0) {
-              let bestIdx = -1, bestSim = -1
-              for (const c of bClusters) {
-                if (!c.medoid_minilm || !Array.isArray(c.medoid_minilm)) continue
-                const sim = cosineSim(artRow.embedding_minilm, c.medoid_minilm)
-                if (sim > bestSim) { bestSim = sim; bestIdx = c.cluster_index }
-              }
-              if (bestIdx >= 0) {
-                const weight = event_type === 'article_saved' ? 3.0
-                  : event_type === 'article_shared' ? 2.0
-                  : event_type === 'article_liked' ? 1.5
-                  : event_type === 'article_revisit' ? 4.0
-                  : 1.0
-                console.log('[bandit-debug]', {
-                  user: effectiveUserId.substring(0, 8),
-                  pers: bPersId.substring(0, 8),
-                  cluster: bestIdx,
-                  sim: bestSim.toFixed(2),
-                  isPositive,
-                  weight,
-                  n_clusters: bClusters.length,
-                })
-                const { error: armErr } = await admin.rpc('update_bandit_arm', {
-                  p_user_id: effectiveUserId,
-                  p_arm_key: `cluster:${bestIdx}`,
-                  p_is_positive: isPositive,
-                  p_weight: isPositive ? weight : 1.0,
-                })
-                if (armErr) console.log('[bandit-debug] rpc error:', armErr.message)
-              } else {
-                console.log('[bandit-debug] no cluster match found')
+            if (isPositive) {
+              // Atomic insert-or-merge under FOR UPDATE lock — returns the
+              // assigned cluster_index. Hard-caps at MAX_CLUSTERS=7 by
+              // force-merging into nearest when at cap.
+              const { data: iomRows, error: iomErr } = await admin.rpc('insert_or_merge_cluster', {
+                p_user_id: effectiveUserId,
+                p_personalization_id: bPersId,
+                p_article_id: article_id,
+                p_embedding: artRow.embedding_minilm,
+                p_max_clusters: 7,
+              })
+              if (iomErr) {
+                console.log('[cluster] insert_or_merge_cluster error:', iomErr.message)
+              } else if (iomRows && iomRows.length > 0) {
+                bestIdx = iomRows[0].cluster_index
               }
             } else {
-              console.log('[bandit-debug] no clusters for user')
+              // Skip event — don't touch clusters, just find the nearest for
+              // the bandit β update.
+              const { data: bClusters } = await admin
+                .from('user_interest_clusters')
+                .select('cluster_index, medoid_minilm')
+                .or(`personalization_id.eq.${bPersId},user_id.eq.${effectiveUserId}`)
+                .eq('is_archived', false)
+
+              if (bClusters && bClusters.length > 0) {
+                let bestSim = -1
+                for (const c of bClusters) {
+                  if (!c.medoid_minilm || !Array.isArray(c.medoid_minilm)) continue
+                  const sim = cosineSim(artRow.embedding_minilm, c.medoid_minilm)
+                  if (sim > bestSim) { bestSim = sim; bestIdx = c.cluster_index }
+                }
+              }
             }
-          } else {
-            console.log('[bandit-debug] could not resolve persId')
+
+            if (bestIdx >= 0) {
+              const weight = event_type === 'article_saved' ? 3.0
+                : event_type === 'article_shared' ? 2.0
+                : event_type === 'article_liked' ? 1.5
+                : event_type === 'article_revisit' ? 4.0
+                : 1.0
+              const { error: armErr } = await admin.rpc('update_bandit_arm', {
+                p_user_id: effectiveUserId,
+                p_arm_key: `cluster:${bestIdx}`,
+                p_is_positive: isPositive,
+                p_weight: isPositive ? weight : 1.0,
+              })
+              if (armErr) console.log('[bandit] rpc error:', armErr.message)
+            }
           }
-        } else {
-          console.log('[bandit-debug] article has no embedding')
         }
       } catch (e) {
-        console.log('[bandit-debug] exception:', e.message)
+        console.log('[track] cluster/bandit update exception:', e.message)
       }
     }
 
