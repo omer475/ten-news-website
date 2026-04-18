@@ -263,12 +263,15 @@ function isStillFresh(article) {
   const ageHours = (Date.now() - new Date(article.created_at).getTime()) / 3600000;
   const contentType = inferContentType(article.freshness_category, article.category, article.shelf_life_days);
   switch (contentType) {
-    case 'breaking':   return ageHours < 24;   // was 36 — breaking news stale after 1 day
-    case 'developing': return ageHours < 72;   // was 96 — 3 days max for developing stories
-    case 'analysis':   return ageHours < 168;  // was 240 — 7 days for analysis pieces
-    case 'evergreen':  return ageHours < 168;  // was 504 (21 days!) — 7 days max
-    case 'timeless':   return ageHours < 336;  // was 1080 — 14 days max
-    default:           return ageHours < 72;   // was 168 — 3 days for unknown type
+    // Extended 2026-04-18 post-Phase-1: typed_signals give 12-signal
+    // personalization coverage, so editorial-relevance decay is no longer
+    // the binding constraint on inclusion. breaking 24→48h, developing 72→120h.
+    case 'breaking':   return ageHours < 48;
+    case 'developing': return ageHours < 120;
+    case 'analysis':   return ageHours < 168;
+    case 'evergreen':  return ageHours < 168;
+    case 'timeless':   return ageHours < 336;
+    default:           return ageHours < 120;
   }
 }
 
@@ -1275,13 +1278,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   // on Vercel due to extra embedding fetches. Needs optimization before re-enabling.
   let hasAnyPersonalization = tasteVector || tasteVectorMinilm || hasInterestClusters;
 
-  // Fix 4: Over-fetch from pgvector — time filtering done in JS, not SQL
+  // Fix 2 (2026-04-18): anti-join variants replace the old exclude_ids pattern.
+  // NOT EXISTS against user_feed_impressions with (user_id, article_id) index
+  // is sub-ms per candidate regardless of history size. Leaves the legacy RPCs
+  // in place as fallbacks when no userId is available.
   let personalPromise;
   if (!hasAnyPersonalization) {
     personalPromise = Promise.resolve({ data: [], error: null });
+  } else if (hasInterestClusters && useMinilm && userId) {
+    personalPromise = supabase.rpc('match_articles_multi_cluster_minilm_antijoin', {
+      p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
+      min_similarity: minSim,
+    });
   } else if (hasInterestClusters && useMinilm) {
-    // Don't pass exclude_ids to multi-cluster: 1500 IDs → 2318ms (vs 427ms without)
-    // JS filter at pool construction handles dedup. SQL exclusion is redundant here.
     personalPromise = supabase.rpc('match_articles_multi_cluster_minilm', {
       p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
       exclude_ids: null, min_similarity: minSim,
@@ -1290,6 +1299,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     personalPromise = supabase.rpc('match_articles_multi_cluster', {
       p_user_id: clusterLookupId, match_per_cluster: 10, hours_window: 168,
       exclude_ids: null, min_similarity: minSim,
+    });
+  } else if (useMinilm && userId) {
+    personalPromise = supabase.rpc('match_articles_personal_minilm_antijoin', {
+      p_user_id: userId, query_embedding: tasteVectorMinilm,
+      match_count: 800, hours_window: 9999, min_similarity: minSim,
     });
   } else if (useMinilm) {
     personalPromise = supabase.rpc('match_articles_personal_minilm', {
@@ -1312,12 +1326,24 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: [], error: err };
     }),
 
-    // 2. TRENDING: per-category fetch to guarantee diversity
-    // Hotfix: limit raised 60 → 200 per category. For power users with 5k+ seen
-    // articles, the top-60-per-cat was being dominated by already-seen top scorers,
-    // collapsing the effective unseen pool to < 20 articles across all categories.
+    // 2. TRENDING: per-category unseen via anti-join RPC when authenticated.
+    // Fix 2 (2026-04-18): old JS pattern NOT IN (<1500 seen IDs>) was partial
+    // (let 3.6k seen articles return from SQL to be filtered JS-side) and
+    // URL-length bound. RPC does NOT EXISTS anti-join against
+    // user_feed_impressions, returning only truly-unseen candidates.
     (async () => {
       const TRENDING_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
+      if (userId) {
+        const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
+          p_user_id: userId,
+          p_categories: TRENDING_CATS,
+          p_min_score: 400,
+          p_hours_window: 168,
+          p_per_category: 200,
+        });
+        return { data: data || [], error };
+      }
+      // Guest fallback: pre-Fix-2 path
       const sqlExclude = cleanSeenArray.slice(0, 1500);
       const catPromises = TRENDING_CATS.map(cat => {
         let q = supabase.from('published_articles')
@@ -1336,9 +1362,19 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: all, error: null };
     })(),
 
-    // 3. DISCOVERY: same per-category approach with matching limit bump
+    // 3. DISCOVERY: same pattern, score floor 300 instead of 400
     (async () => {
       const DISC_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
+      if (userId) {
+        const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
+          p_user_id: userId,
+          p_categories: DISC_CATS,
+          p_min_score: 300,
+          p_hours_window: 168,
+          p_per_category: 200,
+        });
+        return { data: data || [], error };
+      }
       const sqlExclude = cleanSeenArray.slice(0, 1500);
       const catPromises = DISC_CATS.map(cat => {
         let q = supabase.from('published_articles')
