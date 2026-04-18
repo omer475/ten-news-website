@@ -1881,7 +1881,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Squared exponent (not cubed) — cubed overpenalizes mixed signals.
   function entitySignalMultiplier(article) {
     const signals = safeJsonParse(article.typed_signals, []);
-    if (!Array.isArray(signals) || signals.length === 0) return 1.0;
+    // Empty / unparsed typed_signals: article is untagged (pipeline-bug window or
+    // legacy content). Don't let it bypass scoring at full weight.
+    if (!Array.isArray(signals) || signals.length === 0) return 0.5;
 
     let affinitySum = 0;
     let matchCount = 0;
@@ -1894,12 +1896,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       matchCount++;
     }
 
-    if (matchCount === 0) return 1.0;
+    // Tagged but user has no record on any signal — mild penalty so strongly-matched
+    // articles rank above unmatched ones, but content isn't fully suppressed.
+    if (matchCount === 0) return 0.85;
 
     const avgAffinity = affinitySum / matchCount;
     const raw = 1.0 + avgAffinity; // 0.0 to 2.0
-
-    // Squared, not cubed. Cubed overpenalized mixed signals.
     return Math.pow(raw, 2);
   }
 
@@ -2209,13 +2211,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
+  // Fix E (Apr 18): also enforce one-pick-per-article across THIS request. Pool
+  // assembly can legitimately place the same article in multiple pools (e.g.
+  // both personal and trending); this ensures no page ever contains duplicates.
+  const servedInThisRequest = new Set();
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
     while (attempts < 10 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda, embeddingCache);
       if (!picked) return null;
+      if (servedInThisRequest.has(picked.id)) { attempts++; continue; }
       if (isEventCapped(picked)) { attempts++; continue; }
       if (isEntityCappedShared(picked)) { attempts++; continue; }
+      servedInThisRequest.add(picked.id);
       return picked;
     }
     return null;
@@ -2878,7 +2886,10 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       while (queue.length > 0) {
         const candidate = queue.shift();
-        if (!usedIds.has(candidate.id) && !isEventCapped(candidate) && !isEntityCappedShared(candidate)) {
+        if (!usedIds.has(candidate.id)
+            && !servedInThisRequest.has(candidate.id)
+            && !isEventCapped(candidate)
+            && !isEntityCappedShared(candidate)) {
           picked = candidate;
           break;
         }
@@ -2886,6 +2897,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       if (picked) {
         usedIds.add(picked.id);
+        servedInThisRequest.add(picked.id);
         picked.bucket = 'interest';
         recordEventSelection(picked);
         recordEntitySelectionShared(picked);

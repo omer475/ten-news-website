@@ -126,6 +126,41 @@ SIGNAL_CATEGORY_BLOCKLIST = {
     'news', 'breaking', 'opinion', 'culture', 'education',
 }
 
+# Stopword-level tokens Gemini sometimes emits as topics. These get extracted
+# from verbs/prepositions/adjectives in headlines (e.g. "Darfur FACES Famine
+# AMID Ethnic Cleansing" yielding topic:faces / topic:amid / topic:ethnic).
+# Keep this tight — only truly meaningless-on-their-own tokens.
+TOPIC_STOPWORDS = {
+    # prepositions / conjunctions
+    'faces', 'amid', 'after', 'before', 'during', 'against', 'between',
+    'through', 'without', 'within', 'across', 'amongst', 'under', 'over',
+    'into', 'onto', 'upon', 'beyond', 'among',
+    # auxiliaries / common verbs
+    'has', 'have', 'had', 'was', 'were', 'been', 'being', 'does', 'did',
+    'are', 'is', 'be', 'will', 'would', 'could', 'should', 'may', 'might',
+    'must', 'can', 'shall',
+    # function words
+    'the', 'and', 'but', 'or', 'for', 'nor', 'yet', 'so',
+    # common adjectives that carry no topical meaning alone
+    'new', 'old', 'big', 'small', 'first', 'last', 'next', 'prev',
+    'major', 'minor', 'high', 'low', 'long', 'short',
+    # bare fragments often emitted by NER truncation
+    'ethnic', 'global', 'local', 'national', 'international',
+    'public', 'private', 'modern', 'ancient',
+}
+
+
+def _is_valid_topic(slug: str) -> bool:
+    """Reject stopwords and too-generic single-word topics."""
+    if slug in TOPIC_STOPWORDS:
+        return False
+    if len(slug) < 4:
+        return False
+    # Single short words are usually noise. Multi-word (contains _) is fine.
+    if '_' not in slug and len(slug) < 6:
+        return False
+    return True
+
 def _slugify(s: str) -> str:
     s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode()
     s = re.sub(r'[^a-z0-9]+', '_', s.lower()).strip('_')
@@ -155,7 +190,11 @@ Rules:
 - events: named events like "World Cup 2026", "Artemis II", "Monte-Carlo Masters"
 - products: product/franchise names like "iPhone 17", "Spider-Man 3", "GTA 6"
 - cities: city-level locations mentioned
-- narrow_topics: 2-5 specific concepts, NEVER category names like "tech" or "sports" or "business"
+- narrow_topics: 2-5 multi-word concepts or compound terms (e.g. "geopolitical_tensions",
+  "brain_hologram", "class_action_lawsuit", "quantum_computing"). NEVER single common
+  English words like "faces", "amid", "ethnic", "after", "new", "economy", "global".
+  Must be a specific concept, not a generic word or stopword. If the concept can't be
+  expressed in 2+ words, omit it entirely.
 """
     try:
         import json as _ner_json
@@ -184,6 +223,10 @@ def build_typed_signals(article_countries, interest_tags, ner_result=None, langu
     def add(signal_type: str, value: str):
         slug = _slugify(value)
         if not slug or slug in SIGNAL_CATEGORY_BLOCKLIST or len(slug) > 64:
+            return
+        # Topics get an extra stopword/quality filter — org/person/event/product
+        # come from NER name lists which are noun-phrases by construction.
+        if signal_type == 'topic' and not _is_valid_topic(slug):
             return
         sig = f"{signal_type}:{slug}"
         if sig in seen:

@@ -1,6 +1,11 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
+// Hard cap on per-user interest clusters. cluster_user_interests RPC respects
+// this via LEAST(p_max_clusters, ...); the incremental write path below must
+// force-merge when at cap instead of silently creating an 8th, 9th, ... cluster.
+const MAX_CLUSTERS = 7
+
 // ============================================================
 // K-MEANS CLUSTERING (JavaScript implementation for V23)
 // ============================================================
@@ -533,15 +538,18 @@ export default async function handler(req, res) {
             if (!artData?.embedding_minilm || !Array.isArray(artData.embedding_minilm)) return
             const artEmb = artData.embedding_minilm
 
+            // Include both user_id and personalization_id matches — the cluster_user_interests
+            // RPC writes with user_id set, track.js historically wrote with user_id=null.
+            // Either record counts toward the cap.
             admin.from('user_interest_clusters')
-              .select('id, cluster_index, medoid_minilm, article_count, importance_score')
-              .eq('personalization_id', persId)
+              .select('id, cluster_index, medoid_minilm, article_count, importance_score, user_id, personalization_id')
+              .or(`personalization_id.eq.${persId},and(user_id.eq.${effectiveUserId || '00000000-0000-0000-0000-000000000000'})`)
               .eq('is_archived', false)
               .then(({ data: clusters }) => {
                 if (!clusters || clusters.length === 0) {
                   // First engagement — create first cluster
                   admin.from('user_interest_clusters').insert({
-                    user_id: null, cluster_index: 0,
+                    user_id: effectiveUserId || null, cluster_index: 0,
                     medoid_embedding: artEmb, medoid_minilm: artEmb,
                     article_count: 1, importance_score: 1.0,
                     personalization_id: persId,
@@ -560,10 +568,12 @@ export default async function handler(req, res) {
                 }
 
                 const MERGE_THRESHOLD = 0.70
-                const MAX_CLUSTERS = 7
+                const atCap = clusters.length >= MAX_CLUSTERS
+                const closeEnough = bestIdx >= 0 && bestSim >= MERGE_THRESHOLD
+                // Merge when close OR when at cap — never exceed MAX_CLUSTERS
+                const shouldMerge = closeEnough || atCap
 
-                if (bestIdx >= 0 && bestSim >= MERGE_THRESHOLD) {
-                  // Close to existing cluster — update it
+                if (shouldMerge && bestIdx >= 0) {
                   const cluster = clusters[bestIdx]
                   const count = cluster.article_count || 1
                   const centroid = cluster.medoid_minilm
@@ -583,14 +593,16 @@ export default async function handler(req, res) {
                         .update({ importance_score: (c.article_count || 0) / totalCount })
                         .eq('id', c.id).then(() => {}).catch(() => {})
                     }
+                    if (atCap && !closeEnough) {
+                      console.log(`[analytics] Cap reached (${MAX_CLUSTERS}), force-merged into cluster ${cluster.cluster_index} (sim=${bestSim.toFixed(2)}) for ${persId.substring(0, 8)}`)
+                    }
                   }).catch(() => {})
-
-                } else if (clusters.length < MAX_CLUSTERS) {
-                  // Too far from any cluster + room for new one → create it
+                } else {
+                  // Below cap + no close match → create new cluster
                   const totalCount = clusters.reduce((s, c) => s + (c.article_count || 0), 0) + 1
                   const newIdx = clusters.length > 0 ? Math.max(...clusters.map(c => c.cluster_index)) + 1 : 0
                   admin.from('user_interest_clusters').insert({
-                    user_id: null, cluster_index: newIdx,
+                    user_id: effectiveUserId || null, cluster_index: newIdx,
                     medoid_embedding: artEmb, medoid_minilm: artEmb,
                     article_count: 1, importance_score: 1 / totalCount,
                     personalization_id: persId,
