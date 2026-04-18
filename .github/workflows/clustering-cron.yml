@@ -1,9 +1,15 @@
 name: User Interest Clustering
 
+# Scheduled cron DISABLED 2026-04-19: services/cluster_user_interests.py uses
+# Ward's hierarchical clustering with a distance threshold (criterion='distance',
+# t=1.2) which is uncapped — for power users with 1k+ engagement embeddings it
+# produced 81 clusters in a single run (2026-04-18 19:02 UTC), blowing past the
+# MAX_CLUSTERS=8 constant (which only applies to the K-Means variant). The
+# track.js incremental path with the atomic insert_or_merge_cluster RPC now
+# maintains clusters correctly with a hard 7-cluster cap. Re-enable only after
+# ward_cluster has a post-clustering consolidation pass that respects MAX_CLUSTERS.
 on:
-  schedule:
-    - cron: '0 */6 * * *'   # Every 6 hours (00:00, 06:00, 12:00, 18:00 UTC)
-  workflow_dispatch:       # Manual trigger
+  workflow_dispatch:       # Manual trigger only
 
 jobs:
   cluster-users:

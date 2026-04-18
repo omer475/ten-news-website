@@ -1902,29 +1902,102 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // Session-reactive category suppression: build from current session signals
+  // Fix B (2026-04-19): session category stats used to read article categories
+  // from articleMap, but articleMap only contains the CURRENT request's candidate
+  // pool. After the anti-join retrieval fix, previously-served articles (the ones
+  // that produced the session's engage/skip events) are excluded from
+  // retrieval → not in articleMap → sessionCatStats never accumulates → 5-impression
+  // suppression threshold is never reached.
+  //
+  // Fix: fetch category + typed_signals for the session's event IDs directly,
+  // independent of this request's candidate retrieval. One extra query per feed
+  // request; restores the intended session suppression behavior.
+  const allSessionIds = [
+    ...(sessionEngagedIds || []),
+    ...(sessionSkippedIds || []),
+    ...(sessionGlancedIds || []),
+  ];
+  let sessionCategoryLookup = {};
+  let sessionSignalLookup = {};
+  if (allSessionIds.length > 0) {
+    try {
+      const { data: sessionArticleMeta } = await supabase
+        .from('published_articles')
+        .select('id, category, typed_signals')
+        .in('id', allSessionIds.slice(0, 300));  // safety cap
+      if (sessionArticleMeta) {
+        for (const a of sessionArticleMeta) {
+          sessionCategoryLookup[a.id] = a.category;
+          sessionSignalLookup[a.id] = a.typed_signals || [];
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+
+  // Session-reactive category suppression
   const sessionCatStats = {};
-  for (const id of sessionEngagedIds) {
-    const art = articleMap[id];
-    if (!art) continue;
-    const cat = art.category || 'Other';
+  function ensureCatStat(cat) {
     if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
-    sessionCatStats[cat].impressions++;
-    sessionCatStats[cat].engaged++;
+    return sessionCatStats[cat];
   }
-  for (const id of sessionSkippedIds) {
-    const art = articleMap[id];
-    if (!art) continue;
-    const cat = art.category || 'Other';
-    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
-    sessionCatStats[cat].impressions++;
+  for (const id of (sessionEngagedIds || [])) {
+    const cat = sessionCategoryLookup[id];
+    if (!cat) continue;
+    const s = ensureCatStat(cat); s.impressions++; s.engaged++;
   }
-  for (const id of sessionGlancedIds) {
-    const art = articleMap[id];
-    if (!art) continue;
-    const cat = art.category || 'Other';
-    if (!sessionCatStats[cat]) sessionCatStats[cat] = { impressions: 0, engaged: 0 };
-    sessionCatStats[cat].impressions++;
+  for (const id of (sessionSkippedIds || [])) {
+    const cat = sessionCategoryLookup[id];
+    if (!cat) continue;
+    ensureCatStat(cat).impressions++;
+  }
+  for (const id of (sessionGlancedIds || [])) {
+    const cat = sessionCategoryLookup[id];
+    if (!cat) continue;
+    ensureCatStat(cat).impressions++;
+  }
+
+  // Fix C (2026-04-19): TikTok same_tag_today pattern. Tally per-signal skips vs
+  // engagements within the session; apply penalty at scoring time to articles
+  // whose typed_signals include tags the user is actively rejecting THIS session.
+  // Skips lang:* and loc:usa (over-common signals, same as entity-dispersion).
+  // Coefficients are inferred — the feature exists in the TikTok NYT-2021 leak
+  // but coefficients aren't published.
+  const sessionSignalSkips = new Map();
+  const sessionSignalEngages = new Map();
+  function _tallyForSig(map, sig) {
+    if (typeof sig !== 'string') return;
+    if (sig.startsWith('lang:') || sig === 'loc:usa') return;
+    map.set(sig, (map.get(sig) || 0) + 1);
+  }
+  for (const id of (sessionSkippedIds || [])) {
+    const sigs = sessionSignalLookup[id] || [];
+    if (Array.isArray(sigs)) for (const s of sigs) _tallyForSig(sessionSignalSkips, s);
+  }
+  for (const id of (sessionEngagedIds || [])) {
+    const sigs = sessionSignalLookup[id] || [];
+    if (Array.isArray(sigs)) for (const s of sigs) _tallyForSig(sessionSignalEngages, s);
+  }
+
+  function sessionTopicPenalty(article) {
+    const signals = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(signals)) return 1.0;
+    let maxSkipsOnMatch = 0;
+    let engagesOffsetting = 0;
+    for (const sig of signals) {
+      if (typeof sig !== 'string') continue;
+      if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
+      const skips = sessionSignalSkips.get(sig) || 0;
+      const engages = sessionSignalEngages.get(sig) || 0;
+      if (skips > engages) {
+        maxSkipsOnMatch = Math.max(maxSkipsOnMatch, skips - engages);
+      } else if (engages > 0) {
+        engagesOffsetting = Math.max(engagesOffsetting, engages);
+      }
+    }
+    if (engagesOffsetting > 0) return 1.0;
+    if (maxSkipsOnMatch >= 3) return 0.3;
+    if (maxSkipsOnMatch >= 2) return 0.5;
+    return 1.0;
   }
 
   function getCategorySuppression(article) {
@@ -2023,8 +2096,21 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (matchCount === 0) return 0.85;
 
     const avgAffinity = affinitySum / matchCount;
-    const raw = 1.0 + avgAffinity; // 0.0 to 2.0
-    return Math.pow(raw, 2);
+    const raw = Math.pow(1.0 + avgAffinity, 2); // 0.0 to 4.0
+
+    // Fix A (2026-04-19): coverage factor — treat "unknown entity = uncertainty",
+    // not "unknown entity = neutral". When only a small fraction of an article's
+    // entities are in the user's signal table, the average affinity is dominated
+    // by a handful of signals and doesn't reflect genuine preference. Damp such
+    // articles so they don't slip past pivot-mode's multiplier>=1.0 gate on the
+    // strength of 2 matched negatives + 6 unknowns.
+    //   coverage 0.2 (1 of 5 matched) → multiplier capped at ~0.85
+    //   coverage 0.4+ (e.g. 4 of 10) → no penalty
+    // Calibration parameters — not cited; correction to multiplier averaging.
+    const coverage = matchCount / signals.length;
+    const coveragePenalty = coverage < 0.4 ? 0.7 + (coverage / 0.4) * 0.3 : 1.0;
+
+    return raw * coveragePenalty;
   }
 
   // Legacy entityAffinities for backward compat during transition
@@ -2078,6 +2164,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
+      // Fix C (2026-04-19): session-level topic skip penalty
+      score *= sessionTopicPenalty(article);
       score *= underfedWinnerBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
@@ -2102,6 +2190,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
     })
@@ -2113,6 +2202,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
     })
@@ -2132,6 +2222,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2150,6 +2241,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
       let s = (article.ai_final_score || 0) * recency * sigMult;
+      s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'fresh_best');
       return {
         ...article,
