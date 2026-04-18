@@ -340,7 +340,12 @@ Content: {content}
 
 """
     
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     prompt = f"""You are writing a news article by synthesizing information from {len(sorted_sources)} sources about the same event.
+
+📅 TODAY'S DATE: {today_str}
+Use this date as reference for all temporal language. We are currently in {datetime.now().strftime('%Y')}. Do NOT reference years or dates that contradict this.
 
 {sources_text}
 
@@ -438,7 +443,12 @@ Content: {content}
 
 """
     
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     prompt = f"""You are UPDATING a news article with new information from {len(new_sources)} additional sources.
+
+📅 TODAY'S DATE: {today_str}
+Use this date as reference for all temporal language. We are currently in {datetime.now().strftime('%Y')}. Do NOT reference years or dates that contradict this.
 
 EVENT: {cluster.get('event_name', 'Unknown Event')}
 
