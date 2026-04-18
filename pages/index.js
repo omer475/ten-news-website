@@ -2403,7 +2403,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         console.log('🔄 Background refresh - checking for new articles...');
       }
       try {
-        const response = await fetch(`/api/news?page=1&pageSize=30&t=${Date.now()}`);
+        const response = await fetch(`/api/news?page=1&pageSize=2000&t=${Date.now()}`);
         
         if (response.ok) {
           const newsData = await response.json();
