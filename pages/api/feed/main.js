@@ -2413,14 +2413,31 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
 
     // Re-score with taste vector similarity (angle-aware)
+    // Problem 4-lite (2026-04-19): apply sessionTasteVector boost alongside
+    // the long-term taste multiplier. Trending/discovery/fresh_best currently
+    // only use long-term tasteVectorMinilm for re-rank; session-reactivity via
+    // sessionTasteVector was only used in personal pool scoring (scoreArticleV3).
+    // Now these pools also pick up session engagement drift.
+    // Source: Pinterest multi-embedding retrieval framework (KDD 2020),
+    // Instagram two-tower user-embedding approach (Meta Engineering 2023).
+    //   sessionSim ∈ [-1, +1] → sessionBoost ∈ [0.5, 1.5] (multiplicative).
+    //   Gated on sessionTasteVector presence — no-op for users without
+    //   session activity (cold start unaffected).
     for (const { pool } of reRankPools) {
       for (const a of pool) {
         const emb = embeddingCache.get(a.id);
-        if (emb && userTasteVec.length === emb.length) {
+        if (!emb) continue;
+        // Long-term taste (existing)
+        if (userTasteVec.length === emb.length) {
           const sim = cosineSimilarityVec(userTasteVec, emb);
-          // Stronger taste weight: sim 0.8→1.42x, sim 0.5→1.0x, sim 0.3→0.72x
           const tasteMult = 0.3 + Math.max(0, sim) * 1.4;
           a._score *= tasteMult;
+        }
+        // Problem 4-lite: session-reactive taste alignment
+        if (sessionTasteVector && sessionTasteVector.length === emb.length) {
+          const sessionSim = cosineSimilarityVec(sessionTasteVector, emb);
+          const sessionBoost = 1.0 + sessionSim * 0.5;  // [0.5, 1.5]
+          a._score *= sessionBoost;
         }
       }
       pool.sort((a, b) => b._score - a._score);
