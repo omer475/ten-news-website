@@ -1758,6 +1758,88 @@ async function handleV2Feed(req, res, supabase, opts) {
   personalIdOrder = personalIdOrder.filter(id => !sessionExcludeIds.has(id));
   const personalIds = new Set(personalIdOrder);
 
+  // ==========================================
+  // PHASE 2b (Migration 046): AUGMENT personal pool with global leaf bandit
+  // Thompson sample over the user's 100 user_leaf_arms, pick top leaves,
+  // fetch_unseen_by_leaves RPC. Prepend those candidates to personalIdOrder
+  // so they rank high in downstream scoring. Falls back silently when the
+  // user has no leaf arms yet (new user) or leaf bandit hasn't learned
+  // anything (fresh Beta(1,1) across all arms).
+  // Source: TikTok Deep Retrieval (shared paths with per-user preferences).
+  // ==========================================
+  if (userId) {
+    try {
+      const { data: leafArms } = await supabase
+        .from('user_leaf_arms')
+        .select('super_cluster_id, leaf_cluster_id, alpha, beta')
+        .eq('user_id', userId);
+      const armCount = (leafArms || []).length;
+      // Activate only when user has meaningful learned signal: at least 3 arms
+      // diverged from the Beta(1,1) baseline (explored + got feedback).
+      const learnedArms = armCount > 0
+        ? leafArms.filter(a => (a.alpha || 1) > 1.1 || (a.beta || 1) > 1.1).length
+        : 0;
+
+      if (armCount >= 20 && learnedArms >= 3) {
+        // Inline Thompson Sampling over Beta(α, β). Reuses Marsaglia-Tsang
+        // Gamma sampling from Fix 1D (kept local so we don't depend on outer block's closure).
+        const _sampleGamma = (shape) => {
+          if (shape < 1) return _sampleGamma(shape + 1) * Math.pow(Math.random() || 1e-9, 1 / shape);
+          const d = shape - 1 / 3;
+          const c = 1 / Math.sqrt(9 * d);
+          for (;;) {
+            let x, v;
+            do {
+              const u1 = Math.random(), u2 = Math.random();
+              x = Math.sqrt(-2 * Math.log(u1 || 1e-9)) * Math.cos(2 * Math.PI * u2);
+              v = 1 + c * x;
+            } while (v <= 0);
+            v = v * v * v;
+            const u = Math.random() || 1e-9;
+            if (u < 1 - 0.0331 * x * x * x * x) return d * v;
+            if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+          }
+        };
+        const _sampleBeta = (a, b) => {
+          const x = _sampleGamma(a);
+          const y = _sampleGamma(b);
+          return (x + y) > 0 ? x / (x + y) : 0.5;
+        };
+
+        const sampled = leafArms.map(a => ({
+          super: a.super_cluster_id,
+          leaf: a.leaf_cluster_id,
+          theta: _sampleBeta(a.alpha || 1, a.beta || 1),
+        }));
+        sampled.sort((a, b) => b.theta - a.theta);
+        const topLeaves = sampled.slice(0, 10).map(s => ({ super: s.super, leaf: s.leaf }));
+
+        const { data: leafArticles } = await supabase.rpc('fetch_unseen_by_leaves', {
+          p_user_id: userId,
+          p_leaves: topLeaves,
+          p_per_leaf: 20,
+          p_hours_window: 168,
+          p_min_score: 400,
+        });
+
+        const leafAdded = [];
+        for (const a of (leafArticles || [])) {
+          if (!personalIds.has(a.id) && !sessionExcludeIds.has(a.id) && !canonicalSeenIds.has(a.id)) {
+            leafAdded.push(a.id);
+            personalIds.add(a.id);
+          }
+        }
+        // Prepend leaf picks so they rank high in personal pool during downstream MMR.
+        if (leafAdded.length > 0) {
+          personalIdOrder = [...leafAdded, ...personalIdOrder];
+        }
+        console.log(`[feed:leaf-bandit] arms=${armCount} learned=${learnedArms} leaves=${topLeaves.length} added=${leafAdded.length}`);
+      }
+    } catch (e) {
+      console.log(`[feed:leaf-bandit] error: ${e?.message || e}`);
+    }
+  }
+
   // TRENDING: category-cap per category, exclude personal/seen
   // Cold-start users get higher caps since they have no personal pool
   // Category cap per pool — prevents one dominant category from flooding
