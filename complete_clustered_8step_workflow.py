@@ -1651,6 +1651,26 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
+            # Real-time global cluster assignment (Migration 046).
+            # Compares article embedding to last-nightly-run centroids and returns
+            # top-3 nearest leaves. Falls back to None fields if centroids aren't
+            # populated yet (nightly hasn't run) — article will be clustered in
+            # the next nightly batch.
+            cluster_super = None
+            cluster_leaf = None
+            cluster_assigns = None
+            if article_embedding_minilm:
+                try:
+                    from services.cluster_assign_helper import assign_clusters_for_embedding
+                    _ca = assign_clusters_for_embedding(article_embedding_minilm)
+                    cluster_super = _ca.get('super_cluster_id')
+                    cluster_leaf = _ca.get('leaf_cluster_id')
+                    cluster_assigns = _ca.get('cluster_assignments')
+                    if cluster_super is not None:
+                        print(f"   🗂️  [Cluster {cluster_id}] global cluster: super={cluster_super} leaf={cluster_leaf}")
+                except Exception as e:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Global cluster assignment failed: {e}")
+
             # ANN concept entity tagging: find matching entities via embedding similarity
             # Then validate each match by checking if entity name/alias appears in article text
             if article_embedding_minilm:
@@ -1813,6 +1833,9 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'author_name': matched_author_name,
                 'pages': article_pages,
                 'typed_signals': article_typed_signals,
+                'super_cluster_id': cluster_super,
+                'leaf_cluster_id': cluster_leaf,
+                'cluster_assignments': cluster_assigns,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
