@@ -2049,7 +2049,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (userId) {
     const { data: signalRows } = await supabase
       .from('user_entity_signals')
-      .select('entity, positive_count, negative_count')
+      .select('entity, positive_count, negative_count, positive_7d, negative_7d')
       .eq('user_id', userId)
       .or('positive_count.gt.0,negative_count.gt.0')
       .limit(500);
@@ -2058,10 +2058,37 @@ async function handleV2Feed(req, res, supabase, opts) {
         entitySignals[row.entity] = {
           positive: row.positive_count || 0,
           negative: row.negative_count || 0,
+          positive_7d: row.positive_7d || 0,
+          negative_7d: row.negative_7d || 0,
         };
       }
     }
   }
+
+  // Fix E (2026-04-19): pivot-mode selector support. When the algorithm enters
+  // skip-cascade recovery, pivot should AMPLIFY the user's strongest recent
+  // positive signals rather than filter out negatives. Source: TikTok
+  // retention-oriented session design (NYT 2021 leak) — negative feedback
+  // shifts the system toward content with higher predicted positive engagement,
+  // not neutral content. Conviction floor: >=5 total events and >=0.65 positive
+  // ratio. Sort by positive_7d desc (with positive_count desc tiebreak).
+  const topPositiveSignals = (() => {
+    const candidates = Object.entries(entitySignals)
+      .filter(([entity]) => !entity.startsWith('lang:') && entity !== 'loc:usa')
+      .filter(([, rec]) => {
+        const total = (rec.positive || 0) + (rec.negative || 0);
+        if (total < 5) return false;
+        return (rec.positive / total) >= 0.65;
+      });
+    candidates.sort((a, b) => {
+      const a7 = a[1].positive_7d || 0;
+      const b7 = b[1].positive_7d || 0;
+      if (b7 !== a7) return b7 - a7;
+      return (b[1].positive || 0) - (a[1].positive || 0);
+    });
+    return candidates.slice(0, 8).map(c => c[0]);
+  })();
+  const topPositiveSet = new Set(topPositiveSignals);
 
   // Compute entity affinity from signals: (positive - negative) / (positive + negative)
   // Returns -1 to +1
@@ -2085,10 +2112,35 @@ async function handleV2Feed(req, res, supabase, opts) {
 
     for (const sig of signals) {
       const record = entitySignals[sig];
-      if (!record) continue;
-      const affinity = computeEntityAffinity(record);
-      affinitySum += affinity;
-      matchCount++;
+      if (record) {
+        // Signal is in DB — use as-is. Fix C's sessionTopicPenalty handles
+        // session-level downweighting separately (applied as a multiplier in
+        // the scoring layer) so we do NOT stack an additional penalty here.
+        const affinity = computeEntityAffinity(record);
+        affinitySum += affinity;
+        matchCount++;
+        continue;
+      }
+      // Fix G (2026-04-19): in-memory skip overlay to close the write-latency
+      // race. When user skips an article at T and requests the next feed page
+      // at T+3s, track.js's fire-and-forget write to user_entity_signals may
+      // not have propagated — the new signal is invisible to Fix C and to this
+      // multiplier. This overlay treats such signals as fresh negatives for
+      // THIS request only. Gated on !record so we don't double-penalize
+      // signals already captured in the DB (which Fix C handles).
+      // Mirrors Monolith's minute-granularity sparse-embedding sync (Liu et
+      // al. 2022): critical session signals must influence the next query,
+      // not the one after.
+      if (typeof sig !== 'string' || sig.startsWith('lang:') || sig === 'loc:usa') continue;
+      const inMemSkips = sessionSignalSkips.get(sig) || 0;
+      if (inMemSkips > 0) {
+        // -0.3 per skip, bounded at -1.0. Penalty is calibration; raised from
+        // -0.2 because gating to first-time-in-session signals means it carries
+        // the full load of the write-latency bridge.
+        const affinity = Math.max(-1.0, -0.3 * inMemSkips);
+        affinitySum += affinity;
+        matchCount++;
+      }
     }
 
     // Tagged but user has no record on any signal — mild penalty so strongly-matched
@@ -2241,6 +2293,14 @@ async function handleV2Feed(req, res, supabase, opts) {
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
       let s = (article.ai_final_score || 0) * recency * sigMult;
+      // Fix F (2026-04-19): soft-exclude fresh_best articles whose matched
+      // signals average clearly negative. The existing multiplier is already
+      // applied, but fresh_best's freshness weighting can outweigh a 0.28
+      // multiplier on an 800-point AI score (observed 04-19 10:01 with
+      // Spain Immigrants and Russia Soldiers). Additional 70% penalty when
+      // sigMult < 0.4. Only on fresh_best — trending/discovery/personal don't
+      // have the freshness-dominance problem. Threshold and penalty inferred.
+      if (sigMult < 0.4) s *= 0.3;
       s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -3227,17 +3287,37 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (usePivotMode) {
-        // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive)
-        // Use lambda=0.5 (MORE diversity) not 0.8 — the old 0.8 caused topic flooding
-        const pivotFilter = (a) => entitySignalMultiplier(a) >= 1.0;
-        const pivotPPool = pPool.filter(pivotFilter);
-        const pivotTPool = tPool.filter(pivotFilter);
-        const pivotDPool = dPool.filter(pivotFilter);
-        // Use low lambda for maximum diversity — pivot is about breaking the skip streak
-        picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
-        // NO fallback to unfiltered pool — better to show fewer articles than repeat the skip pattern
+        // Fix E (2026-04-19): selector, not filter. The old filter
+        // (entitySignalMultiplier >= 1.0) admitted vacuous articles whose only
+        // user-matched signals were lang:en + loc:usa, yielding 0% engagement
+        // on pivot pages (observed 04-19 10:08 UTC, 0/22 engaged). Rebuild as
+        // a POSITIVE selector sourcing from the user's top-8 strongest recent
+        // positive signals (see topPositiveSignals above). Cold-start safety:
+        // if user has <3 qualifying positive signals, fall back to the old
+        // filter behavior so cold users aren't starved.
+        if (topPositiveSignals.length >= 3) {
+          const pivotMatches = (a) => {
+            const sigs = safeJsonParse(a.typed_signals, []);
+            if (!Array.isArray(sigs)) return false;
+            return sigs.some(s => topPositiveSet.has(s));
+          };
+          const pivotTPool = tPool.filter(pivotMatches);
+          const pivotDPool = dPool.filter(pivotMatches);
+          const pivotPPool = pPool.filter(pivotMatches);
+          picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
+          if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
+          if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
+          // NO fallback to unfiltered pool — better fewer articles than skip-pattern repeat
+        } else {
+          // Cold-start fallback: old filter behavior (multiplier >= 1.0).
+          const pivotFilter = (a) => entitySignalMultiplier(a) >= 1.0;
+          const pivotTPool = tPool.filter(pivotFilter);
+          const pivotDPool = dPool.filter(pivotFilter);
+          const pivotPPool = pPool.filter(pivotFilter);
+          picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
+          if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
+          if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
+        }
       } else if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {
