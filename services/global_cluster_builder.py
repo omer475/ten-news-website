@@ -306,31 +306,52 @@ def write_centroids_to_db(sb, super_centroids: np.ndarray,
 
 def write_article_clusters(sb, ids: List[int], super_labels: np.ndarray,
                             leaf_labels: np.ndarray, assignments):
-    """Batch-update published_articles with cluster columns."""
-    log.info(f"writing cluster assignments for {len(ids)} articles")
+    """Parallel-update published_articles with cluster columns.
+
+    Serial UPDATE per row against the Supabase REST API takes ~100ms each,
+    which is 2+ hours for 75k articles. ThreadPoolExecutor with 24 workers
+    drops this to ~10 minutes.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    log.info(f"writing cluster assignments for {len(ids)} articles (parallel, 24 workers)")
     n = len(ids)
-    written = 0
     t0 = time.time()
 
-    for i in range(0, n, BATCH_SIZE_UPDATE):
-        batch_ids = ids[i:i+BATCH_SIZE_UPDATE]
-        batch_super = super_labels[i:i+BATCH_SIZE_UPDATE]
-        batch_leaf = leaf_labels[i:i+BATCH_SIZE_UPDATE]
-        batch_assigns = assignments[i:i+BATCH_SIZE_UPDATE]
+    def _update_one(args):
+        aid, s, l, ap = args
+        try:
+            sb.table('published_articles').update({
+                'super_cluster_id': int(s),
+                'leaf_cluster_id': int(l),
+                'cluster_assignments': ap,
+            }).eq('id', int(aid)).execute()
+            return True
+        except Exception as e:
+            log.warning(f"  update failed for id={aid}: {e}")
+            return False
 
-        for aid, s, l, ap in zip(batch_ids, batch_super, batch_leaf, batch_assigns):
-            try:
-                sb.table('published_articles').update({
-                    'super_cluster_id': int(s),
-                    'leaf_cluster_id': int(l),
-                    'cluster_assignments': ap,
-                }).eq('id', int(aid)).execute()
+    written = 0
+    failed = 0
+    last_log = t0
+
+    tasks = list(zip(ids, super_labels, leaf_labels, assignments))
+
+    with ThreadPoolExecutor(max_workers=24) as pool:
+        for ok in pool.map(_update_one, tasks, chunksize=1):
+            if ok:
                 written += 1
-            except Exception as e:
-                log.warning(f"  update failed for id={aid}: {e}")
+            else:
+                failed += 1
+            now = time.time()
+            if now - last_log >= 5.0:  # log every 5 seconds
+                elapsed = now - t0
+                rate = written / elapsed if elapsed > 0 else 0
+                eta = (n - written - failed) / rate if rate > 0 else 0
+                log.info(f"  progress: {written}/{n} in {elapsed:.1f}s ({rate:.1f}/s, ETA {eta:.0f}s)")
+                last_log = now
 
-        elapsed = time.time() - t0
-        log.info(f"  progress: {written}/{n} in {elapsed:.1f}s")
+    elapsed = time.time() - t0
+    log.info(f"  final: {written} updated, {failed} failed in {elapsed:.1f}s")
 
 
 def log_distribution_stats(leaf_counts: np.ndarray):
