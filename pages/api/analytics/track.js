@@ -756,9 +756,41 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('embedding_minilm')
+          .select('embedding_minilm, cluster_assignments')
           .eq('id', article_id)
           .single()
+
+        // Phase 2 (Migration 046): global-leaf bandit update via multi-label
+        // cluster_assignments. For each of the article's top-3 leaves, credit
+        // the user's user_leaf_arms with weight × dwell_signal_weight.
+        // Runs alongside the legacy per-user cluster bandit below so we can
+        // verify the new system populates correctly before retiring the old.
+        if (artRow?.cluster_assignments && Array.isArray(artRow.cluster_assignments) && artRow.cluster_assignments.length > 0) {
+          const explicitWeightForLeaf = event_type === 'article_saved' ? 3.0
+            : event_type === 'article_shared' ? 2.0
+            : event_type === 'article_liked' ? 1.5
+            : event_type === 'article_revisit' ? 4.0
+            : null
+          const leafBandit = explicitWeightForLeaf != null ? explicitWeightForLeaf : _banditSig.weight
+          for (const ca of artRow.cluster_assignments) {
+            const credit = leafBandit * (Number(ca.weight) || 0)
+            if (credit < 0.02) continue
+            const superIdx = Number(ca.super)
+            const leafIdx = Number(ca.leaf)
+            if (!Number.isInteger(superIdx) || !Number.isInteger(leafIdx)) continue
+            try {
+              await admin.rpc('update_leaf_arm', {
+                p_user_id: effectiveUserId,
+                p_super: superIdx,
+                p_leaf: leafIdx,
+                p_is_positive: isPositive,
+                p_weight: credit,
+              })
+            } catch (e) {
+              console.log('[leaf-bandit] rpc error:', e?.message || e)
+            }
+          }
+        }
 
         if (artRow?.embedding_minilm && Array.isArray(artRow.embedding_minilm)) {
           const rpcParams2 = effectiveUserId
