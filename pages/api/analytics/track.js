@@ -6,6 +6,53 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 // force-merge when at cap instead of silently creating an 8th, 9th, ... cluster.
 const MAX_CLUSTERS = 7
 
+// Fix M (2026-04-19): TikTok-style single-event dwell signal.
+// The app is a vertical-swipe feed — one action (swipe-away), one measurement
+// (dwell). The iOS client labels events as article_skipped/view/engaged by
+// dwell tier, but the server ignores those labels for signal direction and
+// uses raw dwell instead. Source: TikTok passive-skip model (arxiv 2308.04086),
+// Tencent dwell-time reweighting (arxiv 2209.09000).
+//
+// Calibration for this app's short-card format:
+//   offset=5s  — user-stated engagement threshold
+//   tau=2      — tight transition, saturates near 10s (cards are bullets+image)
+//   max_dwell=30s — cap backgrounded-app outliers
+//
+//   1s  → -0.76 (strong negative, instant swipe)
+//   3s  → -0.46 (quick-skip)
+//   5s  →  0.00 (neutral boundary)
+//   7s  → +0.46
+//   10s → +0.85 (clearly engaged)
+//   15s → +1.00 (saturated)
+function dwellSignal(dwellSec) {
+  if (dwellSec == null || dwellSec < 0) return { direction: 'neutral', weight: 0 }
+  const clamped = Math.min(dwellSec, 30)
+  const offset = 5
+  const tau = 2
+  const genuineness = 1 / (1 + Math.exp(-(clamped - offset) / tau))
+  const signed = (genuineness - 0.5) * 2  // [-1, +1]
+  if (signed < 0) return { direction: 'negative', weight: Math.abs(signed) }
+  if (signed > 0) return { direction: 'positive', weight: signed }
+  return { direction: 'neutral', weight: 0 }
+}
+
+// Fix M: signal-write wrapper. Ignores client-side event_type classification
+// (article_skipped / article_view / article_engaged are all dwell tiers of the
+// same underlying swipe event). Direction is determined from dwell alone.
+// Explicit actions stack on top with elevated weights.
+function signalFromCard(eventType, dwellSec) {
+  // Explicit action events override dwell-based direction (always positive).
+  if (eventType === 'article_liked')   return { direction: 'positive', weight: 2.0 }
+  if (eventType === 'article_saved')   return { direction: 'positive', weight: 3.0 }
+  if (eventType === 'article_shared')  return { direction: 'positive', weight: 3.0 }
+  if (eventType === 'article_revisit') return { direction: 'positive', weight: 2.5 }
+
+  // article_skipped / article_view / article_engaged / article_detail_view:
+  // all are dwell-classified labels for the same "card impression" event.
+  // Use raw dwell to decide direction + magnitude.
+  return dwellSignal(dwellSec)
+}
+
 // ============================================================
 // K-MEANS CLUSTERING (JavaScript implementation for V23)
 // ============================================================
@@ -586,45 +633,65 @@ export default async function handler(req, res) {
     // Reads typed_signals from the article, writes to user_entity_signals.
     // ============================================================
 
+    // Fix M (2026-04-19): card-impression events (skipped/view/engaged) are
+    // all client-side labels for one underlying swipe action. Ignore the
+    // event_type for direction; use raw dwell to decide positive/negative.
+    // Explicit actions (liked/saved/shared) override dwell-direction.
+    // article_exit is dropped entirely — recordSwipeAway already covers the
+    // feed signal and article_exit from the detail-view path would double-write.
+    const SIGNAL_EVENTS = new Set([
+      'article_skipped', 'article_view', 'article_engaged', 'article_detail_view',
+      'article_liked', 'article_saved', 'article_shared', 'article_revisit',
+    ])
+
+    if (effectiveUserId && article_id && SIGNAL_EVENTS.has(event_type)) {
+      const _dwellSec = metadata?.dwell ? parseFloat(metadata.dwell)
+        : metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds)
+        : metadata?.engaged_seconds ? parseFloat(metadata.engaged_seconds)
+        : null
+      const _sig = signalFromCard(event_type, _dwellSec)
+
+      // dwellSignal returns 'neutral' for missing dwell or dead-center 5s.
+      // Neutral means no write — we don't nudge entity signals on ambiguous events.
+      if (_sig && _sig.direction !== 'neutral' && _sig.weight > 0.02) {
+        const isPositive = _sig.direction === 'positive'
+
+        admin
+          .from('published_articles')
+          .select('typed_signals')
+          .eq('id', article_id)
+          .single()
+          .then(({ data: articleData }) => {
+            if (!articleData) return
+            const typed = typeof articleData.typed_signals === 'string'
+              ? JSON.parse(articleData.typed_signals || '[]')
+              : (articleData.typed_signals || [])
+            if (!Array.isArray(typed) || typed.length === 0) return
+
+            const validSignals = typed.filter(s => {
+              if (typeof s !== 'string') return false
+              const parts = s.split(':')
+              if (parts.length !== 2) return false
+              return parts[1].length > 0 && parts[1].length <= 64
+            })
+            if (validSignals.length === 0) return
+
+            admin.rpc('bulk_update_entity_signals', {
+              p_user_id: effectiveUserId,
+              p_signals: validSignals,
+              p_is_positive: isPositive,
+              p_weight: _sig.weight,
+            }).then(({ error: sigError }) => {
+              if (sigError) console.log('[analytics] entity signal update failed:', sigError.message)
+            })
+          })
+          .catch(() => {})
+      }
+    }
+
+    // Legacy event_type sets retained for older code paths below (cluster/bandit block).
     const POSITIVE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view', 'article_liked', 'article_shared']
     const NEGATIVE_EVENTS = ['article_skipped']
-
-    if (effectiveUserId && article_id && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
-      const isPositive = POSITIVE_EVENTS.includes(event_type)
-
-      // Use atomic RPC to prevent race conditions (concurrent events overwriting each other)
-
-      admin
-        .from('published_articles')
-        .select('typed_signals')
-        .eq('id', article_id)
-        .single()
-        .then(({ data: articleData }) => {
-          if (!articleData) return
-          const typed = typeof articleData.typed_signals === 'string'
-            ? JSON.parse(articleData.typed_signals || '[]')
-            : (articleData.typed_signals || [])
-          if (!Array.isArray(typed) || typed.length === 0) return
-
-          // Filter to valid typed signals (type:value format, not category words)
-          const validSignals = typed.filter(s => {
-            if (typeof s !== 'string') return false
-            const parts = s.split(':')
-            if (parts.length !== 2) return false
-            return parts[1].length > 0 && parts[1].length <= 64
-          })
-          if (validSignals.length === 0) return
-
-          admin.rpc('bulk_update_entity_signals', {
-            p_user_id: effectiveUserId,
-            p_signals: validSignals,
-            p_is_positive: isPositive,
-          }).then(({ error: sigError }) => {
-            if (sigError) console.log('[analytics] entity signal update failed:', sigError.message)
-          })
-        })
-        .catch(() => {})
-    }
 
     // Explore page signals → typed entity signals
     const EXPLORE_EVENTS = ['explore_topic_tap', 'explore_topic_dwell', 'explore_article_tap']
@@ -672,12 +739,20 @@ export default async function handler(req, res) {
       }
     }
 
-    // Awaited block: atomic cluster maintenance (positive events) + bandit
-    // posterior update (positive or negative). Runs synchronously before the
+    // Awaited block: atomic cluster maintenance (positive direction) + bandit
+    // posterior update (either direction). Runs synchronously before the
     // response so Vercel doesn't kill mid-chain.
-    if (effectiveUserId && article_id
-        && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
-      const isPositive = POSITIVE_EVENTS.includes(event_type)
+    // Fix M: use dwell-based direction (not event_type). Skip on neutral.
+    if (effectiveUserId && article_id && SIGNAL_EVENTS.has(event_type)) {
+      const _banditDwellSec = metadata?.dwell ? parseFloat(metadata.dwell)
+        : metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds)
+        : metadata?.engaged_seconds ? parseFloat(metadata.engaged_seconds)
+        : null
+      const _banditSig = signalFromCard(event_type, _banditDwellSec)
+      if (!_banditSig || _banditSig.direction === 'neutral' || _banditSig.weight <= 0.02) {
+        return res.status(200).json({ ok: true })
+      }
+      const isPositive = _banditSig.direction === 'positive'
       try {
         const { data: artRow } = await admin
           .from('published_articles')
@@ -731,16 +806,20 @@ export default async function handler(req, res) {
             }
 
             if (bestIdx >= 0) {
-              const weight = event_type === 'article_saved' ? 3.0
+              // Fix M: bandit weight combines explicit-action elevation with
+              // dwell magnitude. For implicit events (dwell-classified), use
+              // the sigmoid weight directly. For explicit, use legacy weights.
+              const explicitWeight = event_type === 'article_saved' ? 3.0
                 : event_type === 'article_shared' ? 2.0
                 : event_type === 'article_liked' ? 1.5
                 : event_type === 'article_revisit' ? 4.0
-                : 1.0
+                : null
+              const banditWeight = explicitWeight != null ? explicitWeight : _banditSig.weight
               const { error: armErr } = await admin.rpc('update_bandit_arm', {
                 p_user_id: effectiveUserId,
                 p_arm_key: `cluster:${bestIdx}`,
                 p_is_positive: isPositive,
-                p_weight: isPositive ? weight : 1.0,
+                p_weight: banditWeight,
               })
               if (armErr) console.log('[bandit] rpc error:', armErr.message)
             }
