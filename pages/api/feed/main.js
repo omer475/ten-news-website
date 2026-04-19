@@ -2007,18 +2007,69 @@ async function handleV2Feed(req, res, supabase, opts) {
     return 1.0;
   }
 
+  // Fix L (2026-04-19): embedding-space secondary check. Articles whose
+  // 384-dim MiniLM embedding is far from the user's current session taste
+  // vector get a light downweight. Catches semantic negatives that
+  // typed_signals miss (the "Pakistan war article missing topic:middle_east"
+  // class of taxonomic gaps flagged 04-19). Reuses existing sessionTasteVector
+  // (session-engagement contrastive centroid) or tasteVectorMinilm fallback —
+  // no new DB round-trip. Apply in trending/discovery/fresh_best scorers only.
+  // Personal already uses sessionVecSim; pivot selector is positive-filtered.
+  const _fixLRef = sessionTasteVector || tasteVectorMinilm;
+  function embeddingAffinityPenalty(article) {
+    if (!_fixLRef) return 1.0;
+    const emb = safeJsonParse(article.embedding_minilm, null);
+    if (!emb || !Array.isArray(emb) || emb.length !== 384 || _fixLRef.length !== 384) return 1.0;
+    const sim = cosineSimilarityVec(emb, _fixLRef);
+    if (sim < 0.10) return 0.85;
+    if (sim < 0.20) return 0.95;
+    return 1.0;
+  }
+
   function getCategorySuppression(article) {
     const cat = article.category;
-
-    // Session-reactive: 5+ articles this session with <15% engagement → suppress NOW
     const sessionData = sessionCatStats[cat];
-    if (sessionData && sessionData.impressions >= 5) {
-      const sessionRate = sessionData.engaged / sessionData.impressions;
-      if (sessionRate < 0.15) return 0.20;
-    }
+    const historical = categorySuppressionMap[cat] || 1.0;
+    if (!sessionData) return historical;
 
-    // 7-day historical suppression (slower, more stable)
-    return categorySuppressionMap[cat] || 1.0;
+    // Fix K (2026-04-19): adaptive threshold. Old >=5 missed short sessions —
+    // user had 4 Sports and 4 World skips on a 2-page session and neither
+    // category suppressed (11:57 UTC diagnostic). Scale threshold with total
+    // session impressions: min 3, else 15% of session length.
+    const totalSessionImpressions = Object.values(sessionCatStats)
+      .reduce((sum, s) => sum + (s.impressions || 0), 0);
+    const threshold = Math.max(3, Math.floor(totalSessionImpressions * 0.15));
+    if (sessionData.impressions < threshold) return historical;
+
+    const sessionRate = sessionData.engaged / sessionData.impressions;
+    if (sessionRate >= 0.15) return historical;
+
+    // Fix K (2026-04-19): category is being skipped, but don't blanket-suppress.
+    // First, defer to Fix C (sessionTopicPenalty): Fix C is signal-level and
+    // more specific. If Fix C already fires on this article we skip Fix K's
+    // entity-overlap check to avoid multiplicative stacking (Pinterest
+    // PinnerSage / Twitter home-mixer / YouTube MMoE all avoid stacking
+    // multiplicative penalties — drift risk).
+    const fixCPenalty = sessionTopicPenalty(article);
+    if (fixCPenalty < 1.0) return historical;
+
+    // Fix K: Fix C didn't fire. Check if this article shares ANY meaningful
+    // entity with articles the user skipped this session. Presence-based
+    // (>=1 overlap). If no overlap, the article's sub-topic differs from
+    // what user skipped — don't penalize (category label alone isn't signal).
+    const articleSignals = safeJsonParse(article.typed_signals, []);
+    if (Array.isArray(articleSignals)) {
+      for (const sig of articleSignals) {
+        if (typeof sig !== 'string') continue;
+        if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
+        if ((sessionSignalSkips.get(sig) || 0) >= 1) {
+          return 0.20;  // entity overlap with session skips: full suppression
+        }
+      }
+    }
+    // No entity overlap — different sub-topic within a skipped category.
+    // Don't penalize via session path; historical suppression still applies.
+    return historical;
   }
 
   // Underfed winner boost: amplify categories with high engagement but low serving volume
@@ -2250,6 +2301,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
     })
@@ -2262,6 +2314,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
     })
@@ -2310,6 +2363,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       // extremely-negative articles. Additional 70% penalty when 0.2 <= mult < 0.4.
       else if (sigMult < 0.4) s *= 0.3;
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
         ...article,
