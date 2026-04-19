@@ -1331,15 +1331,21 @@ async function handleV2Feed(req, res, supabase, opts) {
     // (let 3.6k seen articles return from SQL to be filtered JS-side) and
     // URL-length bound. RPC does NOT EXISTS anti-join against
     // user_feed_impressions, returning only truly-unseen candidates.
+    // Fix J (2026-04-19): per-category limit bumps to 300 when this isn't the
+    // first request of the session (sessionInteractionCount > 0). Heavy users
+    // exhaust the 200/cat pool by page 5-6; the larger fetch extends runway
+    // without requiring a mid-request second round-trip.
     (async () => {
       const TRENDING_CATS = ['Business', 'Tech', 'Science', 'Entertainment', 'Sports', 'Politics', 'World', 'Health', 'Finance', 'Lifestyle', 'Crypto'];
+      const _sessionHasActivity = (sessionSkippedIds?.length || 0) + (sessionEngagedIds?.length || 0) + (sessionGlancedIds?.length || 0) > 0;
+      const _perCat = _sessionHasActivity ? 300 : 200;
       if (userId) {
         const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
           p_user_id: userId,
           p_categories: TRENDING_CATS,
           p_min_score: 400,
           p_hours_window: 168,
-          p_per_category: 200,
+          p_per_category: _perCat,
         });
         return { data: data || [], error };
       }
@@ -2293,14 +2299,15 @@ async function handleV2Feed(req, res, supabase, opts) {
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
       let s = (article.ai_final_score || 0) * recency * sigMult;
-      // Fix F (2026-04-19): soft-exclude fresh_best articles whose matched
-      // signals average clearly negative. The existing multiplier is already
-      // applied, but fresh_best's freshness weighting can outweigh a 0.28
-      // multiplier on an 800-point AI score (observed 04-19 10:01 with
-      // Spain Immigrants and Russia Soldiers). Additional 70% penalty when
-      // sigMult < 0.4. Only on fresh_best — trending/discovery/personal don't
-      // have the freshness-dominance problem. Threshold and penalty inferred.
-      if (sigMult < 0.4) s *= 0.3;
+      // Fix H (2026-04-19): hard floor. When matched signals average clearly
+      // negative (mult < 0.2), Fix F's 0.3× soft-penalty can't save a pool
+      // where all surviving articles score ~1.5 and the user's fresh candidate
+      // residue is 3.7× skewed toward negatives (04-19 diagnostic Q2). Return
+      // -Infinity so the article is fully excluded from fresh_best.
+      if (sigMult < 0.2) { s = -Infinity; }
+      // Fix F (2026-04-19): soft-exclude band for clearly-misaligned but not
+      // extremely-negative articles. Additional 70% penalty when 0.2 <= mult < 0.4.
+      else if (sigMult < 0.4) s *= 0.3;
       s *= sessionTopicPenalty(article);  // Fix C
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -2445,8 +2452,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   const iTiers = splitThreeTiers(interestScoredFiltered);
   // fresh_best: skip three-tier split — already pre-filtered for freshness (48h).
   // Directly split into unseen/resurfaced to avoid isStillFresh rejecting articles.
-  const fUnseen = freshBestScoredFiltered.filter(a => !allSeenSet.has(a.id));
-  const fResurfaced = freshBestScoredFiltered.filter(a => allSeenSet.has(a.id));
+  // Fix H: drop Fix-H hard-excluded articles (_score = -Infinity).
+  const fUnseen = freshBestScoredFiltered.filter(a => !allSeenSet.has(a.id) && Number.isFinite(a._score));
+  const fResurfaced = freshBestScoredFiltered.filter(a => allSeenSet.has(a.id) && Number.isFinite(a._score));
   const fTiers = { freshUnseen: fUnseen, resurfaced: fResurfaced, staleUnseen: [] };
 
   // Count fresh unseen for feed_state
@@ -2478,6 +2486,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   } else {
     // Personal exhausted — trending + discovery first, fresh_best last resort
     SLOTS = ['T','D','T','D','T','F','T','D','T','F'];           // 50T/30D/20F
+  }
+
+  // Fix I (2026-04-19): when fresh_best pool is thin (post Fix H hard-floor),
+  // skipping fresh_best slots entirely is better than padding the page with
+  // mediocre content. Reallocate 'F' slots to 'T' (2/3) and 'D' (1/3). Threshold
+  // of 3 viable articles and the 2:1 T:D split are calibration parameters.
+  if (fUnseen.length < 3 && SLOTS.includes('F')) {
+    let fIdx = 0;
+    SLOTS = SLOTS.map(s => {
+      if (s !== 'F') return s;
+      const rep = fIdx % 3 === 2 ? 'D' : 'T';
+      fIdx++;
+      return rep;
+    });
   }
 
   // Phase 1: Fill from FRESH UNSEEN candidates only
