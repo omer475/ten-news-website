@@ -1238,6 +1238,7 @@ export default async function handler(req, res) {
 // ==========================================
 
 async function handleV2Feed(req, res, supabase, opts) {
+  const _feedT0 = Date.now();  // Fix J timing monitor
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
         similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
         canonicalSeenIds, seenMeta, totalInteractions,
@@ -3759,6 +3760,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     : null;
 
   // console.log(`[feed-diag] FINAL: selected=${selected.length} feedState=${feedState} freshCount=${totalFreshUnseen} formatted=${formattedArticles.length}`);
+
+  // Fix J (2026-04-19): per-request timing for p95 monitoring after the
+  // 200→300 per-cat bump. Watch for regressions >3s on Vercel.
+  const _feedMs = Date.now() - _feedT0;
+  const _sessHit = (sessionSkippedIds?.length || 0) + (sessionEngagedIds?.length || 0) + (sessionGlancedIds?.length || 0);
+  console.log(`[feed:timing] ms=${_feedMs} selected=${selected.length} sess_hit=${_sessHit} user=${userId || 'guest'}`);
 
   return res.status(200).json({
     articles: formattedArticles,
