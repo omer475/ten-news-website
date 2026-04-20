@@ -1767,6 +1767,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // anything (fresh Beta(1,1) across all arms).
   // Source: TikTok Deep Retrieval (shared paths with per-user preferences).
   // ==========================================
+  // Hoisted so the caught_up feedState decision can see whether the leaf
+  // bandit / pivot path could deliver more content on the next request.
+  let userLeafArmsLearned = 0;
   if (userId) {
     try {
       const { data: leafArms } = await supabase
@@ -1779,6 +1782,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const learnedArms = armCount > 0
         ? leafArms.filter(a => (a.alpha || 1) > 1.1 || (a.beta || 1) > 1.1).length
         : 0;
+      userLeafArmsLearned = learnedArms;
 
       if (armCount >= 20 && learnedArms >= 3) {
         // Inline Thompson Sampling over Beta(α, β). Reuses Marsaglia-Tsang
@@ -3901,10 +3905,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   //   thinning       — fresh content running low, might want to show "more coming soon"
   //   mostly_caught_up — very few fresh articles, show divider before resurfaced
   //   caught_up      — no fresh articles at all
-  const feedState = totalFreshUnseen >= requestedLimit ? 'normal'
+  //
+  // Phase 2c (2026-04-20): demote caught_up → thinning when the leaf bandit
+  // has enough learned arms (>=5) to drive pivot mode on the next request.
+  // Observed 04-19 session showed users seeing "all caught up" premature —
+  // they scrolled past, pivot fired, 40 more articles served. Don't claim
+  // "done" when there's a realistic chance the next request delivers more.
+  const canLeafBanditDeliverMore = userLeafArmsLearned >= 5;
+  let feedState = totalFreshUnseen >= requestedLimit ? 'normal'
     : totalFreshUnseen >= 5 ? 'thinning'
     : totalFreshUnseen > 0 ? 'mostly_caught_up'
     : 'caught_up';
+  if (feedState === 'caught_up' && canLeafBanditDeliverMore) {
+    feedState = 'thinning';  // pivot/leaf-augment can still deliver
+  }
 
   const caughtUpMessage = feedState === 'caught_up'
     ? "You're all caught up! Here are some stories worth another look."
