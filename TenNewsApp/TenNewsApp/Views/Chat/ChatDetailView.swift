@@ -93,9 +93,11 @@ struct ChatDetailView: View {
                 isLoading = false
             }
             chatService.startPolling(conversationId: conversation.id) { newMessages in
-                if newMessages.count != messages.count || newMessages.last?.id != messages.last?.id {
-                    messages = newMessages
-                }
+                // Always update — server may enrich messages with article data
+                // or other fields after initial fetch (e.g. article_id populated
+                // on first fetch, but article object populated only after the
+                // backend attaches it). Count+lastID equality is insufficient.
+                messages = newMessages
             }
         }
         .onDisappear {
