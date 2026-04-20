@@ -1,5 +1,6 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { readFractionPenaltyScale, readFractionEngageScale } from '../../../lib/readingTime'
 
 // Hard cap on per-user interest clusters. cluster_user_interests RPC respects
 // this via LEAST(p_max_clusters, ...); the incremental write path below must
@@ -658,7 +659,7 @@ export default async function handler(req, res) {
 
         admin
           .from('published_articles')
-          .select('typed_signals')
+          .select('typed_signals, expected_read_seconds')
           .eq('id', article_id)
           .single()
           .then(({ data: articleData }) => {
@@ -676,11 +677,25 @@ export default async function handler(req, res) {
             })
             if (validSignals.length === 0) return
 
+            // Layer read-fraction on top of Fix M's dwellSignal. Fix M sets
+            // direction + raw-dwell weight calibrated for an "average" card.
+            // For variable-length articles a 3 s skip on a 3-sentence card is
+            // not the same negative as a 3 s skip on a 400-word longform.
+            // Multiply weight by the read-fraction scale so the magnitude
+            // reflects how much of the article was actually consumed.
+            const expected = (articleData.expected_read_seconds && Number.isFinite(articleData.expected_read_seconds))
+              ? articleData.expected_read_seconds : 30
+            const fractionScale = isPositive
+              ? readFractionEngageScale(_dwellSec || 0, expected)
+              : readFractionPenaltyScale(_dwellSec || 0, expected)
+            const finalWeight = _sig.weight * fractionScale
+            if (!(finalWeight > 0.02)) return  // dropped by length-aware dampening
+
             admin.rpc('bulk_update_entity_signals', {
               p_user_id: effectiveUserId,
               p_signals: validSignals,
               p_is_positive: isPositive,
-              p_weight: _sig.weight,
+              p_weight: finalWeight,
             }).then(({ error: sigError }) => {
               if (sigError) console.log('[analytics] entity signal update failed:', sigError.message)
             })
@@ -756,7 +771,7 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('embedding_minilm, cluster_assignments')
+          .select('embedding_minilm, cluster_assignments, expected_read_seconds')
           .eq('id', article_id)
           .single()
 
@@ -771,7 +786,19 @@ export default async function handler(req, res) {
             : event_type === 'article_liked' ? 1.5
             : event_type === 'article_revisit' ? 4.0
             : null
-          const leafBandit = explicitWeightForLeaf != null ? explicitWeightForLeaf : _banditSig.weight
+          // Bandit posterior also gets length-aware reward shaping. A 90 s
+          // dwell on a 10 s card and a 90 s dwell on a 200 s longform are very
+          // different signals; Fix M's _banditSig.weight is dwell-only and
+          // can't tell them apart. Skip the scaling for explicit actions
+          // (save/share/like/revisit) — those carry their own intent.
+          const _expectedRead = (artRow.expected_read_seconds && Number.isFinite(artRow.expected_read_seconds))
+            ? artRow.expected_read_seconds : 30
+          const _fracScale = isPositive
+            ? readFractionEngageScale(_banditDwellSec || 0, _expectedRead)
+            : readFractionPenaltyScale(_banditDwellSec || 0, _expectedRead)
+          const leafBandit = explicitWeightForLeaf != null
+            ? explicitWeightForLeaf
+            : _banditSig.weight * _fracScale
 
           // Credit each leaf in cluster_assignments
           const superCredits = new Map()  // super_idx → summed credit
