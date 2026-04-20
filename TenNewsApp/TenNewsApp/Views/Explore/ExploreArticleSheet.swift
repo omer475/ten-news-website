@@ -11,6 +11,11 @@ struct ExploreArticleSheet: View {
 
     @State private var pagerIndex: Int = 0
     @State private var articlePages: [Article] = []
+    /// Hydrated version of selectedArticle (full bullets, components, etc).
+    /// Preserved across `allArticles` rebuilds so background feed loads don't wipe it.
+    @State private var hydratedPrimary: Article?
+
+    private var primaryArticle: Article { hydratedPrimary ?? selectedArticle }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -24,13 +29,16 @@ struct ExploreArticleSheet: View {
                             article: article,
                             accentColor: Self.accentColor(for: article)
                         )
+                        // Force re-instantiation when hydration adds bullets/components.
+                        // Article: Equatable compares only by id, so SwiftUI otherwise
+                        // skips prop updates when pages[0] is replaced with a hydrated copy.
+                        .id("\(article.id.stringValue)-b\(article.displayBullets.count)-c\(article.components?.count ?? 0)")
                     }
                 } else {
                     Color.black
                 }
             }
 
-            // Back button
             Button {
                 onDismiss()
             } label: {
@@ -43,6 +51,7 @@ struct ExploreArticleSheet: View {
             .padding(.top, 56)
             .padding(.leading, 20)
             .zIndex(10)
+
         }
         .ignoresSafeArea()
         .background(Color.black)
@@ -51,49 +60,48 @@ struct ExploreArticleSheet: View {
             articlePages = buildArticlePages()
         }
         .task(id: selectedArticle.id.stringValue) {
-            // Self-hydrate: if the passed article lacks bullets (came from
-            // Explore where topics/articles endpoint returns minimal data),
-            // fetch the full article directly and update page 0.
-            // Relying on parent's onChange was unreliable — parent state
-            // mutations don't always propagate to child view bodies in time
-            // for the pager to pick up the new article.
-            if selectedArticle.displayBullets.isEmpty || selectedArticle.summaryBulletsNews?.isEmpty ?? true {
-                let articleId = selectedArticle.id.stringValue
-                if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: articleId)) {
-                    if !articlePages.isEmpty, articlePages[0].id.stringValue == response.article.id.stringValue {
-                        articlePages[0] = response.article
-                    }
+            let articleId = selectedArticle.id.stringValue
+            do {
+                let response: ArticleDetailResponse = try await APIClient.shared.get(APIEndpoints.article(id: articleId))
+                hydratedPrimary = response.article
+                if !articlePages.isEmpty, articlePages[0].id.stringValue == response.article.id.stringValue {
+                    articlePages[0] = response.article
                 }
+            } catch {
+                // Silent — user still sees title + image
             }
         }
         .onChange(of: allArticles.count) {
-            // More articles loaded (e.g. search results fetched in background)
-            // Append new ones without disrupting current pager position
             let currentIds = Set(articlePages.map(\.id.stringValue))
             let newArticles = allArticles.filter { !currentIds.contains($0.id.stringValue) }
-            if !newArticles.isEmpty {
-                if preserveOrder {
-                    articlePages.append(contentsOf: newArticles)
-                } else {
-                    articlePages = buildArticlePages()
+            guard !newArticles.isEmpty else { return }
+            if preserveOrder {
+                articlePages.append(contentsOf: newArticles)
+            } else {
+                var rebuilt = buildArticlePages()
+                // Preserve hydration: replace page 0 with hydrated version if available
+                if let hydrated = hydratedPrimary, !rebuilt.isEmpty,
+                   rebuilt[0].id.stringValue == hydrated.id.stringValue {
+                    rebuilt[0] = hydrated
                 }
+                articlePages = rebuilt
             }
         }
         .onChange(of: selectedArticle.displayBullets.count) {
-            // Parent-driven update (e.g. feed cache delivered a hydrated article)
             if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
                 articlePages[0] = selectedArticle
+                hydratedPrimary = selectedArticle
             }
         }
     }
 
-    /// Build the page list once — selected article first, then up to 15 similar articles.
-    /// When preserveOrder is true, keeps the allArticles order (used for feed continuation).
+    /// Build the page list — primary article first (hydrated if available), then up to 15 similar.
     private func buildArticlePages() -> [Article] {
+        let primary = primaryArticle
         let others = allArticles.filter { $0.id != selectedArticle.id }
 
         if preserveOrder {
-            return [selectedArticle] + others
+            return [primary] + others
         }
 
         let selectedCategory = selectedArticle.category
@@ -113,7 +121,7 @@ struct ExploreArticleSheet: View {
             .sorted { $0.1 > $1.1 }
             .prefix(15)
             .map(\.0)
-        return [selectedArticle] + similar
+        return [primary] + similar
     }
 
     private static func accentColor(for article: Article) -> Color {
@@ -128,4 +136,3 @@ struct ExploreArticleSheet: View {
         return Color(hex: hex)
     }
 }
-
