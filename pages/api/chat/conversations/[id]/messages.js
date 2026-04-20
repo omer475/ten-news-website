@@ -32,16 +32,24 @@ export default async function handler(req, res) {
       const { data: messages, error } = await query;
       if (error) throw error;
 
-      // Attach article data for article shares
+      // Attach article data for article shares.
+      // Note: published_articles uses `title_news`, not `title`. Alias when
+      // building the response object so iOS SharedArticle.title decodes cleanly.
       const articleIds = [...new Set((messages || []).filter(m => m.article_id).map(m => m.article_id))];
       let articleMap = {};
       if (articleIds.length > 0) {
         const { data: articles } = await supabase
-          .from('articles')
-          .select('id, title, image_url, source, category')
+          .from('published_articles')
+          .select('id, title_news, image_url, source, category')
           .in('id', articleIds);
         for (const a of (articles || [])) {
-          articleMap[a.id] = a;
+          articleMap[a.id] = {
+            id: a.id,
+            title: a.title_news,
+            image_url: a.image_url,
+            source: a.source,
+            category: a.category,
+          };
         }
       }
 
@@ -99,15 +107,23 @@ export default async function handler(req, res) {
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      // Attach article data if present
+      // Attach article data if present (alias title_news → title for iOS)
       let enrichedMessage = { ...message, article: null };
       if (message.article_id) {
         const { data: article } = await supabase
-          .from('articles')
-          .select('id, title, image_url, source, category')
+          .from('published_articles')
+          .select('id, title_news, image_url, source, category')
           .eq('id', message.article_id)
           .single();
-        enrichedMessage.article = article || null;
+        if (article) {
+          enrichedMessage.article = {
+            id: article.id,
+            title: article.title_news,
+            image_url: article.image_url,
+            source: article.source,
+            category: article.category,
+          };
+        }
       }
 
       return res.status(201).json({ message: enrichedMessage });
