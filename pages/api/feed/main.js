@@ -3473,10 +3473,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   } else {
     // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
-    // Problem 2 (2026-04-20): TikTok-style 30-min session timeout. If the last
-    // engagement was >30 min ago, treat sessionSkippedIds as expired — yesterday's
-    // cascade shouldn't bleed into today's fresh session. Matches TikTok's
-    // published "30-min inactivity = new session" mechanism.
+    // Problem 2 (2026-04-20): session-timeout reset for news app. TikTok uses
+    // 30 min for entertainment usage; news users have bursty check-ins
+    // (morning/lunch/evening) where a short gap shouldn't count as new session.
+    // Using 60 min — catches overnight clearly, tolerates meeting breaks.
     let usePivotMode = false;
     let sessionIsFresh = false;
     if (userId) {
@@ -3491,7 +3491,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (lastEventRow?.created_at) {
           const lastEventMs = new Date(lastEventRow.created_at).getTime();
           const gapMs = Date.now() - lastEventMs;
-          sessionIsFresh = gapMs > 30 * 60 * 1000; // 30 min
+          sessionIsFresh = gapMs > 60 * 60 * 1000; // 60 min — news-app calibration
         } else {
           sessionIsFresh = true;
         }
