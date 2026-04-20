@@ -760,11 +760,11 @@ export default async function handler(req, res) {
           .eq('id', article_id)
           .single()
 
-        // Phase 2 (Migration 046): global-leaf bandit update via multi-label
-        // cluster_assignments. For each of the article's top-3 leaves, credit
-        // the user's user_leaf_arms with weight × dwell_signal_weight.
-        // Runs alongside the legacy per-user cluster bandit below so we can
-        // verify the new system populates correctly before retiring the old.
+        // Phase 2 (Migration 046) + Migration 047: dual-credit bandit update.
+        // Each engagement credits both the LEAF arm (fine-grained) and the
+        // SUPER arm (coarse). Super-level learning accelerates cold-start on
+        // new leaves and enables hierarchical Thompson sampling in retrieval.
+        // Matches TikTok Deep Retrieval D-layer hierarchy.
         if (artRow?.cluster_assignments && Array.isArray(artRow.cluster_assignments) && artRow.cluster_assignments.length > 0) {
           const explicitWeightForLeaf = event_type === 'article_saved' ? 3.0
             : event_type === 'article_shared' ? 2.0
@@ -772,6 +772,9 @@ export default async function handler(req, res) {
             : event_type === 'article_revisit' ? 4.0
             : null
           const leafBandit = explicitWeightForLeaf != null ? explicitWeightForLeaf : _banditSig.weight
+
+          // Credit each leaf in cluster_assignments
+          const superCredits = new Map()  // super_idx → summed credit
           for (const ca of artRow.cluster_assignments) {
             const credit = leafBandit * (Number(ca.weight) || 0)
             if (credit < 0.02) continue
@@ -788,6 +791,23 @@ export default async function handler(req, res) {
               })
             } catch (e) {
               console.log('[leaf-bandit] rpc error:', e?.message || e)
+            }
+            // Accumulate super-level credit. Use 0.5x scaling so super arms
+            // build posterior more slowly than leaves (super is aggregate).
+            superCredits.set(superIdx, (superCredits.get(superIdx) || 0) + credit * 0.5)
+          }
+          // Flush super-level credits
+          for (const [superIdx, credit] of superCredits.entries()) {
+            if (credit < 0.02) continue
+            try {
+              await admin.rpc('update_super_arm', {
+                p_user_id: effectiveUserId,
+                p_super: superIdx,
+                p_is_positive: isPositive,
+                p_weight: credit,
+              })
+            } catch (e) {
+              console.log('[super-bandit] rpc error:', e?.message || e)
             }
           }
         }

@@ -1772,21 +1772,28 @@ async function handleV2Feed(req, res, supabase, opts) {
   let userLeafArmsLearned = 0;
   if (userId) {
     try {
-      const { data: leafArms } = await supabase
-        .from('user_leaf_arms')
-        .select('super_cluster_id, leaf_cluster_id, alpha, beta')
-        .eq('user_id', userId);
-      const armCount = (leafArms || []).length;
-      // Activate only when user has meaningful learned signal: at least 3 arms
-      // diverged from the Beta(1,1) baseline (explored + got feedback).
+      // Problem 4 (2026-04-20): load BOTH super and leaf arms for hierarchical
+      // Thompson sampling. TikTok Deep Retrieval hierarchy: sample super first,
+      // then sample leaves within top supers. Enables cross-sibling learning
+      // transfer (engaging a Science leaf lifts other Science leaves' priors).
+      const [leafArmsRes, superArmsRes] = await Promise.all([
+        supabase.from('user_leaf_arms')
+          .select('super_cluster_id, leaf_cluster_id, alpha, beta')
+          .eq('user_id', userId),
+        supabase.from('user_super_arms')
+          .select('super_cluster_id, alpha, beta')
+          .eq('user_id', userId),
+      ]);
+      const leafArms = leafArmsRes.data || [];
+      const superArms = superArmsRes.data || [];
+      const armCount = leafArms.length;
       const learnedArms = armCount > 0
         ? leafArms.filter(a => (a.alpha || 1) > 1.1 || (a.beta || 1) > 1.1).length
         : 0;
       userLeafArmsLearned = learnedArms;
 
       if (armCount >= 20 && learnedArms >= 3) {
-        // Inline Thompson Sampling over Beta(α, β). Reuses Marsaglia-Tsang
-        // Gamma sampling from Fix 1D (kept local so we don't depend on outer block's closure).
+        // Inline Thompson Sampling over Beta(α, β). Marsaglia-Tsang Gamma.
         const _sampleGamma = (shape) => {
           if (shape < 1) return _sampleGamma(shape + 1) * Math.pow(Math.random() || 1e-9, 1 / shape);
           const d = shape - 1 / 3;
@@ -1810,18 +1817,41 @@ async function handleV2Feed(req, res, supabase, opts) {
           return (x + y) > 0 ? x / (x + y) : 0.5;
         };
 
-        const sampled = leafArms.map(a => ({
-          super: a.super_cluster_id,
-          leaf: a.leaf_cluster_id,
-          theta: _sampleBeta(a.alpha || 1, a.beta || 1),
-        }));
+        // Problem 4 — Hierarchical Thompson:
+        // Level 1: sample all super arms. Pick top 4 supers by sampled theta.
+        // Level 2: within those 4 supers, sample leaf arms. Pick top 10 leaves.
+        // If super data is sparse (e.g. brand-new user), degrades to flat leaf.
+        const superSampled = new Map();
+        if (superArms.length > 0) {
+          for (const s of superArms) {
+            superSampled.set(s.super_cluster_id, _sampleBeta(s.alpha || 1, s.beta || 1));
+          }
+        }
+        const sortedSupers = [...superSampled.entries()].sort((a, b) => b[1] - a[1]);
+        const topSupers = new Set(sortedSupers.slice(0, 4).map(([s]) => s));
+        const useHierarchical = topSupers.size >= 3;
+
+        const sampled = leafArms
+          .filter(a => !useHierarchical || topSupers.has(a.super_cluster_id))
+          .map(a => {
+            // Boost leaf theta by its super's theta (additive blend 0.3)
+            const leafTheta = _sampleBeta(a.alpha || 1, a.beta || 1);
+            const superTheta = superSampled.get(a.super_cluster_id) || 0.5;
+            return {
+              super: a.super_cluster_id,
+              leaf: a.leaf_cluster_id,
+              theta: 0.7 * leafTheta + 0.3 * superTheta,
+            };
+          });
         sampled.sort((a, b) => b.theta - a.theta);
         const topLeaves = sampled.slice(0, 10).map(s => ({ super: s.super, leaf: s.leaf }));
 
-        const { data: leafArticles } = await supabase.rpc('fetch_unseen_by_leaves', {
+        // Use hierarchical fetch (with sibling-leaf fallback tier)
+        const { data: leafArticles } = await supabase.rpc('fetch_unseen_by_leaves_hierarchical', {
           p_user_id: userId,
           p_leaves: topLeaves,
           p_per_leaf: 20,
+          p_sibling_per_leaf: 8,
           p_hours_window: 168,
           p_min_score: 400,
         });
@@ -1833,11 +1863,10 @@ async function handleV2Feed(req, res, supabase, opts) {
             personalIds.add(a.id);
           }
         }
-        // Prepend leaf picks so they rank high in personal pool during downstream MMR.
         if (leafAdded.length > 0) {
           personalIdOrder = [...leafAdded, ...personalIdOrder];
         }
-        console.log(`[feed:leaf-bandit] arms=${armCount} learned=${learnedArms} leaves=${topLeaves.length} added=${leafAdded.length}`);
+        console.log(`[feed:hierarchical-bandit] supers=${topSupers.size} leaves=${topLeaves.length} hierarchical=${useHierarchical} added=${leafAdded.length}`);
       }
     } catch (e) {
       console.log(`[feed:leaf-bandit] error: ${e?.message || e}`);
@@ -3444,8 +3473,31 @@ async function handleV2Feed(req, res, supabase, opts) {
   } else {
     // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
+    // Problem 2 (2026-04-20): TikTok-style 30-min session timeout. If the last
+    // engagement was >30 min ago, treat sessionSkippedIds as expired — yesterday's
+    // cascade shouldn't bleed into today's fresh session. Matches TikTok's
+    // published "30-min inactivity = new session" mechanism.
     let usePivotMode = false;
-    if (sessionSkippedIds.length >= 5) {
+    let sessionIsFresh = false;
+    if (userId) {
+      try {
+        const { data: lastEventRow } = await supabase
+          .from('user_article_events')
+          .select('created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (lastEventRow?.created_at) {
+          const lastEventMs = new Date(lastEventRow.created_at).getTime();
+          const gapMs = Date.now() - lastEventMs;
+          sessionIsFresh = gapMs > 30 * 60 * 1000; // 30 min
+        } else {
+          sessionIsFresh = true;
+        }
+      } catch (_e) { /* non-blocking */ }
+    }
+    if (!sessionIsFresh && sessionSkippedIds.length >= 5) {
       const engagedSet = new Set(sessionEngagedIds);
       const glancedSet = new Set(sessionGlancedIds);
       let consecutiveSkips = 0;
@@ -3459,6 +3511,26 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
       usePivotMode = consecutiveSkips >= 5;
     }
+    if (sessionIsFresh) {
+      console.log(`[feed:session] fresh session (gap>30min) — pivot disabled`);
+    }
+
+    // Problem 3 (2026-04-20): per-super diversity cap. TikTok-style "don't
+    // let any single topic-cluster dominate the page." Track how many articles
+    // from each super have been selected; skip candidates when their super is
+    // full. Matches TikTok's "7 consecutive from same category → inject
+    // different" mechanism (our threshold: max 5 per super per page).
+    const superCountOnPage = {};
+    const MAX_PER_SUPER = 5;
+    function withinSuperCap(article) {
+      const s = article.super_cluster_id;
+      if (s == null) return true;
+      return (superCountOnPage[s] || 0) < MAX_PER_SUPER;
+    }
+    function recordSuperPick(article) {
+      const s = article.super_cluster_id;
+      if (s != null) superCountOnPage[s] = (superCountOnPage[s] || 0) + 1;
+    }
 
     // Personalized user without topic selections: standard slot-filling
     let consecutiveFails2 = 0;
@@ -3467,16 +3539,18 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (usePivotMode) {
-        // Fix E (2026-04-19): selector, not filter. The old filter
-        // (entitySignalMultiplier >= 1.0) admitted vacuous articles whose only
-        // user-matched signals were lang:en + loc:usa, yielding 0% engagement
-        // on pivot pages (observed 04-19 10:08 UTC, 0/22 engaged). Rebuild as
-        // a POSITIVE selector sourcing from the user's top-8 strongest recent
-        // positive signals (see topPositiveSignals above). Cold-start safety:
-        // if user has <3 qualifying positive signals, fall back to the old
-        // filter behavior so cold users aren't starved.
+        // Fix E (2026-04-19) + Problem 3 (2026-04-20):
+        // Selector sources articles matching top-8 positive signals.
+        // NEW: multiplier floor of 0.8 prevents pivot-pool collapse observed
+        // 04-20 12:51 (pages 3-4 dropped to 9% engagement when pivot backfilled
+        // with low-mult articles that matched a top-8 tag but had poor overall
+        // alignment). Also: per-super diversity cap applied below.
         if (topPositiveSignals.length >= 3) {
+          const PIVOT_MULT_FLOOR = 0.8;
           const pivotMatches = (a) => {
+            if (!withinSuperCap(a)) return false;
+            const mult = entitySignalMultiplier(a);
+            if (mult < PIVOT_MULT_FLOOR) return false;
             const sigs = safeJsonParse(a.typed_signals, []);
             if (!Array.isArray(sigs)) return false;
             return sigs.some(s => topPositiveSet.has(s));
@@ -3490,7 +3564,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           // NO fallback to unfiltered pool — better fewer articles than skip-pattern repeat
         } else {
           // Cold-start fallback: old filter behavior (multiplier >= 1.0).
-          const pivotFilter = (a) => entitySignalMultiplier(a) >= 1.0;
+          const pivotFilter = (a) => withinSuperCap(a) && entitySignalMultiplier(a) >= 1.0;
           const pivotTPool = tPool.filter(pivotFilter);
           const pivotDPool = dPool.filter(pivotFilter);
           const pivotPPool = pPool.filter(pivotFilter);
@@ -3515,11 +3589,16 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
 
       if (!picked) { consecutiveFails2++; continue; }
+      // Problem 3 (2026-04-20): per-super diversity cap applies in normal mode
+      // too. Prevents monoculture pages (e.g. 18 of 20 from super 0 even when
+      // the user also likes super 4 and 7).
+      if (!withinSuperCap(picked)) { consecutiveFails2++; continue; }
       consecutiveFails2 = 0;
 
       picked.bucket = usePivotMode ? 'pivot' : (slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery');
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
+      recordSuperPick(picked);
       selected.push(picked);
     }
   }
