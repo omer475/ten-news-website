@@ -921,6 +921,12 @@ export default async function handler(req, res) {
 
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const cursor = req.query.cursor || null;
+    // Stable identifier so all impressions in the same feed request can be
+    // joined back together for slate-level analysis (group cohesion, slot
+    // dependencies, etc.). Uses Web Crypto when available, with a fallback.
+    const requestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}-${Math.random().toString(16).slice(2, 10)}`;
     const homeCountry = req.query.home_country || null;
     const followedCountries = req.query.followed_countries ? req.query.followed_countries.split(',') : [];
     const followedTopics = req.query.followed_topics ? req.query.followed_topics.split(',') : [];
@@ -2034,13 +2040,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // Load typed entity signals for scoring (unified behavioral signal store)
-  // Replaces both entity_affinity and skip_profile with one system.
-  let entitySignals = {};
+  // Load typed entity signals for scoring (unified behavioral signal store).
+  // Reassigns the entitySignals declared upstream (legacy session-events path),
+  // overriding it with the canonical DB-backed view that downstream functions
+  // expect. Also fetches last_*_at so we can apply continuous read-time decay —
+  // older engagements should weigh less than recent ones, but a write-time
+  // cron is race-prone and only reflects "days since cron last ran." Continuous
+  // decay at read time is what TikTok-style ranking systems do (exp half-life).
+  entitySignals = {};
   if (userId) {
     const { data: signalRows } = await supabase
       .from('user_entity_signals')
-      .select('entity, positive_count, negative_count')
+      .select('entity, positive_count, negative_count, positive_7d, negative_7d, positive_24h, negative_24h, last_positive_at, last_negative_at')
       .eq('user_id', userId)
       .or('positive_count.gt.0,negative_count.gt.0')
       .limit(500);
@@ -2049,17 +2060,57 @@ async function handleV2Feed(req, res, supabase, opts) {
         entitySignals[row.entity] = {
           positive: row.positive_count || 0,
           negative: row.negative_count || 0,
+          positive_24h: row.positive_24h || 0,
+          negative_24h: row.negative_24h || 0,
+          positive_7d: row.positive_7d || 0,
+          negative_7d: row.negative_7d || 0,
+          last_positive_at: row.last_positive_at,
+          last_negative_at: row.last_negative_at,
         };
       }
     }
   }
 
-  // Compute entity affinity from signals: (positive - negative) / (positive + negative)
-  // Returns -1 to +1
+  // Continuous time-decay parameters. 14-day half-life means a signal from
+  // 2 weeks ago counts half as much as a signal from today. Lambda for the
+  // decay is ln(2) / half_life_days.
+  const ENTITY_DECAY_HALF_LIFE_DAYS = 14;
+  const ENTITY_DECAY_LAMBDA = Math.log(2) / ENTITY_DECAY_HALF_LIFE_DAYS;
+  const NOW_MS = Date.now();
+  function decayMultiplier(lastEventISO) {
+    if (!lastEventISO) return 1.0;
+    const elapsedMs = NOW_MS - new Date(lastEventISO).getTime();
+    if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return 1.0;
+    const days = elapsedMs / 86400000;
+    return Math.exp(-ENTITY_DECAY_LAMBDA * days);
+  }
+
+  // Compute entity affinity with continuous decay + recent-window blending.
+  // Raw counts are kept in the DB for auditability; the decay is applied at
+  // read time so the signal naturally fades without any write-side bookkeeping.
+  // The 24h window (recency-of-recency) gets a heavier blend so a same-session
+  // skip can override an older positive history.
   function computeEntityAffinity(record) {
-    const total = (record.positive || 0) + (record.negative || 0);
-    if (total === 0) return 0;
-    return ((record.positive || 0) - (record.negative || 0)) / total;
+    const posDecay = decayMultiplier(record.last_positive_at);
+    const negDecay = decayMultiplier(record.last_negative_at);
+    const decayedPos = (record.positive || 0) * posDecay;
+    const decayedNeg = (record.negative || 0) * negDecay;
+    const decayedTotal = decayedPos + decayedNeg;
+    if (decayedTotal < 1) return 0;
+    const allTimeAffinity = (decayedPos - decayedNeg) / decayedTotal;
+    // 24h window — undecayed because 24h is already a recency window and the
+    // counts are reset by the RPC if the previous event was > 24h ago.
+    const total24h = (record.positive_24h || 0) + (record.negative_24h || 0);
+    if (total24h >= 2) {
+      const recent = ((record.positive_24h || 0) - (record.negative_24h || 0)) / total24h;
+      return recent * 0.6 + allTimeAffinity * 0.4;
+    }
+    const total7d = (record.positive_7d || 0) + (record.negative_7d || 0);
+    if (total7d >= 3) {
+      const recent7 = ((record.positive_7d || 0) - (record.negative_7d || 0)) / total7d;
+      return recent7 * 0.4 + allTimeAffinity * 0.6;
+    }
+    return allTimeAffinity;
   }
 
   // Typed entity signal multiplier: replaces skip_profile AND tag_profile scoring.
@@ -2095,12 +2146,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     entityAffinities[entity] = computeEntityAffinity(record);
   }
 
-  // Fix 10: Count session interactions for adaptive weighting
-  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
-
-  // Fix 5: Category-level engagement suppression
-  // Load per-category engagement stats (last 7 days) to suppress 0% categories
-  let categorySuppressionMap = {};
+  // sessionInteractionCount and categorySuppressionMap are already declared
+  // upstream in this function (Fix 10 + Fix 5 blocks). The duplicates here were
+  // dead stubs from an old refactor that SWC now rejects as let-redeclaration.
 
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
@@ -2198,15 +2246,100 @@ async function handleV2Feed(req, res, supabase, opts) {
     .sort((a, b) => b._score - a._score);
 
   // ==========================================
-  // PHASE 5.5: TASTE VECTOR RE-RANKING (angle-aware personalization)
-  // Entity scoring can't distinguish "longevity market" from "mole rat longevity".
-  // Taste vector embeddings CAN — one is near business articles, the other near biology.
-  // Fetch embeddings for top 60 candidates per pool, compute cosine similarity
-  // to taste vector, and re-score. This is the key to solving "right entity, wrong angle."
+  // PHASE 5.5: MULTI-CLUSTER RE-RANKING (PinnerSage / TikTok-style)
+  // A single mean-pooled "taste vector" smashes a multi-interest user (cooking
+  // AND tech AND sports) into one centroid that matches none of them well.
+  // PinnerSage (Pancha et al., KDD 2020) keeps K interest centroids per user
+  // and scores a candidate as max_c [importance_c * cosine(article, centroid_c)].
+  // We already maintain user_interest_clusters with medoid_minilm + importance,
+  // we just weren't using them at the cross-bucket re-rank phase. This block
+  // pulls the user's centroids and replaces the single-vector path with the
+  // multi-cluster max-score (falls back to single vector if no clusters yet).
   // ==========================================
 
   const userTasteVec = tasteVectorMinilm || tasteVector;
-  if (userTasteVec && hasAnyPersonalization) {
+
+  // Intent-shift detection. The user's long-term profile says "loves Tech /
+  // Science / Business" but tonight they only opened Architecture and Cooking.
+  // Cosine between the rolling session vector and the long-term vector is a
+  // simple, robust shift signal — when it drops the user is in a different
+  // mode than their history would predict, and we should favor *session*
+  // context over long-term centroids. SASRec/BERT4Rec systems do this with
+  // a learned encoder; the simple cosine version captures most of the value.
+  let intentShiftCos = null;
+  if (sessionTasteVector && tasteVectorMinilm
+      && Array.isArray(sessionTasteVector) && Array.isArray(tasteVectorMinilm)
+      && sessionTasteVector.length === tasteVectorMinilm.length
+      && sessionTasteVector.length > 0) {
+    intentShiftCos = cosineSimilarityVec(sessionTasteVector, tasteVectorMinilm);
+  }
+  // Intent considered "shifted" when the rolling session vector is meaningfully
+  // distinct from the long-term taste. Threshold is empirical — 0.6 means the
+  // session content shares only ~37 % directional alignment with history.
+  const INTENT_SHIFT_THRESHOLD = 0.6;
+  const intentShifted = intentShiftCos !== null && intentShiftCos < INTENT_SHIFT_THRESHOLD;
+
+  let userClusterCentroids = null; // [{ centroid: float[], weight: number }]
+  if (clusterLookupId && hasAnyPersonalization) {
+    const { data: centroidRows } = await supabase
+      .from('user_interest_clusters')
+      .select('cluster_index, importance_score, article_count, medoid_minilm')
+      .eq(clusterLookupColumn, clusterLookupId)
+      .neq('suppressed', true);
+    if (centroidRows && centroidRows.length > 0) {
+      const totalImportance = centroidRows.reduce((s, c) => s + (c.importance_score || 0), 0);
+      const fallbackCount = centroidRows.reduce((s, c) => s + (c.article_count || 0), 0);
+      userClusterCentroids = [];
+      for (const row of centroidRows) {
+        const centroid = safeJsonParse(row.medoid_minilm, null);
+        if (!Array.isArray(centroid) || centroid.length === 0) continue;
+        // Weight by importance_score when present, otherwise size of cluster.
+        // Cap any single cluster at 0.6 weight so a dominant interest can't
+        // crowd out the long tail (matches the 0.5 cap upstream allocation).
+        const rawWeight = totalImportance > 0
+          ? (row.importance_score || 0) / totalImportance
+          : (row.article_count || 1) / Math.max(fallbackCount, 1);
+        userClusterCentroids.push({ centroid, weight: Math.min(rawWeight, 0.6) });
+      }
+      if (userClusterCentroids.length === 0) userClusterCentroids = null;
+    }
+  }
+
+  // When intent has shifted, inject the session vector as a weighted ephemeral
+  // centroid. This tells the reranker "match the current session, not just the
+  // history." The 0.5 cap matches the per-cluster cap so it can dominate but
+  // not erase the long-term profile entirely. Without this the SASRec-style
+  // adaptation only happens inside scoreArticleV3 (sessionVecSim weighting),
+  // and the trending/discovery/fresh re-rank still keeps using stale history.
+  if (intentShifted && Array.isArray(sessionTasteVector) && sessionTasteVector.length > 0) {
+    if (!userClusterCentroids) userClusterCentroids = [];
+    userClusterCentroids.push({ centroid: sessionTasteVector, weight: 0.5 });
+  }
+
+  // Returns the PinnerSage-style multi-cluster score for an article embedding.
+  // Falls back to single taste-vector cosine when the user has no clusters
+  // (cold-start / very early signal).
+  function multiClusterScore(emb) {
+    if (!emb || emb.length === 0) return null;
+    if (userClusterCentroids) {
+      let best = 0;
+      for (const { centroid, weight } of userClusterCentroids) {
+        if (centroid.length !== emb.length) continue;
+        const sim = cosineSimilarityVec(centroid, emb);
+        // Weighted-but-max: bigger clusters get a small boost on top of cosine,
+        // but a candidate matching a small cluster perfectly can still win.
+        const score = sim * (0.6 + 0.4 * weight);
+        if (score > best) best = score;
+      }
+      return best;
+    }
+    if (userTasteVec && userTasteVec.length === emb.length) {
+      return cosineSimilarityVec(userTasteVec, emb);
+    }
+    return null;
+  }
+
+  if ((userClusterCentroids || userTasteVec) && hasAnyPersonalization) {
     // Collect top 60 candidates from each non-personal pool for embedding fetch
     const reRankPools = [
       { pool: trendingScored, name: 'trending' },
@@ -2236,18 +2369,23 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // Re-score with taste vector similarity (angle-aware)
+    // Re-score with multi-cluster max similarity. Same magnitude scaling as
+    // before so existing score normalization downstream still holds:
+    //   sim 0.8 → 1.42x, sim 0.5 → 1.00x, sim 0.3 → 0.72x.
     for (const { pool } of reRankPools) {
       for (const a of pool) {
         const emb = embeddingCache.get(a.id);
-        if (emb && userTasteVec.length === emb.length) {
-          const sim = cosineSimilarityVec(userTasteVec, emb);
-          // Stronger taste weight: sim 0.8→1.42x, sim 0.5→1.0x, sim 0.3→0.72x
+        const sim = multiClusterScore(emb);
+        if (sim !== null) {
           const tasteMult = 0.3 + Math.max(0, sim) * 1.4;
           a._score *= tasteMult;
         }
       }
       pool.sort((a, b) => b._score - a._score);
+    }
+
+    if (userClusterCentroids) {
+      console.log(`[feed] multi-cluster rerank: ${userClusterCentroids.length} centroids active`);
     }
   }
 
@@ -2258,14 +2396,48 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   // Entity-level skip signals are handled by entitySignalMultiplier (ratio-based
-  // scoring via typed_signals). No hard-blocking — the old globalBlocklist was
-  // too aggressive, blocking common entities like "film", "moon", "nasa" and
-  // eliminating 97% of trending articles.
-  const personalScoredFiltered = personalScored;
-  const trendingScoredFiltered = trendingScored;
-  const discoveryScoredFiltered = discoveryScored;
-  const interestScoredFiltered = interestScored;
-  const freshBestScoredFiltered = freshBestScored;
+  // scoring via typed_signals). The multiplier alone dilutes a strong negative
+  // when it sits next to neutral signals — e.g. a single loc:germany at affinity
+  // -0.19 averaged across 4 neutral signals barely moves the score. Build a
+  // hard-suppression set for entities with a clear majority-negative pattern
+  // and enough volume to trust, and drop any candidate whose typed_signals
+  // intersect it. This catches the geographic / topical "I really don't want
+  // this" signals that the multiplier was leaking through.
+  const STRONG_NEG_NET = -7;          // pos - neg
+  const STRONG_NEG_AFFINITY = -0.5;   // ratio
+  const STRONG_NEG_MIN_TOTAL = 5;     // require enough trials before suppressing
+  const strongNegEntities = new Set();
+  // Apply the same continuous decay used by computeEntityAffinity. A strong
+  // grudge from 60 days ago should not hard-suppress today (decay ~0.05x);
+  // a fresh skip pattern with cumulative net < -7 still hits the cap.
+  for (const [entity, rec] of Object.entries(entitySignals)) {
+    const decPos = (rec.positive || 0) * decayMultiplier(rec.last_positive_at);
+    const decNeg = (rec.negative || 0) * decayMultiplier(rec.last_negative_at);
+    const total = decPos + decNeg;
+    if (total < STRONG_NEG_MIN_TOTAL) continue;
+    const net = decPos - decNeg;
+    const affinity = net / total;
+    if (net <= STRONG_NEG_NET || affinity <= STRONG_NEG_AFFINITY) {
+      strongNegEntities.add(entity);
+    }
+  }
+  function passesStrongNegFilter(article) {
+    if (strongNegEntities.size === 0) return true;
+    const signals = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(signals)) return true;
+    for (const sig of signals) {
+      if (strongNegEntities.has(sig)) return false;
+    }
+    return true;
+  }
+  const personalScoredFiltered = personalScored.filter(passesStrongNegFilter);
+  const trendingScoredFiltered = trendingScored.filter(passesStrongNegFilter);
+  const discoveryScoredFiltered = discoveryScored.filter(passesStrongNegFilter);
+  const interestScoredFiltered = interestScored.filter(passesStrongNegFilter);
+  const freshBestScoredFiltered = freshBestScored.filter(passesStrongNegFilter);
+  if (strongNegEntities.size > 0) {
+    console.log(`[feed] strong-neg suppress: ${strongNegEntities.size} entities (e.g. ${[...strongNegEntities].slice(0, 5).join(', ')})`);
+  }
 
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
@@ -2294,6 +2466,26 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const selected = [];
   let banditPoolTotal = 0; // set by cold-start path, used for has_more calculation
+
+  // Pre-declared so all selection paths (bandit cold-start, interest, standard)
+  // can stamp them onto the impressions log uniformly. Each path overwrites
+  // these as it learns its actual policy state.
+  let slotsPatternStr = 'none';
+  let totalPoolAtPolicyTime = 0;
+
+  // MMR lambda per bucket. Higher = more relevance, lower = more diversity.
+  // Personal at 0.7 was letting one leaf cluster take 37 % of impressions in
+  // observed sessions — diversity within personal needed to come up. Discovery
+  // at 0.4 was over-diverse (too random); a touch more relevance helps it stay
+  // useful instead of feeling like noise. These values are the per-bucket
+  // sweet-spot now, but they are all in one place so we can A/B them later
+  // (or eventually let a contextual bandit tune them per user).
+  const MMR_LAMBDA_PERSONAL  = 0.55;
+  const MMR_LAMBDA_TRENDING  = 0.60;
+  const MMR_LAMBDA_DISCOVERY = 0.50;
+  const MMR_LAMBDA_FRESH     = 0.50;
+  const MMR_LAMBDA_INTEREST  = 0.50;
+  const MMR_LAMBDA_PIVOT     = 0.45;
 
   // ── THREE-TIER SLOT FILLING ──
   // Tier 1: FRESH UNSEEN — articles within their freshness window that user hasn't seen
@@ -2341,15 +2533,57 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
   // Fresh_best is exploration (last resort), not primary filler.
   const personalUnseenCount = pTiers.freshUnseen.length;
+  // Session engage rate is a stronger signal than unseen count for deciding
+  // how much to exploit vs explore. If the user is skipping most of what we
+  // serve this session, drop out of personal-dominant mode even if they
+  // technically have plenty of unseen personal candidates — those candidates
+  // are evidently not working today.
+  const sessionDecisions = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0);
+  const sessionEngageRate = sessionDecisions >= 10
+    ? (sessionEngagedIds.length / sessionDecisions)
+    : null;
+  const lowEngagementMode = sessionEngageRate !== null && sessionEngageRate < 0.3;
+
   let SLOTS;
-  if (personalUnseenCount >= 15) {
+  let slotsReason;
+  if (lowEngagementMode) {
+    // Skip-heavy session: open up to exploration + fresh even if personal has unseen.
+    SLOTS = ['P','T','D','T','D','F','T','D','T','F'];           // 10P/30T/40D/20F
+    slotsReason = `low-engage-rate=${sessionEngageRate.toFixed(2)}`;
+  } else if (intentShifted) {
+    // Session intent diverging from long-term profile. Personal pool is built
+    // off the long-term centroids and is therefore the *wrong* pool to lean on
+    // right now — favor trending + discovery (driven by current engagement)
+    // and let the multi-cluster re-rank (which now contains the session vector)
+    // pull session-relevant items to the top.
+    SLOTS = ['P','T','D','T','D','D','T','D','T','F'];           // 10P/30T/50D/10F
+    slotsReason = `intent-shift cos=${intentShiftCos.toFixed(2)}`;
+  } else if (personalUnseenCount >= 15) {
     SLOTS = ['P','P','T','P','P','D','P','P','T','D'];           // 60P/20T/20D
+    slotsReason = `personal-heavy unseen=${personalUnseenCount}`;
   } else if (personalUnseenCount >= 5) {
     SLOTS = ['P','T','D','T','P','D','T','D','T','F'];           // 20P/40T/30D/10F
+    slotsReason = `balanced unseen=${personalUnseenCount}`;
   } else {
     // Personal exhausted — trending + discovery first, fresh_best last resort
     SLOTS = ['T','D','T','D','T','F','T','D','T','F'];           // 50T/30D/20F
+    slotsReason = `personal-exhausted unseen=${personalUnseenCount}`;
   }
+  // Snapshot of pool sizes at policy-decision time. Used as the IPS denominator
+  // for off-policy evaluation: propensity_score = 1 / pool_size approximates the
+  // probability the article would have been picked under a uniform-random
+  // baseline policy with the same inventory. Logging this is what unlocks
+  // counterfactual A/B (Swaminathan & Joachims 2015) instead of naive A vs B.
+  const slotsPoolSnapshot = {
+    P: pTiers.freshUnseen.length,
+    T: tTiers.freshUnseen.length,
+    D: dTiers.freshUnseen.length,
+    F: fUnseen.length,
+    I: iTiers.freshUnseen.length,
+  };
+  totalPoolAtPolicyTime = Object.values(slotsPoolSnapshot).reduce((s, n) => s + n, 0);
+  slotsPatternStr = SLOTS.join('');
+  console.log(`[feed] SLOTS=${slotsPatternStr} reason=${slotsReason} pools P=${slotsPoolSnapshot.P} T=${slotsPoolSnapshot.T} D=${slotsPoolSnapshot.D} F=${slotsPoolSnapshot.F} total=${totalPoolAtPolicyTime}`);
 
   // Phase 1: Fill from FRESH UNSEEN candidates only
   const pPool = [...pTiers.freshUnseen];
@@ -2403,6 +2637,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
+  // Hard leaf-cluster cap. A single leaf (super_cluster_id, leaf_cluster_id)
+  // must not dominate a feed. In the 2026-04-20 session leaf 0/0 alone took
+  // 37% of impressions, which reads as repetitive regardless of MMR similarity.
+  const MAX_PER_LEAF_PER_FEED = 4;
+  function isLeafCapped(article, sel) {
+    const leaf = article?.leaf_cluster_id;
+    const sup = article?.super_cluster_id;
+    if (leaf == null || sup == null) return false;
+    let count = 0;
+    for (const s of sel) {
+      if (s.leaf_cluster_id === leaf && s.super_cluster_id === sup) count++;
+      if (count >= MAX_PER_LEAF_PER_FEED) return true;
+    }
+    return false;
+  }
+
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
     while (attempts < 10 && pool.length > 0) {
@@ -2410,6 +2660,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) return null;
       if (isEventCapped(picked)) { attempts++; continue; }
       if (isEntityCappedShared(picked)) { attempts++; continue; }
+      if (isLeafCapped(picked, sel)) { attempts++; continue; }
       return picked;
     }
     return null;
@@ -3099,20 +3350,20 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       // Try preferred pool first, then ALL others as fallback
       if (slot === 'F') {
-        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+        picked = mmrSelectDeduped(fPool, selected, tagCache, MMR_LAMBDA_FRESH);
       } else if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        picked = mmrSelectDeduped(pPool, selected, tagCache, MMR_LAMBDA_PERSONAL);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, MMR_LAMBDA_TRENDING);
       } else {
-        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        picked = mmrSelectDeduped(dPool, selected, tagCache, MMR_LAMBDA_DISCOVERY);
       }
       // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
-      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
-      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, MMR_LAMBDA_TRENDING);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, MMR_LAMBDA_DISCOVERY);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, MMR_LAMBDA_PERSONAL);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, MMR_LAMBDA_INTEREST);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, MMR_LAMBDA_FRESH);
 
       if (!picked) { consecutiveFails++; continue; }
       consecutiveFails = 0;
@@ -3148,32 +3399,32 @@ async function handleV2Feed(req, res, supabase, opts) {
       let picked = null;
 
       if (usePivotMode) {
-        // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive)
-        // Use lambda=0.5 (MORE diversity) not 0.8 — the old 0.8 caused topic flooding
+        // Pivot mode — broaden entity filter to >= 1.0 (neutral or positive).
+        // Pivot is invoked after a skip streak: the goal is to break the
+        // current pattern, so we lean into diversity (low lambda).
         const pivotFilter = (a) => !hasEntitySignals || entitySignalMultiplier(a, entitySignals, onboardingTagSet) >= 1.0;
         const pivotPPool = pPool.filter(pivotFilter);
         const pivotTPool = tPool.filter(pivotFilter);
         const pivotDPool = dPool.filter(pivotFilter);
-        // Use low lambda for maximum diversity — pivot is about breaking the skip streak
-        picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
-        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
-        if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
+        picked = mmrSelectDeduped(pivotTPool, selected, tagCache, MMR_LAMBDA_PIVOT);
+        if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, MMR_LAMBDA_PIVOT);
+        if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, MMR_LAMBDA_PIVOT);
         // NO fallback to unfiltered pool — better to show fewer articles than repeat the skip pattern
       } else if (slot === 'F') {
-        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+        picked = mmrSelectDeduped(fPool, selected, tagCache, MMR_LAMBDA_FRESH);
       } else if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
+        picked = mmrSelectDeduped(pPool, selected, tagCache, MMR_LAMBDA_PERSONAL);
       } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
+        picked = mmrSelectDeduped(tPool, selected, tagCache, MMR_LAMBDA_TRENDING);
       } else {
-        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
+        picked = mmrSelectDeduped(dPool, selected, tagCache, MMR_LAMBDA_DISCOVERY);
       }
       // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
-      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
-      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
+      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, MMR_LAMBDA_TRENDING);
+      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, MMR_LAMBDA_DISCOVERY);
+      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, MMR_LAMBDA_PERSONAL);
+      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, MMR_LAMBDA_INTEREST);
+      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, MMR_LAMBDA_FRESH);
 
       if (!picked) { consecutiveFails2++; continue; }
       consecutiveFails2 = 0;
@@ -3413,12 +3664,20 @@ async function handleV2Feed(req, res, supabase, opts) {
     return formatted;
   });
 
-  // Synchronous serving log — must commit before response so next request sees them
+  // Synchronous serving log — must commit before response so next request sees them.
+  // Logging propensity / slot / pool-size enables off-policy evaluation (IPS) of
+  // future ranker changes without needing live A/B traffic for every iteration.
   if (userId && pageIds.length > 0) {
+    const propensity = totalPoolAtPolicyTime > 0 ? (1 / totalPoolAtPolicyTime) : null;
     const impressions = pageIds.map((aid, idx) => ({
       user_id: userId,
       article_id: aid,
       bucket: selected[idx]?.bucket || null,
+      slot_index: idx,
+      pool_size: totalPoolAtPolicyTime || null,
+      propensity_score: propensity,
+      slots_pattern: slotsPatternStr,
+      request_id: requestId,
     }));
     const { error: impError } = await supabase.from('user_feed_impressions').insert(impressions);
     if (impError) console.error('[feed] Impression log failed:', impError.message);

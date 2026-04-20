@@ -1,5 +1,6 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { skipPenaltyWeight, engageRewardWeight, expectedReadSecondsForArticle } from '../../../lib/readingTime'
 
 // ============================================================
 // K-MEANS CLUSTERING (JavaScript implementation for V23)
@@ -671,11 +672,20 @@ export default async function handler(req, res) {
     if (effectiveUserId && article_id && (POSITIVE_EVENTS.includes(event_type) || NEGATIVE_EVENTS.includes(event_type))) {
       const isPositive = POSITIVE_EVENTS.includes(event_type)
 
+      // Dwell-aware reward magnitude. A 2 s bounce on a 60 s article is a real
+      // negative; a 90 s "skip" on a 10 s card is actually a full read that
+      // happens to have been swiped away. Scale by read_fraction so short and
+      // long articles contribute proportionally to the taste profile.
+      const dwellForReward = metadata?.dwell ? parseFloat(metadata.dwell)
+        : metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds)
+        : metadata?.engaged_seconds ? parseFloat(metadata.engaged_seconds)
+        : 0
+
       // Use atomic RPC to prevent race conditions (concurrent events overwriting each other)
 
       admin
         .from('published_articles')
-        .select('typed_signals')
+        .select('typed_signals, expected_read_seconds')
         .eq('id', article_id)
         .single()
         .then(({ data: articleData }) => {
@@ -694,10 +704,23 @@ export default async function handler(req, res) {
           })
           if (validSignals.length === 0) return
 
+          // 30 s fallback expected_read_seconds covers the backfill gap for
+          // articles published before migration 044.
+          const expected = (articleData.expected_read_seconds && Number.isFinite(articleData.expected_read_seconds))
+            ? articleData.expected_read_seconds : 30
+          const weight = isPositive
+            ? engageRewardWeight(dwellForReward, expected)
+            : skipPenaltyWeight(dwellForReward, expected)
+
+          // weight === 0 means "user actually read this but the UI fired a skip" —
+          // don't penalize. Also no-op positives with zero dwell.
+          if (!(weight > 0)) return
+
           admin.rpc('bulk_update_entity_signals', {
             p_user_id: effectiveUserId,
             p_signals: validSignals,
             p_is_positive: isPositive,
+            p_weight: weight,
           }).then(({ error: sigError }) => {
             if (sigError) console.log('[analytics] entity signal update failed:', sigError.message)
           })
