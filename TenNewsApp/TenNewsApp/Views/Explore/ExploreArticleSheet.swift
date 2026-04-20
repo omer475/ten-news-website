@@ -50,9 +50,21 @@ struct ExploreArticleSheet: View {
         .onAppear {
             articlePages = buildArticlePages()
         }
-        .onChange(of: selectedArticle.id) {
-            // Rebuild pages if the selected article identity changes
-            articlePages = buildArticlePages()
+        .task(id: selectedArticle.id.stringValue) {
+            // Self-hydrate: if the passed article lacks bullets (came from
+            // Explore where topics/articles endpoint returns minimal data),
+            // fetch the full article directly and update page 0.
+            // Relying on parent's onChange was unreliable — parent state
+            // mutations don't always propagate to child view bodies in time
+            // for the pager to pick up the new article.
+            if selectedArticle.displayBullets.isEmpty || selectedArticle.summaryBulletsNews?.isEmpty ?? true {
+                let articleId = selectedArticle.id.stringValue
+                if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: articleId)) {
+                    if !articlePages.isEmpty, articlePages[0].id.stringValue == response.article.id.stringValue {
+                        articlePages[0] = response.article
+                    }
+                }
+            }
         }
         .onChange(of: allArticles.count) {
             // More articles loaded (e.g. search results fetched in background)
@@ -68,12 +80,7 @@ struct ExploreArticleSheet: View {
             }
         }
         .onChange(of: selectedArticle.displayBullets.count) {
-            // Full article arrived from API — update first page with bullets/content
-            if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
-                articlePages[0] = selectedArticle
-            }
-        }
-        .onChange(of: selectedArticle.summaryText) {
+            // Parent-driven update (e.g. feed cache delivered a hydrated article)
             if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
                 articlePages[0] = selectedArticle
             }
