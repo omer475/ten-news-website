@@ -3896,7 +3896,15 @@ async function handleV2Feed(req, res, supabase, opts) {
   const scoredTotal = totalFreshUnseenRemaining + totalResurfaced;
   const remainingPool = Math.max(banditPoolTotal, scoredTotal);
   const requestedLimit = limit || 20;
-  const hasMore = selected.length >= requestedLimit && remainingPool > selected.length;
+  // Phase 2c (2026-04-20): hasMore should be true when the leaf bandit has
+  // learned posteriors that can drive pivot/augment on the next request, even
+  // if this request's fresh pool was thin. Prevents the iOS "You're all caught
+  // up!" banner from appearing prematurely when pivot mode has plenty of
+  // content left. Users observed this on 04-19 — saw the banner, scrolled,
+  // pivot delivered 40+ more articles.
+  const leafBanditCanDeliverMore = userLeafArmsLearned >= 5;
+  const hasMore = (selected.length >= requestedLimit && remainingPool > selected.length)
+    || leafBanditCanDeliverMore;
   const totalServed = offset + selected.length;
   const nextCursor = hasMore ? `v2_${totalServed}_${selected[selected.length - 1]?.id || 0}` : null;
 
