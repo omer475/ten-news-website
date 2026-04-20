@@ -2040,13 +2040,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   // PHASE 5: SCORE CANDIDATES
   // ==========================================
 
-  // Load typed entity signals for scoring (unified behavioral signal store)
-  // Replaces both entity_affinity and skip_profile with one system.
-  // Also fetch last_*_at so we can apply continuous read-time decay — older
-  // engagements should weigh less than recent ones, but a write-time cron is
-  // race-prone and only reflects "days since cron last ran." Continuous decay
-  // at read time is what TikTok-style ranking systems do (exp half-life).
-  let entitySignals = {};
+  // Load typed entity signals for scoring (unified behavioral signal store).
+  // Reassigns the entitySignals declared upstream (legacy session-events path),
+  // overriding it with the canonical DB-backed view that downstream functions
+  // expect. Also fetches last_*_at so we can apply continuous read-time decay —
+  // older engagements should weigh less than recent ones, but a write-time
+  // cron is race-prone and only reflects "days since cron last ran." Continuous
+  // decay at read time is what TikTok-style ranking systems do (exp half-life).
+  entitySignals = {};
   if (userId) {
     const { data: signalRows } = await supabase
       .from('user_entity_signals')
@@ -2145,12 +2146,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     entityAffinities[entity] = computeEntityAffinity(record);
   }
 
-  // Fix 10: Count session interactions for adaptive weighting
-  const sessionInteractionCount = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0) + (sessionGlancedIds?.length || 0);
-
-  // Fix 5: Category-level engagement suppression
-  // Load per-category engagement stats (last 7 days) to suppress 0% categories
-  let categorySuppressionMap = {};
+  // sessionInteractionCount and categorySuppressionMap are already declared
+  // upstream in this function (Fix 10 + Fix 5 blocks). The duplicates here were
+  // dead stubs from an old refactor that SWC now rejects as let-redeclaration.
 
   // Personal bucket: V3 scoring with entity affinity + vector similarity
   const personalScored = personalIdOrder
