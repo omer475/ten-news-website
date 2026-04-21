@@ -1052,6 +1052,21 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
+  // Debug state — hoisted to the top so early-return paths and the retrieval
+  // funnel can populate it without TDZ errors. Only attached to the response
+  // when debugFlag is true; otherwise just a few extra property writes per
+  // request (negligible).
+  const _dbg = {
+    enabled: !!debugFlag,
+    path: null,
+    pools_at_entry: null,
+    null_cluster_ratio: {},
+    has_personalization: null,
+    bandit_state: null,
+    buckets_served: {},
+    caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0 },
+  };
+
   const now = Date.now();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
   const sevenDaysAgo = new Date(now - 7 * 24 * 3600000).toISOString();
@@ -2711,19 +2726,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   const iPool = [...iTiers.freshUnseen];
   const fPool = [...fUnseen];
 
-  // Debug state — populated throughout the request when debugFlag is on, then
-  // attached to the response at the end. Cheap to build even when unused.
-  const _dbg = {
-    enabled: !!debugFlag,
-    path: null,  // 'cold_start' | 'interest_prefill' | 'standard'
-    pools_at_entry: {
-      p: pPool.length, t: tPool.length, d: dPool.length, i: iPool.length, f: fPool.length,
-    },
-    null_cluster_ratio: {},  // pool_name -> fraction null
-    has_personalization: null,
-    bandit_state: null,
-    buckets_served: {},
-    caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0 },
+  // Populate pool-at-entry stats on the hoisted _dbg object.
+  _dbg.pools_at_entry = {
+    p: pPool.length, t: tPool.length, d: dPool.length, i: iPool.length, f: fPool.length,
   };
   if (debugFlag) {
     for (const [name, pool] of Object.entries({ p: pPool, t: tPool, d: dPool, i: iPool, f: fPool })) {
