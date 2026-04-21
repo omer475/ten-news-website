@@ -2571,8 +2571,25 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Soft entity multiplier (entitySignalMultiplier) continues to down-weight
   // negative-affinity content in all pools, so bad content is still ranked
   // low in trending/discovery — just not hard-blocked.
-  const passesPersonalFilters = (a) => passesSignalFilter(a) && passesStrongNegFilter(a);
-  const passesExplorationFilters = (a) => passesSignalFilter(a);
+  // Per-filter rejection counts — populated when debugFlag is on so we can
+  // see which filter is actually doing work vs which is vestigial. Evidence
+  // drives the next wave of Phase 1 deletions.
+  _dbg.filter_rejects = {
+    sig_personal: 0, sig_exploration: 0,
+    strongneg_personal: 0,
+  };
+  const passesPersonalFilters = (a) => {
+    const sig = passesSignalFilter(a);
+    if (!sig) { if (debugFlag) _dbg.filter_rejects.sig_personal++; return false; }
+    const sn = passesStrongNegFilter(a);
+    if (!sn) { if (debugFlag) _dbg.filter_rejects.strongneg_personal++; return false; }
+    return true;
+  };
+  const passesExplorationFilters = (a) => {
+    const sig = passesSignalFilter(a);
+    if (!sig) { if (debugFlag) _dbg.filter_rejects.sig_exploration++; return false; }
+    return true;
+  };
   const personalScoredFiltered   = personalScored.filter(passesPersonalFilters);
   const trendingScoredFiltered   = trendingScored.filter(passesExplorationFilters);
   const discoveryScoredFiltered  = discoveryScored.filter(passesExplorationFilters);
@@ -2820,9 +2837,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     while (attempts < 10 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda, embeddingCache);
       if (!picked) return null;
-      if (servedInThisRequest.has(picked.id)) { attempts++; continue; }
-      if (isEventCapped(picked)) { attempts++; continue; }
-      if (isEntityCappedShared(picked)) { attempts++; continue; }
+      if (servedInThisRequest.has(picked.id)) { if (debugFlag) _dbg.caps.null_dedup++; attempts++; continue; }
+      if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.event++; attempts++; continue; }
+      if (isEntityCappedShared(picked)) { if (debugFlag) _dbg.caps.entity_shared++; attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3440,9 +3457,9 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
 
       // Event/cluster cap
-      if (isEventCapped(picked)) continue;
+      if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.cold_event++; continue; }
       // Entity-level cap (Fix 1)
-      if (isEntityCappedFn(picked)) continue;
+      if (isEntityCappedFn(picked)) { if (debugFlag) _dbg.caps.cold_entity++; continue; }
       // Per-leaf cap reverted in hotfix — see comment by mmrSelectDeduped.
 
       picked.bucket = 'bandit';
