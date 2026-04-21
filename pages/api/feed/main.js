@@ -604,6 +604,12 @@ export default async function handler(req, res) {
     const followedTopics = req.query.followed_topics ? req.query.followed_topics.split(',') : [];
     const userId = req.query.user_id || null;
     const guestDeviceId = req.query.guest_device_id || null;
+    // Diagnostic gate. When ?debug=1 or ?debug=full is passed, the response
+    // includes a `_debug` block with pool sizes, cap rejections, leaves served,
+    // and counts per bucket. Zero impact on normal requests. Used to diagnose
+    // prod-only regressions (e.g. pool depletion, over-restrictive caps) that
+    // local testing can't reproduce.
+    const debugFlag = req.query.debug === '1' || req.query.debug === 'full';
 
     // Session signals from client (real-time skip/engage tracking)
     const sessionEngagedIds = req.query.engaged_ids ? req.query.engaged_ids.split(',').map(Number).filter(Boolean) : [];
@@ -1007,6 +1013,7 @@ export default async function handler(req, res) {
       clusterLookupColumn,
       limit,
       offset,
+      debugFlag,
     });
 
   } catch (error) {
@@ -1028,7 +1035,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         canonicalSeenIds, seenMeta, totalInteractions,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
-        clusterLookupId, clusterLookupColumn, limit, offset } = opts;
+        clusterLookupId, clusterLookupColumn, limit, offset, debugFlag } = opts;
   // requestId is declared in handler() scope and not automatically visible here
   // (handleV2Feed is a sibling function). Recreate it locally so the impression
   // insert below can stamp every row with a stable per-request id. Web Crypto
@@ -1707,7 +1714,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   const uniqueIds = [...new Set(allCandidateIds)];
 
   if (uniqueIds.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0 });
+    const _emptyResp = { articles: [], next_cursor: null, has_more: false, total: 0 };
+    if (debugFlag) {
+      _emptyResp._debug = {
+        enabled: true,
+        empty_reason: 'uniqueIds.length === 0 — no pools returned any candidates',
+        retrieval_counts: {
+          personal: personalIds.size,
+          trending: trendingIds.size,
+          discovery: discoveryArticleMeta.length,
+          interest: interestIds.size,
+          fresh_best: freshBestIds.size,
+        },
+        feed_ms: Date.now() - _feedT0,
+      };
+    }
+    return res.status(200).json(_emptyResp);
   }
 
   // Fetch article data for scoring — use POOL_COLUMNS (lightweight, no embeddings)
@@ -2661,6 +2683,28 @@ async function handleV2Feed(req, res, supabase, opts) {
   const iPool = [...iTiers.freshUnseen];
   const fPool = [...fUnseen];
 
+  // Debug state — populated throughout the request when debugFlag is on, then
+  // attached to the response at the end. Cheap to build even when unused.
+  const _dbg = {
+    enabled: !!debugFlag,
+    path: null,  // 'cold_start' | 'interest_prefill' | 'standard'
+    pools_at_entry: {
+      p: pPool.length, t: tPool.length, d: dPool.length, i: iPool.length, f: fPool.length,
+    },
+    null_cluster_ratio: {},  // pool_name -> fraction null
+    has_personalization: null,
+    bandit_state: null,
+    buckets_served: {},
+    caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0 },
+  };
+  if (debugFlag) {
+    for (const [name, pool] of Object.entries({ p: pPool, t: tPool, d: dPool, i: iPool, f: fPool })) {
+      if (pool.length === 0) { _dbg.null_cluster_ratio[name] = 0; continue; }
+      const nullN = pool.filter(a => a?.super_cluster_id == null || a?.leaf_cluster_id == null).length;
+      _dbg.null_cluster_ratio[name] = Math.round((nullN / pool.length) * 100) / 100;
+    }
+  }
+
   // Lazy-fetch embeddings for personalized path MMR (same pattern as bandit Change 3)
   // Take top 50 from each pool — these are the candidates MMR will actually score
   if (hasAnyPersonalization) {
@@ -2797,7 +2841,9 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // console.log(`[feed-diag] interestCategories=${[...interestCategories].join(',')} iPool=${iPool.length} pPool=${pPool.length} tPool=${tPool.length} dPool=${dPool.length} fPool=${fPool.length}`);
 
+  _dbg.has_personalization = !!hasAnyPersonalization;
   if (!hasAnyPersonalization) {
+    _dbg.path = 'cold_start';
     // console.log('[feed-diag] BRANCH: cold-start bandit');
 
     // ── Fix 6: Proper Beta sampling via Marsaglia-Tsang gamma method ──
@@ -3360,6 +3406,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
+    _dbg.path = 'interest_prefill';
     // console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
     // ==========================================
     // QUOTA-BASED PRE-FILL for users with interest selections
@@ -3452,6 +3499,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       selected.push(picked);
     }
   } else {
+    _dbg.path = 'standard';
     // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     //
     // PIVOT MODE REMOVED (2026-04-21, Phase A).
@@ -3807,7 +3855,14 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   if (selected.length === 0) {
-    return res.status(200).json({ articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 });
+    const _emptyResp = { articles: [], next_cursor: null, has_more: false, total: 0, feed_state: 'caught_up', fresh_count: 0 };
+    if (debugFlag) {
+      _dbg.total_selected = 0;
+      _dbg.feed_ms = Date.now() - _feedT0;
+      _dbg.empty_reason = 'selected.length === 0 after slot-fill';
+      _emptyResp._debug = _dbg;
+    }
+    return res.status(200).json(_emptyResp);
   }
 
   const pageIds = selected.map(a => a.id);
@@ -3961,7 +4016,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   const _sessHit = (sessionSkippedIds?.length || 0) + (sessionEngagedIds?.length || 0) + (sessionGlancedIds?.length || 0);
   console.log(`[feed:timing] ms=${_feedMs} selected=${selected.length} sess_hit=${_sessHit} user=${userId || 'guest'}`);
 
-  return res.status(200).json({
+  // Debug payload — populated throughout the request when ?debug=1 was passed.
+  // Counts buckets for the final slate so we can see what pathway dominated.
+  if (debugFlag) {
+    for (const a of selected) {
+      const b = a?.bucket || 'unknown';
+      _dbg.buckets_served[b] = (_dbg.buckets_served[b] || 0) + 1;
+    }
+    _dbg.total_selected = selected.length;
+    _dbg.formatted_returned = formattedArticles.length;
+    _dbg.feed_ms = Date.now() - _feedT0;
+  }
+
+  const _resp = {
     articles: formattedArticles,
     next_cursor: nextCursor,
     has_more: hasMore,
@@ -3969,7 +4036,9 @@ async function handleV2Feed(req, res, supabase, opts) {
     feed_state: feedState,
     fresh_count: totalFreshUnseen,
     caught_up_message: caughtUpMessage,
-  });
+  };
+  if (debugFlag) _resp._debug = _dbg;
+  return res.status(200).json(_resp);
 }
 
 // ==========================================
