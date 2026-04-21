@@ -2742,25 +2742,30 @@ async function handleV2Feed(req, res, supabase, opts) {
   // strongly rejected this entity" is a permanent fact and shouldn't flip
   // positive just because the user tapped one related story this week.
   //
-  // Thresholds (TikTok-calibrated): affinity <= -0.55 (55 % negative or worse)
-  // AND at least 8 total trials AND negative_count >= 5. Raw net alone is
-  // misleading on high-volume entities: loc:usa at net -10 looks bad but
-  // affinity is -0.026 (basically balanced at 420 trials). Hard filter
-  // only fires on CLEAR rejection; everything else stays soft-penalized.
-  const STRONG_NEG_AFFINITY = -0.55;
-  const STRONG_NEG_MIN_TOTAL = 8;
-  const STRONG_NEG_MIN_NEG = 5;
+  // Thresholds (Phase 1 calibrated — three-tier to catch:
+  //   (a) small-sample unambiguous rejections: 0 positives / ≥ 3 negatives
+  //       (100 % skip rate with enough volume — no ambiguity)
+  //   (b) borderline medium-sample: affinity ≤ -0.4 / ≥ 6 trials / ≥ 4 neg
+  //       (catches person:trump at -0.51 which the old -0.55 gate missed
+  //       when the 2026-04-21 13:31 session started with only 3 prior skips)
+  //   (c) strong large-sample: affinity ≤ -0.55 / ≥ 8 trials / ≥ 5 neg
+  //       (original TikTok-calibrated rate-based filter)
+  // Raw net alone is still avoided — high-volume balanced entities like
+  // loc:usa (net -10 but affinity -0.026) stay in the feed via soft multiplier.
   const strongNegEntities = new Set();
   for (const [entity, rec] of Object.entries(entitySignals)) {
     if (typeof entity !== 'string' || entity.startsWith('lang:')) continue;
     const pos = rec.positive || 0;
     const neg = rec.negative || 0;
     const total = pos + neg;
-    if (total < STRONG_NEG_MIN_TOTAL || neg < STRONG_NEG_MIN_NEG) continue;
+    if (total === 0) continue;
     const affinity = (pos - neg) / total;
-    if (affinity <= STRONG_NEG_AFFINITY) {
-      strongNegEntities.add(entity);
-    }
+    // Tier (a): 0 positive / clear rejection pattern
+    if (pos === 0 && neg >= 3) { strongNegEntities.add(entity); continue; }
+    // Tier (b): borderline medium-sample
+    if (total >= 6 && neg >= 4 && affinity <= -0.4) { strongNegEntities.add(entity); continue; }
+    // Tier (c): large-sample strong rate
+    if (total >= 8 && neg >= 5 && affinity <= -0.55) { strongNegEntities.add(entity); continue; }
   }
   function passesStrongNegFilter(article) {
     if (strongNegEntities.size === 0) return true;
