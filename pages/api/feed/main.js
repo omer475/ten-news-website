@@ -2300,31 +2300,48 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   // Load typed entity signals for scoring (unified behavioral signal store).
-  // Also fetch 24h windows + last_*_at — needed for continuous read-time decay
-  // (TikTok / Pinterest-style exp half-life) and 24h-window blending so a
-  // same-session skip can override months of older positives.
+  // Combines:
+  //   - Widened fetch (Phase A): heavy users have 7k+ entity rows, the old
+  //     .limit(500) with default ordering cut off high-magnitude signals
+  //     that matter most. Parallel top-N-by-positive + top-N-by-negative,
+  //     deduped. This is what lets loc:uk / topic:soccer / topic:basketball
+  //     show up at all for the strong-neg filter below.
+  //   - 24h / 7d windows + last_*_at (PR #12): needed for continuous
+  //     read-time decay (TikTok / Pinterest-style exp half-life) and
+  //     24h-window blending so a same-session skip can override months of
+  //     older positives.
   let entitySignals = {};
   if (userId) {
-    const { data: signalRows } = await supabase
-      .from('user_entity_signals')
-      .select('entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d, last_positive_at, last_negative_at')
-      .eq('user_id', userId)
-      .or('positive_count.gt.0,negative_count.gt.0')
-      .limit(500);
-    if (signalRows) {
-      for (const row of signalRows) {
-        entitySignals[row.entity] = {
-          positive: row.positive_count || 0,
-          negative: row.negative_count || 0,
-          positive_24h: row.positive_24h || 0,
-          negative_24h: row.negative_24h || 0,
-          positive_7d: row.positive_7d || 0,
-          negative_7d: row.negative_7d || 0,
-          last_positive_at: row.last_positive_at,
-          last_negative_at: row.last_negative_at,
-        };
-      }
-    }
+    const SELECT_COLS = 'entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d, last_positive_at, last_negative_at';
+    const [topResult, negResult] = await Promise.all([
+      supabase.from('user_entity_signals')
+        .select(SELECT_COLS)
+        .eq('user_id', userId)
+        .or('positive_count.gt.0,negative_count.gt.0')
+        .order('positive_count', { ascending: false })
+        .limit(2000),
+      supabase.from('user_entity_signals')
+        .select(SELECT_COLS)
+        .eq('user_id', userId)
+        .gt('negative_count', 2)
+        .order('negative_count', { ascending: false })
+        .limit(500),
+    ]);
+    const addRow = (row) => {
+      if (entitySignals[row.entity]) return;
+      entitySignals[row.entity] = {
+        positive: row.positive_count || 0,
+        negative: row.negative_count || 0,
+        positive_24h: row.positive_24h || 0,
+        negative_24h: row.negative_24h || 0,
+        positive_7d: row.positive_7d || 0,
+        negative_7d: row.negative_7d || 0,
+        last_positive_at: row.last_positive_at,
+        last_negative_at: row.last_negative_at,
+      };
+    };
+    for (const row of (topResult?.data || [])) addRow(row);
+    for (const row of (negResult?.data || [])) addRow(row);
   }
 
   // Continuous time-decay: 14-day half-life, applied at READ time. Lambda for
@@ -2343,39 +2360,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     return Math.exp(-ENTITY_DECAY_LAMBDA * days);
   }
 
-  // Hard-suppression set for entities where the user has shown a clear,
-  // sustained negative pattern that the soft entitySignalMultiplier dilutes
-  // into invisibility (e.g. 1 strong-neg signal averaged with 4 neutral signals
-  // moves the multiplier <10 %). Threshold pair: net ≤ -7 OR (affinity ≤ -0.5
-  // AND ≥ 5 trials). Apply decay so a 60-day-old grudge fades naturally.
-  const STRONG_NEG_NET = -7;
-  const STRONG_NEG_AFFINITY = -0.5;
-  const STRONG_NEG_MIN_TOTAL = 5;
-  const strongNegEntities = new Set();
-  for (const [entity, rec] of Object.entries(entitySignals)) {
-    if (typeof entity !== 'string' || entity.startsWith('lang:')) continue;
-    const decPos = (rec.positive || 0) * entityDecayMultiplier(rec.last_positive_at);
-    const decNeg = (rec.negative || 0) * entityDecayMultiplier(rec.last_negative_at);
-    const total = decPos + decNeg;
-    if (total < STRONG_NEG_MIN_TOTAL) continue;
-    const net = decPos - decNeg;
-    const affinity = net / total;
-    if (net <= STRONG_NEG_NET || affinity <= STRONG_NEG_AFFINITY) {
-      strongNegEntities.add(entity);
-    }
-  }
-  function passesStrongNegFilter(article) {
-    if (strongNegEntities.size === 0) return true;
-    const signals = safeJsonParse(article.typed_signals, []);
-    if (!Array.isArray(signals)) return true;
-    for (const sig of signals) {
-      if (strongNegEntities.has(sig)) return false;
-    }
-    return true;
-  }
-  if (strongNegEntities.size > 0) {
-    console.log(`[feed] strong-neg suppress: ${strongNegEntities.size} entities (e.g. ${[...strongNegEntities].slice(0, 5).join(', ')})`);
-  }
+  // (Phase A 2026-04-21: the decay-aware strong-neg block that used to live
+  // here was superseded by the calibrated rate-based filter defined further
+  // down, just before the *ScoredFiltered assignments. Decayed counts were
+  // wrong for a hard filter — a recent UK engagement shouldn't unblock a
+  // user's 27-pos/44-neg history.)
 
   // Fix E (2026-04-19): pivot-mode selector support. When the algorithm enters
   // skip-cascade recovery, pivot should AMPLIFY the user's strongest recent
@@ -2738,10 +2727,56 @@ async function handleV2Feed(req, res, supabase, opts) {
     return Number.isFinite(created) && created < PIPELINE_SIGNAL_CUTOFF_MS;
   }
 
-  // Compose filters: signal presence (Fix 1C) + strong-negative entity hard
-  // suppress. Both are O(n) linear filters; running them as one .filter() chain
-  // avoids double-iterating each pool.
-  const passesPoolFilters = (article) => passesSignalFilter(article) && passesStrongNegFilter(article);
+  // Strong-negative entity hard-suppress (Phase A, 2026-04-21).
+  //
+  // The soft entitySignalMultiplier averages entity affinities, which
+  // dilutes a single strong-negative signal when sandwiched between
+  // neutral signals: one `loc:uk` at affinity -0.37 averaged with 4
+  // neutral signals moves the multiplier by < 8 %. Articles like "UK
+  // Reform party tax scandal" then leak through despite the user having
+  // 43 negative to 27 positive engagements on `loc:uk`.
+  //
+  // This filter looks at RAW counts, not time-decayed counts. The decay
+  // math is right for the soft multiplier (recent UK engagement should
+  // soften the penalty) but wrong for a hard filter: "I have historically
+  // strongly rejected this entity" is a permanent fact and shouldn't flip
+  // positive just because the user tapped one related story this week.
+  //
+  // Thresholds (TikTok-calibrated): affinity <= -0.55 (55 % negative or worse)
+  // AND at least 8 total trials AND negative_count >= 5. Raw net alone is
+  // misleading on high-volume entities: loc:usa at net -10 looks bad but
+  // affinity is -0.026 (basically balanced at 420 trials). Hard filter
+  // only fires on CLEAR rejection; everything else stays soft-penalized.
+  const STRONG_NEG_AFFINITY = -0.55;
+  const STRONG_NEG_MIN_TOTAL = 8;
+  const STRONG_NEG_MIN_NEG = 5;
+  const strongNegEntities = new Set();
+  for (const [entity, rec] of Object.entries(entitySignals)) {
+    if (typeof entity !== 'string' || entity.startsWith('lang:')) continue;
+    const pos = rec.positive || 0;
+    const neg = rec.negative || 0;
+    const total = pos + neg;
+    if (total < STRONG_NEG_MIN_TOTAL || neg < STRONG_NEG_MIN_NEG) continue;
+    const affinity = (pos - neg) / total;
+    if (affinity <= STRONG_NEG_AFFINITY) {
+      strongNegEntities.add(entity);
+    }
+  }
+  function passesStrongNegFilter(article) {
+    if (strongNegEntities.size === 0) return true;
+    const signals = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(signals)) return true;
+    for (const sig of signals) {
+      if (strongNegEntities.has(sig)) return false;
+    }
+    return true;
+  }
+  if (strongNegEntities.size > 0) {
+    console.log(`[feed] strong-neg suppress: ${strongNegEntities.size} entities (e.g. ${[...strongNegEntities].slice(0, 5).join(', ')})`);
+  }
+
+  // Compose: signal-presence (Fix 1C) + strong-negative hard-suppress.
+  const passesPoolFilters = (a) => passesSignalFilter(a) && passesStrongNegFilter(a);
   const personalScoredFiltered   = personalScored.filter(passesPoolFilters);
   const trendingScoredFiltered   = trendingScored.filter(passesPoolFilters);
   const discoveryScoredFiltered  = discoveryScored.filter(passesPoolFilters);
@@ -2930,17 +2965,30 @@ async function handleV2Feed(req, res, supabase, opts) {
   // both personal and trending); this ensures no page ever contains duplicates.
   const servedInThisRequest = new Set();
 
-  // Hard per-leaf cluster cap. The hierarchical bandit + MAX_PER_SUPER cap
-  // already keep super-clusters diverse, but inside a hot super (the user's
-  // dominant interest) one specific leaf can still take 4-6 of 10 cards. In
-  // observed sessions one leaf took 24 of 64 impressions across a 16-min
-  // window. A hard 4-per-leaf-per-feed cap keeps the slate readable without
-  // hurting personalization (the leaf still wins lots of slots, just not all).
+  // Per-leaf hard cap (Phase A, 2026-04-21).
+  //
+  // The hierarchical bandit + MAX_PER_SUPER cap keep supers diverse, but
+  // inside a hot super one specific leaf can still take 4-6 cards. In the
+  // 2026-04-20 session, leaf 0/0 alone took 24 of 64 impressions (37 %).
+  // A hard max-4-per-leaf cap keeps the slate readable — the leaf still
+  // wins many slots, just not all of them. Unclustered articles (NULL
+  // leaf) are capped separately below.
   const MAX_PER_LEAF_PER_FEED = 4;
+  const MAX_NULL_LEAF_PER_FEED = 2;  // brand-new articles not yet clustered
   function isLeafCapped(article, sel) {
     const leaf = article?.leaf_cluster_id;
     const sup = article?.super_cluster_id;
-    if (leaf == null || sup == null) return false;
+    if (leaf == null || sup == null) {
+      // NULL-cluster articles get their own narrow cap so fresh-published
+      // content can surface but can't flood the slate when the nightly
+      // cluster-assignment job is lagging.
+      let nullCount = 0;
+      for (const s of sel) {
+        if (s?.leaf_cluster_id == null || s?.super_cluster_id == null) nullCount++;
+        if (nullCount >= MAX_NULL_LEAF_PER_FEED) return true;
+      }
+      return false;
+    }
     let count = 0;
     for (const s of sel) {
       if (s.leaf_cluster_id === leaf && s.super_cluster_id === sup) count++;
@@ -3679,48 +3727,28 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   } else {
     // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
-    // Fix 8: Detect skip streak — if 5+ consecutive skips, switch to high-confidence only
-    // Problem 2 (2026-04-20): session-timeout reset for news app. TikTok uses
-    // 30 min for entertainment usage; news users have bursty check-ins
-    // (morning/lunch/evening) where a short gap shouldn't count as new session.
-    // Using 60 min — catches overnight clearly, tolerates meeting breaks.
-    let usePivotMode = false;
-    let sessionIsFresh = false;
-    if (userId) {
-      try {
-        const { data: lastEventRow } = await supabase
-          .from('user_article_events')
-          .select('created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        if (lastEventRow?.created_at) {
-          const lastEventMs = new Date(lastEventRow.created_at).getTime();
-          const gapMs = Date.now() - lastEventMs;
-          sessionIsFresh = gapMs > 60 * 60 * 1000; // 60 min — news-app calibration
-        } else {
-          sessionIsFresh = true;
-        }
-      } catch (_e) { /* non-blocking */ }
-    }
-    if (!sessionIsFresh && sessionSkippedIds.length >= 5) {
-      const engagedSet = new Set(sessionEngagedIds);
-      const glancedSet = new Set(sessionGlancedIds);
-      let consecutiveSkips = 0;
-      for (let i = sessionSkippedIds.length - 1; i >= 0; i--) {
-        const skipId = sessionSkippedIds[i];
-        if (!engagedSet.has(skipId) && !glancedSet.has(skipId)) {
-          consecutiveSkips++;
-        } else {
-          break;
-        }
-      }
-      usePivotMode = consecutiveSkips >= 5;
-    }
-    if (sessionIsFresh) {
-      console.log(`[feed:session] fresh session (gap>30min) — pivot disabled`);
-    }
+    //
+    // PIVOT MODE REMOVED (2026-04-21, Phase A).
+    //
+    // Prior behavior: after 5 consecutive skips, every remaining slot was
+    // relabeled 'pivot' and filled from pools filtered to neutral-or-positive
+    // entity-signal average. This was an invented mechanic with no analogue
+    // in the published recommender literature (TikTok Monolith, Pinterest
+    // PinnerSage, YouTube two-tower — none use mode machines). It caused
+    // lock-in: the filter let near-neutral articles through that the user
+    // still rejected (UK politics, motorsport), every fresh skip extended
+    // the streak, and the mode never exited. Session of 2026-04-21 09:05 UTC
+    // showed 58 of 94 impressions (62 %) served as pivot, all with 72 % skip
+    // rate — explicit regression vs the 2026-04-20 baseline.
+    //
+    // The correct answer (per research 2026-04-21): no mode machine.
+    // Multi-cluster retrieval (Phase B) structurally forces breadth. Online
+    // signal updates (already shipped in Monolith-style form via Fix M +
+    // read-fraction rewards) absorb the negative gradient from skips on the
+    // next request. A retention head (Phase D) punishes lock-in at the
+    // ranker level. Until Phase B lands, the standard slot-fill below already
+    // uses trending/discovery/fresh pools that inherit strong-neg filtering
+    // and entity-signal multipliers — good enough as a baseline.
 
     // Problem 3 (2026-04-20): per-super diversity cap. TikTok-style "don't
     // let any single topic-cluster dominate the page." Track how many articles
@@ -3739,47 +3767,13 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (s != null) superCountOnPage[s] = (superCountOnPage[s] || 0) + 1;
     }
 
-    // Personalized user without topic selections: standard slot-filling
+    // Personalized user without topic selections: standard slot-filling.
     let consecutiveFails2 = 0;
     for (let pos = 0; selected.length < limit && consecutiveFails2 < 20; pos++) {
       const slot = SLOTS[pos % SLOTS.length];
       let picked = null;
 
-      if (usePivotMode) {
-        // Fix E (2026-04-19) + Problem 3 (2026-04-20):
-        // Selector sources articles matching top-8 positive signals.
-        // NEW: multiplier floor of 0.8 prevents pivot-pool collapse observed
-        // 04-20 12:51 (pages 3-4 dropped to 9% engagement when pivot backfilled
-        // with low-mult articles that matched a top-8 tag but had poor overall
-        // alignment). Also: per-super diversity cap applied below.
-        if (topPositiveSignals.length >= 3) {
-          const PIVOT_MULT_FLOOR = 0.8;
-          const pivotMatches = (a) => {
-            if (!withinSuperCap(a)) return false;
-            const mult = entitySignalMultiplier(a);
-            if (mult < PIVOT_MULT_FLOOR) return false;
-            const sigs = safeJsonParse(a.typed_signals, []);
-            if (!Array.isArray(sigs)) return false;
-            return sigs.some(s => topPositiveSet.has(s));
-          };
-          const pivotTPool = tPool.filter(pivotMatches);
-          const pivotDPool = dPool.filter(pivotMatches);
-          const pivotPPool = pPool.filter(pivotMatches);
-          picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
-          if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
-          if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
-          // NO fallback to unfiltered pool — better fewer articles than skip-pattern repeat
-        } else {
-          // Cold-start fallback: old filter behavior (multiplier >= 1.0).
-          const pivotFilter = (a) => withinSuperCap(a) && entitySignalMultiplier(a) >= 1.0;
-          const pivotTPool = tPool.filter(pivotFilter);
-          const pivotDPool = dPool.filter(pivotFilter);
-          const pivotPPool = pPool.filter(pivotFilter);
-          picked = mmrSelectDeduped(pivotTPool, selected, tagCache, 0.5);
-          if (!picked) picked = mmrSelectDeduped(pivotDPool, selected, tagCache, 0.4);
-          if (!picked) picked = mmrSelectDeduped(pivotPPool, selected, tagCache, 0.5);
-        }
-      } else if (slot === 'F') {
+      if (slot === 'F') {
         picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
       } else if (slot === 'P') {
         picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
@@ -3802,7 +3796,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!withinSuperCap(picked)) { consecutiveFails2++; continue; }
       consecutiveFails2 = 0;
 
-      picked.bucket = usePivotMode ? 'pivot' : (slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery');
+      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       recordSuperPick(picked);
