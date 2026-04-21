@@ -103,14 +103,18 @@ struct MainFeedView: View {
             currentPageIndex = newIndex
             viewModel.recordViewStart(at: newIndex)
             viewModel.trackArticleView(at: newIndex)  // reading history only, no analytics event
-            if newIndex >= sortedArticles.count - 5 {
-                Task {
-                    await viewModel.loadMoreIfNeeded()
-                    // If filters removed everything and server has more, keep fetching
-                    if newIndex >= sortedArticles.count - 2 && viewModel.hasMore {
-                        await viewModel.loadMoreIfNeeded()
-                    }
-                }
+
+            // Aggressive prefetch (TikTok pattern). Server response is currently
+            // 20-26 s, so waiting until N-5 means the user hits the end before
+            // the next batch arrives. Fire prefetch at N-15, N-10, N-5 —
+            // loadMoreIfNeeded caps at 3 concurrent in-flight fetches so this
+            // doesn't runaway. Target: user never sees a "loading" gap after
+            // the first slate is consumed.
+            let remaining = sortedArticles.count - newIndex - 1
+            if viewModel.hasMore {
+                if remaining <= 15 { Task { await viewModel.loadMoreIfNeeded() } }
+                if remaining <= 10 { Task { await viewModel.loadMoreIfNeeded() } }
+                if remaining <=  5 { Task { await viewModel.loadMoreIfNeeded() } }
             }
         }
         .overlay(alignment: .bottom) {

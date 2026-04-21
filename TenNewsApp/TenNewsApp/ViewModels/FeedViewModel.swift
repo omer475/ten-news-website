@@ -79,6 +79,12 @@ final class FeedViewModel {
     }
 
     private let fetchLimit = 25
+    /// How many prefetch requests can be in-flight at once.
+    /// TikTok-style: fire-and-forget parallel loads so the user never waits
+    /// at the end of the buffer when the server is slow (currently 20-26 s).
+    /// Cap at 3 to avoid hammering server / burning mobile bandwidth.
+    private let maxConcurrentPrefetches = 3
+    private var activePrefetches = 0
 
     // MARK: - Data Loading
 
@@ -102,7 +108,12 @@ final class FeedViewModel {
 
         // Step 2: Fetch fresh feed (runs regardless, replaces cache)
         do {
-            let persistedSeenIds = ReadingHistoryManager.shared.seenArticleIds(limit: 500)
+            // Reduced from 500 → 200. For heavy users (7k+ seen articles) the
+            // pgvector exclude_ids filter at 500 IDs was timing out on the
+            // personal query (statement timeout 5 s), forcing a fallback to
+            // single-vector retrieval and adding ~5 s to every response.
+            // The server's user_feed_impressions table handles older dedup.
+            let persistedSeenIds = ReadingHistoryManager.shared.seenArticleIds(limit: 200)
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
                 preferences: preferences,
@@ -146,7 +157,7 @@ final class FeedViewModel {
     }
 
     func loadMoreIfNeeded() async {
-        guard !isLoading, !isRefreshing else { return }
+        guard !isRefreshing else { return }
         if !hasMore {
             // Recovery: if hasMore has been false for > 2 min, retry once.
             // Handles stale sessions where a bad response permanently blocked pagination.
@@ -155,22 +166,34 @@ final class FeedViewModel {
             hasMoreBecameFalseAt = Date() // prevent rapid retries
             let added = await loadMoreBatch()
             if added == 0 && !hasMore {
-                // Server confirmed no more — don't retry again for a while
                 hasMoreBecameFalseAt = Date()
             }
             return
         }
+        // Parallel prefetch: allow up to maxConcurrentPrefetches in flight at once.
+        // This is the TikTok pattern — fire-and-forget next-batch loads while the
+        // user is still consuming the current batch. The server currently takes
+        // ~20-26 s per request, and waiting serially means the user hits the
+        // end of the buffer before the next batch arrives. Concurrent prefetch
+        // ensures the buffer always has content even when the server is slow.
+        guard activePrefetches < maxConcurrentPrefetches else { return }
+        activePrefetches += 1
         await loadMoreBatch()
+        activePrefetches -= 1
     }
 
     /// Fetch one batch, filter, append visible articles, and re-rank the new batch.
     /// Returns the count of articles that passed filters.
+    /// Does NOT mutate `isLoading` — that's owned by loadInitialData / refresh.
+    /// Parallel prefetches are tracked via `activePrefetches` in loadMoreIfNeeded.
     @discardableResult
     private func loadMoreBatch() async -> Int {
-        isLoading = true
         do {
             let signals = reRanker.sessionSignals
-            let existingIds = allArticles.map { $0.id.stringValue }
+            // Only send IDs server hasn't already logged as impressions — session
+            // IDs are the ones added since the last fetch. Keeps the payload small
+            // (older seen IDs are already in user_feed_impressions server-side).
+            let sessionIds = allArticles.suffix(100).map { $0.id.stringValue }
             let response = try await feedService.fetchMainFeed(
                 cursor: nextCursor,
                 limit: fetchLimit,
@@ -179,9 +202,9 @@ final class FeedViewModel {
                 engagedIds: signals.engaged,
                 glancedIds: signals.glanced,
                 skippedIds: signals.skipped,
-                seenIds: existingIds
+                seenIds: sessionIds
             )
-            let existingSet = Set(existingIds)
+            let existingSet = Set(allArticles.map { $0.id.stringValue })
             let newArticles = response.articles.filter { !existingSet.contains($0.id.stringValue) }
             allArticles.append(contentsOf: newArticles)
             nextCursor = response.nextCursor
@@ -189,7 +212,6 @@ final class FeedViewModel {
                 hasMore = true
                 hasMoreBecameFalseAt = nil
             } else if hasMore {
-                // Transition from true → false: record timestamp for recovery
                 hasMore = false
                 hasMoreBecameFalseAt = Date()
             }
@@ -199,10 +221,8 @@ final class FeedViewModel {
             let filtered = newArticles.filter { passesFeedFilters($0, followedSlugs: followedSlugs) }
             let ranked = reRanker.rerank(articles: filtered, currentIndex: -1)
             articles.append(contentsOf: ranked)
-            isLoading = false
             return filtered.count
         } catch {
-            isLoading = false
             return 0
         }
     }
@@ -230,9 +250,10 @@ final class FeedViewModel {
         isLoading = true
         errorMessage = nil
         do {
-            // Fix 6: Merge current session IDs + persisted reading history for dedup
+            // Fix 6: Merge current session IDs + persisted reading history for dedup.
+            // Capped at 200 persisted to avoid pgvector exclude_ids statement timeout.
             let currentIds = allArticles.map { $0.id.stringValue }
-            let persistedIds = ReadingHistoryManager.shared.seenArticleIds(limit: 500)
+            let persistedIds = ReadingHistoryManager.shared.seenArticleIds(limit: 200)
             let mergedSeenIds = Array(Set(currentIds + persistedIds))
             let feedResponse = try await feedService.fetchMainFeed(
                 limit: fetchLimit,
