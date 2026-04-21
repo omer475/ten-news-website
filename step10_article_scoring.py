@@ -432,7 +432,7 @@ def score_article(
         Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
     system_prompt = SCORING_SYSTEM_PROMPT_V18
 
@@ -1010,7 +1010,7 @@ def generate_interest_tags(
     
     prompt = INTEREST_TAGS_PROMPT.format(title=title, summary=summary)
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
