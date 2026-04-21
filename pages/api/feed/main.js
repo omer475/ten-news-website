@@ -2551,6 +2551,34 @@ async function handleV2Feed(req, res, supabase, opts) {
   const interestScoredFiltered   = interestScored.filter(passesPoolFilters);
   const freshBestScoredFiltered  = freshBestScored.filter(passesPoolFilters);
 
+  // Retrieval funnel for debug payload — captures where candidates are lost
+  // between raw RPC return → scored → filtered → tier-split. This is the gap
+  // that killed earlier diagnostics.
+  if (debugFlag) {
+    _dbg.retrieval_raw = {
+      personal: personalIdOrder.length,
+      trending: trendingArticleMeta.length,
+      discovery: discoveryArticleMeta.length,
+      interest: interestArticleMeta.length,
+      fresh_best: freshBestArticleMeta.length,
+    };
+    _dbg.scored = {
+      personal: personalScored.length,
+      trending: trendingScored.length,
+      discovery: discoveryScored.length,
+      interest: interestScored.length,
+      fresh_best: freshBestScored.length,
+    };
+    _dbg.after_filters = {
+      personal: personalScoredFiltered.length,
+      trending: trendingScoredFiltered.length,
+      discovery: discoveryScoredFiltered.length,
+      interest: interestScoredFiltered.length,
+      fresh_best: freshBestScoredFiltered.length,
+    };
+    _dbg.canonical_seen = canonicalSeenIds.size;
+  }
+
   // ==========================================
   // PHASE 5.5b: WORLD-EVENT DEDUP (IMPROVEMENT 3)
   // Cap articles per world_event/cluster to prevent event flooding
