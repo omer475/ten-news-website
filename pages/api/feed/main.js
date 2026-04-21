@@ -470,80 +470,11 @@ async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
 }
 
 // ==========================================
-// SCORING V3: Entity-level + session momentum + skip penalty
-// ==========================================
-
-function scorePersonalV3(article, similarity, tagProfile, sessionBoosts, skipProfile) {
-  const tags = safeJsonParse(article.interest_tags, []);
-  const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-  const aiScore = article.ai_final_score || 0;
-  const n = Math.max(tags.length, 1);
-
-  let tagScore = 0;
-  let momentumBoost = 0;
-  let skipScore = 0;
-
-  // IMPROVEMENT 4: Skip profile time decay — penalties fade over 7 days
-  const SKIP_HALF_LIFE_MS = 7 * 24 * 3600000; // 7 days
-  const now = Date.now();
-
-  for (const tag of tags) {
-    const t = tag.toLowerCase();
-    tagScore += tagProfile[t] || 0;
-    momentumBoost += sessionBoosts[t] || 0;
-    if (skipProfile) {
-      const entry = skipProfile[t];
-      if (typeof entry === 'object' && entry !== null && entry.w) {
-        // Time-stamped skip entry: { w: weight, t: timestamp }
-        const age = now - new Date(entry.t || 0).getTime();
-        const decay = Math.exp(-0.693 * age / SKIP_HALF_LIFE_MS);
-        skipScore += entry.w * decay;
-      } else if (typeof entry === 'number') {
-        // Legacy flat number — apply 50% decay as default
-        skipScore += entry * 0.5;
-      }
-    }
-  }
-
-  tagScore /= n;
-  momentumBoost /= n;
-  skipScore /= n;
-
-  // Skip penalty: only penalize if skip signal > interest signal
-  const netSkip = Math.max(0, skipScore - tagScore * 0.5);
-  const skipPenalty = Math.min(netSkip, 0.9);
-
-  // All components multiplied by recency — prevents old articles from dominating
-  const base = (tagScore * 350 + momentumBoost * 150 + similarity * 250 + (aiScore / 1000) * 250) * recency;
-  return base * (1 - skipPenalty);
-}
-
-// ==========================================
 // V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
+// Personal pool uses scoreArticleV3 (below). Trending/discovery use scoreTrendingV3/scoreDiscoveryV3.
+// Entity signal multiplier + category suppression applied externally via handleV2Feed closures
+// (read typed_signals). Legacy tag-profile scorer and tag-skip penalty removed 2026-04-21.
 // ==========================================
-
-// ══════════════════════════════════════════════════════════════
-// SKIP PENALTY HELPER — used by ALL scoring functions
-// Reads skip_profile to penalize content the user explicitly skipped.
-// entitySignalMultiplier consolidated to single closure in handleV2Feed
-// (reads typed_signals, squared formula). Module-level computeEntityAffinity
-// (tanh version reading positive_7d/negative_24h) removed — superseded by
-// closure at handleV2Feed which uses positive_count/negative_count directly.
-
-// ══════════════════════════════════════════════════════════════
-// LEGACY SKIP PENALTY — kept as fallback when entity_signals unavailable
-// ══════════════════════════════════════════════════════════════
-function computeSkipPenalty(article, userSkipProfile) {
-  if (!userSkipProfile || typeof userSkipProfile !== 'object') return 0;
-  const tags = safeJsonParse(article.interest_tags, []);
-  let penalty = 0;
-  for (const tag of tags) {
-    const t = tag.toLowerCase();
-    const w = userSkipProfile[t];
-    if (w && w > 0) penalty += w;
-  }
-  return Math.min(penalty, 0.80); // cap — don't fully zero out
-}
 
 // Change 1: Blend long-term + session vectors.
 // Typed-signal multiplier applied externally (see handleV2Feed closure).
@@ -595,23 +526,16 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
   return (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
 }
 
-function scoreTrendingV3(article, userSkipProfile) {
+function scoreTrendingV3(article) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-  const baseScore = (article.ai_final_score || 0) * recency;
-  // Entity signal multiplier applied externally (squared) — not here
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
-  return baseScore * skipMultiplier;
+  return (article.ai_final_score || 0) * recency;
 }
 
-function scoreDiscoveryV3(article, personalCategories, userSkipProfile) {
+function scoreDiscoveryV3(article, personalCategories) {
   const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
   const categoryBoost = personalCategories.has(article.category) ? 0.6 : 1.5;
   const surprise = 1 + Math.random() * 0.4;
-  const baseScore = (article.ai_final_score || 0) * recency * categoryBoost * surprise;
-  const skipPenalty = computeSkipPenalty(article, userSkipProfile);
-  const skipMultiplier = Math.max(0.10, 1.0 - skipPenalty);
-  return baseScore * skipMultiplier;
+  return (article.ai_final_score || 0) * recency * categoryBoost * surprise;
 }
 
 // ==========================================
@@ -2525,9 +2449,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           sessionVecSim = cosineSimilarityVec(emb, sessionTasteVector);
         }
       }
-      let score = personalizationId
-        ? scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, sessionInteractionCount)
-        : scorePersonalV3(article, similarity, effectiveTagProfile, momentum.boosts, null);
+      let score = scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
@@ -2557,7 +2479,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
-      let s = scoreTrendingV3(article, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
@@ -2570,7 +2492,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .map(a => {
       const article = articleMap[a.id];
-      let s = scoreDiscoveryV3(article, personalCategories, null) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
