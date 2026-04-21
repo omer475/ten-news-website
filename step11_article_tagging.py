@@ -223,7 +223,7 @@ def tag_article(
         Dict with 'countries' and 'topics' arrays
     """
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
     # Build article text for tagging
     bullets_text = "\n".join(f"- {b}" for b in bullets) if bullets else "No bullets available"

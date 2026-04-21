@@ -80,8 +80,8 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
         print(f"   📷 {articles_without_images} articles without images (Bright Data will fetch later)")
     print(f"   ✅ Filtering {len(articles)} total articles")
     
-    # Use gemini-2.0-flash for production
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    # Use gemini-2.5-flash-lite for production
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     
     # Process articles in batches to avoid rate limits
     if len(articles) > batch_size:
