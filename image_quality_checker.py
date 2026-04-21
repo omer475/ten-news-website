@@ -39,7 +39,7 @@ class ImageQualityChecker:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         self.prompt = """Analyze this news article image for a professional English-language news app. Determine if it's clean and suitable.
 

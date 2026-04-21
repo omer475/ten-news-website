@@ -22,7 +22,7 @@ from dataclasses import dataclass
 @dataclass
 class ComponentConfig:
     """Configuration for component selection"""
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-2.5-flash-lite"
     temperature: float = 0.1
     top_p: float = 0.95
     top_k: int = 40
@@ -443,7 +443,7 @@ class GeminiComponentSelector:
         # Configure Gemini
         genai.configure(api_key=api_key)
         
-        # Initialize model (response_schema removed - not well supported by gemini-2.0-flash)
+        # Initialize model (response_schema removed - not well supported by gemini-2.5-flash-lite)
         self.model = genai.GenerativeModel(
             model_name=self.config.model,
             generation_config={

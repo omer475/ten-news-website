@@ -23,7 +23,7 @@ from dataclasses import dataclass
 @dataclass
 class ComponentWriterConfig:
     """Configuration for Gemini component writer"""
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-2.5-flash-lite"
     max_tokens: int = 1536  # Enough for timeline + details + graph
     temperature: float = 0.3
     timeout: int = 60
