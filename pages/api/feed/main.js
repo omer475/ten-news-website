@@ -2559,12 +2559,25 @@ async function handleV2Feed(req, res, supabase, opts) {
   }
 
   // Compose: signal-presence (Fix 1C) + strong-negative hard-suppress.
-  const passesPoolFilters = (a) => passesSignalFilter(a) && passesStrongNegFilter(a);
-  const personalScoredFiltered   = personalScored.filter(passesPoolFilters);
-  const trendingScoredFiltered   = trendingScored.filter(passesPoolFilters);
-  const discoveryScoredFiltered  = discoveryScored.filter(passesPoolFilters);
-  const interestScoredFiltered   = interestScored.filter(passesPoolFilters);
-  const freshBestScoredFiltered  = freshBestScored.filter(passesPoolFilters);
+  // Scope tightening (2026-04-22). Prod debug-funnel observed this user's
+  // strong-neg entity set kill 95% of trending, 85% of discovery, and 100%
+  // of fresh_best candidates — leaving empty pools after the downstream
+  // tier-split. The strong-neg filter is calibrated to the user's PERSONAL
+  // taste pool (the taste-vector-similar articles they already care about).
+  // Applying it to exploration pools (trending / discovery / fresh_best)
+  // over-blocks, because those pools are SUPPOSED to surface content outside
+  // the user's known negatives — that's the whole point of exploration.
+  //
+  // Soft entity multiplier (entitySignalMultiplier) continues to down-weight
+  // negative-affinity content in all pools, so bad content is still ranked
+  // low in trending/discovery — just not hard-blocked.
+  const passesPersonalFilters = (a) => passesSignalFilter(a) && passesStrongNegFilter(a);
+  const passesExplorationFilters = (a) => passesSignalFilter(a);
+  const personalScoredFiltered   = personalScored.filter(passesPersonalFilters);
+  const trendingScoredFiltered   = trendingScored.filter(passesExplorationFilters);
+  const discoveryScoredFiltered  = discoveryScored.filter(passesExplorationFilters);
+  const interestScoredFiltered   = interestScored.filter(passesExplorationFilters);
+  const freshBestScoredFiltered  = freshBestScored.filter(passesExplorationFilters);
 
   // Retrieval funnel for debug payload — captures where candidates are lost
   // between raw RPC return → scored → filtered → tier-split. This is the gap
