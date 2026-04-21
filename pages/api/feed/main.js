@@ -325,149 +325,10 @@ const ONBOARDING_ENTITY_MAP = {
   'Trade & Tariffs': ['trade', 'tariffs', 'sanctions'],
 };
 
-// ==========================================
-// USER INTEREST PROFILE (entity-level tag weights from engagement history)
-// ==========================================
-
-async function buildUserInterestProfile(supabase, userId) {
-  // Get article IDs the user engaged with in the last 14 days
-  // IMPROVEMENT 2: Also fetch view_seconds for dwell-time weighting
-  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: events } = await supabase
-    .from('user_article_events')
-    .select('article_id, event_type, metadata')
-    .eq('user_id', userId)
-    .gte('created_at', twoWeeksAgo)
-    .in('event_type', ['article_liked', 'article_shared', 'article_saved', 'article_engaged', 'article_detail_view'])
-    .order('created_at', { ascending: false })
-    .limit(500);
-
-  if (!events || events.length === 0) return null;
-
-  // Weight by engagement type: liked > shared > saved > engaged > viewed
-  // article_liked is the strongest signal — explicit "I want more of this"
-  // article_shared is second — user vouches for this content to others
-  const eventWeights = { article_liked: 4, article_shared: 3.5, article_saved: 3, article_engaged: 2, article_detail_view: 1 };
-  const articleWeights = {};
-  for (const e of events) {
-    let w = eventWeights[e.event_type] || 1;
-    // Professional tiered dwell weighting (TikTok/Pinterest style)
-    // Uses continuous multiplier with tier-based floors for precision
-    const dwellSeconds = e.metadata?.dwell ? parseFloat(e.metadata.dwell) :
-                         e.metadata?.total_active_seconds ? parseFloat(e.metadata.total_active_seconds) : 0;
-    const dwellTier = e.metadata?.dwell_tier || '';
-    if (dwellSeconds > 0) {
-      // Tiered multipliers: the longer someone reads, the stronger the signal
-      //   0-1s   instant_skip → 0.3x (strong negative handled by skip_profile)
-      //   1-3s   quick_skip   → 0.5x
-      //   3-6s   glance       → 0.8x (neutral, slight interest)
-      //   6-12s  light_read   → 1.2x (mild interest)
-      //   12-25s engaged_read → 2.0x (strong interest)
-      //   25-45s deep_read    → 3.0x (very strong interest)
-      //   45s+   absorbed     → 4.0x (maximum signal)
-      let dwellMultiplier;
-      if (dwellTier === 'absorbed' || dwellSeconds >= 45) dwellMultiplier = 4.0;
-      else if (dwellTier === 'deep_read' || dwellSeconds >= 25) dwellMultiplier = 3.0;
-      else if (dwellTier === 'engaged_read' || dwellSeconds >= 12) dwellMultiplier = 2.0;
-      else if (dwellTier === 'light_read' || dwellSeconds >= 6) dwellMultiplier = 1.2;
-      else if (dwellTier === 'glance' || dwellSeconds >= 3) dwellMultiplier = 0.8;
-      else if (dwellSeconds >= 1) dwellMultiplier = 0.5;
-      else dwellMultiplier = 0.3;
-      w *= dwellMultiplier;
-    }
-    articleWeights[e.article_id] = Math.max(articleWeights[e.article_id] || 0, w);
-  }
-
-  const articleIds = Object.keys(articleWeights).map(Number).filter(Boolean);
-  if (articleIds.length === 0) return null;
-
-  // Fetch interest_tags for engaged articles (batch)
-  let allTags = [];
-  for (let i = 0; i < articleIds.length; i += 300) {
-    const batch = articleIds.slice(i, i + 300);
-    const { data } = await supabase
-      .from('published_articles')
-      .select('id, interest_tags')
-      .in('id', batch);
-    if (data) allTags = allTags.concat(data);
-  }
-
-  // Build weighted tag frequency map
-  const tagScores = {};
-  for (const article of allTags) {
-    const tags = safeJsonParse(article.interest_tags, []);
-    const weight = articleWeights[article.id] || 1;
-    for (const tag of tags) {
-      const t = tag.toLowerCase();
-      tagScores[t] = (tagScores[t] || 0) + weight;
-    }
-  }
-
-  // Normalize: divide by max score so top tag = 1.0
-  const maxScore = Math.max(...Object.values(tagScores), 1);
-  const profile = {};
-  for (const [tag, score] of Object.entries(tagScores)) {
-    profile[tag] = score / maxScore;
-  }
-
-  return profile;
-}
-
-// ==========================================
-// SESSION MOMENTUM (streak detection + short-term boosts)
-// ==========================================
-
-async function computeSessionMomentum(supabase, engagedIds, skippedIds) {
-  const boosts = {};
-  const skipPenalties = {};
-  const streakTags = new Set();
-
-  if (engagedIds.length > 0) {
-    const { data: engagedArticles } = await supabase
-      .from('published_articles')
-      .select('interest_tags')
-      .in('id', engagedIds.slice(0, 30));
-
-    // Count tag frequency across session-engaged articles
-    const tagFreq = {};
-    for (const a of (engagedArticles || [])) {
-      const tags = safeJsonParse(a.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        tagFreq[t] = (tagFreq[t] || 0) + 1;
-      }
-    }
-
-    // Streak detection: 3+ articles with same tag = strong momentum
-    for (const [tag, count] of Object.entries(tagFreq)) {
-      if (count >= 3) {
-        boosts[tag] = 0.5;
-        streakTags.add(tag);
-      } else if (count >= 2) {
-        boosts[tag] = 0.3;
-      } else {
-        boosts[tag] = 0.15;
-      }
-    }
-  }
-
-  if (skippedIds.length > 0) {
-    const { data: skippedArticles } = await supabase
-      .from('published_articles')
-      .select('interest_tags')
-      .in('id', skippedIds.slice(0, 30));
-
-    for (const a of (skippedArticles || [])) {
-      const tags = safeJsonParse(a.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        skipPenalties[t] = (skipPenalties[t] || 0) + 0.15;
-      }
-    }
-  }
-
-  return { boosts, skipPenalties, streakTags };
-}
+// Legacy buildUserInterestProfile + computeSessionMomentum removed 2026-04-21.
+// Both produced tag→weight maps whose only consumer was the deleted tag-profile
+// scorer / effectiveTagProfile. Typed entity signals + Thompson bandit replace
+// their role without re-reading the tag taxonomy.
 
 // ==========================================
 // V3 SCORING: vector_score×500 + entity_bonus×200 + quality×200 + freshness×100 + session_boost×150
@@ -758,8 +619,6 @@ export default async function handler(req, res) {
     let userPrefs = null;
     let tasteVector = null;
     let tasteVectorMinilm = null;
-    let skipProfile = null;
-    let storedTagProfile = null;
     let hasInterestClusters = false;
     let persUserId = null; // The users table ID (may differ from auth user ID)
     let personalizationId = null;
@@ -933,9 +792,6 @@ export default async function handler(req, res) {
       if (!tasteVectorMinilm) {
         tasteVectorMinilm = userData?.taste_vector_minilm || null;
       }
-      // skip_profile and tag_profile removed — replaced by typed entity signals
-      skipProfile = null;
-      storedTagProfile = null;
 
       // Fix 1: Use personalizationId (V3 clusters) instead of persUserId (legacy clusters with 0 importance)
       clusterLookupId = personalizationId || persUserId;
@@ -1135,8 +991,6 @@ export default async function handler(req, res) {
       tasteVectorMinilm,
       hasInterestClusters,
       similarityFloor,
-      skipProfile,
-      storedTagProfile,
       seenArticleIds,
       allSeenIds,
       canonicalSeenIds,
@@ -1170,7 +1024,7 @@ export default async function handler(req, res) {
 async function handleV2Feed(req, res, supabase, opts) {
   const _feedT0 = Date.now();  // Fix J timing monitor
   let { userId, userPrefs, tasteVector, tasteVectorMinilm, hasInterestClusters,
-        similarityFloor, skipProfile, storedTagProfile, seenArticleIds, allSeenIds,
+        similarityFloor, seenArticleIds, allSeenIds,
         canonicalSeenIds, seenMeta, totalInteractions,
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
@@ -1257,7 +1111,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   const fortyEightHoursAgoISO = new Date(now - 48 * 3600000).toISOString();
 
-  const [personalResult, trendingResult, discoveryResult, userInterestProfile, recentEngagedResult, freshBestResult] = await Promise.all([
+  const [personalResult, trendingResult, discoveryResult, recentEngagedResult, freshBestResult] = await Promise.all([
     // 1. PERSONAL: pgvector similarity search (catch timeout → empty)
     Promise.resolve(personalPromise).catch(err => {
       console.error('[feed] Personal query threw:', err?.message || err);
@@ -1337,11 +1191,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       return { data: all, error: null };
     })(),
 
-    // 4. USER INTEREST PROFILE: entity-level tag weights from engagement history
-    buildUserInterestProfile(supabase, userId),
-
-    // 5. ALL EVENTS for entity signal computation (engagement rates per entity)
-    //    Also used for topic saturation penalty
+    // USER EVENTS for entity signal computation (engagement rates per entity)
+    //   Also used for topic saturation penalty
     (userId ? supabase
       .from('user_article_events')
       .select('article_id, event_type, created_at')
@@ -1438,42 +1289,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     });
   }
 
-  // ==========================================
-  // PHASE 2: SESSION MOMENTUM (streak detection)
-  // ==========================================
-
-  const momentum = await computeSessionMomentum(supabase, sessionEngagedIds, sessionSkippedIds);
-
-  // Fix 4: Normalize tag_profile to spread out saturated values
-  // When 25 tags are all at 1.0, log-scale normalization restores relative ranking
-  function normalizeTagProfile(tagProfile) {
-    if (!tagProfile || typeof tagProfile !== 'object') return {};
-    const entries = Object.entries(tagProfile);
-    if (entries.length === 0) return {};
-    const maxRaw = Math.max(...entries.map(([, v]) => v));
-    if (maxRaw <= 0) return tagProfile;
-    const normalized = {};
-    for (const [entity, rawWeight] of entries) {
-      normalized[entity] = Math.log1p(rawWeight) / Math.log1p(maxRaw);
-    }
-    return normalized;
-  }
-
-  // Use stored tag_profile if available (incrementally updated via track.js),
-  // fall back to dynamically computed interest profile
-  const rawTagProfile = (storedTagProfile && Object.keys(storedTagProfile).length > 0)
-    ? storedTagProfile
-    : (userInterestProfile || {});
-  const baseTagProfile = normalizeTagProfile(rawTagProfile);
-
-  // Merge session boosts into tag profile (temporary, this request only)
-  const effectiveTagProfile = { ...baseTagProfile };
-  for (const [tag, boost] of Object.entries(momentum.boosts)) {
-    effectiveTagProfile[tag] = Math.min((effectiveTagProfile[tag] || 0) + boost, 1.5);
-  }
-
-  // Skip profile removed — entity signals handle negative learning.
-  // Session skip penalties are still tracked via session momentum for within-session diversity.
+  // Tag-profile normalization + session-momentum tag boosts removed 2026-04-21
+  // along with their sole consumer (scorePersonalV3). Negative learning now
+  // flows exclusively through typed entity signals; within-session diversity
+  // is enforced by sessionTopicPenalty + event/cluster caps.
 
   const sessionExcludeIds = new Set([...sessionEngagedIds, ...sessionSkippedIds]);
 
