@@ -534,7 +534,7 @@ def validate_cluster_sources(sources: List[Dict], cluster_name: str = "") -> Lis
             return sources
         
         genai.configure(api_key=gemini_key)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         # Build source list for AI
         sources_text = ""
@@ -1719,7 +1719,7 @@ def run_complete_pipeline():
             try:
                 import google.generativeai as _ts_genai
                 _ts_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-                _ts_model = _ts_genai.GenerativeModel('gemini-2.0-flash')
+                _ts_model = _ts_genai.GenerativeModel('gemini-2.5-flash-lite')
                 ner_result = extract_named_entities_via_gemini(title, bullets, _ts_model, gemini_semaphore)
                 article_typed_signals = build_typed_signals(article_countries, interest_tags, ner_result)
                 print(f"   🔖 [Cluster {cluster_id}] Typed signals ({len(article_typed_signals)}): {article_typed_signals[:8]}")
@@ -1781,7 +1781,7 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                     with gemini_semaphore:
                         import google.generativeai as _p2_genai
                         _p2_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-                        _p2_model = _p2_genai.GenerativeModel('gemini-2.0-flash')
+                        _p2_model = _p2_genai.GenerativeModel('gemini-2.5-flash-lite')
                         page2_response = _p2_model.generate_content(page2_prompt)
                     page2_text = page2_response.text.strip()
                     if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
@@ -1952,7 +1952,7 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import json
     import time
 
-    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources

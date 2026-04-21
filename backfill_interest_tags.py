@@ -48,7 +48,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 def generate_interest_tags(title: str, bullets: list = None) -> list:
     """Generate 4-8 interest keywords using Gemini."""
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
         
         content = f"Title: {title}"
         if bullets and isinstance(bullets, list):

@@ -25,7 +25,7 @@ from event_components import generate_event_components, refresh_all_event_compon
 @dataclass
 class WorldEventConfig:
     """Configuration for world event detection"""
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-2.5-flash-lite"
     temperature: float = 0.2
     max_output_tokens: int = 1024
     retry_attempts: int = 3
@@ -739,7 +739,7 @@ def search_historical_articles_for_event(event: Dict, event_data: Dict):
     
     # Configure Gemini for verification
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     # Batch verify articles with AI (check up to 30 at a time)
     articles_to_check = matched_articles[:30]
@@ -822,7 +822,7 @@ def update_latest_development(event_id: str, event_name: str, article: Dict, art
     
     # Configure Gemini
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     # Generate latest development content
     prompt = LATEST_DEVELOPMENT_PROMPT.format(
@@ -898,7 +898,7 @@ def detect_world_events(articles: List[Dict]) -> List[Dict]:
     
     # Configure Gemini
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     # Get existing events
     existing_events = get_existing_events()
