@@ -554,7 +554,8 @@ const ARTICLE_COLUMNS = [
   'five_ws', 'timeline', 'graph', 'map', 'details',
   'components_order', 'components', 'countries', 'topics',
   'country_relevance', 'topic_relevance', 'interest_tags', 'typed_signals',
-  'num_sources', 'cluster_id', 'version_number', 'view_count',
+  'num_sources', 'cluster_id', 'super_cluster_id', 'leaf_cluster_id',
+  'version_number', 'view_count',
   'shelf_life_days', 'freshness_category',
   'embedding_minilm',
   'author_id', 'author_name',
@@ -563,11 +564,13 @@ const ARTICLE_COLUMNS = [
 // Lightweight columns for pool construction (no heavy JSONB).
 // typed_signals included for Fix 1C (empty-signal filter) + 1A (dispersion).
 // image_score / image_ai_generated included for Fix 1E (Pinterest-style image feature).
+// super_cluster_id / leaf_cluster_id needed by the per-leaf cap in slot-fill.
 const POOL_COLUMNS = [
   'id', 'title_news', 'category', 'created_at', 'published_at',
   'ai_final_score', 'interest_tags', 'typed_signals',
   'image_score', 'image_ai_generated',
-  'cluster_id', 'shelf_life_days', 'freshness_category',
+  'cluster_id', 'super_cluster_id', 'leaf_cluster_id',
+  'shelf_life_days', 'freshness_category',
   'author_id',
 ].join(', ');
 
@@ -2711,28 +2714,48 @@ async function handleV2Feed(req, res, supabase, opts) {
   // both personal and trending); this ensures no page ever contains duplicates.
   const servedInThisRequest = new Set();
 
-  // Per-leaf cap (Phase A) was reverted 2026-04-21 in this hotfix — it
-  // interacted badly with MMR's deterministic top-K scoring + the existing
-  // event/entity/super caps. When MMR returned the same top article on
-  // retry (because the rejected one wasn't removed from the pool), the
-  // attempts-counter burned through 10 retries picking the same capped
-  // leaf and returned null. Slot-fill hit consecutiveFails2 = 20 after
-  // only 2 successful picks, so iOS clients got 2-article slates instead
-  // of 10 (observed 10:27 - 10:37 UTC 2026-04-21).
+  // Per-leaf cap — retry 2 (2026-04-21).
   //
-  // Smart leaf cap returns in Phase B with a per-request pool-exclusion
-  // implementation (track cap-rejected article IDs so MMR can't re-pick
-  // them and burn retry budget). Super cap (MAX_PER_SUPER = 5) remains
-  // active and provides most of the diversity guarantee.
+  // First retry (PR #21) failed because POOL_COLUMNS and ARTICLE_COLUMNS did
+  // not include super_cluster_id / leaf_cluster_id. Every article came back
+  // with undefined cluster IDs, was treated as NULL-cluster, and the
+  // null-cluster cap killed the feed. That column omission is fixed above.
+  //
+  // Null-cluster articles are NOT capped by leaf — the clustering cron runs
+  // with ~24h lag (verified: 0 % of <24h articles have super/leaf assigned,
+  // 99.8 % of 1-2d articles do), so fresh content is always null by design
+  // and the feed would collapse if we tried to cap it. Diversity for fresh
+  // null-cluster articles is already covered by the event cap (WORLD_EVENT_CAP,
+  // operating on the populated cluster_id field which tracks world events).
+  //
+  // For clustered articles (>24h old), cap at 4 per (super, leaf) prevents a
+  // single hot leaf from taking 4-6 cards inside a hot super.
+  const MAX_PER_LEAF_PER_FEED = 4;
+  const leafServeCounts = new Map();  // key: `${super}:${leaf}`
+  let leafCapRejections = 0;  // diagnostic
+  function leafKey(article) {
+    return `${article.super_cluster_id}:${article.leaf_cluster_id}`;
+  }
+  function isLeafCapped(article) {
+    // Fresh null-cluster articles pass — see comment above.
+    if (article?.leaf_cluster_id == null || article?.super_cluster_id == null) return false;
+    return (leafServeCounts.get(leafKey(article)) || 0) >= MAX_PER_LEAF_PER_FEED;
+  }
+  function recordLeafServe(article) {
+    if (article?.leaf_cluster_id == null || article?.super_cluster_id == null) return;
+    const k = leafKey(article);
+    leafServeCounts.set(k, (leafServeCounts.get(k) || 0) + 1);
+  }
 
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
-    while (attempts < 10 && pool.length > 0) {
+    while (attempts < 25 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda, embeddingCache);
       if (!picked) return null;
       if (servedInThisRequest.has(picked.id)) { attempts++; continue; }
       if (isEventCapped(picked)) { attempts++; continue; }
       if (isEntityCappedShared(picked)) { attempts++; continue; }
+      if (isLeafCapped(picked)) { leafCapRejections++; attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3357,6 +3380,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       recordEntitySelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
@@ -3412,6 +3436,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         picked.bucket = 'interest';
         recordEventSelection(picked);
         recordEntitySelectionShared(picked);
+        recordLeafServe(picked);
         selected.push(picked);
       } else {
         catKeys.splice(catIdx % catKeys.length, 1);
@@ -3449,6 +3474,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   } else {
@@ -3526,6 +3552,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       recordSuperPick(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   }
@@ -3608,6 +3635,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   }
@@ -3960,6 +3988,8 @@ async function handleV2Feed(req, res, supabase, opts) {
   const _feedMs = Date.now() - _feedT0;
   const _sessHit = (sessionSkippedIds?.length || 0) + (sessionEngagedIds?.length || 0) + (sessionGlancedIds?.length || 0);
   console.log(`[feed:timing] ms=${_feedMs} selected=${selected.length} sess_hit=${_sessHit} user=${userId || 'guest'}`);
+  // Leaf-cap diagnostic — watch for high rejections + near-zero selected as a re-emergence of the PR #21 bug
+  console.log(`[feed:leafcap] leaves_seen=${leafServeCounts.size} cap_rejections=${leafCapRejections} top_leaves=${JSON.stringify([...leafServeCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3))}`);
 
   return res.status(200).json({
     articles: formattedArticles,
