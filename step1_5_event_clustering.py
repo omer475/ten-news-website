@@ -263,7 +263,7 @@ def ai_check_cluster_match(new_article_title: str, existing_clusters: List[Dict]
         
         # Configure Gemini for AI check (only for 0-1 keyword matches)
         genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         # Build the list of existing clusters (top 50 - prioritized by keyword relevance)
         # Include source count so AI can see mega-clusters
@@ -431,7 +431,7 @@ def validate_cluster_assignment(new_article_title: str, cluster_sources: List[Di
         
         # Configure Gemini
         genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         # Build list of existing sources in cluster
         existing_titles = "\n".join([
@@ -706,7 +706,7 @@ def _gemini_cluster_query(prompt: str, max_tokens: int = 200) -> str:
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
         raise ValueError("GEMINI_API_KEY must be set in environment")
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
     request_data = {
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {

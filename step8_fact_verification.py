@@ -18,7 +18,7 @@ from dataclasses import dataclass
 @dataclass
 class VerificationConfig:
     """Configuration for fact verification"""
-    model: str = "gemini-2.0-flash"
+    model: str = "gemini-2.5-flash-lite"
     max_tokens: int = 1500
     temperature: float = 0  # Deterministic for verification
     timeout: int = 60

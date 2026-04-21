@@ -821,7 +821,7 @@ Output JSON:
 def generate_article_with_gemini(sport: str, event_name: str, results: Dict,
                                   event_date: str, gemini_key: str) -> Optional[Dict]:
     """Generate title + 3 bullets using Gemini Flash at temperature 0."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={gemini_key}"
 
     prompt = GEMINI_PROMPT_TEMPLATE.format(
         sport=sport,

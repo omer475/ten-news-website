@@ -199,7 +199,7 @@ def main():
             sys.exit(1)
         import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+        gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
         print(f"Using Gemini NER for extraction")
 
     cutoff = (datetime.utcnow() - timedelta(days=args.days)).isoformat()

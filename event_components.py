@@ -436,7 +436,7 @@ def determine_relevant_components(event_name: str, topic_prompt: str, background
     Returns component configuration with enabled flags and generation hints.
     """
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
     
     # Infer event type from keywords for better AI context
     event_type_indicators = []
@@ -704,7 +704,7 @@ def generate_event_components(event_name: str, topic_prompt: str, background: st
 
     # Configure model once for all generations
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-2.0-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     # Step 2: Generate components
 
