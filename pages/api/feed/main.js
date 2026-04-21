@@ -2711,28 +2711,51 @@ async function handleV2Feed(req, res, supabase, opts) {
   // both personal and trending); this ensures no page ever contains duplicates.
   const servedInThisRequest = new Set();
 
-  // Per-leaf cap (Phase A) was reverted 2026-04-21 in this hotfix — it
-  // interacted badly with MMR's deterministic top-K scoring + the existing
-  // event/entity/super caps. When MMR returned the same top article on
-  // retry (because the rejected one wasn't removed from the pool), the
-  // attempts-counter burned through 10 retries picking the same capped
-  // leaf and returned null. Slot-fill hit consecutiveFails2 = 20 after
-  // only 2 successful picks, so iOS clients got 2-article slates instead
-  // of 10 (observed 10:27 - 10:37 UTC 2026-04-21).
+  // Per-leaf cap (reintroduced 2026-04-21 Phase 1 pt3).
   //
-  // Smart leaf cap returns in Phase B with a per-request pool-exclusion
-  // implementation (track cap-rejected article IDs so MMR can't re-pick
-  // them and burn retry budget). Super cap (MAX_PER_SUPER = 5) remains
-  // active and provides most of the diversity guarantee.
+  // Super cap alone (MAX_PER_SUPER = 5) leaves room for a single leaf inside
+  // a hot super to take 4-6 cards (observed: leaf 0/0 took 24 of 64 impressions
+  // in 2026-04-20 session = 37 %). Max 4 per (super, leaf) keeps the slate
+  // readable without starving the user's dominant interest.
+  //
+  // Phase A's previous implementation broke iOS with 2-article slates because
+  // `isLeafCapped(article, sel)` scanned `selected` on every call (O(n) per
+  // check, stale in edge cases). This version uses O(1) counters incremented
+  // on successful pick and decrements retry budget only when a picked article
+  // hits the cap — `mmrSelect` already splices the picked article out of the
+  // pool, so the same ID can't be returned twice. Retry budget raised 10 → 20
+  // to absorb the extra cap rejection path.
+  const MAX_PER_LEAF_PER_FEED = 4;
+  const MAX_NULL_LEAF_PER_FEED = 2;  // articles not yet assigned to a cluster
+  const leafServeCounts = new Map();  // key: `${super}:${leaf}`
+  let nullLeafServedCount = 0;
+  function leafKey(article) {
+    return `${article?.super_cluster_id ?? ''}:${article?.leaf_cluster_id ?? ''}`;
+  }
+  function isLeafCapped(article) {
+    if (article?.leaf_cluster_id == null || article?.super_cluster_id == null) {
+      return nullLeafServedCount >= MAX_NULL_LEAF_PER_FEED;
+    }
+    return (leafServeCounts.get(leafKey(article)) || 0) >= MAX_PER_LEAF_PER_FEED;
+  }
+  function recordLeafServe(article) {
+    if (article?.leaf_cluster_id == null || article?.super_cluster_id == null) {
+      nullLeafServedCount++;
+      return;
+    }
+    const k = leafKey(article);
+    leafServeCounts.set(k, (leafServeCounts.get(k) || 0) + 1);
+  }
 
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
-    while (attempts < 10 && pool.length > 0) {
+    while (attempts < 20 && pool.length > 0) {
       const picked = mmrSelect(pool, sel, tc, lambda, embeddingCache);
       if (!picked) return null;
       if (servedInThisRequest.has(picked.id)) { attempts++; continue; }
       if (isEventCapped(picked)) { attempts++; continue; }
       if (isEntityCappedShared(picked)) { attempts++; continue; }
+      if (isLeafCapped(picked)) { attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3357,6 +3380,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       recordEntitySelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
@@ -3412,6 +3436,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         picked.bucket = 'interest';
         recordEventSelection(picked);
         recordEntitySelectionShared(picked);
+        recordLeafServe(picked);
         selected.push(picked);
       } else {
         catKeys.splice(catIdx % catKeys.length, 1);
@@ -3449,6 +3474,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   } else {
@@ -3526,6 +3552,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
       recordSuperPick(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   }
@@ -3608,6 +3635,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
       recordEntitySelectionShared(picked);
+      recordLeafServe(picked);
       selected.push(picked);
     }
   }
