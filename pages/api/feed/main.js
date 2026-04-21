@@ -2965,37 +2965,19 @@ async function handleV2Feed(req, res, supabase, opts) {
   // both personal and trending); this ensures no page ever contains duplicates.
   const servedInThisRequest = new Set();
 
-  // Per-leaf hard cap (Phase A, 2026-04-21).
+  // Per-leaf cap (Phase A) was reverted 2026-04-21 in this hotfix — it
+  // interacted badly with MMR's deterministic top-K scoring + the existing
+  // event/entity/super caps. When MMR returned the same top article on
+  // retry (because the rejected one wasn't removed from the pool), the
+  // attempts-counter burned through 10 retries picking the same capped
+  // leaf and returned null. Slot-fill hit consecutiveFails2 = 20 after
+  // only 2 successful picks, so iOS clients got 2-article slates instead
+  // of 10 (observed 10:27 - 10:37 UTC 2026-04-21).
   //
-  // The hierarchical bandit + MAX_PER_SUPER cap keep supers diverse, but
-  // inside a hot super one specific leaf can still take 4-6 cards. In the
-  // 2026-04-20 session, leaf 0/0 alone took 24 of 64 impressions (37 %).
-  // A hard max-4-per-leaf cap keeps the slate readable — the leaf still
-  // wins many slots, just not all of them. Unclustered articles (NULL
-  // leaf) are capped separately below.
-  const MAX_PER_LEAF_PER_FEED = 4;
-  const MAX_NULL_LEAF_PER_FEED = 2;  // brand-new articles not yet clustered
-  function isLeafCapped(article, sel) {
-    const leaf = article?.leaf_cluster_id;
-    const sup = article?.super_cluster_id;
-    if (leaf == null || sup == null) {
-      // NULL-cluster articles get their own narrow cap so fresh-published
-      // content can surface but can't flood the slate when the nightly
-      // cluster-assignment job is lagging.
-      let nullCount = 0;
-      for (const s of sel) {
-        if (s?.leaf_cluster_id == null || s?.super_cluster_id == null) nullCount++;
-        if (nullCount >= MAX_NULL_LEAF_PER_FEED) return true;
-      }
-      return false;
-    }
-    let count = 0;
-    for (const s of sel) {
-      if (s.leaf_cluster_id === leaf && s.super_cluster_id === sup) count++;
-      if (count >= MAX_PER_LEAF_PER_FEED) return true;
-    }
-    return false;
-  }
+  // Smart leaf cap returns in Phase B with a per-request pool-exclusion
+  // implementation (track cap-rejected article IDs so MMR can't re-pick
+  // them and burn retry budget). Super cap (MAX_PER_SUPER = 5) remains
+  // active and provides most of the diversity guarantee.
 
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
@@ -3005,7 +2987,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (servedInThisRequest.has(picked.id)) { attempts++; continue; }
       if (isEventCapped(picked)) { attempts++; continue; }
       if (isEntityCappedShared(picked)) { attempts++; continue; }
-      if (isLeafCapped(picked, sel)) { attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3624,8 +3605,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (isEventCapped(picked)) continue;
       // Entity-level cap (Fix 1)
       if (isEntityCappedFn(picked)) continue;
-      // Per-leaf cap — bandit path bypasses mmrSelectDeduped, apply directly.
-      if (isLeafCapped(picked, selected)) continue;
+      // Per-leaf cap reverted in hotfix — see comment by mmrSelectDeduped.
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
