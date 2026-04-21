@@ -1251,6 +1251,13 @@ async function handleV2Feed(req, res, supabase, opts) {
         sessionEngagedIds, sessionGlancedIds, sessionSkippedIds,
         personalizationId, sessionTasteVector, usedTempTasteVector, followedPublisherIds,
         clusterLookupId, clusterLookupColumn, limit, offset } = opts;
+  // requestId is declared in handler() scope and not automatically visible here
+  // (handleV2Feed is a sibling function). Recreate it locally so the impression
+  // insert below can stamp every row with a stable per-request id. Web Crypto
+  // first, fallback otherwise.
+  const requestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}-${Math.random().toString(16).slice(2, 10)}`;
   totalInteractions = totalInteractions || 0;
   canonicalSeenIds = canonicalSeenIds || new Set();
   allSeenIds = allSeenIds || [];
