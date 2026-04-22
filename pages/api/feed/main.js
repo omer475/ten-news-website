@@ -1910,47 +1910,27 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (Array.isArray(sigs)) for (const s of sigs) _tallyForSig(sessionSignalEngages, s);
   }
 
-  function sessionTopicPenalty(article) {
-    const signals = safeJsonParse(article.typed_signals, []);
-    if (!Array.isArray(signals)) return 1.0;
-    let maxSkipsOnMatch = 0;
-    let engagesOffsetting = 0;
-    for (const sig of signals) {
-      if (typeof sig !== 'string') continue;
-      if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
-      const skips = sessionSignalSkips.get(sig) || 0;
-      const engages = sessionSignalEngages.get(sig) || 0;
-      if (skips > engages) {
-        maxSkipsOnMatch = Math.max(maxSkipsOnMatch, skips - engages);
-      } else if (engages > 0) {
-        engagesOffsetting = Math.max(engagesOffsetting, engages);
-      }
-    }
-    if (engagesOffsetting > 0) return 1.0;
-    if (maxSkipsOnMatch >= 3) return 0.3;
-    if (maxSkipsOnMatch >= 2) return 0.5;
-    return 1.0;
-  }
-
-  // Phase 2.1 (2026-04-22): session leaf skip penalty.
-  // Per the plan's deterministic ranker formula: down-weight an article if
-  // its (super_cluster, leaf_cluster) was skipped disproportionately this
-  // session. Leaf-level granularity means "you skipped 3/4 Iran stories
-  // from leaf 5/23 — future picks from 5/23 get suppressed" without
-  // over-generalizing to the whole super. sessionTopicPenalty (above)
-  // operates on typed_signals (topic:iran), this operates on embedding
-  // clusters (leaf 5/23). Complementary: signals catch topic-level,
-  // leaves catch semantic-cluster-level rejection.
-  const _sessionLeafShown = new Map();     // `${super}:${leaf}` -> count
+  // Phase 6.2 (2026-04-23): collapsed sessionTopicPenalty +
+  // sessionLeafSkipPenalty + sessionLeafEngageReward into one
+  // sessionNegativeMultiplier.
+  //
+  // Prior architecture stacked three multipliers on the same underlying
+  // skip signal: signal-level (typed_signals), cluster-level (super/leaf),
+  // plus an in-memory entity overlay (Fix G) — see audit 2026-04-23.
+  // A user who skipped 3 Iran-war articles would get penalized 3× on the
+  // same signal, producing compound factors like 0.3 × 0.5 × 0.85 = 0.13×
+  // when ONE of them at 0.3× would have been correct.
+  //
+  // New design: take the STRONGEST negative signal (min of topic + leaf
+  // penalties) and apply engagement reward on top. Final range [0.3, 1.3].
+  // Matches Pinterest/YouTube citing comment at former line 2118.
+  const _sessionLeafShown = new Map();
   const _sessionLeafSkipped = new Map();
-  const _sessionLeafEngaged = new Map();   // Phase 2.2: positive-reward counter
+  const _sessionLeafEngaged = new Map();
   function _sessionLeafKeyFromArticle(a) {
     if (!a || a.super_cluster_id == null || a.leaf_cluster_id == null) return null;
     return `${a.super_cluster_id}:${a.leaf_cluster_id}`;
   }
-  // Source of truth for session article leaf IDs: sessionLeafLookup (populated
-  // by the session-meta fetch earlier). articleMap is not sufficient because
-  // already-seen articles are excluded from the retrieval pools.
   for (const id of [...(sessionEngagedIds || []), ...(sessionGlancedIds || []), ...(sessionSkippedIds || [])]) {
     const k = sessionLeafLookup[id];
     if (!k) continue;
@@ -1966,34 +1946,45 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (!k) continue;
     _sessionLeafEngaged.set(k, (_sessionLeafEngaged.get(k) || 0) + 1);
   }
-  function sessionLeafSkipPenalty(article) {
+
+  function sessionNegativeMultiplier(article) {
+    // --- Topic-level (typed_signals) ---
+    const signals = safeJsonParse(article.typed_signals, []);
+    let topicMaxSkips = 0;
+    let topicEngagesOffsetting = 0;
+    if (Array.isArray(signals)) {
+      for (const sig of signals) {
+        if (typeof sig !== 'string') continue;
+        if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
+        const skips = sessionSignalSkips.get(sig) || 0;
+        const engages = sessionSignalEngages.get(sig) || 0;
+        if (skips > engages) topicMaxSkips = Math.max(topicMaxSkips, skips - engages);
+        else if (engages > 0) topicEngagesOffsetting = Math.max(topicEngagesOffsetting, engages);
+      }
+    }
+    let topicPenalty = 1.0;
+    if (topicEngagesOffsetting === 0) {
+      if (topicMaxSkips >= 3) topicPenalty = 0.3;
+      else if (topicMaxSkips >= 2) topicPenalty = 0.5;
+    }
+
+    // --- Leaf-level (embedding cluster) ---
     const k = _sessionLeafKeyFromArticle(article);
-    if (!k) return 1.0;
-    const shown = _sessionLeafShown.get(k) || 0;
-    if (shown < 2) return 1.0;  // need >= 2 observations to penalize
-    const skipped = _sessionLeafSkipped.get(k) || 0;
-    const rate = skipped / shown;
-    // Bounded: 0 % skip → 1.0, 100 % skip → 0.5 (plan says -0.3 but in
-    // multiplicative form; 1 - 0.5*rate preserves half-strength at worst).
-    return 1.0 - 0.5 * rate;
-  }
-  // Phase 2.2 (2026-04-22): session leaf engagement reward. Mirror of
-  // sessionLeafSkipPenalty. When the user engages with >= 2 articles from
-  // the same (super, leaf) in-session, articles from that leaf get up to
-  // +30 % boost proportional to the engagement rate. Paired with the skip
-  // penalty this gives the ranker bidirectional session signal at cluster
-  // granularity (the session_vector cosine already captures this more
-  // diffusely; the leaf-level boost is surgical on the clusters the user
-  // is actively engaging with THIS session).
-  function sessionLeafEngageReward(article) {
-    const k = _sessionLeafKeyFromArticle(article);
-    if (!k) return 1.0;
-    const shown = _sessionLeafShown.get(k) || 0;
-    if (shown < 2) return 1.0;
-    const engaged = _sessionLeafEngaged.get(k) || 0;
-    if (engaged === 0) return 1.0;
-    const rate = engaged / shown;
-    return 1.0 + 0.3 * rate;  // 100 % engage → 1.3x, 50 % → 1.15x
+    let leafPenalty = 1.0;
+    let leafReward = 1.0;
+    if (k) {
+      const shown = _sessionLeafShown.get(k) || 0;
+      if (shown >= 2) {
+        const skipped = _sessionLeafSkipped.get(k) || 0;
+        const engaged = _sessionLeafEngaged.get(k) || 0;
+        leafPenalty = 1.0 - 0.5 * (skipped / shown);       // [0.5, 1.0]
+        leafReward  = 1.0 + 0.3 * (engaged / shown);       // [1.0, 1.3]
+      }
+    }
+
+    // Compose: strongest negative, then apply reward. Bounded [0.3, 1.3].
+    const strongestNegative = Math.min(topicPenalty, leafPenalty);
+    return Math.max(0.3, Math.min(1.3, strongestNegative * leafReward));
   }
 
   // Phase 2.3 check (2026-04-22): session-vector cosine re-rank for
@@ -2112,14 +2103,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     const sessionRate = sessionData.engaged / sessionData.impressions;
     if (sessionRate >= 0.15) return historical;
 
-    // Fix K (2026-04-19): category is being skipped, but don't blanket-suppress.
-    // First, defer to Fix C (sessionTopicPenalty): Fix C is signal-level and
-    // more specific. If Fix C already fires on this article we skip Fix K's
-    // entity-overlap check to avoid multiplicative stacking (Pinterest
-    // PinnerSage / Twitter home-mixer / YouTube MMoE all avoid stacking
-    // multiplicative penalties — drift risk).
-    const fixCPenalty = sessionTopicPenalty(article);
-    if (fixCPenalty < 1.0) return historical;
+    // Fix K (2026-04-19, updated Phase 6.2): if the session-negative path
+    // already fires on this article, don't additionally apply category-level
+    // entity-overlap suppression — same anti-stacking principle that drove
+    // the 6.2 collapse of topic + leaf + overlay.
+    if (sessionNegativeMultiplier(article) < 1.0) return historical;
 
     // Fix K: Fix C didn't fire. Check if this article shares ANY meaningful
     // entity with articles the user skipped this session. Presence-based
@@ -2305,37 +2293,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     let affinitySum = 0;
     let matchCount = 0;
 
+    // Phase 6.2 (2026-04-23): in-memory "Fix G" session-skip overlay removed.
+    // It triple-counted negative session signals (this + sessionTopicPenalty +
+    // sessionLeafSkipPenalty). The write-latency race it claimed to bridge is
+    // sub-second on our current Supabase path — session skip data is in DB
+    // before the next feed request. Negative session signals now flow through
+    // sessionNegativeMultiplier() only.
     for (const sig of signals) {
       const record = entitySignals[sig];
-      if (record) {
-        // Signal is in DB — use as-is. Fix C's sessionTopicPenalty handles
-        // session-level downweighting separately (applied as a multiplier in
-        // the scoring layer) so we do NOT stack an additional penalty here.
-        const affinity = computeEntityAffinity(record);
-        affinitySum += affinity;
-        matchCount++;
-        continue;
-      }
-      // Fix G (2026-04-19): in-memory skip overlay to close the write-latency
-      // race. When user skips an article at T and requests the next feed page
-      // at T+3s, track.js's fire-and-forget write to user_entity_signals may
-      // not have propagated — the new signal is invisible to Fix C and to this
-      // multiplier. This overlay treats such signals as fresh negatives for
-      // THIS request only. Gated on !record so we don't double-penalize
-      // signals already captured in the DB (which Fix C handles).
-      // Mirrors Monolith's minute-granularity sparse-embedding sync (Liu et
-      // al. 2022): critical session signals must influence the next query,
-      // not the one after.
-      if (typeof sig !== 'string' || sig.startsWith('lang:') || sig === 'loc:usa') continue;
-      const inMemSkips = sessionSignalSkips.get(sig) || 0;
-      if (inMemSkips > 0) {
-        // -0.3 per skip, bounded at -1.0. Penalty is calibration; raised from
-        // -0.2 because gating to first-time-in-session signals means it carries
-        // the full load of the write-latency bridge.
-        const affinity = Math.max(-1.0, -0.3 * inMemSkips);
-        affinitySum += affinity;
-        matchCount++;
-      }
+      if (!record) continue;
+      const affinity = computeEntityAffinity(record);
+      affinitySum += affinity;
+      matchCount++;
     }
 
     // Tagged but user has no record on any signal — mild penalty so strongly-matched
@@ -2411,11 +2380,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
       // Fix C (2026-04-19): session-level topic skip penalty (typed_signals)
-      score *= sessionTopicPenalty(article);
-      // Phase 2.1 (2026-04-22): session-level leaf skip penalty (embedding clusters)
-      score *= sessionLeafSkipPenalty(article);
-      // Phase 2.2 (2026-04-22): session-level leaf engagement reward
-      score *= sessionLeafEngageReward(article);
+      // Phase 6.2 (2026-04-23): unified session negative/positive signal.
+      score *= sessionNegativeMultiplier(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2439,9 +2405,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
-      s *= sessionTopicPenalty(article);  // Fix C
-      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
-      s *= sessionLeafEngageReward(article);  // Phase 2.2
+      s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2454,9 +2418,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
-      s *= sessionTopicPenalty(article);  // Fix C
-      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
-      s *= sessionLeafEngageReward(article);  // Phase 2.2
+      s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2477,9 +2439,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
-      s *= sessionTopicPenalty(article);  // Fix C
-      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
-      s *= sessionLeafEngageReward(article);  // Phase 2.2
+      s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2507,9 +2467,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Fix F (2026-04-19): soft-exclude band for clearly-misaligned but not
       // extremely-negative articles. Additional 70% penalty when 0.2 <= mult < 0.4.
       else if (sigMult < 0.4) s *= 0.3;
-      s *= sessionTopicPenalty(article);  // Fix C
-      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
-      s *= sessionLeafEngageReward(article);  // Phase 2.2
+      s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
