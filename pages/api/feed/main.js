@@ -1996,6 +1996,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     return 1.0 + 0.3 * rate;  // 100 % engage → 1.3x, 50 % → 1.15x
   }
 
+  // Phase 2.3 check (2026-04-22): session-vector cosine re-rank for
+  // non-personal pools is ALREADY implemented at Phase 5.5 below (the
+  // "Problem 4-lite" block inside the taste-vector re-rank loop). That
+  // block applies 1.0 + sessionSim*0.5 to trending/discovery/fresh_best
+  // after their embeddings are fetched. No new closure needed here; we
+  // just track how often it fires so prod debug can confirm it's working.
+  let _sessionVecBoostHits = 0;
+  let _longTermVecReRankHits = 0;
+
   // Fix L (2026-04-19): embedding-space secondary check. Articles whose
   // 384-dim MiniLM embedding is far from the user's interest centroids get a
   // light downweight. Catches semantic negatives that typed_signals miss
@@ -2543,12 +2552,14 @@ async function handleV2Feed(req, res, supabase, opts) {
           const sim = cosineSimilarityVec(userTasteVec, emb);
           const tasteMult = 0.3 + Math.max(0, sim) * 1.4;
           a._score *= tasteMult;
+          _longTermVecReRankHits++;
         }
         // Problem 4-lite: session-reactive taste alignment
         if (sessionTasteVector && sessionTasteVector.length === emb.length) {
           const sessionSim = cosineSimilarityVec(sessionTasteVector, emb);
           const sessionBoost = 1.0 + sessionSim * 0.5;  // [0.5, 1.5]
           a._score *= sessionBoost;
+          _sessionVecBoostHits++;
         }
       }
       pool.sort((a, b) => b._score - a._score);
@@ -3990,6 +4001,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       };
     }
     _dbg.session_leaf_state = leafSessionState;
+    _dbg.session_vec_boost_hits = _sessionVecBoostHits;
+    _dbg.longterm_vec_rerank_hits = _longTermVecReRankHits;
   }
 
   const _resp = {
