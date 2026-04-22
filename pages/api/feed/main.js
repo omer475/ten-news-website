@@ -354,31 +354,28 @@ function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, ses
     vectorScore = longTermScore;
   }
 
-  const tags = safeJsonParse(article.interest_tags, []);
+  // Entity bonus. Reads typed_signals directly and looks up against
+  // entityAffinities (keyed by typed-signal strings like "person:trump",
+  // "topic:iran_war", "loc:uk"). Previously read article.interest_tags
+  // (flat: "trump", "iran") and needed a fuzzy-match fallback because
+  // of the taxonomy mismatch; both lookups now match on the same key
+  // format so fuzzy-match is unneeded and exact match works at full
+  // strength.
+  const signals = safeJsonParse(article.typed_signals, []);
   let entityBonus = 0;
   let matchCount = 0;
-  for (const tag of tags) {
-    const t = tag.toLowerCase();
-    // Exact match first
-    let affinity = entityAffinities[t];
-    // Fix 9: Fuzzy match — if no exact match, check if any affinity entity contains/is contained by this tag
-    if (!affinity || affinity <= 0) {
-      for (const [entity, score] of Object.entries(entityAffinities)) {
-        if (score <= 0) continue;
-        if ((t.length > 3 && entity.includes(t)) || (entity.length > 3 && t.includes(entity))) {
-          affinity = score * 0.6; // 60% of exact match strength
-          break;
-        }
+  if (Array.isArray(signals)) {
+    for (const sig of signals) {
+      const affinity = entityAffinities[sig];
+      if (affinity && affinity > 0) {
+        entityBonus += 0.10 * affinity;
+        matchCount++;
+        if (matchCount >= 3) break;
       }
     }
-    if (affinity && affinity > 0) {
-      entityBonus += 0.10 * affinity;
-      matchCount++;
-      if (matchCount >= 3) break;
-    }
   }
-  const totalTags = Math.max(tags.length, 1);
-  entityBonus = Math.min(entityBonus * (matchCount / totalTags), 0.30);
+  const totalSigs = Math.max(Array.isArray(signals) ? signals.length : 0, 1);
+  entityBonus = Math.min(entityBonus * (matchCount / totalSigs), 0.30);
 
   const quality = (article.ai_final_score || 0) / 1000;
   const momentum = sessionBoost || 0;
