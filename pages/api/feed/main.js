@@ -2189,31 +2189,6 @@ async function handleV2Feed(req, res, supabase, opts) {
     return !suppressedLeafSet.has(`${article.super_cluster_id}:${article.leaf_cluster_id}`);
   }
 
-  // Phase 4: content heating. Load tier-1 article IDs so fresh articles
-  // (auto-inserted into content_heating on publish) get a scoring boost
-  // regardless of what the bandit has learned. Window it to the last 48h
-  // — older articles still in tier 1 are less useful to boost and we want
-  // to keep this set small for memory.
-  const heatingTier1Set = new Set();
-  try {
-    const { data: heatingRows } = await supabase
-      .from('content_heating')
-      .select('article_id')
-      .eq('tier', 1)
-      .is('demoted_at', null)
-      .gt('entered_tier_at', new Date(Date.now() - 48 * 3600 * 1000).toISOString())
-      .limit(2000);
-    if (heatingRows) {
-      for (const r of heatingRows) heatingTier1Set.add(r.article_id);
-    }
-  } catch (e) { /* non-blocking */ }
-  let _heatingBoostHits = 0;
-  function heatingBoost(article) {
-    if (!heatingTier1Set.has(article?.id)) return 1.0;
-    _heatingBoostHits++;
-    return 1.25;  // +25 % score for tier-1 heating articles
-  }
-
   let entitySignals = {};
   if (userId) {
     const SELECT_COLS = 'entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d, last_positive_at, last_negative_at';
@@ -2441,8 +2416,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= sessionLeafSkipPenalty(article);
       // Phase 2.2 (2026-04-22): session-level leaf engagement reward
       score *= sessionLeafEngageReward(article);
-      // Phase 4 (2026-04-22): fresh-article heating boost
-      score *= heatingBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2469,7 +2442,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= heatingBoost(article);  // Phase 4
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2485,7 +2457,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= heatingBoost(article);  // Phase 4
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2509,7 +2480,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= heatingBoost(article);  // Phase 4
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2540,7 +2510,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= heatingBoost(article);  // Phase 4
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -3923,8 +3892,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (debugFlag) {
     _dbg.diversity_swaps = _diversitySwaps;
     _dbg.suppressed_leaves_count = suppressedLeafSet.size;
-    _dbg.heating_tier1_set_size = heatingTier1Set.size;
-    _dbg.heating_boost_hits = _heatingBoostHits;
   }
 
   const pageIds = selected.map(a => a.id);
