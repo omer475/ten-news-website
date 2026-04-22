@@ -2482,18 +2482,13 @@ async function handleV2Feed(req, res, supabase, opts) {
   // too aggressive, blocking common entities like "film", "moon", "nasa" and
   // eliminating 97% of trending articles.
 
-  // Fix 1C (loosened 2026-04-18): drop only the genuinely empty-signal
-  // pipeline-bug-window articles. Original threshold was >=3 signals, which
-  // combined with the user's 5k+ seen history to starve the slate to 1-7
-  // articles per page. Fix A (0.5× multiplier on empty signals) already
-  // discourages them in ranking — this filter is a safety net for articles
-  // that bypass the multiplier entirely.
-  const PIPELINE_SIGNAL_CUTOFF_MS = Date.parse('2026-04-15T00:00:00Z');
+  // Empty-typed_signals filter. Original Fix-1C had a 2026-04-15 cutoff
+  // grace-period for a pipeline bug that left old articles without
+  // typed_signals. That cutoff is now outside the 168h retrieval window
+  // (today is 2026-04-22+), so the grace path can't activate — removed.
   function passesSignalFilter(article) {
     const sigs = safeJsonParse(article.typed_signals, []);
-    if (Array.isArray(sigs) && sigs.length >= 1) return true;
-    const created = Date.parse(article.created_at);
-    return Number.isFinite(created) && created < PIPELINE_SIGNAL_CUTOFF_MS;
+    return Array.isArray(sigs) && sigs.length >= 1;
   }
 
   // Strong-negative entity hard-suppress (Phase A, 2026-04-21).
