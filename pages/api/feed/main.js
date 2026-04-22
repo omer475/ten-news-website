@@ -3115,46 +3115,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       }
     }
 
-    // ── Fix 1: Entity-level frequency cap (tiered by pool dominance) ──
-    // Compute entity frequency across the entire candidate pool
-    const entityFreqInPool = {};
-    for (const [cat, pool] of Object.entries(categoryPools)) {
-      for (const a of pool) {
-        const tags = safeJsonParse(a.interest_tags, []);
-        for (const tag of tags) {
-          const t = tag.toLowerCase();
-          entityFreqInPool[t] = (entityFreqInPool[t] || 0) + 1;
-        }
-      }
-    }
-
-    function getEntityCap(tag) {
-      const freq = entityFreqInPool[tag] || 0;
-      if (freq >= 20) return 2;   // extreme dominance (e.g. iran) → very strict
-      if (freq >= 10) return 3;   // moderate dominance (e.g. oil) → strict
-      if (freq >= 5) return 4;    // some presence → mild cap
-      return Infinity;            // rare tag → no cap needed
-    }
-
-    const entitySelectionCounts = {};
-
-    function isEntityCappedFn(article) {
-      const tags = safeJsonParse(article.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        const cap = getEntityCap(t);
-        if ((entitySelectionCounts[t] || 0) >= cap) return true;
-      }
-      return false;
-    }
-
-    function recordEntitySelection(article) {
-      const tags = safeJsonParse(article.interest_tags, []);
-      for (const tag of tags) {
-        const t = tag.toLowerCase();
-        entitySelectionCounts[t] = (entitySelectionCounts[t] || 0) + 1;
-      }
-    }
+    // Cold-start tag-frequency cap (isEntityCappedFn + getEntityCap +
+    // entitySelectionCounts + recordEntitySelection + entityFreqInPool)
+    // removed 2026-04-22. Duplicate of the personalized-path isEntityCappedShared
+    // block, read interest_tags (flat). Diversity for cold-start is now owned by
+    // event cap (CLUSTER_CAP=4) + the entity-score multiplier below, which
+    // down-weights disliked tags smoothly rather than hard-capping them.
 
     // ── Fix 4b: Fix missing article lookup bug for session signals ──
     // Fetch metadata for engaged/skipped articles not in current articleMap
@@ -3451,13 +3417,9 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       // Event/cluster cap
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.cold_event++; continue; }
-      // Entity-level cap (Fix 1)
-      if (isEntityCappedFn(picked)) { if (debugFlag) _dbg.caps.cold_entity++; continue; }
-      // Per-leaf cap reverted in hotfix — see comment by mmrSelectDeduped.
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
-      recordEntitySelection(picked);
       recordEntitySelectionShared(picked);
       selected.push(picked);
     }
