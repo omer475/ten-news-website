@@ -1941,8 +1941,9 @@ async function handleV2Feed(req, res, supabase, opts) {
   // operates on typed_signals (topic:iran), this operates on embedding
   // clusters (leaf 5/23). Complementary: signals catch topic-level,
   // leaves catch semantic-cluster-level rejection.
-  const _sessionLeafShown = new Map();   // `${super}:${leaf}` -> count
+  const _sessionLeafShown = new Map();     // `${super}:${leaf}` -> count
   const _sessionLeafSkipped = new Map();
+  const _sessionLeafEngaged = new Map();   // Phase 2.2: positive-reward counter
   function _sessionLeafKeyFromArticle(a) {
     if (!a || a.super_cluster_id == null || a.leaf_cluster_id == null) return null;
     return `${a.super_cluster_id}:${a.leaf_cluster_id}`;
@@ -1960,6 +1961,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (!k) continue;
     _sessionLeafSkipped.set(k, (_sessionLeafSkipped.get(k) || 0) + 1);
   }
+  for (const id of (sessionEngagedIds || [])) {
+    const k = sessionLeafLookup[id];
+    if (!k) continue;
+    _sessionLeafEngaged.set(k, (_sessionLeafEngaged.get(k) || 0) + 1);
+  }
   function sessionLeafSkipPenalty(article) {
     const k = _sessionLeafKeyFromArticle(article);
     if (!k) return 1.0;
@@ -1970,6 +1976,24 @@ async function handleV2Feed(req, res, supabase, opts) {
     // Bounded: 0 % skip → 1.0, 100 % skip → 0.5 (plan says -0.3 but in
     // multiplicative form; 1 - 0.5*rate preserves half-strength at worst).
     return 1.0 - 0.5 * rate;
+  }
+  // Phase 2.2 (2026-04-22): session leaf engagement reward. Mirror of
+  // sessionLeafSkipPenalty. When the user engages with >= 2 articles from
+  // the same (super, leaf) in-session, articles from that leaf get up to
+  // +30 % boost proportional to the engagement rate. Paired with the skip
+  // penalty this gives the ranker bidirectional session signal at cluster
+  // granularity (the session_vector cosine already captures this more
+  // diffusely; the leaf-level boost is surgical on the clusters the user
+  // is actively engaging with THIS session).
+  function sessionLeafEngageReward(article) {
+    const k = _sessionLeafKeyFromArticle(article);
+    if (!k) return 1.0;
+    const shown = _sessionLeafShown.get(k) || 0;
+    if (shown < 2) return 1.0;
+    const engaged = _sessionLeafEngaged.get(k) || 0;
+    if (engaged === 0) return 1.0;
+    const rate = engaged / shown;
+    return 1.0 + 0.3 * rate;  // 100 % engage → 1.3x, 50 % → 1.15x
   }
 
   // Fix L (2026-04-19): embedding-space secondary check. Articles whose
@@ -2354,6 +2378,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= sessionTopicPenalty(article);
       // Phase 2.1 (2026-04-22): session-level leaf skip penalty (embedding clusters)
       score *= sessionLeafSkipPenalty(article);
+      // Phase 2.2 (2026-04-22): session-level leaf engagement reward
+      score *= sessionLeafEngageReward(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2379,6 +2405,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
+      s *= sessionLeafEngageReward(article);  // Phase 2.2
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2393,6 +2420,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
+      s *= sessionLeafEngageReward(article);  // Phase 2.2
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2415,6 +2443,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
+      s *= sessionLeafEngageReward(article);  // Phase 2.2
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2444,6 +2473,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       else if (sigMult < 0.4) s *= 0.3;
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
+      s *= sessionLeafEngageReward(article);  // Phase 2.2
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -3944,14 +3974,22 @@ async function handleV2Feed(req, res, supabase, opts) {
     _dbg.formatted_returned = formattedArticles.length;
     _dbg.feed_ms = Date.now() - _feedT0;
     // Phase 2.1 — session-leaf skip penalty visibility.
-    const penalizedLeaves = {};
+    // Phase 2.2 — session-leaf engagement reward visibility (same map).
+    const leafSessionState = {};
     for (const [k, shown] of _sessionLeafShown.entries()) {
       if (shown < 2) continue;
       const skipped = _sessionLeafSkipped.get(k) || 0;
-      const rate = skipped / shown;
-      if (rate > 0) penalizedLeaves[k] = { shown, skipped, rate: +rate.toFixed(2) };
+      const engaged = _sessionLeafEngaged.get(k) || 0;
+      if (skipped === 0 && engaged === 0) continue;
+      leafSessionState[k] = {
+        shown,
+        skipped,
+        engaged,
+        skip_rate: +(skipped / shown).toFixed(2),
+        engage_rate: +(engaged / shown).toFixed(2),
+      };
     }
-    _dbg.session_leaf_penalty = penalizedLeaves;
+    _dbg.session_leaf_state = leafSessionState;
   }
 
   const _resp = {
