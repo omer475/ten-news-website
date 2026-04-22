@@ -1840,16 +1840,20 @@ async function handleV2Feed(req, res, supabase, opts) {
   ];
   let sessionCategoryLookup = {};
   let sessionSignalLookup = {};
+  let sessionLeafLookup = {};  // Phase 2.1: id -> `${super}:${leaf}` for session-leaf skip penalty
   if (allSessionIds.length > 0) {
     try {
       const { data: sessionArticleMeta } = await supabase
         .from('published_articles')
-        .select('id, category, typed_signals')
+        .select('id, category, typed_signals, super_cluster_id, leaf_cluster_id')
         .in('id', allSessionIds.slice(0, 300));  // safety cap
       if (sessionArticleMeta) {
         for (const a of sessionArticleMeta) {
           sessionCategoryLookup[a.id] = a.category;
           sessionSignalLookup[a.id] = a.typed_signals || [];
+          if (a.super_cluster_id != null && a.leaf_cluster_id != null) {
+            sessionLeafLookup[a.id] = `${a.super_cluster_id}:${a.leaf_cluster_id}`;
+          }
         }
       }
     } catch (e) { /* non-blocking */ }
@@ -1919,6 +1923,46 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (maxSkipsOnMatch >= 3) return 0.3;
     if (maxSkipsOnMatch >= 2) return 0.5;
     return 1.0;
+  }
+
+  // Phase 2.1 (2026-04-22): session leaf skip penalty.
+  // Per the plan's deterministic ranker formula: down-weight an article if
+  // its (super_cluster, leaf_cluster) was skipped disproportionately this
+  // session. Leaf-level granularity means "you skipped 3/4 Iran stories
+  // from leaf 5/23 — future picks from 5/23 get suppressed" without
+  // over-generalizing to the whole super. sessionTopicPenalty (above)
+  // operates on typed_signals (topic:iran), this operates on embedding
+  // clusters (leaf 5/23). Complementary: signals catch topic-level,
+  // leaves catch semantic-cluster-level rejection.
+  const _sessionLeafShown = new Map();   // `${super}:${leaf}` -> count
+  const _sessionLeafSkipped = new Map();
+  function _sessionLeafKeyFromArticle(a) {
+    if (!a || a.super_cluster_id == null || a.leaf_cluster_id == null) return null;
+    return `${a.super_cluster_id}:${a.leaf_cluster_id}`;
+  }
+  // Source of truth for session article leaf IDs: sessionLeafLookup (populated
+  // by the session-meta fetch earlier). articleMap is not sufficient because
+  // already-seen articles are excluded from the retrieval pools.
+  for (const id of [...(sessionEngagedIds || []), ...(sessionGlancedIds || []), ...(sessionSkippedIds || [])]) {
+    const k = sessionLeafLookup[id];
+    if (!k) continue;
+    _sessionLeafShown.set(k, (_sessionLeafShown.get(k) || 0) + 1);
+  }
+  for (const id of (sessionSkippedIds || [])) {
+    const k = sessionLeafLookup[id];
+    if (!k) continue;
+    _sessionLeafSkipped.set(k, (_sessionLeafSkipped.get(k) || 0) + 1);
+  }
+  function sessionLeafSkipPenalty(article) {
+    const k = _sessionLeafKeyFromArticle(article);
+    if (!k) return 1.0;
+    const shown = _sessionLeafShown.get(k) || 0;
+    if (shown < 2) return 1.0;  // need >= 2 observations to penalize
+    const skipped = _sessionLeafSkipped.get(k) || 0;
+    const rate = skipped / shown;
+    // Bounded: 0 % skip → 1.0, 100 % skip → 0.5 (plan says -0.3 but in
+    // multiplicative form; 1 - 0.5*rate preserves half-strength at worst).
+    return 1.0 - 0.5 * rate;
   }
 
   // Fix L (2026-04-19): embedding-space secondary check. Articles whose
@@ -2299,8 +2343,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
-      // Fix C (2026-04-19): session-level topic skip penalty
+      // Fix C (2026-04-19): session-level topic skip penalty (typed_signals)
       score *= sessionTopicPenalty(article);
+      // Phase 2.1 (2026-04-22): session-level leaf skip penalty (embedding clusters)
+      score *= sessionLeafSkipPenalty(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2325,6 +2371,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2338,6 +2385,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2359,6 +2407,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2387,6 +2436,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       // extremely-negative articles. Additional 70% penalty when 0.2 <= mult < 0.4.
       else if (sigMult < 0.4) s *= 0.3;
       s *= sessionTopicPenalty(article);  // Fix C
+      s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -3886,6 +3936,15 @@ async function handleV2Feed(req, res, supabase, opts) {
     _dbg.total_selected = selected.length;
     _dbg.formatted_returned = formattedArticles.length;
     _dbg.feed_ms = Date.now() - _feedT0;
+    // Phase 2.1 — session-leaf skip penalty visibility.
+    const penalizedLeaves = {};
+    for (const [k, shown] of _sessionLeafShown.entries()) {
+      if (shown < 2) continue;
+      const skipped = _sessionLeafSkipped.get(k) || 0;
+      const rate = skipped / shown;
+      if (rate > 0) penalizedLeaves[k] = { shown, skipped, rate: +rate.toFixed(2) };
+    }
+    _dbg.session_leaf_penalty = penalizedLeaves;
   }
 
   const _resp = {
