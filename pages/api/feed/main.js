@@ -3348,97 +3348,16 @@ async function handleV2Feed(req, res, supabase, opts) {
       recordEventSelection(picked);
       selected.push(picked);
     }
-  } else if (interestCategories.size > 0 && iPool.length > 0) {
-    _dbg.path = 'interest_prefill';
-    // console.log('[feed-diag] BRANCH: quota-based interest pre-fill');
-    // ==========================================
-    // QUOTA-BASED PRE-FILL for users with interest selections
-    // 70% of slots guaranteed for interest categories, 30% diversity
-    // This ensures Sports/Gaming/etc. users actually see their topics.
-    // ==========================================
-
-    const interestSlots = Math.ceil(limit * 0.8);
-    const diversitySlots = limit - interestSlots;
-
-    // Pre-fill interest quota: per-category round-robin from interest pool
-    const catQueues = {};
-    for (const a of iPool) {
-      const cat = a.category || 'Other';
-      if (!catQueues[cat]) catQueues[cat] = [];
-      catQueues[cat].push(a);
-    }
-    // Also pull matching articles from personal pool
-    for (const a of pPool) {
-      const cat = a.category || 'Other';
-      if (interestCategories.has(cat) || interestAltCategories.has(cat)) {
-        if (!catQueues[cat]) catQueues[cat] = [];
-        catQueues[cat].push(a);
-      }
-    }
-
-    const catKeys = Object.keys(catQueues);
-    let catIdx = 0;
-    const usedIds = new Set();
-
-    while (selected.length < interestSlots && catKeys.length > 0) {
-      const cat = catKeys[catIdx % catKeys.length];
-      const queue = catQueues[cat];
-      let picked = null;
-
-      while (queue.length > 0) {
-        const candidate = queue.shift();
-        if (!usedIds.has(candidate.id)
-            && !servedInThisRequest.has(candidate.id)
-            && !isEventCapped(candidate)) {
-          picked = candidate;
-          break;
-        }
-      }
-
-      if (picked) {
-        usedIds.add(picked.id);
-        servedInThisRequest.add(picked.id);
-        picked.bucket = 'interest';
-        recordEventSelection(picked);
-          selected.push(picked);
-      } else {
-        catKeys.splice(catIdx % catKeys.length, 1);
-        if (catKeys.length === 0) break;
-      }
-      catIdx++;
-    }
-
-    // Fill remaining slots — every slot tries ALL pools before giving up
-    let consecutiveFails = 0;
-    for (let pos = 0; selected.length < limit && consecutiveFails < 20; pos++) {
-      const slot = SLOTS[pos % SLOTS.length];
-      let picked = null;
-
-      // Try preferred pool first, then ALL others as fallback
-      if (slot === 'F') {
-        picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-      } else if (slot === 'P') {
-        picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-      } else if (slot === 'T') {
-        picked = mmrSelectDeduped(tPool, selected, tagCache, 0.70);
-      } else {
-        picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-      }
-      // Fallback: trending/discovery first (personalized), fresh_best last (exploration)
-      if (!picked) picked = mmrSelectDeduped(tPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(dPool, selected, tagCache, 0.4);
-      if (!picked) picked = mmrSelectDeduped(pPool, selected, tagCache, 0.7);
-      if (!picked) picked = mmrSelectDeduped(iPool, selected, tagCache, 0.5);
-      if (!picked) picked = mmrSelectDeduped(fPool, selected, tagCache, 0.5);
-
-      if (!picked) { consecutiveFails++; continue; }
-      consecutiveFails = 0;
-
-      picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
-      recordEventSelection(picked);
-      selected.push(picked);
-    }
   } else {
+    // Quota-based interest pre-fill branch removed 2026-04-22. It ran
+    // when interestCategories.size > 0 && iPool.length > 0 and reserved
+    // 80 % of slots for onboarding-topic categories via per-category
+    // round-robin. The bandit + taste-vector-driven personal pool + iPool
+    // fallback chain in this branch now cover the same role without a
+    // dedicated quota: users who engage with their selected topics get
+    // reinforcement through the leaf-arm posteriors, and iPool still
+    // participates as a fallback at line 3503 below. Phase 2's ranker
+    // will make topic affinity a learned feature instead.
     _dbg.path = 'standard';
     // console.log('[feed-diag] BRANCH: standard personalized slot-filling');
     //
