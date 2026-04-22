@@ -2682,45 +2682,17 @@ async function handleV2Feed(req, res, supabase, opts) {
   // console.log(`[feed-diag] fUnseen=${fUnseen.length} fResurfaced=${fResurfaced.length}`);
   // console.log(`[feed-diag] totalFreshUnseen=${totalFreshUnseen} hasAnyPersonalization=${hasAnyPersonalization}`);
 
-  // ── Dynamic slot pattern ──
-  // Trending (57% eng) and discovery (67% eng) outperform fresh_best (21%).
-  // Fresh_best is exploration (last resort), not primary filler.
-  const personalUnseenCount = pTiers.freshUnseen.length;
-  // Session engage rate is a stronger signal than unseen count for deciding
-  // exploit vs explore. If the user is skipping most of what we serve this
-  // session, drop out of personal-dominant mode even with high unseen — those
-  // candidates evidently aren't working today.
-  const _sessionDecisions = (sessionEngagedIds?.length || 0) + (sessionSkippedIds?.length || 0);
-  const _sessionEngageRate = _sessionDecisions >= 10
-    ? (sessionEngagedIds.length / _sessionDecisions) : null;
-  const _lowEngagementMode = _sessionEngageRate !== null && _sessionEngageRate < 0.3;
-
-  let SLOTS;
-  let _slotsReason;
-  if (_lowEngagementMode) {
-    // Skip-heavy session: open up to exploration + fresh even if personal has unseen.
-    SLOTS = ['P','T','D','T','D','F','T','D','T','F'];           // 10P/30T/40D/20F
-    _slotsReason = `low-engage-rate=${_sessionEngageRate.toFixed(2)}`;
-  } else if (intentShifted) {
-    // Session intent diverging from long-term profile. Personal pool is built
-    // off long-term centroids and is the *wrong* pool to lean on right now —
-    // favor trending + discovery (driven by current engagement) and let the
-    // multi-cluster re-rank (which now contains the session vector) pull
-    // session-relevant items to the top of those pools.
-    SLOTS = ['P','T','D','T','D','D','T','D','T','F'];           // 10P/30T/50D/10F
-    _slotsReason = `intent-shift cos=${intentShiftCos.toFixed(2)}`;
-  } else if (personalUnseenCount >= 15) {
-    SLOTS = ['P','P','T','P','P','D','P','P','T','D'];           // 60P/20T/20D
-    _slotsReason = `personal-heavy unseen=${personalUnseenCount}`;
-  } else if (personalUnseenCount >= 5) {
-    SLOTS = ['P','T','D','T','P','D','T','D','T','F'];           // 20P/40T/30D/10F
-    _slotsReason = `balanced unseen=${personalUnseenCount}`;
-  } else {
-    // Personal exhausted — trending + discovery first, fresh_best last resort
-    SLOTS = ['T','D','T','D','T','F','T','D','T','F'];           // 50T/30D/20F
-    _slotsReason = `personal-exhausted unseen=${personalUnseenCount}`;
-  }
-  console.log(`[feed] SLOTS=${SLOTS.join('')} reason=${_slotsReason} pools P=${pTiers.freshUnseen.length} T=${tTiers.freshUnseen.length} D=${dTiers.freshUnseen.length} F=${fUnseen.length}`);
+  // Slot pattern — one balanced default (20P / 40T / 30D / 10F).
+  //
+  // Previously there were 5 hand-tuned variants (low-engage-mode, intent-shift,
+  // personal-heavy, balanced, personal-exhausted). The plan calls for
+  // bandit-driven allocation instead; Phase 2's ranker will unify scoring
+  // across pools so a single pattern becomes irrelevant. Until then: one
+  // balanced default + the fresh-best fallback below handles pool-exhaustion
+  // cases cleanly (slot-fill's retry counter skips to the next slot if a
+  // pool is empty).
+  let SLOTS = ['P','T','D','T','P','D','T','D','T','F'];
+  console.log(`[feed] SLOTS=${SLOTS.join('')} pools P=${pTiers.freshUnseen.length} T=${tTiers.freshUnseen.length} D=${dTiers.freshUnseen.length} F=${fUnseen.length}`);
 
   // Fix I (2026-04-19): when fresh_best pool is thin (post Fix H hard-floor),
   // skipping fresh_best slots entirely is better than padding the page with
