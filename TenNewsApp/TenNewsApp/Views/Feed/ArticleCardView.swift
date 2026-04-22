@@ -374,7 +374,7 @@ struct ArticleCardView: View {
                 Task {
                     try? await analytics.track(
                         event: "article_not_interested",
-                        articleId: article.id,
+                        articleId: Int(article.id.stringValue),
                         category: article.category
                     )
                 }
