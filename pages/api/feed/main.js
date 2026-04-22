@@ -1065,7 +1065,14 @@ async function handleV2Feed(req, res, supabase, opts) {
     bandit_state: null,
     buckets_served: {},
     caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0 },
+    phase_ms: {},
   };
+  let _phaseT = _feedT0;
+  function mark(name) {
+    const nowT = Date.now();
+    _dbg.phase_ms[name] = nowT - _phaseT;
+    _phaseT = nowT;
+  }
 
   const now = Date.now();
   const thirtyDaysAgo = new Date(now - 30 * 24 * 3600000).toISOString();
@@ -1235,6 +1242,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .order('ai_final_score', { ascending: false })
       .limit(1000),
   ]);
+  mark('retrieval');
 
   if (personalResult.error) {
     console.error('Personal query error:', personalResult.error?.message || personalResult.error);
@@ -1759,6 +1767,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .in('id', batch);
     if (!error && data) allArticles = allArticles.concat(data);
   }
+  mark('metadata_fetch');
 
   // Filter out test articles
   allArticles = allArticles.filter(a => {
@@ -2292,6 +2301,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     return next;
   }
 
+  mark('pre_scoring');
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .map(id => {
@@ -2590,6 +2600,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (!sig) { if (debugFlag) _dbg.filter_rejects.sig_exploration++; return false; }
     return true;
   };
+  mark('scoring');
   const personalScoredFiltered   = personalScored.filter(passesPersonalFilters);
   const trendingScoredFiltered   = trendingScored.filter(passesExplorationFilters);
   const discoveryScoredFiltered  = discoveryScored.filter(passesExplorationFilters);
@@ -2832,6 +2843,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // them and burn retry budget). Super cap (MAX_PER_SUPER = 5) remains
   // active and provides most of the diversity guarantee.
 
+  mark('filters_tiers');
   function mmrSelectDeduped(pool, sel, tc, lambda) {
     let attempts = 0;
     while (attempts < 10 && pool.length > 0) {
@@ -3913,6 +3925,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  mark('slot_fill');
+
   // ==========================================
   // PHASE 8: FORMAT & RESPOND
   // ==========================================
@@ -4075,6 +4089,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // Fix J (2026-04-19): per-request timing for p95 monitoring after the
   // 200→300 per-cat bump. Watch for regressions >3s on Vercel.
+  mark('format_and_impressions');
   const _feedMs = Date.now() - _feedT0;
   const _sessHit = (sessionSkippedIds?.length || 0) + (sessionEngagedIds?.length || 0) + (sessionGlancedIds?.length || 0);
   console.log(`[feed:timing] ms=${_feedMs} selected=${selected.length} sess_hit=${_sessHit} user=${userId || 'guest'}`);
