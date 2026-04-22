@@ -2059,30 +2059,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     return historical;
   }
 
-  // Underfed winner boost: amplify categories with high engagement but low serving volume
-  // Food (50% rate, 12 served) and Travel (50% rate, 10 served) should appear more
-  let categoryStats30d = {};
-  if (userId) {
-    try {
-      const { data: stats30 } = await supabase.rpc('get_category_engagement_stats', {
-        p_user_id: userId, p_days: 30,
-      });
-      if (stats30) {
-        for (const row of stats30) {
-          categoryStats30d[row.category] = { impressions: parseInt(row.impressions) || 0, engaged: parseInt(row.engaged) || 0 };
-        }
-      }
-    } catch (e) { /* non-blocking */ }
-  }
-
-  function underfedWinnerBoost(article) {
-    const stats = categoryStats30d[article.category];
-    if (!stats || stats.impressions === 0) return 1.0;
-    const rate = stats.engaged / stats.impressions;
-    if (rate >= 0.40 && stats.engaged >= 5 && stats.impressions < 25) return 1.5;
-    if (rate >= 0.40 && stats.impressions < 50) return 1.2;
-    return 1.0;
-  }
+  // underfedWinnerBoost + its categoryStats30d loader removed 2026-04-22.
+  // Was a category-level amplification patch from the tag-era. Category-level
+  // diversity is now owned by (a) MAX_PER_SUPER cap, (b) hierarchical bandit
+  // sampling balancing super/leaf arms, (c) event cap. Category-scale tuning
+  // at the score level was double-counting effects handled by those caps.
+  // Removed one Supabase RPC round-trip per request in the process.
 
   // ==========================================
   // PHASE 5: SCORE CANDIDATES
@@ -2322,7 +2304,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= getCategorySuppression(article);
       // Fix C (2026-04-19): session-level topic skip penalty
       score *= sessionTopicPenalty(article);
-      score *= underfedWinnerBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
