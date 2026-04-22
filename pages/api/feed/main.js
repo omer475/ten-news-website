@@ -2827,57 +2827,19 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) return null;
       if (servedInThisRequest.has(picked.id)) { if (debugFlag) _dbg.caps.null_dedup++; attempts++; continue; }
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.event++; attempts++; continue; }
-      if (isEntityCappedShared(picked)) { if (debugFlag) _dbg.caps.entity_shared++; attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
     return null;
   }
 
-  // ==========================================
-  // ENTITY-LEVEL FREQUENCY CAP (shared across all paths)
-  // Tiered by how dominant an entity is in the candidate pool.
-  // ==========================================
-
-  const entityFreqInPoolShared = {};
-  for (const a of allArticles) {
-    const tags = safeJsonParse(a.interest_tags, []);
-    for (const tag of tags) {
-      const t = tag.toLowerCase();
-      entityFreqInPoolShared[t] = (entityFreqInPoolShared[t] || 0) + 1;
-    }
-  }
-
-  function getEntityCapShared(tag) {
-    const freq = entityFreqInPoolShared[tag] || 0;
-    // Tight caps to prevent topic flooding (5 Artemis articles in one feed)
-    // Tags like "artemis" with freq=4-9 were getting Infinity cap (no limit)
-    if (freq >= 50) return 3;
-    if (freq >= 20) return 3;
-    if (freq >= 10) return 3;
-    if (freq >= 3) return 2; // NEW: even low-freq tags get capped at 2
-    return 3; // unknown tags: max 3 (was Infinity)
-  }
-
-  const entitySelectionCountsShared = {};
-
-  function isEntityCappedShared(article) {
-    const tags = safeJsonParse(article.interest_tags, []);
-    for (const tag of tags) {
-      const t = tag.toLowerCase();
-      const cap = getEntityCapShared(t);
-      if ((entitySelectionCountsShared[t] || 0) >= cap) return true;
-    }
-    return false;
-  }
-
-  function recordEntitySelectionShared(article) {
-    const tags = safeJsonParse(article.interest_tags, []);
-    for (const tag of tags) {
-      const t = tag.toLowerCase();
-      entitySelectionCountsShared[t] = (entitySelectionCountsShared[t] || 0) + 1;
-    }
-  }
+  // isEntityCappedShared + its support (entityFreqInPoolShared / getEntityCapShared
+  // / entitySelectionCountsShared / recordEntitySelectionShared) removed
+  // 2026-04-22. Tag-based (read interest_tags). Debug counters in prod showed
+  // it fired only 1-2 times per request — low-leverage work. Topic diversity
+  // is now owned by MAX_PER_SUPER (super-cluster cap, 5/page) +
+  // CLUSTER_CAP / WORLD_EVENT_CAP (event-level caps, 4/page) + the soft
+  // entitySignalMultiplier (down-weights disliked tags without hard-capping).
 
   // ==========================================
   // V15 COLD-START: Thompson Sampling bandit with:
@@ -3415,7 +3377,6 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
-      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   } else if (interestCategories.size > 0 && iPool.length > 0) {
@@ -3459,8 +3420,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const candidate = queue.shift();
         if (!usedIds.has(candidate.id)
             && !servedInThisRequest.has(candidate.id)
-            && !isEventCapped(candidate)
-            && !isEntityCappedShared(candidate)) {
+            && !isEventCapped(candidate)) {
           picked = candidate;
           break;
         }
@@ -3471,8 +3431,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         servedInThisRequest.add(picked.id);
         picked.bucket = 'interest';
         recordEventSelection(picked);
-        recordEntitySelectionShared(picked);
-        selected.push(picked);
+          selected.push(picked);
       } else {
         catKeys.splice(catIdx % catKeys.length, 1);
         if (catKeys.length === 0) break;
@@ -3508,7 +3467,6 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
-      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   } else {
@@ -3585,7 +3543,6 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
-      recordEntitySelectionShared(picked);
       recordSuperPick(picked);
       selected.push(picked);
     }
@@ -3668,7 +3625,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked._resurfaced = true;
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
-      recordEntitySelectionShared(picked);
       selected.push(picked);
     }
   }
