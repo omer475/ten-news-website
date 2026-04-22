@@ -68,21 +68,23 @@ struct OtpVerificationView: View {
                 HStack(spacing: 8) {
                     if viewModel.isLoading {
                         ProgressView()
-                            .tint(.white)
+                            .tint(.green)
                             .scaleEffect(0.85)
                     } else {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .bold))
                         Text("Verify")
                             .font(.system(size: 16, weight: .semibold))
                             .tracking(-0.2)
                     }
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(viewModel.otpCode.count == 6 ? .green : .white.opacity(0.3))
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(viewModel.otpCode.count == 6 ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
-                }
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                .contentShape(Capsule())
             }
             .disabled(viewModel.otpCode.count != 6 || viewModel.isLoading)
             .padding(.top, 24)

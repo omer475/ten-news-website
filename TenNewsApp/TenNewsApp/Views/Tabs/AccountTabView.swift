@@ -1,5 +1,4 @@
 import SwiftUI
-import PhotosUI
 
 struct AccountTabView: View {
     @Environment(AppViewModel.self) private var appViewModel
@@ -15,10 +14,9 @@ struct AccountTabView: View {
 
     @State private var publishedArticles: [Article] = []
     @State private var isLoadingPublished = false
-    @State private var selectedPhoto: PhotosPickerItem?
     @State private var profileImage: UIImage? = ProfilePhotoManager.shared.load()
-    @State private var pickedImageForCrop: UIImage?
-    @State private var showCropView = false
+    @State private var selectedDefaultAvatar: Int? = ProfilePhotoManager.shared.selectedDefaultAvatar()
+    @State private var showAvatarPicker = false
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
@@ -61,7 +59,7 @@ struct AccountTabView: View {
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 20)
                 }
-                .navigationTitle(user?.displayName ?? "Profile")
+                .navigationTitle(user?.displayName ?? "Guest")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -161,6 +159,7 @@ struct AccountTabView: View {
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
+                    contentKey: article.contentKey,
                     allArticles: feedContinuationArticles,
                     onDismiss: {
                         selectedArticle = nil
@@ -171,24 +170,6 @@ struct AccountTabView: View {
                 .zIndex(1)
             }
 
-            // Photo crop overlay — ZStack so it's guaranteed to have the image
-            if let cropImage = pickedImageForCrop, showCropView {
-                ProfilePhotoCropView(
-                    image: cropImage,
-                    onSave: { cropped in
-                        profileImage = cropped
-                        ProfilePhotoManager.shared.save(cropped)
-                        showCropView = false
-                        pickedImageForCrop = nil
-                    },
-                    onCancel: {
-                        showCropView = false
-                        pickedImageForCrop = nil
-                    }
-                )
-                .ignoresSafeArea()
-                .zIndex(10)
-            }
         }
         .onAppear {
             withAnimation(.smooth(duration: 0.5)) {
@@ -209,10 +190,20 @@ struct AccountTabView: View {
 
     private var profileHeader: some View {
         VStack(spacing: 10) {
-            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+            Button {
+                showAvatarPicker = true
+                HapticManager.light()
+            } label: {
                 ZStack(alignment: .bottomTrailing) {
                     if let profileImage {
                         Image(uiImage: profileImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 86, height: 86)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(.separator, lineWidth: 0.5))
+                    } else if let avatarIndex = selectedDefaultAvatar {
+                        Image("avatar_\(avatarIndex)")
                             .resizable()
                             .scaledToFill()
                             .frame(width: 86, height: 86)
@@ -224,9 +215,7 @@ struct AccountTabView: View {
                             .clipShape(Circle())
                             .overlay(Circle().stroke(.separator, lineWidth: 0.5))
                     } else {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundStyle(.tertiary)
+                        profileInitialAvatar(size: 86)
                     }
 
                     // Camera badge
@@ -239,21 +228,38 @@ struct AccountTabView: View {
                 }
             }
             .buttonStyle(.plain)
-            .onChange(of: selectedPhoto) { _, item in
-                guard let item else { return }
-                Task {
-                    if let data = try? await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        pickedImageForCrop = image
-                        // Delay to let PhotosPicker dismiss first
-                        try? await Task.sleep(for: .milliseconds(500))
-                        showCropView = true
+            .sheet(isPresented: $showAvatarPicker) {
+                ProfileAvatarPickerView(
+                    userName: user?.displayName ?? "U",
+                    onSelectDefault: { index in
+                        ProfilePhotoManager.shared.saveDefaultAvatar(index)
+                        selectedDefaultAvatar = index
+                        profileImage = nil
+                        showAvatarPicker = false
+                    },
+                    onSelectPhoto: { image in
+                        ProfilePhotoManager.shared.save(image)
+                        profileImage = image
+                        selectedDefaultAvatar = nil
+                        showAvatarPicker = false
+                    },
+                    onResetToInitial: {
+                        ProfilePhotoManager.shared.resetToDefault()
+                        profileImage = nil
+                        selectedDefaultAvatar = nil
+                        showAvatarPicker = false
+                    },
+                    onDismiss: {
+                        showAvatarPicker = false
                     }
-                }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
             }
 
             VStack(spacing: 4) {
-                Text(user?.displayName ?? "My Profile")
+                Text(user?.displayName ?? "Guest")
                     .font(.system(size: 16, weight: .semibold))
 
                 if appViewModel.isGuest {
@@ -263,6 +269,27 @@ struct AccountTabView: View {
                 }
             }
         }
+    }
+
+    private func profileInitialAvatar(size: CGFloat) -> some View {
+        let name = user?.displayName ?? "U"
+        let initial = String(name.trimmingCharacters(in: .whitespaces).prefix(1)).uppercased()
+        let colors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
+        let colorIndex = abs(name.hashValue) % colors.count
+        return ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [colors[colorIndex], colors[colorIndex].opacity(0.7)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            Text(initial.isEmpty ? "?" : initial)
+                .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .frame(width: size, height: size)
     }
 
     // MARK: - Stats Row

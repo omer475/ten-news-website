@@ -5,6 +5,12 @@ import SwiftUI
 /// Rendered as an inline overlay (not .fullScreenCover) so the tab bar stays visible.
 struct ExploreArticleSheet: View {
     let selectedArticle: Article
+    /// Content-fingerprint of `selectedArticle` supplied by the parent. Article's `==`
+    /// is id-only (for feed de-duping), which means SwiftUI cannot see when a stub is
+    /// hydrated with bullets/details. This String changes whenever the article's
+    /// *content* changes, giving SwiftUI a reliable signal to re-run `body` so the
+    /// onChange below can mirror the update into `articlePages`.
+    let contentKey: String
     let allArticles: [Article]
     let onDismiss: () -> Void
     var preserveOrder: Bool = false
@@ -24,6 +30,10 @@ struct ExploreArticleSheet: View {
                             article: article,
                             accentColor: Self.accentColor(for: article)
                         )
+                        // Article's `==` is id-only, so SwiftUI can't see when a stub
+                        // is hydrated with bullets. Keying on contentKey forces the
+                        // card to rebuild when content arrives.
+                        .id(article.contentKey)
                     }
                 } else {
                     Color.black
@@ -50,21 +60,9 @@ struct ExploreArticleSheet: View {
         .onAppear {
             articlePages = buildArticlePages()
         }
-        .task(id: selectedArticle.id.stringValue) {
-            // Self-hydrate: if the passed article lacks bullets (came from
-            // Explore where topics/articles endpoint returns minimal data),
-            // fetch the full article directly and update page 0.
-            // Relying on parent's onChange was unreliable — parent state
-            // mutations don't always propagate to child view bodies in time
-            // for the pager to pick up the new article.
-            if selectedArticle.displayBullets.isEmpty || selectedArticle.summaryBulletsNews?.isEmpty ?? true {
-                let articleId = selectedArticle.id.stringValue
-                if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: articleId)) {
-                    if !articlePages.isEmpty, articlePages[0].id.stringValue == response.article.id.stringValue {
-                        articlePages[0] = response.article
-                    }
-                }
-            }
+        .onChange(of: selectedArticle.id) {
+            // Rebuild pages if the selected article identity changes
+            articlePages = buildArticlePages()
         }
         .onChange(of: allArticles.count) {
             // More articles loaded (e.g. search results fetched in background)
@@ -79,8 +77,9 @@ struct ExploreArticleSheet: View {
                 }
             }
         }
-        .onChange(of: selectedArticle.displayBullets.count) {
-            // Parent-driven update (e.g. feed cache delivered a hydrated article)
+        .onChange(of: contentKey) {
+            // Article content was hydrated (bullets/details arrived from the API).
+            // Mirror the updated article into articlePages so the pager re-renders.
             if !articlePages.isEmpty, articlePages[0].id == selectedArticle.id {
                 articlePages[0] = selectedArticle
             }

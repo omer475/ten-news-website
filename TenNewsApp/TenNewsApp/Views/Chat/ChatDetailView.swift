@@ -93,12 +93,7 @@ struct ChatDetailView: View {
                 isLoading = false
             }
             chatService.startPolling(conversationId: conversation.id) { newMessages in
-                // Only update when something actually changed. Plain assignment
-                // every 3s triggers SwiftUI re-layout, and if an article card
-                // hydrated (null → populated) the row height changes mid-scroll
-                // → .defaultScrollAnchor(.bottom) fights the user's gesture and
-                // the chat bounces up/down. Deep-equal check avoids that.
-                if !chatMessagesEqual(newMessages, messages) {
+                if newMessages.count != messages.count || newMessages.last?.id != messages.last?.id {
                     messages = newMessages
                 }
             }
@@ -238,31 +233,6 @@ struct ChatDetailView: View {
             }
         }
     }
-}
-
-/// Deep-equal comparison for chat polling. Compares id, content, article
-/// hydration, and read-receipt — everything that affects message rendering.
-/// Plain ChatMessage.== only compares id, which misses article hydration
-/// (article_id set but article object arrived in a later poll) and causes
-/// layout-shift bouncing when used alone.
-private func chatMessagesEqual(_ a: [ChatMessage], _ b: [ChatMessage]) -> Bool {
-    guard a.count == b.count else { return false }
-    for (x, y) in zip(a, b) {
-        if x.id != y.id { return false }
-        if x.content != y.content { return false }
-        if x.readAt != y.readAt { return false }
-        // Article hydration: nil → populated is a meaningful change
-        let xHas = x.article != nil
-        let yHas = y.article != nil
-        if xHas != yHas { return false }
-        // If both have articles, compare payloads (id suffices — content is immutable server-side)
-        if let xa = x.article, let ya = y.article {
-            if xa.id != ya.id { return false }
-            if xa.title != ya.title { return false }
-            if xa.imageUrl != ya.imageUrl { return false }
-        }
-    }
-    return true
 }
 
 // MARK: - Shared Article Card (uses dominant color from image, same as explore page)

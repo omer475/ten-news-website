@@ -13,6 +13,12 @@ struct LoginResponse: Codable {
     let session: AuthSession?
     let message: String?
     let error: String?
+    let needsProfile: Bool?   // set true by /api/auth/google when username/DOB missing
+
+    enum CodingKeys: String, CodingKey {
+        case success, user, session, message, error
+        case needsProfile = "needs_profile"
+    }
 }
 
 // MARK: - Signup
@@ -21,6 +27,13 @@ struct SignupRequest: Codable {
     let email: String
     let password: String
     let name: String?
+    let username: String?
+    let dateOfBirth: String?   // ISO 8601 date string: "YYYY-MM-DD"
+
+    enum CodingKeys: String, CodingKey {
+        case email, password, name, username
+        case dateOfBirth = "date_of_birth"
+    }
 }
 
 struct SignupResponse: Codable {
@@ -30,6 +43,26 @@ struct SignupResponse: Codable {
     let message: String?
     let error: String?
     let requiresVerification: Bool?
+}
+
+// MARK: - Complete Profile (Google OAuth follow-up)
+
+struct CompleteProfileRequest: Codable {
+    let username: String?
+    let dateOfBirth: String?
+    let name: String?
+
+    enum CodingKeys: String, CodingKey {
+        case username, name
+        case dateOfBirth = "date_of_birth"
+    }
+}
+
+struct CompleteProfileResponse: Codable {
+    let success: Bool?
+    let user: AuthUser?
+    let error: String?
+    let message: String?
 }
 
 // MARK: - OTP Verification
@@ -107,7 +140,13 @@ struct AuthUser: Codable, Identifiable, Hashable {
         case createdAt = "created_at"
     }
 
-    var displayName: String { name ?? "My Profile" }
+    var displayName: String {
+        if let name, !name.isEmpty { return name }
+        if let email, let username = email.split(separator: "@").first {
+            return String(username)
+        }
+        return "User"
+    }
 
     var displayAvatar: URL? {
         guard let urlString = avatarUrl, !urlString.isEmpty else { return nil }

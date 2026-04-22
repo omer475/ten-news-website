@@ -138,10 +138,11 @@ struct CreateContentView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .bold))
                     }
-                    .foregroundStyle(canProceed ? .white : .white.opacity(0.4))
+                    .foregroundStyle(canProceed ? .green : .secondary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 7)
-                    .background(canProceed ? Color.blue : Color.blue.opacity(0.3), in: Capsule())
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
                 }
                 .disabled(!canProceed)
             }
@@ -167,10 +168,11 @@ struct CreateContentView: View {
                         Text(highlightMode ? "Done Highlighting" : "Highlight Words")
                             .font(.system(size: 14, weight: .semibold))
                     }
-                    .foregroundStyle(highlightMode ? .white : .blue)
+                    .foregroundStyle(highlightMode ? .white : .green)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(highlightMode ? Color.blue : Color.blue.opacity(0.12), in: Capsule())
+                    .background(highlightMode ? AnyShapeStyle(Color.green.opacity(0.6)) : AnyShapeStyle(.ultraThinMaterial), in: Capsule())
+                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
                 }
                 .padding(.top, 8)
 
@@ -203,7 +205,7 @@ struct CreateContentView: View {
                             ForEach(tags, id: \.self) { tag in
                                 Text("#\(tag)")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(.green)
                             }
                         }
                         .padding(.horizontal, 20)
@@ -243,10 +245,11 @@ struct CreateContentView: View {
                         Text("Publish")
                             .font(.system(size: 15, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.green)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 7)
-                    .background(Color.blue, in: Capsule())
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
                 }
                 .disabled(isPublishing)
             }
@@ -691,7 +694,7 @@ struct CreateContentView: View {
                                 Text("Add Page")
                                     .font(.system(size: 13, weight: .medium))
                             }
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
@@ -802,7 +805,7 @@ struct CreateContentView: View {
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
                                 .background(
-                                    selectedCategory == cat ? Color.blue : Color(.systemGray5),
+                                    selectedCategory == cat ? Color.green.opacity(0.6) : Color(.systemGray5),
                                     in: Capsule()
                                 )
                         }
@@ -846,10 +849,10 @@ struct CreateContentView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.green)
                     Text("Add Bullet")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.green)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
@@ -914,7 +917,7 @@ struct CreateContentView: View {
                         HStack(spacing: 4) {
                             Text("#\(tag)")
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(.green)
                             Button {
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     tags.removeAll { $0 == tag }
@@ -952,7 +955,7 @@ struct CreateContentView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                     }
                     .buttonStyle(.plain)
                 }
@@ -1004,10 +1007,10 @@ struct CreateContentView: View {
                     HStack(spacing: 4) {
                         Text(showDetails ? "Hide" : "Add")
                             .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                         Image(systemName: showDetails ? "chevron.up" : "chevron.down")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                     }
                 }
             }
@@ -1069,10 +1072,10 @@ struct CreateContentView: View {
                     HStack(spacing: 4) {
                         Text(showMap ? "Hide" : "Add")
                             .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                         Image(systemName: showMap ? "chevron.up" : "chevron.down")
                             .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.green)
                     }
                 }
             }
@@ -1099,7 +1102,7 @@ struct CreateContentView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "mappin.circle.fill")
                                     .font(.system(size: 14))
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(.green)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(locationName)
                                         .font(.system(size: 13, weight: .semibold))
@@ -1118,7 +1121,7 @@ struct CreateContentView: View {
                                 } label: {
                                     Text("Change")
                                         .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(.blue)
+                                        .foregroundStyle(.green)
                                 }
                             }
                             .padding(10)
@@ -1133,7 +1136,7 @@ struct CreateContentView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "mappin.and.ellipse")
                                     .font(.system(size: 20))
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(.green)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Select Location")
                                         .font(.system(size: 15, weight: .medium))

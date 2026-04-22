@@ -251,22 +251,23 @@ struct ForgotPasswordView: View {
     // MARK: - Shared Components
 
     private func ctaButton(label: String, enabled: Bool, loading: Bool) -> some View {
-        HStack {
+        HStack(spacing: 8) {
             if loading {
-                ProgressView().tint(.black).scaleEffect(0.85)
+                ProgressView().tint(.green).scaleEffect(0.85)
             } else {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 13, weight: .bold))
                 Text(label)
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.2)
             }
         }
-        .foregroundStyle(enabled ? .black : .white.opacity(0.4))
+        .foregroundStyle(enabled ? .green : .white.opacity(0.3))
         .frame(maxWidth: .infinity)
         .frame(height: 52)
-        .background(
-            enabled ? AnyShapeStyle(.white) : AnyShapeStyle(Color.white.opacity(0.1)),
-            in: RoundedRectangle(cornerRadius: 26, style: .continuous)
-        )
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
     }
 
     @ViewBuilder

@@ -4,7 +4,6 @@ struct OnboardingFlowView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @State private var viewModel = OnboardingViewModel()
     @State private var showSignIn = false
-    @State private var showSignUp = false
     @State private var showForgotPassword = false
     @State private var contentRevealed = false
 
@@ -19,17 +18,16 @@ struct OnboardingFlowView: View {
             case .welcome:
                 welcomeView
                     .transition(.asymmetric(insertion: .opacity, removal: .push(from: .leading)))
-            case .country:
-                countryPage
-                    .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
             case .topics:
                 topicsPage
+                    .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
+            case .signup:
+                inlineSignupView
                     .transition(.asymmetric(insertion: .push(from: .trailing), removal: .push(from: .leading)))
             }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showSignIn) { signInSheet }
-        .sheet(isPresented: $showSignUp) { signUpSheet }
         .sheet(isPresented: $showForgotPassword) {
             NavigationStack {
                 ForgotPasswordView(onPasswordReset: { user, session in
@@ -70,75 +68,6 @@ struct OnboardingFlowView: View {
         })
     }
 
-    // MARK: - Country Selection
-
-    private var countryPage: some View {
-        onboardingPage(
-            step: 1,
-            title: "Where are you from?",
-            canProceed: viewModel.selectedCountry != nil,
-            ctaLabel: "Continue",
-            showSkip: true
-        ) {
-            LazyVStack(spacing: 6) {
-                ForEach(viewModel.availableCountries) { country in
-                    let isSelected = viewModel.selectedCountry == country.id
-
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            viewModel.selectCountry(country.id)
-                        }
-                    } label: {
-                        HStack(spacing: 14) {
-                            Text(country.flag)
-                                .font(.system(size: 32))
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(country.name)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                Text(country.region)
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.35))
-                            }
-
-                            Spacer()
-
-                            if isSelected {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 22))
-                                    .foregroundStyle(accent)
-                                    .transition(.scale.combined(with: .opacity))
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background {
-                            if isSelected {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(accent.opacity(0.15))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                            .strokeBorder(accent.opacity(0.3), lineWidth: 1.5)
-                                    )
-                            } else {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(.white.opacity(0.06))
-                            }
-                        }
-                        .contentShape(RoundedRectangle(cornerRadius: 14))
-                    }
-                    .buttonStyle(RowPressStyle())
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 120)
-            .opacity(contentRevealed ? 1 : 0)
-            .offset(y: contentRevealed ? 0 : 20)
-            .animation(.spring(response: 0.5, dampingFraction: 0.85), value: contentRevealed)
-        }
-    }
-
     // MARK: - Topics
 
     private var topicsPage: some View {
@@ -146,13 +75,13 @@ struct OnboardingFlowView: View {
         let minTopics = 3
 
         return onboardingPage(
-            step: 2,
+            step: 1,
             title: "What interests you?",
             subtitle: "Pick 3 or more to personalize your feed",
             canProceed: total >= minTopics,
-            ctaLabel: total < minTopics ? "Pick \(minTopics - total) more" : "Get Started",
+            ctaLabel: total < minTopics ? "Pick \(minTopics - total) more" : "Continue",
             showSkip: false,
-            isLastStep: true
+            isLastStep: false
         ) {
             VStack(spacing: 24) {
                 ForEach(Array(TopicCategories.all.enumerated()), id: \.element.id) { index, category in
@@ -268,14 +197,9 @@ struct OnboardingFlowView: View {
 
                         Spacer()
 
-                        HStack(spacing: 5) {
-                            ForEach(1...2, id: \.self) { i in
-                                Capsule()
-                                    .fill(i == step ? accent : .white.opacity(0.15))
-                                    .frame(width: i == step ? 20 : 6, height: 6)
-                            }
-                        }
-                        .animation(.spring(response: 0.4), value: step)
+                        Capsule()
+                            .fill(accent)
+                            .frame(width: 20, height: 6)
 
                         Spacer()
 
@@ -324,8 +248,7 @@ struct OnboardingFlowView: View {
             // CTA button
             VStack(spacing: 8) {
                 Button {
-                    if isLastStep { showSignUp = true }
-                    else { goNext() }
+                    goNext()
                     HapticManager.medium()
                 } label: {
                     Text(ctaLabel)
@@ -336,7 +259,7 @@ struct OnboardingFlowView: View {
                         .frame(height: 52)
                         .background {
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .fill(canProceed ? AnyShapeStyle(.white) : AnyShapeStyle(Color.white.opacity(0.15)))
+                                .fill(canProceed ? AnyShapeStyle(.white) : AnyShapeStyle(Color.white.opacity(0.7)))
                         }
                 }
                 .disabled(!canProceed)
@@ -378,10 +301,14 @@ struct OnboardingFlowView: View {
 
     private func handleDebugLaunch() {
         let args = ProcessInfo.processInfo.arguments
-        if args.contains("--screenshot-step-1") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.country) }
-        } else if args.contains("--screenshot-step-2") {
+        if args.contains("--screenshot-step-1") || args.contains("--screenshot-step-2") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.topics) }
+        }
+        if args.contains("--screenshot-signup") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.signup) }
+        }
+        if args.contains("--screenshot-signup-age") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { viewModel.debugJumpTo(.signup) }
         }
     }
 
@@ -398,7 +325,7 @@ struct OnboardingFlowView: View {
                 onShowSignup: {
                     showSignIn = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        showSignUp = true
+                        viewModel.currentStep = .signup
                     }
                 },
                 onShowForgotPassword: {
@@ -421,201 +348,881 @@ struct OnboardingFlowView: View {
         .presentationCornerRadius(28)
     }
 
-    private var signUpSheet: some View {
-        NavigationStack {
-            SignupView(
-                onSignup: { user, session in
-                    appViewModel.login(user: user, session: session)
-                    let prefs = viewModel.buildPreferences()
-                    appViewModel.completeOnboarding(with: prefs)
-                    showSignUp = false
-                },
-                onShowLogin: {
-                    showSignUp = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        showSignIn = true
-                    }
-                }
-            )
-            .navigationTitle("Create Account")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { showSignUp = false }
-                }
+    private var inlineSignupView: some View {
+        SignupView(
+            onSignup: { user, session in
+                appViewModel.login(user: user, session: session)
+                let prefs = viewModel.buildPreferences()
+                appViewModel.completeOnboarding(with: prefs)
+            },
+            onShowLogin: {
+                showSignIn = true
+            },
+            onBack: {
+                viewModel.previousStep()
             }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-        .presentationCornerRadius(28)
+        )
     }
 }
 
 // MARK: - Welcome Scene
-
-// MARK: - Animated Welcome Scene
-
-private struct FloatingElement: Identifiable {
-    let id = UUID()
-    let symbol: String
-    let size: CGFloat
-    let x: CGFloat        // 0-1 relative position
-    let y: CGFloat
-    let radius: CGFloat   // drift radius in points
-    let speed: Double     // seconds per full orbit
-    let phase: Double     // 0-1 starting phase offset
-    let opacity: Double
-    let rotationSpeed: Double // degrees per second
-}
 
 private struct WelcomeScene: View {
     let accent: Color
     let onContinue: () -> Void
     let onSignIn: () -> Void
 
-    @State private var logoVisible = false
+    @State private var logoProgress: Double = 0   // 0→1 drives letter reveal
+    @State private var haloVisible = false
+    @State private var chipsVisible = false
+    @State private var phraseIndex = 0
+    @State private var taglineVisible = false
     @State private var buttonsVisible = false
 
-    private let elements: [FloatingElement] = [
-        // News & content symbols
-        FloatingElement(symbol: "newspaper.fill", size: 18, x: 0.12, y: 0.15, radius: 25, speed: 12, phase: 0.0, opacity: 0.25, rotationSpeed: 3),
-        FloatingElement(symbol: "book.fill", size: 14, x: 0.85, y: 0.20, radius: 20, speed: 14, phase: 0.3, opacity: 0.20, rotationSpeed: -2),
-        FloatingElement(symbol: "quote.opening", size: 16, x: 0.75, y: 0.72, radius: 22, speed: 11, phase: 0.7, opacity: 0.18, rotationSpeed: 4),
-        // Globe & connectivity
-        FloatingElement(symbol: "globe.americas.fill", size: 22, x: 0.88, y: 0.42, radius: 18, speed: 16, phase: 0.1, opacity: 0.20, rotationSpeed: 1),
-        FloatingElement(symbol: "antenna.radiowaves.left.and.right", size: 13, x: 0.18, y: 0.68, radius: 20, speed: 10, phase: 0.5, opacity: 0.15, rotationSpeed: -3),
-        // Paper planes
-        FloatingElement(symbol: "paperplane.fill", size: 16, x: 0.70, y: 0.12, radius: 28, speed: 9, phase: 0.2, opacity: 0.30, rotationSpeed: 5),
-        FloatingElement(symbol: "paperplane.fill", size: 12, x: 0.22, y: 0.82, radius: 22, speed: 13, phase: 0.8, opacity: 0.22, rotationSpeed: -4),
-        // Stars — scattered, different sizes
-        FloatingElement(symbol: "star.fill", size: 8, x: 0.92, y: 0.08, radius: 15, speed: 7, phase: 0.0, opacity: 0.45, rotationSpeed: 8),
-        FloatingElement(symbol: "star.fill", size: 5, x: 0.05, y: 0.30, radius: 12, speed: 8, phase: 0.4, opacity: 0.40, rotationSpeed: -6),
-        FloatingElement(symbol: "star.fill", size: 6, x: 0.48, y: 0.06, radius: 14, speed: 9, phase: 0.6, opacity: 0.35, rotationSpeed: 5),
-        FloatingElement(symbol: "star.fill", size: 4, x: 0.35, y: 0.92, radius: 10, speed: 6, phase: 0.2, opacity: 0.30, rotationSpeed: -10),
-        FloatingElement(symbol: "star.fill", size: 7, x: 0.65, y: 0.88, radius: 16, speed: 10, phase: 0.9, opacity: 0.28, rotationSpeed: 7),
-        FloatingElement(symbol: "star.fill", size: 3, x: 0.95, y: 0.60, radius: 8, speed: 5, phase: 0.1, opacity: 0.35, rotationSpeed: 12),
-        // Sparkles
-        FloatingElement(symbol: "sparkle", size: 14, x: 0.55, y: 0.20, radius: 20, speed: 8, phase: 0.3, opacity: 0.35, rotationSpeed: 6),
-        FloatingElement(symbol: "sparkle", size: 10, x: 0.08, y: 0.50, radius: 18, speed: 11, phase: 0.7, opacity: 0.28, rotationSpeed: -5),
-        FloatingElement(symbol: "sparkle", size: 12, x: 0.42, y: 0.75, radius: 16, speed: 9, phase: 0.5, opacity: 0.25, rotationSpeed: 4),
-        FloatingElement(symbol: "sparkle", size: 8, x: 0.82, y: 0.85, radius: 14, speed: 7, phase: 0.1, opacity: 0.30, rotationSpeed: -8),
-        // Rockets
-        FloatingElement(symbol: "location.north.fill", size: 14, x: 0.60, y: 0.28, radius: 30, speed: 10, phase: 0.4, opacity: 0.28, rotationSpeed: -3),
-        FloatingElement(symbol: "location.north.fill", size: 10, x: 0.15, y: 0.45, radius: 24, speed: 12, phase: 0.8, opacity: 0.22, rotationSpeed: 2),
-        // Tech/AI
-        FloatingElement(symbol: "cpu.fill", size: 13, x: 0.78, y: 0.55, radius: 18, speed: 14, phase: 0.6, opacity: 0.18, rotationSpeed: 2),
-        FloatingElement(symbol: "waveform", size: 15, x: 0.30, y: 0.35, radius: 20, speed: 11, phase: 0.2, opacity: 0.15, rotationSpeed: -1),
-        // Moon & space
-        FloatingElement(symbol: "moon.fill", size: 16, x: 0.40, y: 0.90, radius: 15, speed: 18, phase: 0.3, opacity: 0.22, rotationSpeed: 1),
-        FloatingElement(symbol: "moon.stars.fill", size: 12, x: 0.92, y: 0.75, radius: 12, speed: 15, phase: 0.9, opacity: 0.18, rotationSpeed: -1),
-        // Dots — ambient
-        FloatingElement(symbol: "circle.fill", size: 5, x: 0.25, y: 0.55, radius: 12, speed: 13, phase: 0.1, opacity: 0.18, rotationSpeed: 0),
-        FloatingElement(symbol: "circle.fill", size: 3, x: 0.68, y: 0.40, radius: 10, speed: 11, phase: 0.6, opacity: 0.15, rotationSpeed: 0),
-        FloatingElement(symbol: "circle.fill", size: 4, x: 0.50, y: 0.62, radius: 8, speed: 9, phase: 0.4, opacity: 0.12, rotationSpeed: 0),
-        FloatingElement(symbol: "circle.fill", size: 6, x: 0.10, y: 0.90, radius: 14, speed: 15, phase: 0.7, opacity: 0.16, rotationSpeed: 0),
-        FloatingElement(symbol: "circle.fill", size: 3, x: 0.58, y: 0.48, radius: 6, speed: 8, phase: 0.9, opacity: 0.10, rotationSpeed: 0),
-    ]
+    private let logoLetters: [String] = ["t", "o", "d", "a", "y"]
 
+    @State private var cardIndex = 0
+    @State private var articles: [ExploreTopicArticle] = []
+    @State private var articleColors: [String: Color] = [:]   // keyed by article id
+    @State private var articleEntities: [String: String] = [:] // article id -> topic display title
     var body: some View {
-        // TimelineView drives continuous animation — never freezes
-        TimelineView(.animation) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            GeometryReader { geo in
-                ZStack {
-                    // Floating elements
-                    ForEach(elements) { e in
-                        let angle = (t / e.speed + e.phase) * .pi * 2
-                        let dx = cos(angle) * e.radius
-                        let dy = sin(angle * 0.7) * e.radius // elliptical path
-                        let rot = t * e.rotationSpeed
+        ZStack {
+            Color.black.ignoresSafeArea()
 
-                        Image(systemName: e.symbol)
-                            .font(.system(size: e.size, weight: .medium))
-                            .foregroundStyle(.white.opacity(e.opacity))
-                            .rotationEffect(.degrees(rot))
-                            .position(
-                                x: geo.size.width * e.x + dx,
-                                y: geo.size.height * e.y + dy
-                            )
-                    }
+            // Ambient color wash — tints the whole screen toward the current card's dominant color
+            ambientColorWash
+                .ignoresSafeArea()
+                .animation(.smooth(duration: 1.0), value: currentArticleColor)
 
-                    // Subtle glow behind logo
-                    let glowPulse = 0.03 + sin(t * 0.5) * 0.01
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.white.opacity(glowPulse), .clear],
-                                center: .center,
-                                startRadius: 30,
-                                endRadius: 220
-                            )
-                        )
-                        .frame(width: 440, height: 440)
-                        .position(x: geo.size.width / 2, y: geo.size.height * 0.4)
+            VStack(spacing: 0) {
+                // Fixed-height welcome slot — text bottom-anchored so 2-row entity
+                // names grow upward while the entity baseline (and the card below)
+                // stay in the same spot.
+                welcomeBlock
+                    .frame(maxWidth: .infinity, alignment: .bottomLeading)
+                    .frame(height: 170, alignment: .bottomLeading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 40)
 
-                    VStack(spacing: 0) {
-                        Spacer()
+                // Fixed gap, then the card — its top edge is now at a constant y.
+                feedCardStack
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .opacity(taglineVisible ? 1 : 0)
+                    .blur(radius: taglineVisible ? 0 : 14)
 
-                        // Logo
-                        HStack(alignment: .firstTextBaseline, spacing: 0) {
-                            Text("today")
-                                .font(.system(size: 48, weight: .bold))
-                                .foregroundStyle(.white)
-                                .tracking(-1.5)
-                            Text("+")
-                                .font(.system(size: 48, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.35))
-                                .tracking(-1.5)
-                        }
-                        .opacity(logoVisible ? 1 : 0)
-                        .scaleEffect(logoVisible ? 1 : 0.92)
+                Spacer()
 
-                        Spacer()
-
-                        // Buttons
-                        VStack(spacing: 12) {
-                            Button {
-                                HapticManager.medium()
-                                onContinue()
-                            } label: {
-                                Text("Create Account")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .tracking(-0.2)
-                                    .foregroundStyle(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 52)
-                                    .background(.white, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-                            }
-
-                            Button {
-                                HapticManager.light()
-                                onSignIn()
-                            } label: {
-                                Text("Sign In")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .tracking(-0.2)
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 52)
-                                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                            .strokeBorder(.white.opacity(0.15), lineWidth: 1)
-                                    )
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 50)
-                        .opacity(buttonsVisible ? 1 : 0)
-                        .offset(y: buttonsVisible ? 0 : 24)
-                    }
-                }
+                buttonStack
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 32)
             }
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.7).delay(0.15)) { logoVisible = true }
-            withAnimation(.easeOut(duration: 0.5).delay(0.5)) { buttonsVisible = true }
+            runEntryAnimation()
+            Task { await fetchArticles() }
         }
+        .onReceive(Timer.publish(every: 4.0, on: .main, in: .common).autoconnect()) { _ in
+            guard taglineVisible, articles.count > 1 else { return }
+            withAnimation(.smooth(duration: 0.9)) {
+                cardIndex = (cardIndex + 1) % articles.count
+            }
+        }
+    }
+
+    private func fetchArticles() async {
+        let guestId = UserDefaults.standard.string(forKey: "guest_device_id") ?? {
+            let newId = UUID().uuidString
+            UserDefaults.standard.set(newId, forKey: "guest_device_id")
+            return newId
+        }()
+        let endpoint = "/api/explore/topics?guest_device_id=\(guestId)"
+        do {
+            let response: ExploreTopicsResponse = try await APIClient.shared.get(endpoint)
+            // For each article, assign it to the topic with the highest weight that
+            // contains it — keeps all articles in the pool while avoiding the
+            // mismatch where an article shows up under a secondary topic.
+            var bestTopic: [String: (title: String, weight: Double)] = [:]
+            for topic in response.topics {
+                let w = topic.weight ?? 0
+                for article in topic.articles where article.imageUrl != nil {
+                    let key = article.id.stringValue
+                    if let current = bestTopic[key], current.weight >= w { continue }
+                    bestTopic[key] = (topic.displayTitle, w)
+                }
+            }
+
+            var pool: [ExploreTopicArticle] = []
+            var entityMap: [String: String] = [:]
+            var seenIDs = Set<String>()
+            for topic in response.topics {
+                for article in topic.articles where article.imageUrl != nil {
+                    let key = article.id.stringValue
+                    if seenIDs.contains(key) { continue }
+                    guard let best = bestTopic[key] else { continue }
+                    pool.append(article)
+                    entityMap[key] = best.title
+                    seenIDs.insert(key)
+                }
+            }
+            let shuffled = pool.shuffled()
+
+            await MainActor.run {
+                articles = shuffled
+                articleEntities = entityMap
+            }
+        } catch {
+            // Silent fail — card will show nothing, but app still works
+        }
+    }
+
+    private func runEntryAnimation() {
+        // Halo blooms in first
+        withAnimation(.easeOut(duration: 1.2).delay(0.2)) {
+            haloVisible = true
+        }
+        // Letters spring in
+        withAnimation(.spring(response: 1.3, dampingFraction: 0.8).delay(0.4)) {
+            logoProgress = 1.0
+        }
+        // Rotating phrase
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.15) {
+            withAnimation(.easeOut(duration: 0.7)) { taglineVisible = true }
+        }
+        // Buttons
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            withAnimation(.spring(response: 0.85, dampingFraction: 0.82)) {
+                buttonsVisible = true
+            }
+        }
+    }
+
+    // MARK: Subviews
+
+    private var currentArticleColor: Color {
+        guard !articles.isEmpty else { return .clear }
+        let key = articles[cardIndex].id.stringValue
+        return articleColors[key] ?? .clear
+    }
+
+    private static let entityPalette: [Color] = [
+        Color(hex: "#FF453A"),  // red
+        Color(hex: "#FF9F0A"),  // orange
+        Color(hex: "#FFD60A"),  // yellow
+        Color(hex: "#30D158"),  // green
+        Color(hex: "#5AC8FA"),  // teal
+        Color(hex: "#0A84FF"),  // blue
+        Color(hex: "#BF5AF2"),  // purple
+        Color(hex: "#FF375F")   // pink
+    ]
+
+    /// Bold **keywords** from current article's title, plus category as fallback. Up to 4 items.
+    private var currentArticleEntities: [String] {
+        guard !articles.isEmpty else { return [] }
+        let article = articles[cardIndex]
+
+        let pattern = /\*\*(.+?)\*\*/
+        var keywords: [String] = []
+        for match in article.title.matches(of: pattern) {
+            let word = String(match.1).trimmingCharacters(in: .whitespaces)
+            if word.count >= 2, word.count <= 22 {
+                keywords.append(word)
+            }
+        }
+        if let cat = article.category?.trimmingCharacters(in: .whitespaces),
+           !cat.isEmpty,
+           !keywords.contains(where: { $0.lowercased() == cat.lowercased() }) {
+            keywords.append(cat.capitalized)
+        }
+        return Array(keywords.prefix(4))
+    }
+
+    /// The entity this article belongs to — taken from the explore topic's display title
+    /// (i.e. the closest match from the entity embedding map on the server).
+    private var primaryEntity: String {
+        guard !articles.isEmpty else { return "" }
+        let key = articles[cardIndex].id.stringValue
+        return articleEntities[key] ?? ""
+    }
+
+    /// Entity color derived from the card's extracted dominant color, made vivid
+    /// so it pops on the dark background. Falls back to a palette color if the
+    /// image hasn't finished loading yet.
+    private var primaryEntityColor: Color {
+        guard !articles.isEmpty else {
+            return Self.entityPalette[cardIndex % Self.entityPalette.count]
+        }
+        let key = articles[cardIndex].id.stringValue
+        if let c = articleColors[key] {
+            return c.vivid()
+        }
+        return Self.entityPalette[cardIndex % Self.entityPalette.count]
+    }
+
+    private var ambientColorWash: some View {
+        // Soft radial wash centered on the card area, gently tinted by current color
+        RadialGradient(
+            colors: [
+                currentArticleColor.opacity(0.26),
+                currentArticleColor.opacity(0.10),
+                currentArticleColor.opacity(0.03),
+                .clear
+            ],
+            center: UnitPoint(x: 0.5, y: 0.40),
+            startRadius: 60,
+            endRadius: 500
+        )
+        .blur(radius: 40)
+    }
+
+    private var topHeader: some View {
+        HStack {
+            // Small logo, left-aligned
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                ForEach(Array(logoLetters.enumerated()), id: \.offset) { i, letter in
+                    LetterReveal(
+                        letter: letter,
+                        progress: logoProgress,
+                        delay: Double(i) * 0.09,
+                        color: .white,
+                        highlighted: false,
+                        size: 30
+                    )
+                }
+                LetterReveal(
+                    letter: "+",
+                    progress: logoProgress,
+                    delay: Double(logoLetters.count) * 0.09,
+                    color: Color.white.opacity(0.55),
+                    highlighted: false,
+                    size: 30
+                )
+            }
+
+            Spacer()
+        }
+    }
+
+    private var feedCardStack: some View {
+        Group {
+            if articles.isEmpty {
+                // Loading / skeleton placeholder matching the card dimensions
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(white: 0.08))
+                    .frame(height: 380)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(.white.opacity(0.06), lineWidth: 1)
+                    )
+            } else {
+                articleCard(at: cardIndex, depth: 0)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func articleCard(at index: Int, depth: Int) -> some View {
+        let article = articles[index]
+        let key = article.id.stringValue
+        let color = articleColors[key] ?? Color(white: 0.15)
+        let metrics = sampleMetrics(for: article)
+
+        ExploreArticleCard(
+            article: article,
+            fallbackColor: color,
+            cardWidth: UIScreen.main.bounds.width - 40,
+            cardHeight: 380,
+            showTags: false,
+            onDominantColorChanged: { c in
+                articleColors[key] = c
+            }
+        )
+        .overlay(alignment: .trailing) {
+            socialRail(metrics: metrics, color: color)
+                .frame(width: 40)
+                .padding(.trailing, 10)
+                .padding(.bottom, 50)
+        }
+        .shadow(color: color.opacity(0.10), radius: 44)
+        .id("front-\(cardIndex)")
+        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+    }
+
+    // MARK: - Social rail
+
+    private struct CardMetrics {
+        let initial: String
+        let handle: String
+        let likes: String
+        let comments: String
+        let shares: String
+        let saves: String
+    }
+
+    private func sampleMetrics(for article: ExploreTopicArticle) -> CardMetrics {
+        let seed = article.id.stringValue.unicodeScalars.reduce(0) { $0 + Int($1.value) }
+        let handles = ["@today", "@pulse", "@newsroom", "@trending", "@daily_feed", "@briefly"]
+        let handle = handles[seed % handles.count]
+        let initial = String(handle.dropFirst().prefix(1)).uppercased()
+
+        let likes = formatCount(1800 + (seed * 37) % 24000)
+        let comments = formatCount(28 + (seed * 11) % 1400)
+        let shares = formatCount(90 + (seed * 19) % 3200)
+        let saves = formatCount(60 + (seed * 23) % 2100)
+
+        return CardMetrics(
+            initial: initial,
+            handle: handle,
+            likes: likes,
+            comments: comments,
+            shares: shares,
+            saves: saves
+        )
+    }
+
+    private func formatCount(_ n: Int) -> String {
+        if n >= 1000 {
+            let k = Double(n) / 1000
+            let s = String(format: "%.1fK", k)
+            return s.replacingOccurrences(of: ".0K", with: "K")
+        }
+        return String(n)
+    }
+
+    @ViewBuilder
+    private func socialRail(metrics: CardMetrics, color: Color) -> some View {
+        VStack(spacing: 14) {
+            // Creator avatar
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [color.opacity(0.9), color.opacity(0.55)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                Text(metrics.initial)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 34, height: 34)
+            .overlay(Circle().strokeBorder(.white.opacity(0.3), lineWidth: 1))
+            .shadow(color: color.opacity(0.45), radius: 8)
+
+            railItem("heart.fill", count: metrics.likes)
+            railItem("bubble.left.fill", count: metrics.comments)
+            railItem("arrowshape.turn.up.right.fill", count: metrics.shares)
+            railItem("bookmark.fill", count: metrics.saves)
+        }
+    }
+
+    private func railItem(_ icon: String, count: String) -> some View {
+        VStack(spacing: 2) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.white.opacity(0.92))
+                .shadow(color: .black.opacity(0.45), radius: 4)
+            Text(count)
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.8))
+                .monospacedDigit()
+                .shadow(color: .black.opacity(0.4), radius: 3)
+        }
+    }
+
+    private var welcomeBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("TRENDING NOW")
+                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.42))
+                .tracking(2.6)
+
+            // Hero entity — massive, tinted by card color
+            if !primaryEntity.isEmpty {
+                Text(primaryEntity)
+                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .foregroundStyle(primaryEntityColor)
+                    .tracking(-2.0)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.5)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .id(cardIndex)
+                    .transition(.opacity.combined(with: .offset(y: 6)))
+            } else {
+                Text(" ")
+                    .font(.system(size: 52, weight: .black, design: .rounded))
+            }
+        }
+        .opacity(taglineVisible ? 1 : 0)
+        .offset(y: taglineVisible ? 0 : 12)
+        .blur(radius: taglineVisible ? 0 : 8)
+        .animation(.smooth(duration: 0.5), value: cardIndex)
+        .animation(.smooth(duration: 0.4), value: primaryEntityColor)
+    }
+
+    private var buttonStack: some View {
+        VStack(spacing: 14) {
+            Button {
+                HapticManager.medium()
+                onContinue()
+            } label: {
+                HStack(spacing: 8) {
+                    Text("Create Account")
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .tracking(-0.2)
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.tint(primaryEntityColor.opacity(0.28)).interactive(), in: Capsule())
+            .animation(.smooth(duration: 0.5), value: primaryEntityColor)
+
+            Button {
+                HapticManager.light()
+                onSignIn()
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Already have an account?")
+                        .foregroundStyle(.white.opacity(0.5))
+                    Text("Sign In")
+                        .foregroundStyle(.white)
+                        .fontWeight(.semibold)
+                }
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .contentShape(Rectangle())
+                .padding(.vertical, 4)
+            }
+            .buttonStyle(.plain)
+        }
+        .opacity(buttonsVisible ? 1 : 0)
+        .offset(y: buttonsVisible ? 0 : 36)
+        .blur(radius: buttonsVisible ? 0 : 10)
+    }
+}
+
+// MARK: - Letter Reveal
+
+private struct LetterReveal: View {
+    let letter: String
+    let progress: Double   // master 0→1 from parent
+    let delay: Double      // seconds of stagger within master animation
+    let color: Color
+    let highlighted: Bool
+    var size: CGFloat = 56
+
+    var body: some View {
+        // Map master progress through per-letter delay window
+        let window = 0.5   // fraction of master animation each letter takes
+        let start = delay / (delay + window + 0.2)
+        let local = max(0, min(1, (progress - start) / (1 - start)))
+        let eased = easeOutBack(local)
+
+        Text(letter)
+            .font(.system(size: size, weight: .bold, design: .rounded))
+            .foregroundStyle(color)
+            .tracking(-2)
+            .shadow(color: highlighted ? Color(hex: "#C8A9FF").opacity(0.6) : .clear, radius: 16)
+            .opacity(local)
+            .blur(radius: (1 - local) * (size * 0.25))
+            .scaleEffect(0.72 + eased * 0.28)
+            .offset(y: (1 - eased) * (size * 0.5))
+    }
+
+    private func easeOutBack(_ t: Double) -> Double {
+        let c1 = 1.70158
+        let c3 = c1 + 1
+        return 1 + c3 * pow(t - 1, 3) + c1 * pow(t - 1, 2)
+    }
+}
+
+// MARK: - Floating Topics Layer (content verticals as glass chips)
+
+private struct FloatingTopicsLayer: View {
+    let time: Double
+    let size: CGSize
+    let visible: Bool
+
+    private struct Topic {
+        let emoji: String
+        let text: String
+    }
+
+    private struct Chip {
+        let topics: [Topic]          // cycles through these
+        let x: Double                // 0-1 base position
+        let y: Double
+        let depth: Double            // 0.4-1.0 — affects scale + opacity
+        let speed: Double            // orbit period
+        let phase: Double            // orbit starting phase
+        let radius: Double           // drift radius in points
+        let enterDelay: Double
+        let cycleInterval: Double    // seconds per label
+        let cycleOffset: Double      // desync timing
+        let glow: Color              // subtle colored glow
+    }
+
+    // Positioned avoiding center logo zone (x 0.28-0.72, y 0.34-0.56)
+    // and bottom buttons area (y > 0.74)
+    private let chips: [Chip] = [
+        // Sports (American)
+        Chip(
+            topics: [.init(emoji: "🏈", text: "NFL"), .init(emoji: "🏀", text: "NBA"), .init(emoji: "⚾", text: "MLB"), .init(emoji: "🏒", text: "NHL")],
+            x: 0.14, y: 0.10, depth: 0.82, speed: 0.055, phase: 0.00, radius: 16, enterDelay: 0.00,
+            cycleInterval: 3.3, cycleOffset: 0.0, glow: Color(hex: "#FF9500")
+        ),
+        // Music
+        Chip(
+            topics: [.init(emoji: "🎤", text: "K-Pop"), .init(emoji: "🎧", text: "Hip-Hop"), .init(emoji: "🎸", text: "Indie"), .init(emoji: "🎹", text: "Pop")],
+            x: 0.80, y: 0.09, depth: 0.95, speed: 0.042, phase: 0.25, radius: 18, enterDelay: 0.08,
+            cycleInterval: 3.8, cycleOffset: 1.4, glow: Color(hex: "#FF4D9C")
+        ),
+        // Tech
+        Chip(
+            topics: [.init(emoji: "💻", text: "AI"), .init(emoji: "🤖", text: "Robotics"), .init(emoji: "🧠", text: "LLMs"), .init(emoji: "⚡", text: "Startups")],
+            x: 0.52, y: 0.18, depth: 0.64, speed: 0.058, phase: 0.78, radius: 13, enterDelay: 0.14,
+            cycleInterval: 4.1, cycleOffset: 2.3, glow: Color(hex: "#4DC5FF")
+        ),
+        // Food
+        Chip(
+            topics: [.init(emoji: "🍳", text: "Cooking"), .init(emoji: "🍕", text: "Recipes"), .init(emoji: "🥐", text: "Baking"), .init(emoji: "🔥", text: "BBQ")],
+            x: 0.14, y: 0.27, depth: 0.58, speed: 0.062, phase: 0.66, radius: 11, enterDelay: 0.22,
+            cycleInterval: 3.2, cycleOffset: 0.8, glow: Color(hex: "#FF9456")
+        ),
+        // Finance
+        Chip(
+            topics: [.init(emoji: "₿", text: "Crypto"), .init(emoji: "📈", text: "Stocks"), .init(emoji: "💰", text: "Markets"), .init(emoji: "🪙", text: "NFTs")],
+            x: 0.86, y: 0.28, depth: 0.68, speed: 0.048, phase: 0.45, radius: 13, enterDelay: 0.16,
+            cycleInterval: 3.6, cycleOffset: 1.8, glow: Color(hex: "#FFCC00")
+        ),
+        // Fashion
+        Chip(
+            topics: [.init(emoji: "👗", text: "Fashion"), .init(emoji: "👟", text: "Sneakers"), .init(emoji: "💅", text: "Beauty"), .init(emoji: "✨", text: "Runway")],
+            x: 0.08, y: 0.57, depth: 0.88, speed: 0.054, phase: 0.18, radius: 15, enterDelay: 0.30,
+            cycleInterval: 3.5, cycleOffset: 0.4, glow: Color(hex: "#FF2D55")
+        ),
+        // Space
+        Chip(
+            topics: [.init(emoji: "🚀", text: "Space"), .init(emoji: "🪐", text: "Planets"), .init(emoji: "🛸", text: "UFOs"), .init(emoji: "🌌", text: "Cosmos")],
+            x: 0.90, y: 0.55, depth: 0.52, speed: 0.068, phase: 0.88, radius: 12, enterDelay: 0.38,
+            cycleInterval: 3.9, cycleOffset: 2.0, glow: Color(hex: "#AF52DE")
+        ),
+        // Gaming
+        Chip(
+            topics: [.init(emoji: "🎮", text: "Gaming"), .init(emoji: "🕹️", text: "Esports"), .init(emoji: "📺", text: "Streaming"), .init(emoji: "👾", text: "Indie")],
+            x: 0.16, y: 0.68, depth: 0.74, speed: 0.050, phase: 0.40, radius: 14, enterDelay: 0.45,
+            cycleInterval: 3.1, cycleOffset: 1.5, glow: Color(hex: "#34C759")
+        ),
+        // Entertainment
+        Chip(
+            topics: [.init(emoji: "🎬", text: "Movies"), .init(emoji: "📺", text: "TV"), .init(emoji: "🍿", text: "Netflix"), .init(emoji: "🎭", text: "Drama")],
+            x: 0.82, y: 0.68, depth: 0.86, speed: 0.060, phase: 0.62, radius: 16, enterDelay: 0.52,
+            cycleInterval: 3.7, cycleOffset: 2.8, glow: Color(hex: "#FF3B30")
+        ),
+        // Sports (World)
+        Chip(
+            topics: [.init(emoji: "⚽", text: "Soccer"), .init(emoji: "🥇", text: "Olympics"), .init(emoji: "🏎️", text: "F1"), .init(emoji: "🎾", text: "Tennis")],
+            x: 0.48, y: 0.64, depth: 0.48, speed: 0.055, phase: 0.10, radius: 11, enterDelay: 0.60,
+            cycleInterval: 3.3, cycleOffset: 0.2, glow: Color(hex: "#00C7BE")
+        )
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(chips.indices, id: \.self) { i in
+                chipView(chips[i])
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func chipView(_ chip: Chip) -> some View {
+        // Drift motion
+        let angle = (time * chip.speed + chip.phase) * .pi * 2
+        let dx = cos(angle) * chip.radius
+        let dy = sin(angle * 1.25) * (chip.radius * 0.55)
+        let rot = sin(angle * 0.8) * 3
+
+        let baseOpacity = 0.42 + chip.depth * 0.5
+        let scale = 0.72 + chip.depth * 0.35
+
+        // Cycle timing — continuous progress through the current label window
+        let totalTime = time + chip.cycleOffset
+        let cycleTime = totalTime.truncatingRemainder(dividingBy: chip.cycleInterval)
+        let currentIndex = Int(totalTime / chip.cycleInterval) % chip.topics.count
+        let nextIndex = (currentIndex + 1) % chip.topics.count
+
+        // Fade happens in the last 0.45s of the cycle window
+        let fadeDur: Double = 0.45
+        let fadeStart = chip.cycleInterval - fadeDur
+        let fadeProgress: Double = cycleTime > fadeStart
+            ? (cycleTime - fadeStart) / fadeDur
+            : 0
+
+        // Subtle pulse at swap moment
+        let swapPulse = 1.0 + (fadeProgress > 0 ? sin(fadeProgress * .pi) * 0.06 : 0)
+
+        let current = chip.topics[currentIndex]
+        let next = chip.topics[nextIndex]
+
+        ZStack {
+            // Outgoing label (current) — slides up and fades out
+            labelPill(emoji: current.emoji, text: current.text)
+                .opacity(1 - fadeProgress)
+                .offset(y: -fadeProgress * 14)
+                .blur(radius: fadeProgress * 4)
+
+            // Incoming label (next) — rises from below, fades in
+            labelPill(emoji: next.emoji, text: next.text)
+                .opacity(fadeProgress)
+                .offset(y: (1 - fadeProgress) * 14)
+                .blur(radius: (1 - fadeProgress) * 4)
+        }
+        .shadow(color: chip.glow.opacity(0.35 * chip.depth), radius: 14, y: 2)
+        .shadow(color: .black.opacity(0.35 * chip.depth), radius: 10, y: 4)
+        .scaleEffect((visible ? scale : scale * 0.5) * swapPulse)
+        .rotationEffect(.degrees(rot))
+        .opacity(visible ? baseOpacity : 0)
+        .blur(radius: visible ? 0 : 12)
+        .animation(
+            .spring(response: 0.9, dampingFraction: 0.72).delay(chip.enterDelay),
+            value: visible
+        )
+        .position(
+            x: size.width * chip.x + dx,
+            y: size.height * chip.y + dy
+        )
+    }
+
+    private func labelPill(emoji: String, text: String) -> some View {
+        HStack(spacing: 6) {
+            Text(emoji)
+                .font(.system(size: 14))
+            Text(text)
+                .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(
+            Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 0.8)
+        )
+    }
+}
+
+// MARK: - Sparkle Emitter (bursts from + sign)
+
+private struct SparkleEmitter: View {
+    let time: Double
+    let size: CGSize
+    let active: Bool
+
+    // Emit a sparkle every 0.35s; each lives 1.6s rising & fading
+    private let sparkleCount = 10
+    private let lifetime: Double = 1.6
+    private let cycle: Double = 3.5      // total cycle = sparkleCount * emitInterval
+    private let emitInterval: Double = 0.35
+
+    var body: some View {
+        Canvas { ctx, canvasSize in
+            guard active else { return }
+
+            // Anchor position matches the "+" in "today+"
+            let anchorX = canvasSize.width / 2 + 52
+            let anchorY = canvasSize.height * 0.40 - 8
+
+            for i in 0..<sparkleCount {
+                let delay = Double(i) * emitInterval
+                var localTime = (time - delay).truncatingRemainder(dividingBy: Double(sparkleCount) * emitInterval)
+                if localTime < 0 { localTime += Double(sparkleCount) * emitInterval }
+                guard localTime < lifetime else { continue }
+
+                let progress = localTime / lifetime   // 0→1
+                let angle = Double(i) * 0.83 + delay * 3
+                let distance = progress * 60
+
+                let x = anchorX + cos(angle) * distance + sin(progress * 6) * 4
+                let y = anchorY - progress * 90 + sin(angle) * 12
+
+                // Fade in then out, peak at 0.3
+                let alphaCurve: Double
+                if progress < 0.15 {
+                    alphaCurve = progress / 0.15
+                } else {
+                    alphaCurve = 1.0 - (progress - 0.15) / 0.85
+                }
+                let alpha = alphaCurve * 0.9
+
+                // Draw as a 4-pointed sparkle: small crossed lines
+                let sparkleSize: CGFloat = 3 + CGFloat(1 - progress) * 3
+                var path = Path()
+                path.move(to: CGPoint(x: x - sparkleSize, y: y))
+                path.addLine(to: CGPoint(x: x + sparkleSize, y: y))
+                path.move(to: CGPoint(x: x, y: y - sparkleSize))
+                path.addLine(to: CGPoint(x: x, y: y + sparkleSize))
+
+                ctx.stroke(
+                    path,
+                    with: .color(.white.opacity(alpha)),
+                    lineWidth: 1.2
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Animated Mesh Background
+
+private struct AnimatedMeshBackground: View {
+    let time: Double
+
+    var body: some View {
+        let t = time * 0.22
+        let s = { (v: Double) -> Float in Float(sin(v)) }
+        let c = { (v: Double) -> Float in Float(cos(v)) }
+
+        MeshGradient(
+            width: 3,
+            height: 3,
+            points: [
+                [0, 0],
+                [0.5 + 0.14 * s(t * 1.0), 0],
+                [1, 0],
+
+                [0, 0.5 + 0.12 * c(t * 0.8)],
+                [0.5 + 0.10 * s(t * 1.3), 0.5 + 0.10 * c(t * 0.9)],
+                [1, 0.5 + 0.12 * s(t * 1.1)],
+
+                [0, 1],
+                [0.5 + 0.14 * c(t * 1.2), 1],
+                [1, 1]
+            ],
+            colors: [
+                Color(hex: "#05010E"), Color(hex: "#1A0B3A"), Color(hex: "#080316"),
+                Color(hex: "#2B1170"), Color(hex: "#4A1D8F"), Color(hex: "#0F1A5C"),
+                Color(hex: "#0A0118"), Color(hex: "#1B0D3A"), Color(hex: "#05010A")
+            ]
+        )
+    }
+}
+
+// MARK: - Bokeh Orb Layer
+
+private struct BokehLayer: View {
+    let time: Double
+    let size: CGSize
+
+    private struct Orb {
+        let x, y, radius, speed, phase: Double
+        let diameter: CGFloat
+        let color: Color
+        let opacity: Double
+    }
+
+    private let orbs: [Orb] = [
+        Orb(x: 0.22, y: 0.18, radius: 55, speed: 0.08, phase: 0.0, diameter: 300, color: Color(hex: "#7C4DFF"), opacity: 0.55),
+        Orb(x: 0.82, y: 0.28, radius: 48, speed: 0.10, phase: 0.35, diameter: 240, color: Color(hex: "#FF4D9C"), opacity: 0.40),
+        Orb(x: 0.30, y: 0.78, radius: 60, speed: 0.06, phase: 0.60, diameter: 340, color: Color(hex: "#4DC5FF"), opacity: 0.45),
+        Orb(x: 0.85, y: 0.85, radius: 50, speed: 0.09, phase: 0.85, diameter: 280, color: Color(hex: "#FF9456"), opacity: 0.30),
+        Orb(x: 0.55, y: 0.45, radius: 35, speed: 0.07, phase: 0.50, diameter: 220, color: Color(hex: "#B794FF"), opacity: 0.28)
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(orbs.indices, id: \.self) { i in
+                let o = orbs[i]
+                let angle = (time * o.speed + o.phase) * .pi * 2
+                let dx = cos(angle) * o.radius
+                let dy = sin(angle * 1.3) * (o.radius * 0.85)
+                let pulse = 1.0 + sin(time * 0.6 + o.phase * 6) * 0.08
+
+                Circle()
+                    .fill(o.color.opacity(o.opacity))
+                    .frame(width: o.diameter * pulse, height: o.diameter * pulse)
+                    .blur(radius: 70)
+                    .position(
+                        x: size.width * o.x + dx,
+                        y: size.height * o.y + dy
+                    )
+            }
+        }
+    }
+}
+
+// MARK: - Particle Canvas (streaming starfield)
+
+private struct ParticleCanvas: View {
+    let time: Double
+
+    private struct Seed {
+        let x: Double          // 0-1 horizontal position
+        let yOffset: Double    // 0-1 initial vertical offset
+        let speed: Double      // vertical fraction per second
+        let size: CGFloat
+        let opacity: Double
+        let twinkleFreq: Double
+        let twinklePhase: Double
+        let drift: Double      // horizontal sway amplitude
+        let driftFreq: Double
+    }
+
+    private static let seeds: [Seed] = {
+        var rng = SeededGenerator(seed: 1337)
+        return (0..<70).map { _ in
+            Seed(
+                x: Double.random(in: 0...1, using: &rng),
+                yOffset: Double.random(in: 0...1, using: &rng),
+                speed: Double.random(in: 0.015...0.07, using: &rng),
+                size: CGFloat.random(in: 1.0...2.8, using: &rng),
+                opacity: Double.random(in: 0.25...0.85, using: &rng),
+                twinkleFreq: Double.random(in: 1.5...3.5, using: &rng),
+                twinklePhase: Double.random(in: 0...6.28, using: &rng),
+                drift: Double.random(in: 4...14, using: &rng),
+                driftFreq: Double.random(in: 0.3...0.9, using: &rng)
+            )
+        }
+    }()
+
+    var body: some View {
+        Canvas { ctx, canvasSize in
+            for p in Self.seeds {
+                // Stream upward, wrap
+                let rawY = (p.yOffset + time * p.speed).truncatingRemainder(dividingBy: 1.0)
+                let yPos = (1.0 - rawY) * canvasSize.height
+
+                // Horizontal drift
+                let dx = sin(time * p.driftFreq + p.twinklePhase) * p.drift
+                let xPos = p.x * canvasSize.width + dx
+
+                // Twinkle
+                let twinkle = 0.45 + (sin(time * p.twinkleFreq + p.twinklePhase) + 1) * 0.275
+
+                let rect = CGRect(
+                    x: xPos - p.size / 2,
+                    y: yPos - p.size / 2,
+                    width: p.size,
+                    height: p.size
+                )
+                ctx.fill(
+                    Path(ellipseIn: rect),
+                    with: .color(.white.opacity(p.opacity * twinkle))
+                )
+            }
+        }
+    }
+}
+
+// Deterministic RNG so particle distribution is stable across runs
+private struct SeededGenerator: RandomNumberGenerator {
+    var state: UInt64
+    init(seed: UInt64) { state = seed == 0 ? 1 : seed }
+    mutating func next() -> UInt64 {
+        state = state &* 6364136223846793005 &+ 1442695040888963407
+        return state
     }
 }
 

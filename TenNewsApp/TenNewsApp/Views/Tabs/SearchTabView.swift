@@ -74,6 +74,7 @@ struct SearchTabView: View {
                 if let article = selectedArticle {
                     ExploreArticleSheet(
                         selectedArticle: article,
+                        contentKey: article.contentKey,
                         allArticles: fetchedArticles,
                         onDismiss: {
                             selectedArticle = nil
@@ -1065,6 +1066,9 @@ struct SearchResultCard: View {
     var hideCategory: Bool = false
 
     @State private var dominantColor: Color?
+    /// Blur color matching ArticleCardView — keeps the card's glass tint visually
+    /// consistent with what the user sees when the article opens.
+    @State private var dominantBlurColor: Color?
     private var isCompact: Bool { cardWidth < 200 }
     private var titleSize: CGFloat { isHero ? 24 : (isCompact ? 15 : 20) }
     private var titleLines: Int { isHero ? 3 : (isCompact ? 3 : 2) }
@@ -1106,11 +1110,12 @@ struct SearchResultCard: View {
             .frame(width: cardWidth, height: cardHeight)
             .allowsHitTesting(false)
 
-            // Glass layer with dominant color
+            // Glass layer tinted with the article's dark blur color — identical
+            // to what the open article page uses for its background.
             Color.clear
                 .frame(width: cardWidth, height: cardHeight)
                 .glassEffect(
-                    .regular.tint((dominantColor ?? fallbackColor).opacity(0.5)),
+                    .regular.tint((dominantBlurColor ?? dominantColor ?? fallbackColor).opacity(0.5)),
                     in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                 )
                 .mask(
@@ -1193,112 +1198,24 @@ struct SearchResultCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    // MARK: - Color Extraction (uses ArticleCardView's cache)
+    // MARK: - Color Extraction
 
-    /// Use ArticleCardView's color cache for consistent colors across feed and cards.
-    /// If not cached, triggers the same extraction algorithm as the full article view.
+    /// Defers to ArticleCardView's shared cache + extractor so this card's
+    /// blur tint and highlight color are identical to the open article page.
     private func extractColor(from url: URL, image: UIImage) {
-        // Check ArticleCardView's accent color cache first
-        if let cached = ArticleCardView.colorCache.object(forKey: url as NSURL) {
-            dominantColor = Color(cached)
+        if let cachedAccent = ArticleCardView.colorCache.object(forKey: url as NSURL),
+           let cachedBlur = ArticleCardView.blurColorCache.object(forKey: url as NSURL) {
+            dominantColor = Color(cachedAccent)
+            dominantBlurColor = Color(cachedBlur)
             return
         }
 
-        // Not cached yet — run the same extraction as ArticleCardView
-        // by calling its extractDominantColor indirectly via the shared cache.
-        // We replicate the exact same algorithm here for consistency.
         Task.detached(priority: .userInitiated) {
-            guard let cgImage = image.cgImage else { return }
-
-            let sampleW = min(cgImage.width, 80)
-            let sampleH = min(cgImage.height, 80)
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
-            var rawData = [UInt8](repeating: 0, count: sampleW * sampleH * 4)
-
-            guard let context = CGContext(
-                data: &rawData, width: sampleW, height: sampleH,
-                bitsPerComponent: 8, bytesPerRow: sampleW * 4, space: colorSpace,
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return }
-            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: sampleW, height: sampleH))
-
-            // Same bucket + scoring as ArticleCardView.extractDominantColor
-            struct ColorBucket {
-                var count: Int = 0
-                var bottomCount: Int = 0
-                var positions: Set<String> = []
-                var rKey: Int; var gKey: Int; var bKey: Int
-            }
-
-            var buckets: [String: ColorBucket] = [:]
-            let totalPixels = sampleW * sampleH
-            let bottomStart = sampleH / 2
-
-            for i in stride(from: 0, to: totalPixels * 4, by: 10 * 4) {
-                let r = Int(rawData[i]), g = Int(rawData[i + 1]), b = Int(rawData[i + 2]), a = Int(rawData[i + 3])
-                if a < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10) { continue }
-                let rK = (r / 15) * 15, gK = (g / 15) * 15, bK = (b / 15) * 15
-                let key = "\(rK),\(gK),\(bK)"
-                let pixelIdx = i / 4
-                let px = (pixelIdx % sampleW) / 10
-                let py = (pixelIdx / sampleW) / 10
-                let isBottom = (pixelIdx / sampleW) >= bottomStart
-                if buckets[key] == nil { buckets[key] = ColorBucket(rKey: rK, gKey: gK, bKey: bK) }
-                buckets[key]!.count += 1
-                if isBottom { buckets[key]!.bottomCount += 1 }
-                buckets[key]!.positions.insert("\(px),\(py)")
-            }
-
-            guard !buckets.isEmpty else { return }
-
-            let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
-            let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
-
-            var accentCandidates: [(h: CGFloat, s: CGFloat, l: CGFloat, count: Int, coverage: Int, score: CGFloat)] =
-                buckets.values.compactMap { bucket in
-                    let hsl = ArticleCardView.rgbToHSL(CGFloat(bucket.rKey)/255, CGFloat(bucket.gKey)/255, CGFloat(bucket.bKey)/255)
-                    guard hsl.s >= 35 && hsl.l >= 20 && hsl.l <= 80 else { return nil }
-                    return (hsl.h, hsl.s, hsl.l, bucket.count, bucket.positions.count, 0)
-                }
-
-            if accentCandidates.isEmpty {
-                if let fb = buckets.values.max(by: {
-                    ArticleCardView.rgbToHSL(CGFloat($0.rKey)/255, CGFloat($0.gKey)/255, CGFloat($0.bKey)/255).s <
-                    ArticleCardView.rgbToHSL(CGFloat($1.rKey)/255, CGFloat($1.gKey)/255, CGFloat($1.bKey)/255).s
-                }) {
-                    let hsl = ArticleCardView.rgbToHSL(CGFloat(fb.rKey)/255, CGFloat(fb.gKey)/255, CGFloat(fb.bKey)/255)
-                    accentCandidates = [(hsl.h, hsl.s, hsl.l, fb.count, fb.positions.count, 0)]
-                }
-            }
-
-            guard !accentCandidates.isEmpty else { return }
-
-            for i in accentCandidates.indices {
-                let c = accentCandidates[i]
-                let normFreq = CGFloat(c.count) / maxCount
-                let normSat = c.s / 100.0
-                let normCov = CGFloat(c.coverage) / maxCoverage
-                var score = normFreq * 0.50 + normSat * 0.30 + normCov * 0.20
-                if c.h >= 200 && c.h <= 220 && c.s < 60 { score *= 0.85 }
-                if c.h >= 15 && c.h <= 50 && c.s < 65 { score *= 0.7 }
-                accentCandidates[i].score = score
-            }
-
-            let winner = accentCandidates.max(by: { $0.score < $1.score })!
-            let accentS = min(90.0, winner.s * 1.15)
-            let accentL: CGFloat = winner.l <= 40
-                ? 55.0 + (winner.l / 40.0) * 10.0
-                : 65.0 + ((winner.l - 40.0) / 40.0) * 10.0
-            let accentCol = ArticleCardView.colorFromHSL(
-                h: winner.h, s: max(65.0, accentS), l: max(55.0, min(75.0, accentL))
-            )
-
-            // Store in ArticleCardView's cache so all views share the same color
-            ArticleCardView.colorCache.setObject(UIColor(accentCol), forKey: url as NSURL)
-
+            guard let result = await ArticleCardView.extractAndCacheColors(url: url, loadedImage: image) else { return }
             await MainActor.run {
                 withAnimation(.easeOut(duration: 0.3)) {
-                    dominantColor = accentCol
+                    dominantColor = Color(result.accent)
+                    dominantBlurColor = Color(result.blur)
                 }
             }
         }

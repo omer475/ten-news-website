@@ -57,15 +57,11 @@ struct ArticleDetailView: View {
             }
         }
         .task {
-            // Show initial article immediately for fast render (title + image).
-            // Explore / feed cards pass minimal articles — missing bullets,
-            // timeline, graph, map, components_order. Always fetch the full
-            // article so the detail page hydrates with all content, regardless
-            // of whether an initial article was supplied.
             if let initialArticle {
                 viewModel.article = initialArticle
+            } else {
+                await viewModel.loadArticle(id: articleId.stringValue, bucket: initialArticle?.bucket)
             }
-            await viewModel.loadArticle(id: articleId.stringValue, bucket: initialArticle?.bucket)
         }
         .onAppear {
             if let intId = Int(articleId.stringValue) {
