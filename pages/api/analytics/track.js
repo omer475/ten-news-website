@@ -365,6 +365,94 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'event_type is required' })
     }
 
+    // ==========================================================
+    // Phase 3.2: explicit "Not Interested" long-press handler.
+    // Per plan, combines three signals:
+    //   1. Insert 14-day suppression of the article's (super, leaf)
+    //   2. bulk_update_entity_signals with typed_signals at weight -2.0
+    //      (amplified vs the -1.0 implicit-skip weight so this reaches
+    //      the "10-50 implicit skips" calibration from YouTube 2021)
+    //   3. update_super_arm + update_leaf_arm with negative weight 3.0
+    //      (triple the normal skip reward, per plan)
+    // Returns early — does not go through the generic event pipeline below.
+    // ==========================================================
+    if (event_type === 'article_not_interested') {
+      if (!article_id) return res.status(400).json({ error: 'article_id required' })
+      if (!effectiveUserId) return res.status(400).json({ error: 'auth required' })
+
+      try {
+        const { data: artRow } = await admin
+          .from('published_articles')
+          .select('id, super_cluster_id, leaf_cluster_id, typed_signals')
+          .eq('id', article_id)
+          .maybeSingle()
+
+        const hasLeaf = artRow?.super_cluster_id != null && artRow?.leaf_cluster_id != null
+        const suppressedUntil = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString()
+
+        // 1. Suppression row.
+        if (hasLeaf) {
+          await admin.from('user_leaf_suppress').upsert({
+            user_id: effectiveUserId,
+            super_cluster_id: artRow.super_cluster_id,
+            leaf_cluster_id: artRow.leaf_cluster_id,
+            source_article_id: article_id,
+            suppressed_until: suppressedUntil,
+          }, { onConflict: 'user_id,super_cluster_id,leaf_cluster_id' })
+        }
+
+        // 2. Entity-signal penalty — use weight 2.0 (the bulk RPC handles sign
+        // via is_positive). Only if the article has typed_signals.
+        const sigs = Array.isArray(artRow?.typed_signals) ? artRow.typed_signals : []
+        if (sigs.length > 0) {
+          await admin.rpc('bulk_update_entity_signals', {
+            p_user_id: effectiveUserId,
+            p_entities: sigs,
+            p_is_positive: false,
+            p_weight: 2.0,
+          }).catch((e) => console.log('[not_interested] entity signals err:', e?.message || e))
+        }
+
+        // 3. Bandit arm penalty — triple-strength negative.
+        if (hasLeaf) {
+          await admin.rpc('update_leaf_arm', {
+            p_user_id: effectiveUserId,
+            p_super: artRow.super_cluster_id,
+            p_leaf: artRow.leaf_cluster_id,
+            p_is_positive: false,
+            p_weight: 3.0,
+          }).catch((e) => console.log('[not_interested] leaf arm err:', e?.message || e))
+          await admin.rpc('update_super_arm', {
+            p_user_id: effectiveUserId,
+            p_super: artRow.super_cluster_id,
+            p_is_positive: false,
+            p_weight: 3.0,
+          }).catch((e) => console.log('[not_interested] super arm err:', e?.message || e))
+        }
+
+        // Still record the event for analytics/replay consistency.
+        await admin.from('user_article_events').insert({
+          user_id: effectiveUserId,
+          article_id,
+          event_type: 'article_not_interested',
+          metadata: {
+            super_cluster_id: artRow?.super_cluster_id,
+            leaf_cluster_id: artRow?.leaf_cluster_id,
+            suppressed_until: hasLeaf ? suppressedUntil : null,
+          },
+        })
+
+        return res.status(200).json({
+          success: true,
+          suppressed_leaf: hasLeaf ? `${artRow.super_cluster_id}:${artRow.leaf_cluster_id}` : null,
+          suppressed_until: hasLeaf ? suppressedUntil : null,
+        })
+      } catch (e) {
+        console.error('[not_interested] handler error:', e?.message || e)
+        return res.status(500).json({ error: 'internal error' })
+      }
+    }
+
     // Extract view_seconds from metadata for article_exit events
     let view_seconds = null
     if (event_type === 'article_exit' && metadata?.total_active_seconds) {
