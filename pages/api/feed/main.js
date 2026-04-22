@@ -3822,6 +3822,47 @@ async function handleV2Feed(req, res, supabase, opts) {
     return res.status(200).json(_emptyResp);
   }
 
+  // Phase 3 (2026-04-22): diversity post-rerank.
+  //
+  // Ensure no two consecutive articles share the same (super_cluster, leaf_cluster).
+  // Slot-fill picks the top article from each pool independently, which can
+  // surface 2-3 back-to-back articles in the same semantic cluster if the leaf
+  // is hot today. This final-slate pass swaps adjacent same-leaf pairs with
+  // later articles in the slate that have a different leaf, preserving the
+  // top-scored article at each position but re-ordering for diversity.
+  //
+  // Only reorders — never drops or replaces articles. If no valid swap exists
+  // (e.g. whole slate is one leaf), the original order is kept. This is the
+  // single cheapest diversity mechanism that actually affects what the user
+  // perceives on swipe.
+  let _diversitySwaps = 0;
+  (function diversityPostRerank() {
+    if (selected.length < 2) return;
+    const sameLeafKey = (a) => {
+      if (!a || a.super_cluster_id == null || a.leaf_cluster_id == null) return null;
+      return `${a.super_cluster_id}:${a.leaf_cluster_id}`;
+    };
+    for (let i = 1; i < selected.length; i++) {
+      const prevKey = sameLeafKey(selected[i - 1]);
+      const currKey = sameLeafKey(selected[i]);
+      if (!prevKey || !currKey || prevKey !== currKey) continue;
+      // Find a later article we can swap in — different from prev (and from the
+      // article that comes after curr, if any, so we don't just move the dupe).
+      const nextKey = i + 1 < selected.length ? sameLeafKey(selected[i + 1]) : null;
+      for (let j = i + 1; j < selected.length; j++) {
+        const candKey = sameLeafKey(selected[j]);
+        if (candKey === prevKey) continue;
+        if (nextKey && candKey === nextKey) continue;
+        [selected[i], selected[j]] = [selected[j], selected[i]];
+        _diversitySwaps++;
+        break;
+      }
+    }
+  })();
+  if (debugFlag) {
+    _dbg.diversity_swaps = _diversitySwaps;
+  }
+
   const pageIds = selected.map(a => a.id);
 
   // Fetch full article data for cold-start pool articles (they only have POOL_COLUMNS)
