@@ -2162,6 +2162,33 @@ async function handleV2Feed(req, res, supabase, opts) {
   //     read-time decay (TikTok / Pinterest-style exp half-life) and
   //     24h-window blending so a same-session skip can override months of
   //     older positives.
+  // Phase 3.2: load active user-initiated leaf suppressions (14-day TTL on
+  // (super, leaf) pairs). Each row in user_leaf_suppress represents a
+  // "Not Interested" long-press. Excluded from retrieval via
+  // passesLeafSuppress filter applied alongside the signal/strong-neg filters.
+  const suppressedLeafSet = new Set();
+  if (userId) {
+    try {
+      const { data: suppressRows } = await supabase
+        .from('user_leaf_suppress')
+        .select('super_cluster_id, leaf_cluster_id, suppressed_until')
+        .eq('user_id', userId)
+        .gt('suppressed_until', new Date().toISOString());
+      if (suppressRows) {
+        for (const r of suppressRows) {
+          if (r.super_cluster_id != null && r.leaf_cluster_id != null) {
+            suppressedLeafSet.add(`${r.super_cluster_id}:${r.leaf_cluster_id}`);
+          }
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+  function passesLeafSuppress(article) {
+    if (suppressedLeafSet.size === 0) return true;
+    if (article?.super_cluster_id == null || article?.leaf_cluster_id == null) return true;
+    return !suppressedLeafSet.has(`${article.super_cluster_id}:${article.leaf_cluster_id}`);
+  }
+
   let entitySignals = {};
   if (userId) {
     const SELECT_COLS = 'entity, positive_count, negative_count, positive_24h, negative_24h, positive_7d, negative_7d, last_positive_at, last_negative_at';
@@ -2658,8 +2685,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   _dbg.filter_rejects = {
     sig_personal: 0, sig_exploration: 0,
     strongneg_personal: 0,
+    leaf_suppress: 0,
   };
   const passesPersonalFilters = (a) => {
+    if (!passesLeafSuppress(a)) { if (debugFlag) _dbg.filter_rejects.leaf_suppress++; return false; }
     const sig = passesSignalFilter(a);
     if (!sig) { if (debugFlag) _dbg.filter_rejects.sig_personal++; return false; }
     const sn = passesStrongNegFilter(a);
@@ -2667,6 +2696,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     return true;
   };
   const passesExplorationFilters = (a) => {
+    if (!passesLeafSuppress(a)) { if (debugFlag) _dbg.filter_rejects.leaf_suppress++; return false; }
     const sig = passesSignalFilter(a);
     if (!sig) { if (debugFlag) _dbg.filter_rejects.sig_exploration++; return false; }
     return true;
@@ -3861,6 +3891,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   })();
   if (debugFlag) {
     _dbg.diversity_swaps = _diversitySwaps;
+    _dbg.suppressed_leaves_count = suppressedLeafSet.size;
   }
 
   const pageIds = selected.map(a => a.id);
