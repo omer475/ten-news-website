@@ -24,6 +24,10 @@ struct ArticleCardView: View {
     // Double-tap like animation
     @State private var showHeartAnimation = false
 
+    // Phase 3.2: "Not Interested" long-press action sheet.
+    @State private var showNotInterestedSheet = false
+    @State private var notInterestedConfirmation: String? = nil
+
     // Multi-page carousel
     @State private var currentPage: Int = 0
 
@@ -222,7 +226,8 @@ struct ArticleCardView: View {
                     Spacer().frame(height: hasInfoBox ? (85 + 16 + 80) : 93)
                 }
 
-                // Double-tap like — behind buttons so they get hit-test priority
+                // Double-tap like — behind buttons so they get hit-test priority.
+                // Phase 3.2: long-press opens the "Not Interested" action sheet.
                 Color.clear
                     .contentShape(Rectangle())
                     .onTapGesture(count: 2) {
@@ -236,6 +241,10 @@ struct ArticleCardView: View {
                                 showHeartAnimation = false
                             }
                         }
+                    }
+                    .onLongPressGesture(minimumDuration: 0.6) {
+                        HapticManager.medium()
+                        showNotInterestedSheet = true
                     }
 
                 // Floating badges on image (top-right)
@@ -349,6 +358,50 @@ struct ArticleCardView: View {
                         }
                     }
                 }
+            }
+        }
+        // Phase 3.2: "Not Interested" long-press action sheet.
+        // Fires article_not_interested to analytics — server applies the
+        // 14-day leaf suppression + entity-signal penalty + bandit arm
+        // negative-reward triple-action (see track.js handler).
+        .confirmationDialog(
+            "Not interested in stories like this?",
+            isPresented: $showNotInterestedSheet,
+            titleVisibility: .visible
+        ) {
+            Button("Not interested", role: .destructive) {
+                HapticManager.medium()
+                Task {
+                    try? await analytics.track(
+                        event: "article_not_interested",
+                        articleId: article.id,
+                        category: article.category
+                    )
+                }
+                withAnimation(.easeOut(duration: 0.3)) {
+                    notInterestedConfirmation = "We'll show fewer stories like this."
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        notInterestedConfirmation = nil
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("We'll suppress similar articles for the next 14 days.")
+        }
+        .overlay(alignment: .top) {
+            if let message = notInterestedConfirmation {
+                Text(message)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(Color.black.opacity(0.75))
+                    .clipShape(Capsule())
+                    .padding(.top, 60)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
     }
