@@ -197,6 +197,19 @@ struct Article: Codable, Identifiable, Hashable {
 
     var displayBullets: [String] { summaryBulletsNews ?? summaryBullets ?? [] }
 
+    /// Fingerprint of the rendered content. Article's `==` is id-only (for feed
+    /// de-duping), so SwiftUI cannot tell when a stub article gets hydrated with
+    /// bullets/details from the API. Pass this alongside the Article to any
+    /// SwiftUI view that needs to re-render when content arrives — it gives
+    /// SwiftUI a primitive String prop that actually changes on hydration.
+    var contentKey: String {
+        let bulletsLen = displayBullets.reduce(0) { $0 + $1.count }
+        let summaryLen = (summaryText ?? summary ?? "").count
+        let detailsCount = details?.count ?? 0
+        let pagesCount = pages?.count ?? 0
+        return "\(id.stringValue)|\(bulletsLen)|\(summaryLen)|\(detailsCount)|\(pagesCount)"
+    }
+
     var displaySummary: String { summaryText ?? summary ?? "" }
 
     var displayImage: URL? {

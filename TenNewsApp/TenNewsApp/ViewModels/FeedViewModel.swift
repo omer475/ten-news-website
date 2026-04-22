@@ -48,13 +48,16 @@ final class FeedViewModel {
         }
     }
 
-    /// Load cached articles. Returns nil if cache is empty or older than 2 hours.
+    /// Load cached articles. Returns nil if cache is empty, older than 2 hours,
+    /// or suspiciously small (< 5 articles — likely a stale "caught_up" cache
+    /// from a broken session). Skipping tiny caches forces a fresh fetch on
+    /// launch instead of showing a 1-article frozen feed.
     private func loadFeedCache() -> [Article]? {
         let cachedTime = UserDefaults.standard.double(forKey: Self.cacheTimeKey)
         guard cachedTime > 0, Date().timeIntervalSince1970 - cachedTime < 7200 else { return nil }
         guard let data = UserDefaults.standard.data(forKey: Self.cacheKey),
               let cached = try? JSONDecoder().decode([Article].self, from: data),
-              !cached.isEmpty else { return nil }
+              cached.count >= 5 else { return nil }
         return cached
     }
 
@@ -260,10 +263,23 @@ final class FeedViewModel {
     }
 
     /// Refresh only if data is stale (>5 min old). Call on app foreground / tab switch.
+    ///
+    /// Fix α: when the previous response was `caught_up`, ALWAYS clear the state
+    /// and force a refresh — regardless of the 5-minute `isStale` threshold.
+    /// Otherwise a stale "you're all caught up" banner can persist through a
+    /// short background/foreground cycle and the feed appears frozen.
     func refreshIfStale(preferences: UserPreferences? = nil, userId: String? = nil) async {
         if let prefs = preferences { currentPreferences = prefs }
         if let uid = userId { currentUserId = uid }
-        guard isStale else { return }
+
+        let wasCaughtUp = (feedState == "caught_up" || feedState == "mostly_caught_up")
+        if wasCaughtUp {
+            feedState = "normal"
+            caughtUpMessage = nil
+        }
+
+        let shouldRefresh = isStale || wasCaughtUp
+        guard shouldRefresh else { return }
 
         if allArticles.isEmpty {
             await loadInitialData(preferences: currentPreferences, userId: currentUserId)

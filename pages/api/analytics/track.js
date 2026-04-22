@@ -453,6 +453,72 @@ export default async function handler(req, res) {
       }
     }
 
+    // ==========================================================
+    // Phase 3.2b: positive mirror of Not Interested — "Show more like this".
+    // Same three-action shape, sign flipped:
+    //   1. No suppression insert (no data structure for positive "pin")
+    //   2. bulk_update_entity_signals with typed_signals at +2.0 weight
+    //   3. update_super_arm + update_leaf_arm with positive weight 3.0
+    // ==========================================================
+    if (event_type === 'article_more_like_this') {
+      if (!article_id) return res.status(400).json({ error: 'article_id required' })
+      if (!effectiveUserId) return res.status(400).json({ error: 'auth required' })
+
+      try {
+        const { data: artRow } = await admin
+          .from('published_articles')
+          .select('id, super_cluster_id, leaf_cluster_id, typed_signals')
+          .eq('id', article_id)
+          .maybeSingle()
+
+        const hasLeaf = artRow?.super_cluster_id != null && artRow?.leaf_cluster_id != null
+        const sigs = Array.isArray(artRow?.typed_signals) ? artRow.typed_signals : []
+
+        if (sigs.length > 0) {
+          await admin.rpc('bulk_update_entity_signals', {
+            p_user_id: effectiveUserId,
+            p_entities: sigs,
+            p_is_positive: true,
+            p_weight: 2.0,
+          }).catch((e) => console.log('[more_like_this] entity signals err:', e?.message || e))
+        }
+
+        if (hasLeaf) {
+          await admin.rpc('update_leaf_arm', {
+            p_user_id: effectiveUserId,
+            p_super: artRow.super_cluster_id,
+            p_leaf: artRow.leaf_cluster_id,
+            p_is_positive: true,
+            p_weight: 3.0,
+          }).catch((e) => console.log('[more_like_this] leaf arm err:', e?.message || e))
+          await admin.rpc('update_super_arm', {
+            p_user_id: effectiveUserId,
+            p_super: artRow.super_cluster_id,
+            p_is_positive: true,
+            p_weight: 3.0,
+          }).catch((e) => console.log('[more_like_this] super arm err:', e?.message || e))
+        }
+
+        await admin.from('user_article_events').insert({
+          user_id: effectiveUserId,
+          article_id,
+          event_type: 'article_more_like_this',
+          metadata: {
+            super_cluster_id: artRow?.super_cluster_id,
+            leaf_cluster_id: artRow?.leaf_cluster_id,
+          },
+        })
+
+        return res.status(200).json({
+          success: true,
+          boosted_leaf: hasLeaf ? `${artRow.super_cluster_id}:${artRow.leaf_cluster_id}` : null,
+        })
+      } catch (e) {
+        console.error('[more_like_this] handler error:', e?.message || e)
+        return res.status(500).json({ error: 'internal error' })
+      }
+    }
+
     // Extract view_seconds from metadata for article_exit events
     let view_seconds = null
     if (event_type === 'article_exit' && metadata?.total_active_seconds) {

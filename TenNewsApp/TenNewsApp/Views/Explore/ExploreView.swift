@@ -8,6 +8,15 @@ struct ExploreView: View {
     @State private var isLoading = true
     @State private var searchText = ""
     @State private var selectedArticle: Article?
+    /// Bumped on every write to `selectedArticle`. Article's `==` is id-only, so
+    /// assigning a hydrated article over a stub (same id) is "equal" to @State
+    /// and invalidation is skipped. Bumping this Int guarantees @State fires,
+    /// and we key the sheet's `.id(...)` off it so SwiftUI rebuilds with the
+    /// fresh article once bullets arrive.
+    @State private var selectedArticleRev: Int = 0
+    /// Full Articles prefetched in the background after topics load, so opens
+    /// are instant (no stub→hydrate flicker). Keyed by article id string.
+    @State private var prefetchedArticles: [String: Article] = [:]
     @State private var selectedTopic: ExploreTopic?
     @State private var topicArticles: [Article] = []
     @State private var loadingTopicArticles = false
@@ -81,12 +90,18 @@ struct ExploreView: View {
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
+                    contentKey: article.contentKey,
                     allArticles: feedViewModel.allArticles
                 ) {
                     selectedArticle = nil
                 }
                 .ignoresSafeArea()
                 .zIndex(1)
+                // Force SwiftUI to rebuild the sheet when the article is hydrated.
+                // selectedArticleRev is bumped on every write to selectedArticle and
+                // reliably changes even when the stub and full article are `==` equal
+                // under Article's id-only Equatable.
+                .id(selectedArticleRev)
             }
 
             // Topic overlay (entity tap — vertical pager of all entity articles)
@@ -382,6 +397,55 @@ struct ExploreView: View {
         isLoading = false
         lastLoadTime = Date()
         withAnimation(.easeOut(duration: 0.4)) { appeared = true }
+
+        // Prefetch full article details in the background so taps open with
+        // bullets/details already in place. Runs after topics are visible so
+        // the user isn't waiting on it — it just warms the cache.
+        Task { await prefetchArticles() }
+    }
+
+    /// Fetches full Article details for the most-visible articles and stores them
+    /// in `prefetchedArticles`. Caps at ~24 to bound work on cold loads.
+    private func prefetchArticles() async {
+        // Take up to 3 articles from each topic to cover the likely taps without
+        // issuing dozens of requests.
+        var ids: [String] = []
+        var seen = Set<String>()
+        for topic in topics {
+            for article in topic.articles.prefix(3) {
+                let key = article.id.stringValue
+                if seen.contains(key) { continue }
+                if prefetchedArticles[key] != nil { continue }
+                if feedViewModel.allArticles.contains(where: { $0.id.stringValue == key }) { continue }
+                seen.insert(key)
+                ids.append(key)
+                if ids.count >= 24 { break }
+            }
+            if ids.count >= 24 { break }
+        }
+        guard !ids.isEmpty else { return }
+
+        let fetched = await withTaskGroup(of: (String, Article?).self) { group -> [String: Article] in
+            for id in ids {
+                group.addTask {
+                    do {
+                        let response: ArticleDetailResponse = try await APIClient.shared.get(APIEndpoints.article(id: id))
+                        return (id, response.article)
+                    } catch {
+                        return (id, nil)
+                    }
+                }
+            }
+            var results: [String: Article] = [:]
+            for await (id, article) in group {
+                if let article { results[id] = article }
+            }
+            return results
+        }
+
+        await MainActor.run {
+            for (id, article) in fetched { prefetchedArticles[id] = article }
+        }
     }
 
     // MARK: - Related Entities
@@ -400,21 +464,44 @@ struct ExploreView: View {
     private func openArticle(_ topicArticle: ExploreTopicArticle) {
         HapticManager.selection()
 
-        // Check feed cache first
-        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == topicArticle.id.stringValue }) {
-            selectedArticle = cached
+        let id = topicArticle.id.stringValue
+
+        // Prefetched full article in hand? Open instantly with complete content.
+        if let prefetched = prefetchedArticles[id] {
+            selectedArticle = prefetched
+            selectedArticleRev &+= 1
             return
         }
 
-        // Open instantly with what we have, upgrade in background
-        let fallback = Article.from(exploreArticle: topicArticle)
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-            selectedArticle = fallback
+        // Check feed cache — full article already in memory, no fetch needed.
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == id }) {
+            selectedArticle = cached
+            selectedArticleRev &+= 1
+            return
         }
 
-        Task {
-            if let response: ArticleDetailResponse = try? await APIClient.shared.get(APIEndpoints.article(id: topicArticle.id.stringValue)) {
+        // Open instantly with a stub (title + photo only), upgrade to full article
+        // once the network call returns.
+        let fallback = Article.from(exploreArticle: topicArticle)
+        let requestedId = fallback.id
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            selectedArticle = fallback
+            selectedArticleRev &+= 1
+        }
+
+        // Task MUST be @MainActor — the assignment to `selectedArticle` drives SwiftUI
+        // state and must happen on the main actor. Without this, the update is silently
+        // dropped off a background thread and the sheet never hydrates beyond the stub.
+        Task { @MainActor in
+            do {
+                let response: ArticleDetailResponse = try await APIClient.shared.get(
+                    APIEndpoints.article(id: topicArticle.id.stringValue)
+                )
+                guard selectedArticle?.id == requestedId else { return }
                 selectedArticle = response.article
+                selectedArticleRev &+= 1
+            } catch {
+                print("❌ openArticle: failed id=\(topicArticle.id.stringValue): \(error)")
             }
         }
     }
@@ -429,12 +516,19 @@ struct ExploreView: View {
         loadingTopicArticles = true
         topicArticles = []
 
-        Task {
+        Task { @MainActor in
             let loaded = await withTaskGroup(of: (Int, Article?).self) { group in
                 for (index, topicArticle) in topic.articles.enumerated() {
                     group.addTask {
-                        let response: ArticleDetailResponse? = try? await APIClient.shared.get(APIEndpoints.article(id: topicArticle.id.stringValue))
-                        return (index, response?.article)
+                        do {
+                            let response: ArticleDetailResponse = try await APIClient.shared.get(
+                                APIEndpoints.article(id: topicArticle.id.stringValue)
+                            )
+                            return (index, response.article)
+                        } catch {
+                            print("❌ openTopic: failed to hydrate id=\(topicArticle.id.stringValue): \(error)")
+                            return (index, nil)
+                        }
                     }
                 }
                 var results: [(Int, Article)] = []
@@ -561,15 +655,20 @@ struct ExploreArticleCard: View {
     let cardWidth: CGFloat
     let cardHeight: CGFloat
     var relatedEntities: [String] = []
+    var showTags: Bool = true
+    var onDominantColorChanged: ((Color) -> Void)? = nil
 
     @State private var dominantColor: Color?
+    /// Blur color matching what ArticleCardView uses on the open article page,
+    /// so the card's glass tint is identical to what the user sees after tapping.
+    @State private var dominantBlurColor: Color?
 
     private var highlightColor: Color {
         (dominantColor ?? Color(white: 0.7)).vivid()
     }
 
     private var glassColor: Color {
-        dominantColor ?? Color(white: 0.15)
+        dominantBlurColor ?? dominantColor ?? Color(white: 0.15)
     }
 
     /// Tags to show: related entities first, then bold keywords from title
@@ -662,16 +761,18 @@ struct ExploreArticleCard: View {
 
                     Spacer()
 
-                    HStack(spacing: 5) {
-                        ForEach(displayTags.prefix(2), id: \.self) { tag in
-                            GlassEffectContainer {
-                                Text(tag)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.white.opacity(0.85))
-                                    .lineLimit(1)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .glassEffect(.regular.tint(Color.black.opacity(0.25)), in: Capsule())
+                    if showTags {
+                        HStack(spacing: 5) {
+                            ForEach(displayTags.prefix(2), id: \.self) { tag in
+                                GlassEffectContainer {
+                                    Text(tag)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                        .lineLimit(1)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .glassEffect(.regular.tint(Color.black.opacity(0.25)), in: Capsule())
+                                }
                             }
                         }
                     }
@@ -695,16 +796,24 @@ struct ExploreArticleCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    // MARK: - Dominant Color Extraction (lightweight, from cached image)
+    // MARK: - Dominant Color Extraction
 
+    /// Pulls colors from ArticleCardView's shared cache / extractor so the card's
+    /// blur tint and highlight color exactly match what the open article page
+    /// shows after the user taps in.
     private func extractColor(from url: URL) {
-        // Use cached result if available
-        if let cached = ArticleCardView.colorCache.object(forKey: url as NSURL) {
-            dominantColor = Color(cached)
+        if let cachedAccent = ArticleCardView.colorCache.object(forKey: url as NSURL),
+           let cachedBlur = ArticleCardView.blurColorCache.object(forKey: url as NSURL) {
+            let accent = Color(cachedAccent)
+            dominantColor = accent
+            dominantBlurColor = Color(cachedBlur)
+            onDominantColorChanged?(accent)
             return
         }
 
         Task.detached(priority: .background) {
+            // Wait briefly for AsyncCachedImage to hand us a decoded UIImage —
+            // skip the network round-trip if the card's image has already loaded.
             var uiImage: UIImage?
             for _ in 0..<15 {
                 if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
@@ -713,128 +822,15 @@ struct ExploreArticleCard: View {
                 }
                 try? await Task.sleep(nanoseconds: 100_000_000)
             }
-            if uiImage == nil {
-                guard let (data, _) = try? await URLSession.shared.data(from: url),
-                      let downloaded = UIImage(data: data) else { return }
-                uiImage = downloaded
-            }
-            guard let uiImage, let cgImage = uiImage.cgImage else { return }
 
-            let sampleW = min(cgImage.width, 80)
-            let sampleH = min(cgImage.height, 80)
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
-            var rawData = [UInt8](repeating: 0, count: sampleW * sampleH * 4)
-
-            guard let context = CGContext(
-                data: &rawData, width: sampleW, height: sampleH,
-                bitsPerComponent: 8, bytesPerRow: sampleW * 4, space: colorSpace,
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return }
-            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: sampleW, height: sampleH))
-
-            // Bucket pixels into 15-unit RGB clusters (same as ArticleCardView)
-            struct ColorBucket {
-                var count: Int = 0
-                var positions: Set<String> = []
-                var rKey: Int
-                var gKey: Int
-                var bKey: Int
-            }
-
-            var buckets: [String: ColorBucket] = [:]
-            let totalPixels = sampleW * sampleH
-
-            for i in stride(from: 0, to: totalPixels * 4, by: 10 * 4) {
-                let r = Int(rawData[i])
-                let g = Int(rawData[i + 1])
-                let b = Int(rawData[i + 2])
-                let a = Int(rawData[i + 3])
-
-                if a < 125 { continue }
-                if r > 250 && g > 250 && b > 250 { continue }
-                if r < 10 && g < 10 && b < 10 { continue }
-
-                let rK = (r / 15) * 15
-                let gK = (g / 15) * 15
-                let bK = (b / 15) * 15
-                let key = "\(rK),\(gK),\(bK)"
-
-                let pixelIdx = i / 4
-                let px = (pixelIdx % sampleW) / 10
-                let py = (pixelIdx / sampleW) / 10
-
-                if buckets[key] == nil {
-                    buckets[key] = ColorBucket(rKey: rK, gKey: gK, bKey: bK)
-                }
-                buckets[key]!.count += 1
-                buckets[key]!.positions.insert("\(px),\(py)")
-            }
-
-            guard !buckets.isEmpty else { return }
-
-            // Convert to HSL, filter, and score (same as ArticleCardView)
-            struct ScoredColor {
-                let h: CGFloat, s: CGFloat, l: CGFloat
-                let count: Int, coverage: Int
-                var score: CGFloat = 0
-            }
-
-            let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
-            let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
-
-            var candidates: [ScoredColor] = buckets.values.compactMap { bucket in
-                let r = CGFloat(bucket.rKey) / 255.0
-                let g = CGFloat(bucket.gKey) / 255.0
-                let b = CGFloat(bucket.bKey) / 255.0
-                let hsl = ArticleCardView.rgbToHSL(r, g, b)
-                guard hsl.s >= 35 && hsl.l >= 20 && hsl.l <= 80 else { return nil }
-                return ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: bucket.count, coverage: bucket.positions.count)
-            }
-
-            if candidates.isEmpty {
-                let fallback = buckets.values.max(by: {
-                    ArticleCardView.rgbToHSL(CGFloat($0.rKey)/255, CGFloat($0.gKey)/255, CGFloat($0.bKey)/255).s <
-                    ArticleCardView.rgbToHSL(CGFloat($1.rKey)/255, CGFloat($1.gKey)/255, CGFloat($1.bKey)/255).s
-                })
-                if let fb = fallback {
-                    let hsl = ArticleCardView.rgbToHSL(CGFloat(fb.rKey)/255, CGFloat(fb.gKey)/255, CGFloat(fb.bKey)/255)
-                    candidates = [ScoredColor(h: hsl.h, s: hsl.s, l: hsl.l, count: fb.count, coverage: fb.positions.count)]
-                }
-            }
-
-            guard !candidates.isEmpty else { return }
-
-            for i in candidates.indices {
-                let normFreq = CGFloat(candidates[i].count) / maxCount
-                let normSat = candidates[i].s / 100.0
-                let normCov = CGFloat(candidates[i].coverage) / maxCoverage
-                var score = normFreq * 0.50 + normSat * 0.30 + normCov * 0.20
-                if candidates[i].h >= 200 && candidates[i].h <= 220 && candidates[i].s < 60 { score *= 0.85 }
-                if candidates[i].h >= 15 && candidates[i].h <= 50 && candidates[i].s < 65 { score *= 0.7 }
-                candidates[i].score = score
-            }
-
-            candidates.sort { $0.score > $1.score }
-            let winner = candidates[0]
-
-            // Create accent color (same formula as ArticleCardView)
-            let accentS = min(90.0, winner.s * 1.15)
-            let accentL: CGFloat = winner.l <= 40
-                ? 55.0 + (winner.l / 40.0) * 10.0
-                : 65.0 + ((winner.l - 40.0) / 40.0) * 10.0
-            let accentCol = ArticleCardView.colorFromHSL(
-                h: winner.h,
-                s: max(65.0, accentS),
-                l: max(55.0, min(75.0, accentL))
-            )
-
-            // Cache so ArticleCardView uses the same color
-            ArticleCardView.colorCache.setObject(UIColor(accentCol), forKey: url as NSURL)
+            guard let result = await ArticleCardView.extractAndCacheColors(url: url, loadedImage: uiImage) else { return }
 
             await MainActor.run {
                 withAnimation(.easeOut(duration: 0.3)) {
-                    dominantColor = accentCol
+                    dominantColor = Color(result.accent)
+                    dominantBlurColor = Color(result.blur)
                 }
+                onDominantColorChanged?(Color(result.accent))
             }
         }
     }
@@ -967,6 +963,7 @@ struct EntityArticlesSheet: View {
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
+                    contentKey: article.contentKey,
                     allArticles: articles,
                     onDismiss: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {

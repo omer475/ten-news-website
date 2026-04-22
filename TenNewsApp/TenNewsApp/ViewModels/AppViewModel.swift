@@ -21,6 +21,10 @@ final class AppViewModel {
     }
 
     func loadState() {
+        if ProcessInfo.processInfo.arguments.contains("--screenshot-welcome") {
+            isOnboardingComplete = false
+            return
+        }
         isOnboardingComplete = defaults.isOnboardingCompleted
         if let prefs = defaults.loadUserPreferences() { preferences = prefs }
         if let user = defaults.loadAuthUser() {

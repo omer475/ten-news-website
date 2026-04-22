@@ -34,6 +34,7 @@ struct ReadingHistoryView: View {
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
+                    contentKey: article.contentKey,
                     allArticles: feedContinuationArticles,
                     onDismiss: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {

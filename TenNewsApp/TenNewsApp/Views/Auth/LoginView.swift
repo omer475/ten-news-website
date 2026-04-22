@@ -3,6 +3,8 @@ import SwiftUI
 struct LoginView: View {
     @State private var viewModel = AuthViewModel()
     @State private var showPassword = false
+    @State private var pendingGoogleAuth: (user: AuthUser, session: AuthSession?)?
+    @State private var showCompleteProfile = false
     @Environment(\.dismiss) private var dismiss
 
     var onLogin: ((AuthUser, AuthSession?) -> Void)?
@@ -32,7 +34,12 @@ struct LoginView: View {
                     HapticManager.medium()
                     Task {
                         if let result = await viewModel.signInWithGoogle() {
-                            onLogin?(result.user, result.session)
+                            if viewModel.needsProfileCompletion {
+                                pendingGoogleAuth = result
+                                showCompleteProfile = true
+                            } else {
+                                onLogin?(result.user, result.session)
+                            }
                         }
                     }
                 } label: {
@@ -161,22 +168,23 @@ struct LoginView: View {
                     HStack(spacing: 8) {
                         if viewModel.isLoading {
                             ProgressView()
-                                .tint(.white)
+                                .tint(.green)
                                 .scaleEffect(0.85)
                         } else {
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 13, weight: .bold))
                             Text("Sign In")
                                 .font(.system(size: 16, weight: .semibold))
                                 .tracking(-0.2)
                         }
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(viewModel.canLogin ? .green : .white.opacity(0.3))
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(viewModel.canLogin ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.white.opacity(0.1)))
-                    }
-                    .contentShape(RoundedRectangle(cornerRadius: 14))
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(LoginPressStyle())
                 .disabled(!viewModel.canLogin || viewModel.isLoading)
@@ -204,6 +212,16 @@ struct LoginView: View {
         }
         .background(Color.black.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
+        .fullScreenCover(isPresented: $showCompleteProfile) {
+            CompleteProfileView(viewModel: viewModel) { _ in
+                let pending = pendingGoogleAuth
+                showCompleteProfile = false
+                pendingGoogleAuth = nil
+                if let pending {
+                    onLogin?(pending.user, pending.session)
+                }
+            }
+        }
     }
 }
 

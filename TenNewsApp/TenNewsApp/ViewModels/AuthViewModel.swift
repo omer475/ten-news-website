@@ -6,15 +6,43 @@ final class AuthViewModel {
     var email: String = ""
     var password: String = ""
     var fullName: String = ""
+    var username: String = ""
+    var birthDate: Date?
     var otpCode: String = ""
     var isLoading = false
     var errorMessage: String?
     var successMessage: String?
     var showOtpVerification = false
     var pendingSignupEmail: String?
+    var needsProfileCompletion = false   // set true after Google OAuth when profile is incomplete
 
     private let authService = AuthService()
     private let googleClientId = "465407271728-t3osp3o35l4hs6ei9coddr24bbsmbkda.apps.googleusercontent.com"
+
+    /// ISO "YYYY-MM-DD" representation of birthDate, or nil when not set
+    private var birthDateISO: String? {
+        guard let birthDate else { return nil }
+        let fmt = DateFormatter()
+        fmt.calendar = Calendar(identifier: .gregorian)
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = TimeZone(secondsFromGMT: 0)
+        fmt.dateFormat = "yyyy-MM-dd"
+        return fmt.string(from: birthDate)
+    }
+
+    /// Username passes the same regex as the server (3-20, letters/numbers/_)
+    var isUsernameValid: Bool {
+        let trimmed = username.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count >= 3, trimmed.count <= 20 else { return false }
+        return trimmed.range(of: "^[a-zA-Z0-9_]+$", options: .regularExpression) != nil
+    }
+
+    /// 13-120 years old
+    var isBirthDateValid: Bool {
+        guard let birthDate else { return false }
+        let years = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 0
+        return years >= 13 && years <= 120
+    }
 
     /// Validates email format
     var isEmailValid: Bool {
@@ -28,9 +56,9 @@ final class AuthViewModel {
     /// Whether login form is valid
     var canLogin: Bool { isEmailValid && isPasswordValid }
 
-    /// Whether signup form is valid
+    /// Whether signup form is valid (email + password + username + DOB)
     var canSignup: Bool {
-        isEmailValid && isPasswordValid && !fullName.trimmingCharacters(in: .whitespaces).isEmpty
+        isEmailValid && isPasswordValid && isUsernameValid && isBirthDateValid
     }
 
     func login() async -> (user: AuthUser, session: AuthSession?)? {
@@ -57,11 +85,15 @@ final class AuthViewModel {
         guard canSignup, !isLoading else { return nil }
         isLoading = true
         errorMessage = nil
+        let trimmedUsername = username.trimmingCharacters(in: .whitespaces)
+        let trimmedName = fullName.trimmingCharacters(in: .whitespaces)
         do {
             let response = try await authService.signup(
                 email: email,
                 password: password,
-                name: fullName.trimmingCharacters(in: .whitespaces)
+                name: trimmedName.isEmpty ? trimmedUsername : trimmedName,
+                username: trimmedUsername,
+                dateOfBirth: birthDateISO
             )
             isLoading = false
             if response.requiresVerification == true {
@@ -74,6 +106,35 @@ final class AuthViewModel {
                 return (user, response.session)
             } else {
                 errorMessage = response.error ?? response.message ?? "Signup failed"
+                return nil
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return nil
+        }
+    }
+
+    /// Call after Google OAuth when `needsProfileCompletion` is true.
+    /// Sends username + DOB to /api/auth/complete-profile. Requires a valid session
+    /// in keychain (AuthService wires the bearer token automatically).
+    func completeProfile() async -> AuthUser? {
+        guard isUsernameValid, isBirthDateValid, !isLoading else { return nil }
+        isLoading = true
+        errorMessage = nil
+        let trimmedName = fullName.trimmingCharacters(in: .whitespaces)
+        do {
+            let response = try await authService.completeProfile(
+                username: username.trimmingCharacters(in: .whitespaces),
+                dateOfBirth: birthDateISO,
+                name: trimmedName.isEmpty ? nil : trimmedName
+            )
+            isLoading = false
+            if let user = response.user {
+                needsProfileCompletion = false
+                return user
+            } else {
+                errorMessage = response.error ?? response.message ?? "Could not save profile"
                 return nil
             }
         } catch {
@@ -156,6 +217,7 @@ final class AuthViewModel {
             isLoading = false
 
             if let user = response.user {
+                needsProfileCompletion = response.needsProfile ?? false
                 return (user, response.session)
             } else {
                 errorMessage = response.error ?? "Google sign-in failed"
