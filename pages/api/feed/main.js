@@ -2021,7 +2021,6 @@ async function handleV2Feed(req, res, supabase, opts) {
   //
   // Falls back to the old single-vector behavior if there are no clusters yet
   // (cold-start / very early signal).
-  const _fixLRef = sessionTasteVector || tasteVectorMinilm;
   let userClusterCentroidsForRerank = null; // [{ centroid, weight }]
   if (clusterLookupId && (tasteVector || tasteVectorMinilm)) {
     const { data: centroidRows } = await supabase
@@ -2066,33 +2065,13 @@ async function handleV2Feed(req, res, supabase, opts) {
     console.log(`[feed] intent shift detected cos=${intentShiftCos.toFixed(2)} — session vector injected as ephemeral cluster`);
   }
 
-  // Multi-cluster max-score for an article embedding. Each cluster's cosine
-  // is scaled by 0.6 + 0.4 * weight so big clusters get a small boost on top
-  // of cosine, but a candidate matching a small cluster perfectly can win.
-  function multiClusterAffinity(emb) {
-    if (!emb || emb.length !== 384) return null;
-    if (userClusterCentroidsForRerank) {
-      let best = 0;
-      for (const { centroid, weight } of userClusterCentroidsForRerank) {
-        const sim = cosineSimilarityVec(centroid, emb);
-        const score = sim * (0.6 + 0.4 * weight);
-        if (score > best) best = score;
-      }
-      return best;
-    }
-    if (_fixLRef && _fixLRef.length === 384) return cosineSimilarityVec(emb, _fixLRef);
-    return null;
-  }
-
-  function embeddingAffinityPenalty(article) {
-    const emb = safeJsonParse(article.embedding_minilm, null);
-    if (!emb || !Array.isArray(emb) || emb.length !== 384) return 1.0;
-    const sim = multiClusterAffinity(emb);
-    if (sim === null) return 1.0;
-    if (sim < 0.10) return 0.85;
-    if (sim < 0.20) return 0.95;
-    return 1.0;
-  }
+  // embeddingAffinityPenalty (Fix L) removed 2026-04-23 (Phase 6.1).
+  // Inert multiplier: tiers were [0.85, 0.95, 1.0] at sim thresholds [0.10, 0.20, 1.0].
+  // The actual corpus similarity distribution vs user clusters sits at 0.6-1.0,
+  // so the <0.20 threshold fired on ~5% of articles and could only move
+  // scores by 15% max even when active. The post-rerank taste-vector
+  // multiplier at line ~2574 (0.3 + sim*1.4) covers the same signal with
+  // 10× the resolution. See multi-agent audit 2026-04-23.
 
   function getCategorySuppression(article) {
     const cat = article.category;
@@ -2442,7 +2421,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
     })
@@ -2457,7 +2435,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
     })
@@ -2510,7 +2487,6 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionTopicPenalty(article);  // Fix C
       s *= sessionLeafSkipPenalty(article);  // Phase 2.1
       s *= sessionLeafEngageReward(article);  // Phase 2.2
-      s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
         ...article,
