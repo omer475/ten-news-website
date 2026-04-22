@@ -881,11 +881,18 @@ export default async function handler(req, res) {
         const batchSize = 1000;
         let hasMore = true;
         while (hasMore) {
+          // Impression-based exclusion window shortened 14d → 7d on 2026-04-22.
+          // Prod debug showed canonical_seen=6363 on heavy test user, depleting
+          // the unseen pool to fresh_best fallbacks and surfacing low-quality
+          // exploration content. Articles just-scrolled-past >7d ago re-enter
+          // the pool — that's how TikTok handles re-exposure on dormant content.
+          // Events-based exclusion (Source 3 below) stays at 14d because those
+          // are stronger signals (user actively engaged or skipped).
           const { data: impressions } = await supabase
             .from('user_feed_impressions')
             .select('article_id')
             .eq('user_id', userId)
-            .gte('created_at', new Date(Date.now() - 14 * 24 * 3600000).toISOString())
+            .gte('created_at', new Date(Date.now() - 7 * 24 * 3600000).toISOString())
             .order('created_at', { ascending: false })
             .range(offset, offset + batchSize - 1);
           if (impressions && impressions.length > 0) {
