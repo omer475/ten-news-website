@@ -567,9 +567,10 @@ const ARTICLE_COLUMNS = [
 // Lightweight columns for pool construction (no heavy JSONB).
 // typed_signals included for Fix 1C (empty-signal filter) + 1A (dispersion).
 // image_score / image_ai_generated included for Fix 1E (Pinterest-style image feature).
+// topics included for Phase 7.2 (affect cap — conflicts/human_rights detection).
 const POOL_COLUMNS = [
   'id', 'title_news', 'category', 'created_at', 'published_at',
-  'ai_final_score', 'interest_tags', 'typed_signals',
+  'ai_final_score', 'interest_tags', 'typed_signals', 'topics',
   'image_score', 'image_ai_generated',
   'cluster_id', 'shelf_life_days', 'freshness_category',
   'author_id',
@@ -1075,7 +1076,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     has_personalization: null,
     bandit_state: null,
     buckets_served: {},
-    caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0 },
+    caps: { event: 0, entity_shared: 0, null_dedup: 0, cold_event: 0, cold_entity: 0, cold_null_dedup: 0, affect: 0, cold_affect: 0 },
     phase_ms: {},
   };
   let _phaseT = _feedT0;
@@ -2934,6 +2935,37 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (clusterId) clusterCounts[clusterId] = (clusterCounts[clusterId] || 0) + 1;
   }
 
+  // Phase 7.2 (2026-04-23): Affect-cap guardrail.
+  // Reference: Sohu Shehai 2025 research on affect-adaptive ranking (user
+  // retention drops sharply when > 40 % of a session is heavy-affect content —
+  // war, violence, human-rights abuses). TikTok's internal rails reportedly
+  // enforce a similar cap via the "safety + diversity post-rerank" stage.
+  //
+  // Heavy-affect detection is topic-based: a small closed set of tags that
+  // unambiguously mean distressing content. We intentionally do NOT include
+  // `geopolitics` (too broad — policy discussion isn't heavy) or `health`
+  // (ambiguous — wellness pieces aren't heavy). We rely on `topics`, which
+  // the Gemini pipeline already populates on every published article.
+  //
+  // Cap: max 4 of every 10 served cards (40 %). Chosen because heavy topics
+  // represent ~9 % of the 7-day corpus today but can spike to 30 %+ during
+  // active conflicts, and unbounded ranking then fills the feed with them.
+  const AFFECT_HEAVY_TOPICS = new Set(['conflicts', 'human_rights']);
+  const MAX_HEAVY_PER_FEED = 4;
+  let heavyAffectCount = 0;
+  function isHeavyAffect(article) {
+    const topics = article.topics;
+    if (!topics || !Array.isArray(topics)) return false;
+    for (const t of topics) if (AFFECT_HEAVY_TOPICS.has(t)) return true;
+    return false;
+  }
+  function isAffectCapped(article) {
+    return heavyAffectCount >= MAX_HEAVY_PER_FEED && isHeavyAffect(article);
+  }
+  function recordAffectSelection(article) {
+    if (isHeavyAffect(article)) heavyAffectCount++;
+  }
+
   // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
   // Fix E (Apr 18): also enforce one-pick-per-article across THIS request. Pool
   // assembly can legitimately place the same article in multiple pools (e.g.
@@ -2962,6 +2994,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (!picked) return null;
       if (servedInThisRequest.has(picked.id)) { if (debugFlag) _dbg.caps.null_dedup++; attempts++; continue; }
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.event++; attempts++; continue; }
+      if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.affect++; attempts++; continue; }
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3509,9 +3542,12 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       // Event/cluster cap
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.cold_event++; continue; }
+      // Phase 7.2: affect cap also applies in cold-start.
+      if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.cold_affect++; continue; }
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
+      recordAffectSelection(picked);
       selected.push(picked);
     }
   } else {
@@ -3597,6 +3633,7 @@ async function handleV2Feed(req, res, supabase, opts) {
 
       picked.bucket = slot === 'F' ? 'fresh_best' : slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : slot === 'D' ? 'discovery' : 'discovery';
       recordEventSelection(picked);
+      recordAffectSelection(picked);
       recordSuperPick(picked);
       selected.push(picked);
     }
@@ -3679,6 +3716,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       picked._resurfaced = true;
       picked.bucket = slot === 'P' ? 'personal' : slot === 'T' ? 'trending' : 'discovery';
       recordEventSelection(picked);
+      recordAffectSelection(picked);
       selected.push(picked);
     }
   }
@@ -3944,6 +3982,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       boost_hits: _interestClockHits,
       total_events_binned: +_totalEvents.toFixed(2),
       top_5_active_hours: _topHours,
+    };
+    // Phase 7.2: Affect-cap observability.
+    _dbg.affect_cap = {
+      heavy_served: heavyAffectCount,
+      max_heavy_per_feed: MAX_HEAVY_PER_FEED,
+      heavy_rejected: (_dbg.caps.affect || 0) + (_dbg.caps.cold_affect || 0),
     };
   }
 
