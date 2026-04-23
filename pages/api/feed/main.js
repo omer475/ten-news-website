@@ -2121,6 +2121,59 @@ async function handleV2Feed(req, res, supabase, opts) {
     _sessionLeafEngaged.set(k, (_sessionLeafEngaged.get(k) || 0) + 1);
   }
 
+  // Phase 9.2 (2026-04-24): session hot-neg retrieval filter.
+  //
+  // The session-analysis of 2026-04-23 showed that in-session skips could not
+  // influence the NEXT page's retrieval — they only dampened scoring. With
+  // `sessionNegativeMultiplier` bounded at 0.3×, a publisher-quality 1.3× plus
+  // an Interest-Clock 1.3× boost could overcome the skip and the article would
+  // still rank into the top 10. Concretely: user skipped 5 basketball cards
+  // on page 14, page 15 served 4 more basketball cards anyway.
+  //
+  // Fix: build a HARD veto set of (topic, leaf) pairs where the user has
+  // clearly rejected during this session — ≥ 3 skips AND no engagement — and
+  // exclude matching articles from the trending / discovery / interest /
+  // fresh_best pools entirely BEFORE scoring runs. Personal (two-tower ANN)
+  // pool stays unfiltered because it's already taste-aligned and small; the
+  // scoring-time multiplier is enough there.
+  //
+  // Also matches TikTok's session-feature-store behavior (Monolith) — the
+  // ranker refuses to retrieve from a cluster the user has been actively
+  // skipping in the current session, rather than rely on the scorer to bury
+  // it under a single coefficient.
+  const sessionHotNegTopics = new Set();
+  for (const [sig, skips] of sessionSignalSkips.entries()) {
+    if (typeof sig !== 'string') continue;
+    if (!sig.startsWith('topic:')) continue;  // only veto topic:* tags
+    const engages = sessionSignalEngages.get(sig) || 0;
+    if (skips >= 3 && engages === 0) {
+      sessionHotNegTopics.add(sig.substring('topic:'.length));
+    }
+  }
+  const sessionHotNegLeafKeys = new Set();
+  for (const [k, skips] of _sessionLeafSkipped.entries()) {
+    if (skips >= 3 && (_sessionLeafEngaged.get(k) || 0) === 0) {
+      sessionHotNegLeafKeys.add(k);
+    }
+  }
+  let _sessionHotNegVetos = 0;
+  function passesSessionHotNegFilter(article) {
+    if (!article) return false;
+    if (sessionHotNegLeafKeys.size > 0) {
+      const lk = _sessionLeafKeyFromArticle(article);
+      if (lk && sessionHotNegLeafKeys.has(lk)) { _sessionHotNegVetos++; return false; }
+    }
+    if (sessionHotNegTopics.size > 0) {
+      const topics = article.topics;
+      if (Array.isArray(topics)) {
+        for (const t of topics) {
+          if (sessionHotNegTopics.has(t)) { _sessionHotNegVetos++; return false; }
+        }
+      }
+    }
+    return true;
+  }
+
   function sessionNegativeMultiplier(article) {
     // --- Topic-level (typed_signals) ---
     const signals = safeJsonParse(article.typed_signals, []);
@@ -2561,6 +2614,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Trending bucket: editorial importance x recency x entity signal x category suppression
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
+    .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2576,6 +2630,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Discovery bucket: boost unfamiliar categories x entity signal x category suppression
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
+    .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2593,6 +2648,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Boost articles whose interest_tags overlap with the user's subtopic tags
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
+    .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .map(a => {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
@@ -2618,6 +2674,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Fresh Best bucket: quality × recency, no taste vector, with skip + saturation penalty
   const freshBestScored = freshBestArticleMeta
     .filter(a => articleMap[a.id])
+    .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
@@ -4085,6 +4142,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       known_publishers: publisherQualityByKey.size,
       boost_hits: _publisherBoostHits,
       baseline: PUBLISHER_BASELINE,
+    };
+    // Phase 9.2: session hot-neg retrieval filter observability.
+    _dbg.session_hot_neg = {
+      hot_topics: [...sessionHotNegTopics],
+      hot_leaves: [...sessionHotNegLeafKeys],
+      retrieval_vetos: _sessionHotNegVetos,
     };
   }
 
