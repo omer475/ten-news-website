@@ -257,9 +257,23 @@ def build_typed_signals(article_countries, interest_tags, ner_result=None, langu
 
     add('lang', language)
 
-    # Topics last — will skip any slug already emitted under a specific type
-    for topic in (ner_result or {}).get('narrow_topics', []) or []:
-        add('topic', topic)
+    # Topics last — will skip any slug already emitted under a specific type.
+    #
+    # Phase 9.3 (2026-04-24): stopped routing NER `narrow_topics` into
+    # typed_signals. Audit on 2026-04-24 found that 75 % of distinct
+    # `topic:*` strings in the 14-day corpus (31 681 of 42 142) appeared
+    # exactly once — Gemini was being instructed by the NER prompt to
+    # produce "2-5 multi-word concepts or compound terms" (e.g.
+    # `topic:subscription_revenue_guidance`, `topic:ai_product_sales`),
+    # which means every engagement dropped 60-80 % of its signal into
+    # dead one-shot keys that never match a future article.
+    #
+    # `interest_tags` (from step10 INTEREST_TAGS_PROMPT) are priority-
+    # ordered 1-4 word entity/topic tags drawn mostly from an implicit
+    # closed vocabulary — soccer, basketball, donald_trump, premier_league,
+    # artificial_intelligence etc. — and they repeat across articles.
+    # That's the path we keep. The NER response still carries
+    # narrow_topics but we ignore them here.
     for tag in (interest_tags or []):
         add('topic', tag)
 
