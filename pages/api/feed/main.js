@@ -2174,6 +2174,52 @@ async function handleV2Feed(req, res, supabase, opts) {
     return true;
   }
 
+  // Phase 9.4 (2026-04-24): cross-page cluster dedup.
+  //
+  // On 2026-04-23, Clayface (trailer story) appeared 3× across pages 13/14/15
+  // via 3 different publishers (Gizmodo, Den of Geek, ...). Apple TV+ Star
+  // City appeared 2× (9to5Mac + Collider). Same-article dedup works via the
+  // user_feed_impressions anti-join, but same-STORY dedup requires matching
+  // on cluster_id (the narrow, event-level cluster from step1_5).
+  //
+  // Fetch cluster_id for the last 30 served articles and build a veto set.
+  // Conservative scope — we use cluster_id (story-level), NOT
+  // super/leaf_cluster_id (topic-level). 100 topic-leaves is already coarse;
+  // deduping on leaf_cluster_id would mean "no more than one basketball
+  // story per session" which is way too aggressive.
+  const recentClusterIds = new Set();
+  let _clusterDedupVetos = 0;
+  if (userId) {
+    try {
+      const { data: recentImpr } = await supabase
+        .from('user_feed_impressions')
+        .select('article_id')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      const recentIds = (recentImpr || []).map(r => r.article_id).filter(Boolean);
+      if (recentIds.length > 0) {
+        const { data: clusterLookup } = await supabase
+          .from('published_articles')
+          .select('id, cluster_id')
+          .in('id', recentIds);
+        if (clusterLookup) {
+          for (const a of clusterLookup) {
+            if (a.cluster_id != null) recentClusterIds.add(a.cluster_id);
+          }
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+  function passesClusterDedup(article) {
+    if (!article || recentClusterIds.size === 0) return true;
+    if (article.cluster_id != null && recentClusterIds.has(article.cluster_id)) {
+      _clusterDedupVetos++;
+      return false;
+    }
+    return true;
+  }
+
   function sessionNegativeMultiplier(article) {
     // --- Topic-level (typed_signals) ---
     const signals = safeJsonParse(article.typed_signals, []);
@@ -2571,6 +2617,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   mark('pre_scoring');
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
+    .filter(id => passesClusterDedup(articleMap[id]))  // Phase 9.4 story-level dedup
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
@@ -2615,6 +2662,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const trendingScored = trendingArticleMeta
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
+    .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2631,6 +2679,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const discoveryScored = discoveryArticleMeta
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
+    .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2649,6 +2698,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const interestScored = interestArticleMeta
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
+    .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
     .map(a => {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
@@ -2675,6 +2725,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const freshBestScored = freshBestArticleMeta
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
+    .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
@@ -4148,6 +4199,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       hot_topics: [...sessionHotNegTopics],
       hot_leaves: [...sessionHotNegLeafKeys],
       retrieval_vetos: _sessionHotNegVetos,
+    };
+    // Phase 9.4: cross-page cluster dedup observability.
+    _dbg.cluster_dedup = {
+      recent_clusters_tracked: recentClusterIds.size,
+      dedup_vetos: _clusterDedupVetos,
     };
   }
 
