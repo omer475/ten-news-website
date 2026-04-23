@@ -340,48 +340,55 @@ const ONBOARDING_ENTITY_MAP = {
 // Change 1: Blend long-term + session vectors.
 // Typed-signal multiplier applied externally (see handleV2Feed closure).
 
-function scoreArticleV3(article, similarity, entityAffinities, sessionBoost, sessionVectorSim, sessionInteractionCount) {
-  const longTermScore = similarity || 0;
-  const sessionScore = sessionVectorSim || 0;
-  // Fix 10: Adaptive weighting — more session data = more session weight
-  let vectorScore;
-  if (sessionScore > 0) {
-    const sessionCount = sessionInteractionCount || 0;
-    const sessionWeight = Math.min(0.85, 0.30 + sessionCount * 0.03);
-    // 0 interactions → 0.30 session, 10 → 0.60, 20+ → 0.85
-    vectorScore = longTermScore * (1 - sessionWeight) + sessionScore * sessionWeight;
+// Phase 6.3 (2026-04-23): coherent multiplicative scoring.
+//
+// Prior additive formula: (v*500 + e*200 + q*200 + m*150) * recencyDecay
+// Then externally multiplied by entitySignalMultiplier × categorySuppression
+// × sessionNegativeMultiplier × publisher × image × (phase 5.5 taste re-rank
+// 0.3+sim*1.4) × (phase 5.5 session re-rank 1+sim*0.5).
+//
+// Problems with the old composition (per 2026-04-23 audit):
+//   1. entityBonus was duplicative with entitySignalMultiplier (both read
+//      typed_signals × user affinities, squared vs linear aggregation).
+//   2. momentum param was always passed 0 — dead.
+//   3. Additive hid the vector signal: a cosine of 0.5 vs 0.8 moved
+//      score by 150 points within a 1000-point base, yet the post-rerank
+//      multiplier then applied 0.3+sim*1.4 on top (0.85 vs 1.42 → 67 %
+//      difference) — the real cosine work was in the rerank, the inner
+//      additive was noise.
+//   4. vectorScore passed through as raw similarity, not confidence-weighted.
+//      A 0.5 cosine was twice as strong as 0.25, but information-theoretically
+//      a 0.5 sim is not "half the confidence" of 0.9 — it's much weaker.
+//
+// New formula: ai_final_score × vectorConfidence × recencyDecay
+//   vectorConfidence = max(0.25, max(0, sim)^2), with adaptive blend
+//     between long-term taste and session vector based on sessionInteractionCount.
+//   Cosine-squared encodes confidence (0.5 sim → 0.25, 0.8 → 0.64).
+//   Floor at 0.25 prevents fresh articles from zeroing out on cold starts.
+//
+// External multipliers (entitySignalMultiplier, getCategorySuppression,
+// sessionNegativeMultiplier, publisher boost, image feature, Phase 5.5
+// taste-vec re-rank) continue to compose on top. The inner score is now
+// a clean "quality × personalization × recency" that downstream multipliers
+// can modulate without fighting internal additive noise.
+function scoreArticleV3(article, similarity, sessionVectorSim, sessionInteractionCount) {
+  const longSim = Math.max(0, similarity || 0);
+  const sessionSim = Math.max(0, sessionVectorSim || 0);
+
+  // Adaptive long/session blend (Fix 10 retained — more session data shifts weight).
+  let effectiveSim;
+  if (sessionSim > 0) {
+    const sessionWeight = Math.min(0.85, 0.30 + (sessionInteractionCount || 0) * 0.03);
+    effectiveSim = longSim * (1 - sessionWeight) + sessionSim * sessionWeight;
   } else {
-    vectorScore = longTermScore;
+    effectiveSim = longSim;
   }
 
-  // Entity bonus. Reads typed_signals directly and looks up against
-  // entityAffinities (keyed by typed-signal strings like "person:trump",
-  // "topic:iran_war", "loc:uk"). Previously read article.interest_tags
-  // (flat: "trump", "iran") and needed a fuzzy-match fallback because
-  // of the taxonomy mismatch; both lookups now match on the same key
-  // format so fuzzy-match is unneeded and exact match works at full
-  // strength.
-  const signals = safeJsonParse(article.typed_signals, []);
-  let entityBonus = 0;
-  let matchCount = 0;
-  if (Array.isArray(signals)) {
-    for (const sig of signals) {
-      const affinity = entityAffinities[sig];
-      if (affinity && affinity > 0) {
-        entityBonus += 0.10 * affinity;
-        matchCount++;
-        if (matchCount >= 3) break;
-      }
-    }
-  }
-  const totalSigs = Math.max(Array.isArray(signals) ? signals.length : 0, 1);
-  entityBonus = Math.min(entityBonus * (matchCount / totalSigs), 0.30);
-
-  const quality = (article.ai_final_score || 0) / 1000;
-  const momentum = sessionBoost || 0;
+  const vectorConfidence = Math.max(0.25, effectiveSim * effectiveSim);
   const recencyDecay = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+  const quality = article.ai_final_score || 500;
 
-  return (vectorScore * 500 + entityBonus * 200 + quality * 200 + momentum * 150) * recencyDecay;
+  return quality * vectorConfidence * recencyDecay;
 }
 
 function scoreTrendingV3(article) {
@@ -2329,13 +2336,11 @@ async function handleV2Feed(req, res, supabase, opts) {
     return raw * coveragePenalty;
   }
 
-  // Legacy entityAffinities for backward compat during transition
-  const entityAffinities = {};
-  for (const [entity, record] of Object.entries(entitySignals)) {
-    entityAffinities[entity] = computeEntityAffinity(record);
-  }
+  // Legacy entityAffinities map removed 2026-04-23 (Phase 6.3) — its only
+  // consumer was scoreArticleV3's inner entityBonus loop, which was
+  // duplicating entitySignalMultiplier's work. Same signal, redundant math.
 
-  // Personal bucket: V3 scoring with entity affinity + vector similarity
+  // Personal bucket: V3 scoring with vector similarity + external multiplier chain
   // Fix 1E: image_score as additive Pinterest-style feature. Scale is 0-100 in DB
   // (Gemini Flash), normalize to [0,1] and center at 0.5 so average images are
   // neutral, good images boost, bad images penalize.
@@ -2374,7 +2379,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           sessionVecSim = cosineSimilarityVec(emb, sessionTasteVector);
         }
       }
-      let score = scoreArticleV3(article, similarity, entityAffinities, 0, sessionVecSim, sessionInteractionCount);
+      let score = scoreArticleV3(article, similarity, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
       // Fix 5: Category suppression
