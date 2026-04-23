@@ -1837,6 +1837,92 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
+  // Phase 7.1 (2026-04-23): Interest Clock — hour-of-week × category affinity.
+  // Source: Douyin Music ByteDance, SIGIR 2024 (arXiv:2404.19357). Production
+  // A/B: +0.509 % active days, +0.758 % app duration.
+  //
+  // The idea: users engage with different categories at different hours/days.
+  // Morning commute → politics/business; evening → entertainment/sports.
+  // Build a 168-bin (7 days × 24 hours) profile of which categories the user
+  // has engaged with at each hour over the last 30 days, Gaussian-smooth over
+  // the hour dimension so a 3pm profile borrows from 2pm/4pm, then boost
+  // candidates whose category matches the user's current-hour affinity.
+  //
+  // Single round-trip via FK embed on user_article_events → published_articles.
+  // Sparse data safe: smoothedHourTotal < 3 returns 1.0 (neutral).
+  const _hourCounts = Array.from({ length: 168 }, () => ({}));
+  const _hourTotals = new Array(168).fill(0);
+  const smoothedHourCats = Array.from({ length: 168 }, () => ({}));
+  const smoothedHourTotals = new Array(168).fill(0);
+  if (userId) {
+    try {
+      // user_article_events → published_articles has no FK, so Supabase's
+      // embedded select can't join. Fetch event (article_id, created_at)
+      // then batch-fetch categories.
+      const { data: hourEvents } = await supabase
+        .from('user_article_events')
+        .select('created_at, article_id')
+        .eq('user_id', userId)
+        .in('event_type', ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_detail_view', 'article_revisit', 'article_more_like_this'])
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 3600000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (hourEvents && hourEvents.length > 0) {
+        const uniqIds = [...new Set(hourEvents.map(e => e.article_id).filter(Boolean))];
+        const catById = new Map();
+        for (let i = 0; i < uniqIds.length; i += 300) {
+          const batch = uniqIds.slice(i, i + 300);
+          const { data: cats } = await supabase
+            .from('published_articles')
+            .select('id, category')
+            .in('id', batch);
+          if (cats) for (const a of cats) catById.set(a.id, a.category);
+        }
+        for (const e of hourEvents) {
+          const cat = catById.get(e.article_id);
+          if (!cat) continue;
+          const d = new Date(e.created_at);
+          const h = d.getUTCDay() * 24 + d.getUTCHours();
+          _hourCounts[h][cat] = (_hourCounts[h][cat] || 0) + 1;
+          _hourTotals[h]++;
+        }
+        // Gaussian smoothing over hour dim (sigma ≈ 1h, kernel width ±3).
+        // Weights: [0.006, 0.061, 0.242, 0.383, 0.242, 0.061, 0.006]
+        const kernel = [0.006, 0.061, 0.242, 0.383, 0.242, 0.061, 0.006];
+        for (let h = 0; h < 168; h++) {
+          for (let k = -3; k <= 3; k++) {
+            const src = (h + k + 168) % 168;
+            const w = kernel[k + 3];
+            smoothedHourTotals[h] += _hourTotals[src] * w;
+            const srcCats = _hourCounts[src];
+            for (const cat in srcCats) {
+              smoothedHourCats[h][cat] = (smoothedHourCats[h][cat] || 0) + srcCats[cat] * w;
+            }
+          }
+        }
+      }
+    } catch (e) { /* non-blocking */ }
+  }
+  const _nowHourOfWeek = (() => {
+    const d = new Date();
+    return d.getUTCDay() * 24 + d.getUTCHours();
+  })();
+  let _interestClockHits = 0;
+  function interestClockBoost(article) {
+    const cat = article.category;
+    if (!cat) return 1.0;
+    const total = smoothedHourTotals[_nowHourOfWeek];
+    if (total < 3) return 1.0;  // insufficient data at this hour — neutral
+    const catCount = smoothedHourCats[_nowHourOfWeek][cat] || 0;
+    const rate = catCount / total;
+    // rate ∈ [0, 1]. Baseline is ~1/N_categories (≈0.10 for 10 cats).
+    // rate > baseline → boost; below → mild down-weight.
+    // Bounded [0.8, 1.3] to avoid swamping other signals.
+    _interestClockHits++;
+    const deviation = rate - 0.10;
+    return Math.max(0.8, Math.min(1.3, 1.0 + 2.0 * deviation));
+  }
+
   // Fix B (2026-04-19): session category stats used to read article categories
   // from articleMap, but articleMap only contains the CURRENT request's candidate
   // pool. After the anti-join retrieval fix, previously-served articles (the ones
@@ -2370,6 +2456,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       // Fix C (2026-04-19): session-level topic skip penalty (typed_signals)
       // Phase 6.2 (2026-04-23): unified session negative/positive signal.
       score *= sessionNegativeMultiplier(article);
+      // Phase 7.1 (2026-04-23): Interest Clock — hour-of-week category affinity.
+      score *= interestClockBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2394,6 +2482,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
+      s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2407,6 +2496,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
+      s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2428,6 +2518,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
+      s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2456,6 +2547,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       // extremely-negative articles. Additional 70% penalty when 0.2 <= mult < 0.4.
       else if (sigMult < 0.4) s *= 0.3;
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
+      s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -3828,6 +3920,31 @@ async function handleV2Feed(req, res, supabase, opts) {
   if (debugFlag) {
     _dbg.diversity_swaps = _diversitySwaps;
     _dbg.suppressed_leaves_count = suppressedLeafSet.size;
+    // Phase 7.1: Interest Clock observability.
+    const _topHours = smoothedHourTotals
+      .map((t, h) => {
+        const catsAtH = smoothedHourCats[h] || {};
+        const topCats = Object.entries(catsAtH)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([c, v]) => ({ cat: c, rate: +(v / t).toFixed(2) }));
+        return { hour: h, total: +t.toFixed(2), top_cats: topCats };
+      })
+      .filter(x => x.total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+    const _totalEvents = smoothedHourTotals.reduce((s, t) => s + t, 0);
+    _dbg.interest_clock = {
+      current_hour_of_week: _nowHourOfWeek,
+      total_at_current_hour: +smoothedHourTotals[_nowHourOfWeek].toFixed(2),
+      top_3_categories_at_hour: Object.entries(smoothedHourCats[_nowHourOfWeek] || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([c, v]) => ({ cat: c, weight: +v.toFixed(2) })),
+      boost_hits: _interestClockHits,
+      total_events_binned: +_totalEvents.toFixed(2),
+      top_5_active_hours: _topHours,
+    };
   }
 
   const pageIds = selected.map(a => a.id);
