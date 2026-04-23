@@ -568,10 +568,11 @@ const ARTICLE_COLUMNS = [
 // typed_signals included for Fix 1C (empty-signal filter) + 1A (dispersion).
 // image_score / image_ai_generated included for Fix 1E (Pinterest-style image feature).
 // topics included for Phase 7.2 (affect cap — conflicts/human_rights detection).
+// source included for Phase 8.2 (publisher-quality prior lookup).
 const POOL_COLUMNS = [
   'id', 'title_news', 'category', 'created_at', 'published_at',
   'ai_final_score', 'interest_tags', 'typed_signals', 'topics',
-  'image_score', 'image_ai_generated',
+  'image_score', 'image_ai_generated', 'source',
   'cluster_id', 'shelf_life_days', 'freshness_category',
   'author_id',
 ].join(', ');
@@ -1968,6 +1969,41 @@ async function handleV2Feed(req, res, supabase, opts) {
     return Math.max(0.8, Math.min(1.3, 1.0 + 2.0 * deviation));
   }
 
+  // Phase 8.2 (2026-04-23): publisher-quality prior.
+  // Reads the precomputed publisher_quality table (refreshed nightly from
+  // IPS-weighted impressions/engagements over 30 days, Beta(1,1) smoothed).
+  // Folds quality in as a soft multiplier relative to the global engage
+  // rate (~0.055 post-IPS). Bounded [0.7, 1.3] so it can't solo-override
+  // taste-vector or ai_final_score — it's a nudge, not a veto.
+  //
+  // New publishers with <5 impressions aren't in the table (HAVING clause
+  // in refresh_publisher_quality); they get 1.0 (neutral) automatically
+  // via the .get() fallback. No cold-start penalty.
+  const PUBLISHER_BASELINE = 0.055;  // IPS-adjusted global engage rate
+  const publisherQualityByKey = new Map();
+  try {
+    const { data: pubRows } = await supabase
+      .from('publisher_quality')
+      .select('publisher, quality');
+    if (pubRows) {
+      for (const r of pubRows) {
+        if (r.publisher && r.quality != null) {
+          publisherQualityByKey.set(r.publisher, +r.quality);
+        }
+      }
+    }
+  } catch (e) { /* non-blocking */ }
+  let _publisherBoostHits = 0;
+  function publisherQualityBoost(article) {
+    const key = article?.source;
+    if (!key) return 1.0;
+    const q = publisherQualityByKey.get(key);
+    if (q == null) return 1.0;  // unknown / new publisher
+    _publisherBoostHits++;
+    const ratio = q / PUBLISHER_BASELINE;
+    return Math.max(0.7, Math.min(1.3, ratio));
+  }
+
   // Fix B (2026-04-19): session category stats used to read article categories
   // from articleMap, but articleMap only contains the CURRENT request's candidate
   // pool. After the anti-join retrieval fix, previously-served articles (the ones
@@ -2503,6 +2539,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       score *= sessionNegativeMultiplier(article);
       // Phase 7.1 (2026-04-23): Interest Clock — hour-of-week category affinity.
       score *= interestClockBoost(article);
+      // Phase 8.2 (2026-04-23): publisher-quality prior.
+      score *= publisherQualityBoost(article);
       // Boost articles from followed publishers
       if (article.author_id && followedPublisherIds.has(article.author_id)) {
         score *= 1.25;
@@ -2528,6 +2566,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
+      s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'trending');
       return { ...article, _score: s, _bucket: 'trending' };
@@ -2542,6 +2581,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
+      s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'discovery');
       return { ...article, _score: s, _bucket: 'discovery' };
@@ -2564,6 +2604,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
+      s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2593,6 +2634,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       else if (sigMult < 0.4) s *= 0.3;
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
+      s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
       s *= embeddingAffinityPenalty(article);  // Fix L
       s = applyImageFeature(s, article, 'fresh_best');
       return {
@@ -4037,6 +4079,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     _dbg.dormancy_revival = {
       arms_revived: userDormancyRevivedArms,
       top_revived_in_top10: userDormancyTopArms,
+    };
+    // Phase 8.2: Publisher-quality prior observability.
+    _dbg.publisher_quality = {
+      known_publishers: publisherQualityByKey.size,
+      boost_hits: _publisherBoostHits,
+      baseline: PUBLISHER_BASELINE,
     };
   }
 
