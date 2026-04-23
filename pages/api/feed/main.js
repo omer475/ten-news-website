@@ -2242,28 +2242,11 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // Fix E (2026-04-19): pivot-mode selector support. When the algorithm enters
   // skip-cascade recovery, pivot should AMPLIFY the user's strongest recent
-  // positive signals rather than filter out negatives. Source: TikTok
-  // retention-oriented session design (NYT 2021 leak) — negative feedback
-  // shifts the system toward content with higher predicted positive engagement,
-  // not neutral content. Conviction floor: >=5 total events and >=0.65 positive
-  // ratio. Sort by positive_7d desc (with positive_count desc tiebreak).
-  const topPositiveSignals = (() => {
-    const candidates = Object.entries(entitySignals)
-      .filter(([entity]) => !entity.startsWith('lang:') && entity !== 'loc:usa')
-      .filter(([, rec]) => {
-        const total = (rec.positive || 0) + (rec.negative || 0);
-        if (total < 5) return false;
-        return (rec.positive / total) >= 0.65;
-      });
-    candidates.sort((a, b) => {
-      const a7 = a[1].positive_7d || 0;
-      const b7 = b[1].positive_7d || 0;
-      if (b7 !== a7) return b7 - a7;
-      return (b[1].positive || 0) - (a[1].positive || 0);
-    });
-    return candidates.slice(0, 8).map(c => c[0]);
-  })();
-  const topPositiveSet = new Set(topPositiveSignals);
+  // topPositiveSignals + topPositiveSet removed 2026-04-23 (Phase 6.4).
+  // Computed every request (with a full Object.entries scan over entitySignals
+  // + sort) but never consumed after pivot-mode was removed in Phase A. The
+  // comment claimed this was for "amplify positive signals" in pivot selection;
+  // pivot selection is gone. Dead code on the hot path.
 
   // Compute entity affinity with continuous time-decay + recent-window blending.
   // Raw counts stay in DB (auditability); decay applies at read time so the
@@ -3608,20 +3591,10 @@ async function handleV2Feed(req, res, supabase, opts) {
     }
   }
 
-  // ==========================================
-  // PHASE 6c: STALE UNSEEN TIER (last resort — old articles user never saw)
-  // Only articles still within their content-type freshness window (isStillFresh).
-  // Stale breaking/developing news never appears here.
-  // ==========================================
-
-  if (selected.length < limit) {
-    const selectedIds = new Set(selected.map(a => a.id));
-    // Filter: only evergreen/analysis/timeless that are still "fresh" per their type.
-    // isStillFresh already handles this — staleUnseen are articles that FAILED isStillFresh,
-    // so this tier only adds articles from the original unseen pool that were borderline.
-    // Actually, staleUnseen already failed isStillFresh, so skip this tier entirely
-    // to avoid showing misleading old news. Resurfaced tier is the final fallback.
-  }
+  // PHASE 6c (STALE UNSEEN TIER) removed 2026-04-23 (Phase 6.4).
+  // Was a dead branch — the comment inside concluded "skip this tier entirely"
+  // without executing anything. Scope was: articles that FAILED isStillFresh
+  // already got filtered out of freshUnseen upstream. Nothing to recover.
 
   // ==========================================
   // PHASE 6.5: INTEREST CATEGORY ALLOCATION FLOOR (Fix 7)
