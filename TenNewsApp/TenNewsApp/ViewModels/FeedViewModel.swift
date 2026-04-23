@@ -28,6 +28,13 @@ final class FeedViewModel {
     private var viewStartTimes: [String: Date] = [:]
     private(set) var lastRefreshTime: Date?
 
+    // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
+    // Set the instant an engagement/skip POST is fired; loadMoreIfNeeded
+    // waits briefly if this timestamp is very recent, so the event lands
+    // server-side before the next-page retrieval closes its snapshot.
+    private var lastEventSentAt: Date?
+    private let prefetchDebounceWindow: TimeInterval = 0.20
+
     private let feedService = FeedService()
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
@@ -150,6 +157,19 @@ final class FeedViewModel {
 
     func loadMoreIfNeeded() async {
         guard !isLoading, !isRefreshing else { return }
+        // Phase 9.2: if a skip/engage POST just fired, give it a moment to
+        // land on the server before the retrieval snapshot closes. Without
+        // this the session_skipped/engaged IDs the server reads from our
+        // query string are client-local only — but the server also cross-
+        // references recent user_article_events when computing session
+        // topics, which lags by ~100-300 ms.
+        if let last = lastEventSentAt {
+            let elapsed = Date().timeIntervalSince(last)
+            if elapsed < prefetchDebounceWindow {
+                let wait = prefetchDebounceWindow - elapsed
+                try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+            }
+        }
         if !hasMore {
             // Recovery: if hasMore has been false for > 2 min, retry once.
             // Handles stale sessions where a bad response permanently blocked pagination.
@@ -370,6 +390,7 @@ final class FeedViewModel {
             event = "article_engaged"
             dwellTier = "absorbed"
         }
+        lastEventSentAt = Date()
         Task {
             try? await analytics.track(
                 event: event,
