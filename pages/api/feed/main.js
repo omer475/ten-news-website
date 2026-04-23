@@ -1568,6 +1568,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // Hoisted so the caught_up feedState decision can see whether the leaf
   // bandit / pivot path could deliver more content on the next request.
   let userLeafArmsLearned = 0;
+  // Phase 7.3: hoisted so post-bandit debug block can read how many arms
+  // the dormancy-revival boost nudged.
+  let userDormancyRevivedArms = 0;
+  let userDormancyTopArms = [];
   if (userId) {
     try {
       // Problem 4 (2026-04-20): load BOTH super and leaf arms for hierarchical
@@ -1576,7 +1580,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       // transfer (engaging a Science leaf lifts other Science leaves' priors).
       const [leafArmsRes, superArmsRes] = await Promise.all([
         supabase.from('user_leaf_arms')
-          .select('super_cluster_id, leaf_cluster_id, alpha, beta')
+          .select('super_cluster_id, leaf_cluster_id, alpha, beta, last_updated_at')
           .eq('user_id', userId),
         supabase.from('user_super_arms')
           .select('super_cluster_id, alpha, beta')
@@ -1589,6 +1593,35 @@ async function handleV2Feed(req, res, supabase, opts) {
         ? leafArms.filter(a => (a.alpha || 1) > 1.1 || (a.beta || 1) > 1.1).length
         : 0;
       userLeafArmsLearned = learnedArms;
+
+      // Phase 7.3 (2026-04-23): Dormant-leaf revival (Trinity
+      // exposure-engagement-novelty). Thompson sampling naturally exploits
+      // entrenched posteriors — arms with α=12/β=4 beat Beta(1,1) arms nearly
+      // every time. Leaves the user genuinely likes but hasn't seen in days
+      // (because a few "hot" leaves crowd them out) get starved, and the feed
+      // drifts to a narrow set of interests. ByteDance's Trinity framing:
+      // rebalance by weighting arms by (historical engagement) × (exposure
+      // dormancy). An arm with engage_rate > 0.55 that hasn't fired in 24h+
+      // gets a gentle theta bump proportional to log(hours_since).
+      //
+      // `last_updated_at` updates on every RPC call (engage OR skip), so a
+      // stale value means the user hasn't been served from this leaf recently.
+      // That's exactly the "dormant" signal we want.
+      const _nowMs = Date.now();
+      function dormancyBoost(arm) {
+        const alpha = arm.alpha || 1;
+        const beta = arm.beta || 1;
+        if (alpha + beta < 4) return 1.0;  // not learned enough
+        const engageRate = alpha / (alpha + beta);
+        if (engageRate < 0.55) return 1.0;  // only revive arms the user likes
+        const hoursSince = arm.last_updated_at
+          ? (_nowMs - new Date(arm.last_updated_at).getTime()) / 3600000
+          : 168;
+        if (hoursSince < 24) return 1.0;  // recently exercised — no boost
+        const factor = Math.min(0.5, Math.log(1 + hoursSince / 24) * (engageRate - 0.5));
+        if (factor > 0) userDormancyRevivedArms++;
+        return 1.0 + factor;
+      }
 
       if (armCount >= 20 && learnedArms >= 3) {
         // Inline Thompson Sampling over Beta(α, β). Marsaglia-Tsang Gamma.
@@ -1635,14 +1668,25 @@ async function handleV2Feed(req, res, supabase, opts) {
             // Boost leaf theta by its super's theta (additive blend 0.3)
             const leafTheta = _sampleBeta(a.alpha || 1, a.beta || 1);
             const superTheta = superSampled.get(a.super_cluster_id) || 0.5;
+            // Phase 7.3: dormancy boost for high-engage arms that haven't
+            // fired recently. Multiplicative — lifts stale favorites back
+            // into contention without changing the ranking of active arms.
+            const dormMult = dormancyBoost(a);
             return {
               super: a.super_cluster_id,
               leaf: a.leaf_cluster_id,
-              theta: 0.7 * leafTheta + 0.3 * superTheta,
+              theta: (0.7 * leafTheta + 0.3 * superTheta) * dormMult,
+              _dormMult: dormMult,
             };
           });
         sampled.sort((a, b) => b.theta - a.theta);
         const topLeaves = sampled.slice(0, 10).map(s => ({ super: s.super, leaf: s.leaf }));
+        // Phase 7.3: snapshot the most-boosted arms in the top-10 for debug.
+        userDormancyTopArms = sampled
+          .slice(0, 10)
+          .filter(s => s._dormMult > 1.0)
+          .map(s => ({ super: s.super, leaf: s.leaf, mult: +s._dormMult.toFixed(3) }))
+          .slice(0, 5);
 
         // Use hierarchical fetch (with sibling-leaf fallback tier)
         const { data: leafArticles } = await supabase.rpc('fetch_unseen_by_leaves_hierarchical', {
@@ -3988,6 +4032,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       heavy_served: heavyAffectCount,
       max_heavy_per_feed: MAX_HEAVY_PER_FEED,
       heavy_rejected: (_dbg.caps.affect || 0) + (_dbg.caps.cold_affect || 0),
+    };
+    // Phase 7.3: Dormant-leaf revival observability.
+    _dbg.dormancy_revival = {
+      arms_revived: userDormancyRevivedArms,
+      top_revived_in_top10: userDormancyTopArms,
     };
   }
 
