@@ -39,25 +39,45 @@ HAVING COUNT(*) >= 3;
 
 CREATE UNIQUE INDEX ON canonical_topics (sig);
 
--- Rewrite typed_signals row-by-row: keep every non-topic entry as-is,
--- keep topic:* entries only if they're in canonical_topics. Entity
--- types (org/person/loc/event/product/lang) are passed through
--- untouched, so named-entity signals like org:microsoft or
--- person:donald_trump are fully preserved.
+-- Rewrite typed_signals: keep every non-topic entry as-is, keep topic:*
+-- entries only if they're in canonical_topics. Entity types
+-- (org/person/loc/event/product/lang) are passed through untouched.
+--
+-- IMPORTANT: we alias the unfolded element as `s`, not `sig`. If we
+-- named it `sig` too, the EXISTS subquery's unqualified `sig` reference
+-- would silently resolve to `canonical_topics.sig` (the table column)
+-- — which makes the EXISTS always true and the filter a no-op. Learned
+-- this the hard way on 2026-04-24 when the first migration attempt
+-- left every one-shot in place.
+--
+-- Run in chunks (LIMIT 5000 per call) — Postgres plans a single-shot
+-- UPDATE across 75 k rows as one transaction that exceeds the 30 s
+-- Supabase statement timeout. Loop from your driver until the
+-- verification query below returns zero.
+
 UPDATE public.published_articles pa
-SET typed_signals = cleaned.sigs
-FROM (
-  SELECT pa2.id,
-         jsonb_agg(sig) FILTER (
-           WHERE sig NOT LIKE 'topic:%'
-              OR sig IN (SELECT ct.sig FROM canonical_topics ct)
-         ) AS sigs
+SET typed_signals = (
+  SELECT jsonb_agg(s)
+  FROM jsonb_array_elements_text(pa.typed_signals::jsonb) AS s
+  WHERE s NOT LIKE 'topic:%'
+     OR EXISTS (SELECT 1 FROM canonical_topics ct WHERE ct.sig = s)
+)
+WHERE pa.id IN (
+  SELECT DISTINCT pa2.id
   FROM public.published_articles pa2,
-       jsonb_array_elements_text(pa2.typed_signals::jsonb) AS sig
+       jsonb_array_elements_text(pa2.typed_signals::jsonb) AS s
   WHERE pa2.typed_signals IS NOT NULL
-  GROUP BY pa2.id
-) AS cleaned
-WHERE pa.id = cleaned.id
-  AND pa.typed_signals::jsonb IS DISTINCT FROM cleaned.sigs;
+    AND s LIKE 'topic:%'
+    AND NOT EXISTS (SELECT 1 FROM canonical_topics ct WHERE ct.sig = s)
+  LIMIT 5000
+);
+
+-- Verification: run this until it returns 0. Then drop the working table.
+--   SELECT COUNT(DISTINCT pa.id)
+--   FROM public.published_articles pa,
+--        jsonb_array_elements_text(pa.typed_signals::jsonb) AS s
+--   WHERE pa.typed_signals IS NOT NULL
+--     AND s LIKE 'topic:%'
+--     AND NOT EXISTS (SELECT 1 FROM canonical_topics ct WHERE ct.sig = s);
 
 DROP TABLE canonical_topics;
