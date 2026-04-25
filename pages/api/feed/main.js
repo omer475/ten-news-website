@@ -3160,6 +3160,51 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (isHeavyAffect(article)) heavyAffectCount++;
   }
 
+  // Phase 10.2 (2026-04-25): sliding-window topic cap.
+  //
+  // Session 2026-04-24 23:48 UTC page 13: 14 slots served, 5 of them
+  // tagged `space` or pure-astronomy adjacent (Phones-satellite, NASA
+  // Crew-13, NASA IV-fluid, Mars rover, Artemis heat shield) — all
+  // skipped, page dropped to 14 % engage rate. Phase 9.2's session
+  // hot-neg filter could not react: the 5 skips happened INSIDE page 13,
+  // after the retrieval closure had already snapshot the candidate pool.
+  //
+  // TikTok / YouTube production approach for *within-page* diversity:
+  // sliding-window DPP (Determinantal Point Processes). Critical insight
+  // from Chen et al. NeurIPS 2018:
+  //   "When recommending a long sequence of items to the user, each time
+  //    only a small portion of the sequence catches the user's attention.
+  //    Requiring items far away from each other to be diverse is
+  //    unnecessary."
+  // Window is typically 5-10 items. Repulsion is enforced ONLY inside.
+  //
+  // We don't have learned DPP weights. The simplified equivalent: a
+  // sliding-window hard rule. Within any 5-slot window, no `topic:*`
+  // tag may appear on more than 2 articles. This is intentionally
+  // looser than a per-page cap (a 20-slot page can still serve 6 sports
+  // articles, but never 4 in a row of 5) — matches TikTok's "local
+  // diversity, global flexibility."
+  const TOPIC_WINDOW_SIZE = 5;
+  const MAX_TOPIC_PER_WINDOW = 2;
+  let _topicWindowVetos = 0;
+  function isTopicWindowCapped(article) {
+    if (!article?.topics || !Array.isArray(article.topics)) return false;
+    if (selected.length === 0) return false;
+    const window = selected.slice(-TOPIC_WINDOW_SIZE);
+    // For each topic the candidate carries, count occurrences in the window.
+    for (const t of article.topics) {
+      let count = 0;
+      for (const w of window) {
+        if (Array.isArray(w?.topics) && w.topics.includes(t)) count++;
+      }
+      if (count >= MAX_TOPIC_PER_WINDOW) {
+        if (debugFlag) _topicWindowVetos++;
+        return true;
+      }
+    }
+    return false;
+  }
+
   // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
   // Fix E (Apr 18): also enforce one-pick-per-article across THIS request. Pool
   // assembly can legitimately place the same article in multiple pools (e.g.
@@ -3189,6 +3234,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (servedInThisRequest.has(picked.id)) { if (debugFlag) _dbg.caps.null_dedup++; attempts++; continue; }
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.event++; attempts++; continue; }
       if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.affect++; attempts++; continue; }
+      if (isTopicWindowCapped(picked)) { attempts++; continue; }  // Phase 10.2 sliding-window
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -3738,6 +3784,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.cold_event++; continue; }
       // Phase 7.2: affect cap also applies in cold-start.
       if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.cold_affect++; continue; }
+      // Phase 10.2: sliding-window topic cap also applies in cold-start.
+      if (isTopicWindowCapped(picked)) { continue; }
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
@@ -4204,6 +4252,12 @@ async function handleV2Feed(req, res, supabase, opts) {
     _dbg.cluster_dedup = {
       recent_clusters_tracked: recentClusterIds.size,
       dedup_vetos: _clusterDedupVetos,
+    };
+    // Phase 10.2: sliding-window topic cap observability.
+    _dbg.topic_window_cap = {
+      window_size: TOPIC_WINDOW_SIZE,
+      max_per_window: MAX_TOPIC_PER_WINDOW,
+      vetos: _topicWindowVetos,
     };
   }
 
