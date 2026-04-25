@@ -502,6 +502,60 @@ function mmrSelect(candidates, selected, tagCache, lambda, embeddingCache) {
 // DIVERSITY ENFORCEMENT (max consecutive same category)
 // ==========================================
 
+// Phase 10.2 fix (2026-04-25): post-rerank sliding-window topic enforcement.
+//
+// The original Phase 10.2 enforced the cap inside mmrSelectDeduped during
+// placement. But the slate goes through TWO post-placement filters
+// (global category cap, quality floor) that shrink and re-pack `selected`.
+// When articles between two same-topic neighbors get filtered out, new
+// adjacency violations are created the in-loop check can't see.
+//
+// Session 2026-04-25 17:04 page 3 caught this: 7 of 24 slots violated
+// "max 2 same-topic per 5-window" despite the in-loop cap firing 32 times.
+//
+// TikTok / YouTube production pattern is sliding-window DPP at the FINAL
+// post-rerank stage. We mirror with a hard-rule swap pass: scan the slate,
+// for each violation swap the offending article with a later non-violating
+// candidate. Same shape as enforceConsecutiveLimit but on the topic axis.
+function enforceTopicWindow(articles, windowSize, maxPerWindow) {
+  const violatesAt = (i, candidate, sourceIdx) => {
+    const ts = candidate?.topics;
+    if (!Array.isArray(ts)) return false;
+    for (const t of ts) {
+      let count = 0;
+      const start = Math.max(0, i - windowSize + 1);
+      for (let j = start; j < i; j++) {
+        if (j === sourceIdx) continue;  // ignore the article being moved
+        const cts = articles[j]?.topics;
+        if (Array.isArray(cts) && cts.includes(t)) count++;
+      }
+      if (count >= maxPerWindow) return true;
+    }
+    return false;
+  };
+  // Iterate up to 3 passes — a single pass can't always resolve all
+  // violations because moving a candidate to position i may itself put
+  // pressure on a later window. Three passes converges in practice for
+  // typical 20-25 slot slates with our 5-window / max-2 hyperparameters.
+  for (let pass = 0; pass < 3; pass++) {
+    let swappedThisPass = false;
+    for (let i = 0; i < articles.length; i++) {
+      if (!violatesAt(i, articles[i], -1)) continue;
+      for (let k = i + 1; k < articles.length; k++) {
+        if (violatesAt(i, articles[k], k)) continue;
+        if (violatesAt(k, articles[i], i)) continue;
+        [articles[i], articles[k]] = [articles[k], articles[i]];
+        swappedThisPass = true;
+        break;
+      }
+    }
+    if (!swappedThisPass) break;  // converged
+  }
+  // Remaining unfixable violations are left in place (fail-open) — same
+  // policy as the rest of the diversity stack when alternatives are
+  // exhausted.
+}
+
 function enforceConsecutiveLimit(articles, maxConsecutive) {
   for (let i = maxConsecutive; i < articles.length; i++) {
     let allSame = true;
@@ -4081,6 +4135,12 @@ async function handleV2Feed(req, res, supabase, opts) {
   // ==========================================
 
   enforceConsecutiveLimit(selected, 2);
+
+  // Phase 10.2 fix: post-rerank sliding-window topic enforcement.
+  // Catches violations introduced by upstream global cat-cap and quality
+  // floor filters that ran AFTER placement. Same hyperparameters as the
+  // in-loop check (5-slot window, max 2 of any topic).
+  enforceTopicWindow(selected, TOPIC_WINDOW_SIZE, MAX_TOPIC_PER_WINDOW);
 
   // ==========================================
   // PHASE 7.25 (Fix 1A): ENTITY-DISPERSION RE-RANK
