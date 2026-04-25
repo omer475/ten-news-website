@@ -2572,6 +2572,63 @@ async function handleV2Feed(req, res, supabase, opts) {
     for (const row of (negResult?.data || [])) addRow(row);
   }
 
+  // Phase 10.4 (2026-04-25): hard veto for high-confidence long-term negatives.
+  //
+  // Session 2026-04-25 caught the "algorithmic persistence" failure mode
+  // (CHI 2025, Karizat et al., DOI 10.1145/3706598.3713666): NBA / soccer
+  // articles kept being served despite topic:basketball net-31 (9 engaged
+  // / 40 skipped) and topic:soccer net-38 (14/52). The soft entitySignal
+  // multiplier was returning ~0.19× — strong, but never zero — and the
+  // discovery-bucket categoryBoost of 1.5× for "unfamiliar categories"
+  // was lifting these articles back into the top-15.
+  //
+  // TikTok's mechanism for this: explicit "Not Interested" → HARD FILTER
+  // at retrieval, not soft penalty. We mirror that semantic with an
+  // *implicit* hard veto when the user's skip pattern matches what
+  // 30+ explicit "Not Interested" clicks would mean.
+  //
+  // Criteria for veto status (an entity must meet ALL):
+  //   - lifetime total interactions ≥ 25 (high confidence, not noise)
+  //   - engage ratio < 25 % (clearly disliked, not split)
+  //   - net negative ≥ 15 (numerically significant, not borderline)
+  //   - NOT a dilutive global tag (lang:*, loc:usa) — those are skipped
+  //     because they appear on nearly every article and don't carry
+  //     topical preference signal.
+  //
+  // Articles whose typed_signals contain ANY entity meeting the veto
+  // criteria are filtered out of every retrieval pool BEFORE scoring.
+  const LONGTERM_VETO_MIN_TOTAL = 25;
+  const LONGTERM_VETO_MAX_ENGAGE_RATIO = 0.25;
+  const LONGTERM_VETO_MIN_NET_NEG = 15;
+  const longTermNegVetoSet = new Set();
+  for (const entity in entitySignals) {
+    if (entity.startsWith('lang:') || entity === 'loc:usa') continue;
+    const r = entitySignals[entity];
+    const pos = r.positive || 0;
+    const neg = r.negative || 0;
+    const total = pos + neg;
+    if (total < LONGTERM_VETO_MIN_TOTAL) continue;
+    if (pos / total >= LONGTERM_VETO_MAX_ENGAGE_RATIO) continue;
+    if (neg - pos < LONGTERM_VETO_MIN_NET_NEG) continue;
+    longTermNegVetoSet.add(entity);
+  }
+  let _longTermVetos = 0;
+  function passesLongTermNegFilter(article) {
+    if (!article || longTermNegVetoSet.size === 0) return true;
+    const sigs = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(sigs)) return true;
+    for (const s of sigs) {
+      if (longTermNegVetoSet.has(s)) {
+        _longTermVetos++;
+        return false;
+      }
+    }
+    return true;
+  }
+  if (longTermNegVetoSet.size > 0) {
+    console.log(`[feed:longterm-veto] vetoing ${longTermNegVetoSet.size} entities: ${[...longTermNegVetoSet].slice(0, 10).join(', ')}`);
+  }
+
   // Continuous time-decay: 14-day half-life, applied at READ time. Lambda for
   // exp decay = ln(2) / half_life_days. No write-side cron, no race conditions,
   // reflects actual elapsed time. Closes the gap where a user's old positive
@@ -2643,7 +2700,17 @@ async function handleV2Feed(req, res, supabase, opts) {
     // sub-second on our current Supabase path — session skip data is in DB
     // before the next feed request. Negative session signals now flow through
     // sessionNegativeMultiplier() only.
+    //
+    // Phase 10.4 (2026-04-25): skip dilutive global signals in the average.
+    // `lang:en` and `loc:usa` appear on nearly every article and have mildly-
+    // negative aggregate affinities (-0.14, -0.18) just because the user
+    // skips lots of articles overall. Including them drags every average
+    // toward neutral, weakening real topical preferences. Same exclusion
+    // already applied in sessionNegativeMultiplier (line 2230); applying
+    // here closes the parity gap between the two layers.
     for (const sig of signals) {
+      if (typeof sig !== 'string') continue;
+      if (sig.startsWith('lang:') || sig === 'loc:usa') continue;
       const record = entitySignals[sig];
       if (!record) continue;
       const affinity = computeEntityAffinity(record);
@@ -2706,6 +2773,7 @@ async function handleV2Feed(req, res, supabase, opts) {
   const personalScored = personalIdOrder
     .filter(id => articleMap[id])
     .filter(id => passesClusterDedup(articleMap[id]))  // Phase 9.4 story-level dedup
+    .filter(id => passesLongTermNegFilter(articleMap[id]))  // Phase 10.4 hard veto
     .map(id => {
       const article = articleMap[id];
       const similarity = personalSimilarityMap[id] || 0;
@@ -2751,6 +2819,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
+    .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2768,6 +2837,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
+    .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
@@ -2787,6 +2857,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
+    .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
@@ -2814,6 +2885,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => articleMap[a.id])
     .filter(a => passesSessionHotNegFilter(articleMap[a.id]))  // Phase 9.2
     .filter(a => passesClusterDedup(articleMap[a.id]))  // Phase 9.4 story-level dedup
+    .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
@@ -4354,6 +4426,11 @@ async function handleV2Feed(req, res, supabase, opts) {
       window_size: TOPIC_WINDOW_SIZE,
       max_per_window: MAX_TOPIC_PER_WINDOW,
       vetos: _topicWindowVetos,
+    };
+    // Phase 10.4: long-term negative hard-veto observability.
+    _dbg.longterm_neg_veto = {
+      blocked_entities: [...longTermNegVetoSet],
+      vetos: _longTermVetos,
     };
   }
 
