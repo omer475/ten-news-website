@@ -22,7 +22,13 @@ actor APIClient {
         // Cached responses caused "pages don't refresh" and stale feed content.
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
-        config.timeoutIntervalForRequest = 30
+        // 30s was tight against Vercel cold starts: a typical feed request
+        // returns in 9-16s warm, but a function cold-start can add 10-20s
+        // on top. Bumped to 60s 2026-04-26 after a user-reported "Unable to
+        // load news" that traced to an iOS-side URLSession timeout while
+        // the server was still computing successfully.
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 90
         config.httpAdditionalHeaders = ["Content-Type": "application/json"]
         session = URLSession(configuration: config)
     }
