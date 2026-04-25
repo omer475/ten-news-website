@@ -2187,8 +2187,28 @@ async function handleV2Feed(req, res, supabase, opts) {
   // super/leaf_cluster_id (topic-level). 100 topic-leaves is already coarse;
   // deduping on leaf_cluster_id would mean "no more than one basketball
   // story per session" which is way too aggressive.
+  // Phase 9.4 + Phase 10.3 (2026-04-25): multi-key cross-page dedup.
+  //
+  // Phase 9.4 originally matched on cluster_id only. The 2026-04-24 23:37
+  // session caught a near-duplicate that slipped through: "Golden Orb"
+  // story appeared on page 11 (Gizmodo, cluster_id 339966) AND page 17
+  // (Newsweek, cluster_id 336083). Same news event, two publishers,
+  // two different cluster_ids — Phase 9.4 dedup couldn't see it.
+  //
+  // TikTok / ByteDance handle this with multi-key fingerprinting: video
+  // dedup matches on visual fingerprint OR audio fingerprint OR posting-
+  // pattern fingerprint OR network-cluster fingerprint. The principle is
+  // that one identifier is never enough — semantic duplicates need
+  // multiple signals OR'd together.
+  //
+  // For news, the second key is `world_event_id` from the article_world_events
+  // table (populated by step6 of the pipeline for big stories — Iran war,
+  // SCOTUS rulings, named events). Same news event ⇒ same world_event_id
+  // even when the embedding clusters split because of publisher style.
   const recentClusterIds = new Set();
+  const recentWorldEventIds = new Set();
   let _clusterDedupVetos = 0;
+  let _eventDedupVetos = 0;
   if (userId) {
     try {
       const { data: recentImpr } = await supabase
@@ -2199,22 +2219,36 @@ async function handleV2Feed(req, res, supabase, opts) {
         .limit(30);
       const recentIds = (recentImpr || []).map(r => r.article_id).filter(Boolean);
       if (recentIds.length > 0) {
-        const { data: clusterLookup } = await supabase
-          .from('published_articles')
-          .select('id, cluster_id')
-          .in('id', recentIds);
+        const [{ data: clusterLookup }, { data: aweLookup }] = await Promise.all([
+          supabase.from('published_articles').select('id, cluster_id').in('id', recentIds),
+          supabase.from('article_world_events').select('event_id').in('article_id', recentIds),
+        ]);
         if (clusterLookup) {
           for (const a of clusterLookup) {
             if (a.cluster_id != null) recentClusterIds.add(a.cluster_id);
+          }
+        }
+        if (aweLookup) {
+          for (const r of aweLookup) {
+            if (r.event_id != null) recentWorldEventIds.add(r.event_id);
           }
         }
       }
     } catch (e) { /* non-blocking */ }
   }
   function passesClusterDedup(article) {
-    if (!article || recentClusterIds.size === 0) return true;
-    if (article.cluster_id != null && recentClusterIds.has(article.cluster_id)) {
+    if (!article) return true;
+    if (recentClusterIds.size > 0 && article.cluster_id != null
+        && recentClusterIds.has(article.cluster_id)) {
       _clusterDedupVetos++;
+      return false;
+    }
+    // Phase 10.3: world-event dedup. `_world_event_id` is attached to the
+    // article object in candidateEventMap loop (line ~2984) before this
+    // function is called from scoring, so it's available here.
+    if (recentWorldEventIds.size > 0 && article._world_event_id != null
+        && recentWorldEventIds.has(article._world_event_id)) {
+      _eventDedupVetos++;
       return false;
     }
     return true;
@@ -4248,10 +4282,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       hot_leaves: [...sessionHotNegLeafKeys],
       retrieval_vetos: _sessionHotNegVetos,
     };
-    // Phase 9.4: cross-page cluster dedup observability.
+    // Phase 9.4 + Phase 10.3: cross-page multi-key dedup observability.
     _dbg.cluster_dedup = {
       recent_clusters_tracked: recentClusterIds.size,
-      dedup_vetos: _clusterDedupVetos,
+      recent_world_events_tracked: recentWorldEventIds.size,
+      cluster_vetos: _clusterDedupVetos,
+      event_vetos: _eventDedupVetos,
     };
     // Phase 10.2: sliding-window topic cap observability.
     _dbg.topic_window_cap = {
