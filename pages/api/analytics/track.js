@@ -527,6 +527,40 @@ export default async function handler(req, res) {
       view_seconds = parseInt(metadata.engaged_seconds, 10) || null
     }
 
+    // Phase 10.1 (2026-04-25): noise filter on dwell.
+    //
+    // The 2026-04-24 23:37 session showed three consecutive articles with
+    // ~530 s dwell each — caused by iOS background-suspension while the
+    // user had the app open. Wall-clock kept ticking. Real attention was
+    // on the first article (60 s); the next two slots were idle window.
+    //
+    // Reference: D2Co (RecSys 2023, Zhao et al.) and CWT (KDD 2024). They
+    // model watch_time as a mixture of true_interest + duration_bias +
+    // noise_term, where noise comes from "leaving the device unattended,
+    // accidental device malfunction, intentional re-play, or data stream
+    // delays." The standard production fix is a hard cap at K × expected
+    // duration (K ≈ 2-3) — anything beyond is noise, not signal.
+    //
+    // We do two things here:
+    //   1. Cap raw view_seconds at 600 s (10 min). No news article needs
+    //      more than 10 minutes of dwell; beyond that is always idle.
+    //   2. Reject `article_skipped` events with dwell > 300 s entirely —
+    //      you cannot meaningfully "skip" an article you stared at for
+    //      5 minutes; that's an idle/background false event.
+    if (view_seconds != null && view_seconds > 600) {
+      console.log(`[analytics] Capping dwell ${view_seconds}s → 600s (idle/background noise filter, Phase 10.1)`)
+      view_seconds = 600
+    }
+    if (event_type === 'article_skipped') {
+      const claimedDwell = metadata?.total_active_seconds
+        ? parseFloat(metadata.total_active_seconds)
+        : (metadata?.dwell ? parseFloat(metadata.dwell) : 0)
+      if (claimedDwell > 300) {
+        console.log(`[analytics] Dropping article_skipped with ${claimedDwell}s dwell — almost certainly app-background, not a skip (Phase 10.1)`)
+        return res.status(200).json({ ok: true, dropped: 'idle_skip_filter' })
+      }
+    }
+
     // For guests without auth, we still need a user_id for the events table.
     // Use the guest_device_id as a pseudo-UUID (or the auth user id).
     const eventUserId = effectiveUserId || effectiveDeviceId
