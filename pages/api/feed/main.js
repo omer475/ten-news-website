@@ -2629,6 +2629,133 @@ async function handleV2Feed(req, res, supabase, opts) {
     console.log(`[feed:longterm-veto] vetoing ${longTermNegVetoSet.size} entities: ${[...longTermNegVetoSet].slice(0, 10).join(', ')}`);
   }
 
+  // Phase 10.5 (2026-04-26): category-level long-term engagement multiplier.
+  //
+  // Phase 10.4's entity-level veto catches strong-confidence individual tags
+  // (topic:basketball -31 net) but misses category-level patterns when the
+  // user's skips are distributed across many narrow tags. Test user
+  // 2026-04-25: skipped 351 Sports articles cumulatively but split across
+  // topic:american_football (2.1 total), topic:hockey (19.7), topic:football
+  // (24.3), topic:baseball (27.9, 28% engage so above veto threshold), etc.
+  // None individually crossed the 25-total + 25%-ratio gate, so NFL Draft /
+  // Phillies / Cowboys / Dodgers articles kept being served on pages 13-15.
+  //
+  // TikTok / ByteDance aggregate skip signals at multiple semantic levels
+  // simultaneously: hashtag (entity) + topic (category) + creator + cluster.
+  // We had entity, creator, cluster — were missing the topic-level layer.
+  //
+  // Pulled from user_feed_impressions × user_article_events for last 30
+  // days, computed once per request. Multiplier applied alongside
+  // entitySignalMultiplier at scoring time. Keeps soft (not veto) so
+  // discovery/trending keep some category exposure for serendipity.
+  //
+  // Curve (chosen from observed user data — 6 categories below 11 % engage):
+  //   < 7 %   →  0.25×  (severely suppressed)
+  //   7-10 %  →  0.40×
+  //   10-14 % →  0.65×
+  //   14-18 % →  0.85×
+  //   ≥ 18 %  →  1.00×  (no penalty)
+  // Min 100 impressions before the multiplier activates (otherwise default 1.0×).
+  const categoryEngageRate = {};
+  if (userId) {
+    let rpcSucceeded = false;
+    try {
+      const { data: catImpressions, error: rpcError } = await supabase.rpc('user_category_engage_stats', {
+        p_user_id: userId,
+        p_days: 30,
+        p_min_total: 100,
+      });
+      if (rpcError) throw rpcError;
+      if (catImpressions && catImpressions.length > 0) {
+        for (const row of catImpressions) {
+          if (row.category && row.engage_rate != null) {
+            categoryEngageRate[row.category] = +row.engage_rate;
+          }
+        }
+        rpcSucceeded = true;
+      }
+    } catch (e) {
+      console.log(`[feed:cat-multiplier] RPC failed: ${e?.message || e}, falling back to inline`);
+    }
+    if (!rpcSucceeded) {
+      // RPC may not exist yet — fall back to inline aggregation.
+      try {
+        const { data: imps } = await supabase
+          .from('user_feed_impressions')
+          .select('article_id')
+          .eq('user_id', userId)
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString())
+          .limit(5000);
+        const impIds = (imps || []).map(r => r.article_id).filter(Boolean);
+        if (impIds.length >= 100) {
+          const catCounts = {};
+          for (let i = 0; i < impIds.length; i += 500) {
+            const batch = impIds.slice(i, i + 500);
+            const { data: cats } = await supabase
+              .from('published_articles')
+              .select('id, category')
+              .in('id', batch);
+            if (cats) for (const a of cats) {
+              const c = a.category || 'Other';
+              if (!catCounts[c]) catCounts[c] = { total: 0, eng: 0 };
+              catCounts[c].total++;
+            }
+          }
+          const { data: events } = await supabase
+            .from('user_article_events')
+            .select('article_id')
+            .eq('user_id', userId)
+            .in('event_type', ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_detail_view', 'article_revisit'])
+            .gte('created_at', new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString())
+            .limit(5000);
+          const engagedIds = new Set((events || []).map(r => r.article_id).filter(Boolean));
+          for (let i = 0; i < impIds.length; i += 500) {
+            const batch = impIds.slice(i, i + 500);
+            const { data: cats } = await supabase
+              .from('published_articles')
+              .select('id, category')
+              .in('id', batch);
+            if (cats) for (const a of cats) {
+              if (engagedIds.has(a.id)) {
+                const c = a.category || 'Other';
+                if (catCounts[c]) catCounts[c].eng++;
+              }
+            }
+          }
+          for (const cat in catCounts) {
+            const c = catCounts[cat];
+            if (c.total >= 100) categoryEngageRate[cat] = c.eng / c.total;
+          }
+          console.log(`[feed:cat-multiplier] inline computed for ${Object.keys(categoryEngageRate).length} categories from ${impIds.length} impressions`);
+        } else {
+          console.log(`[feed:cat-multiplier] inline skipped: only ${impIds.length} impressions (need 100)`);
+        }
+      } catch (e2) {
+        console.log(`[feed:cat-multiplier] inline failed: ${e2?.message || e2}`);
+      }
+    }
+    }
+  }
+  function categoryEngagementMultiplier(article) {
+    const cat = article?.category;
+    if (!cat) return 1.0;
+    const rate = categoryEngageRate[cat];
+    if (rate == null) return 1.0;  // not enough data
+    if (rate >= 0.18) return 1.0;
+    if (rate >= 0.14) return 0.85;
+    if (rate >= 0.10) return 0.65;
+    if (rate >= 0.07) return 0.40;
+    return 0.25;
+  }
+  if (Object.keys(categoryEngageRate).length > 0) {
+    const summary = Object.entries(categoryEngageRate)
+      .sort((a, b) => a[1] - b[1])
+      .slice(0, 8)
+      .map(([c, r]) => `${c}:${(r*100).toFixed(0)}%`)
+      .join(' ');
+    console.log(`[feed:cat-multiplier] ${summary}`);
+  }
+
   // Continuous time-decay: 14-day half-life, applied at READ time. Lambda for
   // exp decay = ln(2) / half_life_days. No write-side cron, no race conditions,
   // reflects actual elapsed time. Closes the gap where a user's old positive
@@ -2788,6 +2915,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       let score = scoreArticleV3(article, similarity, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
+      // Phase 10.5: long-term per-category engagement multiplier
+      score *= categoryEngagementMultiplier(article);
       // Fix 5: Category suppression
       score *= getCategorySuppression(article);
       // Fix C (2026-04-19): session-level topic skip penalty (typed_signals)
@@ -2822,7 +2951,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
-      let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -2840,7 +2969,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .filter(a => passesLongTermNegFilter(articleMap[a.id]))  // Phase 10.4 hard veto
     .map(a => {
       const article = articleMap[a.id];
-      let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * getCategorySuppression(article);
+      let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -2870,6 +2999,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
+      s *= categoryEngagementMultiplier(article);  // Phase 10.5 category prior
       s = applyImageFeature(s, article, 'interest');
       return {
         ...article,
@@ -2890,7 +3020,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
-      let s = (article.ai_final_score || 0) * recency * sigMult;
+      let s = (article.ai_final_score || 0) * recency * sigMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
       // Fix H (2026-04-19): hard floor. When matched signals average clearly
       // negative (mult < 0.2), Fix F's 0.3× soft-penalty can't save a pool
       // where all surviving articles score ~1.5 and the user's fresh candidate
@@ -4432,6 +4562,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       blocked_entities: [...longTermNegVetoSet],
       vetos: _longTermVetos,
     };
+    // Phase 10.5: category-level engagement multiplier observability.
+    _dbg.category_engagement = Object.entries(categoryEngageRate)
+      .sort((a, b) => a[1] - b[1])
+      .map(([cat, rate]) => ({ cat, rate: +rate.toFixed(3) }));
   }
 
   const pageIds = selected.map(a => a.id);
