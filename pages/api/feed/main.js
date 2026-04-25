@@ -2734,7 +2734,6 @@ async function handleV2Feed(req, res, supabase, opts) {
         console.log(`[feed:cat-multiplier] inline failed: ${e2?.message || e2}`);
       }
     }
-    }
   }
   function categoryEngagementMultiplier(article) {
     const cat = article?.category;
