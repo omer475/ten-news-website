@@ -27,6 +27,7 @@ struct FeedService {
         engagedIds: [String] = [],
         glancedIds: [String] = [],
         skippedIds: [String] = [],
+        skipDwellsJSON: String = "",
         seenIds: [String] = []
     ) async throws -> MainFeedResponse {
         var params = "?limit=\(limit)"
@@ -57,6 +58,13 @@ struct FeedService {
         }
         if !skippedIds.isEmpty {
             params += "&skipped_ids=\(skippedIds.joined(separator: ","))"
+        }
+        // Phase F (feed v11): per-article skip dwell so the server can build
+        // the session taste-delta with Kuaishou-tier negative weighting
+        // (read-then-skip ≠ fast scroll-skip). URL-encoded JSON object.
+        if !skipDwellsJSON.isEmpty,
+           let encoded = skipDwellsJSON.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            params += "&skip_dwells=\(encoded)"
         }
         // Seen IDs for dedup — send last 300 to prevent repeats across pages
         if !seenIds.isEmpty {

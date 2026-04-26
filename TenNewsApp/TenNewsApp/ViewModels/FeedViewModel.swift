@@ -202,6 +202,7 @@ final class FeedViewModel {
                 engagedIds: signals.engaged,
                 glancedIds: signals.glanced,
                 skippedIds: signals.skipped,
+                skipDwellsJSON: reRanker.sessionSkipDwellsJSON,  // Phase F (feed v11)
                 seenIds: existingIds
             )
             let existingSet = Set(existingIds)
