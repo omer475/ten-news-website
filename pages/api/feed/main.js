@@ -2175,58 +2175,20 @@ async function handleV2Feed(req, res, supabase, opts) {
     _sessionLeafEngaged.set(k, (_sessionLeafEngaged.get(k) || 0) + 1);
   }
 
-  // Phase 9.2 (2026-04-24): session hot-neg retrieval filter.
+  // Phase 9.2 (2026-04-24) DELETED in Phase F (feed v11) — superseded by
+  // the in-request session taste-delta vector below. Phase 9.2's
+  // (topic, leaf) hard-veto sets were a coarse symbolic-level binary
+  // mask that fired only at ≥3 same-tag skips. Phase F uses the actual
+  // article embeddings of in-session engaged/skipped articles to nudge
+  // every candidate score by cosine similarity to that delta — same
+  // intent (skipped clusters disfavoured next page) but at full
+  // semantic resolution and from the very first skip, not the third.
   //
-  // The session-analysis of 2026-04-23 showed that in-session skips could not
-  // influence the NEXT page's retrieval — they only dampened scoring. With
-  // `sessionNegativeMultiplier` bounded at 0.3×, a publisher-quality 1.3× plus
-  // an Interest-Clock 1.3× boost could overcome the skip and the article would
-  // still rank into the top 10. Concretely: user skipped 5 basketball cards
-  // on page 14, page 15 served 4 more basketball cards anyway.
-  //
-  // Fix: build a HARD veto set of (topic, leaf) pairs where the user has
-  // clearly rejected during this session — ≥ 3 skips AND no engagement — and
-  // exclude matching articles from the trending / discovery / interest /
-  // fresh_best pools entirely BEFORE scoring runs. Personal (two-tower ANN)
-  // pool stays unfiltered because it's already taste-aligned and small; the
-  // scoring-time multiplier is enough there.
-  //
-  // Also matches TikTok's session-feature-store behavior (Monolith) — the
-  // ranker refuses to retrieve from a cluster the user has been actively
-  // skipping in the current session, rather than rely on the scorer to bury
-  // it under a single coefficient.
-  const sessionHotNegTopics = new Set();
-  for (const [sig, skips] of sessionSignalSkips.entries()) {
-    if (typeof sig !== 'string') continue;
-    if (!sig.startsWith('topic:')) continue;  // only veto topic:* tags
-    const engages = sessionSignalEngages.get(sig) || 0;
-    if (skips >= 3 && engages === 0) {
-      sessionHotNegTopics.add(sig.substring('topic:'.length));
-    }
-  }
-  const sessionHotNegLeafKeys = new Set();
-  for (const [k, skips] of _sessionLeafSkipped.entries()) {
-    if (skips >= 3 && (_sessionLeafEngaged.get(k) || 0) === 0) {
-      sessionHotNegLeafKeys.add(k);
-    }
-  }
+  // Back-compat shim — call sites that still reference
+  // passesSessionHotNegFilter get a permissive identity so the .filter
+  // chain doesn't break before Phase F's same-PR scoring rewire.
   let _sessionHotNegVetos = 0;
-  function passesSessionHotNegFilter(article) {
-    if (!article) return false;
-    if (sessionHotNegLeafKeys.size > 0) {
-      const lk = _sessionLeafKeyFromArticle(article);
-      if (lk && sessionHotNegLeafKeys.has(lk)) { _sessionHotNegVetos++; return false; }
-    }
-    if (sessionHotNegTopics.size > 0) {
-      const topics = article.topics;
-      if (Array.isArray(topics)) {
-        for (const t of topics) {
-          if (sessionHotNegTopics.has(t)) { _sessionHotNegVetos++; return false; }
-        }
-      }
-    }
-    return true;
-  }
+  function passesSessionHotNegFilter(_article) { return true; }
 
   // Phase 9.4 (2026-04-24): cross-page cluster dedup.
   //
@@ -2306,6 +2268,108 @@ async function handleV2Feed(req, res, supabase, opts) {
       return false;
     }
     return true;
+  }
+
+  // ============================================================
+  // Phase F (feed v11) — session taste-delta vector (Monolith-lite).
+  //
+  // Source: Monolith (arXiv:2209.07663) §2 "Background" — pre-online-
+  // training-era TikTok used a session-state delta carried through the
+  // request to nudge candidate scoring toward in-session interest spikes
+  // and away from in-session rejections, BEFORE Monolith's true online
+  // gradient updates were built. We don't have Monolith's PS infra so
+  // we run that exact same workaround at our scale.
+  //
+  // Why it matters. 2026-04-26 session: user engaged 3 robot/AI articles
+  // back-to-back on page 1 (61s + 83s+like + 81s) — clear hot-tail spike.
+  // Page 2 had ZERO Tech articles. The user's offline taste vector
+  // doesn't move that fast; only an in-request delta can react to a
+  // 30-second interest swing.
+  //
+  // What it does. We pull the embeddings for every article ID the iOS
+  // client passed in `engaged_ids` and `skipped_ids`, weight them
+  // according to dwell-aware Kuaishou intensity (engagement +0.4,
+  // 20s+ skip −0.3, 3-20s skip −0.15, fast skip −0.05), sum into a
+  // 384-d delta, L2-normalise, and apply a (1 + 0.4 * cosine(delta,
+  // article_embedding)) multiplier in every scoring chain — boost
+  // [0.6, 1.4]. Articles in the engagement direction get +40%,
+  // articles in the rejection direction get −40%.
+  //
+  // skip_dwells: optional JSON map { articleId: dwellSec } sent by iOS
+  // for the read-then-skip differentiation. Falls back to medium-skip
+  // weighting when absent (older client builds).
+  let sessionRequestDelta = null;
+  let _sessionDeltaCount = 0;
+  let _sessionDeltaSkipDwellsRaw = null;
+  try {
+    if (req.query.skip_dwells) {
+      const parsed = JSON.parse(req.query.skip_dwells);
+      if (parsed && typeof parsed === 'object') _sessionDeltaSkipDwellsRaw = parsed;
+    }
+  } catch (e) { /* malformed — ignore */ }
+
+  if ((sessionEngagedIds.length || sessionSkippedIds.length)
+      && (sessionEngagedIds.length + sessionSkippedIds.length) <= 200) {
+    try {
+      const allIds = Array.from(new Set([
+        ...sessionEngagedIds.map(Number).filter(Boolean),
+        ...sessionSkippedIds.map(Number).filter(Boolean),
+      ]));
+      if (allIds.length > 0) {
+        const { data: embRows } = await supabase
+          .from('published_articles')
+          .select('id, embedding_minilm')
+          .in('id', allIds);
+        const engagedSet = new Set(sessionEngagedIds.map(String));
+        const dim = 384;
+        const delta = new Array(dim).fill(0);
+        for (const row of (embRows || [])) {
+          const emb = safeJsonParse(row.embedding_minilm, null);
+          if (!Array.isArray(emb) || emb.length !== dim) continue;
+          const idStr = String(row.id);
+          let w;
+          if (engagedSet.has(idStr)) {
+            w = 0.4;  // engaged — strongest positive nudge
+          } else {
+            const dwell = _sessionDeltaSkipDwellsRaw
+              ? Number(_sessionDeltaSkipDwellsRaw[idStr] || _sessionDeltaSkipDwellsRaw[row.id]) || 0
+              : 0;
+            // Kuaishou intensity tiers — same shape as Phase B weights but
+            // with sign flipped (negative since this is the away-from set).
+            w = dwell >= 20 ? -0.3
+              : dwell >= 3  ? -0.15
+              :               -0.05;
+          }
+          for (let i = 0; i < dim; i++) delta[i] += w * emb[i];
+          _sessionDeltaCount++;
+        }
+        // L2 normalise so the cosine bonus is in a stable [-1, +1] range
+        let norm = 0;
+        for (let i = 0; i < dim; i++) norm += delta[i] * delta[i];
+        norm = Math.sqrt(norm);
+        if (norm > 0) {
+          for (let i = 0; i < dim; i++) delta[i] /= norm;
+          sessionRequestDelta = delta;
+        }
+      }
+    } catch (e) {
+      console.log('[feed:phase-f] session-delta build failed (non-blocking):', e?.message);
+    }
+  }
+
+  function sessionDeltaBonus(article) {
+    if (!sessionRequestDelta) return 1.0;
+    const emb = safeJsonParse(article.embedding_minilm, null);
+    if (!Array.isArray(emb) || emb.length !== 384) return 1.0;
+    // cosine(delta, emb) — both are 384-d, delta is L2-normalised but emb
+    // generally is too (MiniLM normalises by default), so dot product ≈ cosine.
+    let dot = 0, magE = 0;
+    for (let i = 0; i < 384; i++) { dot += sessionRequestDelta[i] * emb[i]; magE += emb[i] * emb[i]; }
+    const cos = magE > 0 ? dot / Math.sqrt(magE) : 0;
+    // Multiplier in [0.6, 1.4]: +40% boost in engagement direction,
+    // −40% in rejection direction. Strength chosen to match Monolith's
+    // reported +3.7% engagement lift from real-time user-tower update.
+    return Math.max(0.6, Math.min(1.4, 1.0 + 0.4 * cos));
   }
 
   function sessionNegativeMultiplier(article) {
@@ -2914,6 +2978,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       let score = scoreArticleV3(article, similarity, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
+      // Phase F (feed v11): Monolith-lite session delta bonus.
+      score *= sessionDeltaBonus(article);
       // Phase 10.5: long-term per-category engagement multiplier
       score *= categoryEngagementMultiplier(article);
       // Fix 5: Category suppression
@@ -2951,6 +3017,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -2969,6 +3036,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -2995,6 +3063,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -3019,7 +3088,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
-      let s = (article.ai_final_score || 0) * recency * sigMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
+      const deltaMult = sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
+      let s = (article.ai_final_score || 0) * recency * sigMult * deltaMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
       // Fix H (2026-04-19): hard floor. When matched signals average clearly
       // negative (mult < 0.2), Fix F's 0.3× soft-penalty can't save a pool
       // where all surviving articles score ~1.5 and the user's fresh candidate

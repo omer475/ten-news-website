@@ -11,6 +11,13 @@ final class SessionReRanker {
     private(set) var skippedIds: Set<String> = []
     private(set) var sourceClickedIds: Set<String> = []
 
+    // Phase F (feed v11): dwell time captured for each skipped article so the
+    // server can build a session taste-delta vector with Kuaishou-tier
+    // negative weighting (read-then-skip is a much stronger negative than a
+    // fast scroll-past). Capped at 50 most recent skips to keep the URL
+    // payload bounded.
+    private(set) var skipDwellMap: [String: TimeInterval] = [:]
+
     // Tag frequency profiles built from session signals
     private var interestProfile: [String: Double] = [:]
     private var skipProfile: [String: Double] = [:]
@@ -27,6 +34,7 @@ final class SessionReRanker {
         if dwellSeconds < hardSkipThreshold {
             // Hard skip: didn't even read headline — strong negative
             skippedIds.insert(article.id.stringValue)
+            skipDwellMap[article.id.stringValue] = dwellSeconds
             for tag in tags {
                 skipProfile[tag] = (skipProfile[tag] ?? 0) + 1.0
             }
@@ -36,6 +44,7 @@ final class SessionReRanker {
         } else if dwellSeconds < softSkipThreshold {
             // Soft skip: read headline but wasn't interested — moderate negative
             skippedIds.insert(article.id.stringValue)
+            skipDwellMap[article.id.stringValue] = dwellSeconds
             for tag in tags {
                 skipProfile[tag] = (skipProfile[tag] ?? 0) + 0.4
             }
@@ -140,11 +149,32 @@ final class SessionReRanker {
         (Array(engagedIds.prefix(50)), Array(glancedIds.prefix(50)), Array(skippedIds.prefix(50)))
     }
 
+    /// Phase F (feed v11): JSON-serialised dwell map for the 50 most recent
+    /// skips, fed to the server's session taste-delta vector for Kuaishou-tier
+    /// negative weighting. Returns "" when there are no skips so the caller
+    /// can simply check isEmpty before adding a query parameter.
+    var sessionSkipDwellsJSON: String {
+        let recent = Array(skippedIds.prefix(50))
+        var trimmed: [String: Double] = [:]
+        for id in recent {
+            if let d = skipDwellMap[id] {
+                trimmed[id] = (d * 10).rounded() / 10  // 1 decimal place
+            }
+        }
+        guard !trimmed.isEmpty,
+              let data = try? JSONSerialization.data(withJSONObject: trimmed, options: []),
+              let str = String(data: data, encoding: .utf8) else {
+            return ""
+        }
+        return str
+    }
+
     func reset() {
         engagedIds.removeAll()
         glancedIds.removeAll()
         skippedIds.removeAll()
         sourceClickedIds.removeAll()
+        skipDwellMap.removeAll()
         interestProfile.removeAll()
         skipProfile.removeAll()
     }
