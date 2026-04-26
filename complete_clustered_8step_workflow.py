@@ -209,8 +209,21 @@ Rules:
         print(f"   ⚠️ NER extraction failed: {e}")
         return {}
 
-def build_typed_signals(article_countries, interest_tags, ner_result=None, language='en'):
+def build_typed_signals(article_countries, interest_tags, ner_result=None, language='en',
+                        category=None, article_topics=None):
     """Build typed entity signals from article metadata + NER results.
+
+    Emits a 3-level hierarchy (Phase A — feed v11, see plan
+    /Users/omersogancioglu/.claude/plans/harmonic-napping-melody.md):
+      L0 root  — `cat:<Category>` (Tech, Politics, Sports, ...)
+      L1 topic — `topic:<topic>`  (the article's own topics[] array)
+      L2 entity — `topic:<tag>` from interest_tags + org/person/event/product/loc/lang
+
+    Source: Douyin algorithm disclosure 2025 — engagement signals
+    propagate at every granularity simultaneously. Without the L0/L1
+    layers a user's category-wide preference (e.g. heavy entertainment
+    skipping) cannot accumulate into a learnable signal because each
+    individual entity tag stays below the confidence floor.
 
     A slug emitted under a specific type (org/person/event/product) is NOT
     re-emitted as `topic:<slug>`. This prevents double-counting in the
@@ -257,7 +270,21 @@ def build_typed_signals(article_countries, interest_tags, ner_result=None, langu
 
     add('lang', language)
 
-    # Topics last — will skip any slug already emitted under a specific type.
+    # L0 — root category (Tech, Politics, Sports, ...). One per article.
+    # Enables category-wide engagement learning that narrow tags can't reach.
+    if category:
+        add('cat', category)
+
+    # L1 — article's own topics[] array (ai, conflicts, entertainment, ...).
+    # Previously this array was written to published_articles.topics but
+    # never propagated into typed_signals — leaving the macro-topic level
+    # blind. Article-tagged topics already pass step10's quality check.
+    if article_topics:
+        for t in article_topics:
+            if isinstance(t, str) and t:
+                add('topic', t)
+
+    # L2 — interest_tags (existing behaviour, preserved verbatim).
     #
     # Phase 9.3 (2026-04-24): stopped routing NER `narrow_topics` into
     # typed_signals. Audit on 2026-04-24 found that 75 % of distinct
@@ -1735,7 +1762,10 @@ def run_complete_pipeline():
                 _ts_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
                 _ts_model = _ts_genai.GenerativeModel('gemini-2.5-flash-lite')
                 ner_result = extract_named_entities_via_gemini(title, bullets, _ts_model, gemini_semaphore)
-                article_typed_signals = build_typed_signals(article_countries, interest_tags, ner_result)
+                article_typed_signals = build_typed_signals(
+                    article_countries, interest_tags, ner_result,
+                    category=article_category, article_topics=article_topics,
+                )
                 print(f"   🔖 [Cluster {cluster_id}] Typed signals ({len(article_typed_signals)}): {article_typed_signals[:8]}")
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
