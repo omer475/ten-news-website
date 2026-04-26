@@ -1119,6 +1119,26 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
+  // Phase E (feed v11) — page-aware quality floor.
+  //
+  // Source: Kuaishou cold-start (10.1145/3701716.3715205) — refuse to
+  // fill below the quality minimum rather than padding with weak
+  // candidates. 2026-04-26 session showed page 5 served 5 articles at
+  // ai_final_score 450-580 (Yellowstone spinoff, Kylie Minogue
+  // docuseries) once the high-quality pool was exhausted. The right
+  // behavior is to short the response — the iOS app already shows
+  // "you're caught up" UX when the response is short.
+  //
+  // Floor rises with page number: pages 1-2 keep current 400/300 base
+  // floors (already permissive); pages 3-4 require ≥650; page 5+
+  // requires ≥700. Applied as Math.max with each retrieval pool's
+  // existing floor so we never *lower* a stricter pool floor.
+  const _pageNumForQuality = Math.floor((seenArticleIds?.length || 0) / Math.max(limit || 20, 1)) + 1;
+  const MIN_QUALITY_BY_PAGE =
+    _pageNumForQuality <= 2 ? 0     // keep base pool floors on early pages
+    : _pageNumForQuality <= 4 ? 650
+    : 700;
+
   // Debug state — hoisted to the top so early-return paths and the retrieval
   // funnel can populate it without TDZ errors. Only attached to the response
   // when debugFlag is true; otherwise just a few extra property writes per
@@ -1231,7 +1251,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
           p_user_id: userId,
           p_categories: TRENDING_CATS,
-          p_min_score: 400,
+          p_min_score: Math.max(400, MIN_QUALITY_BY_PAGE),  // Phase E
           p_hours_window: 168,
           p_per_category: _perCat,
         });
@@ -1244,7 +1264,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
           .eq('category', cat)
           .gte('created_at', sevenDaysAgo)
-          .gte('ai_final_score', 400)
+          .gte('ai_final_score', Math.max(400, MIN_QUALITY_BY_PAGE))  // Phase E
           .order('ai_final_score', { ascending: false })
           .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
@@ -1263,7 +1283,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
           p_user_id: userId,
           p_categories: DISC_CATS,
-          p_min_score: 300,
+          p_min_score: Math.max(300, MIN_QUALITY_BY_PAGE),  // Phase E
           p_hours_window: 168,
           p_per_category: 200,
         });
@@ -1275,7 +1295,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
           .eq('category', cat)
           .gte('created_at', sevenDaysAgo)
-          .gte('ai_final_score', 300)
+          .gte('ai_final_score', Math.max(300, MIN_QUALITY_BY_PAGE))  // Phase E
           .order('ai_final_score', { ascending: false })
           .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
@@ -1305,7 +1325,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
       .gte('created_at', fortyEightHoursAgoISO)
-      .gte('ai_final_score', 300)
+      .gte('ai_final_score', Math.max(300, MIN_QUALITY_BY_PAGE))  // Phase E
       .order('ai_final_score', { ascending: false })
       .limit(1000),
   ]);
