@@ -684,13 +684,30 @@ export default async function handler(req, res) {
         // NEW: Update entity_signals (replaces dual tag_profile/skip_profile)
         // Tracks positive/negative counts with time windows per entity.
         // One unified signal instead of two saturating counters.
+        //
+        // Phase B (feed v11) — Kuaishou CIKM 2023 (arXiv:2308.13249):
+        // weight skips by dwell time. A 30s read-then-skip is a much
+        // stronger negative than a 1s scroll-past, but until now both
+        // wrote +1 to negative_count. Three tiers:
+        //   < 3s  → 0.5  (likely accidental scroll)
+        //   3–20s → 1.0  (standard skip — current behaviour)
+        //   ≥ 20s → 1.8  (read-then-reject — the loudest implicit "no")
         // ============================================================
         const ENTITY_SIGNAL_POSITIVE = ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_revisit']
         const ENTITY_SIGNAL_NEGATIVE = ['article_skipped']
         const isSignalPositive = ENTITY_SIGNAL_POSITIVE.includes(event_type)
         const isSignalNegative = ENTITY_SIGNAL_NEGATIVE.includes(event_type)
 
+        function computeSignalWeight(eventType, viewSec) {
+          if (eventType !== 'article_skipped') return 1.0
+          const v = Number.isFinite(viewSec) ? viewSec : 0
+          if (v < 3)  return 0.5  // weak: probably accidental
+          if (v < 20) return 1.0  // standard skip
+          return 1.8                // read-then-reject — strongest signal
+        }
+
         if ((isSignalPositive || isSignalNegative) && article_id && effectiveUserId) {
+          const signalWeightForRpc = computeSignalWeight(event_type, dwellSec)
           admin.from('published_articles').select('interest_tags').eq('id', article_id).single()
             .then(({ data: artData }) => {
               if (!artData) return
@@ -702,6 +719,7 @@ export default async function handler(req, res) {
                   p_user_id: effectiveUserId,
                   p_entity: tag.toLowerCase(),
                   p_is_positive: isSignalPositive,
+                  p_weight: signalWeightForRpc,
                   p_event_at: new Date().toISOString(),
                 }).catch(err => {
                   // Table may not exist yet — non-blocking
