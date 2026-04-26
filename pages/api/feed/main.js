@@ -1119,6 +1119,26 @@ async function handleV2Feed(req, res, supabase, opts) {
   sessionGlancedIds = sessionGlancedIds || [];
   sessionSkippedIds = sessionSkippedIds || [];
 
+  // Phase E (feed v11) — page-aware quality floor.
+  //
+  // Source: Kuaishou cold-start (10.1145/3701716.3715205) — refuse to
+  // fill below the quality minimum rather than padding with weak
+  // candidates. 2026-04-26 session showed page 5 served 5 articles at
+  // ai_final_score 450-580 (Yellowstone spinoff, Kylie Minogue
+  // docuseries) once the high-quality pool was exhausted. The right
+  // behavior is to short the response — the iOS app already shows
+  // "you're caught up" UX when the response is short.
+  //
+  // Floor rises with page number: pages 1-2 keep current 400/300 base
+  // floors (already permissive); pages 3-4 require ≥650; page 5+
+  // requires ≥700. Applied as Math.max with each retrieval pool's
+  // existing floor so we never *lower* a stricter pool floor.
+  const _pageNumForQuality = Math.floor((seenArticleIds?.length || 0) / Math.max(limit || 20, 1)) + 1;
+  const MIN_QUALITY_BY_PAGE =
+    _pageNumForQuality <= 2 ? 0     // keep base pool floors on early pages
+    : _pageNumForQuality <= 4 ? 650
+    : 700;
+
   // Debug state — hoisted to the top so early-return paths and the retrieval
   // funnel can populate it without TDZ errors. Only attached to the response
   // when debugFlag is true; otherwise just a few extra property writes per
@@ -1231,7 +1251,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
           p_user_id: userId,
           p_categories: TRENDING_CATS,
-          p_min_score: 400,
+          p_min_score: Math.max(400, MIN_QUALITY_BY_PAGE),  // Phase E
           p_hours_window: 168,
           p_per_category: _perCat,
         });
@@ -1244,7 +1264,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
           .eq('category', cat)
           .gte('created_at', sevenDaysAgo)
-          .gte('ai_final_score', 400)
+          .gte('ai_final_score', Math.max(400, MIN_QUALITY_BY_PAGE))  // Phase E
           .order('ai_final_score', { ascending: false })
           .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
@@ -1263,7 +1283,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         const { data, error } = await supabase.rpc('fetch_unseen_per_category', {
           p_user_id: userId,
           p_categories: DISC_CATS,
-          p_min_score: 300,
+          p_min_score: Math.max(300, MIN_QUALITY_BY_PAGE),  // Phase E
           p_hours_window: 168,
           p_per_category: 200,
         });
@@ -1275,7 +1295,7 @@ async function handleV2Feed(req, res, supabase, opts) {
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
           .eq('category', cat)
           .gte('created_at', sevenDaysAgo)
-          .gte('ai_final_score', 300)
+          .gte('ai_final_score', Math.max(300, MIN_QUALITY_BY_PAGE))  // Phase E
           .order('ai_final_score', { ascending: false })
           .limit(200);
         if (sqlExclude.length > 0) q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
@@ -1305,7 +1325,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       .from('published_articles')
       .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category, interest_tags')
       .gte('created_at', fortyEightHoursAgoISO)
-      .gte('ai_final_score', 300)
+      .gte('ai_final_score', Math.max(300, MIN_QUALITY_BY_PAGE))  // Phase E
       .order('ai_final_score', { ascending: false })
       .limit(1000),
   ]);
@@ -2270,6 +2290,58 @@ async function handleV2Feed(req, res, supabase, opts) {
     return true;
   }
 
+  // Phase D (feed v11) — per-(user, article) exposure decay.
+  //
+  // Source: Douyin algorithm disclosure 2025
+  //   https://www.scmp.com/tech/big-tech/article/3304799/
+  //   "weights of user interests on contents with hot reach are
+  //    discounted as that signal is likely to provide little
+  //    information reflective of users' interests."
+  //
+  // The cluster_id dedup above only tracks the last 30 impressions.
+  // 2026-04-26 session caught article 132478 (Apple AI Challenge) being
+  // shown 6 times across 5 days because it kept falling out of the
+  // 30-impression window. The fix is per-(user, article_id) tracking
+  // with a smooth decay multiplier so the article score is squashed
+  // before it ever reaches the dedup gate.
+  //
+  // Loaded once per request, scoped to last 60 days of activity.
+  const exposureMap = new Map();
+  let _exposureVetos = 0;
+  if (userId) {
+    try {
+      const { data: expRows } = await supabase
+        .from('user_article_exposures')
+        .select('article_id, shown_count, engaged_count, skipped_count, last_skipped_at, last_engaged_at')
+        .eq('user_id', userId)
+        .gte('last_shown_at', new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString());
+      for (const r of (expRows || [])) exposureMap.set(r.article_id, r);
+    } catch (e) { /* table may not exist yet — non-blocking */ }
+  }
+
+  function exposureMultiplier(article) {
+    if (!article) return 1.0;
+    const e = exposureMap.get(article.id);
+    if (!e) return 1.0;
+    // Hard 14-day cooldown after a skip — user already said no on this exact piece.
+    if (e.skipped_count >= 1 && e.last_skipped_at) {
+      const days = (Date.now() - new Date(e.last_skipped_at).getTime()) / 86400000;
+      if (days < 14) { _exposureVetos++; return 0; }
+    }
+    // Story decayed even though they engaged once: 1 engage + ≥2 ignored shows means dead.
+    if (e.engaged_count >= 1 && (e.shown_count - e.engaged_count) >= 2) {
+      _exposureVetos++;
+      return 0;
+    }
+    // Smooth decay on un-engaged repeats — first re-show ok at half weight,
+    // second is barely worth it, third is dead.
+    const unEngaged = e.shown_count - e.engaged_count;
+    if (unEngaged === 1) return 0.5;
+    if (unEngaged === 2) return 0.1;
+    if (unEngaged >= 3) { _exposureVetos++; return 0; }
+    return 1.0;
+  }
+
   // ============================================================
   // Phase F (feed v11) — session taste-delta vector (Monolith-lite).
   //
@@ -2636,61 +2708,115 @@ async function handleV2Feed(req, res, supabase, opts) {
     for (const row of (negResult?.data || [])) addRow(row);
   }
 
-  // Phase 10.4 (2026-04-25): hard veto for high-confidence long-term negatives.
+  // Phase C (feed v11) — two-tier veto + Bayesian Beta shrinkage.
   //
-  // Session 2026-04-25 caught the "algorithmic persistence" failure mode
-  // (CHI 2025, Karizat et al., DOI 10.1145/3706598.3713666): NBA / soccer
-  // articles kept being served despite topic:basketball net-31 (9 engaged
-  // / 40 skipped) and topic:soccer net-38 (14/52). The soft entitySignal
-  // multiplier was returning ~0.19× — strong, but never zero — and the
-  // discovery-bucket categoryBoost of 1.5× for "unfamiliar categories"
-  // was lifting these articles back into the top-15.
+  // Replaces the single-cliff Phase 10.4 threshold (total≥25 AND
+  // engage<25% AND net≥15). 2026-04-26 session showed entities like
+  // topic:donald_trump (43% engage), topic:cryptocurrency (27.5%) and
+  // loc:ukraine (32%) sitting just outside that gate and slipping in,
+  // turning Page 4 into a 100% Trump/Ukraine/crypto wipe-out.
   //
-  // TikTok's mechanism for this: explicit "Not Interested" → HARD FILTER
-  // at retrieval, not soft penalty. We mirror that semantic with an
-  // *implicit* hard veto when the user's skip pattern matches what
-  // 30+ explicit "Not Interested" clicks would mean.
+  // Sources:
+  //   • TikTok RecSys 2025 (10.1145/3705328.3748145) — multi-tier
+  //     confidence (explicit "Not Interested" + strong implicit) routing
+  //     into a hard filter, lower-confidence implicit into a soft penalty.
+  //   • Kuaishou CIKM 2023 (arXiv:2308.13249) — Beta-distribution lower-
+  //     bound shrinkage as the soft penalty so borderline entities get
+  //     a smooth, confidence-aware multiplier instead of a binary cliff.
   //
-  // Criteria for veto status (an entity must meet ALL):
-  //   - lifetime total interactions ≥ 25 (high confidence, not noise)
-  //   - engage ratio < 25 % (clearly disliked, not split)
-  //   - net negative ≥ 15 (numerically significant, not borderline)
-  //   - NOT a dilutive global tag (lang:*, loc:usa) — those are skipped
-  //     because they appear on nearly every article and don't carry
-  //     topical preference signal.
+  // Tier 1 — HARD VETO. Entity is the user's "explicit Not Interested"
+  // pattern: ≥30 lifetime interactions, ≤15% engage rate, net-neg ≥20.
   //
-  // Articles whose typed_signals contain ANY entity meeting the veto
-  // criteria are filtered out of every retrieval pool BEFORE scoring.
-  const LONGTERM_VETO_MIN_TOTAL = 25;
-  const LONGTERM_VETO_MAX_ENGAGE_RATIO = 0.25;
-  const LONGTERM_VETO_MIN_NET_NEG = 15;
-  const longTermNegVetoSet = new Set();
+  // Tier 2 — RECENT VETO. Same intent, expressed in the last 7 days.
+  // Catches a fresh aversion before it has the lifetime volume to
+  // qualify for Tier 1 (e.g. user just got tired of Trump after the
+  // Hilton incident — 7d signals will spike before lifetime catches up).
+  //
+  // Soft shrinkage. Every other entity contributes a Beta lower-bound
+  // multiplier in [0.1, 1.0]. Trump (45/61 lifetime → ~0.91), crypto
+  // (11/30 → ~0.75), geopolitics (3/32 → tier-1 hard veto).
+  const HARD_VETO_TOTAL = 30;
+  const HARD_VETO_RATIO = 0.15;
+  const HARD_VETO_NET   = 20;
+  const RECENT_VETO_TOTAL = 8;
+  const RECENT_VETO_RATIO = 0.25;
+  const RECENT_VETO_NET   = 8;
+
+  const hardVetoSet = new Set();
   for (const entity in entitySignals) {
     if (entity.startsWith('lang:') || entity === 'loc:usa') continue;
     const r = entitySignals[entity];
-    const pos = r.positive || 0;
-    const neg = r.negative || 0;
-    const total = pos + neg;
-    if (total < LONGTERM_VETO_MIN_TOTAL) continue;
-    if (pos / total >= LONGTERM_VETO_MAX_ENGAGE_RATIO) continue;
-    if (neg - pos < LONGTERM_VETO_MIN_NET_NEG) continue;
-    longTermNegVetoSet.add(entity);
+    const pos = r.positive || 0, neg = r.negative || 0, total = pos + neg;
+    // Tier 1 — lifetime
+    if (total >= HARD_VETO_TOTAL
+        && pos / total < HARD_VETO_RATIO
+        && neg - pos >= HARD_VETO_NET) {
+      hardVetoSet.add(entity); continue;
+    }
+    // Tier 2 — last 7 days
+    const p7 = r.positive_7d || 0, n7 = r.negative_7d || 0, t7 = p7 + n7;
+    if (t7 >= RECENT_VETO_TOTAL
+        && p7 / Math.max(t7, 0.001) < RECENT_VETO_RATIO
+        && n7 - p7 >= RECENT_VETO_NET) {
+      hardVetoSet.add(entity);
+    }
   }
-  let _longTermVetos = 0;
-  function passesLongTermNegFilter(article) {
-    if (!article || longTermNegVetoSet.size === 0) return true;
+
+  // Beta lower-bound shrinkage. With Jeffreys' prior (a=pos+1, b=neg+1)
+  // we compute the 85% one-sided lower bound of the engagement-rate
+  // posterior using the normal approximation. <0.5 means we're confident
+  // engagement is below 50% — proportionally penalise. ≥0.5 → no penalty.
+  function betaShrinkage(pos, neg) {
+    const a = pos + 1, b = neg + 1;
+    const mean = a / (a + b);
+    const variance = (a * b) / ((a + b) ** 2 * (a + b + 1));
+    const z = 1.04;  // ~85% lower bound
+    return Math.max(0.1, mean - z * Math.sqrt(variance));
+  }
+
+  let _hardVetos = 0;
+  let _shrinkageApplied = 0;
+
+  function applyShrinkageMultiplier(article) {
+    if (!article) return 1.0;
     const sigs = safeJsonParse(article.typed_signals, []);
-    if (!Array.isArray(sigs)) return true;
+    if (!Array.isArray(sigs) || sigs.length === 0) return 1.0;
+    let mult = 1.0;
     for (const s of sigs) {
-      if (longTermNegVetoSet.has(s)) {
-        _longTermVetos++;
-        return false;
+      if (typeof s !== 'string') continue;
+      if (s.startsWith('lang:') || s === 'loc:usa') continue;
+      // Tier 1/2: hard veto kills the article outright.
+      if (hardVetoSet.has(s)) { _hardVetos++; return 0; }
+      // Soft shrinkage — only entities with enough observations contribute.
+      const r = entitySignals[s];
+      if (!r) continue;
+      const pos = r.positive || 0, neg = r.negative || 0;
+      if (pos + neg < 5) continue;  // too thin to shrink against
+      const beta = betaShrinkage(pos, neg);
+      if (beta < 0.5) {
+        mult *= (0.5 + beta);  // beta=0.1 → 0.6×, 0.4 → 0.9×, 0.5 → 1.0×
+        _shrinkageApplied++;
       }
     }
-    return true;
+    return mult;
   }
-  if (longTermNegVetoSet.size > 0) {
-    console.log(`[feed:longterm-veto] vetoing ${longTermNegVetoSet.size} entities: ${[...longTermNegVetoSet].slice(0, 10).join(', ')}`);
+
+  if (hardVetoSet.size > 0) {
+    console.log(`[feed:phase-c-veto] hard-vetoing ${hardVetoSet.size} entities: ${[...hardVetoSet].slice(0, 10).join(', ')}`);
+  }
+
+  // Back-compat shim: keep the old function name as a wrapper so the 5
+  // existing call sites (lines 2902/2950/2968/2988/3017) don't have to
+  // change in this PR. The shim returns `false` when hard-veto fires
+  // (preserving the .filter() semantics) and `true` otherwise. The new
+  // applyShrinkageMultiplier is composed into scoring chains at the
+  // same locations as a multiplier so the soft penalty actually lands.
+  function passesLongTermNegFilter(article) {
+    if (!article || hardVetoSet.size === 0) return true;
+    const sigs = safeJsonParse(article.typed_signals, []);
+    if (!Array.isArray(sigs)) return true;
+    for (const s of sigs) if (hardVetoSet.has(s)) return false;
+    return true;
   }
 
   // Phase 10.5 (2026-04-26): category-level long-term engagement multiplier.
@@ -2978,6 +3104,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       let score = scoreArticleV3(article, similarity, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
+      // Phase C (feed v11): two-tier veto + Beta shrinkage continuous penalty
+      score *= applyShrinkageMultiplier(article);
+      // Phase D (feed v11): per-(user, article) exposure decay (Douyin disclosure 2025).
+      score *= exposureMultiplier(article);
       // Phase F (feed v11): Monolith-lite session delta bonus.
       score *= sessionDeltaBonus(article);
       // Phase 10.5: long-term per-category engagement multiplier
@@ -3017,6 +3147,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= applyShrinkageMultiplier(article);  // Phase C — Beta shrinkage
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
@@ -3036,6 +3168,8 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= applyShrinkageMultiplier(article);  // Phase C — Beta shrinkage
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
@@ -3063,6 +3197,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      s *= applyShrinkageMultiplier(article);  // Phase C — Beta shrinkage
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
@@ -3088,8 +3224,10 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
+      const shrinkMult = applyShrinkageMultiplier(article);  // Phase C — Beta shrinkage
+      const expMult = exposureMultiplier(article);  // Phase D — per-article exposure decay
       const deltaMult = sessionDeltaBonus(article);  // Phase F — Monolith-lite session delta
-      let s = (article.ai_final_score || 0) * recency * sigMult * deltaMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
+      let s = (article.ai_final_score || 0) * recency * sigMult * shrinkMult * expMult * deltaMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
       // Fix H (2026-04-19): hard floor. When matched signals average clearly
       // negative (mult < 0.2), Fix F's 0.3× soft-penalty can't save a pool
       // where all surviving articles score ~1.5 and the user's fresh candidate
