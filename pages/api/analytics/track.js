@@ -729,6 +729,23 @@ export default async function handler(req, res) {
                 })
               }
             }).catch(() => {})
+
+          // Phase D (feed v11) — per-(user, article) exposure tracking.
+          // Drives the exposureMultiplier in pages/api/feed/main.js so the
+          // same article doesn't keep coming back after the user already
+          // engaged-then-ignored, or skipped, this exact piece. Source:
+          // Douyin disclosure 2025 (per-content exposure decay).
+          admin.rpc('upsert_article_exposure', {
+            p_user_id: effectiveUserId,
+            p_article_id: article_id,
+            p_is_engaged: isSignalPositive,
+            p_is_skipped: isSignalNegative,
+            p_event_at: new Date().toISOString(),
+          }).catch(err => {
+            if (!err?.message?.includes('relation') && !err?.message?.includes('does not exist')) {
+              console.log('[analytics] article_exposure upsert failed:', err?.message)
+            }
+          })
         }
 
         // UCB TRACKING: lightweight — only match against user's own interest clusters

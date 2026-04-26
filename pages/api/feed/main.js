@@ -2328,6 +2328,58 @@ async function handleV2Feed(req, res, supabase, opts) {
     return true;
   }
 
+  // Phase D (feed v11) — per-(user, article) exposure decay.
+  //
+  // Source: Douyin algorithm disclosure 2025
+  //   https://www.scmp.com/tech/big-tech/article/3304799/
+  //   "weights of user interests on contents with hot reach are
+  //    discounted as that signal is likely to provide little
+  //    information reflective of users' interests."
+  //
+  // The cluster_id dedup above only tracks the last 30 impressions.
+  // 2026-04-26 session caught article 132478 (Apple AI Challenge) being
+  // shown 6 times across 5 days because it kept falling out of the
+  // 30-impression window. The fix is per-(user, article_id) tracking
+  // with a smooth decay multiplier so the article score is squashed
+  // before it ever reaches the dedup gate.
+  //
+  // Loaded once per request, scoped to last 60 days of activity.
+  const exposureMap = new Map();
+  let _exposureVetos = 0;
+  if (userId) {
+    try {
+      const { data: expRows } = await supabase
+        .from('user_article_exposures')
+        .select('article_id, shown_count, engaged_count, skipped_count, last_skipped_at, last_engaged_at')
+        .eq('user_id', userId)
+        .gte('last_shown_at', new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString());
+      for (const r of (expRows || [])) exposureMap.set(r.article_id, r);
+    } catch (e) { /* table may not exist yet — non-blocking */ }
+  }
+
+  function exposureMultiplier(article) {
+    if (!article) return 1.0;
+    const e = exposureMap.get(article.id);
+    if (!e) return 1.0;
+    // Hard 14-day cooldown after a skip — user already said no on this exact piece.
+    if (e.skipped_count >= 1 && e.last_skipped_at) {
+      const days = (Date.now() - new Date(e.last_skipped_at).getTime()) / 86400000;
+      if (days < 14) { _exposureVetos++; return 0; }
+    }
+    // Story decayed even though they engaged once: 1 engage + ≥2 ignored shows means dead.
+    if (e.engaged_count >= 1 && (e.shown_count - e.engaged_count) >= 2) {
+      _exposureVetos++;
+      return 0;
+    }
+    // Smooth decay on un-engaged repeats — first re-show ok at half weight,
+    // second is barely worth it, third is dead.
+    const unEngaged = e.shown_count - e.engaged_count;
+    if (unEngaged === 1) return 0.5;
+    if (unEngaged === 2) return 0.1;
+    if (unEngaged >= 3) { _exposureVetos++; return 0; }
+    return 1.0;
+  }
+
   function sessionNegativeMultiplier(article) {
     // --- Topic-level (typed_signals) ---
     const signals = safeJsonParse(article.typed_signals, []);
@@ -2934,6 +2986,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       let score = scoreArticleV3(article, similarity, sessionVecSim, sessionInteractionCount);
       // Apply typed entity signal multiplier (replaces skip_profile penalty)
       score *= entitySignalMultiplier(article);
+      // Phase D (feed v11): per-(user, article) exposure decay (Douyin disclosure 2025).
+      score *= exposureMultiplier(article);
       // Phase 10.5: long-term per-category engagement multiplier
       score *= categoryEngagementMultiplier(article);
       // Fix 5: Category suppression
@@ -2971,6 +3025,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreTrendingV3(article) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -2989,6 +3044,7 @@ async function handleV2Feed(req, res, supabase, opts) {
     .map(a => {
       const article = articleMap[a.id];
       let s = scoreDiscoveryV3(article, personalCategories) * entitySignalMultiplier(article) * categoryEngagementMultiplier(article) * getCategorySuppression(article);
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -3015,6 +3071,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
       const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
+      s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
       s *= sessionNegativeMultiplier(article);  // Phase 6.2 unified
       s *= interestClockBoost(article);  // Phase 7.1 hour-of-week affinity
       s *= publisherQualityBoost(article);  // Phase 8.2 publisher prior
@@ -3039,7 +3096,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       const article = articleMap[a.id];
       const recency = getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       const sigMult = entitySignalMultiplier(article);
-      let s = (article.ai_final_score || 0) * recency * sigMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
+      const expMult = exposureMultiplier(article);  // Phase D — per-article exposure decay
+      let s = (article.ai_final_score || 0) * recency * sigMult * expMult * categoryEngagementMultiplier(article);  // Phase 10.5 category prior
       // Fix H (2026-04-19): hard floor. When matched signals average clearly
       // negative (mult < 0.2), Fix F's 0.3× soft-penalty can't save a pool
       // where all surviving articles score ~1.5 and the user's fresh candidate
