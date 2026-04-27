@@ -718,8 +718,17 @@ export default async function handler(req, res) {
         const isSignalPositive = ENTITY_SIGNAL_POSITIVE.includes(event_type)
         const isSignalNegative = ENTITY_SIGNAL_NEGATIVE.includes(event_type)
 
-        function expectedReadSecondsFromArticle(art) {
+        function expectedReadSecondsFromArticle(art, observedMedian) {
+          // Preferred: observed median dwell across other readers (Kuaishou
+          // CIKM 2023 production approach). When ≥5 users have read this
+          // exact article, their p50 dwell is the strongest available
+          // anchor for "what consumed-it looks like." Fed by the
+          // article_dwell_stats table refreshed nightly.
+          if (Number.isFinite(observedMedian) && observedMedian >= 3) {
+            return observedMedian
+          }
           if (!art) return 25
+          // Cold-start fallback — pipeline-stored estimate, then text length.
           const stored = Number(art.expected_read_seconds)
           if (Number.isFinite(stored) && stored > 0) return stored
           const bullets = Array.isArray(art.summary_bullets_news)
@@ -747,31 +756,38 @@ export default async function handler(req, res) {
         }
 
         if ((isSignalPositive || isSignalNegative) && article_id && effectiveUserId) {
-          admin.from('published_articles')
-            .select('interest_tags, summary_bullets_news, components_order, expected_read_seconds')
-            .eq('id', article_id).single()
-            .then(({ data: artData }) => {
-              if (!artData) return
-              const tags = Array.isArray(artData.interest_tags) ? artData.interest_tags
-                : (typeof artData.interest_tags === 'string' ? JSON.parse(artData.interest_tags || '[]') : [])
-              const expectedRead = expectedReadSecondsFromArticle(artData)
-              const signalWeightForRpc = computeSignalWeight(event_type, dwellSec, expectedRead)
-              // Update first 5 tags (position-weighted: top tags are primary signals)
-              for (const tag of tags.slice(0, 5)) {
-                admin.rpc('update_entity_signal', {
-                  p_user_id: effectiveUserId,
-                  p_entity: tag.toLowerCase(),
-                  p_is_positive: isSignalPositive,
-                  p_weight: signalWeightForRpc,
-                  p_event_at: new Date().toISOString(),
-                }).catch(err => {
-                  // Table may not exist yet — non-blocking
-                  if (!err?.message?.includes('relation') && !err?.message?.includes('does not exist')) {
-                    console.log('[analytics] entity_signal update failed:', err?.message)
-                  }
-                })
-              }
-            }).catch(() => {})
+          // Two parallel queries — same wall-clock latency as one, gives us
+          // article metadata + observed dwell percentile in one round trip.
+          Promise.all([
+            admin.from('published_articles')
+              .select('interest_tags, summary_bullets_news, components_order, expected_read_seconds')
+              .eq('id', article_id).single(),
+            admin.from('article_dwell_stats')
+              .select('median_dwell_sec, observation_count')
+              .eq('article_id', article_id).maybeSingle(),
+          ]).then(([{ data: artData }, { data: dwellStats }]) => {
+            if (!artData) return
+            const tags = Array.isArray(artData.interest_tags) ? artData.interest_tags
+              : (typeof artData.interest_tags === 'string' ? JSON.parse(artData.interest_tags || '[]') : [])
+            const observedMedian = dwellStats?.median_dwell_sec
+            const expectedRead = expectedReadSecondsFromArticle(artData, observedMedian)
+            const signalWeightForRpc = computeSignalWeight(event_type, dwellSec, expectedRead)
+            // Update first 5 tags (position-weighted: top tags are primary signals)
+            for (const tag of tags.slice(0, 5)) {
+              admin.rpc('update_entity_signal', {
+                p_user_id: effectiveUserId,
+                p_entity: tag.toLowerCase(),
+                p_is_positive: isSignalPositive,
+                p_weight: signalWeightForRpc,
+                p_event_at: new Date().toISOString(),
+              }).catch(err => {
+                // Table may not exist yet — non-blocking
+                if (!err?.message?.includes('relation') && !err?.message?.includes('does not exist')) {
+                  console.log('[analytics] entity_signal update failed:', err?.message)
+                }
+              })
+            }
+          }).catch(() => {})
 
           // Phase D (feed v11) — per-(user, article) exposure tracking.
           // Drives the exposureMultiplier in pages/api/feed/main.js so the

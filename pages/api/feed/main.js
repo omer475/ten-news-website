@@ -2386,10 +2386,15 @@ async function handleV2Feed(req, res, supabase, opts) {
         ...sessionSkippedIds.map(Number).filter(Boolean),
       ]));
       if (allIds.length > 0) {
-        const { data: embRows } = await supabase
-          .from('published_articles')
-          .select('id, embedding_minilm, summary_bullets_news, components_order, expected_read_seconds')
-          .in('id', allIds);
+        const [{ data: embRows }, { data: dwellRows }] = await Promise.all([
+          supabase.from('published_articles')
+            .select('id, embedding_minilm, summary_bullets_news, components_order, expected_read_seconds')
+            .in('id', allIds),
+          supabase.from('article_dwell_stats')
+            .select('article_id, median_dwell_sec')
+            .in('article_id', allIds),
+        ]);
+        const dwellMap = new Map((dwellRows || []).map(r => [r.article_id, r.median_dwell_sec]));
         const engagedSet = new Set(sessionEngagedIds.map(String));
         const dim = 384;
         const delta = new Array(dim).fill(0);
@@ -2398,7 +2403,14 @@ async function handleV2Feed(req, res, supabase, opts) {
         // negative. The loud negative is the < 1s instant-swipe (low
         // completion). Inverts the previous raw-dwell tiers to match
         // Kuaishou's play-ratio model.
+        //
+        // Expected dwell is the OBSERVED median across other users when
+        // available (Kuaishou EVV anchor — 50%-percentile of other users'
+        // watch on the same content). Falls back to text-length estimate
+        // for cold-start articles (< 5 observations).
         function _expectedReadSec(art) {
+          const observed = dwellMap.get(art && art.id);
+          if (Number.isFinite(observed) && observed >= 3) return observed;
           const stored = Number(art && art.expected_read_seconds);
           if (Number.isFinite(stored) && stored > 0) return stored;
           const bullets = Array.isArray(art && art.summary_bullets_news)
