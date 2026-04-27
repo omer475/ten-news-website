@@ -686,33 +686,76 @@ export default async function handler(req, res) {
         // One unified signal instead of two saturating counters.
         //
         // Phase B (feed v11) — Kuaishou CIKM 2023 (arXiv:2308.13249):
-        // weight skips by dwell time. A 30s read-then-skip is a much
-        // stronger negative than a 1s scroll-past, but until now both
-        // wrote +1 to negative_count. Three tiers:
-        //   < 3s  → 0.5  (likely accidental scroll)
-        //   3–20s → 1.0  (standard skip — current behaviour)
-        //   ≥ 20s → 1.8  (read-then-reject — the loudest implicit "no")
+        // weight skips by COMPLETION RATIO, not raw dwell.
+        //
+        // Original Phase B used raw seconds:
+        //   < 3s → 0.5×, 3–20s → 1.0×, ≥20s → 1.8× ("loudest negative")
+        //
+        // That was wrong on two axes (audit 2026-04-27):
+        //   1. 15s on a 1-bullet card = full re-read (good signal); 15s on
+        //      a 3-bullet+component card = read-half-and-bailed. Same raw
+        //      seconds, opposite intent. Need to normalise by article length.
+        //   2. The "longer dwell + skip = louder negative" rule is the
+        //      opposite of what Kuaishou's play-ratio model says. A user
+        //      who finished the card and *then* swiped consumed it — that's
+        //      near-neutral, not a loud "no". The loud "no" is the < 1s
+        //      instant-swipe.
+        //
+        // New formula uses completion = dwell / expected_read_seconds:
+        //   < 0.15  → 1.0× negative   (didn't even try — real rejection)
+        //   0.15–0.40 → 0.7× negative (brief glance)
+        //   0.40–0.75 → 0.4× negative (significant read but bailed)
+        //   0.75–1.20 → 0.2× negative (basically finished, neutral-ish)
+        //   ≥ 1.20  → 0.0×             (re-read past expected — neutral)
+        //
+        // expected_read_seconds is rarely populated in the DB (1 of 7617 as
+        // of 2026-04-27), so we compute on the fly from bullet character
+        // count + component presence: 250 wpm ≈ 20 chars/sec, +6s if the
+        // article has a component card to scan, +3s for headline.
         // ============================================================
         const ENTITY_SIGNAL_POSITIVE = ['article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_revisit']
         const ENTITY_SIGNAL_NEGATIVE = ['article_skipped']
         const isSignalPositive = ENTITY_SIGNAL_POSITIVE.includes(event_type)
         const isSignalNegative = ENTITY_SIGNAL_NEGATIVE.includes(event_type)
 
-        function computeSignalWeight(eventType, viewSec) {
+        function expectedReadSecondsFromArticle(art) {
+          if (!art) return 25
+          const stored = Number(art.expected_read_seconds)
+          if (Number.isFinite(stored) && stored > 0) return stored
+          const bullets = Array.isArray(art.summary_bullets_news)
+            ? art.summary_bullets_news
+            : (typeof art.summary_bullets_news === 'string'
+                ? JSON.parse(art.summary_bullets_news || '[]')
+                : [])
+          const totalChars = bullets.reduce((sum, b) =>
+            sum + (typeof b === 'string' ? b.length : 0), 0)
+          const hasComponent = Array.isArray(art.components_order) && art.components_order.length > 0
+          const seconds = 3 + (totalChars / 20) + (hasComponent ? 6 : 0)
+          return Math.max(8, Math.min(60, Math.round(seconds)))
+        }
+
+        function computeSignalWeight(eventType, viewSec, expectedReadSec) {
           if (eventType !== 'article_skipped') return 1.0
-          const v = Number.isFinite(viewSec) ? viewSec : 0
-          if (v < 3)  return 0.5  // weak: probably accidental
-          if (v < 20) return 1.0  // standard skip
-          return 1.8                // read-then-reject — strongest signal
+          const dwell = Number.isFinite(viewSec) ? viewSec : 0
+          const expected = Math.max(Number.isFinite(expectedReadSec) ? expectedReadSec : 25, 8)
+          const completion = dwell / expected
+          if (completion < 0.15) return 1.0  // real rejection
+          if (completion < 0.40) return 0.7  // brief glance
+          if (completion < 0.75) return 0.4  // significant read, still bailed
+          if (completion < 1.20) return 0.2  // basically consumed it
+          return 0.0                            // re-read past expected — neutral
         }
 
         if ((isSignalPositive || isSignalNegative) && article_id && effectiveUserId) {
-          const signalWeightForRpc = computeSignalWeight(event_type, dwellSec)
-          admin.from('published_articles').select('interest_tags').eq('id', article_id).single()
+          admin.from('published_articles')
+            .select('interest_tags, summary_bullets_news, components_order, expected_read_seconds')
+            .eq('id', article_id).single()
             .then(({ data: artData }) => {
               if (!artData) return
               const tags = Array.isArray(artData.interest_tags) ? artData.interest_tags
                 : (typeof artData.interest_tags === 'string' ? JSON.parse(artData.interest_tags || '[]') : [])
+              const expectedRead = expectedReadSecondsFromArticle(artData)
+              const signalWeightForRpc = computeSignalWeight(event_type, dwellSec, expectedRead)
               // Update first 5 tags (position-weighted: top tags are primary signals)
               for (const tag of tags.slice(0, 5)) {
                 admin.rpc('update_entity_signal', {
