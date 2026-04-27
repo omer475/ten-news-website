@@ -161,6 +161,15 @@ def main():
             # workflow still runs even if the rebuild bombs.
             if should_rebuild_clusters(supabase):
                 run_cluster_rebuild()
+                # Same nightly slot — refresh the article_dwell_stats
+                # percentile table (Kuaishou EVV/FVV anchors). Cheap
+                # aggregate over user_article_events; runs in seconds.
+                # Source: Kuaishou CIKM 2023 (arXiv:2308.13249).
+                try:
+                    rows = supabase.rpc('refresh_article_dwell_stats').execute()
+                    print(f"🕒 article_dwell_stats refreshed ({rows.data} rows)")
+                except Exception as e:
+                    print(f"⚠️ article_dwell_stats refresh failed (non-blocking): {e}")
 
             # Run a single cycle of the workflow
             result = run_single_cycle()
