@@ -1123,19 +1123,17 @@ async function handleV2Feed(req, res, supabase, opts) {
   //
   // Source: Kuaishou cold-start (10.1145/3701716.3715205) — refuse to
   // fill below the quality minimum rather than padding with weak
-  // candidates. 2026-04-26 session showed page 5 served 5 articles at
-  // ai_final_score 450-580 (Yellowstone spinoff, Kylie Minogue
-  // docuseries) once the high-quality pool was exhausted. The right
-  // behavior is to short the response — the iOS app already shows
-  // "you're caught up" UX when the response is short.
+  // candidates.
   //
-  // Floor rises with page number: pages 1-2 keep current 400/300 base
-  // floors (already permissive); pages 3-4 require ≥650; page 5+
-  // requires ≥700. Applied as Math.max with each retrieval pool's
-  // existing floor so we never *lower* a stricter pool floor.
+  // Floor rises with page number. Pages 1-2 enforce 400 (kills the
+  // quality 300-320 leaks observed 2026-04-26 session p2 — "Otters
+  // Surf Snow" ai_final_score=320, "Shooter Steam Reviews" =300 both
+  // got through because the prior page-1-2 floor was 0). Pages 3-4
+  // tighten to 650; page 5+ requires 700. Math.max'd with each pool's
+  // own base floor so we never *lower* a stricter pool's gate.
   const _pageNumForQuality = Math.floor((seenArticleIds?.length || 0) / Math.max(limit || 20, 1)) + 1;
   const MIN_QUALITY_BY_PAGE =
-    _pageNumForQuality <= 2 ? 0     // keep base pool floors on early pages
+    _pageNumForQuality <= 2 ? 400
     : _pageNumForQuality <= 4 ? 650
     : 700;
 
@@ -2745,6 +2743,18 @@ async function handleV2Feed(req, res, supabase, opts) {
   const hardVetoSet = new Set();
   for (const entity in entitySignals) {
     if (entity.startsWith('lang:') || entity === 'loc:usa') continue;
+    // Specificity gate — `cat:*` is a hierarchical-root aggregate
+    // (Tech / Politics / Sports). Sub-topics within a category often
+    // disagree (e.g. user loves topic:ai but skips topic:consumer_tech;
+    // both roll up into cat:Tech). A hard veto on cat:* would punish
+    // every article in the category, including the ones the user
+    // would have engaged with via their narrow topic preference.
+    // Hard veto is reserved for specific labels — topic:, person:,
+    // org:, event:, product:, loc: — where the signal is unambiguous.
+    // Source: ByteDance hierarchical interest patent — confidence
+    // weighting requires correlation between sub-labels; aggregates
+    // need higher specificity-evidence before a hard cut.
+    if (entity.startsWith('cat:')) continue;
     const r = entitySignals[entity];
     const pos = r.positive || 0, neg = r.negative || 0, total = pos + neg;
     // Tier 1 — lifetime
@@ -2774,6 +2784,18 @@ async function handleV2Feed(req, res, supabase, opts) {
     return Math.max(0.1, mean - z * Math.sqrt(variance));
   }
 
+  // Specificity weight for shrinkage strength — ByteDance hierarchical
+  // interest pattern (Douyin disclosure 2025): each level of the label
+  // tree contributes proportional to its specificity. cat:* is a noisy
+  // aggregate (correlation-weak across sub-topics); topic:* is the
+  // primary signal layer; person/org/event/product/loc are entity
+  // ground-truths and carry the strongest implicit feedback.
+  function specificityWeight(sig) {
+    if (sig.startsWith('cat:')) return 0.3;
+    if (sig.startsWith('topic:')) return 1.0;
+    return 1.3;  // person:, org:, event:, product:, loc:
+  }
+
   let _hardVetos = 0;
   let _shrinkageApplied = 0;
 
@@ -2786,6 +2808,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (typeof s !== 'string') continue;
       if (s.startsWith('lang:') || s === 'loc:usa') continue;
       // Tier 1/2: hard veto kills the article outright.
+      // (cat:* skipped from hardVetoSet by construction — see build loop above.)
       if (hardVetoSet.has(s)) { _hardVetos++; return 0; }
       // Soft shrinkage — only entities with enough observations contribute.
       const r = entitySignals[s];
@@ -2794,7 +2817,15 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (pos + neg < 5) continue;  // too thin to shrink against
       const beta = betaShrinkage(pos, neg);
       if (beta < 0.5) {
-        mult *= (0.5 + beta);  // beta=0.1 → 0.6×, 0.4 → 0.9×, 0.5 → 1.0×
+        // Damp the penalty by signal specificity: cat:* aggregates
+        // contribute a fraction of the raw shrinkage, entity tags
+        // contribute slightly more. With raw=(0.5+beta) ∈ [0.6, 1.0],
+        // damped = 1 − (1 − raw) × specificityWeight; so a 30% raw
+        // penalty becomes ~9% for cat:*, 30% for topic:*, 39% for
+        // entity tags. Same direction, calibrated by reliability.
+        const raw = 0.5 + beta;
+        const damped = 1.0 - (1.0 - raw) * specificityWeight(s);
+        mult *= damped;
         _shrinkageApplied++;
       }
     }
