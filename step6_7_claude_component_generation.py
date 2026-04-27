@@ -62,10 +62,24 @@ Before writing each detail:
 REQUIREMENTS:
 ✓ Every detail must contain a number
 ✓ Must NOT be in bullet summary
-✓ Must be relevant to the story
+✓ Must DIRECTLY support or explain the headline
 ✓ Label: 1-3 words
 ✓ Value: Number with unit
 ✓ Maximum 7 words total per detail
+
+HEADLINE-RELEVANCE RULE — read this twice:
+The 3 details MUST connect to the specific story in the headline,
+not provide unrelated historical background. If the headline says
+"After 18 Months", the details should explain THAT GAP — last
+flight date, current launch date, payload weight, destination —
+NOT the rocket's debut from years ago. If the headline says "Wins
+4th Title", the details should be about the 4 wins (year span,
+margin, opponents) — NOT the sport's invention date.
+
+If a fact is older than 1 year before TODAY'S DATE, only include
+it when it's the *direct cause* of why this story is news today.
+Otherwise reach for a number that lives in the article body about
+the current event.
 
 OUTPUT FORMAT:
 [
@@ -78,6 +92,10 @@ BAD DETAILS (never do):
 ✗ Duplicates from bullets
 ✗ No number: {"label": "Status", "value": "Ongoing"}
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
+✗ Stale historical: {"label": "Falcon Heavy debut", "value": "February 2018"}
+   for an article about a 2026 launch — debut isn't why today's news exists.
+   Better: {"label": "Last flight", "value": "October 2024"} which IS the
+   reason for "After 18 months" in the headline.
 ✗ Filler: {"label": "Age", "value": "43 years"} when age adds nothing
 ✗ Fewer than 3 or more than 3 details
 

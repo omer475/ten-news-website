@@ -69,25 +69,46 @@ TASK 2: Is this a NEW major world event?
 
 If NO existing event matches, determine if this is a NEW major world event.
 
-A MAJOR ONGOING WORLD EVENT must meet ALL criteria:
+A MAJOR ONGOING WORLD EVENT must meet AT LEAST ONE of these patterns:
+
+PATTERN A — GLOBAL ONGOING (all 4 of):
 1. GLOBAL SIGNIFICANCE - Affects multiple countries or has worldwide impact
-2. ONGOING - Will continue for days, weeks, or months (not a one-day story)
+2. ONGOING - Will continue for days, weeks, or months
 3. MAJOR FIGURES - Involves world leaders, major institutions, or significant entities
 4. HIGH IMPACT - Major humanitarian, economic, political, or security implications
 
+PATTERN B — BREAKING-NEWS INCIDENT (all 3 of):
+1. SINGLE NAMED EVENT - A specific, identifiable incident with a clear when+where
+   (e.g. "WHCD Shooting", "Heathrow Drone Incident", "Notre Dame Fire")
+2. MULTI-PUBLISHER COVERAGE - The kind of story that 5+ outlets will independently
+   write about within 24 hours (mass casualty, security breach involving heads of
+   state, terror attack, plane crash, building collapse, prominent assassination)
+3. MAJOR FIGURE OR INSTITUTION involved (head of state, supreme court, federal
+   agency, top sports/entertainment institution)
+
+Pattern B exists specifically so 5+ articles about the same one-day breaking
+event share a world_event_id and can be deduplicated downstream. Without it,
+each publisher's story gets a different cluster_id and the user sees the same
+incident 5 times in one session. Trust this branch on incidents where you can
+already imagine the alternate-publisher headlines.
+
 TYPES OF WORLD EVENTS TO DETECT:
-✓ Wars/Conflicts: "Israel-Gaza War", "Russia-Ukraine War"
-✓ Trade/Economic: "Trump's Tariffs", "US-China Trade War"
-✓ Global Summits: "G20 Summit", "World Economic Forum", "COP29", "UN General Assembly"
-✓ Major Disasters: "Turkey Earthquake", "Hawaii Wildfires"
-✓ Political Crises: "Iran Protests", "Venezuela Crisis"
-✓ Health Emergencies: "Bird Flu Outbreak", "Mpox Emergency"
+✓ Wars/Conflicts: "Israel-Gaza War", "Russia-Ukraine War" (Pattern A)
+✓ Trade/Economic: "Trump's Tariffs", "US-China Trade War" (Pattern A)
+✓ Global Summits: "G20 Summit", "World Economic Forum", "COP29" (Pattern A)
+✓ Major Disasters: "Turkey Earthquake", "Hawaii Wildfires" (Pattern A)
+✓ Political Crises: "Iran Protests", "Venezuela Crisis" (Pattern A)
+✓ Health Emergencies: "Bird Flu Outbreak", "Mpox Emergency" (Pattern A)
+✓ Breaking incidents: "WHCD Shooting", "Heathrow Drone Incident",
+  "Trump Assassination Attempt", "Notre Dame Fire" (Pattern B — single
+  high-profile incident with multi-publisher coverage in 24 hours)
 
 NOT world events:
 ✗ "Company releases new product" - NO (not global significance)
 ✗ "Celebrity scandal" - NO (not major impact)
 ✗ "Local election results" - NO (not global)
 ✗ "Stock drops 2%" - NO (unless major crash)
+✗ "Local crime story" - NO (no major figure / institution)
 
 ═══════════════════════════════════════════════════════════════
 EVENT NAMING RULES (CRITICAL):

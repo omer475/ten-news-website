@@ -180,6 +180,7 @@ Return JSON with these arrays (empty array if none found):
   "people": [],
   "events": [],
   "products": [],
+  "countries": [],
   "cities": [],
   "narrow_topics": []
 }}
@@ -189,6 +190,15 @@ Rules:
 - people: full names only (e.g. "Jannik Sinner", not "Sinner")
 - events: named events like "World Cup 2026", "Artemis II", "Monte-Carlo Masters"
 - products: product/franchise names like "iPhone 17", "Spider-Man 3", "GTA 6"
+- countries: ALWAYS infer the article's country/countries even when not
+  named explicitly. Examples:
+    "Indian Minister Sudhakar lung transplant" → ["India"]
+    "Chennai stock exchange falls" → ["India"]
+    "Bundestag passes climate bill" → ["Germany"]
+    "SCOTUS hears case in DC" → ["USA"]
+  Use full English country names (not ISO codes). If the article is
+  truly multi-country (a treaty, a global summit), list each. If
+  unambiguously global with no country anchor, leave empty.
 - cities: city-level locations mentioned
 - narrow_topics: 2-5 multi-word concepts or compound terms (e.g. "geopolitical_tensions",
   "brain_hologram", "class_action_lawsuit", "quantum_computing"). NEVER single common
@@ -263,7 +273,19 @@ def build_typed_signals(article_countries, interest_tags, ner_result=None, langu
 
     # Locations: countries + NER cities (loc: is not deduped against topic: on purpose —
     # a country can legitimately also be a topic in an article about that country)
+    #
+    # Country sources, in order:
+    #   1. article_countries — from step 11 tag_article (TAGGING_PROMPT_V1).
+    #      Heavyweight; can fail and leave article without any country.
+    #   2. ner_result.countries — NEW (feed v11 follow-up, 2026-04-27). NER
+    #      now infers country from context even when not named explicitly,
+    #      so an article about an Indian government minister picks up
+    #      `loc:india` even if the body doesn't say "India" by name. Closes
+    #      the 2026-04-26 session bug where loc:india was missing on slot 10
+    #      page 1, letting the loc:india hard veto silently miss.
     for country in (article_countries or []):
+        add('loc', country)
+    for country in (ner_result or {}).get('countries', []) or []:
         add('loc', country)
     for city in (ner_result or {}).get('cities', []) or []:
         add('loc', city)
