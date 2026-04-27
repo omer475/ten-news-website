@@ -2388,11 +2388,28 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (allIds.length > 0) {
         const { data: embRows } = await supabase
           .from('published_articles')
-          .select('id, embedding_minilm')
+          .select('id, embedding_minilm, summary_bullets_news, components_order, expected_read_seconds')
           .in('id', allIds);
         const engagedSet = new Set(sessionEngagedIds.map(String));
         const dim = 384;
         const delta = new Array(dim).fill(0);
+        // Completion-ratio weighting (audit 2026-04-27): a long dwell + skip
+        // means "consumed but didn't tap" — that's near-neutral, not loud
+        // negative. The loud negative is the < 1s instant-swipe (low
+        // completion). Inverts the previous raw-dwell tiers to match
+        // Kuaishou's play-ratio model.
+        function _expectedReadSec(art) {
+          const stored = Number(art && art.expected_read_seconds);
+          if (Number.isFinite(stored) && stored > 0) return stored;
+          const bullets = Array.isArray(art && art.summary_bullets_news)
+            ? art.summary_bullets_news
+            : [];
+          const totalChars = bullets.reduce((sum, b) =>
+            sum + (typeof b === 'string' ? b.length : 0), 0);
+          const hasComponent = Array.isArray(art && art.components_order) && art.components_order.length > 0;
+          const seconds = 3 + (totalChars / 20) + (hasComponent ? 6 : 0);
+          return Math.max(8, Math.min(60, Math.round(seconds)));
+        }
         for (const row of (embRows || [])) {
           const emb = safeJsonParse(row.embedding_minilm, null);
           if (!Array.isArray(emb) || emb.length !== dim) continue;
@@ -2404,11 +2421,16 @@ async function handleV2Feed(req, res, supabase, opts) {
             const dwell = _sessionDeltaSkipDwellsRaw
               ? Number(_sessionDeltaSkipDwellsRaw[idStr] || _sessionDeltaSkipDwellsRaw[row.id]) || 0
               : 0;
-            // Kuaishou intensity tiers — same shape as Phase B weights but
-            // with sign flipped (negative since this is the away-from set).
-            w = dwell >= 20 ? -0.3
-              : dwell >= 3  ? -0.15
-              :               -0.05;
+            const expected = _expectedReadSec(row);
+            const completion = dwell / Math.max(expected, 8);
+            // Negative magnitude DECREASES with completion: low completion
+            // (real bail) = strongest negative; high completion (consumed
+            // it) = barely-there negative.
+            if (completion < 0.15)      w = -0.30;  // real rejection
+            else if (completion < 0.40) w = -0.20;  // brief glance
+            else if (completion < 0.75) w = -0.10;  // partial read
+            else if (completion < 1.20) w = -0.05;  // near-full consume
+            else                         w =  0.00;  // re-read past expected — neutral
           }
           for (let i = 0; i < dim; i++) delta[i] += w * emb[i];
           _sessionDeltaCount++;
