@@ -1925,6 +1925,32 @@ struct ArticleCardView: View {
         let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
         let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
 
+        // --- Preferred hue family (feed v11) ---
+        //
+        // The accent picker (whole image) and blur picker (bottom half)
+        // can land on different hue families when the image has a small
+        // saturated region in the upper portion (e.g. warm bokeh lights
+        // above a desk in a dark navy office). 2026-04-26 21:42 Thomson
+        // Reuters card hit this — orange highlight on a navy background.
+        //
+        // Snapshot the dominant SATURATED hue from the bottom half before
+        // accent scoring runs, then bias accent candidates toward that
+        // family. Same single-color-family principle Apple Music, Spotify,
+        // and TikTok use on auto-tinted card backgrounds.
+        let preferredHueFamily: CGFloat? = {
+            let scored = buckets.values
+                .filter { $0.bottomCount > 0 }
+                .map { (b: ColorBucket) -> (h: CGFloat, s: CGFloat, score: CGFloat) in
+                    let hsl = rgbToHSL(CGFloat(b.rKey) / 255.0,
+                                       CGFloat(b.gKey) / 255.0,
+                                       CGFloat(b.bKey) / 255.0)
+                    return (hsl.h, hsl.s, CGFloat(b.bottomCount) * (hsl.s / 100.0))
+                }
+                .filter { $0.s >= 25 }
+                .sorted { $0.score > $1.score }
+            return scored.first?.h
+        }()
+
         var accentCandidates: [ScoredColor] = buckets.values.compactMap { bucket in
             let r = CGFloat(bucket.rKey) / 255.0
             let g = CGFloat(bucket.gKey) / 255.0
@@ -1954,6 +1980,22 @@ struct ArticleCardView: View {
             var score = normFreq * 0.50 + normSat * 0.30 + normCov * 0.20
             if accentCandidates[i].h >= 200 && accentCandidates[i].h <= 220 && accentCandidates[i].s < 60 { score *= 0.85 }
             if accentCandidates[i].h >= 15 && accentCandidates[i].h <= 50 && accentCandidates[i].s < 65 { score *= 0.7 }
+
+            // Hue-family coupling (feed v11) — boost candidates within ±45°
+            // of the bottom-half dominant hue, penalise candidates more
+            // than 90° away. Locks accent and blur into the same color
+            // family. Wrap-around-aware so reds at h=355 sit next to
+            // reds at h=5.
+            if let preferredH = preferredHueFamily {
+                let raw = abs(accentCandidates[i].h - preferredH)
+                let diff = min(raw, 360 - raw)
+                if diff <= 45 {
+                    score *= 1.3
+                } else if diff > 90 {
+                    score *= 0.5
+                }
+            }
+
             accentCandidates[i].score = score
         }
 
