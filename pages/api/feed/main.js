@@ -3841,6 +3841,58 @@ async function handleV2Feed(req, res, supabase, opts) {
     return false;
   }
 
+  // Phase 10.2 ext (2026-04-28): sliding-window PRIMARY-ENTITY cap.
+  //
+  // 2026-04-28 13:17 session served the GM tariff pair back-to-back
+  // (p2s8 "GM Stock Soars on $500M Tariff Refund" + p2s9 "GM Raises
+  // 2026 Profit Forecast on Tariff Savings"). Their embedding-cosine
+  // similarity was 0.632 — below the 0.78 near-dup threshold (correctly,
+  // since they ARE different facts: refund cash vs forecast revision).
+  // Their topics arrays don't overlap enough to trip Phase 10.2's
+  // topic-window. But they share `org:gm` as primary entity — and from
+  // the user's perspective, two GM-tariff articles in adjacent slots is
+  // redundant.
+  //
+  // TikTok / Douyin enforce this exact rule on creator dedup ("the For
+  // You feed won't show two videos by the same creator in a row" —
+  // confirmed in TikTok docs). For news, the analogue is the SUBJECT
+  // entity: don't show two articles about the same person/org in
+  // adjacent slots. K=5 / N=2 mirrors Phase 10.2's topic-cap shape.
+  //
+  // Source: TikTok production rule, public-facing.
+  const ENTITY_WINDOW_SIZE = 5;
+  const MAX_ENTITY_PER_WINDOW = 2;
+  let _entityWindowVetos = 0;
+  function getPrimaryEntities(article) {
+    const sigs = safeJsonParse(article && article.typed_signals, []);
+    if (!Array.isArray(sigs)) return [];
+    const ents = [];
+    for (const s of sigs) {
+      if (typeof s !== 'string') continue;
+      if (s.startsWith('org:') || s.startsWith('person:')) ents.push(s);
+      if (ents.length >= 5) break;  // top-5 named entities is plenty
+    }
+    return ents;
+  }
+  function isEntityWindowCapped(article) {
+    const ents = getPrimaryEntities(article);
+    if (ents.length === 0) return false;
+    if (selected.length === 0) return false;
+    const window = selected.slice(-ENTITY_WINDOW_SIZE);
+    for (const e of ents) {
+      let count = 0;
+      for (const w of window) {
+        const wEnts = getPrimaryEntities(w);
+        if (wEnts.indexOf(e) !== -1) count++;
+      }
+      if (count >= MAX_ENTITY_PER_WINDOW) {
+        if (debugFlag) _entityWindowVetos++;
+        return true;
+      }
+    }
+    return false;
+  }
+
   // IMPROVEMENT 3: MMR select with event/cluster + entity dedup
   // Fix E (Apr 18): also enforce one-pick-per-article across THIS request. Pool
   // assembly can legitimately place the same article in multiple pools (e.g.
@@ -3871,6 +3923,7 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (isEventCapped(picked)) { if (debugFlag) _dbg.caps.event++; attempts++; continue; }
       if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.affect++; attempts++; continue; }
       if (isTopicWindowCapped(picked)) { attempts++; continue; }  // Phase 10.2 sliding-window
+      if (isEntityWindowCapped(picked)) { attempts++; continue; }  // Phase 10.2 ext — primary-entity cap (TikTok creator-dedup analogue)
       servedInThisRequest.add(picked.id);
       return picked;
     }
@@ -4430,6 +4483,8 @@ async function handleV2Feed(req, res, supabase, opts) {
       if (isAffectCapped(picked)) { if (debugFlag) _dbg.caps.cold_affect++; continue; }
       // Phase 10.2: sliding-window topic cap also applies in cold-start.
       if (isTopicWindowCapped(picked)) { continue; }
+      // Phase 10.2 ext: primary-entity sliding-window cap (TikTok creator-dedup analogue).
+      if (isEntityWindowCapped(picked)) { continue; }
 
       picked.bucket = 'bandit';
       recordEventSelection(picked);
