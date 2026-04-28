@@ -636,13 +636,19 @@ export default async function handler(req, res) {
           : (bucket === 'discovery' || bucket === 'exploration' || bucket === 'cold-start') ? 0.1
           : 1.0 // personal, explore, search = full weight
 
-        // Interaction weight for the signal
-        const signalWeight = event_type === 'article_saved' ? 3.0
-          : event_type === 'article_shared' ? 2.0
-          : event_type === 'article_liked' ? 1.5
-          : event_type === 'article_revisit' ? 4.0
+        // Interaction weight for the signal — TikTok 2025 priority order:
+        // shares > comments > likes (public commitment > private intent
+        // > cheap social signal). Revisit ranks highest because the user
+        // deliberately scrolled BACK — strongest implicit endorsement
+        // there is. Save ranks below share because saving is private
+        // and reversible, while sharing is public commitment.
+        // Source: TikTok Algorithm 2025 published priority weights.
+        const signalWeight = event_type === 'article_revisit' ? 4.0  // scroll-back, strongest
+          : event_type === 'article_shared' ? 3.5  // public commitment
+          : event_type === 'article_saved' ? 2.5   // private bookmark
+          : event_type === 'article_liked' ? 1.0   // cheap social signal
           : event_type === 'article_engaged' ? 1.0
-          : event_type === 'article_view' ? 0.3 // glance
+          : event_type === 'article_view' ? 0.3    // glance
           : 0.0
         const maxSignal = 4.0
         const effectiveMultiplier = baseBucketMult + (Math.max(signalWeight, 0) / maxSignal) * (1.0 - baseBucketMult)
@@ -756,8 +762,24 @@ export default async function handler(req, res) {
         }
 
         if ((isSignalPositive || isSignalNegative) && article_id && effectiveUserId) {
-          // Two parallel queries — same wall-clock latency as one, gives us
-          // article metadata + observed dwell percentile in one round trip.
+          // Three parallel queries — article metadata + observed dwell
+          // percentile + the impression's slot_index for IPS correction.
+          // Same wall-clock latency as one query.
+          //
+          // Position-bias correction (Wang et al. 2018, "Position Bias
+          // Estimation for Unbiased Learning to Rank in Personal Search"):
+          // engagement on slot 0 carries more cumulative bias than
+          // engagement on slot 20 — users see top-of-feed items
+          // disproportionately. Weight every entity-signal write by
+          // (1 + slot)^η with η = 0.70 (industry standard, same value
+          // Phase 8.1 uses on ranker training labels).
+          //   slot  0 → weight  1.0×  (saw it because we ranked it #1)
+          //   slot  5 → weight  3.6×
+          //   slot 10 → weight  5.4×
+          //   slot 20 → weight  8.4×  (rare slot, stronger signal)
+          //
+          // Without this, the model thinks "everything I served first was
+          // good" and top-bias compounds over time.
           Promise.all([
             admin.from('published_articles')
               .select('interest_tags, summary_bullets_news, components_order, expected_read_seconds')
@@ -765,13 +787,28 @@ export default async function handler(req, res) {
             admin.from('article_dwell_stats')
               .select('median_dwell_sec, observation_count')
               .eq('article_id', article_id).maybeSingle(),
-          ]).then(([{ data: artData }, { data: dwellStats }]) => {
+            admin.from('user_feed_impressions')
+              .select('slot_index')
+              .eq('user_id', effectiveUserId)
+              .eq('article_id', article_id)
+              .order('created_at', { ascending: false })
+              .limit(1).maybeSingle(),
+          ]).then(([{ data: artData }, { data: dwellStats }, { data: imprData }]) => {
             if (!artData) return
             const tags = Array.isArray(artData.interest_tags) ? artData.interest_tags
               : (typeof artData.interest_tags === 'string' ? JSON.parse(artData.interest_tags || '[]') : [])
             const observedMedian = dwellStats?.median_dwell_sec
             const expectedRead = expectedReadSecondsFromArticle(artData, observedMedian)
-            const signalWeightForRpc = computeSignalWeight(event_type, dwellSec, expectedRead)
+            const baseWeight = computeSignalWeight(event_type, dwellSec, expectedRead)
+
+            // Position-bias IPS multiplier. slot defaults to 0 if no
+            // impression row found (shouldn't happen for engagement
+            // events — every event implies a prior impression — but
+            // be safe).
+            const slot = Number.isFinite(imprData?.slot_index) ? imprData.slot_index : 0
+            const ipsMultiplier = Math.pow(1 + Math.max(slot, 0), 0.70)
+            const signalWeightForRpc = baseWeight * ipsMultiplier
+
             // Update first 5 tags (position-weighted: top tags are primary signals)
             for (const tag of tags.slice(0, 5)) {
               admin.rpc('update_entity_signal', {
