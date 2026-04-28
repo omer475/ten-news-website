@@ -1925,57 +1925,6 @@ struct ArticleCardView: View {
         let maxCount = CGFloat(buckets.values.map { $0.count }.max() ?? 1)
         let maxCoverage = CGFloat(buckets.values.map { $0.positions.count }.max() ?? 1)
 
-        // --- Low-saturation image detection (2026-04-28) ---
-        //
-        // Some images have NO clearly saturated region — neutral grey
-        // buildings at night, dark suit + brown wood, etc. The 2026-04-28
-        // audit flagged 2 such cards as horrible: Liberals/Politician
-        // hallucinated a bright royal-blue title from skin-tone pixels;
-        // Toyota Sci-Fi City fell back to forest green from a tiny
-        // night-time grass courtyard. In both, the image dictated no
-        // dominant colour and the algorithm picked a saturated minority
-        // and amplified it — wrong direction.
-        //
-        // Detection: does ANY bucket have s≥35 AND ≥10% of total pixels?
-        // If not, the image is genuinely neutral and we fall back to
-        // safe dark navy for both accent and blur. Same default Apple
-        // Music / Spotify use when an album cover has no dominant tint.
-        let totalSampled = CGFloat(buckets.values.reduce(0) { $0 + $1.count })
-        let hasStrongDominant = buckets.values.contains { bucket in
-            let hsl = rgbToHSL(CGFloat(bucket.rKey)/255, CGFloat(bucket.gKey)/255, CGFloat(bucket.bKey)/255)
-            return hsl.s >= 35 && CGFloat(bucket.count) >= totalSampled * 0.10
-        }
-        if !hasStrongDominant {
-            // Neutral dark navy fallback. Accent is bright enough to read on
-            // top of the gradient; blur is dark enough to keep text legible.
-            let neutralAccent = colorFromHSL(h: 220, s: 70, l: 65)
-            let neutralBlur = colorFromHSL(h: 220, s: 40, l: 10)
-            // Compute lightness flag from top-right region for icon contrast.
-            let isLightFallback: Bool = {
-                var totalLum: CGFloat = 0
-                var count: CGFloat = 0
-                let startX = sampleW / 2
-                let endY = sampleH / 3
-                for y in 0..<endY {
-                    for x in startX..<sampleW {
-                        let idx = (y * sampleW + x) * 4
-                        let r = CGFloat(rawData[idx]) / 255.0
-                        let g = CGFloat(rawData[idx + 1]) / 255.0
-                        let b = CGFloat(rawData[idx + 2]) / 255.0
-                        totalLum += 0.299 * r + 0.587 * g + 0.114 * b
-                        count += 1
-                    }
-                }
-                return count > 0 && (totalLum / count) > 0.55
-            }()
-            let nAcc = UIColor(neutralAccent)
-            let nBlur = UIColor(neutralBlur)
-            colorCache.setObject(nAcc, forKey: url as NSURL)
-            blurColorCache.setObject(nBlur, forKey: url as NSURL)
-            lightnessCache.setObject(NSNumber(value: isLightFallback), forKey: url as NSURL)
-            return (nAcc, nBlur, isLightFallback)
-        }
-
         // --- Preferred hue family (feed v11) ---
         //
         // The accent picker (whole image) and blur picker (bottom half)
@@ -1997,11 +1946,7 @@ struct ArticleCardView: View {
                                        CGFloat(b.bKey) / 255.0)
                     return (hsl.h, hsl.s, CGFloat(b.bottomCount) * (hsl.s / 100.0))
                 }
-                // 2026-04-28 audit: threshold 25 missed desaturated forest /
-                // army greens (Fight Club image) and let accent drift into a
-                // wrong hue family. 15 is permissive enough to register
-                // muted greens as a family without picking up pure-grey noise.
-                .filter { $0.s >= 15 }
+                .filter { $0.s >= 25 }
                 .sorted { $0.score > $1.score }
             return scored.first?.h
         }()
@@ -2036,23 +1981,18 @@ struct ArticleCardView: View {
             if accentCandidates[i].h >= 200 && accentCandidates[i].h <= 220 && accentCandidates[i].s < 60 { score *= 0.85 }
             if accentCandidates[i].h >= 15 && accentCandidates[i].h <= 50 && accentCandidates[i].s < 65 { score *= 0.7 }
 
-            // Hue-family coupling (feed v11) — boost candidates within
-            // ±30° of the bottom-half dominant hue, strongly penalise
-            // candidates more than 60° away. Wrap-around-aware so reds
-            // at h=355 sit next to reds at h=5.
-            //
-            // 2026-04-28 audit: Starbucks card — green sweater + green
-            // logo + brown wall, but accent picked orange (the warm wall
-            // tones) because the in-family bonus wasn't strong enough
-            // to overcome the orange's high raw saturation. Tightened
-            // ±45 → ±30, bonus 1.3 → 1.5, far-side 0.5 → 0.4.
+            // Hue-family coupling (feed v11) — boost candidates within ±45°
+            // of the bottom-half dominant hue, penalise candidates more
+            // than 90° away. Locks accent and blur into the same color
+            // family. Wrap-around-aware so reds at h=355 sit next to
+            // reds at h=5.
             if let preferredH = preferredHueFamily {
                 let raw = abs(accentCandidates[i].h - preferredH)
                 let diff = min(raw, 360 - raw)
-                if diff <= 30 {
-                    score *= 1.5
-                } else if diff > 60 {
-                    score *= 0.4
+                if diff <= 45 {
+                    score *= 1.3
+                } else if diff > 90 {
+                    score *= 0.5
                 }
             }
 
@@ -2084,28 +2024,16 @@ struct ArticleCardView: View {
         for bucket in bottomBuckets {
             let hsl = rgbToHSL(CGFloat(bucket.rKey) / 255, CGFloat(bucket.gKey) / 255, CGFloat(bucket.bKey) / 255)
             let freq = CGFloat(bucket.bottomCount) / maxBottomCount
-            // 2026-04-28 audit: Toyota Sci-Fi card hallucinated dark forest
-            // green from a tiny night-time grass courtyard because the
-            // saturation-weighted 0.45 component let a small green minority
-            // beat the dominant neutral. Rebalance toward frequency: most
-            // bottom-pixel-count wins unless saturation is overwhelming.
-            // Old: freq=0.4, sat=0.45, cov=0.15
-            // New: freq=0.55, sat=0.30, cov=0.15
-            var score = freq * 0.55 + (hsl.s / 100) * 0.30 + (CGFloat(bucket.positions.count) / maxCoverage) * 0.15
+            var score = freq * 0.4 + (hsl.s / 100) * 0.45 + (CGFloat(bucket.positions.count) / maxCoverage) * 0.15
             let isMuddyBrown = hsl.h >= 20 && hsl.h <= 55 && hsl.s < 35
             if isMuddyBrown && freq < 0.7 { score *= 0.3 }
             if hsl.s < 15 && hsl.l < 30 { score *= 0.4 }
-            // Hue-bias multipliers reduced (1.2-1.3 → 1.05-1.10). Frequency
-            // should drive the decision; aesthetic preference per-hue is a
-            // tiebreaker, not a primary force. Greens / purples used to
-            // get +20-30% which was strong enough to flip a tiny saturated
-            // minority into the winner.
             if hsl.s >= 40 {
-                if (hsl.h >= 180 && hsl.h <= 300) { score *= 1.10 }
-                if (hsl.h >= 330 || hsl.h <= 15) { score *= 1.10 }
-                if (hsl.h >= 100 && hsl.h <= 170) { score *= 1.05 }
-                if (hsl.h >= 40 && hsl.h <= 70) { score *= 1.10 }
-                if (hsl.h >= 15 && hsl.h <= 40) { score *= 1.05 }
+                if (hsl.h >= 180 && hsl.h <= 300) { score *= 1.3 }
+                if (hsl.h >= 330 || hsl.h <= 15) { score *= 1.25 }
+                if (hsl.h >= 100 && hsl.h <= 170) { score *= 1.2 }
+                if (hsl.h >= 40 && hsl.h <= 70) { score *= 1.2 }
+                if (hsl.h >= 15 && hsl.h <= 40) { score *= 1.15 }
             }
             if score > bestBlurScore {
                 bestBlurScore = score
