@@ -92,6 +92,30 @@ each publisher's story gets a different cluster_id and the user sees the same
 incident 5 times in one session. Trust this branch on incidents where you can
 already imagine the alternate-publisher headlines.
 
+PATTERN C — MAJOR CORPORATE / DEAL CYCLE (all 3 of):
+1. SINGLE NAMED DEAL OR ANNOUNCEMENT - A specific company/companies and a
+   specific event ("OpenAI/Microsoft Renegotiation", "Spotify Acquires Anchor",
+   "Apple-EU Antitrust Ruling"). NOT a generic earnings beat or routine
+   dividend.
+2. MULTI-PUBLISHER COVERAGE in 24h - The same deal will be reported by
+   Bloomberg + Reuters + WSJ + Verge + tech press, each with their own angle.
+3. MOVES MARKETS OR INDUSTRY - Either >$1B transaction value, or shifts a
+   competitive landscape (M&A, exclusivity ends, major regulatory ruling,
+   leadership change at FAANG-tier company, multi-billion-dollar
+   investment / IPO / round).
+
+Pattern C exists because corporate news cycles fragment exactly like
+breaking-news incidents — same event, six different cluster_ids. The
+2026-04-27 23:30 session served the OpenAI/Microsoft renegotiation FOUR
+times in one session (different clusters, no shared world_event_id).
+When in doubt, prefer tagging — false positives cost less than the
+4× duplicate the user just suffered.
+
+WHEN TO USE PATTERN B vs C:
+  Shooting / accident / casualty / crash → Pattern B
+  Deal / acquisition / IPO / exclusivity / leadership change → Pattern C
+  Earnings beat / dividend hike / routine product launch → NOT a world event
+
 TYPES OF WORLD EVENTS TO DETECT:
 ✓ Wars/Conflicts: "Israel-Gaza War", "Russia-Ukraine War" (Pattern A)
 ✓ Trade/Economic: "Trump's Tariffs", "US-China Trade War" (Pattern A)

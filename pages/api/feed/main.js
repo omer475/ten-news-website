@@ -2241,8 +2241,10 @@ async function handleV2Feed(req, res, supabase, opts) {
   // even when the embedding clusters split because of publisher style.
   const recentClusterIds = new Set();
   const recentWorldEventIds = new Set();
+  const nearDupArticleIds = new Set();
   let _clusterDedupVetos = 0;
   let _eventDedupVetos = 0;
+  let _nearDupVetos = 0;
   if (userId) {
     try {
       const { data: recentImpr } = await supabase
@@ -2253,9 +2255,12 @@ async function handleV2Feed(req, res, supabase, opts) {
         .limit(30);
       const recentIds = (recentImpr || []).map(r => r.article_id).filter(Boolean);
       if (recentIds.length > 0) {
-        const [{ data: clusterLookup }, { data: aweLookup }] = await Promise.all([
+        const [{ data: clusterLookup }, { data: aweLookup }, { data: embLookup }] = await Promise.all([
           supabase.from('published_articles').select('id, cluster_id').in('id', recentIds),
           supabase.from('article_world_events').select('event_id').in('article_id', recentIds),
+          // Phase 10.3 ext (2026-04-28): pull recent embeddings for near-dup
+          // detection on top of cluster_id/world_event_id keys.
+          supabase.from('published_articles').select('id, embedding_minilm').in('id', recentIds),
         ]);
         if (clusterLookup) {
           for (const a of clusterLookup) {
@@ -2265,6 +2270,49 @@ async function handleV2Feed(req, res, supabase, opts) {
         if (aweLookup) {
           for (const r of aweLookup) {
             if (r.event_id != null) recentWorldEventIds.add(r.event_id);
+          }
+        }
+        // Build the near-dup set from cosine similarity. Threshold 0.78
+        // calibrated on real session pairs:
+        //   El Niño dup       : 0.82  → caught
+        //   OpenAI/MS x4 dups : 0.79–0.83 → caught
+        //   Trump shooter angle pair : 0.50 → spared (different angles)
+        //   unrelated         : -0.07 → spared
+        // Iterates articleMap candidates against recent embeddings;
+        // marks each candidate whose max sim ≥ 0.78 as a near-duplicate.
+        const recentEmbeddings = [];
+        for (const r of (embLookup || [])) {
+          const e = safeJsonParse(r.embedding_minilm, null);
+          if (Array.isArray(e) && e.length === 384) recentEmbeddings.push(e);
+        }
+        if (recentEmbeddings.length > 0 && articleMap) {
+          const NEAR_DUP_THRESHOLD = 0.78;
+          // Pre-compute magnitudes of recent embeddings for cosine sim.
+          const recentMags = recentEmbeddings.map(e => {
+            let m = 0;
+            for (let i = 0; i < 384; i++) m += e[i] * e[i];
+            return Math.sqrt(m) || 1;
+          });
+          for (const id in articleMap) {
+            const art = articleMap[id];
+            const cand = safeJsonParse(art.embedding_minilm, null);
+            if (!Array.isArray(cand) || cand.length !== 384) continue;
+            let candMag = 0;
+            for (let i = 0; i < 384; i++) candMag += cand[i] * cand[i];
+            candMag = Math.sqrt(candMag) || 1;
+            for (let r = 0; r < recentEmbeddings.length; r++) {
+              const re = recentEmbeddings[r];
+              let dot = 0;
+              for (let i = 0; i < 384; i++) dot += re[i] * cand[i];
+              const sim = dot / (recentMags[r] * candMag);
+              if (sim >= NEAR_DUP_THRESHOLD) {
+                nearDupArticleIds.add(art.id);
+                break;
+              }
+            }
+          }
+          if (nearDupArticleIds.size > 0) {
+            console.log(`[feed:near-dup] flagged ${nearDupArticleIds.size} candidates as near-duplicates of recent impressions`);
           }
         }
       }
@@ -2283,6 +2331,19 @@ async function handleV2Feed(req, res, supabase, opts) {
     if (recentWorldEventIds.size > 0 && article._world_event_id != null
         && recentWorldEventIds.has(article._world_event_id)) {
       _eventDedupVetos++;
+      return false;
+    }
+    // Phase 10.3 ext (2026-04-28): embedding-similarity dedup. Same news
+    // event written by different publishers can land in different
+    // cluster_ids and both miss world_event_id tagging — observed in the
+    // 2026-04-27 23:30 session where the OpenAI/Microsoft renegotiation
+    // got served 4 times across one session in 4 different clusters
+    // (cosine sims 0.79-0.83), and El Niño twice (0.82). Threshold 0.78
+    // catches genuine same-story duplicates while sparing different-
+    // angle articles on broader events (e.g. Trump shooter variants
+    // measured at 0.50, well below).
+    if (nearDupArticleIds.size > 0 && nearDupArticleIds.has(article.id)) {
+      _nearDupVetos++;
       return false;
     }
     return true;
@@ -3258,9 +3319,22 @@ async function handleV2Feed(req, res, supabase, opts) {
       const articleTags = safeJsonParse(article.interest_tags, []).map(t => t.toLowerCase());
       // Count how many of the article's tags match the user's subtopic tags
       const tagMatches = articleTags.filter(t => interestTags.has(t)).length;
-      // Base score + category boost + subtopic tag match boost
-      const catBoost = interestCategories.has(a.category) ? 1.5 : 1.0;
-      const tagBoost = 1.0 + (tagMatches * 0.25); // +25% per matching tag (was 15%)
+      // Onboarding fade (2026-04-28): cold-start users (< 50 lifetime
+      // interactions) get the full +50% category boost / +25% per
+      // matching tag. The boost linearly fades to ZERO by 200
+      // interactions — past that, the algorithm runs on its own
+      // engagement-derived signal and the day-1 onboarding picks no
+      // longer interfere. Source: TikTok onboarding doc — interest
+      // selections are scaffolding, not a permanent prior.
+      const _onboardingScale = (() => {
+        const t = totalInteractions || 0;
+        if (t < 50)  return 1.0;
+        if (t >= 200) return 0.0;
+        return (200 - t) / 150;
+      })();
+      const rawCatExtra = interestCategories.has(a.category) ? 0.5 : 0.0;
+      const catBoost = 1.0 + rawCatExtra * _onboardingScale;
+      const tagBoost = 1.0 + (tagMatches * 0.25) * _onboardingScale;
       let s = (article.ai_final_score || 0) * catBoost * tagBoost * getRecencyDecay(article.created_at, article.category, article.shelf_life_days, article.freshness_category);
       s *= applyShrinkageMultiplier(article);  // Phase C — Beta shrinkage
       s *= exposureMultiplier(article);  // Phase D — per-article exposure decay
@@ -3930,7 +4004,12 @@ async function handleV2Feed(req, res, supabase, opts) {
       supabase.from('published_articles').select(POOL_COLUMNS)
         .eq('category', cat)
         .gte('created_at', catTimeWindow)
-        .gte('ai_final_score', catScoreThreshold)
+        // Phase E ext (2026-04-28): subtopic pool was bypassing the
+        // page-aware quality floor. Math.max enforces the higher of
+        // the two — subtopic stays permissive for cold pages 1-2 but
+        // tightens to ≥650 / ≥700 for pages 3-4 / 5+. Caught a q=380
+        // "Dinosaur Statue Burns" leak onto page 4 of the 04-27 23:30 session.
+        .gte('ai_final_score', Math.max(catScoreThreshold, MIN_QUALITY_BY_PAGE))
         .order('ai_final_score', { ascending: false })
         .limit(120) // wide fetch — subtopic partitioning + decay will select the best
     );
@@ -3974,7 +4053,10 @@ async function handleV2Feed(req, res, supabase, opts) {
               .select(POOL_COLUMNS)
               .eq('category', cat)
               .gte('created_at', catFallbackWindow)
-              .gte('ai_final_score', 200)
+              // Phase E ext (2026-04-28): same Math.max as the main pool —
+              // fallback was previously a 200-floor escape hatch that could
+              // drop quality on pages 3+. Honour the page-aware floor.
+              .gte('ai_final_score', Math.max(200, MIN_QUALITY_BY_PAGE))
               .order('ai_final_score', { ascending: false })
               .limit(40);
             if (fallbackData) {
