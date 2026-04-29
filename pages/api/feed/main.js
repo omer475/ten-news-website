@@ -1175,7 +1175,17 @@ async function handleV2Feed(req, res, supabase, opts) {
 
   // Filter to valid positive integers — null/NaN/0 cause SQL errors
   const cleanSeenArray = [...canonicalSeenIds].filter(id => Number.isFinite(id) && id > 0);
-  const excludeIds = cleanSeenArray.length > 0 ? cleanSeenArray.slice(0, 1500) : null;
+  // 2026-04-28 audit: cap was 1500 but heavy users (test user 5082a1df-…)
+  // accumulated 2,159 distinct seen articles in the rolling 7-day window.
+  // Slicing to 1500 left ~30% of older seen IDs not excluded from
+  // retrieval, which is how article 141011 (Fungi/Mars) got served twice
+  // in the same 175-impression session. Postgres handles 5000-element
+  // NOT IN clauses without issue (a few KB of query bytes). Same shape
+  // TikTok / Kuaishou ship as a bloom-filter equivalent for our scale —
+  // a Set of ~5000 ids in memory + a SQL anti-join, vs. a 60GB bloom
+  // filter at billion-user scale.
+  const excludeIds = cleanSeenArray.length > 0 ? cleanSeenArray.slice(0, 5000) : null;
+  const seenIdSet = new Set(cleanSeenArray);  // O(1) post-retrieval check (belt + suspenders)
   const minSim = similarityFloor || 0;
   const useMinilm = !!tasteVectorMinilm;
 
@@ -1256,7 +1266,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         return { data: data || [], error };
       }
       // Guest fallback: pre-Fix-2 path
-      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 5000);
       const catPromises = TRENDING_CATS.map(cat => {
         let q = supabase.from('published_articles')
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
@@ -1287,7 +1297,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         });
         return { data: data || [], error };
       }
-      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 5000);
       const catPromises = DISC_CATS.map(cat => {
         let q = supabase.from('published_articles')
           .select('id, ai_final_score, category, created_at, shelf_life_days, freshness_category')
@@ -1385,7 +1395,7 @@ async function handleV2Feed(req, res, supabase, opts) {
         .gte('created_at', thirtyDaysAgo)
         .gte('ai_final_score', 300)
         .order('ai_final_score', { ascending: false });
-      const sqlExclude = cleanSeenArray.slice(0, 1500);
+      const sqlExclude = cleanSeenArray.slice(0, 5000);
       if (sqlExclude.length > 0) {
         q = q.not('id', 'in', `(${sqlExclude.join(',')})`);
       }
@@ -1906,7 +1916,22 @@ async function handleV2Feed(req, res, supabase, opts) {
   });
 
   const articleMap = {};
-  for (const a of allArticles) articleMap[a.id] = a;
+  // Final defensive filter — strip any candidate whose id is in
+  // the canonical seen set. Belt + suspenders alongside the SQL
+  // anti-join: the personal-pool RPC's anti-join occasionally misses
+  // a row (race with impression-write tail; observed in 2026-04-28
+  // 22:53 session where article 141011 came back at p11s2 despite
+  // being inserted into user_feed_impressions at p1s4). This filter
+  // closes the loop deterministically with O(1) Set.has() per
+  // candidate. Cost: a few µs per article, ~0 vs the ~50ms retrieval.
+  let _seenLeakageVetoed = 0;
+  for (const a of allArticles) {
+    if (seenIdSet.has(Number(a.id))) { _seenLeakageVetoed++; continue; }
+    articleMap[a.id] = a;
+  }
+  if (_seenLeakageVetoed > 0) {
+    console.log(`[feed:seen-leak] dropped ${_seenLeakageVetoed} candidates that slipped past RPC anti-join`);
+  }
 
   // Pre-compute tag sets and embedding cache for MMR diversity calculations
   const tagCache = buildTagSetsCache(allArticles);
