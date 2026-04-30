@@ -778,9 +778,13 @@ export default async function handler(req, res) {
                     request_id: requestId,
                   }));
                   if (impressionRows.length > 0) {
-                    supabase.from('user_feed_impressions').insert(impressionRows).then(({ error }) => {
-                      if (error) console.error('[trinity] impression log failed:', error.message);
-                    });
+                    // AWAIT the insert — Vercel kills the lambda the moment we
+                    // return, so a fire-and-forget `.then()` loses every row.
+                    // Lost the entire 2026-04-30 21:00 session this way.
+                    const { error: impErr } = await supabase
+                      .from('user_feed_impressions')
+                      .insert(impressionRows);
+                    if (impErr) console.error('[trinity] impression log failed:', impErr.message);
                   }
                   return res.status(200).json({
                     articles: formatted,
