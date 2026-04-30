@@ -751,9 +751,41 @@ export default async function handler(req, res) {
                 .eq('personalization_id', personalizationId)
                 .single();
               if (flagRow?.trinity_enabled === true) {
+                // Build a canonical seen set so Trinity doesn't re-show articles
+                // we already served. Last session showed 13/25 (52%) prior-seen
+                // because the Trinity branch had only the client-sent IDs.
+                // Mirror the four sources v11 uses, scoped to the windows that
+                // matter:
+                //   - user_feed_impressions  last 7 days  (everything we showed)
+                //   - user_article_events    last 14 days (anything user reacted to)
+                //   - clientSeenIds                       (current session)
+                //   - user_recent_impressions last 10 min (Twitter-style guard)
+                const seenSet = new Set();
+                for (const id of clientSeenIds) if (id) seenSet.add(Number(id));
+                if (userId) {
+                  try {
+                    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
+                    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 3600000).toISOString();
+                    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+                    const [impRes, evtRes, recRes] = await Promise.all([
+                      supabase.from('user_feed_impressions').select('article_id').eq('user_id', userId).gte('created_at', sevenDaysAgo).limit(5000),
+                      supabase.from('user_article_events').select('article_id').eq('user_id', userId).gte('created_at', fourteenDaysAgo).limit(5000),
+                      supabase.from('user_recent_impressions').select('article_id').eq('user_id', userId).gte('served_at', tenMinAgo).limit(200),
+                    ]);
+                    for (const r of (impRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
+                    for (const r of (evtRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
+                    for (const r of (recRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
+                  } catch (seenErr) {
+                    console.warn('[trinity] seen-set load partial failure (non-blocking):', seenErr?.message);
+                  }
+                }
+                // Cap seen IDs at 2000 to keep PostgREST URL under its 32KB limit.
+                // Articles older than the 7-day candidate window can't appear anyway
+                // so we lose nothing meaningful by capping.
+                const seenIds = Array.from(seenSet).slice(0, 2000);
                 const trinityResult = await serveTrinityFeed(supabase, {
                   userId,
-                  seenIds: clientSeenIds,
+                  seenIds,
                   feedSize: limit,
                   hoursWindow: 7 * 24,
                 });
