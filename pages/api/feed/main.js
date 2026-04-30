@@ -766,17 +766,21 @@ export default async function handler(req, res) {
                   }));
                   // Log impressions with propensity (paper-orthogonal but kept).
                   const poolSize = trinityResult.debug.poolSize || formatted.length;
-                  const impressionRows = formatted.map((a, i) => ({
-                    user_id: userId || null,
-                    guest_device_id: guestDeviceId || null,
-                    article_id: a.id,
-                    bucket: a._bucket,
-                    slot_index: i,
-                    pool_size: poolSize,
-                    propensity_score: poolSize > 0 ? 1.0 / poolSize : null,
-                    slots_pattern: 'trinity',
-                    request_id: requestId,
-                  }));
+                  // Schema note: user_feed_impressions has NO guest_device_id column
+                  // and user_id is NOT NULL. Skip impression logging entirely for
+                  // anonymous-device requests. This matches the v11 path's behavior.
+                  const impressionRows = userId
+                    ? formatted.map((a, i) => ({
+                        user_id: userId,
+                        article_id: a.id,
+                        bucket: a._bucket,
+                        slot_index: i,
+                        pool_size: poolSize,
+                        propensity_score: poolSize > 0 ? 1.0 / poolSize : null,
+                        slots_pattern: 'trinity',
+                        request_id: requestId,
+                      }))
+                    : [];
                   if (impressionRows.length > 0) {
                     // AWAIT the insert — Vercel kills the lambda the moment we
                     // return, so a fire-and-forget `.then()` loses every row.
