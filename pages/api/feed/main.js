@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { serveTrinityFeed } from '../../../lib/trinityServe.js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const TRINITY_DISABLED_GLOBAL = process.env.TRINITY_DISABLE === '1';
 
 // Helper to parse JSON safely
 const safeJsonParse = (value, fallback = null) => {
@@ -734,6 +736,69 @@ export default async function handler(req, res) {
         }
 
         if (persResolved) {
+
+          // ==========================================
+          // TRINITY (KDD 2024) PHASE 2/3 — feature-flagged delegation.
+          // If personalization_profiles.trinity_enabled is true and the global
+          // kill-switch is off, delegate to lib/trinityServe.js. Falls through
+          // to v11 on any error so the feed never goes dark.
+          // ==========================================
+          if (!TRINITY_DISABLED_GLOBAL) {
+            try {
+              const { data: flagRow } = await supabase
+                .from('personalization_profiles')
+                .select('trinity_enabled')
+                .eq('personalization_id', personalizationId)
+                .single();
+              if (flagRow?.trinity_enabled === true) {
+                const trinityResult = await serveTrinityFeed(supabase, {
+                  userId,
+                  seenIds: clientSeenIds,
+                  feedSize: limit,
+                  hoursWindow: 7 * 24,
+                });
+                if (trinityResult.articles.length > 0) {
+                  // Format like the v11 response so iOS sees the same shape.
+                  const formatted = trinityResult.articles.map((a, idx) => ({
+                    ...formatArticle(a),
+                    _bucket: trinityResult.attribution[idx],
+                    _trinity: true,
+                  }));
+                  // Log impressions with propensity (paper-orthogonal but kept).
+                  const poolSize = trinityResult.debug.poolSize || formatted.length;
+                  const impressionRows = formatted.map((a, i) => ({
+                    user_id: userId || null,
+                    guest_device_id: guestDeviceId || null,
+                    article_id: a.id,
+                    bucket: a._bucket,
+                    slot_index: i,
+                    pool_size: poolSize,
+                    propensity_score: poolSize > 0 ? 1.0 / poolSize : null,
+                    slots_pattern: 'trinity',
+                    request_id: requestId,
+                  }));
+                  if (impressionRows.length > 0) {
+                    supabase.from('user_feed_impressions').insert(impressionRows).then(({ error }) => {
+                      if (error) console.error('[trinity] impression log failed:', error.message);
+                    });
+                  }
+                  return res.status(200).json({
+                    articles: formatted,
+                    next_cursor: null,
+                    has_more: false,
+                    total: formatted.length,
+                    feed_state: 'normal',
+                    fresh_count: formatted.length,
+                    caught_up_message: null,
+                    _trinity_debug: trinityResult.debug,
+                  });
+                }
+                console.warn('[trinity] returned 0 articles, falling through to v11');
+              }
+            } catch (trinityErr) {
+              console.error('[trinity] delegation failed, falling through to v11:', trinityErr?.message);
+            }
+          }
 
           // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
