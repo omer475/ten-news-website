@@ -354,8 +354,9 @@ def _load_active_codebook(supabase_client):
     if _VQ_CODEBOOK_CACHE['codebook'] and (now - _VQ_CODEBOOK_CACHE['ts']) < _VQ_CACHE_TTL_S:
         return _VQ_CODEBOOK_CACHE['codebook']
     try:
+        # Header (small).
         resp = (supabase_client.table('vq_codebooks')
-                .select('id, version, level1_centroids, level2_centroids, parent_map, dim')
+                .select('id, version, parent_map, dim')
                 .eq('is_active', True)
                 .order('trained_at', desc=True)
                 .limit(1)
@@ -365,16 +366,43 @@ def _load_active_codebook(supabase_client):
             return None
         import numpy as np
         cb = rows[0]
-        l1 = np.asarray(cb['level1_centroids'], dtype=np.float32)
-        l2 = np.asarray(cb['level2_centroids'], dtype=np.float32)  # stored as residuals
-        parent_map = cb['parent_map']
+        codebook_id = cb['id']
+        dim = cb['dim']
+        # Centroids: pull all rows for this codebook, sort by (level, idx) in Python.
+        cent_resp = (supabase_client.table('vq_centroids')
+                     .select('level, idx, vec')
+                     .eq('codebook_id', codebook_id)
+                     .execute())
+        cent_rows = cent_resp.data or []
+        if not cent_rows:
+            print(f"   ⚠️ [Trinity Step 12] codebook {codebook_id} has no centroid rows yet")
+            return None
+        # Build numpy arrays: level1 has rows where level=1; level2 where level=2.
+        # Vec strings come back as '[a,b,c,...]' from pgvector.
+        def _parse_vec(v):
+            if isinstance(v, list):
+                return v
+            s = str(v).strip().lstrip('[').rstrip(']')
+            return [float(x) for x in s.split(',')] if s else []
+
+        # Pre-size arrays based on max idx we see per level.
+        l1_rows = [r for r in cent_rows if r['level'] == 1]
+        l2_rows = [r for r in cent_rows if r['level'] == 2]
+        l1_size = max((r['idx'] for r in l1_rows), default=-1) + 1
+        l2_size = max((r['idx'] for r in l2_rows), default=-1) + 1
+        l1 = np.zeros((l1_size, dim), dtype=np.float32)
+        l2 = np.zeros((l2_size, dim), dtype=np.float32)
+        for r in l1_rows:
+            l1[r['idx']] = _parse_vec(r['vec'])
+        for r in l2_rows:
+            l2[r['idx']] = _parse_vec(r['vec'])
         cooked = {
-            'id': cb['id'],
+            'id': codebook_id,
             'version': cb['version'],
-            'l1': l1,                # shape (128, 384)
-            'l2': l2,                # shape (1024, 384) — residuals
-            'parent_map': parent_map,
-            'dim': cb['dim'],
+            'l1': l1,
+            'l2': l2,
+            'parent_map': cb['parent_map'],
+            'dim': dim,
         }
         _VQ_CODEBOOK_CACHE['ts'] = now
         _VQ_CODEBOOK_CACHE['codebook'] = cooked

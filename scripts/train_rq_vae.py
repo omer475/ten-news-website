@@ -46,9 +46,9 @@ except ImportError:
     sys.exit(1)
 
 
-PRIMARY_K = 128                 # J in the paper
-SUBCODEBOOK_K = 8               # K / J = 1024 / 128 = 8
-SECONDARY_K = PRIMARY_K * SUBCODEBOOK_K   # 1024
+PRIMARY_K = 256                 # J — doubled from 128 (Streaming-VQ direction)
+SUBCODEBOOK_K = 8               # K / J = 2048 / 256 = 8
+SECONDARY_K = PRIMARY_K * SUBCODEBOOK_K   # 2048
 EMBEDDING_DIM = 384             # MiniLM
 FETCH_BATCH = 1000
 STAMP_BATCH = 1000   # bulk_stamp_vq RPC has statement_timeout=120s, plenty of room
@@ -215,31 +215,60 @@ def write_codebook(
     activate: bool,
     notes: str | None,
 ) -> int:
+    """Insert codebook row + per-centroid rows into vq_centroids.
+
+    The two big arrays (level1 256x384 + level2 2048x384) used to live as
+    jsonb on vq_codebooks itself, but that triggered statement_timeout at
+    J=256. Now we write the small header to vq_codebooks then stream
+    centroids in batches into vq_centroids.
+    """
     version = datetime.now(timezone.utc).strftime("v%Y%m%d_%H%M%S")
-    row = {
+    header = {
         "version": version,
         "signal_type": "semantic",
-        "level1_centroids": l1.tolist(),
-        "level2_centroids": l2.tolist(),
         "parent_map": parent_map.tolist(),
         "dim": EMBEDDING_DIM,
         "item_count": item_count,
         "is_active": False,
         "notes": notes or "",
     }
-    print(f"[{ts()}] Writing codebook version={version}…")
-    inserted = supabase.table("vq_codebooks").insert(row).execute()
+    print(f"[{ts()}] Writing codebook header version={version}…")
+    inserted = supabase.table("vq_codebooks").insert(header).execute()
     codebook_id = inserted.data[0]["id"]
     print(f"[{ts()}]   inserted vq_codebooks.id = {codebook_id}")
 
+    # Stream centroids row-per-vector in batches of 200.
+    print(f"[{ts()}] Writing {l1.shape[0]} L1 centroids + {l2.shape[0]} L2 centroids…")
+    centroid_rows = []
+    for i in range(l1.shape[0]):
+        centroid_rows.append({
+            "codebook_id": codebook_id, "level": 1, "idx": i,
+            "vec": _format_vector(l1[i]),
+        })
+    for i in range(l2.shape[0]):
+        centroid_rows.append({
+            "codebook_id": codebook_id, "level": 2, "idx": i,
+            "vec": _format_vector(l2[i]),
+        })
+    BATCH = 200
+    for start in range(0, len(centroid_rows), BATCH):
+        chunk = centroid_rows[start : start + BATCH]
+        supabase.table("vq_centroids").insert(chunk).execute()
+        if start % (BATCH * 5) == 0:
+            print(f"[{ts()}]   wrote {start + len(chunk)}/{len(centroid_rows)} centroids")
+    print(f"[{ts()}]   done writing centroids")
+
     if activate:
         # Deactivate any existing active codebook then mark this one active.
-        # Two statements; the partial unique index on is_active=true tolerates
-        # the brief-zero-active window.
         supabase.table("vq_codebooks").update({"is_active": False}).eq("is_active", True).execute()
         supabase.table("vq_codebooks").update({"is_active": True}).eq("id", codebook_id).execute()
         print(f"[{ts()}]   activated codebook id={codebook_id}.")
     return codebook_id
+
+
+def _format_vector(arr: np.ndarray) -> str:
+    """pgvector accepts a string of the form '[v1,v2,...]'."""
+    return "[" + ",".join(f"{float(x):.6f}" for x in arr) + "]"
 
 
 def stamp_articles(
