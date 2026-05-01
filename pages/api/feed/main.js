@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { serveTrinityFeed } from '../../../lib/trinityServe.js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const TRINITY_DISABLED_GLOBAL = process.env.TRINITY_DISABLE === '1';
 
 // Helper to parse JSON safely
 const safeJsonParse = (value, fallback = null) => {
@@ -734,6 +736,98 @@ export default async function handler(req, res) {
         }
 
         if (persResolved) {
+
+          // ==========================================
+          // TRINITY (KDD 2024) v2 — feature-flagged delegation.
+          // If personalization_profiles.trinity_enabled is true and the
+          // global kill-switch is off, delegate to lib/trinityServe.js.
+          // Falls through to v11 on any error so the feed never goes dark.
+          //
+          // Lessons from v1 (PRs #94-#98) baked in:
+          //  - Full seen-history dedup (4 sources, capped at 2000 IDs)
+          //  - await impression insert (no fire-and-forget — Vercel kills lambdas)
+          //  - user_feed_impressions schema has NO guest_device_id; user_id NOT NULL
+          // ==========================================
+          if (!TRINITY_DISABLED_GLOBAL) {
+            try {
+              const { data: flagRow } = await supabase
+                .from('personalization_profiles')
+                .select('trinity_enabled')
+                .eq('personalization_id', personalizationId)
+                .single();
+              if (flagRow?.trinity_enabled === true) {
+                // Build canonical seen set: 4 sources Trinity needs to dedup against.
+                const seenSet = new Set();
+                for (const id of clientSeenIds) if (id) seenSet.add(Number(id));
+                if (userId) {
+                  try {
+                    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
+                    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 3600000).toISOString();
+                    const [impRes, evtRes] = await Promise.all([
+                      supabase.from('user_feed_impressions').select('article_id').eq('user_id', userId).gte('created_at', sevenDaysAgo).limit(5000),
+                      supabase.from('user_article_events').select('article_id').eq('user_id', userId).gte('created_at', fourteenDaysAgo).limit(5000),
+                    ]);
+                    for (const r of (impRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
+                    for (const r of (evtRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
+                  } catch (seenErr) {
+                    console.warn('[trinity] seen-set load partial failure:', seenErr?.message);
+                  }
+                }
+                // Cap at 2000 to keep PostgREST `not.in.(...)` URL under 32KB.
+                const seenIds = Array.from(seenSet).slice(0, 2000);
+
+                const trinityResult = await serveTrinityFeed(supabase, {
+                  userId,
+                  seenIds,
+                  feedSize: limit,
+                  hoursWindow: 7 * 24,
+                });
+                if (trinityResult.articles.length > 0) {
+                  const formatted = trinityResult.articles.map((a, idx) => ({
+                    ...formatArticle(a),
+                    _bucket: trinityResult.attribution[idx],
+                    _trinity: true,
+                  }));
+                  // Schema reality: user_feed_impressions has NO guest_device_id;
+                  // user_id is NOT NULL. Skip logging for anonymous-device requests.
+                  const poolSize = trinityResult.debug.poolSize || formatted.length;
+                  const impressionRows = userId
+                    ? formatted.map((a, i) => ({
+                        user_id: userId,
+                        article_id: a.id,
+                        bucket: a._bucket,
+                        slot_index: i,
+                        pool_size: poolSize,
+                        propensity_score: poolSize > 0 ? 1.0 / poolSize : null,
+                        slots_pattern: 'trinity',
+                        request_id: requestId,
+                      }))
+                    : [];
+                  if (impressionRows.length > 0) {
+                    // AWAIT — Vercel kills the lambda the moment we return,
+                    // so a fire-and-forget .then() loses every row.
+                    const { error: impErr } = await supabase
+                      .from('user_feed_impressions')
+                      .insert(impressionRows);
+                    if (impErr) console.error('[trinity] impression log failed:', impErr.message);
+                  }
+                  return res.status(200).json({
+                    articles: formatted,
+                    next_cursor: null,
+                    has_more: false,
+                    total: formatted.length,
+                    feed_state: 'normal',
+                    fresh_count: formatted.length,
+                    caught_up_message: null,
+                    _trinity_debug: trinityResult.debug,
+                  });
+                }
+                console.warn('[trinity] returned 0 articles, falling through to v11');
+              }
+            } catch (trinityErr) {
+              console.error('[trinity] delegation failed, falling through to v11:', trinityErr?.message);
+            }
+          }
 
           // Load BOTH long-term taste vector AND session vector (Change 1)
           const { data: ppData } = await supabase
