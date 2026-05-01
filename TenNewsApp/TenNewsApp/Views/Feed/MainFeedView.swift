@@ -26,14 +26,7 @@ struct MainFeedView: View {
                 feedContent
                     .transition(.opacity)
             } else {
-                // Empty state: should never appear in practice — Trinity always
-                // tops up to feedSize via trending fallback. If we somehow get
-                // here (network down, server bug), show a quiet spinner rather
-                // than the old "you're all caught up" message — TikTok-style
-                // feeds never end.
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(.opacity)
+                CaughtUpView()
             }
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
