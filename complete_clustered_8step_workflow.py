@@ -329,6 +329,116 @@ def build_typed_signals(article_countries, interest_tags, ner_result=None, langu
     return signals
 
 
+# ==========================================
+# STEP 12: Trinity (KDD 2024) v2 two-level cluster assignment.
+# Reads the active codebook from vq_codebooks (header) + vq_centroids
+# (per-centroid pgvector rows), cached in-process for 5 min, and projects
+# each new article's MiniLM embedding into (vq_primary, vq_secondary).
+# Hierarchical k-means: 256 primary x 8 sub = 2048 secondary.
+# vq_secondary = vq_primary * 8 + nearest sub-cluster index within that primary.
+# ==========================================
+
+_VQ_CODEBOOK_CACHE = {'ts': 0, 'codebook': None}
+_VQ_CACHE_TTL_S = 300
+
+def _l2_normalize(vec):
+    import numpy as np
+    a = np.asarray(vec, dtype=np.float32)
+    n = float(np.linalg.norm(a))
+    if n == 0.0:
+        return a
+    return a / n
+
+def _load_active_codebook(supabase_client):
+    import time as _t
+    now = _t.time()
+    if _VQ_CODEBOOK_CACHE['codebook'] and (now - _VQ_CODEBOOK_CACHE['ts']) < _VQ_CACHE_TTL_S:
+        return _VQ_CODEBOOK_CACHE['codebook']
+    try:
+        # Header
+        resp = (supabase_client.table('vq_codebooks')
+                .select('id, version, parent_map, dim')
+                .eq('is_active', True)
+                .order('trained_at', desc=True)
+                .limit(1)
+                .execute())
+        rows = resp.data or []
+        if not rows:
+            return None
+        import numpy as np
+        cb = rows[0]
+        codebook_id = cb['id']
+        dim = cb['dim']
+        # Centroids (one row per)
+        cent_resp = (supabase_client.table('vq_centroids')
+                     .select('level, idx, vec')
+                     .eq('codebook_id', codebook_id)
+                     .execute())
+        cent_rows = cent_resp.data or []
+        if not cent_rows:
+            print(f"   ⚠️ [Trinity Step 12] codebook {codebook_id} has no centroid rows yet")
+            return None
+
+        def _parse_vec(v):
+            if isinstance(v, list):
+                return v
+            s = str(v).strip().lstrip('[').rstrip(']')
+            return [float(x) for x in s.split(',')] if s else []
+
+        l1_rows = [r for r in cent_rows if r['level'] == 1]
+        l2_rows = [r for r in cent_rows if r['level'] == 2]
+        l1_size = max((r['idx'] for r in l1_rows), default=-1) + 1
+        l2_size = max((r['idx'] for r in l2_rows), default=-1) + 1
+        l1 = np.zeros((l1_size, dim), dtype=np.float32)
+        l2 = np.zeros((l2_size, dim), dtype=np.float32)
+        for r in l1_rows:
+            l1[r['idx']] = _parse_vec(r['vec'])
+        for r in l2_rows:
+            l2[r['idx']] = _parse_vec(r['vec'])
+        cooked = {
+            'id': codebook_id,
+            'version': cb['version'],
+            'l1': l1,
+            'l2': l2,
+            'parent_map': cb['parent_map'],
+            'dim': dim,
+        }
+        _VQ_CODEBOOK_CACHE['ts'] = now
+        _VQ_CODEBOOK_CACHE['codebook'] = cooked
+        return cooked
+    except Exception as e:
+        print(f"   ⚠️ [Trinity Step 12] codebook fetch failed: {e}")
+        return None
+
+def assign_vq_clusters(embedding_minilm, supabase_client):
+    """Project a 384-d MiniLM embedding into (vq_primary, vq_secondary)."""
+    if embedding_minilm is None:
+        return None, None
+    cb = _load_active_codebook(supabase_client)
+    if cb is None:
+        return None, None
+    try:
+        import numpy as np
+        v = _l2_normalize(embedding_minilm)
+        if v.shape[0] != cb['dim']:
+            return None, None
+        # Level 1: nearest centroid
+        d1 = np.linalg.norm(cb['l1'] - v[None, :], axis=1)
+        c1 = int(np.argmin(d1))
+        # Level 2: nearest residual within this c1's 8 sub-slots
+        residual = v - cb['l1'][c1]
+        SUBCODEBOOK_K = 8
+        base = c1 * SUBCODEBOOK_K
+        sub_residuals = cb['l2'][base : base + SUBCODEBOOK_K]
+        d2 = np.linalg.norm(sub_residuals - residual[None, :], axis=1)
+        local = int(np.argmin(d2))
+        c2 = base + local
+        return c1, c2
+    except Exception as e:
+        print(f"   ⚠️ [Trinity Step 12] projection failed: {e}")
+        return None, None
+
+
 def enrich_with_subtopics(interest_tags, title):
     """Append matching subtopic names to interest_tags list."""
     if not interest_tags:
@@ -1863,6 +1973,11 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 except Exception as page2_err:
                     print(f"   ⚠️ [Cluster {cluster_id}] Page 2 generation failed: {page2_err}")
 
+            # STEP 12: Trinity 2-level cluster assignment.
+            vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
+            if vq_primary is not None:
+                print(f"   🎯 [Cluster {cluster_id}] Trinity (c1={vq_primary}, c2={vq_secondary})")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1898,6 +2013,8 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'author_name': matched_author_name,
                 'pages': article_pages,
                 'typed_signals': article_typed_signals,
+                'vq_primary': vq_primary,
+                'vq_secondary': vq_secondary,
                 'super_cluster_id': cluster_super,
                 'leaf_cluster_id': cluster_leaf,
                 'cluster_assignments': cluster_assigns,
