@@ -55,14 +55,13 @@ final class FeedViewModel {
         }
     }
 
-    /// Load cached articles. Returns nil if cache is empty, older than 60 seconds,
-    /// or suspiciously small (< 5 articles — likely a stale cache from a broken
-    /// session). 60-second TTL is short enough that force-quit + reopen always
-    /// feels fresh (Trinity dedups server-side anyway), long enough to absorb
-    /// a brief app-switch (check Slack, return) without a spinner.
+    /// Load cached articles. Returns nil if cache is empty, older than 2 hours,
+    /// or suspiciously small (< 5 articles — likely a stale "caught_up" cache
+    /// from a broken session). Skipping tiny caches forces a fresh fetch on
+    /// launch instead of showing a 1-article frozen feed.
     private func loadFeedCache() -> [Article]? {
         let cachedTime = UserDefaults.standard.double(forKey: Self.cacheTimeKey)
-        guard cachedTime > 0, Date().timeIntervalSince1970 - cachedTime < 60 else { return nil }
+        guard cachedTime > 0, Date().timeIntervalSince1970 - cachedTime < 7200 else { return nil }
         guard let data = UserDefaults.standard.data(forKey: Self.cacheKey),
               let cached = try? JSONDecoder().decode([Article].self, from: data),
               cached.count >= 5 else { return nil }
