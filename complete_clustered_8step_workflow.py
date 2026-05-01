@@ -1699,16 +1699,15 @@ def run_complete_pipeline():
                 failed_components = [c for c in selected if c not in successful_components]
                 print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
-            # Generate embeddings for feed personalization (pgvector similarity search)
-            article_embedding = None
+            # Generate MiniLM embedding for feed personalization (pgvector similarity search).
+            # The 768-d Gemini embedding is no longer emitted — main.js only reads
+            # `embedding_minilm`, and the extra Gemini API call was pure overhead.
+            article_embedding = None  # kept as None for backward-compat with the insert dict shape
             article_embedding_minilm = None
             try:
-                from step1_5_event_clustering import get_embedding, get_embedding_minilm
+                from step1_5_event_clustering import get_embedding_minilm
                 embed_text = f"{title} {' '.join(bullets) if isinstance(bullets, list) else ''}"
-                article_embedding = get_embedding(embed_text)
                 article_embedding_minilm = get_embedding_minilm(embed_text)
-                if article_embedding:
-                    print(f"   🧬 [Cluster {cluster_id}] Gemini embedding ({len(article_embedding)} dims)")
                 if article_embedding_minilm:
                     print(f"   🧠 [Cluster {cluster_id}] MiniLM embedding ({len(article_embedding_minilm)} dims)")
             except Exception as e:

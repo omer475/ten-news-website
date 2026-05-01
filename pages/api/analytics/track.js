@@ -809,21 +809,11 @@ export default async function handler(req, res) {
             const ipsMultiplier = Math.pow(1 + Math.max(slot, 0), 0.70)
             const signalWeightForRpc = baseWeight * ipsMultiplier
 
-            // Update first 5 tags (position-weighted: top tags are primary signals)
-            for (const tag of tags.slice(0, 5)) {
-              admin.rpc('update_entity_signal', {
-                p_user_id: effectiveUserId,
-                p_entity: tag.toLowerCase(),
-                p_is_positive: isSignalPositive,
-                p_weight: signalWeightForRpc,
-                p_event_at: new Date().toISOString(),
-              }).catch(err => {
-                // Table may not exist yet — non-blocking
-                if (!err?.message?.includes('relation') && !err?.message?.includes('does not exist')) {
-                  console.log('[analytics] entity_signal update failed:', err?.message)
-                }
-              })
-            }
+            // (cleanup) Removed legacy per-tag `update_entity_signal` RPC loop.
+            // Same signal already written via `bulk_update_entity_signals` calls
+            // earlier in this handler; the RPC `update_entity_signal` is no
+            // longer read by main.js.
+            void signalWeightForRpc;
           }).catch(() => {})
 
           // Phase D (feed v11) — per-(user, article) exposure tracking.
@@ -844,101 +834,13 @@ export default async function handler(req, res) {
           })
         }
 
-        // UCB TRACKING: lightweight — only match against user's own interest clusters
-        if (bucket === 'personal' && article_id) {
-          admin.from('published_articles').select('embedding_minilm, category').eq('id', article_id).single().then(({ data: artInfo }) => {
-            if (!artInfo?.embedding_minilm || !Array.isArray(artInfo.embedding_minilm)) return
-
-            // Find which precomputed cluster this article is closest to (limit to 20 for performance)
-            admin.from('subtopic_entity_clusters').select('subtopic_category, cluster_index, centroid_embedding').limit(20).then(({ data: allClusters }) => {
-              if (!allClusters) return
-
-              let bestCat = null, bestIdx = null, bestSim = -1
-              for (const c of allClusters) {
-                const centroid = typeof c.centroid_embedding === 'string' ? JSON.parse(c.centroid_embedding) : c.centroid_embedding
-                if (!Array.isArray(centroid)) continue
-                const sim = cosineSim(artInfo.embedding_minilm, centroid)
-                if (sim > bestSim) { bestSim = sim; bestCat = c.subtopic_category; bestIdx = c.cluster_index; }
-              }
-
-              if (bestCat && bestSim > 0.3) {
-                const isEngaged = !['article_skipped', 'article_glance'].includes(event_type)
-                admin.from('user_cluster_stats').upsert({
-                  personalization_id: persId,
-                  subtopic_category: bestCat,
-                  cluster_index: bestIdx,
-                  times_shown: 1,
-                  times_engaged: isEngaged ? 1 : 0,
-                  last_shown_at: new Date().toISOString(),
-                }, { onConflict: 'personalization_id,subtopic_category,cluster_index' })
-                .then(() => {
-                  // Increment existing stats
-                  admin.rpc('increment_cluster_stats', { p_pers_id: persId, p_cat: bestCat, p_idx: bestIdx, p_engaged: isEngaged })
-                    .catch(() => {
-                      // RPC doesn't exist yet, do manual update
-                      admin.from('user_cluster_stats')
-                        .select('times_shown, times_engaged')
-                        .eq('personalization_id', persId)
-                        .eq('subtopic_category', bestCat)
-                        .eq('cluster_index', bestIdx)
-                        .single()
-                        .then(({ data: stat }) => {
-                          if (stat) {
-                            admin.from('user_cluster_stats').update({
-                              times_shown: (stat.times_shown || 0) + 1,
-                              times_engaged: (stat.times_engaged || 0) + (isEngaged ? 1 : 0),
-                              last_shown_at: new Date().toISOString(),
-                            }).eq('personalization_id', persId).eq('subtopic_category', bestCat).eq('cluster_index', bestIdx).then(() => {}).catch(() => {})
-                          }
-                        }).catch(() => {})
-                    })
-                }).catch(() => {})
-              }
-            }).catch(() => {})
-          }).catch(() => {})
-        }
-
-        // INCREMENTAL CLUSTERING: moved to awaited block below, calling the
-        // atomic `insert_or_merge_cluster` RPC. The prior fire-and-forget
-        // version raced under rapid engagement and blew past MAX_CLUSTERS=7.
-        // Fix 1D bandit update: also awaited, below, for the same reason.
-
-        // ============================================================
-        // BUCKET ENGAGEMENT STATS — for adaptive budget allocation
-        // Tracks how well trending/exploration performs for this user
-        // ============================================================
-        if (bucket === 'trending' || bucket === 'exploration' || bucket === 'discovery' || bucket === 'cold-start') {
-          const isEngaged = !['article_skipped', 'article_glance'].includes(event_type)
-          admin.rpc('update_bucket_stats', {
-            p_pers_id: persId,
-            p_bucket: bucket,
-            p_engaged: isEngaged,
-          }).catch(() => {})
-        }
-
-        // ============================================================
-        // SUBTOPIC ENGAGEMENT STATS — for weighted subtopic allocation
-        // Matches article to user's subtopics via category + tags
-        // ============================================================
-        if (article_id && bucket === 'personal') {
-          admin.from('published_articles').select('category, interest_tags').eq('id', article_id).single().then(({ data: artInfo }) => {
-            if (!artInfo) return
-            const artCat = artInfo.category
-            const artTags = Array.isArray(artInfo.interest_tags) ? artInfo.interest_tags :
-              (typeof artInfo.interest_tags === 'string' ? JSON.parse(artInfo.interest_tags || '[]') : [])
-
-            // Find which subtopic this article belongs to by matching the metadata bucket subtopic
-            // Use the article's category + tags to find best matching subtopic
-            const subtopicName = metadata?.subtopic_name
-            if (subtopicName) {
-              admin.rpc('update_subtopic_stats', {
-                p_pers_id: persId,
-                p_subtopic: subtopicName,
-                p_event_type: event_type,
-              }).catch(() => {})
-            }
-          }).catch(() => {})
-        }
+        // (cleanup) Removed three dead-write blocks:
+        //   - UCB tracking against `subtopic_entity_clusters` (table is empty
+        //     in prod — bestCat never matched, the entire block was a no-op).
+        //   - `user_cluster_stats` upsert + `increment_cluster_stats` RPC
+        //     (RPC doesn't exist; main.js never reads the table).
+        //   - `update_bucket_stats` and `update_subtopic_stats` RPC calls
+        //     (their target columns/tables are not read by main.js).
       })
 
       // REMOVED: Legacy EMA update was overwriting the cluster-computed taste vector
