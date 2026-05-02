@@ -26,7 +26,13 @@ struct MainFeedView: View {
                 feedContent
                     .transition(.opacity)
             } else {
-                CaughtUpView()
+                // Empty articles + no error + not loading = transient state.
+                // Trinity v3 should never reach here (always returns ≥1 article
+                // and has_more=true). Show a quiet spinner rather than the v11
+                // "you're all caught up" page.
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
             }
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
@@ -113,13 +119,9 @@ struct MainFeedView: View {
                 }
             }
         }
-        .overlay(alignment: .bottom) {
-            if viewModel.currentIndex >= sortedArticles.count - 1 && !viewModel.hasMore {
-                CompactCaughtUpBanner()
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, 90)
-            }
-        }
+        // Trinity v3: feeds are conceptually unbounded — every fresh request
+        // retrieves new candidates after dedup. The CompactCaughtUpBanner is
+        // a v11 artifact and contradicts that promise; removed entirely.
     }
 
     private var timeOfDay: TimeOfDay { .current }
