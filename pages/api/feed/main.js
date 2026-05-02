@@ -811,10 +811,16 @@ export default async function handler(req, res) {
                       .insert(impressionRows);
                     if (impErr) console.error('[trinity] impression log failed:', impErr.message);
                   }
+                  // Trinity is conceptually unbounded (every fresh request
+                  // retrieves new candidates after dedup). has_more=true keeps
+                  // iOS's loadMoreIfNeeded loop firing — without it the
+                  // CompactCaughtUpBanner shows "you're all caught up" after
+                  // the 20-article slate, even though the next request would
+                  // give 20 fresh articles.
                   return res.status(200).json({
                     articles: formatted,
                     next_cursor: null,
-                    has_more: false,
+                    has_more: true,
                     total: formatted.length,
                     feed_state: 'normal',
                     fresh_count: formatted.length,
