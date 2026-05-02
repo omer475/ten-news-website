@@ -780,7 +780,9 @@ export default async function handler(req, res) {
                   userId,
                   seenIds,
                   feedSize: limit,
-                  hoursWindow: 7 * 24,
+                  // v3: hoursWindow at the top level is ignored.
+                  // Adaptive multi-tier retrieval picks the window per
+                  // retriever (M / LT / explore independently).
                 });
                 if (trinityResult.articles.length > 0) {
                   const formatted = trinityResult.articles.map((a, idx) => ({

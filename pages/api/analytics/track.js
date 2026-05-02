@@ -592,6 +592,51 @@ export default async function handler(req, res) {
 
     console.log('[analytics] Event stored successfully:', event_type)
 
+    // ─── Trinity v3 explore-arm bandit update ────────────────────────────
+    // If this is a qualifying engagement event AND the article was served via
+    // bucket='explore' in a recent Trinity request, increment the cluster's
+    // explore_engages counter so Beta(α, β) Thompson Sampling learns. Pure
+    // fire-and-forget — never blocks the response.
+    const TRINITY_QUALIFYING_ENGAGE = new Set([
+      'article_engaged', 'article_liked', 'article_saved', 'article_shared', 'article_revisit',
+    ])
+    if (TRINITY_QUALIFYING_ENGAGE.has(event_type) && article_id && effectiveUserId) {
+      ;(async () => {
+        try {
+          // Find the most recent impression for this (user, article) — was it explore-bucket?
+          const { data: impr } = await admin
+            .from('user_feed_impressions')
+            .select('bucket, article_id')
+            .eq('user_id', effectiveUserId)
+            .eq('article_id', article_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+          if (impr?.bucket !== 'explore') return
+          // Look up the article's vq_secondary
+          const { data: art } = await admin
+            .from('published_articles')
+            .select('vq_secondary')
+            .eq('id', article_id)
+            .single()
+          if (art?.vq_secondary == null) return
+          // Increment explore_engages on the cluster_state row.
+          const { data: cs } = await admin
+            .from('cluster_state')
+            .select('explore_engages')
+            .eq('cluster_id', art.vq_secondary)
+            .single()
+          await admin.from('cluster_state').upsert({
+            cluster_id: art.vq_secondary,
+            explore_engages: (cs?.explore_engages || 0) + 1,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'cluster_id' })
+        } catch (e) {
+          // Non-blocking — bandit miss is fine, never fails the analytics request.
+        }
+      })()
+    }
+
     // ============================================================
     // V3 ALGORITHM: Resolve personalization_id, then update
     // sliding window + entity affinity (replaces EMA)
