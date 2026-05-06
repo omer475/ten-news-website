@@ -97,7 +97,12 @@ final class FeedViewModel {
         errorMessage = nil
         currentPreferences = preferences
         currentUserId = userId
-        reRanker.reset()
+        // v5.1 fix #8: do NOT reset reRanker on launch. SessionReRanker now
+        // persists state across launches via UserDefaults (24h sliding TTL),
+        // so a power user opening the app 5× a day keeps a single growing
+        // session context instead of 5 cold-start contexts. Manual refresh()
+        // still calls reset() — that path is an explicit "wipe my context"
+        // signal from the user.
 
         // Step 1: Show cached articles IMMEDIATELY if available
         if let cached = loadFeedCache() {

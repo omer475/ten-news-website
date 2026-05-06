@@ -364,19 +364,37 @@ def _load_active_codebook(supabase_client):
                 .execute())
         rows = resp.data or []
         if not rows:
+            print("   ⚠️ [Trinity Step 12] FAIL_REASON=no_active_codebook (vq_codebooks has no is_active=true row)")
             return None
         import numpy as np
         cb = rows[0]
         codebook_id = cb['id']
         dim = cb['dim']
-        # Centroids (one row per)
-        cent_resp = (supabase_client.table('vq_centroids')
-                     .select('level, idx, vec')
-                     .eq('codebook_id', codebook_id)
-                     .execute())
-        cent_rows = cent_resp.data or []
+        # Centroids (one row per).
+        # supabase-py defaults to a 1000-row PostgREST pagination cap,
+        # but the codebook has 256 L1 + 2048 L2 = 2304 rows. A naive
+        # query silently truncates to 1000 (256 L1 + 744 L2), producing
+        # l2 of shape (744, dim) instead of (2048, dim). For any article
+        # whose L1 code projects to vq_primary ≥ 93 (~64% of the
+        # codebook), the L2 sub-residual slice base..base+8 falls past
+        # 744 and `argmin` raises "empty sequence" — exact ROOT CAUSE of
+        # the silent stamping failure that started 2026-05-01.
+        cent_rows = []
+        _page_size = 1000
+        _offset = 0
+        while True:
+            cent_resp = (supabase_client.table('vq_centroids')
+                         .select('level, idx, vec')
+                         .eq('codebook_id', codebook_id)
+                         .range(_offset, _offset + _page_size - 1)
+                         .execute())
+            _page = cent_resp.data or []
+            cent_rows.extend(_page)
+            if len(_page) < _page_size:
+                break
+            _offset += _page_size
         if not cent_rows:
-            print(f"   ⚠️ [Trinity Step 12] codebook {codebook_id} has no centroid rows yet")
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=no_centroids codebook_id={codebook_id} version={cb.get('version')}")
             return None
 
         def _parse_vec(v):
@@ -389,6 +407,9 @@ def _load_active_codebook(supabase_client):
         l2_rows = [r for r in cent_rows if r['level'] == 2]
         l1_size = max((r['idx'] for r in l1_rows), default=-1) + 1
         l2_size = max((r['idx'] for r in l2_rows), default=-1) + 1
+        if l1_size == 0 or l2_size == 0:
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=empty_centroid_levels codebook_id={codebook_id} l1_rows={len(l1_rows)} l2_rows={len(l2_rows)}")
+            return None
         l1 = np.zeros((l1_size, dim), dtype=np.float32)
         l2 = np.zeros((l2_size, dim), dtype=np.float32)
         for r in l1_rows:
@@ -405,22 +426,28 @@ def _load_active_codebook(supabase_client):
         }
         _VQ_CODEBOOK_CACHE['ts'] = now
         _VQ_CODEBOOK_CACHE['codebook'] = cooked
+        print(f"   ✓ [Trinity Step 12] codebook loaded id={codebook_id} version={cb.get('version')} dim={dim} l1={l1_size} l2={l2_size}")
         return cooked
     except Exception as e:
-        print(f"   ⚠️ [Trinity Step 12] codebook fetch failed: {e}")
+        import traceback
+        print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=codebook_fetch_exception type={type(e).__name__} msg={e}")
+        traceback.print_exc()
         return None
 
 def assign_vq_clusters(embedding_minilm, supabase_client):
     """Project a 384-d MiniLM embedding into (vq_primary, vq_secondary)."""
     if embedding_minilm is None:
+        print("   ⚠️ [Trinity Step 12] FAIL_REASON=null_embedding")
         return None, None
     cb = _load_active_codebook(supabase_client)
     if cb is None:
+        # _load_active_codebook already logged the specific reason
         return None, None
     try:
         import numpy as np
         v = _l2_normalize(embedding_minilm)
         if v.shape[0] != cb['dim']:
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=dim_mismatch input_dim={v.shape[0]} codebook_dim={cb['dim']}")
             return None, None
         # Level 1: nearest centroid
         d1 = np.linalg.norm(cb['l1'] - v[None, :], axis=1)
@@ -435,7 +462,9 @@ def assign_vq_clusters(embedding_minilm, supabase_client):
         c2 = base + local
         return c1, c2
     except Exception as e:
-        print(f"   ⚠️ [Trinity Step 12] projection failed: {e}")
+        import traceback
+        print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=projection_exception type={type(e).__name__} msg={e}")
+        traceback.print_exc()
         return None, None
 
 
@@ -1977,6 +2006,11 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
             if vq_primary is not None:
                 print(f"   🎯 [Cluster {cluster_id}] Trinity (c1={vq_primary}, c2={vq_secondary})")
+            else:
+                # Loud failure log so the next pipeline run is observable.
+                # Article still inserted with NULL vq codes (won't break the pipeline);
+                # downstream backfill script (scripts/backfill_vq_stamping.py) will retry.
+                print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — article will be inserted with NULL vq_primary/vq_secondary. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
 
             article_data = {
                 'cluster_id': cluster_id,

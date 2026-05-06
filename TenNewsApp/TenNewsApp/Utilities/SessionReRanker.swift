@@ -4,6 +4,12 @@ import Foundation
 /// Tracks dwell time per article as the user swipes.
 /// 4-tier dwell signals: hard skip (<1.5s), soft skip (1.5-3s), neutral (3-5s), engaged (>=5s).
 /// Re-ranks unseen articles instantly using tag/category overlap with session signals.
+///
+/// v5.1 Phase 1 fix #8 (2026-05-06): now persists state across app launches
+/// via UserDefaults with a 24h sliding TTL. Without this, the ReRanker
+/// reset on every launch and a heavy user opening the app 5× a day got
+/// 5 cold-context sessions, losing every signal between fetches.
+/// Monolith-lite: persists user state as the platform recommender does.
 @MainActor @Observable
 final class SessionReRanker {
     private(set) var engagedIds: Set<String> = []
@@ -25,6 +31,79 @@ final class SessionReRanker {
     private let hardSkipThreshold: TimeInterval = 1.5
     private let softSkipThreshold: TimeInterval = 3.0
     private let engageThreshold: TimeInterval = 5.0
+
+    // MARK: - Persistence (Fix #8)
+
+    private static let storageKey = "session_signals_v1"
+    private static let ttlSeconds: TimeInterval = 24 * 60 * 60   // 24h sliding window
+    private static let perSetCap = 200                            // bound storage growth
+    private static let saveDebounceMs: UInt64 = 300
+
+    /// Encoded snapshot for UserDefaults round-trip.
+    private struct Snapshot: Codable {
+        let engagedIds: [String]
+        let glancedIds: [String]
+        let skippedIds: [String]
+        let sourceClickedIds: [String]
+        let skipDwellMap: [String: TimeInterval]
+        let interestProfile: [String: Double]
+        let skipProfile: [String: Double]
+        let savedAt: Date
+    }
+
+    private var saveTask: Task<Void, Never>?
+
+    init() {
+        loadFromDisk()
+    }
+
+    private func loadFromDisk() {
+        guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
+              let snapshot = try? JSONDecoder().decode(Snapshot.self, from: data) else {
+            return
+        }
+        let age = Date().timeIntervalSince(snapshot.savedAt)
+        if age < 0 || age > Self.ttlSeconds {
+            // Clock skew or expired — start clean.
+            UserDefaults.standard.removeObject(forKey: Self.storageKey)
+            return
+        }
+        engagedIds = Set(snapshot.engagedIds)
+        glancedIds = Set(snapshot.glancedIds)
+        skippedIds = Set(snapshot.skippedIds)
+        sourceClickedIds = Set(snapshot.sourceClickedIds)
+        skipDwellMap = snapshot.skipDwellMap
+        interestProfile = snapshot.interestProfile
+        skipProfile = snapshot.skipProfile
+    }
+
+    /// Debounced write — coalesces bursty mutations during fast scrolling.
+    /// Saves an absolute capped snapshot so storage never grows unbounded.
+    private func scheduleSave() {
+        saveTask?.cancel()
+        saveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: Self.saveDebounceMs * 1_000_000)
+            guard !Task.isCancelled else { return }
+            self?.persistNow()
+        }
+    }
+
+    private func persistNow() {
+        let cap = Self.perSetCap
+        let snapshot = Snapshot(
+            engagedIds: Array(engagedIds.prefix(cap)),
+            glancedIds: Array(glancedIds.prefix(cap)),
+            skippedIds: Array(skippedIds.prefix(cap)),
+            sourceClickedIds: Array(sourceClickedIds.prefix(cap)),
+            skipDwellMap: skipDwellMap,
+            interestProfile: interestProfile,
+            skipProfile: skipProfile,
+            savedAt: Date()
+        )
+        if let data = try? JSONEncoder().encode(snapshot) {
+            UserDefaults.standard.set(data, forKey: Self.storageKey)
+        }
+    }
 
     // MARK: - Record Signal
 
@@ -70,6 +149,7 @@ final class SessionReRanker {
                 interestProfile[cat] = (interestProfile[cat] ?? 0) + 0.15
             }
         }
+        scheduleSave()
     }
 
     /// Scroll-back = very strong positive signal (4x weight).
@@ -83,6 +163,7 @@ final class SessionReRanker {
         if let cat = article.category?.lowercased() {
             interestProfile[cat] = (interestProfile[cat] ?? 0) + 2.0
         }
+        scheduleSave()
     }
 
     /// Source click = strongest engagement signal (3× weight)
@@ -96,6 +177,7 @@ final class SessionReRanker {
         if let cat = article.category?.lowercased() {
             interestProfile[cat] = (interestProfile[cat] ?? 0) + 1.5
         }
+        scheduleSave()
     }
 
     // MARK: - Re-rank
@@ -169,6 +251,10 @@ final class SessionReRanker {
         return str
     }
 
+    /// Hard reset — wipes in-memory state AND the persisted snapshot.
+    /// Reserved for explicit "fresh feed" intents (manual pull-to-refresh).
+    /// App-launch flow no longer calls this; persistent state survives the
+    /// 24h TTL (see init / loadFromDisk).
     func reset() {
         engagedIds.removeAll()
         glancedIds.removeAll()
@@ -177,6 +263,8 @@ final class SessionReRanker {
         skipDwellMap.removeAll()
         interestProfile.removeAll()
         skipProfile.removeAll()
+        saveTask?.cancel()
+        UserDefaults.standard.removeObject(forKey: Self.storageKey)
     }
 
     // MARK: - Helpers
