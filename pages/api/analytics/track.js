@@ -655,17 +655,14 @@ export default async function handler(req, res) {
             .eq('id', article_id)
             .single()
           if (art?.vq_secondary == null) return
-          // Increment explore_engages on the cluster_state row.
-          const { data: cs } = await admin
-            .from('cluster_state')
-            .select('explore_engages')
-            .eq('cluster_id', art.vq_secondary)
-            .single()
-          await admin.from('cluster_state').upsert({
-            cluster_id: art.vq_secondary,
-            explore_engages: (cs?.explore_engages || 0) + 1,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'cluster_id' })
+          // Audit fix A2 (2026-05-06): atomic RPC replaces the read-modify-
+          // write race. Previously two concurrent engagement events on the
+          // same cluster would each read the same value and each write +1,
+          // producing one increment instead of two and skewing the Beta
+          // posterior the explore arm samples from.
+          await admin.rpc('bump_cluster_explore_engages', {
+            p_cluster_id: art.vq_secondary,
+          })
         } catch (e) {
           // Non-blocking — bandit miss is fine, never fails the analytics request.
         }

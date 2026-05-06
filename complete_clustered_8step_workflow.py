@@ -2091,10 +2091,17 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             if vq_primary is not None:
                 print(f"   🎯 [Cluster {cluster_id}] Trinity (c1={vq_primary}, c2={vq_secondary})")
             else:
-                # Loud failure log so the next pipeline run is observable.
-                # Article still inserted with NULL vq codes (won't break the pipeline);
-                # downstream backfill script (scripts/backfill_vq_stamping.py) will retry.
-                print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — article will be inserted with NULL vq_primary/vq_secondary. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
+                # Audit fix A7 (2026-05-06): SKIP this article instead of
+                # inserting it with NULL vq_primary. NULL articles are
+                # invisible to Trinity-M / Trinity-LT / trinity-fresh
+                # retrievers (they all filter on vq_primary IS NOT NULL),
+                # so an article with no VQ code costs Cloud Run + Gemini
+                # generation budget for zero distribution. Failing the
+                # SINGLE article (return False) leaves the rest of the
+                # batch untouched — pipeline doesn't grind to a halt, but
+                # broken articles never enter the corpus.
+                print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — SKIPPING article. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
+                return False
 
             article_data = {
                 'cluster_id': cluster_id,
