@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { serveTrinityFeed } from '../../../lib/trinityServe.js';
+import { expectedReadSecondsForArticle } from '../../../lib/readingTime.js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -192,6 +193,9 @@ function formatArticle(article, eventMap = {}) {
     views: article.view_count || 0,
     author_id: article.author_id || null,
     author_name: article.author_name || null,
+    // Kuaishou WTG / TikTok pCompletion analog. Lets the client derive
+    // read_ratio = dwell / expected_read_seconds for length-aware engagement.
+    expected_read_seconds: expectedReadSecondsForArticle(article),
   };
 
   // Add world event if available
