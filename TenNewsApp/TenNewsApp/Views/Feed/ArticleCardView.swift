@@ -740,7 +740,7 @@ struct ArticleCardView: View {
 
         if !bullets.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(bullets.prefix(4).enumerated()), id: \.offset) { _, bullet in
+                ForEach(Array(bullets.prefix(4).enumerated()), id: \.offset) { idx, bullet in
                     HStack(alignment: .top, spacing: 12) {
                         Circle()
                             .fill(effectiveColor)
@@ -753,6 +753,13 @@ struct ArticleCardView: View {
                             .lineSpacing(5)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    // Audit fix B1 (2026-05-06): bullet-level tap event.
+                    // Fires entity_tap with bullet_index and the first bolded
+                    // entity (between **markers**) — bolded names are the
+                    // pipeline's NER-extracted entities. Server can match
+                    // against article.interest_tags to attribute.
+                    .contentShape(Rectangle())
+                    .onTapGesture { fireEntityTap(bulletIndex: idx, bulletText: bullet) }
                 }
             }
             .frame(maxHeight: availableHeight, alignment: .top)
@@ -788,6 +795,34 @@ struct ArticleCardView: View {
             }
         }
         return views.reduce(Text("")) { $0 + $1 }
+    }
+
+    // Audit fix B1 (2026-05-06): extract first bolded entity span and fire
+    // entity_tap analytics. The pipeline marks NER-extracted entities with
+    // **double-asterisks** in title/bullet text, so the first bold span is
+    // typically the most prominent entity in that bullet. Server-side
+    // attribution maps the entity text to article.interest_tags / topics.
+    private func fireEntityTap(bulletIndex: Int, bulletText: String) {
+        let parts = bulletText.components(separatedBy: "**")
+        // Odd indices are bolded segments.
+        let firstEntity: String? = {
+            for (i, p) in parts.enumerated() where i % 2 == 1 && !p.isEmpty { return p }
+            return nil
+        }()
+        guard let entity = firstEntity else { return }
+        let articleId = Int(article.id.stringValue)
+        Task {
+            try? await AnalyticsService().track(
+                event: "entity_tap",
+                articleId: articleId,
+                category: article.category,
+                metadata: [
+                    "entity_text": entity,
+                    "bullet_index": String(bulletIndex),
+                    "source_field": "bullet"
+                ]
+            )
+        }
     }
 
     // MARK: - 5W View

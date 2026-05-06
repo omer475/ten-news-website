@@ -46,8 +46,13 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-# Event detection paused (re-enable after app launch)
-# from step6_world_event_detection import detect_world_events
+# Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
+# it `article_world_events` was empty (~0% of articles), so Trinity v5's
+# story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
+# the cross-session 0.3× demote never fired. The detector adds ~0.5s
+# Gemini latency per published article — for ~16 articles/cycle that's
+# ~10s extra, well under the 30-min Cloud Run task timeout.
+from step6_world_event_detection import detect_world_events
 from supabase import create_client
 import unicodedata
 
@@ -1347,6 +1352,10 @@ def run_complete_pipeline():
     
     # Thread-safe counter for published articles
     published_lock = threading.Lock()
+    # Audit fix A6 (2026-05-06): collect newly-published articles for the
+    # post-loop world-event detection batch.
+    published_for_events = []
+    published_for_events_lock = threading.Lock()
     published_count = 0
     # Per-run typed_signals audit: (id, signal_count, rich_count)
     published_signal_audit = []
@@ -2170,6 +2179,13 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                     'total': len(article_typed_signals),
                     'rich': _rich_signal_count,
                 })
+            # Audit fix A6 (2026-05-06): collect for post-loop step6.
+            with published_for_events_lock:
+                published_for_events.append({
+                    'id': published_article_id,
+                    'title': title,
+                    'bullets': ' '.join(b for b in bullets if isinstance(b, str)) if isinstance(bullets, list) else str(bullets or ''),
+                })
             
             # Add to title + embedding cache for other workers' duplicate detection
             with title_cache_lock:
@@ -2213,6 +2229,20 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             except Exception as e:
                 print(f"   ❌ Cluster {cid} exception: {e}")
     
+    # Audit fix A6 (2026-05-06): batch world-event detection on every newly-
+    # published article. Tags articles to existing events when they cover the
+    # same story, creates new event clusters when they don't. Populates
+    # article_world_events which Trinity v5 uses for in-slate story dedup
+    # (max 1 per event_id) and 0.3× cross-session demote.
+    if published_for_events:
+        try:
+            print(f"\n🌍 STEP 6 (post-publish): detecting world events for {len(published_for_events)} articles")
+            detect_world_events(published_for_events)
+        except Exception as e:
+            # Non-blocking: detection failure must not abort the pipeline.
+            # The articles are already published; tagging is enrichment.
+            print(f"   ⚠️ [Step 6] world-event detection failed (non-fatal): {e}")
+
     # Summary
     print(f"\n{'='*80}")
     print(f"✅ PIPELINE COMPLETE")
