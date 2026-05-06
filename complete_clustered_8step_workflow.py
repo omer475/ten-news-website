@@ -468,6 +468,84 @@ def assign_vq_clusters(embedding_minilm, supabase_client):
         return None, None
 
 
+# Audit fix F-4 (2026-05-06): Category whitelist enforcement.
+# Gemini's category prompt declares 14 valid values but it free-forms 67+
+# variants in practice ('Tech' vs 'Technology', 'Art' vs 'Arts' vs 'Arts &
+# Culture', 'Law' vs 'Law & Justice', 'U.S' vs 'U.S.' vs 'US' etc.). Each
+# variant fragments the user's category-level engagement signal. Map any
+# non-canonical input to the closest match, defaulting to 'Other'.
+CANONICAL_CATEGORIES = {
+    'Tech', 'Business', 'Science', 'Politics', 'Finance', 'Crypto', 'Health',
+    'Entertainment', 'Sports', 'World', 'Food', 'Fashion', 'Travel', 'Lifestyle',
+}
+_CATEGORY_ALIASES = {
+    'technology': 'Tech', 'tech': 'Tech', 'ai': 'Tech', 'gadgets': 'Tech',
+    'art': 'Entertainment', 'arts': 'Entertainment', 'arts & culture': 'Entertainment',
+    'art|culture': 'Entertainment', 'culture': 'Entertainment', 'music': 'Entertainment',
+    'movies': 'Entertainment', 'film': 'Entertainment', 'tv': 'Entertainment',
+    'royals': 'Entertainment', 'royalty': 'Entertainment', 'celebrity': 'Entertainment',
+    'business news': 'Business', 'economics': 'Business', 'economy': 'Business',
+    'real estate': 'Business', 'startups': 'Business',
+    'law': 'Politics', 'law & justice': 'Politics', 'law and justice': 'Politics',
+    'government': 'Politics', 'us politics': 'Politics', 'world politics': 'World',
+    'u.s': 'World', 'u.s.': 'World', 'us': 'World', 'usa': 'World', 'world news': 'World',
+    'international': 'World', 'global': 'World',
+    'wellness': 'Health', 'fitness': 'Health', 'medicine': 'Health',
+    'esports': 'Sports', 'football': 'Sports', 'basketball': 'Sports', 'soccer': 'Sports',
+    'cooking': 'Food', 'recipes': 'Food', 'cuisine': 'Food', 'restaurants': 'Food',
+    'investing': 'Finance', 'crypto news': 'Crypto', 'bitcoin': 'Crypto',
+    'science news': 'Science', 'space': 'Science', 'climate': 'Science',
+    'environment': 'Science', 'nature': 'Science',
+    'photo': 'Lifestyle', 'obituaries': 'Lifestyle', 'city': 'World', 'nsw': 'World',
+}
+
+def canonicalize_category(raw):
+    """Map any LLM-generated category string to the closed taxonomy."""
+    if not raw or not isinstance(raw, str):
+        return 'Other'
+    cleaned = raw.strip()
+    # Already canonical?
+    if cleaned in CANONICAL_CATEGORIES:
+        return cleaned
+    # Case-insensitive canonical match
+    for c in CANONICAL_CATEGORIES:
+        if cleaned.lower() == c.lower():
+            return c
+    # Alias lookup (lowercased)
+    alias = _CATEGORY_ALIASES.get(cleaned.lower())
+    if alias:
+        return alias
+    # Pipe / ampersand split — take first segment
+    for sep in ('|', '&', '/', ','):
+        if sep in cleaned:
+            first = cleaned.split(sep, 1)[0].strip()
+            if first.lower() in (c.lower() for c in CANONICAL_CATEGORIES):
+                return next(c for c in CANONICAL_CATEGORIES if c.lower() == first.lower())
+            alias2 = _CATEGORY_ALIASES.get(first.lower())
+            if alias2:
+                return alias2
+    print(f"   ⚠️ [F-4] category fallback: {raw!r} → 'Other'")
+    return 'Other'
+
+
+# Audit fix F4 (2026-05-06): expected_read_seconds at insert time.
+# 71,907 of 93,880 articles in the DB had this column NULL because nothing
+# wrote it. Trinity's qualifying gate, dwell-aware ranking, and the iOS
+# read-ratio classifier all depend on it. Compute once at insert (cheap)
+# instead of recomputing per-event downstream.
+def compute_expected_read_seconds(title, bullets):
+    """Words / 3.83 words-per-sec (~230 WPM mobile reading rate).
+    Mirrors lib/readingTime.js expectedReadSeconds(). Min 5s, max 600s."""
+    text = (title or '') + ' '
+    if isinstance(bullets, list):
+        text += ' '.join(b for b in bullets if isinstance(b, str))
+    elif isinstance(bullets, str):
+        text += bullets
+    word_count = len([w for w in text.split() if w.strip()])
+    seconds = word_count / 3.833
+    return max(5.0, min(600.0, seconds))
+
+
 def enrich_with_subtopics(interest_tags, title):
     """Append matching subtopic names to interest_tags list."""
     if not interest_tags:
@@ -1763,7 +1841,13 @@ def run_complete_pipeline():
             # STEPS 10+11: SCORING + TAGGING (run in parallel - both use Gemini independently)
             print(f"\n   🎯 [Cluster {cluster_id}] STEPS 10+11: SCORING + TAGGING (parallel)")
             bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
-            article_category = synthesized.get('category', 'Other')
+            # Audit fix F-4 (2026-05-06): Gemini ignores the category whitelist
+            # in the synthesis prompt and free-forms whatever it likes — the DB
+            # ended up with 67 distinct categories instead of the declared 14
+            # ('cat:art_business', 'cat:art_lifestyle' etc.), fragmenting the L0
+            # category signal that Phase A relies on. Canonicalize on the way
+            # in so typed_signals stays clean.
+            article_category = canonicalize_category(synthesized.get('category', 'Other'))
             
             article_score = 750  # default
             shelf_life_days = 1
@@ -2016,7 +2100,7 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
                 'source': cluster_sources[0]['source_name'],
-                'category': synthesized.get('category', 'Other'),
+                'category': article_category,  # canonicalized — see fix F-4
                 'title_news': title,
                 'summary_bullets_news': bullets,
                 'five_ws': five_ws,
@@ -2052,6 +2136,11 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'super_cluster_id': cluster_super,
                 'leaf_cluster_id': cluster_leaf,
                 'cluster_assignments': cluster_assigns,
+                # Audit fix F4 (2026-05-06): write expected_read_seconds at
+                # insert so downstream qualifying gates / read-ratio scorers
+                # don't have to recompute per event. ~30s for a typical
+                # 3-bullet card; ~50s for detail-page articles.
+                'expected_read_seconds': compute_expected_read_seconds(title, bullets),
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
