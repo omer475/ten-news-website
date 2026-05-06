@@ -54,11 +54,15 @@ final class BookmarkManager {
         }
         save()
 
-        // Signal the backend on save (not unsave) for taste vector evolution
-        if isSaving, let numericId = Int(id) {
+        // Audit fix B3 (2026-05-06): emit BOTH save and unsave events.
+        // Previously only save was tracked, so removed bookmarks produced no
+        // negative signal — exactly the asymmetry that biases the taste
+        // vector. TikTok records both `favorite_add` and `favorite_remove`
+        // and weights them equally in opposite directions.
+        if let numericId = Int(id) {
             Task {
                 try? await AnalyticsService().track(
-                    event: "article_saved",
+                    event: isSaving ? "article_saved" : "article_unsaved",
                     articleId: numericId,
                     category: article.category,
                     metadata: ["bucket": article.bucket ?? "personal"]

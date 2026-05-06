@@ -349,65 +349,57 @@ final class FeedViewModel {
         let arts = articles
         guard fromIndex < arts.count else { return }
         let article = arts[fromIndex]
-        let dwellSeconds: TimeInterval
+        // Audit fix B4 (2026-05-06): cap raw dwell at 120s to prevent
+        // backgrounded/locked-phone time from polluting taste vector.
+        // Without explicit pause-on-background (planned for next round),
+        // a 30-minute phone lock currently produced a 1800s "absorbed"
+        // engagement. Cap until proper scenePhase tracking ships.
+        let rawDwell: TimeInterval
         if let start = viewStartTimes[article.id.stringValue] {
-            dwellSeconds = Date().timeIntervalSince(start)
+            rawDwell = Date().timeIntervalSince(start)
         } else {
-            dwellSeconds = 0
+            rawDwell = 0
         }
+        let dwellSeconds = min(rawDwell, 120.0)
         viewStartTimes.removeValue(forKey: article.id.stringValue)
-        reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
+
+        // Audit fix B5+B6 (2026-05-06): unified DwellTier classification +
+        // Kuaishou WTG / TikTok pCompletion read-ratio support. When
+        // `expected_read_seconds` is in the article payload, classify by
+        // dwell/expected ratio instead of absolute seconds — a 30s dwell
+        // on a 60-word card and a 30s dwell on a 200-word card no longer
+        // collapse to the same tier. Falls back to absolute thresholds
+        // when expected is missing.
+        //
+        // Classify ONCE here, pass the tier to BOTH the on-device reranker
+        // AND the analytics event so both apply consistent weighting.
+        let tier = DwellTier.classify(dwell: dwellSeconds, expected: article.expectedReadSeconds)
+        reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds, tier: tier)
 
         // Count as "read" if user spent more than 3 seconds
         if dwellSeconds >= 3.0 {
             ReadingHistoryManager.shared.recordRead(articleId: article.id.stringValue)
         }
-
-        // Professional-grade tiered dwell tracking (TikTok/Pinterest style)
-        // 7 tiers with continuous dwell weighting via metadata
-        //   0-1s   → article_skipped (strong negative — instant rejection)
-        //   1-3s   → article_skipped (mild negative — saw and passed)
-        //   3-6s   → article_view (neutral/curious — glanced)
-        //   6-12s  → article_engaged (mild positive — showed interest)
-        //   12-25s → article_engaged (strong positive — read it)
-        //   25-45s → article_engaged (very strong — deeply interested)
-        //   45s+   → article_engaged (maximum — absorbed)
-        let event: String
-        let dwellTier: String
-        if dwellSeconds < 1.0 {
-            event = "article_skipped"
-            dwellTier = "instant_skip"
-        } else if dwellSeconds < 3.0 {
-            event = "article_skipped"
-            dwellTier = "quick_skip"
-        } else if dwellSeconds < 6.0 {
-            event = "article_view"
-            dwellTier = "glance"
-        } else if dwellSeconds < 12.0 {
-            event = "article_engaged"
-            dwellTier = "light_read"
-        } else if dwellSeconds < 25.0 {
-            event = "article_engaged"
-            dwellTier = "engaged_read"
-        } else if dwellSeconds < 45.0 {
-            event = "article_engaged"
-            dwellTier = "deep_read"
-        } else {
-            event = "article_engaged"
-            dwellTier = "absorbed"
+        let readRatio: String? = article.expectedReadSeconds.flatMap { exp in
+            exp > 0 ? String(format: "%.2f", dwellSeconds / exp) : nil
         }
         lastEventSentAt = Date()
         Task {
+            var meta: [String: String] = [
+                "dwell": String(format: "%.1f", dwellSeconds),
+                "total_active_seconds": String(format: "%.1f", dwellSeconds),
+                "dwell_tier": tier.rawValue,
+                "bucket": article.bucket ?? "unknown"
+            ]
+            if let r = readRatio { meta["read_ratio"] = r }
+            if let exp = article.expectedReadSeconds {
+                meta["expected_read_seconds"] = String(format: "%.1f", exp)
+            }
             try? await analytics.track(
-                event: event,
+                event: tier.analyticsEvent,
                 articleId: Int(article.id.stringValue),
                 category: article.category,
-                metadata: [
-                    "dwell": String(format: "%.1f", dwellSeconds),
-                    "total_active_seconds": String(format: "%.1f", dwellSeconds),
-                    "dwell_tier": dwellTier,
-                    "bucket": article.bucket ?? "unknown"
-                ]
+                metadata: meta
             )
         }
     }
