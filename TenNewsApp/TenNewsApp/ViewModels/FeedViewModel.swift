@@ -26,6 +26,11 @@ final class FeedViewModel {
     private(set) var currentPreferences: UserPreferences?
     private(set) var currentUserId: String?
     private var viewStartTimes: [String: Date] = [:]
+    // Audit fix B11 (2026-05-06): accumulated dwell across pause/resume
+    // boundaries (background, sheet presented, Safari open). Without this,
+    // a 30-min phone lock produced a 1800s "absorbed" engagement.
+    private var viewDwellAccum: [String: TimeInterval] = [:]
+    private var dwellPaused = false
     private(set) var lastRefreshTime: Date?
 
     // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
@@ -322,7 +327,37 @@ final class FeedViewModel {
     func recordViewStart(at index: Int) {
         let arts = articles
         guard index < arts.count else { return }
-        viewStartTimes[arts[index].id.stringValue] = Date()
+        let id = arts[index].id.stringValue
+        // Reset accumulated for a fresh-card view (not coming back via revisit).
+        viewDwellAccum.removeValue(forKey: id)
+        viewStartTimes[id] = Date()
+    }
+
+    // MARK: - Audit fix B11 — Dwell pause/resume
+
+    /// Pause the in-flight dwell timer for the currently-visible card.
+    /// Call when scenePhase leaves .active (background, inactive) or when a
+    /// sheet/Safari is presented over the feed. Accumulates elapsed time so
+    /// the next resume picks up where we left off.
+    func pauseDwellTracking() {
+        guard !dwellPaused else { return }
+        let now = Date()
+        for (id, start) in viewStartTimes {
+            let elapsed = now.timeIntervalSince(start)
+            viewDwellAccum[id] = (viewDwellAccum[id] ?? 0) + max(0, elapsed)
+        }
+        viewStartTimes.removeAll()
+        dwellPaused = true
+    }
+
+    /// Resume dwell tracking on the currently-visible card.
+    /// Call when scenePhase becomes .active or sheet is dismissed.
+    func resumeDwellTracking() {
+        guard dwellPaused else { return }
+        dwellPaused = false
+        let arts = articles
+        guard currentIndex < arts.count else { return }
+        viewStartTimes[arts[currentIndex].id.stringValue] = Date()
     }
 
     /// Call when user swipes back to a previously seen card — strong positive signal.
@@ -349,19 +384,25 @@ final class FeedViewModel {
         let arts = articles
         guard fromIndex < arts.count else { return }
         let article = arts[fromIndex]
-        // Audit fix B4 (2026-05-06): cap raw dwell at 120s to prevent
-        // backgrounded/locked-phone time from polluting taste vector.
-        // Without explicit pause-on-background (planned for next round),
-        // a 30-minute phone lock currently produced a 1800s "absorbed"
-        // engagement. Cap until proper scenePhase tracking ships.
-        let rawDwell: TimeInterval
-        if let start = viewStartTimes[article.id.stringValue] {
-            rawDwell = Date().timeIntervalSince(start)
+        // Audit fix B11 (2026-05-06): pause-aware dwell. When the app is
+        // backgrounded or a sheet is presented, pauseDwellTracking()
+        // accumulates the in-flight elapsed into viewDwellAccum and clears
+        // viewStartTimes. resumeDwellTracking() restarts the timer from the
+        // current moment. Total dwell = accumulated + (now - start).
+        // Cap retained at 120s as a safety net against any uncovered
+        // pause path.
+        let id = article.id.stringValue
+        let accum = viewDwellAccum[id] ?? 0
+        let liveSegment: TimeInterval
+        if let start = viewStartTimes[id] {
+            liveSegment = max(0, Date().timeIntervalSince(start))
         } else {
-            rawDwell = 0
+            liveSegment = 0
         }
+        let rawDwell = accum + liveSegment
         let dwellSeconds = min(rawDwell, 120.0)
-        viewStartTimes.removeValue(forKey: article.id.stringValue)
+        viewStartTimes.removeValue(forKey: id)
+        viewDwellAccum.removeValue(forKey: id)
 
         // Audit fix B5+B6 (2026-05-06): unified DwellTier classification +
         // Kuaishou WTG / TikTok pCompletion read-ratio support. When

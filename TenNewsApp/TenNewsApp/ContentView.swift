@@ -104,15 +104,26 @@ struct ContentView: View {
             // User's scroll position and loaded articles stay intact.
             // Refresh only happens on pull-to-refresh or app foreground after 5+ min.
         }
-        // Auto-refresh when app returns to foreground after being backgrounded
+        // Auto-refresh when app returns to foreground after being backgrounded.
+        // Audit fix B11 (2026-05-06): also pause/resume the feed dwell timer
+        // so backgrounded-phone time doesn't pollute taste vector. Without
+        // this a 30-min phone lock recorded as 1800s "absorbed" engagement.
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active && selectedTab == 0 {
-                Task {
-                    await feedViewModel.refreshIfStale(
-                        preferences: appViewModel.preferences,
-                        userId: appViewModel.currentUser?.id
-                    )
+            switch newPhase {
+            case .active:
+                feedViewModel.resumeDwellTracking()
+                if selectedTab == 0 {
+                    Task {
+                        await feedViewModel.refreshIfStale(
+                            preferences: appViewModel.preferences,
+                            userId: appViewModel.currentUser?.id
+                        )
+                    }
                 }
+            case .inactive, .background:
+                feedViewModel.pauseDwellTracking()
+            @unknown default:
+                break
             }
         }
         .animation(.smooth(duration: 0.45), value: tabBarExpanded)
