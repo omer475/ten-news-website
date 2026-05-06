@@ -49,7 +49,6 @@
 		65FA954B15EBB1059F2B1CA4 /* FeedResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468D1B58E2F07B147E7E07A0 /* FeedResponse.swift */; };
 		679C55CA63311A819940821E /* VerticalPager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF9842AEF08B21C4B2169D03 /* VerticalPager.swift */; };
 		69065BD0A55D2AF3C7F6AAB5 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3214E7F65E936CF2A39F234 /* SignupView.swift */; };
-		CP01COMPLETEPROFBF0001AA /* CompleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */; };
 		6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F129A9689C3124330A2529 /* HapticManager.swift */; };
 		6F263CDE4FCCB7DF57F26C4C /* EventWhatToWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B837F3F530355509B049B4 /* EventWhatToWatchView.swift */; };
 		705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D0EF3C215540E9B1A3556E /* FollowManager.swift */; };
@@ -90,6 +89,7 @@
 		CH03CHATLISTVIEWBUILD1 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH03CHATLISTVIEWFREF01 /* ChatListView.swift */; };
 		CH04CHATDETAILBUILD001 /* ChatDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH04CHATDETAILFREF0001 /* ChatDetailView.swift */; };
 		CH05NEWCHATVIEWBUILD01 /* NewChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CH05NEWCHATVIEWFREF001 /* NewChatView.swift */; };
+		CP01COMPLETEPROFBF0001AA /* CompleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */; };
 		CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR01CREATORMODELSFRF01 /* CreatorModels.swift */; };
 		CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */; };
 		D38339DC8FFC3E2444B34296 /* UserDefaultsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CEEEB13F9AE7D53C8C3A86 /* UserDefaultsManager.swift */; };
@@ -218,10 +218,10 @@
 		CH03CHATLISTVIEWFREF01 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
 		CH04CHATDETAILFREF0001 /* ChatDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDetailView.swift; sourceTree = "<group>"; };
 		CH05NEWCHATVIEWFREF001 /* NewChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChatView.swift; sourceTree = "<group>"; };
+		CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteProfileView.swift; sourceTree = "<group>"; };
 		CR01CREATORMODELSFRF01 /* CreatorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorModels.swift; sourceTree = "<group>"; };
 		CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorProfileView.swift; sourceTree = "<group>"; };
 		D3214E7F65E936CF2A39F234 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
-		CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteProfileView.swift; sourceTree = "<group>"; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* EventDataAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDataAnalyticsView.swift; sourceTree = "<group>"; };
 		D5F37BE28BA17571197C7F3E /* CategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBadge.swift; sourceTree = "<group>"; };
 		D76A59784FD3A3CADE2298CA /* ResponseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseModels.swift; sourceTree = "<group>"; };
@@ -366,7 +366,7 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		4F60404FBFDF40A2513E2919 /* Settings */ = {
+		4F60404FBFDF40A2513E2919 /* TenNewsApp/Views/Settings */ = {
 			isa = PBXGroup;
 			children = (
 				BA5C515A70A9A9EE01C6CCB1 /* SettingsView.swift */,
@@ -526,7 +526,7 @@
 				7C8BEA66158914C298FAE625 /* Feed */,
 				02B6071172BF914AADD5FDDB /* Onboarding */,
 				FAAB0A74B94E5EE1A5621A7C /* PersonalizedFeed */,
-				4F60404FBFDF40A2513E2919 /* Settings */,
+				4F60404FBFDF40A2513E2919 /* TenNewsApp/Views/Settings */,
 				2C392019E786B2541023AF47 /* Splash */,
 				AABB11CC22DD33EE44FF5566 /* Tabs */,
 			);
@@ -637,6 +637,8 @@
 /* Begin PBXProject section */
 		089C1665073F9A82011FF435 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 7A97A35160987A8F39536D2C /* Build configuration list for PBXProject "TenNewsApp" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
@@ -835,6 +837,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S6W6YX4V2M;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TenNewsApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -856,6 +859,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S6W6YX4V2M;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TenNewsApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
