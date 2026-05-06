@@ -383,12 +383,17 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('id, super_cluster_id, leaf_cluster_id, typed_signals')
+          .select('id, super_cluster_id, leaf_cluster_id, typed_signals, source, vq_primary')
           .eq('id', article_id)
           .maybeSingle()
 
         const hasLeaf = artRow?.super_cluster_id != null && artRow?.leaf_cluster_id != null
         const suppressedUntil = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString()
+        // 48h cooldown for the Trinity VQ primary — matches
+        // NOT_INTERESTED_COOLDOWN_HOURS in lib/trinity.js. Soft-excludes the
+        // primary's secondaries from Trinity-M / Trinity-LT; explore can
+        // still pick. "We'll show fewer like that" semantics, not blocklist.
+        const primaryCooldownUntil = new Date(Date.now() + 48 * 3600 * 1000).toISOString()
 
         // 1. Suppression row.
         if (hasLeaf) {
@@ -399,6 +404,36 @@ export default async function handler(req, res) {
             source_article_id: article_id,
             suppressed_until: suppressedUntil,
           }, { onConflict: 'user_id,super_cluster_id,leaf_cluster_id' })
+        }
+
+        // 1a. Phase 1 fix #9 — Multi-level propagation: publisher demote.
+        // Per TikTok help page, Not Interested propagates to "similar
+        // content" — including the creator (publisher in news context).
+        // Twitter open-source weights confirm explicit negatives ~150× the
+        // strength of explicit positives. We translate to a 0.5× score
+        // multiplier in Trinity rerank for 14d.
+        if (artRow?.source) {
+          await admin.from('user_publisher_penalty').upsert({
+            user_id: effectiveUserId,
+            publisher: artRow.source,
+            penalty: 0.5,
+            expires_at: suppressedUntil,
+            source_article_id: article_id,
+          }, { onConflict: 'user_id,publisher' })
+            .catch((e) => console.log('[not_interested] publisher penalty err:', e?.message || e))
+        }
+
+        // 1b. Phase 1 fix #9 — Multi-level propagation: VQ-primary cooldown.
+        // Already wired into Trinity's cooldownPrimaries set in lib/trinity.js;
+        // this row makes it durable across requests.
+        if (artRow?.vq_primary != null) {
+          await admin.from('user_primary_cooldown').upsert({
+            user_id: effectiveUserId,
+            vq_primary: artRow.vq_primary,
+            expires_at: primaryCooldownUntil,
+            source_article_id: article_id,
+          }, { onConflict: 'user_id,vq_primary' })
+            .catch((e) => console.log('[not_interested] primary cooldown err:', e?.message || e))
         }
 
         // 2. Entity-signal penalty — use weight 2.0 (the bulk RPC handles sign
@@ -620,17 +655,14 @@ export default async function handler(req, res) {
             .eq('id', article_id)
             .single()
           if (art?.vq_secondary == null) return
-          // Increment explore_engages on the cluster_state row.
-          const { data: cs } = await admin
-            .from('cluster_state')
-            .select('explore_engages')
-            .eq('cluster_id', art.vq_secondary)
-            .single()
-          await admin.from('cluster_state').upsert({
-            cluster_id: art.vq_secondary,
-            explore_engages: (cs?.explore_engages || 0) + 1,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'cluster_id' })
+          // Audit fix A2 (2026-05-06): atomic RPC replaces the read-modify-
+          // write race. Previously two concurrent engagement events on the
+          // same cluster would each read the same value and each write +1,
+          // producing one increment instead of two and skewing the Beta
+          // posterior the explore arm samples from.
+          await admin.rpc('bump_cluster_explore_engages', {
+            p_cluster_id: art.vq_secondary,
+          })
         } catch (e) {
           // Non-blocking — bandit miss is fine, never fails the analytics request.
         }

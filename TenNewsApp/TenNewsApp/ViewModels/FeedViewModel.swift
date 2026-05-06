@@ -26,6 +26,11 @@ final class FeedViewModel {
     private(set) var currentPreferences: UserPreferences?
     private(set) var currentUserId: String?
     private var viewStartTimes: [String: Date] = [:]
+    // Audit fix B11 (2026-05-06): accumulated dwell across pause/resume
+    // boundaries (background, sheet presented, Safari open). Without this,
+    // a 30-min phone lock produced a 1800s "absorbed" engagement.
+    private var viewDwellAccum: [String: TimeInterval] = [:]
+    private var dwellPaused = false
     private(set) var lastRefreshTime: Date?
 
     // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
@@ -97,7 +102,12 @@ final class FeedViewModel {
         errorMessage = nil
         currentPreferences = preferences
         currentUserId = userId
-        reRanker.reset()
+        // v5.1 fix #8: do NOT reset reRanker on launch. SessionReRanker now
+        // persists state across launches via UserDefaults (24h sliding TTL),
+        // so a power user opening the app 5× a day keeps a single growing
+        // session context instead of 5 cold-start contexts. Manual refresh()
+        // still calls reset() — that path is an explicit "wipe my context"
+        // signal from the user.
 
         // Step 1: Show cached articles IMMEDIATELY if available
         if let cached = loadFeedCache() {
@@ -317,7 +327,37 @@ final class FeedViewModel {
     func recordViewStart(at index: Int) {
         let arts = articles
         guard index < arts.count else { return }
-        viewStartTimes[arts[index].id.stringValue] = Date()
+        let id = arts[index].id.stringValue
+        // Reset accumulated for a fresh-card view (not coming back via revisit).
+        viewDwellAccum.removeValue(forKey: id)
+        viewStartTimes[id] = Date()
+    }
+
+    // MARK: - Audit fix B11 — Dwell pause/resume
+
+    /// Pause the in-flight dwell timer for the currently-visible card.
+    /// Call when scenePhase leaves .active (background, inactive) or when a
+    /// sheet/Safari is presented over the feed. Accumulates elapsed time so
+    /// the next resume picks up where we left off.
+    func pauseDwellTracking() {
+        guard !dwellPaused else { return }
+        let now = Date()
+        for (id, start) in viewStartTimes {
+            let elapsed = now.timeIntervalSince(start)
+            viewDwellAccum[id] = (viewDwellAccum[id] ?? 0) + max(0, elapsed)
+        }
+        viewStartTimes.removeAll()
+        dwellPaused = true
+    }
+
+    /// Resume dwell tracking on the currently-visible card.
+    /// Call when scenePhase becomes .active or sheet is dismissed.
+    func resumeDwellTracking() {
+        guard dwellPaused else { return }
+        dwellPaused = false
+        let arts = articles
+        guard currentIndex < arts.count else { return }
+        viewStartTimes[arts[currentIndex].id.stringValue] = Date()
     }
 
     /// Call when user swipes back to a previously seen card — strong positive signal.
@@ -344,65 +384,63 @@ final class FeedViewModel {
         let arts = articles
         guard fromIndex < arts.count else { return }
         let article = arts[fromIndex]
-        let dwellSeconds: TimeInterval
-        if let start = viewStartTimes[article.id.stringValue] {
-            dwellSeconds = Date().timeIntervalSince(start)
+        // Audit fix B11 (2026-05-06): pause-aware dwell. When the app is
+        // backgrounded or a sheet is presented, pauseDwellTracking()
+        // accumulates the in-flight elapsed into viewDwellAccum and clears
+        // viewStartTimes. resumeDwellTracking() restarts the timer from the
+        // current moment. Total dwell = accumulated + (now - start).
+        // Cap retained at 120s as a safety net against any uncovered
+        // pause path.
+        let id = article.id.stringValue
+        let accum = viewDwellAccum[id] ?? 0
+        let liveSegment: TimeInterval
+        if let start = viewStartTimes[id] {
+            liveSegment = max(0, Date().timeIntervalSince(start))
         } else {
-            dwellSeconds = 0
+            liveSegment = 0
         }
-        viewStartTimes.removeValue(forKey: article.id.stringValue)
-        reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds)
+        let rawDwell = accum + liveSegment
+        let dwellSeconds = min(rawDwell, 120.0)
+        viewStartTimes.removeValue(forKey: id)
+        viewDwellAccum.removeValue(forKey: id)
+
+        // Audit fix B5+B6 (2026-05-06): unified DwellTier classification +
+        // Kuaishou WTG / TikTok pCompletion read-ratio support. When
+        // `expected_read_seconds` is in the article payload, classify by
+        // dwell/expected ratio instead of absolute seconds — a 30s dwell
+        // on a 60-word card and a 30s dwell on a 200-word card no longer
+        // collapse to the same tier. Falls back to absolute thresholds
+        // when expected is missing.
+        //
+        // Classify ONCE here, pass the tier to BOTH the on-device reranker
+        // AND the analytics event so both apply consistent weighting.
+        let tier = DwellTier.classify(dwell: dwellSeconds, expected: article.expectedReadSeconds)
+        reRanker.recordSignal(article: article, dwellSeconds: dwellSeconds, tier: tier)
 
         // Count as "read" if user spent more than 3 seconds
         if dwellSeconds >= 3.0 {
             ReadingHistoryManager.shared.recordRead(articleId: article.id.stringValue)
         }
-
-        // Professional-grade tiered dwell tracking (TikTok/Pinterest style)
-        // 7 tiers with continuous dwell weighting via metadata
-        //   0-1s   → article_skipped (strong negative — instant rejection)
-        //   1-3s   → article_skipped (mild negative — saw and passed)
-        //   3-6s   → article_view (neutral/curious — glanced)
-        //   6-12s  → article_engaged (mild positive — showed interest)
-        //   12-25s → article_engaged (strong positive — read it)
-        //   25-45s → article_engaged (very strong — deeply interested)
-        //   45s+   → article_engaged (maximum — absorbed)
-        let event: String
-        let dwellTier: String
-        if dwellSeconds < 1.0 {
-            event = "article_skipped"
-            dwellTier = "instant_skip"
-        } else if dwellSeconds < 3.0 {
-            event = "article_skipped"
-            dwellTier = "quick_skip"
-        } else if dwellSeconds < 6.0 {
-            event = "article_view"
-            dwellTier = "glance"
-        } else if dwellSeconds < 12.0 {
-            event = "article_engaged"
-            dwellTier = "light_read"
-        } else if dwellSeconds < 25.0 {
-            event = "article_engaged"
-            dwellTier = "engaged_read"
-        } else if dwellSeconds < 45.0 {
-            event = "article_engaged"
-            dwellTier = "deep_read"
-        } else {
-            event = "article_engaged"
-            dwellTier = "absorbed"
+        let readRatio: String? = article.expectedReadSeconds.flatMap { exp in
+            exp > 0 ? String(format: "%.2f", dwellSeconds / exp) : nil
         }
         lastEventSentAt = Date()
         Task {
+            var meta: [String: String] = [
+                "dwell": String(format: "%.1f", dwellSeconds),
+                "total_active_seconds": String(format: "%.1f", dwellSeconds),
+                "dwell_tier": tier.rawValue,
+                "bucket": article.bucket ?? "unknown"
+            ]
+            if let r = readRatio { meta["read_ratio"] = r }
+            if let exp = article.expectedReadSeconds {
+                meta["expected_read_seconds"] = String(format: "%.1f", exp)
+            }
             try? await analytics.track(
-                event: event,
+                event: tier.analyticsEvent,
                 articleId: Int(article.id.stringValue),
                 category: article.category,
-                metadata: [
-                    "dwell": String(format: "%.1f", dwellSeconds),
-                    "total_active_seconds": String(format: "%.1f", dwellSeconds),
-                    "dwell_tier": dwellTier,
-                    "bucket": article.bucket ?? "unknown"
-                ]
+                metadata: meta
             )
         }
     }

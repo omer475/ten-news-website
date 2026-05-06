@@ -20,7 +20,7 @@ final class FollowManager {
         return followedIDs.contains(id)
     }
 
-    func toggle(_ publisherId: String?, userId: String?) {
+    func toggle(_ publisherId: String?, userId: String?, sourceArticleId: Int? = nil) {
         guard let id = publisherId else { return }
         let wasFollowing = followedIDs.contains(id)
 
@@ -30,6 +30,21 @@ final class FollowManager {
             followedIDs.insert(id)
         }
         save()
+
+        // Audit fix B3 (2026-05-06): emit analytics on follow/unfollow.
+        // Following a publisher is one of TikTok's strongest positive signals
+        // (~25× a like per Twitter open-source weights). Previously this fired
+        // ZERO events, so Trinity had no signal from a high-affordance UI.
+        Task {
+            let analytics = AnalyticsService()
+            var meta: [String: String] = ["publisher_id": id]
+            if let sourceArticleId { meta["source_article_id"] = String(sourceArticleId) }
+            try? await analytics.track(
+                event: wasFollowing ? "publisher_unfollowed" : "publisher_followed",
+                articleId: sourceArticleId,
+                metadata: meta
+            )
+        }
 
         // Sync with API
         guard let userId else { return }

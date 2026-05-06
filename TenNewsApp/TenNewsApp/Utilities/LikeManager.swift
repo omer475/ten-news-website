@@ -55,10 +55,13 @@ final class LikeManager {
         }
         save()
 
-        if isLiking, let numericId = Int(id) {
+        // Audit fix B3 (2026-05-06): track BOTH like and unlike. Previously
+        // unlike was silent — so a removed like produced no negative signal,
+        // biasing the taste vector toward stale "liked" categories.
+        if let numericId = Int(id) {
             Task {
                 try? await AnalyticsService().track(
-                    event: "article_liked",
+                    event: isLiking ? "article_liked" : "article_unliked",
                     articleId: numericId,
                     category: article.category
                 )

@@ -129,6 +129,10 @@ struct Article: Codable, Identifiable, Hashable {
     let authorId: String?
     let authorName: String?
     let pages: [ArticlePage]?
+    /// Server-computed expected reading time, used for engagement-state read-ratio
+    /// scoring (Kuaishou WTG / TikTok pCompletion analog). Length-aware so a 30s
+    /// dwell on a 60-word card and a 30s dwell on a 200-word card aren't conflated.
+    let expectedReadSeconds: Double?
 
     enum CodingKeys: String, CodingKey {
         case id, title, summary, url, source, category, emoji, timeline, graph, map
@@ -169,6 +173,7 @@ struct Article: Codable, Identifiable, Hashable {
         case authorId = "author_id"
         case authorName = "author_name"
         case pages
+        case expectedReadSeconds = "expected_read_seconds"
     }
 
     // MARK: - Computed Display Properties

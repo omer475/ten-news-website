@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { serveTrinityFeed } from '../../../lib/trinityServe.js';
+import { expectedReadSecondsForArticle } from '../../../lib/readingTime.js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -192,6 +193,9 @@ function formatArticle(article, eventMap = {}) {
     views: article.view_count || 0,
     author_id: article.author_id || null,
     author_name: article.author_name || null,
+    // Kuaishou WTG / TikTok pCompletion analog. Lets the client derive
+    // read_ratio = dwell / expected_read_seconds for length-aware engagement.
+    expected_read_seconds: expectedReadSecondsForArticle(article),
   };
 
   // Add world event if available
@@ -776,10 +780,32 @@ export default async function handler(req, res) {
                 // Cap at 2000 to keep PostgREST `not.in.(...)` URL under 32KB.
                 const seenIds = Array.from(seenSet).slice(0, 2000);
 
+                // v5.1 Phase 1 fix #6 — engagement-state signal for the
+                // bandit-with-abandonment exploration arm. We don't need
+                // server-side dwell lookups: the iOS SessionReRanker
+                // already classified the user's last N cards into engaged
+                // / glanced / skipped sets and sent them as URL params.
+                // Counting their relative sizes is a faithful "recent
+                // engagement state" without any extra DB round-trip.
+                //
+                // Mapping: positive = engaged + 0.3*glanced − skipped,
+                // normalized by (engaged + glanced + skipped). Output is
+                // in [-1, +1]. Yahoo's MAB-with-abandonment policy
+                // (IEEE 2022) translates: when reward is below baseline,
+                // push exploitation; when above, push exploration.
+                const engN = sessionEngagedIds.length;
+                const glnN = sessionGlancedIds.length;
+                const skpN = sessionSkippedIds.length;
+                const totN = engN + glnN + skpN;
+                const recentEngagementZ = totN >= 5
+                  ? (engN + 0.3 * glnN - skpN) / totN
+                  : 0;  // not enough signal yet — use defaults
+
                 const trinityResult = await serveTrinityFeed(supabase, {
                   userId,
                   seenIds,
                   feedSize: limit,
+                  recentEngagementZ,
                   // v3: hoursWindow at the top level is ignored.
                   // Adaptive multi-tier retrieval picks the window per
                   // retriever (M / LT / explore independently).

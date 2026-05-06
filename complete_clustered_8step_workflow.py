@@ -46,8 +46,13 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-# Event detection paused (re-enable after app launch)
-# from step6_world_event_detection import detect_world_events
+# Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
+# it `article_world_events` was empty (~0% of articles), so Trinity v5's
+# story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
+# the cross-session 0.3× demote never fired. The detector adds ~0.5s
+# Gemini latency per published article — for ~16 articles/cycle that's
+# ~10s extra, well under the 30-min Cloud Run task timeout.
+from step6_world_event_detection import detect_world_events
 from supabase import create_client
 import unicodedata
 
@@ -364,19 +369,37 @@ def _load_active_codebook(supabase_client):
                 .execute())
         rows = resp.data or []
         if not rows:
+            print("   ⚠️ [Trinity Step 12] FAIL_REASON=no_active_codebook (vq_codebooks has no is_active=true row)")
             return None
         import numpy as np
         cb = rows[0]
         codebook_id = cb['id']
         dim = cb['dim']
-        # Centroids (one row per)
-        cent_resp = (supabase_client.table('vq_centroids')
-                     .select('level, idx, vec')
-                     .eq('codebook_id', codebook_id)
-                     .execute())
-        cent_rows = cent_resp.data or []
+        # Centroids (one row per).
+        # supabase-py defaults to a 1000-row PostgREST pagination cap,
+        # but the codebook has 256 L1 + 2048 L2 = 2304 rows. A naive
+        # query silently truncates to 1000 (256 L1 + 744 L2), producing
+        # l2 of shape (744, dim) instead of (2048, dim). For any article
+        # whose L1 code projects to vq_primary ≥ 93 (~64% of the
+        # codebook), the L2 sub-residual slice base..base+8 falls past
+        # 744 and `argmin` raises "empty sequence" — exact ROOT CAUSE of
+        # the silent stamping failure that started 2026-05-01.
+        cent_rows = []
+        _page_size = 1000
+        _offset = 0
+        while True:
+            cent_resp = (supabase_client.table('vq_centroids')
+                         .select('level, idx, vec')
+                         .eq('codebook_id', codebook_id)
+                         .range(_offset, _offset + _page_size - 1)
+                         .execute())
+            _page = cent_resp.data or []
+            cent_rows.extend(_page)
+            if len(_page) < _page_size:
+                break
+            _offset += _page_size
         if not cent_rows:
-            print(f"   ⚠️ [Trinity Step 12] codebook {codebook_id} has no centroid rows yet")
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=no_centroids codebook_id={codebook_id} version={cb.get('version')}")
             return None
 
         def _parse_vec(v):
@@ -389,6 +412,9 @@ def _load_active_codebook(supabase_client):
         l2_rows = [r for r in cent_rows if r['level'] == 2]
         l1_size = max((r['idx'] for r in l1_rows), default=-1) + 1
         l2_size = max((r['idx'] for r in l2_rows), default=-1) + 1
+        if l1_size == 0 or l2_size == 0:
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=empty_centroid_levels codebook_id={codebook_id} l1_rows={len(l1_rows)} l2_rows={len(l2_rows)}")
+            return None
         l1 = np.zeros((l1_size, dim), dtype=np.float32)
         l2 = np.zeros((l2_size, dim), dtype=np.float32)
         for r in l1_rows:
@@ -405,22 +431,28 @@ def _load_active_codebook(supabase_client):
         }
         _VQ_CODEBOOK_CACHE['ts'] = now
         _VQ_CODEBOOK_CACHE['codebook'] = cooked
+        print(f"   ✓ [Trinity Step 12] codebook loaded id={codebook_id} version={cb.get('version')} dim={dim} l1={l1_size} l2={l2_size}")
         return cooked
     except Exception as e:
-        print(f"   ⚠️ [Trinity Step 12] codebook fetch failed: {e}")
+        import traceback
+        print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=codebook_fetch_exception type={type(e).__name__} msg={e}")
+        traceback.print_exc()
         return None
 
 def assign_vq_clusters(embedding_minilm, supabase_client):
     """Project a 384-d MiniLM embedding into (vq_primary, vq_secondary)."""
     if embedding_minilm is None:
+        print("   ⚠️ [Trinity Step 12] FAIL_REASON=null_embedding")
         return None, None
     cb = _load_active_codebook(supabase_client)
     if cb is None:
+        # _load_active_codebook already logged the specific reason
         return None, None
     try:
         import numpy as np
         v = _l2_normalize(embedding_minilm)
         if v.shape[0] != cb['dim']:
+            print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=dim_mismatch input_dim={v.shape[0]} codebook_dim={cb['dim']}")
             return None, None
         # Level 1: nearest centroid
         d1 = np.linalg.norm(cb['l1'] - v[None, :], axis=1)
@@ -435,8 +467,88 @@ def assign_vq_clusters(embedding_minilm, supabase_client):
         c2 = base + local
         return c1, c2
     except Exception as e:
-        print(f"   ⚠️ [Trinity Step 12] projection failed: {e}")
+        import traceback
+        print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=projection_exception type={type(e).__name__} msg={e}")
+        traceback.print_exc()
         return None, None
+
+
+# Audit fix F-4 (2026-05-06): Category whitelist enforcement.
+# Gemini's category prompt declares 14 valid values but it free-forms 67+
+# variants in practice ('Tech' vs 'Technology', 'Art' vs 'Arts' vs 'Arts &
+# Culture', 'Law' vs 'Law & Justice', 'U.S' vs 'U.S.' vs 'US' etc.). Each
+# variant fragments the user's category-level engagement signal. Map any
+# non-canonical input to the closest match, defaulting to 'Other'.
+CANONICAL_CATEGORIES = {
+    'Tech', 'Business', 'Science', 'Politics', 'Finance', 'Crypto', 'Health',
+    'Entertainment', 'Sports', 'World', 'Food', 'Fashion', 'Travel', 'Lifestyle',
+}
+_CATEGORY_ALIASES = {
+    'technology': 'Tech', 'tech': 'Tech', 'ai': 'Tech', 'gadgets': 'Tech',
+    'art': 'Entertainment', 'arts': 'Entertainment', 'arts & culture': 'Entertainment',
+    'art|culture': 'Entertainment', 'culture': 'Entertainment', 'music': 'Entertainment',
+    'movies': 'Entertainment', 'film': 'Entertainment', 'tv': 'Entertainment',
+    'royals': 'Entertainment', 'royalty': 'Entertainment', 'celebrity': 'Entertainment',
+    'business news': 'Business', 'economics': 'Business', 'economy': 'Business',
+    'real estate': 'Business', 'startups': 'Business',
+    'law': 'Politics', 'law & justice': 'Politics', 'law and justice': 'Politics',
+    'government': 'Politics', 'us politics': 'Politics', 'world politics': 'World',
+    'u.s': 'World', 'u.s.': 'World', 'us': 'World', 'usa': 'World', 'world news': 'World',
+    'international': 'World', 'global': 'World',
+    'wellness': 'Health', 'fitness': 'Health', 'medicine': 'Health',
+    'esports': 'Sports', 'football': 'Sports', 'basketball': 'Sports', 'soccer': 'Sports',
+    'cooking': 'Food', 'recipes': 'Food', 'cuisine': 'Food', 'restaurants': 'Food',
+    'investing': 'Finance', 'crypto news': 'Crypto', 'bitcoin': 'Crypto',
+    'science news': 'Science', 'space': 'Science', 'climate': 'Science',
+    'environment': 'Science', 'nature': 'Science',
+    'photo': 'Lifestyle', 'obituaries': 'Lifestyle', 'city': 'World', 'nsw': 'World',
+}
+
+def canonicalize_category(raw):
+    """Map any LLM-generated category string to the closed taxonomy."""
+    if not raw or not isinstance(raw, str):
+        return 'Other'
+    cleaned = raw.strip()
+    # Already canonical?
+    if cleaned in CANONICAL_CATEGORIES:
+        return cleaned
+    # Case-insensitive canonical match
+    for c in CANONICAL_CATEGORIES:
+        if cleaned.lower() == c.lower():
+            return c
+    # Alias lookup (lowercased)
+    alias = _CATEGORY_ALIASES.get(cleaned.lower())
+    if alias:
+        return alias
+    # Pipe / ampersand split — take first segment
+    for sep in ('|', '&', '/', ','):
+        if sep in cleaned:
+            first = cleaned.split(sep, 1)[0].strip()
+            if first.lower() in (c.lower() for c in CANONICAL_CATEGORIES):
+                return next(c for c in CANONICAL_CATEGORIES if c.lower() == first.lower())
+            alias2 = _CATEGORY_ALIASES.get(first.lower())
+            if alias2:
+                return alias2
+    print(f"   ⚠️ [F-4] category fallback: {raw!r} → 'Other'")
+    return 'Other'
+
+
+# Audit fix F4 (2026-05-06): expected_read_seconds at insert time.
+# 71,907 of 93,880 articles in the DB had this column NULL because nothing
+# wrote it. Trinity's qualifying gate, dwell-aware ranking, and the iOS
+# read-ratio classifier all depend on it. Compute once at insert (cheap)
+# instead of recomputing per-event downstream.
+def compute_expected_read_seconds(title, bullets):
+    """Words / 3.83 words-per-sec (~230 WPM mobile reading rate).
+    Mirrors lib/readingTime.js expectedReadSeconds(). Min 5s, max 600s."""
+    text = (title or '') + ' '
+    if isinstance(bullets, list):
+        text += ' '.join(b for b in bullets if isinstance(b, str))
+    elif isinstance(bullets, str):
+        text += bullets
+    word_count = len([w for w in text.split() if w.strip()])
+    seconds = word_count / 3.833
+    return max(5.0, min(600.0, seconds))
 
 
 def enrich_with_subtopics(interest_tags, title):
@@ -1240,6 +1352,10 @@ def run_complete_pipeline():
     
     # Thread-safe counter for published articles
     published_lock = threading.Lock()
+    # Audit fix A6 (2026-05-06): collect newly-published articles for the
+    # post-loop world-event detection batch.
+    published_for_events = []
+    published_for_events_lock = threading.Lock()
     published_count = 0
     # Per-run typed_signals audit: (id, signal_count, rich_count)
     published_signal_audit = []
@@ -1734,7 +1850,13 @@ def run_complete_pipeline():
             # STEPS 10+11: SCORING + TAGGING (run in parallel - both use Gemini independently)
             print(f"\n   🎯 [Cluster {cluster_id}] STEPS 10+11: SCORING + TAGGING (parallel)")
             bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
-            article_category = synthesized.get('category', 'Other')
+            # Audit fix F-4 (2026-05-06): Gemini ignores the category whitelist
+            # in the synthesis prompt and free-forms whatever it likes — the DB
+            # ended up with 67 distinct categories instead of the declared 14
+            # ('cat:art_business', 'cat:art_lifestyle' etc.), fragmenting the L0
+            # category signal that Phase A relies on. Canonicalize on the way
+            # in so typed_signals stays clean.
+            article_category = canonicalize_category(synthesized.get('category', 'Other'))
             
             article_score = 750  # default
             shelf_life_days = 1
@@ -1977,12 +2099,24 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
             if vq_primary is not None:
                 print(f"   🎯 [Cluster {cluster_id}] Trinity (c1={vq_primary}, c2={vq_secondary})")
+            else:
+                # Audit fix A7 (2026-05-06): SKIP this article instead of
+                # inserting it with NULL vq_primary. NULL articles are
+                # invisible to Trinity-M / Trinity-LT / trinity-fresh
+                # retrievers (they all filter on vq_primary IS NOT NULL),
+                # so an article with no VQ code costs Cloud Run + Gemini
+                # generation budget for zero distribution. Failing the
+                # SINGLE article (return False) leaves the rest of the
+                # batch untouched — pipeline doesn't grind to a halt, but
+                # broken articles never enter the corpus.
+                print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — SKIPPING article. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
+                return False
 
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
                 'source': cluster_sources[0]['source_name'],
-                'category': synthesized.get('category', 'Other'),
+                'category': article_category,  # canonicalized — see fix F-4
                 'title_news': title,
                 'summary_bullets_news': bullets,
                 'five_ws': five_ws,
@@ -2018,6 +2152,11 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'super_cluster_id': cluster_super,
                 'leaf_cluster_id': cluster_leaf,
                 'cluster_assignments': cluster_assigns,
+                # Audit fix F4 (2026-05-06): write expected_read_seconds at
+                # insert so downstream qualifying gates / read-ratio scorers
+                # don't have to recompute per event. ~30s for a typical
+                # 3-bullet card; ~50s for detail-page articles.
+                'expected_read_seconds': compute_expected_read_seconds(title, bullets),
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
@@ -2039,6 +2178,13 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                     'id': published_article_id,
                     'total': len(article_typed_signals),
                     'rich': _rich_signal_count,
+                })
+            # Audit fix A6 (2026-05-06): collect for post-loop step6.
+            with published_for_events_lock:
+                published_for_events.append({
+                    'id': published_article_id,
+                    'title': title,
+                    'bullets': ' '.join(b for b in bullets if isinstance(b, str)) if isinstance(bullets, list) else str(bullets or ''),
                 })
             
             # Add to title + embedding cache for other workers' duplicate detection
@@ -2083,6 +2229,20 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             except Exception as e:
                 print(f"   ❌ Cluster {cid} exception: {e}")
     
+    # Audit fix A6 (2026-05-06): batch world-event detection on every newly-
+    # published article. Tags articles to existing events when they cover the
+    # same story, creates new event clusters when they don't. Populates
+    # article_world_events which Trinity v5 uses for in-slate story dedup
+    # (max 1 per event_id) and 0.3× cross-session demote.
+    if published_for_events:
+        try:
+            print(f"\n🌍 STEP 6 (post-publish): detecting world events for {len(published_for_events)} articles")
+            detect_world_events(published_for_events)
+        except Exception as e:
+            # Non-blocking: detection failure must not abort the pipeline.
+            # The articles are already published; tagging is enrichment.
+            print(f"   ⚠️ [Step 6] world-event detection failed (non-fatal): {e}")
+
     # Summary
     print(f"\n{'='*80}")
     print(f"✅ PIPELINE COMPLETE")
