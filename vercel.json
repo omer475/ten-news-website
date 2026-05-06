@@ -17,7 +17,7 @@
     },
     {
       "path": "/api/admin/vq-health",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     }
   ],
   "functions": {
