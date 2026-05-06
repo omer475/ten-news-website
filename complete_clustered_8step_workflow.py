@@ -370,12 +370,29 @@ def _load_active_codebook(supabase_client):
         cb = rows[0]
         codebook_id = cb['id']
         dim = cb['dim']
-        # Centroids (one row per)
-        cent_resp = (supabase_client.table('vq_centroids')
-                     .select('level, idx, vec')
-                     .eq('codebook_id', codebook_id)
-                     .execute())
-        cent_rows = cent_resp.data or []
+        # Centroids (one row per).
+        # supabase-py defaults to a 1000-row PostgREST pagination cap,
+        # but the codebook has 256 L1 + 2048 L2 = 2304 rows. A naive
+        # query silently truncates to 1000 (256 L1 + 744 L2), producing
+        # l2 of shape (744, dim) instead of (2048, dim). For any article
+        # whose L1 code projects to vq_primary ≥ 93 (~64% of the
+        # codebook), the L2 sub-residual slice base..base+8 falls past
+        # 744 and `argmin` raises "empty sequence" — exact ROOT CAUSE of
+        # the silent stamping failure that started 2026-05-01.
+        cent_rows = []
+        _page_size = 1000
+        _offset = 0
+        while True:
+            cent_resp = (supabase_client.table('vq_centroids')
+                         .select('level, idx, vec')
+                         .eq('codebook_id', codebook_id)
+                         .range(_offset, _offset + _page_size - 1)
+                         .execute())
+            _page = cent_resp.data or []
+            cent_rows.extend(_page)
+            if len(_page) < _page_size:
+                break
+            _offset += _page_size
         if not cent_rows:
             print(f"   ⚠️ [Trinity Step 12] FAIL_REASON=no_centroids codebook_id={codebook_id} version={cb.get('version')}")
             return None

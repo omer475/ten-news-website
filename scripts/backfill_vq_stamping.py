@@ -22,19 +22,143 @@ import os
 import sys
 import time
 import argparse
+import traceback
 from collections import Counter
 
-# Allow importing from the repo root.
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from supabase import create_client
-from complete_clustered_8step_workflow import (
-    assign_vq_clusters,
-    _load_active_codebook,
-)
 
 SUPABASE_URL = os.environ.get('NEXT_PUBLIC_SUPABASE_URL') or os.environ.get('SUPABASE_URL')
 SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
+
+
+# ────────────────────────────────────────────────────────────────────────
+# VQ projection — copy of complete_clustered_8step_workflow.py:330-440.
+#
+# We inline rather than import because the workflow file raises at module-
+# init when pipeline-only API keys (GEMINI_API_KEY, BRIGHTDATA_API_KEY) are
+# missing — the backfill needs neither. Keep BYTE-IDENTICAL to the
+# workflow's so this script behaves the same as the live pipeline.
+# ────────────────────────────────────────────────────────────────────────
+
+_VQ_CODEBOOK_CACHE = {'ts': 0, 'codebook': None}
+_VQ_CACHE_TTL_S = 300
+
+
+def _l2_normalize(vec):
+    import numpy as np
+    a = np.asarray(vec, dtype=np.float32)
+    n = float(np.linalg.norm(a))
+    if n == 0.0:
+        return a
+    return a / n
+
+
+def _load_active_codebook(supabase_client):
+    now = time.time()
+    if _VQ_CODEBOOK_CACHE['codebook'] and (now - _VQ_CODEBOOK_CACHE['ts']) < _VQ_CACHE_TTL_S:
+        return _VQ_CODEBOOK_CACHE['codebook']
+    try:
+        resp = (supabase_client.table('vq_codebooks')
+                .select('id, version, parent_map, dim')
+                .eq('is_active', True)
+                .order('trained_at', desc=True)
+                .limit(1)
+                .execute())
+        rows = resp.data or []
+        if not rows:
+            print('   ⚠️ FAIL_REASON=no_active_codebook')
+            return None
+        import numpy as np
+        cb = rows[0]
+        codebook_id = cb['id']
+        dim = cb['dim']
+        # supabase-py defaults to a 1000-row PostgREST pagination cap.
+        # Codebook has 256 L1 + 2048 L2 = 2304 centroid rows, so an
+        # un-paginated query silently truncates to 1000 (256 L1 + 744 L2)
+        # and the resulting l2 array is shape (744, dim) instead of
+        # (2048, dim) — projection fails with "argmin of empty sequence"
+        # for any L1 code whose sub-residual base ≥ 744. ROOT CAUSE of
+        # the silent stamping failure since 2026-05-01.
+        cent_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            cent_resp = (supabase_client.table('vq_centroids')
+                         .select('level, idx, vec')
+                         .eq('codebook_id', codebook_id)
+                         .range(offset, offset + page_size - 1)
+                         .execute())
+            page = cent_resp.data or []
+            cent_rows.extend(page)
+            if len(page) < page_size:
+                break
+            offset += page_size
+        if not cent_rows:
+            print(f'   ⚠️ FAIL_REASON=no_centroids codebook_id={codebook_id}')
+            return None
+
+        def _parse_vec(v):
+            if isinstance(v, list):
+                return v
+            s = str(v).strip().lstrip('[').rstrip(']')
+            return [float(x) for x in s.split(',')] if s else []
+
+        l1_rows = [r for r in cent_rows if r['level'] == 1]
+        l2_rows = [r for r in cent_rows if r['level'] == 2]
+        l1_size = max((r['idx'] for r in l1_rows), default=-1) + 1
+        l2_size = max((r['idx'] for r in l2_rows), default=-1) + 1
+        if l1_size == 0 or l2_size == 0:
+            print(f'   ⚠️ FAIL_REASON=empty_centroid_levels l1={len(l1_rows)} l2={len(l2_rows)}')
+            return None
+        l1 = np.zeros((l1_size, dim), dtype=np.float32)
+        l2 = np.zeros((l2_size, dim), dtype=np.float32)
+        for r in l1_rows:
+            l1[r['idx']] = _parse_vec(r['vec'])
+        for r in l2_rows:
+            l2[r['idx']] = _parse_vec(r['vec'])
+        cooked = {
+            'id': codebook_id,
+            'version': cb['version'],
+            'l1': l1,
+            'l2': l2,
+            'parent_map': cb['parent_map'],
+            'dim': dim,
+        }
+        _VQ_CODEBOOK_CACHE['ts'] = now
+        _VQ_CODEBOOK_CACHE['codebook'] = cooked
+        return cooked
+    except Exception as e:
+        print(f'   ⚠️ FAIL_REASON=codebook_fetch_exception type={type(e).__name__} msg={e}')
+        traceback.print_exc()
+        return None
+
+
+def assign_vq_clusters(embedding_minilm, supabase_client):
+    """Project a 384-d MiniLM embedding into (vq_primary, vq_secondary)."""
+    if embedding_minilm is None:
+        return None, None
+    cb = _load_active_codebook(supabase_client)
+    if cb is None:
+        return None, None
+    try:
+        import numpy as np
+        v = _l2_normalize(embedding_minilm)
+        if v.shape[0] != cb['dim']:
+            return None, None
+        d1 = np.linalg.norm(cb['l1'] - v[None, :], axis=1)
+        c1 = int(np.argmin(d1))
+        residual = v - cb['l1'][c1]
+        SUBCODEBOOK_K = 8
+        base = c1 * SUBCODEBOOK_K
+        sub_residuals = cb['l2'][base : base + SUBCODEBOOK_K]
+        d2 = np.linalg.norm(sub_residuals - residual[None, :], axis=1)
+        local = int(np.argmin(d2))
+        c2 = base + local
+        return c1, c2
+    except Exception as e:
+        print(f'   ⚠️ FAIL_REASON=projection_exception type={type(e).__name__} msg={e}')
+        return None, None
+# ────────────────────────────────────────────────────────────────────────
 
 
 def parse_args():
