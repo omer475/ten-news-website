@@ -780,10 +780,32 @@ export default async function handler(req, res) {
                 // Cap at 2000 to keep PostgREST `not.in.(...)` URL under 32KB.
                 const seenIds = Array.from(seenSet).slice(0, 2000);
 
+                // v5.1 Phase 1 fix #6 — engagement-state signal for the
+                // bandit-with-abandonment exploration arm. We don't need
+                // server-side dwell lookups: the iOS SessionReRanker
+                // already classified the user's last N cards into engaged
+                // / glanced / skipped sets and sent them as URL params.
+                // Counting their relative sizes is a faithful "recent
+                // engagement state" without any extra DB round-trip.
+                //
+                // Mapping: positive = engaged + 0.3*glanced − skipped,
+                // normalized by (engaged + glanced + skipped). Output is
+                // in [-1, +1]. Yahoo's MAB-with-abandonment policy
+                // (IEEE 2022) translates: when reward is below baseline,
+                // push exploitation; when above, push exploration.
+                const engN = sessionEngagedIds.length;
+                const glnN = sessionGlancedIds.length;
+                const skpN = sessionSkippedIds.length;
+                const totN = engN + glnN + skpN;
+                const recentEngagementZ = totN >= 5
+                  ? (engN + 0.3 * glnN - skpN) / totN
+                  : 0;  // not enough signal yet — use defaults
+
                 const trinityResult = await serveTrinityFeed(supabase, {
                   userId,
                   seenIds,
                   feedSize: limit,
+                  recentEngagementZ,
                   // v3: hoursWindow at the top level is ignored.
                   // Adaptive multi-tier retrieval picks the window per
                   // retriever (M / LT / explore independently).
