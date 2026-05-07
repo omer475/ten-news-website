@@ -63,8 +63,16 @@ REQUIREMENTS:
 ✓ Every detail must contain a number
 ✓ Must NOT be in bullet summary
 ✓ Must DIRECTLY support or explain the headline
-✓ Label: 1-3 words
-✓ Value: Number with unit
+✓ Label: HARD CAP 18 characters AND 1-2 words. NEVER 3+ words.
+   - GOOD: "Crew", "Casualties", "Stake", "Funding", "Top speed"
+   - BAD: "Reports since January" (too many words),
+          "Civil society support" (too many words),
+          "Toddlers involved" (acceptable but borderline — prefer "Toddlers")
+✓ Value: A number paired with a unit, currency, percent, or context word.
+   - GOOD: "5 aboard", "$1.5M", "48 MP", "2,515 meters", "9.2%"
+   - BAD: "1", "2", "100" (bare digit, no unit — REJECTED)
+✓ Each label MUST be unique within the article (no two columns saying
+   the same thing). Case-insensitive comparison.
 ✓ Maximum 7 words total per detail
 
 HEADLINE-RELEVANCE RULE — read this twice:
@@ -83,12 +91,15 @@ the current event.
 
 OUTPUT FORMAT:
 [
-  {"label": "Crew members", "value": "5 aboard"},
-  {"label": "Flight origin", "value": "Leipzig, Germany"},
-  {"label": "Runway length", "value": "2,515 meters"}
+  {"label": "Crew", "value": "5 aboard"},
+  {"label": "Origin", "value": "Leipzig, Germany"},
+  {"label": "Runway", "value": "2,515 meters"}
 ]
 
 BAD DETAILS (never do):
+✗ Long labels: {"label": "Reports since January"}  → use "Reports" (1 word)
+✗ Duplicate labels: two columns labelled "Civil society support"
+✗ Bare-digit values: {"label": "Toddlers", "value": "2"}  → use "2 toddlers"
 ✗ Duplicates from bullets
 ✗ No number: {"label": "Status", "value": "Ongoing"}
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
@@ -725,33 +736,63 @@ class GeminiComponentWriter:
                 # Too many events - just trim to 4 instead of failing
                 result['timeline'] = result['timeline'][:4]
 
-        # --- DETAILS validation (exactly 3 required) ---
+        # --- DETAILS validation (exactly 3 required, strict shape) ---
+        # The 3-column iOS card is small. Long labels truncate as "…",
+        # bare-digit values like "2" read as meaningless without context,
+        # duplicate labels look broken. We enforce all three at validation
+        # time so the AI's output isn't trusted blindly.
         if 'details' in selected_components:
             if 'details' not in result or not isinstance(result['details'], list) or len(result['details']) == 0:
                 errors.append("Details selected but missing or empty — need exactly 3")
                 if 'details' in result:
                     del result['details']
             else:
-                valid_details = []
-                details_with_numbers = []
-                for detail in result['details']:
-                    if isinstance(detail, dict) and detail.get('label') and detail.get('value'):
-                        valid_details.append(detail)
-                        value = str(detail.get('value', ''))
-                        if any(char.isdigit() for char in value):
-                            details_with_numbers.append(detail)
-                    elif isinstance(detail, str) and len(detail) > 3:
-                        valid_details.append(detail)
-                        if any(char.isdigit() for char in detail):
-                            details_with_numbers.append(detail)
+                MAX_LABEL_CHARS = 18
+                MAX_LABEL_WORDS = 2  # tightened from 3 — labels were truncating
 
-                # Prefer details with numbers, require exactly 3
-                best_details = details_with_numbers if len(details_with_numbers) >= 3 else valid_details
-                if len(best_details) >= 3:
-                    result['details'] = best_details[:3]
+                def _detail_passes(detail):
+                    if not isinstance(detail, dict):
+                        return False, "not-dict"
+                    label = str(detail.get('label') or '').strip()
+                    value = str(detail.get('value') or '').strip()
+                    if not label or not value:
+                        return False, "empty-label-or-value"
+                    if len(label) > MAX_LABEL_CHARS:
+                        return False, f"label-too-long({len(label)})"
+                    if len(label.split()) > MAX_LABEL_WORDS:
+                        return False, f"label-too-many-words({len(label.split())})"
+                    if not any(c.isdigit() for c in value):
+                        return False, "value-no-digit"
+                    # "2" alone is rejected; "2 toddlers" passes.
+                    bare_digit = value.replace(',', '').replace('.', '').replace('+', '').replace('-', '').strip()
+                    if bare_digit.isdigit() and len(value) <= len(bare_digit) + 1:
+                        return False, "bare-digit-no-unit"
+                    return True, "ok"
+
+                seen_labels = set()
+                valid_details = []
+                rejection_reasons = []
+                for detail in result['details']:
+                    ok, reason = _detail_passes(detail)
+                    if not ok:
+                        rejection_reasons.append(f"{detail!r}→{reason}")
+                        continue
+                    label_key = str(detail['label']).strip().lower()
+                    if label_key in seen_labels:
+                        rejection_reasons.append(f"{detail!r}→duplicate-label")
+                        continue
+                    seen_labels.add(label_key)
+                    valid_details.append(detail)
+
+                if len(valid_details) >= 3:
+                    result['details'] = valid_details[:3]
                 else:
-                    errors.append(f"Only {len(best_details)} valid details (need exactly 3)")
-                    del result['details']
+                    errors.append(
+                        f"Only {len(valid_details)} valid details after strict checks "
+                        f"(need 3). Rejections: {rejection_reasons[:3]}"
+                    )
+                    if 'details' in result:
+                        del result['details']
 
         # --- GRAPH validation ---
         if 'graph' in selected_components:
