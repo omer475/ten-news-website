@@ -29,6 +29,7 @@ COPY image_quality_checker.py .
 COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_world_event_detection.py .
+COPY event_components.py .
 COPY step6_7_claude_component_generation.py .
 COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
