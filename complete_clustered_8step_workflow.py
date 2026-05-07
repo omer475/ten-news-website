@@ -548,7 +548,11 @@ def compute_expected_read_seconds(title, bullets):
         text += bullets
     word_count = len([w for w in text.split() if w.strip()])
     seconds = word_count / 3.833
-    return max(5.0, min(600.0, seconds))
+    # Postgres column is INTEGER — must round before returning, otherwise
+    # `21.132...` triggers `invalid input syntax for type integer` and
+    # the entire article insert fails (300 articles processed → 0
+    # published in run bktgw on 2026-05-07).
+    return int(round(max(5.0, min(600.0, seconds))))
 
 
 def enrich_with_subtopics(interest_tags, title):
