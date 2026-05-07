@@ -1556,7 +1556,11 @@ def run_complete_pipeline():
                 print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
                 try:
                     with gemini_semaphore:
-                        ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                        # Lowered min_confidence 70→55 (2026-05-07): the
+                        # original threshold rejected ~50% of articles'
+                        # images, way too many. 55 keeps obviously-bad
+                        # images out while accepting more mediocre ones.
+                        ai_approved = check_and_select_best_image(valid_candidates, min_confidence=55)
                     if ai_approved:
                         selected_image = {
                             'url': ai_approved['url'],
@@ -1564,10 +1568,24 @@ def run_complete_pipeline():
                             'quality_score': ai_approved['quality_score']
                         }
                         print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
-                    else:
-                        print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check — publishing text-only")
                 except Exception as e:
-                    print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed ({str(e)[:60]}) — publishing text-only")
+                    print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed ({str(e)[:60]})")
+
+                # Fallback: if AI rejected (or errored), use the highest
+                # quality_score candidate. valid_candidates is already
+                # sorted desc by quality_score. Only fall back when the
+                # candidate is at least decent (>=40 quality score).
+                if selected_image is None and valid_candidates:
+                    best = valid_candidates[0]
+                    if best.get('quality_score', 0) >= 40:
+                        selected_image = {
+                            'url': best['url'],
+                            'source_name': best['source_name'],
+                            'quality_score': best['quality_score']
+                        }
+                        print(f"   📷 [Cluster {cluster_id}] Fallback image from {selected_image['source_name']} (q={selected_image['quality_score']:.1f})")
+                    else:
+                        print(f"   📰 [Cluster {cluster_id}] Best candidate quality {best.get('quality_score',0):.1f} < 40 — text-only")
 
             # Image is optional. Articles continue with selected_image=None
             # if no candidate passed AI check. The iOS card renders a
@@ -2080,10 +2098,11 @@ def run_complete_pipeline():
             # same 500-char per-page limit as page 1.
             article_pages = None
             article_type_now = (component_result.get('article_type') if isinstance(component_result, dict) else None) or 'standard'
-            multipage_eligible = (
-                article_score >= 700
-                and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing')
-            ) or article_type_now in ('recipe', 'stock_analysis', 'story', 'investigation', 'explainer', 'deep_dive')
+            # Broadened (2026-05-07): every article above a moderate
+            # quality bar gets the AI a chance to decide whether multi-
+            # page makes sense. Previously gated to a tight whitelist,
+            # which meant 0 multi-page articles ever got produced.
+            multipage_eligible = article_score >= 600
 
             if multipage_eligible:
                 try:
@@ -2094,28 +2113,45 @@ Category: {synthesized.get('category', 'Other')}
 Article type: {article_type_now}
 
 Decide whether this article benefits from MULTIPLE PAGES and, if so, generate them.
+You can ALSO suggest dropping bullets entirely and turning page 1 into a
+photo-driven moment (a single sentence-long title with NO bullets).
 
-WHEN TO USE MULTIPLE PAGES (1-10 pages):
-- Recipes: page 1 = overview, page 2 = ingredients, pages 3-N = steps (one per step)
-- Stock analyses: page 1 = thesis, page 2 = financials, page 3 = risks, page 4 = outlook
-- Stories / investigations: chapter-by-chapter narrative (each chapter = 1 page)
-- Explainers / deep dives: concept → evidence → implications (2-4 pages)
-- Standard breaking news: ONE page only — return [] (empty array)
+DECIDE between three modes:
 
-PER-PAGE RULES:
+MODE A — SINGLE PAGE WITH BULLETS (default for breaking news, most stories):
+   Return [] (empty array).
+
+MODE B — MULTI-PAGE (1-10 pages) for ANY narrative or analytical content:
+   - Recipes: overview → ingredients → steps
+   - Stock analyses / market explainers: thesis → financials → risks → outlook
+   - Investigations / stories / deep dives: chapter-by-chapter narrative
+   - Long-form explainers: concept → evidence → implications
+   - News with multiple distinct beats: page per beat
+   Per page: optional heading (≤40 chars), 1-3 bullets, ≤500 chars total.
+   Return: [{{"heading": "Ingredients", "bullets": ["..."]}}, …]
+   Maximum 9 additional pages (so total ≤ 10 with page 1).
+
+MODE C — PHOTO ESSAY (single page, no bullets):
+   For visual-driven stories where the photo IS the story:
+   - Met Gala / fashion week / red carpet
+   - Sports highlights / championship trophy moments
+   - Art exhibits / concerts / awards ceremonies
+   - Viral images / iconic photographs
+   - "Photo of the day" style entries
+   Return ONE special object: [{{"photo_essay": true, "headline": "<sentence-long title up to 100 chars>"}}]
+   The headline replaces the article title for that single page.
+   Bullets become empty. The user sees photo + sentence only.
+
+PER-PAGE RULES (Mode B):
 - Max 500 characters of bullet text per page (count carefully)
 - 1-3 bullets per page (a single long bullet is fine)
-- Each page bullet should be ≤ 500 chars total combined
-- Optional short page heading (max 40 chars) — null when not useful
 - Each page must add NEW information; never repeat page 1 content
 
 OUTPUT:
-Return ONLY a JSON array of additional pages (page 2, page 3, ...).
-Page 1 is already the headline + bullets you were shown — DO NOT include page 1.
-For single-page articles return: []
-For multi-page articles return: [{{"heading": "Ingredients", "bullets": ["..."]}}, {{"heading": "Step 1: Sear", "bullets": ["..."]}}, ...]
-
-Maximum 9 additional pages (so total ≤ 10 with page 1)."""
+Return ONLY a JSON array.
+For single-page (Mode A): []
+For multi-page (Mode B): [{{"heading": "...", "bullets": ["..."]}}, …]
+For photo essay (Mode C): [{{"photo_essay": true, "headline": "..."}}]"""
 
                     with gemini_semaphore:
                         import google.generativeai as _mp_genai
@@ -2128,7 +2164,24 @@ Maximum 9 additional pages (so total ≤ 10 with page 1)."""
                     if mp_text.startswith('json'): mp_text = mp_text[4:]
                     extra_pages = json.loads(mp_text.strip())
 
-                    if isinstance(extra_pages, list) and extra_pages:
+                    is_photo_essay = (
+                        isinstance(extra_pages, list)
+                        and len(extra_pages) == 1
+                        and isinstance(extra_pages[0], dict)
+                        and extra_pages[0].get('photo_essay') is True
+                    )
+
+                    if is_photo_essay:
+                        # Mode C: collapse page 1 to title-only, no bullets.
+                        # Title becomes the AI-supplied sentence-long headline
+                        # (cap 100 chars). Bullets wiped, no carousel.
+                        headline = str(extra_pages[0].get('headline') or '').strip()
+                        if 10 <= len(headline) <= 100:
+                            title = headline
+                            bullets = []
+                            print(f"   📷 [Cluster {cluster_id}] Photo essay mode → '{headline[:60]}'")
+                        article_pages = None
+                    elif isinstance(extra_pages, list) and extra_pages:
                         # Validate each page: bullets list, ≤ 500 chars total,
                         # heading ≤ 40 chars. Cap at 9 extras (total 10 pages).
                         validated = []
