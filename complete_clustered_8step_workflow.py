@@ -1538,37 +1538,36 @@ def run_complete_pipeline():
                     valid_candidates.append(candidate)
             
             if not valid_candidates:
-                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No image found")
-                update_cluster_status(cluster_id, 'failed', 'no_image',
-                    f'No usable image found in {len(cluster_sources)} sources')
-                return False
+                # Image is optional from 2026-05-07 onwards. If no usable
+                # image candidate, publish the article without one. The
+                # iOS card renders title-led layout when image_url is null.
+                print(f"   📰 [Cluster {cluster_id}] No usable image — publishing as text-only")
+                valid_candidates = []  # explicit, will skip AI check below
             
             valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
-            
+
             # STEP 3.1: AI Image Quality Check (Gemini 2.0 Flash)
-            print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
-            
             selected_image = None
-            try:
-                with gemini_semaphore:
-                    ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
-                if ai_approved:
-                    selected_image = {
-                        'url': ai_approved['url'],
-                        'source_name': ai_approved['source_name'],
-                        'quality_score': ai_approved['quality_score']
-                    }
-                    print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
-                else:
-                    print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check")
-            except Exception as e:
-                print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
-            
-            if not selected_image:
-                print(f"   ❌ [Cluster {cluster_id}] No images passed AI quality check — skipping article")
-                update_cluster_status(cluster_id, 'failed', 'no_quality_image',
-                    f'All {len(valid_candidates)} candidate images failed AI quality check')
-                return False
+            if valid_candidates:
+                print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
+                try:
+                    with gemini_semaphore:
+                        ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                    if ai_approved:
+                        selected_image = {
+                            'url': ai_approved['url'],
+                            'source_name': ai_approved['source_name'],
+                            'quality_score': ai_approved['quality_score']
+                        }
+                        print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
+                    else:
+                        print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check — publishing text-only")
+                except Exception as e:
+                    print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed ({str(e)[:60]}) — publishing text-only")
+
+            # Image is optional. Articles continue with selected_image=None
+            # if no candidate passed AI check. The iOS card renders a
+            # title-led layout when image_url is null.
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
@@ -1596,10 +1595,15 @@ def run_complete_pipeline():
                     'Gemini API failed to synthesize article from sources')
                 return False
             
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
-            
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+            else:
+                synthesized['image_url'] = None
+                synthesized['image_source'] = None
+                synthesized['image_score'] = 0
+
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
             
             # ==========================================
@@ -1779,10 +1783,16 @@ def run_complete_pipeline():
                 update_cluster_status(cluster_id, 'failed', 'verification_failed',
                     f'Failed fact verification after {max_verification_attempts} attempts')
                 return False
-            
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
+
+            # Optional image — guarded against None (image-less articles).
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+            else:
+                synthesized.setdefault('image_url', None)
+                synthesized.setdefault('image_source', None)
+                synthesized.setdefault('image_score', 0)
             
             # STEP 9: Publishing to Supabase
             print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
@@ -2023,20 +2033,23 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
 
-            # If article has info box components, trim bullets to 450 max
-            # Articles without components keep up to 550 chars
-            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
-            if has_components and isinstance(bullets, list):
+            # Flat 500-char cap on total bullet text per page, regardless
+            # of whether components are present. Bullets count is flexible
+            # (1-3, with one long bullet ≈ three short ones being
+            # acceptable) — this cap protects card height across all
+            # rendering variants.
+            MAX_BULLET_CHARS_PER_PAGE = 500
+            if isinstance(bullets, list):
                 total_bullet_chars = sum(len(b) for b in bullets)
-                if total_bullet_chars > 450:
+                if total_bullet_chars > MAX_BULLET_CHARS_PER_PAGE:
                     trimmed = []
                     running = 0
                     for b in bullets:
-                        if running + len(b) <= 450:
+                        if running + len(b) <= MAX_BULLET_CHARS_PER_PAGE:
                             trimmed.append(b)
                             running += len(b)
                         else:
-                            remaining = 450 - running
+                            remaining = MAX_BULLET_CHARS_PER_PAGE - running
                             if remaining > 30:
                                 truncated = b[:remaining]
                                 cut_at = max(truncated.rfind('.'), truncated.rfind(','))
@@ -2046,54 +2059,115 @@ def run_complete_pipeline():
                                     trimmed.append(truncated.rsplit(' ', 1)[0])
                             break
                     bullets = trimmed
-                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (has components)")
+                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (cap=500)")
 
             # Match article to a publisher account
             matched_author_id, matched_author_name = match_publisher(
                 interest_tags, synthesized.get('category', 'Other'), publishers_cache, article_id=cluster_id
             )
 
-            # MULTI-PAGE: Generate a "deeper context" page 2 for articles that deserve it
-            # Only for analysis/evergreen articles with 3+ bullets and high score
+            # MULTI-PAGE: Generate up to 10 pages for narrative / analytical
+            # content. Recipes get steps. Stock analyses get thesis →
+            # financials → risks. Stories get chapters. Standard breaking
+            # news stays single-page (article_pages = None).
+            #
+            # Page count is decided by AI based on article_type — we don't
+            # force a fixed N. Each page has its own bullets, capped at the
+            # same 500-char per-page limit as page 1.
             article_pages = None
-            if article_score >= 700 and len(bullets) >= 3 and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing'):
+            article_type_now = (component_result.get('article_type') if isinstance(component_result, dict) else None) or 'standard'
+            multipage_eligible = (
+                article_score >= 700
+                and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing')
+            ) or article_type_now in ('recipe', 'stock_analysis', 'story', 'investigation', 'explainer', 'deep_dive')
+
+            if multipage_eligible:
                 try:
-                    page2_prompt = f"""This news article just published:
+                    multipage_prompt = f"""This article just published:
 Title: {title}
 Bullets: {' | '.join(bullets)}
 Category: {synthesized.get('category', 'Other')}
+Article type: {article_type_now}
 
-Write a SHORT second page that gives the reader deeper context. NOT a summary of page 1.
-Instead: explain WHY this matters, the background context, or how it works in simple terms.
+Decide whether this article benefits from MULTIPLE PAGES and, if so, generate them.
 
-Rules:
-- 2-3 short bullets, each a specific fact or context that helps understand the news
-- Present tense, short sentences, no academic language
-- No "Here's why this matters" — just state the context directly
-- Each bullet should make the reader go "oh, that makes more sense now"
+WHEN TO USE MULTIPLE PAGES (1-10 pages):
+- Recipes: page 1 = overview, page 2 = ingredients, pages 3-N = steps (one per step)
+- Stock analyses: page 1 = thesis, page 2 = financials, page 3 = risks, page 4 = outlook
+- Stories / investigations: chapter-by-chapter narrative (each chapter = 1 page)
+- Explainers / deep dives: concept → evidence → implications (2-4 pages)
+- Standard breaking news: ONE page only — return [] (empty array)
 
-Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
-Example: ["Current solar panels max out at 25% efficiency commercially", "The theoretical limit has been 33% since 1961 — this breaks that barrier", "If scalable, this could cut solar farm sizes by half"]"""
+PER-PAGE RULES:
+- Max 500 characters of bullet text per page (count carefully)
+- 1-3 bullets per page (a single long bullet is fine)
+- Each page bullet should be ≤ 500 chars total combined
+- Optional short page heading (max 40 chars) — null when not useful
+- Each page must add NEW information; never repeat page 1 content
+
+OUTPUT:
+Return ONLY a JSON array of additional pages (page 2, page 3, ...).
+Page 1 is already the headline + bullets you were shown — DO NOT include page 1.
+For single-page articles return: []
+For multi-page articles return: [{{"heading": "Ingredients", "bullets": ["..."]}}, {{"heading": "Step 1: Sear", "bullets": ["..."]}}, ...]
+
+Maximum 9 additional pages (so total ≤ 10 with page 1)."""
 
                     with gemini_semaphore:
-                        import google.generativeai as _p2_genai
-                        _p2_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-                        _p2_model = _p2_genai.GenerativeModel('gemini-2.5-flash-lite')
-                        page2_response = _p2_model.generate_content(page2_prompt)
-                    page2_text = page2_response.text.strip()
-                    if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
-                    if page2_text.endswith('```'): page2_text = page2_text[:-3]
-                    if page2_text.startswith('json'): page2_text = page2_text[4:]
-                    page2_bullets = json.loads(page2_text.strip())
+                        import google.generativeai as _mp_genai
+                        _mp_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+                        _mp_model = _mp_genai.GenerativeModel('gemini-2.5-flash-lite')
+                        mp_response = _mp_model.generate_content(multipage_prompt)
+                    mp_text = mp_response.text.strip()
+                    if mp_text.startswith('```'): mp_text = mp_text.split('\n', 1)[1] if '\n' in mp_text else mp_text[3:]
+                    if mp_text.endswith('```'): mp_text = mp_text[:-3]
+                    if mp_text.startswith('json'): mp_text = mp_text[4:]
+                    extra_pages = json.loads(mp_text.strip())
 
-                    if isinstance(page2_bullets, list) and len(page2_bullets) >= 2:
-                        article_pages = [
-                            {"title": title, "image_url": None, "bullets": bullets},
-                            {"title": None, "image_url": None, "bullets": page2_bullets},
-                        ]
-                        print(f"   📄 [Cluster {cluster_id}] Added context page 2 ({len(page2_bullets)} bullets)")
-                except Exception as page2_err:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Page 2 generation failed: {page2_err}")
+                    if isinstance(extra_pages, list) and extra_pages:
+                        # Validate each page: bullets list, ≤ 500 chars total,
+                        # heading ≤ 40 chars. Cap at 9 extras (total 10 pages).
+                        validated = []
+                        for p in extra_pages[:9]:
+                            if not isinstance(p, dict):
+                                continue
+                            p_bullets = p.get('bullets') or []
+                            if not isinstance(p_bullets, list) or not p_bullets:
+                                continue
+                            p_bullets = [str(b).strip() for b in p_bullets if isinstance(b, str) and b.strip()]
+                            if not p_bullets:
+                                continue
+                            # Trim to 500 chars total
+                            running = 0
+                            kept = []
+                            for b in p_bullets:
+                                if running + len(b) <= 500:
+                                    kept.append(b)
+                                    running += len(b)
+                                else:
+                                    remaining = 500 - running
+                                    if remaining > 30:
+                                        truncated = b[:remaining]
+                                        cut_at = max(truncated.rfind('.'), truncated.rfind(','))
+                                        kept.append(b[:cut_at + 1].rstrip(',') if cut_at > 30 else truncated.rsplit(' ', 1)[0])
+                                    break
+                            heading = p.get('heading')
+                            if heading and (not isinstance(heading, str) or len(heading) > 40):
+                                heading = None
+                            validated.append({
+                                "title": heading,
+                                "image_url": None,
+                                "bullets": kept,
+                            })
+
+                        if validated:
+                            article_pages = [
+                                {"title": title, "image_url": None, "bullets": bullets},
+                                *validated,
+                            ]
+                            print(f"   📄 [Cluster {cluster_id}] Multi-page: {len(article_pages)} pages (type={article_type_now})")
+                except Exception as mp_err:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Multi-page generation failed: {mp_err}")
 
             # STEP 12: Trinity 2-level cluster assignment.
             vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
@@ -2448,14 +2522,16 @@ EXAMPLES:
 
 PURPOSE: Narrative summary for readers who want context and flow.
 
-TOTAL LENGTH: Minimum 250 characters, maximum 550 characters across ALL bullets combined.
-HARD LIMIT: Do NOT exceed 550 characters total. Count your characters. If you have 3 bullets at 180 chars each, that's 540 — close to the max.
-NUMBER OF BULLETS: Write 2-3 bullets (minimum 2, maximum 3).
-  - Simple story (sports score, death announcement): 2 bullets with context
-  - Medium story: 2-3 bullets
-  - Complex story (geopolitics, policy): 3 shorter bullets
-  - IMPORTANT: Every article MUST reach 250 chars total. Add context, numbers, or background details.
-  - IMPORTANT: Keep each bullet under 190 characters. 3 bullets × 180 chars = 540 max.
+TOTAL LENGTH: Up to 500 characters across ALL bullets combined per page.
+HARD LIMIT: Do NOT exceed 500 characters total per page. Count your characters.
+NUMBER OF BULLETS: 1-3 bullets per page. Pick whichever count fits the story best.
+  - Single long bullet (up to 500 chars): when the story flows as one continuous beat
+    — a sports recap, a death announcement, a single-event update.
+  - 2 bullets: most stories — one set-up bullet and one consequence bullet, each ~200-240 chars.
+  - 3 bullets: only when the story has clearly distinct beats (geopolitics, multi-actor policy,
+    layered analysis) — keep each bullet 130-170 chars so the total stays ≤ 500.
+  - Bullets are NOT required to be similar lengths. One 380-char bullet + one 90-char bullet
+    is fine when that's the natural shape of the story.
 
 WRITING RULES:
   ✓ Each bullet provides NEW information not in the title
@@ -2465,10 +2541,14 @@ WRITING RULES:
   ✓ 2-3 **bold** highlights per bullet
 
 EXAMPLES:
-  1 bullet (simple story):
+  1 bullet (simple / single-beat story — fine to be a long single bullet):
   • "**PSG** dominated with goals from **Dembélé**, **Barcola**, and **Doué** to eliminate Chelsea from the Champions League"
 
-  3 bullets (complex story):
+  2 bullets (most stories):
+  • "**Apple** unveiled **iPhone 17** at Cupertino with a redesigned titanium frame and **48MP** main camera, starting at **$999**"
+  • "Pre-orders open **Friday**; analysts forecast **80M** units shipped by year-end as **Samsung** loses share in premium handsets"
+
+  3 bullets (complex story — keep each bullet shorter):
   • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**"
   • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD**"
   • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value"
