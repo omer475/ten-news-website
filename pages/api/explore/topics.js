@@ -159,6 +159,26 @@ const BLEND_FULL_AT = 50    // interactions needed to reach max behavior weight
 const MAX_BEHAVIOR_WEIGHT = 0.85  // cold_start always keeps 15% influence
 const BLEND_START_AT = 5    // minimum matches before any behavior influence
 
+/**
+ * Parse summary_bullets_news (sometimes a JSON string, sometimes an array,
+ * sometimes null). Return at most `limit` plain strings, trimmed.
+ * Mirrors news-supabase.js's parsing behaviour.
+ */
+function parseBullets(raw, limit = 2) {
+  if (!raw) return []
+  let arr
+  try {
+    arr = typeof raw === 'string' ? JSON.parse(raw) : raw
+  } catch {
+    return []
+  }
+  if (!Array.isArray(arr)) return []
+  return arr
+    .filter(b => typeof b === 'string' && b.trim().length > 0)
+    .slice(0, limit)
+    .map(b => b.trim())
+}
+
 const CATEGORY_EMOJIS = {
   'Soccer': '⚽', 'Basketball': '🏀', 'Football': '🏈', 'Baseball': '⚾',
   'Cricket': '🏏', 'Motorsport': '🏎️', 'Combat Sports': '🥊', 'Tennis': '🎾',
@@ -298,7 +318,7 @@ export default async function handler(req, res) {
             // Fetch sample articles for this leaf
             const { data: sampleArts } = await supabase
               .from('published_articles')
-              .select('id, title_news, image_url, category, typed_signals, published_at, ai_final_score')
+              .select('id, title_news, image_url, category, typed_signals, summary_bullets_news, published_at, ai_final_score')
               .eq('super_cluster_id', l.super)
               .eq('leaf_cluster_id', l.leaf)
               .gte('published_at', sevenDaysAgo)
@@ -352,6 +372,7 @@ export default async function handler(req, res) {
                 image_url: a.image_url,
                 category: a.category,
                 published_at: a.published_at,
+                bullets: parseBullets(a.summary_bullets_news, 2),
               })),
               _leafKey: `${l.super}_${l.leaf}`,
             })
@@ -381,7 +402,7 @@ export default async function handler(req, res) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data: recentArticlesAll } = await supabase
       .from('published_articles')
-      .select('id, title_news, image_url, category, interest_tags, published_at, ai_final_score, author_id, author_name')
+      .select('id, title_news, image_url, category, interest_tags, summary_bullets_news, published_at, ai_final_score, author_id, author_name')
       .gte('published_at', sevenDaysAgo)
       .lte('published_at', new Date().toISOString())
       .not('interest_tags', 'is', null)
@@ -746,7 +767,8 @@ export default async function handler(req, res) {
                 title: article.title_news,
                 image_url: article.image_url,
                 category: article.category,
-                published_at: article.published_at
+                published_at: article.published_at,
+                bullets: parseBullets(article.summary_bullets_news, 2),
               })
             }
           }
