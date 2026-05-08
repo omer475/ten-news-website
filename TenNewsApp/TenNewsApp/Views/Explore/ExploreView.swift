@@ -82,6 +82,121 @@ private func exploreAccentColor(for id: FlexibleID) -> Color {
     return Color(hue: hue, saturation: 0.55, brightness: 0.85)
 }
 
+/// PreferenceKey for collecting per-card measured heights inside an
+/// `EntityArticleCarousel`. Each card emits `[index: height]`; the parent
+/// `.onPreferenceChange` merges them into the carousel's `cardHeights`
+/// state. Scoped per-carousel: each ScrollView is its own subtree, so two
+/// carousels on screen don't cross-pollute.
+private struct CardHeightKey: PreferenceKey {
+    /// Computed getter (not a stored static var) to satisfy Swift 6 strict
+    /// concurrency: stored mutable globals are flagged.
+    static var defaultValue: [Int: CGFloat] { [:] }
+    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+        value.merge(nextValue(), uniquingKeysWith: { $1 })
+    }
+}
+
+/// Horizontal swipe carousel where each card keeps its natural height
+/// and the container morphs to match whichever card is currently snapped.
+/// Each card has `.fixedSize(vertical: true)` so the parent's frame can't
+/// compress it during measurement — without that, cards 2+ would all
+/// report card 1's constrained height through the PreferenceKey and the
+/// carousel would never resize.
+private struct EntityArticleCarousel: View {
+    let topic: ExploreTopic
+    let cardWidth: CGFloat
+    let prefetchedArticles: [String: Article]
+    let preloadedArticles: [Article]
+    var onTopicTap: (String) -> Void
+    var onSwipeDepth: (Int) -> Void
+    var onScrollHit: () -> Void
+
+    @State private var cardHeights: [Int: CGFloat] = [:]
+    @State private var currentIndex: Int = 0
+
+    /// Height of the currently-snapped card. Falls back to a sensible
+    /// estimate while the first measurement is in flight.
+    private var currentHeight: CGFloat {
+        cardHeights[currentIndex] ?? 600
+    }
+
+    /// Resolve the Article to render at a given carousel slot:
+    /// prefetched full > already-loaded-in-feed > slim explore proxy.
+    /// Pulled out of the ForEach body because the SwiftUI type-checker
+    /// chokes on the deeply nested expression when it lives inline.
+    private func resolvedArticle(at index: Int) -> Article {
+        let article = topic.articles[index]
+        let key = article.id.stringValue
+        if let pre = prefetchedArticles[key] { return pre }
+        if let loaded = preloadedArticles.first(where: { $0.id.stringValue == key }) { return loaded }
+        return Article.fromExplore(article, source: topic.displayTitle)
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 12) {
+                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
+                        ArticleCardContinuousView(
+                            article: resolvedArticle(at: index),
+                            accentColor: exploreAccentColor(for: article.id),
+                            onTopicTap: onTopicTap,
+                            showTopicTags: false
+                        )
+                        .frame(width: cardWidth)
+                        // CRITICAL: card commits to its intrinsic height
+                        // so the parent's .frame(height:) can't compress
+                        // it during measurement. Without this, cards 2+
+                        // would all measure at card 1's height.
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: CardHeightKey.self,
+                                    value: [index: geo.size.height]
+                                )
+                            }
+                        )
+                        .onAppear {
+                            if index == 2 { onScrollHit() }
+                        }
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.horizontal, 20)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .onPreferenceChange(CardHeightKey.self) { heights in
+                cardHeights.merge(heights, uniquingKeysWith: { _, new in new })
+            }
+            .frame(height: currentHeight)
+            .clipped()
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, newOffset in
+                let page = Int(round(newOffset / (cardWidth + 12)))
+                let clamped = max(0, min(page, topic.articles.count - 1))
+                if clamped != currentIndex {
+                    let prev = currentIndex
+                    // Spring-animate the index flip so the carousel
+                    // height change AND the section below sliding both
+                    // ride the same animation curve.
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                        currentIndex = clamped
+                    }
+                    if clamped > prev { onSwipeDepth(clamped) }
+                }
+            }
+
+            if topic.articles.count > 1 {
+                PageDots(count: topic.articles.count, current: currentIndex)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
 struct ExploreView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
@@ -288,7 +403,6 @@ struct ExploreView: View {
     private func entitySection(_ topic: ExploreTopic) -> some View {
         let catColor = categoryColor(for: topic.category)
         let icon = categoryIcon(for: topic.category)
-        let currentIndex = scrolledIndices[topic.entityName] ?? 0
 
         return VStack(alignment: .leading, spacing: 12) {
             // Entity header — SF Symbol icon + bold name + chevron
@@ -324,52 +438,23 @@ struct ExploreView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal swipe carousel of feed-style cards. One full
-            // article per page; user swipes right to see the next article
-            // in the entity. Same UX as the old box-card carousel — feed-
-            // style cards now instead of box previews.
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
-                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
-                        let articleProxy = Article.fromExplore(article, source: topic.displayTitle)
-                        ArticleCardContinuousView(
-                            article: articleProxy,
-                            accentColor: exploreAccentColor(for: article.id),
-                            onTopicTap: { entity in
-                                topicTarget = TopicTarget(entity: entity)
-                            }
-                        )
-                        .frame(width: cardWidth)
-                        .onAppear {
-                            if index == 2 {
-                                trackScrollIfNeeded(topic)
-                            }
-                        }
-                    }
-                }
-                .scrollTargetLayout()
-                .padding(.horizontal, 20)
-            }
-            .scrollTargetBehavior(.viewAligned)
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.x
-            } action: { _, newOffset in
-                let page = Int(round(newOffset / (cardWidth + 12)))
-                let clamped = max(0, min(page, topic.articles.count - 1))
-                let previousIndex = scrolledIndices[topic.entityName] ?? 0
-                if clamped != previousIndex {
-                    scrolledIndices[topic.entityName] = clamped
-                    if clamped > previousIndex {
-                        trackEntitySwipe(topic: topic, depth: clamped)
-                    }
-                }
-            }
-
-            if topic.articles.count > 1 {
-                PageDots(count: topic.articles.count, current: currentIndex)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
-            }
+            // Horizontal swipe carousel of feed-style cards. Each card
+            // stays at its natural height and the container morphs to
+            // match the snapped card — see EntityArticleCarousel.
+            EntityArticleCarousel(
+                topic: topic,
+                cardWidth: cardWidth,
+                prefetchedArticles: prefetchedArticles,
+                preloadedArticles: feedViewModel.allArticles,
+                onTopicTap: { entity in
+                    topicTarget = TopicTarget(entity: entity)
+                },
+                onSwipeDepth: { depth in
+                    scrolledIndices[topic.entityName] = depth
+                    trackEntitySwipe(topic: topic, depth: depth)
+                },
+                onScrollHit: { trackScrollIfNeeded(topic) }
+            )
         }
     }
 
@@ -895,7 +980,8 @@ struct EntityArticlesSheet: View {
                                     accentColor: exploreAccentColor(for: article.id),
                                     onTopicTap: { entity in
                                         nestedTopicTarget = TopicTarget(entity: entity)
-                                    }
+                                    },
+                                    showTopicTags: false
                                 )
                             }
                         }

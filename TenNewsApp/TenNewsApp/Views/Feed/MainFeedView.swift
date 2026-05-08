@@ -206,6 +206,11 @@ struct ArticleCardContinuousView: View {
     /// bullet. Wired through SwiftUI's `OpenURLAction` so the existing
     /// AttributedString markdown link plumbing dispatches to us.
     var onTopicTap: ((String) -> Void)? = nil
+    /// Show the topic-tag chips (search icon + 2 entity capsules) on the
+    /// LEFT of the action row. Main feed = true (quick topic jumps).
+    /// Explore page = false (the topic is already the section header
+    /// above the card, so chips would be redundant clutter).
+    var showTopicTags: Bool = true
 
     @State private var liked = false
     @State private var saved = false
@@ -372,7 +377,7 @@ struct ArticleCardContinuousView: View {
     /// pattern.
     private var actionRow: some View {
         HStack(spacing: 6) {
-            topicTags
+            if showTopicTags { topicTags }
             Spacer()
             actionIcon(systemName: liked ? "heart.fill" : "heart",
                        isOn: liked,
