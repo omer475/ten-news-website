@@ -206,12 +206,21 @@ OUTPUT FORMAT:
 Generate 1-2 SPECIFIC locations showing WHERE THE NEWS HAPPENED.
 
 CRITICAL RULES:
-1. MUST be a SPECIFIC location (building, facility, airport, etc.)
-2. MUST be ON PLANET EARTH (no Moon, Mars, space stations, asteroids)
-3. MUST NOT be just a country or city name
-4. MUST NOT be a famous building everyone knows (Kremlin, White House)
+1. MUST be a SPECIFIC NAMED venue, building, facility, airport, golf course,
+   stadium, port, etc. — NEVER a city, neighborhood, or region.
+2. MUST be ON PLANET EARTH (no Moon, Mars, space stations, asteroids).
+3. The "name" field MUST NOT equal the "city" field. If "name" == "city"
+   (e.g. name="Madrid", city="Madrid"), DO NOT emit that location at all.
+4. MUST NOT be a famous building everyone knows (Kremlin, White House,
+   Eiffel Tower, etc.).
+5. If the article does NOT mention a specific named venue / building /
+   facility, OMIT the map component entirely. A generic city pin is
+   WORSE than no map at all.
 
 THE PURPOSE: Users want to see "Where EXACTLY did this happen?"
+A pin on "Madrid" answers nothing. A pin on "Trump International Golf
+Course West Palm Beach" or "Vilnius International Airport" answers
+the question.
 
 ═══════════════════════════════════════════════════════════════
 GOOD MAP LOCATIONS (specific places on Earth):
@@ -648,8 +657,8 @@ class GeminiComponentWriter:
                 # Parse JSON
                 result = json.loads(response_text)
                 
-                # Validate
-                is_valid, errors = self._validate_output(result, components)
+                # Validate (pass bullets so details can dedup against them).
+                is_valid, errors = self._validate_output(result, components, bullets=article.get('summary_bullets_news', []))
                 
                 if is_valid:
                     return result
@@ -712,7 +721,7 @@ class GeminiComponentWriter:
 
         return formatted_prompt
     
-    def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
+    def _validate_output(self, result: Dict, selected_components: List[str], bullets: List = None) -> tuple[bool, List[str]]:
         """
         Validate component output PER-COMPONENT.
         Invalid components are removed from result but valid ones are kept.
@@ -769,6 +778,19 @@ class GeminiComponentWriter:
                         return False, "bare-digit-no-unit"
                     return True, "ok"
 
+                # Build a lower-cased blob of all bullet text for
+                # substring matching. Any detail whose value-numeric or
+                # label appears verbatim in bullets is rejected as a
+                # duplicate (the screen would render the same number
+                # twice — once in bullets, once in the box, useless).
+                bullets_blob = ' '.join(
+                    str(b).lower().replace('**', '')
+                    for b in (bullets or [])
+                    if isinstance(b, str)
+                )
+
+                import re as _re
+
                 seen_labels = set()
                 valid_details = []
                 rejection_reasons = []
@@ -780,6 +802,14 @@ class GeminiComponentWriter:
                     label_key = str(detail['label']).strip().lower()
                     if label_key in seen_labels:
                         rejection_reasons.append(f"{detail!r}→duplicate-label")
+                        continue
+                    # Anti-duplicate: pull the numeric run out of the
+                    # value and reject if it's already in the bullets.
+                    value_str = str(detail.get('value') or '').lower().replace('**', '').strip()
+                    num_match = _re.search(r'\$?[\d][\d,\.]*[%kmb\+\-]?', value_str)
+                    num_part = num_match.group(0) if num_match else ''
+                    if bullets_blob and num_part and num_part in bullets_blob:
+                        rejection_reasons.append(f"{detail!r}→value-already-in-bullets")
                         continue
                     seen_labels.add(label_key)
                     valid_details.append(detail)
@@ -831,12 +861,22 @@ class GeminiComponentWriter:
                         continue
 
                     loc_name_lower = loc.get('name', '').lower().strip()
+                    loc_city_lower = (loc.get('city') or '').lower().strip()
 
                     if loc_name_lower in too_vague:
                         errors.append(f"Map location '{loc.get('name')}' too vague (country/region)")
                         continue
                     if any(space in loc_name_lower for space in space_locations):
                         errors.append(f"Map location '{loc.get('name')}' not on Earth")
+                        continue
+                    # Reject city-only locations (name == city or name
+                    # is just a single-word city name with no specific
+                    # venue qualifier).
+                    if loc_name_lower and loc_city_lower and loc_name_lower == loc_city_lower:
+                        errors.append(f"Map location '{loc.get('name')}' is just the city name")
+                        continue
+                    if len(loc_name_lower.split()) <= 1 and loc_name_lower == loc_city_lower:
+                        errors.append(f"Map location '{loc.get('name')}' too generic (single-word == city)")
                         continue
 
                     # Validate coordinates
