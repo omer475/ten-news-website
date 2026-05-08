@@ -492,6 +492,68 @@ struct ExploreView: View {
         // bullets/details already in place. Runs after topics are visible so
         // the user isn't waiting on it — it just warms the cache.
         Task { await prefetchArticles() }
+        // Also kick off image prefetching in parallel — different endpoints
+        // (CDN vs our API) so the two don't compete. Most cards have heavy
+        // hero images and waiting until LazyHStack lazily renders them is
+        // why photos appeared late on first swipe.
+        Task(priority: .utility) { await prefetchImages() }
+    }
+
+    /// Background image prefetcher. Walks the loaded topics, deduplicates
+    /// image URLs, and warms `AsyncCachedImage.cache` with up to ~100
+    /// decoded UIImages so cards have their photos ready before the user
+    /// swipes to them. Network is parallel with a soft cap from URLSession's
+    /// per-host concurrency. Best-effort — failures are silent.
+    private func prefetchImages() async {
+        var urls: [URL] = []
+        var seen = Set<String>()
+        for topic in topics {
+            for article in topic.articles.prefix(10) {
+                guard let s = article.imageUrl,
+                      !s.isEmpty,
+                      let url = URL(string: s) else { continue }
+                let key = url.absoluteString
+                if seen.contains(key) { continue }
+                if AsyncCachedImage.cache.object(forKey: url as NSURL) != nil { continue }
+                seen.insert(key)
+                urls.append(url)
+                if urls.count >= 100 { break }
+            }
+            if urls.count >= 100 { break }
+        }
+        guard !urls.isEmpty else { return }
+
+        await withTaskGroup(of: Void.self) { group in
+            for url in urls {
+                group.addTask(priority: .utility) {
+                    await Self.fetchAndCacheImage(url)
+                }
+            }
+        }
+    }
+
+    /// One-shot image fetch + decode + cache insert. Mirrors the request
+    /// shape AsyncCachedImage uses (UA / Accept / Referer) so any host
+    /// that gates on those treats the prefetch the same as the in-card
+    /// load. Marked nonisolated-static so it can run off the main actor.
+    nonisolated private static func fetchAndCacheImage(_ url: URL) async {
+        var request = URLRequest(url: url)
+        request.setValue(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue("image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
+        request.setValue(url.host.map { "https://\($0)/" } ?? "", forHTTPHeaderField: "Referer")
+        request.timeoutInterval = 12
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 200
+            if statusCode < 400, let image = UIImage(data: data) {
+                AsyncCachedImage.cache.setObject(image, forKey: url as NSURL, cost: data.count)
+            }
+        } catch {
+            // Silent — AsyncCachedImage will retry on actual card render
+        }
     }
 
     /// Fetches full Article details for the most-visible articles and stores them

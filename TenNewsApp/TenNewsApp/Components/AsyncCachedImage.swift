@@ -13,8 +13,11 @@ struct AsyncCachedImage: View {
 
     nonisolated(unsafe) static let cache: NSCache<NSURL, UIImage> = {
         let c = NSCache<NSURL, UIImage>()
-        c.countLimit = 50
-        c.totalCostLimit = 100 * 1024 * 1024 // 100 MB
+        // Bumped 50 → 200 because Explore prefetches up to 100 images on
+        // load, plus the main feed adds dozens more. At 50 items the
+        // explore prefetch was evicting itself before the user even swiped.
+        c.countLimit = 200
+        c.totalCostLimit = 250 * 1024 * 1024 // 250 MB raw image bytes
         return c
     }()
 
