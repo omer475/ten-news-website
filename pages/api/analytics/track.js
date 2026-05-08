@@ -554,12 +554,21 @@ export default async function handler(req, res) {
       }
     }
 
-    // Extract view_seconds from metadata for article_exit events
+    // Phoenix Phase 1.4 (2026-05-08): persist dwell for ALL feed event types,
+    // not just article_exit. iOS sends metadata.dwell + metadata.total_active_seconds
+    // on every swipe (article_engaged / article_skipped / article_view) plus
+    // explicit actions (article_liked / article_saved / article_shared). The
+    // previous version only read it for article_exit, leaving view_seconds
+    // NULL on every feed event — which broke Trinity's read-fraction qualifying
+    // gate, the dwell-tier signal magnitude, and any audit query against the
+    // user_article_events table.
     let view_seconds = null
-    if (event_type === 'article_exit' && metadata?.total_active_seconds) {
-      view_seconds = parseInt(metadata.total_active_seconds, 10) || null
-    } else if (event_type === 'article_engaged' && metadata?.engaged_seconds) {
-      view_seconds = parseInt(metadata.engaged_seconds, 10) || null
+    const dwellRaw = metadata?.total_active_seconds ?? metadata?.dwell ?? metadata?.engaged_seconds
+    if (dwellRaw != null) {
+      const parsed = parseFloat(dwellRaw)
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        view_seconds = Math.round(parsed)
+      }
     }
 
     // Phase 10.1 (2026-04-25): noise filter on dwell.
