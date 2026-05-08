@@ -1,5 +1,87 @@
 import SwiftUI
 
+// MARK: - Article from ExploreTopicArticle
+
+extension Article {
+    /// Build a slim Article from an ExploreTopicArticle preview so the
+    /// Explore page can render the same `ArticleCardContinuousView` as the
+    /// main feed. Bullets carry markdown bold spans so entity-tap still works.
+    /// All other Article fields (components, multi-page, details, scorecard,
+    /// etc.) stay nil — the feed card falls into the simple title+bullets
+    /// layout for these cards.
+    static func fromExplore(_ e: ExploreTopicArticle, source: String? = nil) -> Article {
+        Article(
+            id: e.id,
+            title: e.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: e.bullets,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: e.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: source,
+            category: e.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: e.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: nil,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
+    }
+}
+
+/// Deterministic hash-derived accent color for any article id. Same hue
+/// formula as `TopicFeedView.accentColor(for:)` and `FeedViewModel.accentColor`,
+/// so the same article shows the same accent everywhere.
+private func exploreAccentColor(for id: FlexibleID) -> Color {
+    let s = id.stringValue
+    var hash: UInt64 = 14695981039346656037
+    for byte in s.utf8 {
+        hash = (hash ^ UInt64(byte)) &* 1099511628211
+    }
+    let hue = Double(hash % 360) / 360.0
+    return Color(hue: hue, saturation: 0.55, brightness: 0.85)
+}
+
 struct ExploreView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
@@ -8,6 +90,10 @@ struct ExploreView: View {
     @State private var isLoading = true
     @State private var searchText = ""
     @State private var selectedArticle: Article?
+    /// Set when the user taps a bold entity on a feed-style explore card.
+    /// Drives the same TopicFeedView full-screen cover that the main feed
+    /// uses, for exact behavioural parity.
+    @State private var topicTarget: TopicTarget? = nil
     /// Bumped on every write to `selectedArticle`. Article's `==` is id-only, so
     /// assigning a hydrated article over a stub (same id) is "equal" to @State
     /// and invalidation is skipped. Bumping this Int guarantees @State fires,
@@ -87,6 +173,13 @@ struct ExploreView: View {
             }
 
             // Article overlay (single article from card tap)
+            // Topic feed cover — opened when the user taps a bold entity
+            // on a feed-style card. Mirrors the main feed exactly.
+            EmptyView()
+                .fullScreenCover(item: $topicTarget) { target in
+                    TopicFeedView(entity: target.entity)
+                }
+
             if let article = selectedArticle {
                 ExploreArticleSheet(
                     selectedArticle: article,
@@ -231,23 +324,22 @@ struct ExploreView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal article scroll
+            // Horizontal swipe carousel of feed-style cards. One full
+            // article per page; user swipes right to see the next article
+            // in the entity. Same UX as the old box-card carousel — feed-
+            // style cards now instead of box previews.
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 12) {
                     ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
-                        Button {
-                            trackArticleTap(article, topic: topic)
-                            openArticle(article)
-                        } label: {
-                            ExploreArticleCard(
-                                article: article,
-                                fallbackColor: catColor,
-                                cardWidth: cardWidth,
-                                cardHeight: cardHeight,
-                                relatedEntities: relatedEntityNames(for: article, excluding: topic)
-                            )
-                        }
-                        .buttonStyle(.plain)
+                        let articleProxy = Article.fromExplore(article, source: topic.displayTitle)
+                        ArticleCardContinuousView(
+                            article: articleProxy,
+                            accentColor: exploreAccentColor(for: article.id),
+                            onTopicTap: { entity in
+                                topicTarget = TopicTarget(entity: entity)
+                            }
+                        )
+                        .frame(width: cardWidth)
                         .onAppear {
                             if index == 2 {
                                 trackScrollIfNeeded(topic)
@@ -267,14 +359,12 @@ struct ExploreView: View {
                 let previousIndex = scrolledIndices[topic.entityName] ?? 0
                 if clamped != previousIndex {
                     scrolledIndices[topic.entityName] = clamped
-                    // Track swipe-right as interest signal (stronger than scroll, weaker than tap)
                     if clamped > previousIndex {
                         trackEntitySwipe(topic: topic, depth: clamped)
                     }
                 }
             }
 
-            // Page indicator dots (max 7 visible, iOS-style scaling)
             if topic.articles.count > 1 {
                 PageDots(count: topic.articles.count, current: currentIndex)
                     .frame(maxWidth: .infinity)
@@ -647,186 +737,6 @@ struct ExploreView: View {
     }
 }
 
-// MARK: - Explore Article Card (extracts dominant color from image)
-
-struct ExploreArticleCard: View {
-    let article: ExploreTopicArticle
-    let fallbackColor: Color
-    let cardWidth: CGFloat
-    let cardHeight: CGFloat
-    var relatedEntities: [String] = []
-    var showTags: Bool = true
-    var onDominantColorChanged: ((Color) -> Void)? = nil
-
-    @State private var dominantColor: Color?
-    /// Blur color matching what ArticleCardView uses on the open article page,
-    /// so the card's glass tint is identical to what the user sees after tapping.
-    @State private var dominantBlurColor: Color?
-
-    private var highlightColor: Color {
-        (dominantColor ?? Color(white: 0.7)).vivid()
-    }
-
-    private var glassColor: Color {
-        dominantBlurColor ?? dominantColor ?? Color(white: 0.15)
-    }
-
-    /// Tags to show: related entities first, then bold keywords from title
-    private var displayTags: [String] {
-        if !relatedEntities.isEmpty { return relatedEntities }
-        // Extract bold **keywords** from title
-        let pattern = /\*\*(.+?)\*\*/
-        var keywords: [String] = []
-        for match in article.title.matches(of: pattern) {
-            let word = String(match.1).trimmingCharacters(in: .whitespaces)
-            if word.count >= 2 && word.count <= 18 {
-                keywords.append(word)
-            }
-        }
-        return keywords
-    }
-
-    var body: some View {
-        // Editorial square card. Two layouts depending on whether the
-        // article has an image:
-        //   • IMAGE: photo fills the top ~62%, title sits in the bottom
-        //     ~38% on white surface — Apple News / NYT magazine card.
-        //   • NO IMAGE: full-square cream surface, title takes the lead
-        //     centred/top, larger weight. Like a typeset cover.
-        // Both use 20pt outer radius, 14pt inner image radius, 1pt
-        // hairline border, soft drop shadow.
-        let outerRadius: CGFloat = 20
-
-        return Group {
-            if let imageUrl = article.imageUrl,
-               !imageUrl.isEmpty,
-               let url = URL(string: imageUrl) {
-                imageVariant(url: url, outerRadius: outerRadius)
-                    .onAppear { extractColor(from: url) }
-            } else {
-                textOnlyVariant()
-            }
-        }
-        .frame(width: cardWidth, height: cardHeight)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-    }
-
-    /// Image variant: photo top (all 4 corners rounded, inset with
-    /// padding), title + meta bottom on white.
-    @ViewBuilder
-    private func imageVariant(url: URL, outerRadius: CGFloat) -> some View {
-        VStack(spacing: 12) {
-            AsyncCachedImage(url: url, contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .frame(height: cardHeight * 0.55)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 8) {
-                if let category = article.category, !category.isEmpty {
-                    Text(category.uppercased())
-                        .font(.system(size: 10, weight: .heavy))
-                        .tracking(1.2)
-                        .foregroundStyle(fallbackColor)
-                        .lineLimit(1)
-                }
-                Text(article.cleanTitle)
-                    .font(.system(size: 22, weight: .bold))
-                    .tracking(-0.4)
-                    .foregroundStyle(Color.primary)
-                    .lineSpacing(2)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Spacer(minLength: 0)
-                if !article.relativeTime.isEmpty {
-                    Text(article.relativeTime)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }
-        .padding(14)
-    }
-
-    /// Text-only variant: full square cream surface, title-led layout.
-    @ViewBuilder
-    private func textOnlyVariant() -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let category = article.category, !category.isEmpty {
-                Text(category.uppercased())
-                    .font(.system(size: 11, weight: .heavy))
-                    .tracking(1.4)
-                    .foregroundStyle(fallbackColor)
-                    .lineLimit(1)
-            }
-            Text(article.cleanTitle)
-                .font(.system(size: 28, weight: .bold))
-                .tracking(-0.5)
-                .foregroundStyle(Color.primary)
-                .lineSpacing(3)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
-            if !article.relativeTime.isEmpty {
-                Text(article.relativeTime)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.secondary)
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 18)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    // MARK: - Dominant Color Extraction
-
-    /// Pulls colors from ArticleCardView's shared cache / extractor so the card's
-    /// blur tint and highlight color exactly match what the open article page
-    /// shows after the user taps in.
-    private func extractColor(from url: URL) {
-        if let cachedAccent = ArticleCardView.colorCache.object(forKey: url as NSURL),
-           let cachedBlur = ArticleCardView.blurColorCache.object(forKey: url as NSURL) {
-            let accent = Color(cachedAccent)
-            dominantColor = accent
-            dominantBlurColor = Color(cachedBlur)
-            onDominantColorChanged?(accent)
-            return
-        }
-
-        Task.detached(priority: .background) {
-            // Wait briefly for AsyncCachedImage to hand us a decoded UIImage —
-            // skip the network round-trip if the card's image has already loaded.
-            var uiImage: UIImage?
-            for _ in 0..<15 {
-                if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
-                    uiImage = cached
-                    break
-                }
-                try? await Task.sleep(nanoseconds: 100_000_000)
-            }
-
-            guard let result = await ArticleCardView.extractAndCacheColors(url: url, loadedImage: uiImage) else { return }
-
-            await MainActor.run {
-                withAnimation(.easeOut(duration: 0.3)) {
-                    dominantColor = Color(result.accent)
-                    dominantBlurColor = Color(result.blur)
-                }
-                onDominantColorChanged?(Color(result.accent))
-            }
-        }
-    }
-}
-
 // MARK: - Section Appear Modifier
 
 private struct SectionAppearModifier: ViewModifier {
@@ -860,9 +770,9 @@ struct EntityArticlesSheet: View {
     let onDismiss: () -> Void
 
     @State private var selectedArticle: Article?
-
-    private let cardWidth: CGFloat = UIScreen.main.bounds.width - 40
-    private var cardHeight: CGFloat { cardWidth }
+    /// Set when the user taps a bold entity inside a feed card. Drives a
+    /// nested TopicFeedView cover, same as the main feed.
+    @State private var nestedTopicTarget: TopicTarget? = nil
 
     private func categoryColor() -> Color {
         let colors: [String: String] = [
@@ -916,21 +826,17 @@ struct EntityArticlesSheet: View {
                         .padding(.trailing, 20)
                         .padding(.top, 66)
 
-                        ForEach(articles) { article in
-                            Button {
-                                HapticManager.selection()
-                                selectedArticle = article
-                            } label: {
-                                ExploreArticleCard(
-                                    article: matchingTopicArticle(for: article),
-                                    fallbackColor: categoryColor(),
-                                    cardWidth: cardWidth,
-                                    cardHeight: cardHeight
+                        VStack(spacing: 18) {
+                            ForEach(articles) { article in
+                                ArticleCardContinuousView(
+                                    article: article,
+                                    accentColor: exploreAccentColor(for: article.id),
+                                    onTopicTap: { entity in
+                                        nestedTopicTarget = TopicTarget(entity: entity)
+                                    }
                                 )
                             }
-                            .buttonStyle(.plain)
                         }
-                        .padding(.horizontal, 20)
                         .padding(.bottom, 100)
                     }
                 }
@@ -968,21 +874,9 @@ struct EntityArticlesSheet: View {
                 .zIndex(1)
             }
         }
-    }
-
-    /// Find the matching ExploreTopicArticle for a full Article (for the card display)
-    private func matchingTopicArticle(for article: Article) -> ExploreTopicArticle {
-        if let match = topic.articles.first(where: { $0.id.stringValue == article.id.stringValue }) {
-            return match
+        .fullScreenCover(item: $nestedTopicTarget) { target in
+            TopicFeedView(entity: target.entity)
         }
-        // Fallback: create one from the Article
-        return ExploreTopicArticle(
-            id: article.id,
-            title: article.title ?? "Untitled",
-            imageUrl: article.imageUrl,
-            category: article.category,
-            publishedAt: article.publishedAt
-        )
     }
 }
 

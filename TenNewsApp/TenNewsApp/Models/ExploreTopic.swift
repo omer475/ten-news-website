@@ -47,6 +47,9 @@ struct ExploreTopicArticle: Identifiable, Decodable {
     let imageUrl: String?
     let category: String?
     let publishedAt: String?
+    /// First 1-2 bullets from summary_bullets_news. May be empty when the
+    /// article has no bullets, or when the field is missing on older clients.
+    let bullets: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -54,11 +57,43 @@ struct ExploreTopicArticle: Identifiable, Decodable {
         case imageUrl = "image_url"
         case category
         case publishedAt = "published_at"
+        case bullets
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(FlexibleID.self, forKey: .id)
+        title = try c.decode(String.self, forKey: .title)
+        imageUrl = try c.decodeIfPresent(String.self, forKey: .imageUrl)
+        category = try c.decodeIfPresent(String.self, forKey: .category)
+        publishedAt = try c.decodeIfPresent(String.self, forKey: .publishedAt)
+        bullets = try c.decodeIfPresent([String].self, forKey: .bullets)
+    }
+
+    init(
+        id: FlexibleID,
+        title: String,
+        imageUrl: String?,
+        category: String?,
+        publishedAt: String?,
+        bullets: [String]? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.imageUrl = imageUrl
+        self.category = category
+        self.publishedAt = publishedAt
+        self.bullets = bullets
     }
 
     /// Title with markdown bold markers stripped
     var cleanTitle: String {
         title.replacingOccurrences(of: "**", with: "")
+    }
+
+    /// Bullets with markdown bold markers stripped, capped at 2.
+    var cleanBullets: [String] {
+        (bullets ?? []).prefix(2).map { $0.replacingOccurrences(of: "**", with: "") }
     }
 
     var relativeTime: String {

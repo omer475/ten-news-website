@@ -542,7 +542,11 @@ struct ArticleCardContinuousView: View {
     // anywhere on the photo likes the article (Instagram pattern).
     private var photoBlock: some View {
         ZStack {
-            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
+            // 16:9 forced aspect + .fill: low-res thumbnails scale up to
+            // fill card width (no more "tiny image floating in space" for
+            // small thumbnails), and tall/square images get cropped to a
+            // consistent 16:9 frame so every card has the same image height.
+            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), aspectRatio: 16.0 / 9.0, contentMode: .fill)
                 .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))

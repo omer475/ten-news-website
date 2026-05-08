@@ -1298,3 +1298,184 @@ private struct CTAPressStyle: ButtonStyle {
     OnboardingFlowView()
         .environment(AppViewModel())
 }
+
+
+// MARK: - Onboarding Preview Card (legacy ExploreArticleCard, used only here)
+
+fileprivate struct ExploreArticleCard: View {
+    let article: ExploreTopicArticle
+    let fallbackColor: Color
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
+    var relatedEntities: [String] = []
+    var showTags: Bool = true
+    var onDominantColorChanged: ((Color) -> Void)? = nil
+
+    @State private var dominantColor: Color?
+    /// Blur color matching what ArticleCardView uses on the open article page,
+    /// so the card's glass tint is identical to what the user sees after tapping.
+    @State private var dominantBlurColor: Color?
+
+    private var highlightColor: Color {
+        (dominantColor ?? Color(white: 0.7)).vivid()
+    }
+
+    private var glassColor: Color {
+        dominantBlurColor ?? dominantColor ?? Color(white: 0.15)
+    }
+
+    /// Tags to show: related entities first, then bold keywords from title
+    private var displayTags: [String] {
+        if !relatedEntities.isEmpty { return relatedEntities }
+        // Extract bold **keywords** from title
+        let pattern = /\*\*(.+?)\*\*/
+        var keywords: [String] = []
+        for match in article.title.matches(of: pattern) {
+            let word = String(match.1).trimmingCharacters(in: .whitespaces)
+            if word.count >= 2 && word.count <= 18 {
+                keywords.append(word)
+            }
+        }
+        return keywords
+    }
+
+    var body: some View {
+        // Editorial square card. Two layouts depending on whether the
+        // article has an image:
+        //   • IMAGE: photo fills the top ~62%, title sits in the bottom
+        //     ~38% on white surface — Apple News / NYT magazine card.
+        //   • NO IMAGE: full-square cream surface, title takes the lead
+        //     centred/top, larger weight. Like a typeset cover.
+        // Both use 20pt outer radius, 14pt inner image radius, 1pt
+        // hairline border, soft drop shadow.
+        let outerRadius: CGFloat = 20
+
+        return Group {
+            if let imageUrl = article.imageUrl,
+               !imageUrl.isEmpty,
+               let url = URL(string: imageUrl) {
+                imageVariant(url: url, outerRadius: outerRadius)
+                    .onAppear { extractColor(from: url) }
+            } else {
+                textOnlyVariant()
+            }
+        }
+        .frame(width: cardWidth, height: cardHeight)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    /// Image variant: photo top (all 4 corners rounded, inset with
+    /// padding), title + meta bottom on white.
+    @ViewBuilder
+    private func imageVariant(url: URL, outerRadius: CGFloat) -> some View {
+        VStack(spacing: 12) {
+            AsyncCachedImage(url: url, contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .frame(height: cardHeight * 0.55)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let category = article.category, !category.isEmpty {
+                    Text(category.uppercased())
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(1.2)
+                        .foregroundStyle(fallbackColor)
+                        .lineLimit(1)
+                }
+                Text(article.cleanTitle)
+                    .font(.system(size: 22, weight: .bold))
+                    .tracking(-0.4)
+                    .foregroundStyle(Color.primary)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 0)
+                if !article.relativeTime.isEmpty {
+                    Text(article.relativeTime)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .padding(14)
+    }
+
+    /// Text-only variant: full square cream surface, title-led layout.
+    @ViewBuilder
+    private func textOnlyVariant() -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let category = article.category, !category.isEmpty {
+                Text(category.uppercased())
+                    .font(.system(size: 11, weight: .heavy))
+                    .tracking(1.4)
+                    .foregroundStyle(fallbackColor)
+                    .lineLimit(1)
+            }
+            Text(article.cleanTitle)
+                .font(.system(size: 28, weight: .bold))
+                .tracking(-0.5)
+                .foregroundStyle(Color.primary)
+                .lineSpacing(3)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            if !article.relativeTime.isEmpty {
+                Text(article.relativeTime)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    // MARK: - Dominant Color Extraction
+
+    /// Pulls colors from ArticleCardView's shared cache / extractor so the card's
+    /// blur tint and highlight color exactly match what the open article page
+    /// shows after the user taps in.
+    private func extractColor(from url: URL) {
+        if let cachedAccent = ArticleCardView.colorCache.object(forKey: url as NSURL),
+           let cachedBlur = ArticleCardView.blurColorCache.object(forKey: url as NSURL) {
+            let accent = Color(cachedAccent)
+            dominantColor = accent
+            dominantBlurColor = Color(cachedBlur)
+            onDominantColorChanged?(accent)
+            return
+        }
+
+        Task.detached(priority: .background) {
+            // Wait briefly for AsyncCachedImage to hand us a decoded UIImage —
+            // skip the network round-trip if the card's image has already loaded.
+            var uiImage: UIImage?
+            for _ in 0..<15 {
+                if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
+                    uiImage = cached
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+
+            guard let result = await ArticleCardView.extractAndCacheColors(url: url, loadedImage: uiImage) else { return }
+
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    dominantColor = Color(result.accent)
+                    dominantBlurColor = Color(result.blur)
+                }
+                onDominantColorChanged?(Color(result.accent))
+            }
+        }
+    }
+}
