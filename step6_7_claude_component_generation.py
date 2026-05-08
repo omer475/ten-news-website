@@ -63,8 +63,16 @@ REQUIREMENTS:
 ✓ Every detail must contain a number
 ✓ Must NOT be in bullet summary
 ✓ Must DIRECTLY support or explain the headline
-✓ Label: 1-3 words
-✓ Value: Number with unit
+✓ Label: HARD CAP 18 characters AND 1-2 words. NEVER 3+ words.
+   - GOOD: "Crew", "Casualties", "Stake", "Funding", "Top speed"
+   - BAD: "Reports since January" (too many words),
+          "Civil society support" (too many words),
+          "Toddlers involved" (acceptable but borderline — prefer "Toddlers")
+✓ Value: A number paired with a unit, currency, percent, or context word.
+   - GOOD: "5 aboard", "$1.5M", "48 MP", "2,515 meters", "9.2%"
+   - BAD: "1", "2", "100" (bare digit, no unit — REJECTED)
+✓ Each label MUST be unique within the article (no two columns saying
+   the same thing). Case-insensitive comparison.
 ✓ Maximum 7 words total per detail
 
 HEADLINE-RELEVANCE RULE — read this twice:
@@ -83,12 +91,15 @@ the current event.
 
 OUTPUT FORMAT:
 [
-  {"label": "Crew members", "value": "5 aboard"},
-  {"label": "Flight origin", "value": "Leipzig, Germany"},
-  {"label": "Runway length", "value": "2,515 meters"}
+  {"label": "Crew", "value": "5 aboard"},
+  {"label": "Origin", "value": "Leipzig, Germany"},
+  {"label": "Runway", "value": "2,515 meters"}
 ]
 
 BAD DETAILS (never do):
+✗ Long labels: {"label": "Reports since January"}  → use "Reports" (1 word)
+✗ Duplicate labels: two columns labelled "Civil society support"
+✗ Bare-digit values: {"label": "Toddlers", "value": "2"}  → use "2 toddlers"
 ✗ Duplicates from bullets
 ✗ No number: {"label": "Status", "value": "Ongoing"}
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
@@ -195,12 +206,21 @@ OUTPUT FORMAT:
 Generate 1-2 SPECIFIC locations showing WHERE THE NEWS HAPPENED.
 
 CRITICAL RULES:
-1. MUST be a SPECIFIC location (building, facility, airport, etc.)
-2. MUST be ON PLANET EARTH (no Moon, Mars, space stations, asteroids)
-3. MUST NOT be just a country or city name
-4. MUST NOT be a famous building everyone knows (Kremlin, White House)
+1. MUST be a SPECIFIC NAMED venue, building, facility, airport, golf course,
+   stadium, port, etc. — NEVER a city, neighborhood, or region.
+2. MUST be ON PLANET EARTH (no Moon, Mars, space stations, asteroids).
+3. The "name" field MUST NOT equal the "city" field. If "name" == "city"
+   (e.g. name="Madrid", city="Madrid"), DO NOT emit that location at all.
+4. MUST NOT be a famous building everyone knows (Kremlin, White House,
+   Eiffel Tower, etc.).
+5. If the article does NOT mention a specific named venue / building /
+   facility, OMIT the map component entirely. A generic city pin is
+   WORSE than no map at all.
 
 THE PURPOSE: Users want to see "Where EXACTLY did this happen?"
+A pin on "Madrid" answers nothing. A pin on "Trump International Golf
+Course West Palm Beach" or "Vilnius International Airport" answers
+the question.
 
 ═══════════════════════════════════════════════════════════════
 GOOD MAP LOCATIONS (specific places on Earth):
@@ -637,8 +657,8 @@ class GeminiComponentWriter:
                 # Parse JSON
                 result = json.loads(response_text)
                 
-                # Validate
-                is_valid, errors = self._validate_output(result, components)
+                # Validate (pass bullets so details can dedup against them).
+                is_valid, errors = self._validate_output(result, components, bullets=article.get('summary_bullets_news', []))
                 
                 if is_valid:
                     return result
@@ -701,7 +721,7 @@ class GeminiComponentWriter:
 
         return formatted_prompt
     
-    def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
+    def _validate_output(self, result: Dict, selected_components: List[str], bullets: List = None) -> tuple[bool, List[str]]:
         """
         Validate component output PER-COMPONENT.
         Invalid components are removed from result but valid ones are kept.
@@ -725,33 +745,84 @@ class GeminiComponentWriter:
                 # Too many events - just trim to 4 instead of failing
                 result['timeline'] = result['timeline'][:4]
 
-        # --- DETAILS validation (exactly 3 required) ---
+        # --- DETAILS validation (exactly 3 required, strict shape) ---
+        # The 3-column iOS card is small. Long labels truncate as "…",
+        # bare-digit values like "2" read as meaningless without context,
+        # duplicate labels look broken. We enforce all three at validation
+        # time so the AI's output isn't trusted blindly.
         if 'details' in selected_components:
             if 'details' not in result or not isinstance(result['details'], list) or len(result['details']) == 0:
                 errors.append("Details selected but missing or empty — need exactly 3")
                 if 'details' in result:
                     del result['details']
             else:
-                valid_details = []
-                details_with_numbers = []
-                for detail in result['details']:
-                    if isinstance(detail, dict) and detail.get('label') and detail.get('value'):
-                        valid_details.append(detail)
-                        value = str(detail.get('value', ''))
-                        if any(char.isdigit() for char in value):
-                            details_with_numbers.append(detail)
-                    elif isinstance(detail, str) and len(detail) > 3:
-                        valid_details.append(detail)
-                        if any(char.isdigit() for char in detail):
-                            details_with_numbers.append(detail)
+                MAX_LABEL_CHARS = 18
+                MAX_LABEL_WORDS = 2  # tightened from 3 — labels were truncating
 
-                # Prefer details with numbers, require exactly 3
-                best_details = details_with_numbers if len(details_with_numbers) >= 3 else valid_details
-                if len(best_details) >= 3:
-                    result['details'] = best_details[:3]
+                def _detail_passes(detail):
+                    if not isinstance(detail, dict):
+                        return False, "not-dict"
+                    label = str(detail.get('label') or '').strip()
+                    value = str(detail.get('value') or '').strip()
+                    if not label or not value:
+                        return False, "empty-label-or-value"
+                    if len(label) > MAX_LABEL_CHARS:
+                        return False, f"label-too-long({len(label)})"
+                    if len(label.split()) > MAX_LABEL_WORDS:
+                        return False, f"label-too-many-words({len(label.split())})"
+                    if not any(c.isdigit() for c in value):
+                        return False, "value-no-digit"
+                    # "2" alone is rejected; "2 toddlers" passes.
+                    bare_digit = value.replace(',', '').replace('.', '').replace('+', '').replace('-', '').strip()
+                    if bare_digit.isdigit() and len(value) <= len(bare_digit) + 1:
+                        return False, "bare-digit-no-unit"
+                    return True, "ok"
+
+                # Build a lower-cased blob of all bullet text for
+                # substring matching. Any detail whose value-numeric or
+                # label appears verbatim in bullets is rejected as a
+                # duplicate (the screen would render the same number
+                # twice — once in bullets, once in the box, useless).
+                bullets_blob = ' '.join(
+                    str(b).lower().replace('**', '')
+                    for b in (bullets or [])
+                    if isinstance(b, str)
+                )
+
+                import re as _re
+
+                seen_labels = set()
+                valid_details = []
+                rejection_reasons = []
+                for detail in result['details']:
+                    ok, reason = _detail_passes(detail)
+                    if not ok:
+                        rejection_reasons.append(f"{detail!r}→{reason}")
+                        continue
+                    label_key = str(detail['label']).strip().lower()
+                    if label_key in seen_labels:
+                        rejection_reasons.append(f"{detail!r}→duplicate-label")
+                        continue
+                    # Anti-duplicate: pull the numeric run out of the
+                    # value and reject if it's already in the bullets.
+                    value_str = str(detail.get('value') or '').lower().replace('**', '').strip()
+                    num_match = _re.search(r'\$?[\d][\d,\.]*[%kmb\+\-]?', value_str)
+                    num_part = num_match.group(0) if num_match else ''
+                    if bullets_blob and num_part and num_part in bullets_blob:
+                        rejection_reasons.append(f"{detail!r}→value-already-in-bullets")
+                        continue
+                    seen_labels.add(label_key)
+                    valid_details.append(detail)
+
+                if len(valid_details) >= 3:
+                    result['details'] = valid_details[:3]
                 else:
-                    errors.append(f"Only {len(best_details)} valid details (need exactly 3)")
-                    del result['details']
+                    errors.append(
+                        f"Only {len(valid_details)} valid details after strict checks "
+                        f"(need 3). Rejections: {rejection_reasons[:3]}"
+                    )
+                    if 'details' in result:
+                        del result['details']
 
         # --- GRAPH validation ---
         if 'graph' in selected_components:
@@ -790,12 +861,22 @@ class GeminiComponentWriter:
                         continue
 
                     loc_name_lower = loc.get('name', '').lower().strip()
+                    loc_city_lower = (loc.get('city') or '').lower().strip()
 
                     if loc_name_lower in too_vague:
                         errors.append(f"Map location '{loc.get('name')}' too vague (country/region)")
                         continue
                     if any(space in loc_name_lower for space in space_locations):
                         errors.append(f"Map location '{loc.get('name')}' not on Earth")
+                        continue
+                    # Reject city-only locations (name == city or name
+                    # is just a single-word city name with no specific
+                    # venue qualifier).
+                    if loc_name_lower and loc_city_lower and loc_name_lower == loc_city_lower:
+                        errors.append(f"Map location '{loc.get('name')}' is just the city name")
+                        continue
+                    if len(loc_name_lower.split()) <= 1 and loc_name_lower == loc_city_lower:
+                        errors.append(f"Map location '{loc.get('name')}' too generic (single-word == city)")
                         continue
 
                     # Validate coordinates
