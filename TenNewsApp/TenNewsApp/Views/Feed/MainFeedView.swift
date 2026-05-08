@@ -87,7 +87,7 @@ struct MainFeedView: View {
 
     private var feedContent: some View {
         ScrollView(showsIndicators: false) {
-            LazyVStack(spacing: 28) {
+            LazyVStack(spacing: 0) {
                 ForEach(Array(sortedArticles.enumerated()), id: \.offset) { idx, article in
                     ArticleCardContinuousView(
                         article: article,
@@ -96,6 +96,7 @@ struct MainFeedView: View {
                             topicTarget = TopicTarget(entity: entity)
                         }
                     )
+                    .padding(.vertical, 14)
                     .onAppear {
                         viewModel.recordViewStart(at: idx)
                         currentPageIndex = idx
@@ -106,6 +107,13 @@ struct MainFeedView: View {
                     }
                     .onDisappear {
                         viewModel.recordSwipeAway(fromIndex: idx)
+                    }
+
+                    if idx < sortedArticles.count - 1 {
+                        Rectangle()
+                            .fill(dividerColor)
+                            .frame(height: 0.5)
+                            .padding(.horizontal, 16)
                     }
                 }
                 Spacer().frame(height: 100)
@@ -126,6 +134,18 @@ struct MainFeedView: View {
     }
 
     private var timeOfDay: TimeOfDay { .current }
+
+    /// Hairline between cards. ~7% darker than the cream page bg in
+    /// light mode, low-opacity white in dark — same logic as the topic
+    /// chip background, just thinner. Reads as a quiet parsing cue, not
+    /// a hard rule.
+    private var dividerColor: Color {
+        Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark
+                ? UIColor(white: 1.0, alpha: 0.07)
+                : UIColor(red: 0.86, green: 0.85, blue: 0.82, alpha: 1.0)
+        })
+    }
 
     // MARK: - Error
 
