@@ -77,13 +77,49 @@ struct AsyncCachedImage: View {
         }
     }
 
-    private static let session: URLSession = {
+    /// Shared URL session with a generous disk-backed URLCache so images
+    /// survive across app launches (cold start no longer round-trips
+    /// every photo) and a higher per-host concurrency limit so prefetch
+    /// + on-screen card loads don't queue behind each other through the
+    /// default 6 connections per host.
+    nonisolated(unsafe) static let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 30
-        config.urlCache = nil // Don't cache HTTP responses (we cache UIImages ourselves)
+        config.httpMaximumConnectionsPerHost = 12
+        config.requestCachePolicy = .useProtocolCachePolicy
+        config.urlCache = URLCache(
+            memoryCapacity: 20 * 1024 * 1024,    // 20 MB raw bytes hot
+            diskCapacity: 300 * 1024 * 1024,     // 300 MB disk persistence
+            directory: nil
+        )
         return URLSession(configuration: config)
     }()
+
+    /// One-shot prefetch — fetches the URL, decodes to UIImage, drops
+    /// it into the in-memory cache. No-op if already cached. Uses the
+    /// same shared session as on-card loads, so both paths benefit from
+    /// the URLCache disk layer. Marked nonisolated-static so Explore
+    /// can call it from a background task group.
+    nonisolated static func prefetch(_ url: URL) async {
+        if cache.object(forKey: url as NSURL) != nil { return }
+        var request = URLRequest(url: url)
+        request.setValue(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+            forHTTPHeaderField: "User-Agent"
+        )
+        request.setValue("image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
+        request.setValue(url.host.map { "https://\($0)/" } ?? "", forHTTPHeaderField: "Referer")
+        do {
+            let (data, response) = try await session.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 200
+            if statusCode < 400, let image = UIImage(data: data) {
+                cache.setObject(image, forKey: url as NSURL, cost: data.count)
+            }
+        } catch {
+            // Silent — AsyncCachedImage will retry on actual card render
+        }
+    }
 
     private func loadImage() async {
         guard let url else {
@@ -101,10 +137,13 @@ struct AsyncCachedImage: View {
 
         isLoading = true
 
-        // Try up to 2 times (initial + 1 retry)
+        // Try up to 2 times (initial + 1 retry). Retry delay 500→200ms
+        // because the most common cause of a first-attempt failure is a
+        // transient connection setup, not a real server issue — fast
+        // retry shaves perceived latency on flaky networks.
         for attempt in 0..<2 {
             if attempt > 0 {
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .milliseconds(200))
             }
             do {
                 var request = URLRequest(url: url)

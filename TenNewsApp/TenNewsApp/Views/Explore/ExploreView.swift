@@ -584,16 +584,21 @@ struct ExploreView: View {
         Task(priority: .utility) { await prefetchImages() }
     }
 
-    /// Background image prefetcher. Walks the loaded topics, deduplicates
-    /// image URLs, and warms `AsyncCachedImage.cache` with up to ~100
-    /// decoded UIImages so cards have their photos ready before the user
-    /// swipes to them. Network is parallel with a soft cap from URLSession's
-    /// per-host concurrency. Best-effort — failures are silent.
+    /// Background image prefetcher. Walks topics in **round-robin order**
+    /// so the first card of every topic gets prefetched before any topic's
+    /// second card — the user can scroll to topic N's first card without
+    /// waiting on topic 1's articles to download first. Delegates to
+    /// `AsyncCachedImage.prefetch(_:)` so the prefetch + on-card load
+    /// share the same URLSession + URLCache disk layer (cross-launch
+    /// hits cut down on round-trips dramatically).
     private func prefetchImages() async {
         var urls: [URL] = []
         var seen = Set<String>()
-        for topic in topics {
-            for article in topic.articles.prefix(10) {
+        let perTopicCap = 10
+        // Round-robin: first articles of every topic, then second, etc.
+        for slot in 0..<perTopicCap {
+            for topic in topics where slot < topic.articles.count {
+                let article = topic.articles[slot]
                 guard let s = article.imageUrl,
                       !s.isEmpty,
                       let url = URL(string: s) else { continue }
@@ -602,42 +607,18 @@ struct ExploreView: View {
                 if AsyncCachedImage.cache.object(forKey: url as NSURL) != nil { continue }
                 seen.insert(key)
                 urls.append(url)
-                if urls.count >= 100 { break }
+                if urls.count >= 120 { break }
             }
-            if urls.count >= 100 { break }
+            if urls.count >= 120 { break }
         }
         guard !urls.isEmpty else { return }
 
         await withTaskGroup(of: Void.self) { group in
             for url in urls {
                 group.addTask(priority: .utility) {
-                    await Self.fetchAndCacheImage(url)
+                    await AsyncCachedImage.prefetch(url)
                 }
             }
-        }
-    }
-
-    /// One-shot image fetch + decode + cache insert. Mirrors the request
-    /// shape AsyncCachedImage uses (UA / Accept / Referer) so any host
-    /// that gates on those treats the prefetch the same as the in-card
-    /// load. Marked nonisolated-static so it can run off the main actor.
-    nonisolated private static func fetchAndCacheImage(_ url: URL) async {
-        var request = URLRequest(url: url)
-        request.setValue(
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-            forHTTPHeaderField: "User-Agent"
-        )
-        request.setValue("image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
-        request.setValue(url.host.map { "https://\($0)/" } ?? "", forHTTPHeaderField: "Referer")
-        request.timeoutInterval = 12
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 200
-            if statusCode < 400, let image = UIImage(data: data) {
-                AsyncCachedImage.cache.setObject(image, forKey: url as NSURL, cost: data.count)
-            }
-        } catch {
-            // Silent — AsyncCachedImage will retry on actual card render
         }
     }
 
