@@ -30,12 +30,17 @@ struct ContentView: View {
 
     private var onFeedTab: Bool { selectedTab == 0 }
 
+    /// Tab bar icon colors. Pre-2026-05-07 these were forced to white
+    /// on the feed tab because the feed had a dark photo background.
+    /// The feed is now light (cream / white card surface), so we drop
+    /// the `onFeedTab` override and key purely off the system color
+    /// scheme: dark UI → white icons, light UI → near-black icons.
     private var iconActiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.9) : Color(white: 0.15)
+        isDark ? Color.white.opacity(0.9) : Color(white: 0.12)
     }
 
     private var iconInactiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.55) : Color(white: 0.5)
+        isDark ? Color.white.opacity(0.55) : Color(white: 0.40)
     }
 
     var body: some View {

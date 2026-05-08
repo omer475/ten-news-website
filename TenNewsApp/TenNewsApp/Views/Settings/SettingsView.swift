@@ -21,6 +21,7 @@ struct SettingsView: View {
                 VStack(spacing: Theme.Spacing.lg) {
                     profileHeader
                     contentPreferencesSection
+                    displaySection
                     supportSection
                     aboutSection
                     accountSection

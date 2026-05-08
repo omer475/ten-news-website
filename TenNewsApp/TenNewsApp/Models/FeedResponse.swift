@@ -40,6 +40,29 @@ struct MainFeedResponse: Codable {
     }
 }
 
+// MARK: - Topic Feed Response
+
+struct TopicFeedResponse: Codable {
+    let entity: String?
+    let articles: [Article]
+    let count: Int?
+    let offset: Int?
+    let limit: Int?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        entity = try container.decodeIfPresent(String.self, forKey: .entity)
+        articles = try container.decodeIfPresent([Article].self, forKey: .articles) ?? []
+        count = try container.decodeIfPresent(Int.self, forKey: .count)
+        offset = try container.decodeIfPresent(Int.self, forKey: .offset)
+        limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case entity, articles, count, offset, limit
+    }
+}
+
 // MARK: - For You Feed Response
 
 struct ForYouFeedResponse: Codable {

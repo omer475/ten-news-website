@@ -7,6 +7,7 @@ enum APIEndpoints {
     static let newsFeed = "/api/news"
     static let mainFeed = "/api/feed/main"
     static let forYouFeed = "/api/feed/for-you"
+    static let topicFeed = "/api/feed/topic"
 
     // MARK: - World Events
     static let worldEvents = "/api/world-events?limit=100"

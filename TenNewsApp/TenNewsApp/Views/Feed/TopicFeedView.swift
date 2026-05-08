@@ -1,0 +1,217 @@
+import SwiftUI
+
+/// Identifiable wrapper so SwiftUI's `fullScreenCover(item:)` can drive
+/// the topic-feed presentation from a plain entity string.
+struct TopicTarget: Identifiable, Hashable {
+    let entity: String
+    var id: String { entity }
+}
+
+/// Feed page for a single entity. When a user taps a bold word in a
+/// bullet (e.g. **OpenAI**), we present this view full-screen with the
+/// entity name in the header and a list of articles tagged with that
+/// entity — same `ArticleCardContinuousView` as the main feed so the
+/// reading experience is identical, just scoped.
+///
+/// Recursive entity taps inside this view re-enter `TopicFeedView`
+/// covering the current one, so users can drill down freely.
+struct TopicFeedView: View {
+    let entity: String
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var articles: [Article] = []
+    @State private var isLoading = false
+    @State private var hasMore = true
+    @State private var errorMessage: String?
+    @State private var nestedTarget: TopicTarget? = nil
+
+    private let pageSize = 20
+    private let service = FeedService()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            content
+        }
+        .background(Color(red: 0.949, green: 0.949, blue: 0.969))
+        .ignoresSafeArea(edges: .bottom)
+        .task { await loadInitial() }
+        .fullScreenCover(item: $nestedTarget) { target in
+            TopicFeedView(entity: target.entity)
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color(white: 0.20))
+                    .frame(width: 36, height: 36)
+                    .contentShape(Rectangle())
+            }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(entity)
+                    .font(.system(size: 19, weight: .bold))
+                    .tracking(-0.3)
+                    .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.06))
+                    .lineLimit(1)
+                Text("Topic")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color(white: 0.50))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 14)
+        .padding(.bottom, 10)
+        .background(
+            Color.white.ignoresSafeArea(edges: .top)
+        )
+        .overlay(
+            Divider().opacity(0.3),
+            alignment: .bottom
+        )
+    }
+
+    // MARK: - Content
+
+    @ViewBuilder
+    private var content: some View {
+        if isLoading && articles.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let error = errorMessage, articles.isEmpty {
+            errorView(error)
+        } else if articles.isEmpty {
+            emptyView
+        } else {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 12) {
+                    ForEach(Array(articles.enumerated()), id: \.offset) { idx, article in
+                        ArticleCardContinuousView(
+                            article: article,
+                            accentColor: accentColor(for: article),
+                            onTopicTap: { e in
+                                nestedTarget = TopicTarget(entity: e)
+                            }
+                        )
+                        .onAppear {
+                            if idx >= articles.count - 4 {
+                                Task { await loadMoreIfNeeded() }
+                            }
+                        }
+                    }
+                    if isLoading {
+                        ProgressView().padding(.vertical, 24)
+                    }
+                    Spacer().frame(height: 80)
+                }
+                .padding(.top, 12)
+            }
+            .refreshable { await refresh() }
+        }
+    }
+
+    private var emptyView: some View {
+        VStack(spacing: 12) {
+            Spacer()
+            Image(systemName: "tray")
+                .font(.system(size: 32, weight: .light))
+                .foregroundStyle(Color(white: 0.55))
+            Text("No articles yet")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color(white: 0.30))
+            Text("Nothing tagged with \"\(entity)\" right now.")
+                .font(.system(size: 14))
+                .foregroundStyle(Color(white: 0.50))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Spacer()
+        }
+    }
+
+    private func errorView(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Spacer()
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 28, weight: .light))
+                .foregroundStyle(Color(white: 0.55))
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundStyle(Color(white: 0.40))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Button("Retry") { Task { await loadInitial() } }
+                .font(.system(size: 14, weight: .semibold))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(Color(white: 0.94), in: Capsule())
+            Spacer()
+        }
+    }
+
+    // MARK: - Networking
+
+    private func loadInitial() async {
+        guard articles.isEmpty, !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            let resp = try await service.fetchTopicFeed(entity: entity, offset: 0, limit: pageSize)
+            articles = resp.articles
+            hasMore = resp.articles.count >= pageSize
+        } catch {
+            errorMessage = "Couldn't load \(entity). Pull to retry."
+        }
+    }
+
+    private func refresh() async {
+        do {
+            let resp = try await service.fetchTopicFeed(entity: entity, offset: 0, limit: pageSize)
+            articles = resp.articles
+            hasMore = resp.articles.count >= pageSize
+        } catch {
+            errorMessage = "Couldn't refresh."
+        }
+    }
+
+    private func loadMoreIfNeeded() async {
+        guard hasMore, !isLoading else { return }
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let resp = try await service.fetchTopicFeed(
+                entity: entity,
+                offset: articles.count,
+                limit: pageSize
+            )
+            articles.append(contentsOf: resp.articles)
+            hasMore = resp.articles.count >= pageSize
+        } catch {
+            // Silent on pagination failure — keep what we have.
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// Accent colour matching the main feed: deterministic per-article
+    /// hue derived from the article ID. Keeps each card's avatar circle
+    /// + bullet dots visually distinct without computing dominant photo
+    /// colour off the main thread.
+    private func accentColor(for article: Article) -> Color {
+        let s = article.id.stringValue
+        var hash: UInt64 = 14695981039346656037
+        for byte in s.utf8 {
+            hash = (hash ^ UInt64(byte)) &* 1099511628211
+        }
+        let hue = Double(hash % 360) / 360.0
+        return Color(hue: hue, saturation: 0.55, brightness: 0.85)
+    }
+}

@@ -687,113 +687,104 @@ struct ExploreArticleCard: View {
     }
 
     var body: some View {
-        ZStack {
-            // Full-bleed image
-            if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
-                AsyncCachedImage(url: url, contentMode: .fill)
-                    .frame(width: cardWidth, height: cardHeight)
-                    .clipped()
+        // Editorial square card. Two layouts depending on whether the
+        // article has an image:
+        //   • IMAGE: photo fills the top ~62%, title sits in the bottom
+        //     ~38% on white surface — Apple News / NYT magazine card.
+        //   • NO IMAGE: full-square cream surface, title takes the lead
+        //     centred/top, larger weight. Like a typeset cover.
+        // Both use 20pt outer radius, 14pt inner image radius, 1pt
+        // hairline border, soft drop shadow.
+        let outerRadius: CGFloat = 20
+
+        return Group {
+            if let imageUrl = article.imageUrl,
+               !imageUrl.isEmpty,
+               let url = URL(string: imageUrl) {
+                imageVariant(url: url, outerRadius: outerRadius)
                     .onAppear { extractColor(from: url) }
             } else {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [fallbackColor.opacity(0.6), fallbackColor.opacity(0.2), Color(white: 0.08)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: cardWidth, height: cardHeight)
+                textOnlyVariant()
             }
-
-            // Dark gradient overlay for text readability
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0.0),
-                    .init(color: .clear, location: 0.3),
-                    .init(color: .black.opacity(0.4), location: 0.45),
-                    .init(color: .black.opacity(0.7), location: 0.6),
-                    .init(color: .black.opacity(0.85), location: 0.75),
-                    .init(color: .black.opacity(0.95), location: 1.0),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(width: cardWidth, height: cardHeight)
-            .allowsHitTesting(false)
-
-            // Liquid glass on top of dark gradient
-            Color.clear
-                .frame(width: cardWidth, height: cardHeight)
-                .glassEffect(
-                    .regular.tint(glassColor.opacity(0.45)),
-                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                )
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .clear, location: 0.3),
-                            .init(color: .white.opacity(0.15), location: 0.42),
-                            .init(color: .white.opacity(0.35), location: 0.54),
-                            .init(color: .white.opacity(0.55), location: 0.66),
-                            .init(color: .white.opacity(0.70), location: 0.78),
-                            .init(color: .white.opacity(0.70), location: 1.0),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .allowsHitTesting(false)
-
-            // Bottom: time + keywords row, then title
-            VStack(alignment: .leading, spacing: 6) {
-                Spacer()
-
-                // Time (left) + keyword tags (right) — same horizontal line
-                HStack {
-                    if !article.relativeTime.isEmpty {
-                        Text(article.relativeTime)
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .tracking(0.3)
-                    }
-
-                    Spacer()
-
-                    if showTags {
-                        HStack(spacing: 5) {
-                            ForEach(displayTags.prefix(2), id: \.self) { tag in
-                                GlassEffectContainer {
-                                    Text(tag)
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(.white.opacity(0.85))
-                                        .lineLimit(1)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .glassEffect(.regular.tint(Color.black.opacity(0.25)), in: Capsule())
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Title — no line limit, show full text
-                article.title.coloredTitle(
-                    size: 26,
-                    weight: .bold,
-                    baseColor: .white,
-                    highlightColor: highlightColor
-                )
-                .fixedSize(horizontal: false, vertical: true)
-                .multilineTextAlignment(.leading)
-            }
-            .frame(width: cardWidth - 32, alignment: .bottomLeading)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 14)
         }
         .frame(width: cardWidth, height: cardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    /// Image variant: photo top (all 4 corners rounded, inset with
+    /// padding), title + meta bottom on white.
+    @ViewBuilder
+    private func imageVariant(url: URL, outerRadius: CGFloat) -> some View {
+        VStack(spacing: 12) {
+            AsyncCachedImage(url: url, contentMode: .fill)
+                .frame(maxWidth: .infinity)
+                .frame(height: cardHeight * 0.55)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let category = article.category, !category.isEmpty {
+                    Text(category.uppercased())
+                        .font(.system(size: 10, weight: .heavy))
+                        .tracking(1.2)
+                        .foregroundStyle(fallbackColor)
+                        .lineLimit(1)
+                }
+                Text(article.cleanTitle)
+                    .font(.system(size: 22, weight: .bold))
+                    .tracking(-0.4)
+                    .foregroundStyle(Color.primary)
+                    .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 0)
+                if !article.relativeTime.isEmpty {
+                    Text(article.relativeTime)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .padding(14)
+    }
+
+    /// Text-only variant: full square cream surface, title-led layout.
+    @ViewBuilder
+    private func textOnlyVariant() -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let category = article.category, !category.isEmpty {
+                Text(category.uppercased())
+                    .font(.system(size: 11, weight: .heavy))
+                    .tracking(1.4)
+                    .foregroundStyle(fallbackColor)
+                    .lineLimit(1)
+            }
+            Text(article.cleanTitle)
+                .font(.system(size: 28, weight: .bold))
+                .tracking(-0.5)
+                .foregroundStyle(Color.primary)
+                .lineSpacing(3)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            if !article.relativeTime.isEmpty {
+                Text(article.relativeTime)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     // MARK: - Dominant Color Extraction
