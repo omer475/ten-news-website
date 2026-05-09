@@ -1,6 +1,7 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { readFractionPenaltyScale, readFractionEngageScale } from '../../../lib/readingTime'
+import { explicitWeight, EXPLICIT_POSITIVE_EVENTS } from '../../../lib/signals/weights'
 
 // Hard cap on per-user interest clusters. cluster_user_interests RPC respects
 // this via LEAST(p_max_clusters, ...); the incremental write path below must
@@ -42,11 +43,12 @@ function dwellSignal(dwellSec) {
 // same underlying swipe event). Direction is determined from dwell alone.
 // Explicit actions stack on top with elevated weights.
 function signalFromCard(eventType, dwellSec) {
-  // Explicit action events override dwell-based direction (always positive).
-  if (eventType === 'article_liked')   return { direction: 'positive', weight: 2.0 }
-  if (eventType === 'article_saved')   return { direction: 'positive', weight: 3.0 }
-  if (eventType === 'article_shared')  return { direction: 'positive', weight: 3.0 }
-  if (eventType === 'article_revisit') return { direction: 'positive', weight: 2.5 }
+  // Phoenix Phase 8.B (2026-05-09): canonical weights from lib/signals/weights.js.
+  // Single source of truth for JS-side event weighting (mirrors migration 084
+  // SQL weights). Replaces the 3 different weight schedules that lived in
+  // this file pre-consolidation.
+  const explicit = explicitWeight(eventType)
+  if (explicit > 0) return { direction: 'positive', weight: explicit }
 
   // article_skipped / article_view / article_engaged / article_detail_view:
   // all are dwell-classified labels for the same "card impression" event.
@@ -775,19 +777,14 @@ export default async function handler(req, res) {
           : (bucket === 'discovery' || bucket === 'exploration' || bucket === 'cold-start') ? 0.1
           : 1.0 // personal, explore, search = full weight
 
-        // Interaction weight for the signal — TikTok 2025 priority order:
-        // shares > comments > likes (public commitment > private intent
-        // > cheap social signal). Revisit ranks highest because the user
-        // deliberately scrolled BACK — strongest implicit endorsement
-        // there is. Save ranks below share because saving is private
-        // and reversible, while sharing is public commitment.
-        // Source: TikTok Algorithm 2025 published priority weights.
-        const signalWeight = event_type === 'article_revisit' ? 4.0  // scroll-back, strongest
-          : event_type === 'article_shared' ? 3.5  // public commitment
-          : event_type === 'article_saved' ? 2.5   // private bookmark
-          : event_type === 'article_liked' ? 1.0   // cheap social signal
+        // Phoenix Phase 8.B (2026-05-09): canonical weights from
+        // lib/signals/weights.js. Replaces the local table that diverged
+        // from migration 084 (revisit was 4.0 here vs 2.5 canonical;
+        // shared was 3.5 vs 4.0 canonical). Now consistent everywhere.
+        const signalWeight = explicitWeight(event_type) > 0
+          ? explicitWeight(event_type)
           : event_type === 'article_engaged' ? 1.0
-          : event_type === 'article_view' ? 0.3    // glance
+          : event_type === 'article_view' ? 0.3
           : 0.0
         const maxSignal = 4.0
         const effectiveMultiplier = baseBucketMult + (Math.max(signalWeight, 0) / maxSignal) * (1.0 - baseBucketMult)
@@ -1141,11 +1138,9 @@ export default async function handler(req, res) {
         // new leaves and enables hierarchical Thompson sampling in retrieval.
         // Matches TikTok Deep Retrieval D-layer hierarchy.
         if (artRow?.cluster_assignments && Array.isArray(artRow.cluster_assignments) && artRow.cluster_assignments.length > 0) {
-          const explicitWeightForLeaf = event_type === 'article_saved' ? 3.0
-            : event_type === 'article_shared' ? 2.0
-            : event_type === 'article_liked' ? 1.5
-            : event_type === 'article_revisit' ? 4.0
-            : null
+          // Phoenix Phase 8.B: canonical weights from lib/signals/weights.js.
+          const _w = explicitWeight(event_type)
+          const explicitWeightForLeaf = _w > 0 ? _w : null
           // Bandit posterior also gets length-aware reward shaping. A 90 s
           // dwell on a 10 s card and a 90 s dwell on a 200 s longform are very
           // different signals; Fix M's _banditSig.weight is dwell-only and
