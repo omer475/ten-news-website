@@ -760,23 +760,25 @@ export default async function handler(req, res) {
                 .eq('personalization_id', personalizationId)
                 .single();
               if (flagRow?.trinity_enabled === true) {
-                // Build canonical seen set: 4 sources Trinity needs to dedup against.
+                // Phoenix Phase 4.G (2026-05-09): seenSet now contains ONLY
+                // clientSeenIds (iOS-supplied). The 7d impressions and 14d
+                // events DB queries that lived here were legacy from Phase
+                // 1.2b — when the seencount RPCs didn't have built-in dedup.
+                // Phase 4.A.3 RPC now hard-excludes (a) any article ever
+                // engaged with, (b) any article impressed in last 48h. The
+                // 7d impression list duplicated (b) AND added 48h-7d-old
+                // impressed-but-not-engaged articles to the exclusion —
+                // which the post-RPC Phase 4.E filter then dropped from the
+                // already-filtered RPC results. Net effect for power users:
+                // tier1/tier2/fresh pools came back empty (Trinity-M
+                // returned 0 articles in main feed even though trinity-debug
+                // showed it picking 5+ articles correctly).
+                //
+                // Now seenSet only contains the in-flight session articles
+                // iOS knows about (~200 max). Phase 4.E catches the race
+                // window. RPC handles the rest of dedup.
                 const seenSet = new Set();
                 for (const id of clientSeenIds) if (id) seenSet.add(Number(id));
-                if (userId) {
-                  try {
-                    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
-                    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 3600000).toISOString();
-                    const [impRes, evtRes] = await Promise.all([
-                      supabase.from('user_feed_impressions').select('article_id').eq('user_id', userId).gte('created_at', sevenDaysAgo).limit(5000),
-                      supabase.from('user_article_events').select('article_id').eq('user_id', userId).gte('created_at', fourteenDaysAgo).limit(5000),
-                    ]);
-                    for (const r of (impRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
-                    for (const r of (evtRes.data || [])) if (r.article_id) seenSet.add(Number(r.article_id));
-                  } catch (seenErr) {
-                    console.warn('[trinity] seen-set load partial failure:', seenErr?.message);
-                  }
-                }
                 // Cap at 2000 to keep PostgREST `not.in.(...)` URL under 32KB.
                 const seenIds = Array.from(seenSet).slice(0, 2000);
 
