@@ -29,6 +29,14 @@ COPY image_quality_checker.py .
 COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_7_claude_component_generation.py .
+# step6_world_event_detection.py: imported by complete_clustered_8step_workflow.py
+# (line 55). The Events tab UI was removed from the iOS app, but the
+# underlying article_world_events data is still consumed by Trinity
+# (recommendation algorithm) for in-slate story-cluster dedup and the
+# cross-session 0.3× demote per audit fix A6 (2026-05-06). Removing it
+# regresses the algorithm. Was missing from the COPY list, causing the
+# tennews-workflow-276d8 ModuleNotFoundError on 2026-05-09.
+COPY step6_world_event_detection.py .
 COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
 COPY step11_article_tagging.py .

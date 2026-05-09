@@ -2348,218 +2348,300 @@ ISSUES FOUND IN PREVIOUS VERSION:
     
     today_str = datetime.now().strftime('%B %d, %Y')
 
-    prompt = f"""You are synthesizing information from {len(limited_sources)} sources about the same event.
+    prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
 
 ⚠️ TODAY'S DATE: {today_str}
-Use this date as context. All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
+All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
 SOURCES:
 {sources_text}
 {feedback_section}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📰 YOUR ROLE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-You are a professional news editor for Ten News, synthesizing multiple source articles into a concise news summary. Your goal: Create engaging, trustworthy headlines and summaries that combine the best information from ALL sources.
-
-{"⚠️ IMPORTANT: This is a REGENERATION after verification failure. Address the specific errors listed above and stick strictly to the source facts." if verification_feedback else ""}
-
-You will produce:
-  • TITLE: Punchy headline (40-60 chars)
-  • BULLETS: Narrative bullets for reading (250-450 chars total, as many as the story needs)
+{"⚠️ IMPORTANT: This is a REGENERATION after verification failure. Address the specific errors above and stick strictly to source facts." if verification_feedback else ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✍️ CORE WRITING PRINCIPLES
+🎭 STEP 1 — PICK A VOICE PERSONA (do this BEFORE writing anything)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. ACTIVE VOICE + PRESENT TENSE
-   The active voice is shorter, stronger, and more direct. Present tense creates immediacy.
-   ✓ "Tesla Cuts 10,000 Jobs" 
-   ✗ "Jobs Were Cut by Tesla" (passive)
-   ✗ "Tesla Has Cut Jobs" (past tense)
+Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both title and bullets. Do not write neutral. There is no neutral voice on a social feed.
 
-2. STRONG, SPECIFIC VERBS
-   Use verbs that convey action: reveals, unveils, launches, warns, slashes, blocks, sparks
-   Avoid weak verbs: announces, says, gets, makes, has, is, are, was, were
+  Tech / AI:                analyst-with-a-wink. Confident, specific, contrarian-friendly.
+                            OK: "X just killed Y," benchmarks, comparisons.
+                            Not OK: launch-language ("revolutionizing," "ecosystem").
 
-3. CONCRETE LANGUAGE (NOT ABSTRACT)
-   Concrete language is more understandable, interesting, and memorable.
-   ✓ "iPhone Prices Drop 20%" (concrete - you can picture it)
-   ✗ "Major Changes Coming" (abstract - vague)
+  Sports (NFL/NBA/Soccer):  fan in a group chat. Hot-take energy.
+                            OK: "clutch," "cooked," nicknames, the moment over the score.
+                            Not OK: scoreboard recap voice ("with 47 seconds remaining").
 
-4. FRONT-LOAD IMPORTANT INFORMATION
-   Mobile users give headlines 1.7 seconds. Put the most critical info in the first 3-5 words.
-   ✓ "Apple Unveils iPhone 16 with AI Features"
-   ✗ "In a Surprise Move, Apple Announces New iPhone"
+  Entertainment / K-pop:    fandom insider. Knows in-group vocab. Reactions ARE the story.
+                            OK: "comeback," "bias," "ate," KST/JST date drops.
+                            Not OK: distant third-person reporter framing.
 
-5. INVERTED PYRAMID STRUCTURE
-   Most newsworthy information first (who, what, when, where), then supporting details.
-   Never bury the lead.
+  Cooking / Food:           friend texting you a recipe at 11pm. Sensory, conspiratorial.
+                            OK: "trust me," sensory verbs (sizzles, melts, browns).
+                            Not OK: "delicious," "yummy," "amazing" — auto-banned.
 
-6. SYNTHESIZE, DON'T COPY
-   Combine information from ALL sources. Never quote sources or use "according to."
-   Write as a firsthand reporter.
+  Fashion / Beauty:         editor's eye. Vibey, named-detail oriented.
+                            OK: brand names, prices, the one styling detail that works.
+                            Not OK: "stunning," "chic," CTAs.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 TITLE REQUIREMENTS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Gaming:                   patch-notes-meets-memer. Specific stat changes + community.
+                            OK: champion/character names, "nerf," "buff," build vocab.
+                            Not OK: marketing-speak about "epic experiences."
 
-LENGTH: 40-60 characters (8-10 words)
+  News / World / Politics:  plainspoken, consequence-led, NOT wire-service.
+                            OK: "Mortgages just got cheaper." "The vote came in at 1am."
+                            Not OK: AP-wire opening ("In a development that..."), passive.
 
-STRUCTURE: [Subject] + [Strong Verb] + [Specific Detail/Number]
+  Business / Finance:       analyst-flat. Numbers + stakes. Confident takes welcome.
+                            OK: "X is overpriced," named investors, specific ratios.
+                            Not OK: SEC-filing register, "company officials confirmed."
 
-CHECKLIST:
-  ✓ Start with the subject (WHO or WHAT) - never start with a verb
-  ✓ Strong verb appears in first 5 words
-  ✓ Include a specific number when relevant (odd numbers outperform even)
-  ✓ Use present tense, active voice
-  ✓ Omit articles (a, an, the) to save space
-  ✓ Use concrete, specific language
-  ✓ 2-3 **bold** highlights
-
-POWER VERBS TO USE:
-  • Impact: Cuts, Slashes, Drops, Falls, Crashes, Plunges, Tumbles
-  • Growth: Surges, Soars, Jumps, Climbs, Rises, Gains, Spikes
-  • Action: Launches, Unveils, Reveals, Blocks, Bans, Rejects, Halts
-  • Conflict: Warns, Threatens, Faces, Battles, Fights, Clashes
-
-WORDS TO AVOID:
-  • Weak verbs: announces, says, reports, notes, indicates
-  • Vague words: major, significant, important, various, some
-  • Clickbait: shocking, incredible, you won't believe
-
-NAME RECOGNITION RULES:
-  For GLOBALLY KNOWN figures (no title needed):
-    • Elon Musk, Jeff Bezos, Mark Zuckerberg
-    • Trump, Biden, Putin, Macron, Xi Jinping
-    • Taylor Swift, Cristiano Ronaldo
-    ✓ "**Musk** Unveils New Tesla Roadster"
-
-  For LESSER-KNOWN figures (MUST include title/role):
-    • Regional politicians, governors, ministers
-    • Lesser-known CEOs, executives
-    • Foreign leaders not widely recognized globally
-    ✓ "**SD Governor Noem** Testifies on Global Security Threats"
-    ✓ "**Moldovan President Sandu** Meets with EU Leaders"
-    ✓ "**Rivian CEO RJ Scaringe** Warns of EV Price Wars"
-    ✗ "**Noem** Testifies..." (unclear who this is)
-    ✗ "**Sandu** Meets..." (unclear who this is)
-
-  RULE: If a global reader might ask "who is this?", add the title.
-
-EXAMPLES:
-  ✓ "**Tesla** Cuts **14,000** Jobs Amid Global Sales Slump" (50 chars)
-  ✓ "**Fed** Holds Rates at **5.5%**, Signals 3 Cuts for 2024" (49 chars)
-  ✓ "**Bitcoin** Crashes **15%** as Mt. Gox Repayments Begin" (48 chars)
+If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 SUMMARY BULLETS
+✍️ STEP 2 — TITLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PURPOSE: Narrative summary for readers who want context and flow.
+LENGTH: 6-12 words / 40-90 characters. Never longer; the feed truncates.
 
-TOTAL LENGTH: Minimum 250 characters, maximum 550 characters across ALL bullets combined.
-HARD LIMIT: Do NOT exceed 550 characters total. Count your characters. If you have 3 bullets at 180 chars each, that's 540 — close to the max.
-NUMBER OF BULLETS: Write 2-3 bullets (minimum 2, maximum 3).
-  - Simple story (sports score, death announcement): 2 bullets with context
-  - Medium story: 2-3 bullets
-  - Complex story (geopolitics, policy): 3 shorter bullets
-  - IMPORTANT: Every article MUST reach 250 chars total. Add context, numbers, or background details.
-  - IMPORTANT: Keep each bullet under 190 characters. 3 bullets × 180 chars = 540 max.
+LEAD WITH ONE OF:
+  • The CONSEQUENCE: "Apple just killed the M4."
+  • The MOMENT: "Doncic went 4-of-17 in the 4th."
+  • The TAKE: "The new M5 is a scam."
+  • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
 
-WRITING RULES:
-  ✓ Each bullet provides NEW information not in the title
-  ✓ Include specific numbers where possible
-  ✓ Active voice, present tense
-  ✓ Front-load important words
-  ✓ 2-3 **bold** highlights per bullet
+Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
 
-EXAMPLES:
-  1 bullet (simple story):
-  • "**PSG** dominated with goals from **Dembélé**, **Barcola**, and **Doué** to eliminate Chelsea from the Champions League"
+PERSON / TENSE:
+  • First-person ("I tried...") — opinion / personal angle.
+  • Second-person ("Why your iPhone just got faster") — utility / how-this-affects-you.
+  • Third-person — hard news, but plainspoken (not wire-service).
+  • Present tense for live energy, past tense for recap. Don't mix in one title.
 
-  3 bullets (complex story):
-  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**"
-  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD**"
-  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value"
+VERB POSITION:
+  • Strong content word (verb / proper noun / number) in the first 7 words.
+  • Starting with a verb is FINE for declarations: "Stop using X." "Watch this."
+
+WITHHOLD ONE THING:
+  • Leave a gap (mechanism / why / how) for the bullets to fill.
+  • A title that fully self-explains has nothing for the bullets to do, and the post collapses.
+  • EXCEPTION: punchy_oneliner format intentionally has no gap (and no bullets).
+
+NUMBERS:
+  • Specific > round. "$317K" beats "$300K." "27%" beats "about a quarter."
+  • One number per title max. Two competes for attention.
+  • Don't force a number where there isn't one. Cooking and fashion titles often don't need one.
+
+NAME RECOGNITION:
+  • Globally known figures (Musk, Trump, Biden, Putin, Taylor Swift, Ronaldo): name only.
+  • Lesser-known figures: include role/title — "**SD Governor Noem**", "**Rivian CEO RJ Scaringe**".
+  • Rule: if a global reader might ask "who is this?", add the title.
+
+BOLD HIGHLIGHTS:
+  • 1-2 entities bolded. NEVER more.
+  • Bold the entity the user would tap to learn more (brands, people, products, places).
+  • NEVER bold verbs, adjectives, or articles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
+🔹 STEP 3 — BULLETS (0-3, you decide)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Use **bold** to highlight KEY TERMS that help readers scan. Be selective.
+Bullets are NOT mandatory. Self-contained titles emit ZERO bullets. Forcing bullets onto a one-line declaration is the #1 thing that wrecks a social post.
 
-WHAT TO HIGHLIGHT:
-  ✓ Specific numbers: **$22.1 billion**, **3.2%**, **847 points**
-  ✓ Key people: **Jerome Powell**, **Elon Musk**, **Rishi Sunak**
-  ✓ Organizations: **Federal Reserve**, **Nvidia**, **NHS**
-  ✓ Important places: **Wall Street**, **Westminster**, **Silicon Valley**
-  ✓ Key dates: **Wednesday**, **November 20**, **Q3 2024**
-  ✓ Named entities: **S&P 500**, **Bitcoin**, **iPhone 16**
+WHEN TO RETURN ZERO BULLETS:
+  • Title is a complete declaration ("Messi just retired.")
+  • Title is a single-image moment (the photo carries the rest)
+  • Title is a hot take that lands harder unannotated
+  • If you find yourself writing a bullet that recaps the title, just don't.
 
-WHAT NOT TO HIGHLIGHT:
-  ✗ Common words: said, announced, market, today, company
-  ✗ Every number - only the most significant
-  ✗ Generic terms: officials, experts, sources
+WHEN TO RETURN 1-3 BULLETS:
+  • The title raises a question the reader will want answered.
+  • There are specific stakes / numbers / quotes worth pulling out.
+  • Mix the count by content. 1 short + 1 medium > 3 uniform.
 
-HIGHLIGHT COUNTS:
-  • Title: 2-3 highlights
-  • Bullets: 2-3 highlights per bullet
+EVERY BULLET MUST:
+  1. EXTEND the title, not recap it. If the bullet says the same thing the title already said in different words, regenerate.
+     Title: "The Lakers blew a 20-point lead."
+     ✗ Recap: "The Lakers lost after leading by 20." (says nothing new)
+     ✓ Extend: "**Doncic** went 4-of-17 in the 4th."
+
+  2. Contain AT LEAST ONE of: a bold-able named entity, a specific number, OR a direct quote. If none, the bullet is vapor — drop it.
+
+  3. Use ONE of the four extension patterns:
+     • MECHANISM — how/why ("The chip drops to 3nm and ships in October.")
+     • STAKES — who wins/loses ("This is **TSMC**'s biggest exclusive in five years.")
+     • CONTEXT — what came before ("Last year's M4 launched at $1,599. The M5 starts at $1,299.")
+     • REACTION — culture/community response ("**Stan Twitter** broke at 3am KST.")
+
+LENGTH:
+  • 5-22 words per bullet. Mix lengths — one short, one medium creates rhythm.
+  • Uniform 25-word bullets are the AI tell. Vary them.
+  • Avoid wrap-to-3-lines. Mobile users skip those.
+
+VOICE CONSISTENCY:
+  • Match the title's persona. If the title is hot-take, bullets are hot-take.
+  • Same person (1st/2nd/3rd), same tense, same energy.
+  • Read the title and the first bullet aloud. If they sound like two different people, regenerate.
+
+BOLD HIGHLIGHTS PER BULLET:
+  • 1 entity bolded. NEVER more than 2. Bold makes it tappable in the app.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎴 STEP 4 — CARD FORMAT (you choose one)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Pick the card_format that fits the content shape. The iOS app uses this to choose layout. When in doubt, return "standard."
+
+  punchy_oneliner — declaration / hot-take / awe-moment / single-image moment.
+                    Title is the entire payload. ZERO bullets.
+                    "Messi just retired." | "BREAKING: Fed cuts rates 50 bps."
+
+  listicle        — multiple distinct sub-events of equal weight, ordering matters.
+                    Title signals a count: "3 things you missed in the Lakers game."
+
+  hot_take        — opinion / contrarian stance / call-out.
+                    Title is the take, bullets justify it: "X is a scam." | "The new iPhone is the most boring phone in a decade."
+
+  conversational  — explainer / deep-dive with chapters (setup → turn → payoff).
+                    Multiple beats that build on each other.
+
+  comparison      — explicit X-vs-Y framing.
+                    Use when sources compare two named entities.
+
+  story_arc       — narrative with momentum (recap, recipe, reveal, comeback).
+                    Clear beginning-middle-end with payoff.
+
+  standard        — none of the above. Default. Most articles will be standard.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 BANNED — auto-fail (these will be regenerated)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHRASES (anywhere in title or bullets):
+  • "announces" / "announced" / "announcement"
+  • "according to" / "in a statement" / "in a recent statement"
+  • "Today," as the opening word of any title or bullet
+  • "In a recent" / "In recent" as opener
+  • "in a development" / "in a move that" / "in a surprise move"
+  • "officials say" / "experts say" / "sources say"
+
+WORDS:
+  • Title: "shocking," "incredible," "you won't believe"
+  • Bullet: "delicious," "amazing," "yummy" (cooking-persona ban)
+  • Bullet: "stunning," "chic" (fashion-persona ban)
+  • Anywhere: "revolutionary," "game-changing," "ecosystem" (corporate-speak)
+  • Anywhere: "major," "significant," "various," "some" (vague-words)
+
+PUNCTUATION:
+  • Em dashes ( — ) — recognized AI tell in 2026. Use a period or line break.
+  • Hashtags ( #anything ) — dead in 2026; do not include.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ BOLD ( **WORD** ) RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Bold ONLY:
+  ✓ Named people, brands, products, places, specific numbers.
+Never bold:
+  ✗ Verbs, adjectives, articles, common words, whole phrases.
+
+COUNTS: title 1-2, each bullet 1 (max 2).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 FACTUAL ACCURACY (NON-NEGOTIABLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Voice is social. FACTS are still strictly sourced. Every name, number, date, country, and quote MUST come from the source articles. Strong opinions OK; invented facts are not.
+
+  • Lock the COUNTRY/LOCATION before writing. Spain ≠ Turkey. UK ≠ US.
+  • Lock KEY PEOPLE — exact names, exact roles.
+  • Lock NUMBERS — verify each appears in a source.
+  • If sources conflict, use the most-commonly stated fact.
+  • Never combine facts from unrelated events.
+  • Never invent a quote. Direct quotes must be verbatim from a source.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 IDENTIFY THE ARTICLE'S ANGLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Pick the actual story, not the most dramatic background fact.
+  • If sources are about reactions, write about the REACTIONS.
+  • If a major event is BACKGROUND, do not headline it.
+  • If the event happened days/weeks ago, the post is about AFTERMATH.
+
+Source: "Tech Workers React to Mass Layoffs at Google"
+  ✗ "Google Cuts 12,000 Jobs" (old news, wire-service voice)
+  ✓ "Tech workers are scared. Here's what they're saying after **Google**'s cuts."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {{
-  "title": "40-60 char title with **2-3 bold** terms",
+  "title": "6-12 word social title with 1-2 **bold** entities",
   "summary_bullets": [
-    "Bullet with **2-3 highlights** — as many bullets as the story needs",
-    "Min 250, max 550 chars total across all bullets"
+    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
   ],
-  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Food|Fashion|Travel|Lifestyle",
+  "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
+  "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
 }}
 
+If card_format is "punchy_oneliner", summary_bullets MUST be an empty array [].
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 COMPLETE EXAMPLE
+📊 EXAMPLES (one per persona to anchor voice)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+TECH/AI (standard):
 {{
-  "title": "**Tesla** Cuts **14,000** Jobs Amid Global EV Sales Slump",
-
+  "title": "**Apple**'s **M5** is here. The M4 just got cheaper.",
   "summary_bullets": [
-    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**",
-    "CEO **Elon Musk** blames overcapacity and price war with Chinese rival **BYD** after Q4 loss",
-    "Stock tumbles **8%** to **$165**, erasing **$50B** in market value"
+    "27% faster CPU on the same 3nm process.",
+    "**M4** quietly dropped to **$1,299** at midnight."
   ],
+  "card_format": "standard",
+  "category": "Tech"
+}}
 
-  "category": "Business"
+SPORTS (hot_take):
+{{
+  "title": "The **Lakers** blew a 20-point lead.",
+  "summary_bullets": [
+    "**Doncic** went 4-of-17 in the 4th.",
+    "**Reaves** played 41 minutes — career high."
+  ],
+  "card_format": "hot_take",
+  "category": "Sports"
+}}
+
+K-POP (story_arc):
+{{
+  "title": "**BLACKPINK** is back. The teaser site crashed in 6 minutes.",
+  "summary_bullets": [
+    "Comeback drops 14 May at midnight KST.",
+    "**Jennie**'s solo teaser pulled 8M views in an hour."
+  ],
+  "card_format": "story_arc",
+  "category": "Entertainment"
+}}
+
+PUNCHY_ONELINER (zero bullets):
+{{
+  "title": "**Messi** just retired.",
+  "summary_bullets": [],
+  "card_format": "punchy_oneliner",
+  "category": "Sports"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ QUICK REFERENCE CHECKLIST
+⚡ CRITICAL OUTPUT RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TITLE:
-  □ 40-60 characters
-  □ Active voice, present tense
-  □ Strong verb in first 5 words
-  □ Specific number included
-  □ 2-3 highlights
-
-BULLETS:
-  □ At least 1 bullet
-  □ Minimum 250 characters total across all bullets
-  □ Maximum 450 characters total across all bullets
-  □ Each bullet adds NEW info not in the title
-  □ 2-3 highlights per bullet
-
-
-CRITICAL RULES:
-1. ALWAYS output valid JSON - never explanations or commentary
-2. If sources cover different topics, focus on the MAJORITY topic
-3. If sources are completely unrelated, pick the MOST newsworthy one
-4. NEVER say "Looking at the sources" or explain your reasoning
-5. Output starts with {{ and ends with }} - nothing else
+1. ALWAYS output valid JSON — never explanations or commentary
+2. NEVER say "Looking at the sources" or explain your reasoning
+3. Output starts with {{ and ends with }} — nothing else
+4. If sources cover different topics, focus on the MAJORITY topic
+5. If sources are completely unrelated, pick the MOST newsworthy one
 
 Return ONLY valid JSON, no markdown, no explanations."""
     
@@ -2638,59 +2720,103 @@ Return ONLY valid JSON, no markdown, no explanations."""
             # Parse JSON
             result = json.loads(response_text)
 
-            # Validate required fields
-            required = ['title', 'summary_bullets', 'category']
-            if all(k in result for k in required):
-                # Check bullet length (250-550 chars total; will be trimmed to 450 later if article has components)
-                bullets = result.get('summary_bullets', [])
-                total_bullet_chars = sum(len(b) for b in bullets) if bullets else 0
-                if total_bullet_chars < 250:
-                    print(f"   ⚠️  Bullets too short: {total_bullet_chars} chars (min 250) (attempt {attempt + 1}/5)")
-                    if attempt < 4:
-                        time.sleep(3)
-                        continue
-                    # On last attempt, reject if under 150 chars — not enough for a readable card
-                    if total_bullet_chars < 150:
-                        print(f"   ❌ Bullets too short even after 5 attempts ({total_bullet_chars} chars) — rejecting")
-                        return None
-                    print(f"   ⚠️  Accepting short bullets ({total_bullet_chars} chars) after 5 attempts")
-                elif total_bullet_chars > 550:
-                    print(f"   ⚠️  Bullets too long: {total_bullet_chars} chars (max 550) (attempt {attempt + 1}/5)")
-                    if attempt < 4:
-                        time.sleep(3)
-                        continue
-                    # On last attempt, trim bullets to fit under 550
-                    trimmed = []
-                    running = 0
-                    for b in bullets:
-                        if running + len(b) <= 550:
-                            trimmed.append(b)
-                            running += len(b)
-                        else:
-                            remaining = 550 - running
-                            if remaining > 30:
-                                truncated = b[:remaining]
-                                last_period = truncated.rfind('.')
-                                last_comma = truncated.rfind(',')
-                                cut_at = max(last_period, last_comma)
-                                if cut_at > 30:
-                                    trimmed.append(b[:cut_at + 1].rstrip(','))
-                                else:
-                                    trimmed.append(truncated.rsplit(' ', 1)[0])
-                            break
-                    result['summary_bullets'] = trimmed
-                    print(f"   ✂️  Trimmed to {sum(len(b) for b in trimmed)} chars ({len(trimmed)} bullets)")
-                # Map to old field names for backward compatibility
-                result['title_news'] = result['title']
-                result['summary_bullets_news'] = result['summary_bullets']
-                return result
-            else:
-                missing = [k for k in required if k not in result]
-                print(f"   ⚠️  Missing fields: {missing} (attempt {attempt + 1}/5)")
-                if attempt < 4:
-                    time.sleep(3)
-                    continue
+            # ─── Social-voice contract validation (2026-05-09 rewrite) ───
+            #
+            # Old contract: 250-550 char total bullets, exactly 1-3 items.
+            # New contract:
+            #   - title required (non-empty string)
+            #   - summary_bullets is a list of 0-3 items (zero is valid for
+            #     punchy_oneliner format; forcing 3 onto a one-line decla-
+            #     ration was the documented top failure mode of the old
+            #     wire-service prompt)
+            #   - card_format from a fixed allowlist; falls back to 'standard'
+            #   - category required
+            # PLUS a banned-phrase gate: title and bullets must not contain
+            # wire-service phrases the rewrite explicitly bans, even if the
+            # prompt's instructions slipped past the model.
+            VALID_CARD_FORMATS = {
+                'punchy_oneliner', 'listicle', 'hot_take',
+                'conversational', 'comparison', 'story_arc',
+                'standard',
+            }
+            BANNED_PHRASES = (
+                'announces', 'announced', 'announcement',
+                'according to', 'in a statement', 'in a recent statement',
+                'in a development', 'in a move that', 'in a surprise move',
+                'officials say', 'experts say', 'sources say',
+            )
+            BANNED_OPENERS = ('today,', 'in a recent ', 'in recent ')
+
+            def _has_banned_phrase(text):
+                if not isinstance(text, str):
+                    return None
+                t = text.lower()
+                for bp in BANNED_PHRASES:
+                    if bp in t:
+                        return bp
+                for opener in BANNED_OPENERS:
+                    if t.startswith(opener):
+                        return f"opener:{opener!r}"
                 return None
+
+            errors = []
+
+            title = result.get('title', '')
+            if not isinstance(title, str) or not title.strip():
+                errors.append('missing or empty title')
+
+            bullets = result.get('summary_bullets', [])
+            if not isinstance(bullets, list):
+                errors.append('summary_bullets must be a list')
+                bullets = []
+            elif len(bullets) > 3:
+                errors.append(f'summary_bullets has {len(bullets)} items (max 3) — keeping first 3')
+                bullets = bullets[:3]
+                result['summary_bullets'] = bullets
+
+            if not isinstance(result.get('category'), str) or not result.get('category', '').strip():
+                errors.append('missing category')
+
+            # Banned-phrase gate
+            hit = _has_banned_phrase(title)
+            if hit:
+                errors.append(f'title contains banned phrase: {hit}')
+            for i, b in enumerate(bullets):
+                hit = _has_banned_phrase(b)
+                if hit:
+                    errors.append(f'bullet[{i}] contains banned phrase: {hit}')
+
+            # If any hard error and we still have retries, regenerate.
+            if errors and attempt < 4:
+                preview = '; '.join(errors[:3])
+                print(f"   ⚠️  Social-voice gate failed (attempt {attempt + 1}/5): {preview}")
+                time.sleep(3)
+                continue
+            if errors:
+                # Final attempt — log and reject if title is empty; otherwise
+                # accept with warnings (banned phrases are best-effort).
+                if 'missing or empty title' in errors:
+                    print(f"   ❌ Final attempt also failed: {errors}")
+                    return None
+                print(f"   ⚠️  Accepting with warnings after 5 attempts: {errors[:2]}")
+
+            # Normalize card_format with fallback to 'standard'
+            cf_raw = result.get('card_format')
+            if isinstance(cf_raw, str) and cf_raw.strip().lower() in VALID_CARD_FORMATS:
+                result['card_format'] = cf_raw.strip().lower()
+            else:
+                result['card_format'] = 'standard'
+
+            # Punchy one-liners must have zero bullets — enforce so iOS
+            # doesn't render an empty-styled bullet list.
+            if result['card_format'] == 'punchy_oneliner':
+                result['summary_bullets'] = []
+
+            # Map to old field names for backward compatibility (downstream
+            # orchestrator code reads these old names).
+            result['title_news'] = result['title']
+            result['summary_bullets_news'] = result['summary_bullets']
+            return result
 
         except json.JSONDecodeError as e:
             print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
