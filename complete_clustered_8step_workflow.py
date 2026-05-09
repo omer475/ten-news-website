@@ -2126,7 +2126,17 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'map': components.get('map'),
                 'scorecard': components.get('scorecard'),
                 'recipe': components.get('recipe'),
-                'article_type': component_result.get('article_type', 'standard') if isinstance(component_result, dict) else 'standard',
+                # Card-format hint from step4's social-voice synthesis takes
+                # priority over the legacy component_result.article_type
+                # (which was always 'standard' in practice anyway). iOS reads
+                # this column to pick the card layout variant: punchy_oneliner,
+                # listicle, hot_take, conversational, comparison, story_arc,
+                # or standard. Falls back to component_result then to 'standard'.
+                'article_type': (
+                    synthesized.get('card_format')
+                    or (component_result.get('article_type') if isinstance(component_result, dict) else None)
+                    or 'standard'
+                ),
                 'emoji': component_result.get('emoji') if isinstance(component_result, dict) else None,
                 'components_order': successful_components,
                 'num_sources': len(cluster_sources),
