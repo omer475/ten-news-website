@@ -861,7 +861,21 @@ export default async function handler(req, res) {
                 console.warn('[trinity] returned 0 articles, falling through to v11');
               }
             } catch (trinityErr) {
-              console.error('[trinity] delegation failed, falling through to v11:', trinityErr?.message);
+              // Phoenix Phase 9.A.3 (2026-05-09): conspicuous fatal logging.
+              // PR #124's `shownClusters` typo went undetected for 7 hours
+              // because the previous .message-only log buried the regression.
+              // Now log the full error class + stack with [trinity.fatal]
+              // prefix so it's grep-able in Vercel logs and an alert can fire.
+              const errClass = trinityErr?.constructor?.name || 'Error'
+              const errMsg = trinityErr?.message || String(trinityErr)
+              const errStack = trinityErr?.stack || '<no stack>'
+              console.error(`[trinity.fatal] ${errClass}: ${errMsg}`)
+              console.error(`[trinity.fatal] stack: ${errStack}`)
+              console.error('[trinity.fatal] falling through to v11 (legacy feed)')
+              // Stash so the response surfaces it for dev inspection.
+              if (typeof res !== 'undefined') {
+                res.setHeader('X-Trinity-Fatal', `${errClass}: ${errMsg.slice(0, 200)}`)
+              }
             }
           }
 
