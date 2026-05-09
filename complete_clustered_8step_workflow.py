@@ -540,7 +540,15 @@ def canonicalize_category(raw):
 # instead of recomputing per-event downstream.
 def compute_expected_read_seconds(title, bullets):
     """Words / 3.83 words-per-sec (~230 WPM mobile reading rate).
-    Mirrors lib/readingTime.js expectedReadSeconds(). Min 5s, max 600s."""
+    Mirrors lib/readingTime.js expectedReadSeconds(). Min 5s, max 600s.
+
+    Returns INTEGER seconds — the DB column is `integer`, not `numeric`.
+    Earlier commit 6f1bbd47 ('round expected_read_seconds to int') was
+    supposed to enforce this but never landed in this function. Without
+    the int() cast, every published_articles insert in the s8xzq run
+    failed with `invalid input syntax for type integer: "8.348552..."`
+    on 2026-05-09, blocking 20 synthesized articles from reaching the DB.
+    """
     text = (title or '') + ' '
     if isinstance(bullets, list):
         text += ' '.join(b for b in bullets if isinstance(b, str))
@@ -548,7 +556,7 @@ def compute_expected_read_seconds(title, bullets):
         text += bullets
     word_count = len([w for w in text.split() if w.strip()])
     seconds = word_count / 3.833
-    return max(5.0, min(600.0, seconds))
+    return int(round(max(5.0, min(600.0, seconds))))
 
 
 def enrich_with_subtopics(interest_tags, title):
