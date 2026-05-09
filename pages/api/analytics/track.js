@@ -678,6 +678,59 @@ export default async function handler(req, res) {
       })()
     }
 
+    // Phoenix Phase 6.C (2026-05-09): ENF-style multi-granular negative
+    // feedback. When a fast-skip event fires (article_skipped with dwell
+    // < 3s — the "user actively rejected this" signal), attribute the
+    // negative to specific dimensions: cluster (vq_secondary), source
+    // (publisher), and primary (vq_primary). Stored separately so rerank
+    // can apply per-dimension penalty rather than a uniform skip penalty.
+    //
+    // Source: ENF (arxiv:2511.18700, ByteDance Nov 2025), +6.2% watch /
+    // -9.4% fast-skip in production by attributing skips to fine-grained
+    // reasons rather than treating all skips as the same signal.
+    if (event_type === 'article_skipped' && article_id && effectiveUserId) {
+      const skipDwell = metadata?.dwell ? parseFloat(metadata.dwell) :
+                       (metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0)
+      // Only fast-skips (≤3s dwell) count as a clear reject signal.
+      if (skipDwell <= 3.0) {
+        ;(async () => {
+          try {
+            const { data: art } = await admin
+              .from('published_articles')
+              .select('vq_secondary, vq_primary, source')
+              .eq('id', article_id)
+              .single()
+            if (!art) return
+            const writes = []
+            if (art.vq_secondary != null) {
+              writes.push(admin.rpc('bump_user_negative_dim', {
+                p_user_id: effectiveUserId,
+                p_dim_type: 'cluster',
+                p_dim_value: String(art.vq_secondary),
+              }))
+            }
+            if (art.vq_primary != null) {
+              writes.push(admin.rpc('bump_user_negative_dim', {
+                p_user_id: effectiveUserId,
+                p_dim_type: 'primary',
+                p_dim_value: String(art.vq_primary),
+              }))
+            }
+            if (art.source) {
+              writes.push(admin.rpc('bump_user_negative_dim', {
+                p_user_id: effectiveUserId,
+                p_dim_type: 'source',
+                p_dim_value: art.source.toLowerCase(),
+              }))
+            }
+            await Promise.all(writes)
+          } catch (e) {
+            // Non-blocking
+          }
+        })()
+      }
+    }
+
     // ============================================================
     // V3 ALGORITHM: Resolve personalization_id, then update
     // sliding window + entity affinity (replaces EMA)
