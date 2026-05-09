@@ -18,6 +18,10 @@
     {
       "path": "/api/admin/vq-health",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/decay-cluster-bandit",
+      "schedule": "0 4 * * *"
     }
   ],
   "functions": {
