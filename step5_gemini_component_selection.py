@@ -77,56 +77,42 @@ FREQUENCY: Only when genuinely useful — do NOT default to including details
 📅 TIMELINE
 ═══════════════════════════════════════════════════════════════
 
-Shows "How did we get here?" — only when the chronology is THE story.
+Shows "What is this news about? How did we get here?"
 
-CRITICAL: Timeline is SEVERELY OVERUSED. Default to NO. Skip unless all
-three gates below pass.
+CRITICAL: Timeline is SEVERELY OVERUSED. Be EXTREMELY selective.
 
-THE THREE-GATE TEST (must pass ALL three):
+THE CORE QUESTION:
+> "Does the reader need background context to understand what this news is about?"
 
-GATE 1 — REAL CHRONOLOGY EXISTS:
-Can you name THREE specific calendar dates spanning AT LEAST 30 DAYS,
-where each date corresponds to a distinct PUBLIC event you can cite from
-the source articles?
-  ✗ "May 2026, May 2026, May 2026" → SAME WEEK = NOT a timeline. Skip.
-  ✗ "May 8, May 9, May 10" → 3 days apart = NOT a timeline. Skip.
-  ✗ "April 2024, May 2024, August 2024" for a 2026 rookie story → fake
-    backfill, not the actual story. Skip.
-  ✓ "October 2023, March 2024, May 2026" for a war escalation → REAL.
+Timeline should answer: "What is this story? How did it start? What happened before?"
 
-GATE 2 — THE READER NEEDS THE HISTORY TO UNDERSTAND TODAY:
-Without 30-second background, would today's headline confuse the reader?
-  ✓ Multi-year war (Ukraine, Gaza, Syria) — yes
-  ✓ Multi-year trial / investigation (Epstein, Maxwell, Trump cases)
-  ✓ Long-running political crisis with named phases
-  ✗ Single announcement — no, headline is self-contained
-  ✗ Single attack / explosion / arrest — no
-  ✗ "Should schools teach AI?" explainer — no, generic context isn't a
-    timeline of THIS story
-  ✗ Sports game / season highlight — no
+SELECT ONLY IF the reader would be LOST without context:
+✓ Ongoing wars/conflicts where understanding escalation matters (Ukraine, Gaza, Syria)
+✓ Multi-year investigations with complex history (Epstein case, Trump trials)
+✓ Long-running political crises that have evolved over time
+✓ Stories where today's news only makes sense with "how we got here"
 
-GATE 3 — A WIKIPEDIA-STYLE BACKGROUND SECTION ALREADY EXISTS:
-For this exact topic, would a Wikipedia article have a "Background" or
-"Timeline" section longer than one paragraph? If you can't picture one,
-the timeline you'd write is fabrication.
+DO NOT SELECT FOR (99% of stories):
+✗ Single announcements (even major ones)
+✗ Product/tech news (iPhone launch, AI model release)
+✗ Entertainment news
+✗ Speeches or statements
+✗ Policy proposals (unless part of long-running saga)
+✗ One-time incidents (plane crash, earthquake, fire)
+✗ Business deals (mergers, acquisitions, earnings)
+✗ Sports news
+✗ Deaths (unless the person's history IS the story)
+✗ Elections (unless explaining a complex political situation)
+✗ Trade deals, tariffs, sanctions (unless ongoing trade war)
 
-HARD ANTI-PATTERNS (NEVER select for these — common mistakes from prior
-runs):
-✗ Single announcements / statements / press conferences
-✗ Single product launches, AI model releases, app updates
-✗ Single sports events, scores, plays, draft picks
-✗ Single arrests, single attacks, single incidents
-✗ Single explainers ("should schools teach X?")
-✗ Single business deals (M&A, earnings, layoffs)
-✗ Local government decisions (paralympic complex, road project)
-✗ Stories with ALL events within the past 2 weeks
-✗ Stories where you'd have to invent dates to fill 3 slots
-✗ Stories where the 3rd item would just be a re-statement of today's news
+ASK YOURSELF:
+1. "Would the reader ask 'Wait, what's the background here?'" → If NO, don't select
+2. "Is this a SINGLE EVENT or part of an ONGOING SAGA?" → Single event = NO timeline
+3. "Does understanding HOW we got here matter?" → If NO, don't select
 
-FREQUENCY TARGET: ~3% of stories. If you're picking timeline for >3 in
-100 articles, you're picking too eagerly.
+FREQUENCY: ~5% of stories (very rare!)
 
-DEFAULT: NO timeline. Only YES when all three gates pass cleanly.
+DEFAULT: Do NOT select timeline. Only add if truly essential.
 
 ═══════════════════════════════════════════════════════════════
 🗺️ MAP
