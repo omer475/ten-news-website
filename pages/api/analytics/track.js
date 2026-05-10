@@ -2,6 +2,7 @@ import { createClient as createAuthedClient } from '../../../lib/supabase-server
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { readFractionPenaltyScale, readFractionEngageScale } from '../../../lib/readingTime'
 import { explicitWeight, EXPLICIT_POSITIVE_EVENTS } from '../../../lib/signals/weights'
+import { slugify, SIGNAL_TYPES } from '../../../lib/signals/types'
 
 // Hard cap on per-user interest clusters. cluster_user_interests RPC respects
 // this via LEAST(p_max_clusters, ...); the incremental write path below must
@@ -552,6 +553,57 @@ export default async function handler(req, res) {
         })
       } catch (e) {
         console.error('[more_like_this] handler error:', e?.message || e)
+        return res.status(500).json({ error: 'internal error' })
+      }
+    }
+
+    // ==========================================================
+    // entity_chip_tap — chip in FlashBriefSheet TRENDING TOPICS section.
+    //
+    // Schema: passive affordance — only positive signals fire (un-tapped
+    // chips are NEVER a negative signal). On tap we write an entity-signal
+    // at weight +0.8 (between save +0.7 and share +1.0, per design).
+    //
+    // The entity is the chip's topic string — NOT a host article. We don't
+    // require article_id (chips aggregate across many articles in the brief).
+    // ==========================================================
+    if (event_type === 'entity_chip_tap') {
+      if (!effectiveUserId) return res.status(401).json({ error: 'auth required' })
+      const entityText = metadata?.entity_text
+      const entityType = metadata?.entity_type || 'topic'
+      if (!entityText || typeof entityText !== 'string') {
+        return res.status(400).json({ error: 'entity_text required' })
+      }
+      const slug = slugify(entityText)
+      if (!slug) return res.status(400).json({ error: 'invalid entity_text' })
+      // Validate entity_type against the canonical SIGNAL_TYPES list. Default
+      // to 'topic' when unrecognized, matching the chip's data source.
+      const validTypes = new Set(Object.values(SIGNAL_TYPES))
+      const safeType = validTypes.has(entityType) ? entityType : 'topic'
+      const typedSignal = `${safeType}:${slug}`
+
+      try {
+        await admin.rpc('bulk_update_entity_signals', {
+          p_user_id: effectiveUserId,
+          p_entities: [typedSignal],
+          p_is_positive: true,
+          p_weight: 0.8,
+        }).catch((e) => console.log('[entity_chip_tap] entity signals err:', e?.message || e))
+
+        await admin.from('user_article_events').insert({
+          user_id: effectiveUserId,
+          article_id,  // may be null when chip aggregates across articles
+          event_type: 'entity_chip_tap',
+          metadata: {
+            entity_text: entityText,
+            entity_type: entityType,
+            source_view: metadata?.source_view || null,
+          },
+        })
+
+        return res.status(200).json({ success: true, signal: typedSignal })
+      } catch (e) {
+        console.error('[entity_chip_tap] handler error:', e?.message || e)
         return res.status(500).json({ error: 'internal error' })
       }
     }
