@@ -1632,21 +1632,10 @@ def run_complete_pipeline():
                 with gemini_semaphore:
                     component_result = component_selector.select_components(article_for_selection)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
-                # Remove "details" — the 3-column stat grid was retired
-                # 2026-05-10. Spec said it shipped with rigid label-≤12-chars +
-                # value-must-have-digit + exactly-3-columns shape that produced
-                # truncated output ("LOTTERY PICK | Projected #6-10..."). High
-                # creator friction (you have to hunt for 3 quantitative facts)
-                # and low engagement payoff vs the alternatives. Filtered here
-                # rather than rewriting step5's 55-reference prompt — single-
-                # point fix and doesn't risk breaking anything else.
-                selected = [c for c in selected if c != 'details']
                 print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
                 print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                # Fallback used to default to ['details'] — now empty list
-                # (no info box) since details is retired.
-                selected = []
+                selected = ['details']
                 component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
@@ -2140,7 +2129,17 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'summary_bullets_news': bullets,
                 'five_ws': five_ws,
                 'timeline': components.get('timeline'),
-                'details': components.get('details'),
+                # 'details' (3-column stat grid) retired 2026-05-10: visually
+                # broken (truncated labels, mixed column types — "LOTTERY PICK
+                # | Projected #6-10... | RIM % 74.5%") and high creator
+                # friction. Step5 may still select it and step6_7 may still
+                # generate it (cheaper than rewriting both prompts), but we
+                # don't write it to the DB. timeline / map / graph kept on
+                # because step6_7 often generates them as side-effects of a
+                # details request — stripping at the orchestrator's `selected`
+                # list killed those side-effects too. Null at insert is the
+                # surgical fix.
+                'details': None,
                 'graph': components.get('graph'),
                 'map': components.get('map'),
                 'scorecard': components.get('scorecard'),
