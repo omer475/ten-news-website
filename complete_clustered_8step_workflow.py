@@ -1632,10 +1632,21 @@ def run_complete_pipeline():
                 with gemini_semaphore:
                     component_result = component_selector.select_components(article_for_selection)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
+                # Remove "details" — the 3-column stat grid was retired
+                # 2026-05-10. Spec said it shipped with rigid label-≤12-chars +
+                # value-must-have-digit + exactly-3-columns shape that produced
+                # truncated output ("LOTTERY PICK | Projected #6-10..."). High
+                # creator friction (you have to hunt for 3 quantitative facts)
+                # and low engagement payoff vs the alternatives. Filtered here
+                # rather than rewriting step5's 55-reference prompt — single-
+                # point fix and doesn't risk breaking anything else.
+                selected = [c for c in selected if c != 'details']
                 print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
                 print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                selected = ['details']
+                # Fallback used to default to ['details'] — now empty list
+                # (no info box) since details is retired.
+                selected = []
                 component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
@@ -2495,31 +2506,73 @@ BOLD HIGHLIGHTS PER BULLET:
   • 1 entity bolded. NEVER more than 2. Bold makes it tappable in the app.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎴 STEP 4 — CARD FORMAT (you choose one)
+🎴 STEP 4 — CARD FORMAT (think like a reader, not an editor)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Pick the card_format that fits the content shape. The iOS app uses this to choose layout. When in doubt, return "standard."
+You're NOT choosing how to summarize the content. You're choosing **how a social-media reader would most want to consume it.** Same story can be standard or hot_take depending on whether the reader is going to nod along or react. Ask: how does the reader engage with this story?
 
-  punchy_oneliner — declaration / hot-take / awe-moment / single-image moment.
-                    Title is the entire payload. ZERO bullets.
-                    "Messi just retired." | "BREAKING: Fed cuts rates 50 bps."
+Most articles ARE standard. That's correct — standard is the baseline post type. But when ONE of the cues below clearly fires, pick the matching non-standard format. Don't stretch — if it's not obvious, standard is right. If it IS obvious, picking standard is wrong because you're hiding the format the reader expected.
 
-  listicle        — multiple distinct sub-events of equal weight, ordering matters.
-                    Title signals a count: "3 things you missed in the Lakers game."
+  punchy_oneliner — Reader sees the title and there's nothing more to say.
+                    The reaction IS the post. Use when the fact is fully self-
+                    contained AND emotionally complete on its own line.
+                    Cues:
+                      • Title is a one-line declaration ("Messi just retired.")
+                      • Title is a single-line breaking moment ("Fed cuts 50 bps.")
+                      • Title is a one-line hot take that lands without backup
+                    When this fires, summary_bullets = [] (zero bullets).
+                    DO NOT pick this if the reader needs a single fact to
+                    understand what happened — those are standard.
 
-  hot_take        — opinion / contrarian stance / call-out.
-                    Title is the take, bullets justify it: "X is a scam." | "The new iPhone is the most boring phone in a decade."
+  listicle        — Reader expects an enumerated, scannable list.
+                    Cues:
+                      • Sources literally count items ("3 takeaways," "5 ways")
+                      • Article is a ranked / recap roundup of distinct events
+                      • Title says "X things..." or "Top N..."
+                    Bullets carry distinct, parallel items in a clear order.
 
-  conversational  — explainer / deep-dive with chapters (setup → turn → payoff).
-                    Multiple beats that build on each other.
+  hot_take        — Reader is going to react with agree/disagree, not just
+                    nod along. The post is taking a stance.
+                    Cues:
+                      • Source is opinion / editorial / column
+                      • Title is contrarian, calls something a scam / overrated
+                        / underrated / dead / done
+                      • Bullets defend the take with specific evidence
+                    DO NOT pick for normal hard news (consequence-led plain
+                    titles are standard, not hot_take, even if punchy).
 
-  comparison      — explicit X-vs-Y framing.
-                    Use when sources compare two named entities.
+  conversational  — Reader needs multiple beats to follow the story. There's
+                    a setup, a turn, and a payoff that don't fit one card.
+                    Cues:
+                      • Story has a "wait for it" reveal mid-way through
+                      • Multi-step explainer where each step depends on the
+                        previous (how something happened, why it matters)
+                      • A how-to or guide with sequenced steps
 
-  story_arc       — narrative with momentum (recap, recipe, reveal, comeback).
-                    Clear beginning-middle-end with payoff.
+  comparison      — Reader wants to mentally hold X and Y side by side.
+                    Cues:
+                      • Sources explicitly frame "X vs Y," "before/after,"
+                        "old vs new"
+                      • Article's whole point is which-one-wins or how-they-differ
+                      • Two named entities receive equal billing in sources
 
-  standard        — none of the above. Default. Most articles will be standard.
+  story_arc       — Reader wants the whole arc, not a summary. Beginning,
+                    middle, end — with momentum.
+                    Cues:
+                      • Sports recap with a comeback / collapse moment
+                      • Recipe that builds (raw → cooked → plated)
+                      • Reveal-style narrative (setup → reveal → reaction)
+                      • Fashion show recap (look 1 → look 12 → closer)
+
+  standard        — Default. Reader reads the title, scans the bullets, gets
+                    the picture. The most common case across news / tech /
+                    business / general updates. If none of the cues above
+                    obviously fire, standard is correct.
+
+The audit: after you pick, ask yourself "would a real reader think this
+post is in the right shape?" If standard feels lazy because there's a
+clear cue you ignored, switch. If a non-standard format feels stretchy
+because you wanted variety, go back to standard.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚫 BANNED — auto-fail (these will be regenerated)

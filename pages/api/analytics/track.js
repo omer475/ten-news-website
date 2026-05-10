@@ -680,21 +680,27 @@ export default async function handler(req, res) {
       })()
     }
 
-    // Phoenix Phase 6.C (2026-05-09): ENF-style multi-granular negative
-    // feedback. When a fast-skip event fires (article_skipped with dwell
-    // < 3s — the "user actively rejected this" signal), attribute the
-    // negative to specific dimensions: cluster (vq_secondary), source
-    // (publisher), and primary (vq_primary). Stored separately so rerank
-    // can apply per-dimension penalty rather than a uniform skip penalty.
+    // ENF-style multi-granular negative feedback (Phase 6.C extended in Phase 1.6).
     //
-    // Source: ENF (arxiv:2511.18700, ByteDance Nov 2025), +6.2% watch /
-    // -9.4% fast-skip in production by attributing skips to fine-grained
-    // reasons rather than treating all skips as the same signal.
+    // Tiered skip-weight based on dwell. ENF (arxiv:2511.18700) treats watched-
+    // but-no-engagement as a real negative; the previous gate at dwell<=3s
+    // dropped meaningful glance-skips on the floor.
+    //
+    //   dwell <= 1.0s → weight 1.5  (hardest fast-skip — instant swipe)
+    //   dwell <= 3.0s → weight 1.0  (canonical fast-skip)
+    //   dwell <= 6.0s → weight 0.5  (NEW: glance-skip)
+    //   dwell  > 6.0s → no negative-dim bump (ambiguous)
+    //
+    // Migration 106 widens fast_skip_count to real and adds p_weight to
+    // bump_user_negative_dim.
     if (event_type === 'article_skipped' && article_id && effectiveUserId) {
       const skipDwell = metadata?.dwell ? parseFloat(metadata.dwell) :
                        (metadata?.total_active_seconds ? parseFloat(metadata.total_active_seconds) : 0)
-      // Only fast-skips (≤3s dwell) count as a clear reject signal.
-      if (skipDwell <= 3.0) {
+      let skipWeight = 0
+      if (skipDwell <= 1.0) skipWeight = 1.5
+      else if (skipDwell <= 3.0) skipWeight = 1.0
+      else if (skipDwell <= 6.0) skipWeight = 0.5
+      if (skipWeight > 0) {
         ;(async () => {
           try {
             const { data: art } = await admin
@@ -709,6 +715,7 @@ export default async function handler(req, res) {
                 p_user_id: effectiveUserId,
                 p_dim_type: 'cluster',
                 p_dim_value: String(art.vq_secondary),
+                p_weight: skipWeight,
               }))
             }
             if (art.vq_primary != null) {
@@ -716,6 +723,7 @@ export default async function handler(req, res) {
                 p_user_id: effectiveUserId,
                 p_dim_type: 'primary',
                 p_dim_value: String(art.vq_primary),
+                p_weight: skipWeight,
               }))
             }
             if (art.source) {
@@ -723,6 +731,7 @@ export default async function handler(req, res) {
                 p_user_id: effectiveUserId,
                 p_dim_type: 'source',
                 p_dim_value: art.source.toLowerCase(),
+                p_weight: skipWeight,
               }))
             }
             await Promise.all(writes)
