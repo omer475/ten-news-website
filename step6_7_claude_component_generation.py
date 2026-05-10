@@ -8,12 +8,45 @@
 # Cost: ~$0.10 per 100 articles
 # Time: ~2-3 minutes for 100 articles
 
+import re
 import requests
 import json
 import time
 from datetime import datetime, timezone
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
+
+
+_MONTHS = {
+    'january': 1, 'february': 2, 'march': 3, 'april': 4, 'may': 5,
+    'june': 6, 'july': 7, 'august': 8, 'september': 9, 'october': 10,
+    'november': 11, 'december': 12,
+}
+
+
+def _parse_timeline_date(date_str: str) -> Optional[Tuple[int, int]]:
+    """Best-effort (year, month) extraction from a timeline date string.
+
+    Recognizes "May 2026", "May 8, 2026", "8 May 2026", "March 2024", etc.
+    Returns None for fuzzy strings like "Friday" or "Late March" that
+    cannot be pinned to a specific (year, month). Used by the validator
+    to enforce date-spread (≥30 days between events) and reject
+    same-month-padding timelines.
+    """
+    if not isinstance(date_str, str) or not date_str.strip():
+        return None
+    s = date_str.lower()
+    month = None
+    for name, num in _MONTHS.items():
+        if name in s:
+            month = num
+            break
+    if month is None:
+        return None
+    year_match = re.search(r'\b(19|20)\d{2}\b', s)
+    if not year_match:
+        return None
+    return int(year_match.group(0)), month
 
 
 # ==========================================
@@ -103,90 +136,90 @@ BAD DETAILS (never do):
 📅 TIMELINE
 ═══════════════════════════════════════════════════════════════
 
-PURPOSE: Answer "What is this news about? How did we get here?"
+PURPOSE: 30-second "how we got here" — chronology only, no commentary.
 
-The timeline should help readers UNDERSTAND the story:
-- What is this news about?
-- How did this situation start?
-- What key events led to today's news?
+Format: tight feed factoids, NOT Wikipedia paragraphs. The reader skims
+this between cards; long sentences kill it.
 
-Generate 2-4 events with CLEAR, COMPLETE descriptions.
-
-EACH EVENT MUST:
-✓ Be 15-25 words long
-✓ Explain WHAT happened AND WHY it matters
-✓ Help the reader understand the CONTEXT of today's news
-✓ Be from recent past (usually last 1-5 years) — use TODAY'S DATE above as reference
-✓ NEVER write a past date as if it is in the future. If a date is before TODAY'S DATE, use past tense
-✓ Be directly relevant to this specific story
-✓ All dates must make sense relative to today's date (no future dates unless they are upcoming events)
-
-THE TIMELINE SHOULD TELL A STORY:
-- First event: "This is how it all started..."
-- Middle events: "This is what happened next..."
-- Last event: "This is the most recent development before today's news..."
+HARD CONSTRAINTS (every event must satisfy):
+✓ 6-12 WORDS per event description (NOT 15-25 — this is a feed, not an
+  article body)
+✓ One concrete fact per event: who did what, optionally where/how-many
+✓ Past tense, specific verb
+✓ At least ONE bold-able entity OR specific number per event
+✓ A real, citable public event — never invented backfill
+✓ EXACTLY 3 events, dates spanning AT LEAST 30 DAYS in total
+✓ Strictly chronological: oldest first, newest last
+✓ All 3 dates must be DIFFERENT (no two events sharing the same month)
 
 DATE FORMAT:
-- Use full month: "January 2024" not "Jan 2024"
-- Always include year
+- "Month YYYY" (e.g. "March 2024") — full month name
+- For events within 30 days of today: "Day Month YYYY" (e.g. "8 May 2026")
+- Never abbreviate ("Jan", "Feb") and never write a past date as future
+
+WHEN TO RETURN AN EMPTY ARRAY (`[]`):
+You MUST return an empty array if ANY of the following is true. The
+selector layer (Step 5) is imperfect; you are the second gate. Do not
+fabricate to fill quota.
+
+✗ The 3 distinct dates you can find are all within 30 days of each other
+✗ You'd need to invent or estimate dates to reach 3 events
+✗ The story is a single moment (announcement, arrest, attack, launch,
+  game, statement) with no real history feeding into it
+✗ The "history" would be generic context (e.g. "ChatGPT gained
+  popularity in 2023") not specific to this exact story
+✗ Two of the three events would land in the same week as today's news
 
 ═══════════════════════════════════════════════════════════════
-BAD TIMELINE (too short, doesn't explain anything):
+BAD TIMELINES (DO NOT EMIT — these are real failures from prior runs)
 ═══════════════════════════════════════════════════════════════
 
-✗ {"date": "Jul 2019", "event": "Epstein arrested"}
-✗ {"date": "Feb 2022", "event": "Russia invades Ukraine"}  
-✗ {"date": "Aug 2019", "event": "Epstein found dead"}
+✗ All-same-month padding (just bullets in disguise):
+   [{"date": "May 2026", "event": "Trump said US would blow up uranium site"},
+    {"date": "May 2026", "event": "Qatar warned Iran on Hormuz"},
+    {"date": "May 2026", "event": "Trump cited Space Force surveillance"}]
+   → Three items in the same week is NOT a timeline. Return [].
 
-These are useless! Reader learns almost nothing about WHAT the story is or HOW we got here.
+✗ Fabricated history backfill:
+   [{"date": "April 2024", "event": "Browns selected McNeil-Warren in NFL Draft"},
+    {"date": "May 2024", "event": "He started early team practices"},
+    {"date": "August 2024", "event": "Preseason games gave him reps"}]
+   → A rookie's standard career path is NOT timeline-worthy. Return [].
+
+✗ Verbose Wikipedia-paragraph style (too many words):
+   {"date": "December 2021", "event": "Ghislaine Maxwell convicted on
+    five federal charges for her role in recruiting and grooming girls
+    for Epstein's trafficking network"}
+   → 22 words. Cut to ≤12. Use the GOOD example below.
+
+✗ Reverse chronology (newest first):
+   [May 2026, April 2026, March 2026]
+   → Always oldest-first, newest-last.
+
+✗ Generic context not specific to this story:
+   {"date": "2023", "event": "ChatGPT gained widespread popularity"}
+   → Generic AI history is not a timeline of THIS story. Return [].
 
 ═══════════════════════════════════════════════════════════════
-GOOD TIMELINE (tells the story, explains context):
+GOOD TIMELINES (tight, dated, specific)
 ═══════════════════════════════════════════════════════════════
 
-✓ {
-    "date": "July 2019", 
-    "event": "Jeffrey Epstein arrested on federal sex trafficking charges involving dozens of underage victims, reopening investigations that had been closed since 2008"
-  }
-
-✓ {
-    "date": "August 2019", 
-    "event": "Epstein found dead in Manhattan jail cell under suspicious circumstances, officially ruled suicide but sparking widespread conspiracy theories and investigations"
-  }
-
-✓ {
-    "date": "December 2021", 
-    "event": "Ghislaine Maxwell convicted on five federal charges for recruiting and grooming underage girls for Epstein's sex trafficking network"
-  }
-
-✓ {
-    "date": "February 2022", 
-    "event": "Russia launched full-scale military invasion of Ukraine with attacks on Kyiv, beginning the largest armed conflict in Europe since World War II"
-  }
-
-✓ {
-    "date": "January 2024", 
-    "event": "William Lai elected Taiwan's president with 40% of the vote despite Chinese pressure, securing unprecedented third consecutive term for DPP party"
-  }
-
-After reading a good timeline, the reader should think:
-"Now I understand what this story is about and how we got to today's news."
-
-OUTPUT FORMAT:
+EPSTEIN CASE (multi-year saga):
 [
-  {
-    "date": "July 2019", 
-    "event": "Jeffrey Epstein arrested on federal sex trafficking charges involving dozens of underage victims, reopening investigations closed since 2008"
-  },
-  {
-    "date": "August 2019", 
-    "event": "Epstein found dead in Manhattan federal jail cell under suspicious circumstances, officially ruled suicide amid widespread skepticism"
-  },
-  {
-    "date": "December 2021", 
-    "event": "Ghislaine Maxwell convicted on five federal charges for her role in recruiting and grooming girls for Epstein's trafficking network"
-  }
+  {"date": "July 2019", "event": "Epstein arrested on federal sex-trafficking charges"},
+  {"date": "August 2019", "event": "Epstein found dead in Manhattan jail cell"},
+  {"date": "December 2021", "event": "Maxwell convicted on five federal counts"}
 ]
+
+UKRAINE WAR (multi-year escalation):
+[
+  {"date": "February 2022", "event": "Russia invaded Ukraine on three fronts"},
+  {"date": "September 2022", "event": "Putin announced partial military mobilization"},
+  {"date": "March 2024", "event": "Russia launched largest drone wave on Kyiv"}
+]
+
+After reading: "Three concrete moments, each on a different date, none
+require a Wikipedia trip to understand."
 
 ═══════════════════════════════════════════════════════════════
 🗺️ MAP
@@ -712,18 +745,58 @@ class GeminiComponentWriter:
         errors = []
 
         # --- TIMELINE validation ---
+        # Quality bar (2026-05-10): timeline was overused (~16% rate) and
+        # most outputs were same-week padding, fabricated backfill, or
+        # 22-word Wikipedia paragraphs. Validator now requires:
+        #   - exactly 3 events (was min 2 / max 4)
+        #   - ≤14 words per event description
+        #   - dates spanning ≥30 days (or 3 distinct date strings if dates
+        #     can't be parsed)
+        # Failures DROP the timeline (don't fail the whole article) so
+        # map/graph/details survive — same independent-component model as
+        # before.
         if 'timeline' in selected_components:
-            if 'timeline' not in result:
-                errors.append("Timeline selected but not in output")
-            elif not isinstance(result['timeline'], list):
-                errors.append("Timeline is not a list")
-                del result['timeline']
-            elif len(result['timeline']) < 2:
-                errors.append(f"Timeline event count: {len(result['timeline'])} (need at least 2)")
-                del result['timeline']
-            elif len(result['timeline']) > 4:
-                # Too many events - just trim to 4 instead of failing
-                result['timeline'] = result['timeline'][:4]
+            tl = result.get('timeline')
+            drop_reason = None
+            if tl is None:
+                drop_reason = "Timeline selected but not in output"
+            elif not isinstance(tl, list):
+                drop_reason = "Timeline is not a list"
+            elif len(tl) != 3:
+                drop_reason = f"Timeline must have exactly 3 events (got {len(tl)})"
+            else:
+                # Per-event word count cap — 6-12 target, hard cap 14.
+                for i, ev in enumerate(tl):
+                    if not isinstance(ev, dict) or 'event' not in ev or 'date' not in ev:
+                        drop_reason = f"Timeline event {i+1} missing date or event"
+                        break
+                    word_count = len(str(ev.get('event', '')).split())
+                    if word_count > 14:
+                        drop_reason = f"Timeline event {i+1} too long ({word_count} words, cap 14)"
+                        break
+                    if word_count < 4:
+                        drop_reason = f"Timeline event {i+1} too short ({word_count} words, min 4)"
+                        break
+                # Date-spread check: parse year+month for each event.
+                if drop_reason is None:
+                    parsed = [_parse_timeline_date(str(ev.get('date', ''))) for ev in tl]
+                    if all(p is not None for p in parsed):
+                        # All 3 dates parsed — require ≥30 days spread.
+                        ym = [(y * 12 + m) for (y, m) in parsed]
+                        if max(ym) - min(ym) < 1:
+                            drop_reason = "Timeline events all within same month (not a real timeline)"
+                        # Require 3 distinct (year, month) buckets.
+                        elif len(set(parsed)) < 3:
+                            drop_reason = "Timeline has duplicate month/year (need 3 distinct dates)"
+                    else:
+                        # Fallback: at least require 3 distinct date strings.
+                        date_strings = [str(ev.get('date', '')).strip().lower() for ev in tl]
+                        if len(set(date_strings)) < 3:
+                            drop_reason = "Timeline has duplicate date strings (need 3 distinct moments)"
+            if drop_reason:
+                errors.append(drop_reason)
+                if 'timeline' in result:
+                    del result['timeline']
 
         # --- DETAILS validation (exactly 3 required) ---
         if 'details' in selected_components:
