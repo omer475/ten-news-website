@@ -755,7 +755,13 @@ class GeminiComponentWriter:
         # Failures DROP the timeline (don't fail the whole article) so
         # map/graph/details survive — same independent-component model as
         # before.
-        if 'timeline' in selected_components:
+        # IMPORTANT: validates whenever a timeline is present in the output,
+        # NOT just when it was in selected_components. Step 7 generates
+        # timeline as a side-effect when other components (e.g. details)
+        # are selected (Trump/Dell article 156215 leaked through with
+        # 2-bucket dates because of this). The validator was previously
+        # skipping side-effect timelines entirely.
+        if 'timeline' in selected_components or result.get('timeline') is not None:
             tl = result.get('timeline')
             drop_reason = None
             if tl is None:
