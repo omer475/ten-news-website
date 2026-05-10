@@ -12,6 +12,11 @@ final class TabBarState {
     var forceExpandedBar = false
     var feedRefreshRequested = false
     var exploreRefreshRequested = false
+    /// Cross-tab navigation request. When a child view (e.g. FlashBriefSheet's
+    /// trending-topic chip) wants to jump to the Search tab pre-filled with a
+    /// query, it sets this to the topic string. ContentView's onChange handler
+    /// switches selectedTab to 99 and sets searchText, then clears this.
+    var pendingSearch: String?
 }
 
 struct ContentView: View {
@@ -88,6 +93,17 @@ struct ContentView: View {
                     collapseBar()
                 }
                 tabBarState.collapseRequested = false
+            }
+        }
+        .onChange(of: tabBarState.pendingSearch) { _, newVal in
+            // Cross-tab navigation requested with a pre-filled query.
+            // Switch to Search tab, then set the searchText AFTER the
+            // selectedTab onChange runs (which clears searchText on its own).
+            guard let topic = newVal, !topic.isEmpty else { return }
+            selectedTab = 99
+            DispatchQueue.main.async {
+                tabBarState.searchText = topic
+                tabBarState.pendingSearch = nil
             }
         }
         .onChange(of: selectedTab) { oldTab, newTab in

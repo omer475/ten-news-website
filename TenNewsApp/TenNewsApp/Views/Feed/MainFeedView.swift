@@ -48,6 +48,31 @@ struct MainFeedView: View {
                             viewModel.currentIndex = index
                         }
                     }
+                },
+                onTopicTap: { topic in
+                    // 1. Fire entity_chip_tap analytics event so the server writes
+                    //    an entity-signal at weight ~0.8 (between save and share).
+                    //    Passive affordance — un-tapped chips never penalized.
+                    Task {
+                        try? await AnalyticsService.shared.track(
+                            event: "entity_chip_tap",
+                            articleId: nil,
+                            category: nil,
+                            source: nil,
+                            metadata: [
+                                "entity_text": topic,
+                                "entity_type": "topic",
+                                "source_view": "flash_brief"
+                            ]
+                        )
+                    }
+                    // 2. Close the sheet, then route to the Search tab pre-filled
+                    //    with the topic. ContentView's onChange(of: pendingSearch)
+                    //    handles the tab switch + searchText prefill.
+                    showFlashBrief = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        tabBarState.pendingSearch = topic
+                    }
                 }
             )
             .presentationDragIndicator(.visible)

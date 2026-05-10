@@ -5,6 +5,12 @@ struct FlashBriefSheet: View {
     let worldEvents: [WorldEvent]
     let timeOfDay: TimeOfDay
     var onArticleTap: ((Int) -> Void)?
+    /// Fired when the user taps a chip in the TRENDING TOPICS section.
+    /// Caller wires this to: (a) navigate to topic-filtered search/feed,
+    /// (b) fire `entity_chip_tap` analytics event so the server writes the
+    /// entity-signal at weight ~0.8. Passive affordance — un-tapped chips
+    /// are NEVER treated as a negative signal.
+    var onTopicTap: ((String) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var appeared = false
@@ -119,13 +125,19 @@ struct FlashBriefSheet: View {
 
                         FlowLayout(spacing: 8) {
                             ForEach(trendingTopics, id: \.self) { topic in
-                                Text(topic)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(.primary)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 8)
-                                    .background(Color(.systemGray6))
-                                    .clipShape(Capsule())
+                                Button {
+                                    HapticManager.light()
+                                    onTopicTap?(topic)
+                                } label: {
+                                    Text(topic)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 8)
+                                        .background(Color(.systemGray6))
+                                        .clipShape(Capsule())
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
