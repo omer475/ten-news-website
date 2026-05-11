@@ -1,9 +1,103 @@
 {
-  "version": "stub",
-  "trained_at": null,
-  "feature_order": [],
-  "scaler_means": [],
-  "scaler_stds": [],
-  "heads": {},
-  "_comment": "Phase 2.4 stub. ranker_v1.js falls back to V0 pseudo-probabilities when `heads` is empty. Run `python scripts/train_ranker_v1.py` to overwrite with trained coefficients."
+  "version": "v1.20260511.1055",
+  "trained_at": "2026-05-11T10:55:32.345858+00:00",
+  "feature_order": [
+    "log_quality",
+    "age_hours_log",
+    "log_expected_read",
+    "log_num_sources",
+    "cluster_fit",
+    "tap_rate",
+    "read_rate",
+    "is_followed_author",
+    "seen_count"
+  ],
+  "scaler_means": [
+    2.0837065797573877,
+    0.0,
+    2.696384305355616,
+    0.6931471805600263,
+    0.5,
+    0.2000000000000256,
+    0.2999999999999701,
+    0.0,
+    0.35276207046541974
+  ],
+  "scaler_stds": [
+    0.16360008543456853,
+    0.0,
+    0.215810859655549,
+    8.104628079763643e-14,
+    0.0,
+    2.5590640717609858e-14,
+    2.986499936241671e-14,
+    0.0,
+    0.47782945922827114
+  ],
+  "heads": {
+    "p_tap": {
+      "coefficients": [
+        0.11575418857220886,
+        0.0,
+        -0.14954371275853096,
+        0.06363851893573394,
+        0.0,
+        0.06363851893573394,
+        -0.06363851893573394,
+        0.0,
+        0.9691427320850221
+      ],
+      "intercept": -0.06363851893573394,
+      "platt_a": 1.0012339678307358,
+      "platt_b": -1.0524215407630024,
+      "metrics": {
+        "positives": 1978,
+        "negatives": 4919,
+        "pos_rate": 0.28679135856169347
+      }
+    },
+    "p_save": {
+      "coefficients": [
+        0.3300003306669266,
+        0.0,
+        0.2230849503433485,
+        0.08862588417327547,
+        0.0,
+        0.08862588417327547,
+        -0.08862588417327547,
+        0.0,
+        0.7823531151376406
+      ],
+      "intercept": -0.08862588417327547,
+      "platt_a": 0.7423661650505566,
+      "platt_b": -6.08416347362547,
+      "metrics": {
+        "positives": 16,
+        "negatives": 6881,
+        "pos_rate": 0.002319849209801363
+      }
+    },
+    "e_dwell": {
+      "coefficients": [
+        0.023632785175826124,
+        0.0,
+        -0.02943886630118082,
+        2.5016968411145337e-25,
+        0.0,
+        2.5016968411145337e-25,
+        -2.5016968411145337e-25,
+        0.0,
+        0.5722072866878876
+      ],
+      "intercept": 0.4178396264461076,
+      "platt_a": null,
+      "platt_b": null,
+      "metrics": {
+        "tap_positive_rows": 1978,
+        "mean_target": 2.0809792109951615
+      }
+    }
+  },
+  "training_rows": 6897,
+  "days_back": 14
 }
