@@ -369,14 +369,17 @@ export default async function handler(req, res) {
     }
 
     // ==========================================================
-    // Phase 3.2: explicit "Not Interested" long-press handler.
-    // Per plan, combines three signals:
-    //   1. Insert 14-day suppression of the article's (super, leaf)
-    //   2. bulk_update_entity_signals with typed_signals at weight -2.0
-    //      (amplified vs the -1.0 implicit-skip weight so this reaches
-    //      the "10-50 implicit skips" calibration from YouTube 2021)
-    //   3. update_super_arm + update_leaf_arm with negative weight 3.0
-    //      (triple the normal skip reward, per plan)
+    // Explicit "Not Interested" long-press handler.
+    // Combines four signals:
+    //   1. 14-day super/leaf suppression row (user_leaf_suppress)
+    //   2. 14-day publisher penalty (user_publisher_penalty)  [Phase 0.2: write removed; table unused]
+    //   3. 48h Trinity VQ-primary cooldown (user_primary_cooldown)
+    //   4. bulk_update_entity_signals at -2.0 weight on typed_signals
+    //      (amplified vs the -1.0 implicit-skip weight, per YouTube 2021 calibration)
+    // Phase 0.1 (2026-05-11): removed dead update_super_arm/update_leaf_arm calls
+    // — those RPCs were dropped by mig 101 with the v11 deletion in Phase 1.1.
+    // ENF (lib/trinityServe.js loadNegativeDimensions) covers per-dimension skip
+    // penalties now; bulk_update_entity_signals provides entity-level decay.
     // Returns early — does not go through the generic event pipeline below.
     // ==========================================================
     if (event_type === 'article_not_interested') {
@@ -409,22 +412,11 @@ export default async function handler(req, res) {
           }, { onConflict: 'user_id,super_cluster_id,leaf_cluster_id' })
         }
 
-        // 1a. Phase 1 fix #9 — Multi-level propagation: publisher demote.
-        // Per TikTok help page, Not Interested propagates to "similar
-        // content" — including the creator (publisher in news context).
-        // Twitter open-source weights confirm explicit negatives ~150× the
-        // strength of explicit positives. We translate to a 0.5× score
-        // multiplier in Trinity rerank for 14d.
-        if (artRow?.source) {
-          await admin.from('user_publisher_penalty').upsert({
-            user_id: effectiveUserId,
-            publisher: artRow.source,
-            penalty: 0.5,
-            expires_at: suppressedUntil,
-            source_article_id: article_id,
-          }, { onConflict: 'user_id,publisher' })
-            .catch((e) => console.log('[not_interested] publisher penalty err:', e?.message || e))
-        }
+        // Phase 0.2 (2026-05-11): publisher penalty write removed. Phase 3.0
+        // deleted loadPublisherPenalties from lib/trinityServe.js — nothing
+        // reads user_publisher_penalty anymore. ENF (lib/trinityServe.js
+        // loadNegativeDimensions, dim_type='source') propagates source-level
+        // skips via fast-skip telemetry instead.
 
         // 1b. Phase 1 fix #9 — Multi-level propagation: VQ-primary cooldown.
         // Already wired into Trinity's cooldownPrimaries set in lib/trinity.js;
@@ -451,22 +443,11 @@ export default async function handler(req, res) {
           }).catch((e) => console.log('[not_interested] entity signals err:', e?.message || e))
         }
 
-        // 3. Bandit arm penalty — triple-strength negative.
-        if (hasLeaf) {
-          await admin.rpc('update_leaf_arm', {
-            p_user_id: effectiveUserId,
-            p_super: artRow.super_cluster_id,
-            p_leaf: artRow.leaf_cluster_id,
-            p_is_positive: false,
-            p_weight: 3.0,
-          }).catch((e) => console.log('[not_interested] leaf arm err:', e?.message || e))
-          await admin.rpc('update_super_arm', {
-            p_user_id: effectiveUserId,
-            p_super: artRow.super_cluster_id,
-            p_is_positive: false,
-            p_weight: 3.0,
-          }).catch((e) => console.log('[not_interested] super arm err:', e?.message || e))
-        }
+        // Phase 0.1 (2026-05-11): removed update_leaf_arm / update_super_arm calls.
+        // Those RPCs were dropped by migration 101 (v11 deletion); the calls
+        // threw "function does not exist" on every Not-Interested event.
+        // Replacement: ENF (lib/trinityServe.js loadNegativeDimensions) and
+        // bulk_update_entity_signals above cover the same suppression semantics.
 
         // Still record the event for analytics/replay consistency.
         await admin.from('user_article_events').insert({
@@ -492,11 +473,11 @@ export default async function handler(req, res) {
     }
 
     // ==========================================================
-    // Phase 3.2b: positive mirror of Not Interested — "Show more like this".
-    // Same three-action shape, sign flipped:
+    // Positive mirror of Not Interested — "Show more like this".
     //   1. No suppression insert (no data structure for positive "pin")
     //   2. bulk_update_entity_signals with typed_signals at +2.0 weight
-    //   3. update_super_arm + update_leaf_arm with positive weight 3.0
+    // Phase 0.1 (2026-05-11): removed dead update_super_arm/update_leaf_arm
+    // calls (v11 bandit RPCs dropped by mig 101).
     // ==========================================================
     if (event_type === 'article_more_like_this') {
       if (!article_id) return res.status(400).json({ error: 'article_id required' })
@@ -521,21 +502,8 @@ export default async function handler(req, res) {
           }).catch((e) => console.log('[more_like_this] entity signals err:', e?.message || e))
         }
 
-        if (hasLeaf) {
-          await admin.rpc('update_leaf_arm', {
-            p_user_id: effectiveUserId,
-            p_super: artRow.super_cluster_id,
-            p_leaf: artRow.leaf_cluster_id,
-            p_is_positive: true,
-            p_weight: 3.0,
-          }).catch((e) => console.log('[more_like_this] leaf arm err:', e?.message || e))
-          await admin.rpc('update_super_arm', {
-            p_user_id: effectiveUserId,
-            p_super: artRow.super_cluster_id,
-            p_is_positive: true,
-            p_weight: 3.0,
-          }).catch((e) => console.log('[more_like_this] super arm err:', e?.message || e))
-        }
+        // Phase 0.1 (2026-05-11): removed dead update_leaf_arm/update_super_arm
+        // calls — RPCs dropped by mig 101 with the v11 deletion.
 
         await admin.from('user_article_events').insert({
           user_id: effectiveUserId,
@@ -1189,71 +1157,21 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('embedding_minilm, cluster_assignments, expected_read_seconds')
+          .select('embedding_minilm')
           .eq('id', article_id)
           .single()
 
-        // Phase 2 (Migration 046) + Migration 047: dual-credit bandit update.
-        // Each engagement credits both the LEAF arm (fine-grained) and the
-        // SUPER arm (coarse). Super-level learning accelerates cold-start on
-        // new leaves and enables hierarchical Thompson sampling in retrieval.
-        // Matches TikTok Deep Retrieval D-layer hierarchy.
-        if (artRow?.cluster_assignments && Array.isArray(artRow.cluster_assignments) && artRow.cluster_assignments.length > 0) {
-          // Phoenix Phase 8.B: canonical weights from lib/signals/weights.js.
-          const _w = explicitWeight(event_type)
-          const explicitWeightForLeaf = _w > 0 ? _w : null
-          // Bandit posterior also gets length-aware reward shaping. A 90 s
-          // dwell on a 10 s card and a 90 s dwell on a 200 s longform are very
-          // different signals; Fix M's _banditSig.weight is dwell-only and
-          // can't tell them apart. Skip the scaling for explicit actions
-          // (save/share/like/revisit) — those carry their own intent.
-          const _expectedRead = (artRow.expected_read_seconds && Number.isFinite(artRow.expected_read_seconds))
-            ? artRow.expected_read_seconds : 30
-          const _fracScale = isPositive
-            ? readFractionEngageScale(_banditDwellSec || 0, _expectedRead)
-            : readFractionPenaltyScale(_banditDwellSec || 0, _expectedRead)
-          const leafBandit = explicitWeightForLeaf != null
-            ? explicitWeightForLeaf
-            : _banditSig.weight * _fracScale
-
-          // Credit each leaf in cluster_assignments
-          const superCredits = new Map()  // super_idx → summed credit
-          for (const ca of artRow.cluster_assignments) {
-            const credit = leafBandit * (Number(ca.weight) || 0)
-            if (credit < 0.02) continue
-            const superIdx = Number(ca.super)
-            const leafIdx = Number(ca.leaf)
-            if (!Number.isInteger(superIdx) || !Number.isInteger(leafIdx)) continue
-            try {
-              await admin.rpc('update_leaf_arm', {
-                p_user_id: effectiveUserId,
-                p_super: superIdx,
-                p_leaf: leafIdx,
-                p_is_positive: isPositive,
-                p_weight: credit,
-              })
-            } catch (e) {
-              console.log('[leaf-bandit] rpc error:', e?.message || e)
-            }
-            // Accumulate super-level credit. Use 0.5x scaling so super arms
-            // build posterior more slowly than leaves (super is aggregate).
-            superCredits.set(superIdx, (superCredits.get(superIdx) || 0) + credit * 0.5)
-          }
-          // Flush super-level credits
-          for (const [superIdx, credit] of superCredits.entries()) {
-            if (credit < 0.02) continue
-            try {
-              await admin.rpc('update_super_arm', {
-                p_user_id: effectiveUserId,
-                p_super: superIdx,
-                p_is_positive: isPositive,
-                p_weight: credit,
-              })
-            } catch (e) {
-              console.log('[super-bandit] rpc error:', e?.message || e)
-            }
-          }
-        }
+        // Phase 0.1 (2026-05-11): removed dual-credit bandit update block
+        // (~60 LOC). update_leaf_arm / update_super_arm RPCs were dropped by
+        // migration 101 with the v11 deletion (Phase 1.1) — the calls were
+        // throwing "function does not exist" on every signal event. Trinity's
+        // own cluster_state EMA (lib/trinityServe.js bump_cluster_b_score)
+        // and ENF negative dimensions (loadNegativeDimensions) provide the
+        // equivalent feedback signal at the K=2048 secondary-cluster level,
+        // wired through the per-pool reranker.
+        //
+        // cluster_assignments and expected_read_seconds removed from the
+        // SELECT above since they were only consumed by the deleted block.
 
         if (artRow?.embedding_minilm && Array.isArray(artRow.embedding_minilm)) {
           const rpcParams2 = effectiveUserId

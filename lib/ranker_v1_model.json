@@ -1,0 +1,9 @@
+{
+  "version": "stub",
+  "trained_at": null,
+  "feature_order": [],
+  "scaler_means": [],
+  "scaler_stds": [],
+  "heads": {},
+  "_comment": "Phase 2.4 stub. ranker_v1.js falls back to V0 pseudo-probabilities when `heads` is empty. Run `python scripts/train_ranker_v1.py` to overwrite with trained coefficients."
+}
