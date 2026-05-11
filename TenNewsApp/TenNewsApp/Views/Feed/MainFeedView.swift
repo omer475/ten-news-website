@@ -266,6 +266,7 @@ struct ArticleCardContinuousView: View {
 
     @State private var liked = false
     @State private var saved = false
+    @State private var reposted = false
     @State private var following = false
     @State private var showShareSheet = false
     @State private var showCreatorProfile = false
@@ -381,6 +382,7 @@ struct ArticleCardContinuousView: View {
         .onAppear {
             liked = LikeManager.shared.isLiked(article.id)
             saved = BookmarkManager.shared.isBookmarked(article.id)
+            reposted = RepostManager.shared.isReposted(article.id)
             following = FollowManager.shared.isFollowing(article.authorId)
         }
     }
@@ -508,6 +510,17 @@ struct ArticleCardContinuousView: View {
                        onColor: accentColor) {
                 BookmarkManager.shared.toggle(article)
                 saved.toggle()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+            // Repost (X / Threads-style share-to-followers, no commentary).
+            // Sits between bookmark and share so the row reads as a clear
+            // intent ramp: save (private) → repost (broadcast) → share
+            // (1-on-1). Green when on (TikTok / X convention).
+            actionIcon(systemName: "arrow.2.squarepath",
+                       isOn: reposted,
+                       onColor: Color(red: 0.0, green: 0.7, blue: 0.35)) {
+                RepostManager.shared.toggle(article)
+                reposted.toggle()
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
             actionIcon(systemName: "arrowshape.turn.up.right",
