@@ -370,16 +370,23 @@ export default async function handler(req, res) {
 
     // ==========================================================
     // Explicit "Not Interested" long-press handler.
-    // Combines four signals:
-    //   1. 14-day super/leaf suppression row (user_leaf_suppress)
-    //   2. 14-day publisher penalty (user_publisher_penalty)  [Phase 0.2: write removed; table unused]
-    //   3. 48h Trinity VQ-primary cooldown (user_primary_cooldown)
-    //   4. bulk_update_entity_signals at -2.0 weight on typed_signals
-    //      (amplified vs the -1.0 implicit-skip weight, per YouTube 2021 calibration)
-    // Phase 0.1 (2026-05-11): removed dead update_super_arm/update_leaf_arm calls
-    // — those RPCs were dropped by mig 101 with the v11 deletion in Phase 1.1.
-    // ENF (lib/trinityServe.js loadNegativeDimensions) covers per-dimension skip
-    // penalties now; bulk_update_entity_signals provides entity-level decay.
+    // Two signals (post-cleanup 2026-05-11):
+    //   1. 48h Trinity VQ-primary cooldown (user_primary_cooldown)
+    //   2. bulk_update_entity_signals at -2.0 weight on typed_signals
+    //      (amplified vs the -1.0 implicit-skip weight, per YouTube 2021)
+    //
+    // History of what's been removed and why:
+    //   * update_super_arm / update_leaf_arm RPCs — RPCs dropped by mig 101
+    //     in Phase 1.1 (v11 deletion); calls were throwing. Removed in
+    //     Phase 0.1.
+    //   * user_publisher_penalty write — reads deleted in Phase 3.0, write
+    //     deleted in Phase 0.2. ENF source-dimension covers it now.
+    //   * user_leaf_suppress write — table is write-only (no readers since
+    //     v11 leaf-bandit dropped in Phase 1.1). Removed in this cleanup
+    //     2026-05-11.
+    //
+    // ENF (lib/trinityServe.js loadNegativeDimensions) covers per-dimension
+    // skip penalties now; bulk_update_entity_signals provides entity decay.
     // Returns early — does not go through the generic event pipeline below.
     // ==========================================================
     if (event_type === 'article_not_interested') {
@@ -389,34 +396,15 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('id, super_cluster_id, leaf_cluster_id, typed_signals, source, vq_primary')
+          .select('id, typed_signals, source, vq_primary')
           .eq('id', article_id)
           .maybeSingle()
 
-        const hasLeaf = artRow?.super_cluster_id != null && artRow?.leaf_cluster_id != null
-        const suppressedUntil = new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString()
         // 48h cooldown for the Trinity VQ primary — matches
         // NOT_INTERESTED_COOLDOWN_HOURS in lib/trinity.js. Soft-excludes the
         // primary's secondaries from Trinity-M / Trinity-LT; explore can
         // still pick. "We'll show fewer like that" semantics, not blocklist.
         const primaryCooldownUntil = new Date(Date.now() + 48 * 3600 * 1000).toISOString()
-
-        // 1. Suppression row.
-        if (hasLeaf) {
-          await admin.from('user_leaf_suppress').upsert({
-            user_id: effectiveUserId,
-            super_cluster_id: artRow.super_cluster_id,
-            leaf_cluster_id: artRow.leaf_cluster_id,
-            source_article_id: article_id,
-            suppressed_until: suppressedUntil,
-          }, { onConflict: 'user_id,super_cluster_id,leaf_cluster_id' })
-        }
-
-        // Phase 0.2 (2026-05-11): publisher penalty write removed. Phase 3.0
-        // deleted loadPublisherPenalties from lib/trinityServe.js — nothing
-        // reads user_publisher_penalty anymore. ENF (lib/trinityServe.js
-        // loadNegativeDimensions, dim_type='source') propagates source-level
-        // skips via fast-skip telemetry instead.
 
         // 1b. Phase 1 fix #9 — Multi-level propagation: VQ-primary cooldown.
         // Already wired into Trinity's cooldownPrimaries set in lib/trinity.js;
@@ -454,18 +442,10 @@ export default async function handler(req, res) {
           user_id: effectiveUserId,
           article_id,
           event_type: 'article_not_interested',
-          metadata: {
-            super_cluster_id: artRow?.super_cluster_id,
-            leaf_cluster_id: artRow?.leaf_cluster_id,
-            suppressed_until: hasLeaf ? suppressedUntil : null,
-          },
+          metadata: { vq_primary: artRow?.vq_primary },
         })
 
-        return res.status(200).json({
-          success: true,
-          suppressed_leaf: hasLeaf ? `${artRow.super_cluster_id}:${artRow.leaf_cluster_id}` : null,
-          suppressed_until: hasLeaf ? suppressedUntil : null,
-        })
+        return res.status(200).json({ success: true })
       } catch (e) {
         console.error('[not_interested] handler error:', e?.message || e)
         return res.status(500).json({ error: 'internal error' })
@@ -474,10 +454,13 @@ export default async function handler(req, res) {
 
     // ==========================================================
     // Positive mirror of Not Interested — "Show more like this".
-    //   1. No suppression insert (no data structure for positive "pin")
-    //   2. bulk_update_entity_signals with typed_signals at +2.0 weight
-    // Phase 0.1 (2026-05-11): removed dead update_super_arm/update_leaf_arm
-    // calls (v11 bandit RPCs dropped by mig 101).
+    // Single signal: bulk_update_entity_signals at +2.0 on typed_signals.
+    //
+    // History of what's been removed:
+    //   * update_leaf_arm / update_super_arm RPC calls — RPCs dropped by
+    //     mig 101 in Phase 1.1; calls were throwing. Removed in Phase 0.1.
+    //   * super_cluster_id / leaf_cluster_id metadata fields on the event
+    //     row — those columns are themselves being removed in this cleanup.
     // ==========================================================
     if (event_type === 'article_more_like_this') {
       if (!article_id) return res.status(400).json({ error: 'article_id required' })
@@ -486,11 +469,10 @@ export default async function handler(req, res) {
       try {
         const { data: artRow } = await admin
           .from('published_articles')
-          .select('id, super_cluster_id, leaf_cluster_id, typed_signals')
+          .select('id, typed_signals')
           .eq('id', article_id)
           .maybeSingle()
 
-        const hasLeaf = artRow?.super_cluster_id != null && artRow?.leaf_cluster_id != null
         const sigs = Array.isArray(artRow?.typed_signals) ? artRow.typed_signals : []
 
         if (sigs.length > 0) {
@@ -502,23 +484,14 @@ export default async function handler(req, res) {
           }).catch((e) => console.log('[more_like_this] entity signals err:', e?.message || e))
         }
 
-        // Phase 0.1 (2026-05-11): removed dead update_leaf_arm/update_super_arm
-        // calls — RPCs dropped by mig 101 with the v11 deletion.
-
         await admin.from('user_article_events').insert({
           user_id: effectiveUserId,
           article_id,
           event_type: 'article_more_like_this',
-          metadata: {
-            super_cluster_id: artRow?.super_cluster_id,
-            leaf_cluster_id: artRow?.leaf_cluster_id,
-          },
+          metadata: {},
         })
 
-        return res.status(200).json({
-          success: true,
-          boosted_leaf: hasLeaf ? `${artRow.super_cluster_id}:${artRow.leaf_cluster_id}` : null,
-        })
+        return res.status(200).json({ success: true })
       } catch (e) {
         console.error('[more_like_this] handler error:', e?.message || e)
         return res.status(500).json({ error: 'internal error' })
