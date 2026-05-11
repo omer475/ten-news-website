@@ -442,8 +442,14 @@ struct ArticleCardContinuousView: View {
                     // following them. Disappears as soon as they tap it.
                     if !following, article.authorId != nil {
                         Button {
+                            // Rich follow: pass name + avatar so the Following
+                            // list on the Account tab renders a real row, not
+                            // an id-only placeholder.
                             FollowManager.shared.toggle(
                                 article.authorId,
+                                name: article.authorName ?? article.source,
+                                avatarUrl: nil,
+                                category: article.category,
                                 userId: appViewModel.currentUser?.id,
                                 sourceArticleId: Int(article.id.stringValue)
                             )

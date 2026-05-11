@@ -85,6 +85,7 @@
 		CP01COMPLETEPROFBF0001AA /* CompleteProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */; };
 		CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR01CREATORMODELSFRF01 /* CreatorModels.swift */; };
 		CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */; };
+		FL01FOLLOWLISTBUILD01 /* FollowingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FL02FOLLOWLISTREF002 /* FollowingListView.swift */; };
 		D38339DC8FFC3E2444B34296 /* UserDefaultsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CEEEB13F9AE7D53C8C3A86 /* UserDefaultsManager.swift */; };
 		D63515DAE9D460CF034F35AB /* Article.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CA6575B4528A411A51289E /* Article.swift */; };
 		DD44EE55FF66AA11BB22CC33 /* SearchTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* SearchTabView.swift */; };
@@ -201,6 +202,7 @@
 		CP01COMPLETEPROFFR0001AA /* CompleteProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteProfileView.swift; sourceTree = "<group>"; };
 		CR01CREATORMODELSFRF01 /* CreatorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorModels.swift; sourceTree = "<group>"; };
 		CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatorProfileView.swift; sourceTree = "<group>"; };
+		FL02FOLLOWLISTREF002 /* FollowingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingListView.swift; sourceTree = "<group>"; };
 		D3214E7F65E936CF2A39F234 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* EventDataAnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDataAnalyticsView.swift; sourceTree = "<group>"; };
 		D5F37BE28BA17571197C7F3E /* CategoryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBadge.swift; sourceTree = "<group>"; };
@@ -519,6 +521,7 @@
 			isa = PBXGroup;
 			children = (
 				CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */,
+				FL02FOLLOWLISTREF002 /* FollowingListView.swift */,
 				E5B34C7A3E004DC6A24A9CF1 /* ProfilePhotoCropView.swift */,
 				D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */,
 			);
@@ -626,6 +629,7 @@
 			files = (
 				CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */,
 				CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */,
+				FL01FOLLOWLISTBUILD01 /* FollowingListView.swift in Sources */,
 				58F8CFB62AAA40F296454425 /* ProfilePhotoCropView.swift in Sources */,
 				E5032C5771095F342C0ADB1F /* AsyncCachedImage.swift in Sources */,
 				F17D20C30CF120A3A0073125 /* CategoryBadge.swift in Sources */,

@@ -140,23 +140,37 @@ struct CreatorProfileView: View {
     }
 
     private func toggleFollow() {
-        guard let pubId = publisherId, let userId = appViewModel.currentUser?.id else { return }
+        guard let pubId = publisherId else { return }
 
         let wasFollowing = isFollowing
         isFollowing.toggle()
         followerCount += isFollowing ? 1 : -1
         HapticManager.medium()
 
+        // Route through FollowManager so AccountTabView's Following list +
+        // stat count stay in sync. FollowManager handles its own API call
+        // and analytics; we just sync local follower-count from the response
+        // when it comes back. Previously CreatorProfileView called
+        // publisherService directly and skipped FollowManager, so unfollows
+        // from the profile didn't remove the row from the Following list.
+        FollowManager.shared.toggle(
+            pubId,
+            name: displayName,
+            avatarUrl: displayAvatarUrl,
+            category: displayCategory,
+            userId: appViewModel.currentUser?.id,
+            sourceArticleId: nil
+        )
+
+        // Refresh follower count from server (FollowManager already issued
+        // the follow/unfollow call; this fetch reads the canonical count).
+        guard let userId = appViewModel.currentUser?.id else { return }
         Task {
             do {
-                let response: FollowResponse
-                if !wasFollowing {
-                    response = try await publisherService.follow(publisherId: pubId, userId: userId)
-                } else {
-                    response = try await publisherService.unfollow(publisherId: pubId, userId: userId)
-                }
-                followerCount = response.followerCount
+                let response = try await publisherService.fetchPublisher(id: pubId, userId: userId)
+                followerCount = response.publisher.followerCount
             } catch {
+                // FollowManager already reverts its own state on failure.
                 isFollowing = wasFollowing
                 followerCount += wasFollowing ? 1 : -1
             }

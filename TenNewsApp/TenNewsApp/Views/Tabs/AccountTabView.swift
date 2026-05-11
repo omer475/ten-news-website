@@ -17,6 +17,8 @@ struct AccountTabView: View {
     @State private var profileImage: UIImage? = ProfilePhotoManager.shared.load()
     @State private var selectedDefaultAvatar: Int? = ProfilePhotoManager.shared.selectedDefaultAvatar()
     @State private var showAvatarPicker = false
+    @State private var showFollowingList = false
+    @State private var followManager = FollowManager.shared
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
@@ -313,17 +315,42 @@ struct AccountTabView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            statItem(value: "0", label: "Followers")
-            statItem(value: "0", label: "Following")
-            statItem(value: "\(history.readCount)", label: "Read")
+            statItem(value: "0", label: "Followers", action: nil)
+            // Following stat opens a list of every publisher the user follows.
+            // Source of truth: FollowManager.shared.followedPublishers. Tap a
+            // row → CreatorProfileView; tap the "Following" pill on a row →
+            // unfollow (FollowManager removes the row + fires analytics).
+            statItem(
+                value: "\(followManager.followedPublishers.count)",
+                label: "Following",
+                action: { showFollowingList = true }
+            )
+            statItem(value: "\(history.readCount)", label: "Read", action: nil)
         }
         .padding(.horizontal, 20)
+        .sheet(isPresented: $showFollowingList) {
+            FollowingListView(onDismiss: { showFollowingList = false })
+        }
     }
 
-    private func statItem(value: String, label: String) -> some View {
+    @ViewBuilder
+    private func statItem(value: String, label: String, action: (() -> Void)?) -> some View {
+        if let action {
+            Button(action: action) {
+                statItemContent(value: value, label: label)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        } else {
+            statItemContent(value: value, label: label)
+        }
+    }
+
+    private func statItemContent(value: String, label: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Color.primary)
             Text(label)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
