@@ -65,8 +65,16 @@ FEATURE_ORDER = [
 ]
 
 
-def build_feature_matrix(rows):
+def build_feature_matrix(rows, article_meta, user_signals):
     """Convert raw DB rows into a feature matrix + label vectors.
+
+    Inputs:
+        rows: list of ranker_training_labels rows
+        article_meta: dict[article_id → {created_at, published_at, num_sources,
+                                          vq_primary, author_id}] from a
+                      separate published_articles fetch.
+        user_signals: dict[user_id → {funnel_by_primary, followed_authors_set,
+                                       histogram_top1_primary, histogram_total}].
 
     Returns:
         X (N×F float32)
@@ -86,21 +94,63 @@ def build_feature_matrix(rows):
     for i, r in enumerate(rows):
         quality = float(r.get("article_quality") or 0)
         expected_read = float(r.get("expected_read_seconds") or 30)
-        # No published_articles join in this view; approximate with current time.
-        # Real script would also fetch published_at + num_sources via join.
-        age_hours = 0.0  # placeholder — full join in a future iteration
-        num_sources = 1.0
+        article_id = r.get("article_id")
+        user_id = r.get("user_id")
+        shown_at = r.get("shown_at")
+
+        meta = article_meta.get(article_id) or {}
+        sig  = user_signals.get(user_id) or {}
+
+        # Age: hours between article publish + impression shown_at.
+        age_hours = 0.0
+        published = meta.get("published_at") or meta.get("created_at")
+        if published and shown_at:
+            try:
+                pub_t = datetime.fromisoformat(published.replace("Z", "+00:00"))
+                show_t = datetime.fromisoformat(shown_at.replace("Z", "+00:00"))
+                age_hours = max(0.0, (show_t - pub_t).total_seconds() / 3600.0)
+            except Exception:
+                pass
+
+        num_sources = float(meta.get("num_sources") or 1)
+        vq_primary = meta.get("vq_primary")
+        author_id = meta.get("author_id")
+
+        # cluster_fit: how much of the user's engagement history is on this primary?
+        # Computed from the user's funnel-stats impressions per primary, normalized
+        # against the user's max-impression primary. Range [0, 1].
+        cluster_fit = 0.0
+        funnel = sig.get("funnel_by_primary") or {}
+        max_imp = sig.get("histogram_max_imp") or 1
+        if vq_primary is not None:
+            fp = funnel.get(int(vq_primary))
+            if fp and max_imp > 0:
+                cluster_fit = min(1.0, fp.get("impressions", 0) / max_imp)
+        elif funnel:
+            cluster_fit = 0.5  # fallback when article has no primary tag
+
+        # Per-primary funnel rates. Beta(5,20) and Beta(2,6) shrunk like the
+        # runtime in lib/trinityServe.js loadUserFunnelStats.
+        tap_rate, read_rate = 0.20, 0.30
+        if vq_primary is not None:
+            fp = funnel.get(int(vq_primary))
+            if fp and fp.get("impressions", 0) >= 5:
+                tap_rate  = (fp["taps"] + 5)        / (fp["impressions"] + 25)
+                read_rate = (fp["deep_reads"] + 2)  / (max(1, fp["taps"]) + 8)
+
+        # Followed author: 1 if author_id in user's follows.
+        is_followed = 0.0
+        if author_id and author_id in (sig.get("followed_authors") or set()):
+            is_followed = 1.0
 
         X[i, 0] = np.log1p(quality / 100.0)
         X[i, 1] = np.log1p(age_hours)
         X[i, 2] = np.log1p(expected_read)
         X[i, 3] = np.log1p(num_sources)
-        # cluster_fit / tap_rate / read_rate / is_followed_author — placeholders
-        # in v0 of the script. Future: join to user_funnel_stats RPC + user_follows.
-        X[i, 4] = 0.5
-        X[i, 5] = 0.20
-        X[i, 6] = 0.30
-        X[i, 7] = 0.0
+        X[i, 4] = cluster_fit
+        X[i, 5] = tap_rate
+        X[i, 6] = read_rate
+        X[i, 7] = is_followed
         X[i, 8] = float(r.get("max_dwell_seconds") or 0) > 0  # crude proxy for seen=1+
 
         y_tap[i]  = bool(r.get("label_engaged") or r.get("label_liked")
@@ -202,46 +252,65 @@ def _build_ssl_context():
         return ssl.create_default_context()
 
 
-def load_rows(days_back: int):
-    """Fetch ranker_training_labels via Supabase REST.
-
-    We use the REST endpoint instead of a direct psycopg connection so the
-    script doesn't need DB credentials beyond the service-role key.
-    """
-    import urllib.request
-    import urllib.parse
-    import datetime as dt
-
+def _supabase_env():
+    """Returns (base_url, service_role_key) where base_url already includes /rest/v1."""
     url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
     if not url or not key:
         print("error: set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY env vars.", file=sys.stderr)
         sys.exit(1)
+    return url.rstrip("/") + "/rest/v1", key
 
-    ssl_ctx = _build_ssl_context()
-    base = url.rstrip("/") + "/rest/v1/ranker_training_labels"
-    # PostgREST paginates; pull up to 50k rows. Adjust if dataset grows.
+
+def _rest_get(path: str, ssl_ctx, key: str, base: str):
+    """GET against /rest/v1 and return parsed JSON. Raises on error with body."""
+    import urllib.request, urllib.error
+    req = urllib.request.Request(base + path, headers={
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=60, context=ssl_ctx) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"  HTTP {e.code} for URL: {base + path}", file=sys.stderr)
+        print(f"  body: {e.read().decode('utf-8')[:500]}", file=sys.stderr)
+        raise
+
+
+def _rpc_post(rpc_name: str, payload: dict, ssl_ctx, key: str, base: str):
+    """POST to /rest/v1/rpc/<name>."""
+    import urllib.request, urllib.error
+    req = urllib.request.Request(
+        base + f"/rpc/{rpc_name}",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60, context=ssl_ctx) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"  RPC {rpc_name} HTTP {e.code}: {e.read().decode('utf-8')[:500]}", file=sys.stderr)
+        return []
+
+
+def load_rows(days_back: int, ssl_ctx, key: str, base: str):
+    """Fetch ranker_training_labels via Supabase REST."""
+    import urllib.parse, datetime as dt
     select = "impression_id,user_id,article_id,bucket,article_quality,expected_read_seconds,max_dwell_seconds,read_fraction,label_engaged,label_skipped,label_saved,label_shared,label_liked,label_revisit,ips_weight,propensity_score,shown_at"
     page_size = 1000
     offset = 0
     all_rows = []
-    # Use 'Z' suffix instead of '+00:00' — PostgREST URL-decodes '+' as a space,
-    # corrupting the timestamp. 'Z' is the unambiguous UTC suffix.
     horizon_iso = (datetime.now(timezone.utc) - dt.timedelta(days=days_back)).strftime("%Y-%m-%dT%H:%M:%SZ")
     horizon = f"shown_at=gte.{horizon_iso}"
     while True:
-        q = f"?select={urllib.parse.quote(select)}&{horizon}&order=shown_at.desc&limit={page_size}&offset={offset}"
-        req = urllib.request.Request(base + q, headers={
-            "apikey": key,
-            "Authorization": f"Bearer {key}",
-        })
-        try:
-            with urllib.request.urlopen(req, timeout=60, context=ssl_ctx) as resp:
-                page = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as e:
-            print(f"  HTTP {e.code} for URL: {base + q}", file=sys.stderr)
-            print(f"  body: {e.read().decode('utf-8')[:500]}", file=sys.stderr)
-            raise
+        q = f"/ranker_training_labels?select={urllib.parse.quote(select)}&{horizon}&order=shown_at.desc&limit={page_size}&offset={offset}"
+        page = _rest_get(q, ssl_ctx, key, base)
         all_rows.extend(page)
         if len(page) < page_size:
             break
@@ -250,6 +319,62 @@ def load_rows(days_back: int):
             print(f"  warn: hit 50k row cap; stopping.")
             break
     return all_rows
+
+
+def load_article_meta(article_ids, ssl_ctx, key: str, base: str):
+    """Fetch published_articles join data keyed by article_id.
+
+    Returns dict[article_id → {published_at, created_at, num_sources, vq_primary, author_id}].
+    Chunks the IN clause to stay under PostgREST URL length limits.
+    """
+    import urllib.parse
+    out = {}
+    if not article_ids:
+        return out
+    distinct = sorted({int(a) for a in article_ids if a is not None})
+    CHUNK = 500
+    for i in range(0, len(distinct), CHUNK):
+        chunk = distinct[i:i + CHUNK]
+        in_clause = ",".join(str(x) for x in chunk)
+        q = (f"/published_articles?select=id,published_at,created_at,num_sources,vq_primary,author_id"
+             f"&id=in.({in_clause})")
+        page = _rest_get(q, ssl_ctx, key, base)
+        for row in page:
+            out[int(row["id"])] = row
+    return out
+
+
+def load_user_signals(user_ids, ssl_ctx, key: str, base: str):
+    """Fetch per-user funnel stats + follow set.
+
+    Returns dict[user_id → {funnel_by_primary, followed_authors, histogram_max_imp}].
+    """
+    out = {}
+    for uid in sorted({u for u in user_ids if u}):
+        funnel_rows = _rpc_post("user_funnel_stats",
+                                {"p_user_id": uid, "p_days_back": 30},
+                                ssl_ctx, key, base)
+        funnel_by_primary = {}
+        max_imp = 0
+        for r in (funnel_rows or []):
+            pri = r.get("vq_primary")
+            if pri is None: continue
+            funnel_by_primary[int(pri)] = {
+                "impressions": int(r.get("impressions") or 0),
+                "taps": int(r.get("taps") or 0),
+                "deep_reads": int(r.get("deep_reads") or 0),
+            }
+            if int(r.get("impressions") or 0) > max_imp:
+                max_imp = int(r.get("impressions") or 0)
+        follows_rows = _rest_get(
+            f"/user_follows?select=publisher_id&user_id=eq.{uid}", ssl_ctx, key, base)
+        followed = {r["publisher_id"] for r in (follows_rows or []) if r.get("publisher_id")}
+        out[uid] = {
+            "funnel_by_primary": funnel_by_primary,
+            "followed_authors": followed,
+            "histogram_max_imp": max_imp,
+        }
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -266,17 +391,34 @@ def main():
                     help="Output JSON path (relative to repo root).")
     args = ap.parse_args()
 
+    base, key = _supabase_env()
+    ssl_ctx = _build_ssl_context()
+
     print(f"[train_ranker_v1] fetching last {args.days_back} days of ranker_training_labels…")
-    rows = load_rows(args.days_back)
+    rows = load_rows(args.days_back, ssl_ctx, key, base)
     print(f"  fetched {len(rows)} rows")
     if len(rows) < 100:
         print("error: fewer than 100 rows — refusing to train. Wait for more data.", file=sys.stderr)
         sys.exit(2)
 
-    X, y_tap, y_save, dwell, w = build_feature_matrix(rows)
+    article_ids = {r.get("article_id") for r in rows if r.get("article_id")}
+    user_ids    = {r.get("user_id")    for r in rows if r.get("user_id")}
+    print(f"[train_ranker_v1] joining published_articles meta for {len(article_ids)} articles…")
+    article_meta = load_article_meta(article_ids, ssl_ctx, key, base)
+    print(f"  resolved {len(article_meta)} articles")
+    print(f"[train_ranker_v1] loading user signals (funnel stats + follows) for {len(user_ids)} users…")
+    user_signals = load_user_signals(user_ids, ssl_ctx, key, base)
+    print(f"  resolved {len(user_signals)} users")
+
+    X, y_tap, y_save, dwell, w = build_feature_matrix(rows, article_meta, user_signals)
     print(f"  features: {X.shape} | tap+ {y_tap.sum()} / {len(y_tap)} ({y_tap.mean()*100:.1f}%) | "
           f"save+ {y_save.sum()} ({y_save.mean()*100:.2f}%) | "
           f"dwell mean (tap+) {dwell[y_tap].mean():.1f}s")
+
+    # Per-feature non-zero coverage sanity check.
+    for j, name in enumerate(FEATURE_ORDER):
+        nonzero = int((X[:, j] != 0).sum())
+        print(f"  feature[{j}] {name:<22s} nonzero={nonzero:>5d}/{len(rows)} ({nonzero/len(rows)*100:5.1f}%)")
 
     means = X.mean(axis=0)
     stds  = X.std(axis=0)
