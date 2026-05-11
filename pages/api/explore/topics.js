@@ -274,118 +274,19 @@ export default async function handler(req, res) {
     // ──────────────────────────────────────────────
     // 2. GENERATE "FOR YOU" TOPICS
     //    Priority order:
-    //    a) NEW (2026-04-20): top leaf arms from user_leaf_arms (hierarchical
-    //       bandit learned preferences, Fix M dwell-weighted)
-    //    b) Legacy tag_profile co-occurrence pairs (fallback)
-    //    c) Legacy user_interest_clusters (fallback)
-    //    d) Cold-start onboarding (still used at the end)
+    //    a) tag_profile co-occurrence pairs (entities the user engaged with)
+    //    b) Cold-start onboarding (when tag_profile is sparse)
+    //
+    // Cleanup (2026-05-11): removed the leaf-bandit topics source. The
+    // user_leaf_arms table was dropped by mig 100 in Phase 1.1 — every call
+    // here had been silently erroring (try/catch swallowed it) since then.
+    // Tag-profile and onboarding sources below handle every user adequately.
     // ──────────────────────────────────────────────
 
     const TARGET_TOPICS = 20
     const userTopics = []
     const usedEntityNames = new Set()
     let matchCount = 0
-
-    // ═══════════════════════════════════════════
-    // NEW: LEAF-BANDIT DRIVEN TOPICS (Phase 2b Explore upgrade)
-    // Uses the hierarchical cluster system from Migration 046+047.
-    // Each top learned leaf becomes a topic row, with display title derived
-    // from the most common typed_signals in that leaf's articles.
-    // ═══════════════════════════════════════════
-
-    if (user_id) {
-      try {
-        const { data: leafArms } = await supabase
-          .from('user_leaf_arms')
-          .select('super_cluster_id, leaf_cluster_id, alpha, beta')
-          .eq('user_id', user_id)
-
-        if (leafArms && leafArms.length > 0) {
-          // Rank by Beta mean, require learned signal (α+β-2 > 1.0 i.e. some engagement)
-          const topLeaves = leafArms
-            .filter(a => (a.alpha || 1) + (a.beta || 1) > 3.0) // has signal
-            .map(a => ({
-              super: a.super_cluster_id,
-              leaf: a.leaf_cluster_id,
-              mean: (a.alpha || 1) / ((a.alpha || 1) + (a.beta || 1)),
-              total: (a.alpha || 1) + (a.beta || 1),
-            }))
-            .filter(a => a.mean >= 0.55) // net positive only
-            .sort((a, b) => b.mean - a.mean)
-            .slice(0, 8)
-
-          for (const l of topLeaves) {
-            // Fetch sample articles for this leaf
-            const { data: sampleArts } = await supabase
-              .from('published_articles')
-              .select('id, title_news, image_url, category, typed_signals, summary_bullets_news, published_at, ai_final_score')
-              .eq('super_cluster_id', l.super)
-              .eq('leaf_cluster_id', l.leaf)
-              .gte('published_at', sevenDaysAgo)
-              .order('ai_final_score', { ascending: false })
-              .limit(30)
-
-            if (!sampleArts || sampleArts.length < 3) continue
-            // Filter out seen articles
-            const unseen = sampleArts.filter(a => !seenArticleIds.has(a.id))
-            if (unseen.length < 3) continue
-
-            // Derive display title from top typed_signals in this leaf
-            const sigCounts = {}
-            for (const a of sampleArts) {
-              const sigs = Array.isArray(a.typed_signals) ? a.typed_signals : []
-              for (const s of sigs) {
-                if (typeof s !== 'string') continue
-                if (s.startsWith('lang:') || s === 'loc:usa' || s.startsWith('loc:')) continue
-                sigCounts[s] = (sigCounts[s] || 0) + 1
-              }
-            }
-            const topSignals = Object.entries(sigCounts)
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 2)
-              .map(([s]) => s)
-            if (topSignals.length === 0) continue
-
-            const formatSignal = (s) => {
-              const part = (s.split(':')[1] || s)
-              return part.split('_').map(w => w[0]?.toUpperCase() + w.slice(1)).join(' ')
-            }
-            const title = topSignals.map(formatSignal).join(' & ')
-
-            // Topic entity_name is synthetic: used to dedupe downstream
-            const syntheticName = `leaf_${l.super}_${l.leaf}`
-            if (usedEntityNames.has(syntheticName)) continue
-            usedEntityNames.add(syntheticName)
-            // Also dedupe against the top signals
-            for (const s of topSignals) usedEntityNames.add(s)
-
-            userTopics.push({
-              entity_name: syntheticName,
-              display_title: title,
-              category: 'For You',
-              weight: l.mean,
-              type: 'personalized',
-              // Pre-populate articles so the fetch step skips these
-              _leafArticles: unseen.slice(0, 10).map(a => ({
-                id: a.id,
-                title: a.title_news,
-                image_url: a.image_url,
-                category: a.category,
-                published_at: a.published_at,
-                bullets: parseBullets(a.summary_bullets_news, 2),
-              })),
-              _leafKey: `${l.super}_${l.leaf}`,
-            })
-
-            if (userTopics.length >= 8) break
-          }
-          matchCount += userTopics.length
-          console.log(`[explore] leaf-based topics: ${userTopics.length}`)
-        }
-      } catch (e) {
-        console.log(`[explore] leaf-based topics error: ${e?.message || e}`)
-      }
-    }
 
     // Source 1: tag_profile top entities → group by co-occurrence into topics
     // Skip entities that are in skip_profile with high weight
@@ -786,12 +687,11 @@ export default async function handler(req, res) {
       emoji: CATEGORY_EMOJIS[t.category] || '📰',
       type: t.type,
       weight: t.weight,
-      // Leaf-based topics carry pre-fetched articles; fall back to topicArticles[]
-      articles: t._leafArticles || topicArticles[t.entity_name] || []
+      articles: topicArticles[t.entity_name] || []
     })
 
-    const hasArticles = t => (t._leafArticles && t._leafArticles.length > 0)
-      || (topicArticles[t.entity_name] && topicArticles[t.entity_name].length > 0)
+    const hasArticles = t =>
+      topicArticles[t.entity_name] && topicArticles[t.entity_name].length > 0
     const personalizedWithArticles = userTopics.filter(hasArticles).map(formatTopic)
     const trendingWithArticles = trendingTopics.filter(hasArticles).map(formatTopic)
 
