@@ -226,6 +226,11 @@ struct AccountTabView: View {
                         .background(Color.accentColor, in: Circle())
                         .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 2))
                 }
+                // Pin the hit area to the full 86x86 circle. Without this the
+                // tap target collapses to the image's non-transparent pixels
+                // (transparent during AsyncCachedImage load → guest users
+                // saw no tap response at all).
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .sheet(isPresented: $showAvatarPicker) {
@@ -258,16 +263,28 @@ struct AccountTabView: View {
                 .presentationCornerRadius(28)
             }
 
-            VStack(spacing: 4) {
-                Text(user?.displayName ?? "Guest")
-                    .font(.system(size: 16, weight: .semibold))
+            // Display name routes to the same avatar picker — there's no
+            // dedicated "edit profile" page yet, and the avatar picker is
+            // the only profile-editing surface. Both elements act as the
+            // single tap target so the user doesn't get a dead zone here.
+            Button {
+                showAvatarPicker = true
+                HapticManager.light()
+            } label: {
+                VStack(spacing: 4) {
+                    Text(user?.displayName ?? "Guest")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.primary)
 
-                if appViewModel.isGuest {
-                    Text("Browsing as Guest")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                    if appViewModel.isGuest {
+                        Text("Browsing as Guest")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
 
