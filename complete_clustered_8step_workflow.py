@@ -2131,6 +2131,41 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — SKIPPING article. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
                 return False
 
+            # Lifestyle-source override (2026-05-11): when an article comes from
+            # a known lifestyle publisher, Gemini tends to over-classify it as
+            # "short" or "analysis" because its news-shaped prompt examples
+            # dominate. Override to "lifestyle" (60d default = mid-bucket) so the
+            # new lifestyle shelf-life bucket activates on existing inventory
+            # instead of waiting for the V1.5 evergreen-content pipeline.
+            # Skipped for genuine breaking news (e.g. "Chef X dies" from BA).
+            LIFESTYLE_SOURCES = {
+                # Food
+                'Bon Appetit', 'Bon Appétit', 'Epicurious', 'Eater', 'Delish',
+                'Taste of Home', 'Food Republic', 'Food52', 'NYT Cooking',
+                'BBC Good Food', 'Tasting Table', 'Serious Eats',
+                # Fashion & beauty
+                'Vogue', 'Teen Vogue', 'The Cut', 'Glamour', 'Allure',
+                'Refinery29', 'Fashionista', 'StyleCaster', "Harper's Bazaar",
+                'Elle', 'GQ', 'WWD',
+                # Home & design
+                'Apartment Therapy', 'Architectural Digest', 'Real Simple',
+                'Better Homes & Gardens', 'Dwell', 'House Beautiful',
+                # Health & fitness
+                "Men's Health", "Women's Health", 'Self', 'Healthline',
+                'Shape', "Runner's World",
+                # Travel
+                'Condé Nast Traveler', 'Travel + Leisure', 'Lonely Planet',
+            }
+            _primary_source = cluster_sources[0].get('source_name', '')
+            if (
+                _primary_source in LIFESTYLE_SOURCES
+                and freshness_category != 'breaking'
+                and shelf_life_days < 30
+            ):
+                print(f"   🌿 [Cluster {cluster_id}] Lifestyle-source override: {_primary_source} {freshness_category}/{shelf_life_days}d → lifestyle/60d")
+                freshness_category = 'lifestyle'
+                shelf_life_days = 60
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
