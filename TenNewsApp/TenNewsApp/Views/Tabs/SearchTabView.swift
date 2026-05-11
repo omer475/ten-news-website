@@ -9,6 +9,7 @@ struct SearchTabView: View {
     @State private var isLoadingArticle = false
     @State private var searchFilter: SearchFilter = .content
     @State private var selectedPublisherId: String?
+    @State private var selectedPublisher: SearchPublisher?
     @State private var showPublisherProfile = false
 
     private let articleService = ArticleService()
@@ -116,17 +117,23 @@ struct SearchTabView: View {
             }
             .navigationDestination(isPresented: $showPublisherProfile) {
                 if let pubId = selectedPublisherId {
+                    // Seed the Creator stub with whatever the search result
+                    // already gave us (displayName, avatar, category, etc.)
+                    // so the profile renders immediately with real data
+                    // instead of flashing "Loading..." until the API fetch
+                    // completes inside CreatorProfileView.task.
+                    let pub = selectedPublisher
                     let creator = Creator(
                         id: pubId,
-                        name: "Loading...",
-                        username: "",
-                        bio: "",
-                        avatarUrl: nil,
-                        isVerified: true,
-                        followerCount: 0,
+                        name: pub?.displayName ?? "",
+                        username: pub?.username ?? "",
+                        bio: pub?.bio ?? "",
+                        avatarUrl: pub?.avatarUrl,
+                        isVerified: pub?.isVerified ?? false,
+                        followerCount: pub?.followerCount ?? 0,
                         followingCount: 0,
-                        articleCount: 0,
-                        category: nil
+                        articleCount: pub?.articleCount ?? 0,
+                        category: pub?.category
                     )
                     CreatorProfileView(
                         creator: creator,
@@ -869,6 +876,7 @@ struct SearchTabView: View {
                 // Publishers from the publishers table
                 ForEach(pubs) { pub in
                     Button {
+                        selectedPublisher = pub
                         selectedPublisherId = pub.id
                         showPublisherProfile = true
                     } label: {
