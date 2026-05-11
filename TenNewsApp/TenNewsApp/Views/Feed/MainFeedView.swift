@@ -204,6 +204,38 @@ struct MainFeedView: View {
         .environment(FeedViewModel())
 }
 
+// MARK: - Not Interested Reasons
+// Typed reasons emitted alongside `article_not_interested` so the ranker can
+// learn topic-level vs. duplicate vs. source vs. tone aversion separately.
+// `rawValue` is the metadata.reason value the server reads.
+
+enum NotInterestedReason: String, CaseIterable, Identifiable {
+    case topic
+    case duplicate
+    case source
+    case tone
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .topic:     return "Not interested in this topic"
+        case .duplicate: return "Already saw this story"
+        case .source:    return "Don't like this source"
+        case .tone:      return "Wrong tone for me"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .topic:     return "tag"
+        case .duplicate: return "rectangle.stack"
+        case .source:    return "newspaper"
+        case .tone:      return "quote.bubble"
+        }
+    }
+}
+
 
 /// Variant 3 — Instagram-style CONTINUOUS feed card.
 /// Combines the original full-screen card's hero photo + side action energy
@@ -299,6 +331,37 @@ struct ArticleCardContinuousView: View {
                 onDismiss: { showCreatorProfile = false },
                 publisherId: article.authorId
             )
+        }
+        // Long-press → leaf-feedback context menu. SwiftUI's contextMenu is
+        // the iOS-native long-press affordance; unlike a custom
+        // onLongPressGesture it does NOT fight the vertical scroll, so the
+        // continuous feed stays buttery.
+        //
+        // Options:
+        //   • Show more like this    → article_more_like_this
+        //   • Not interested (Menu)  → article_not_interested
+        //         with metadata.reason ∈ {topic, duplicate, source, tone}
+        //
+        // Supports Phase 3a typed-reasons negative-feedback path. The 4 reasons
+        // are decided in NotInterestedReason and surfaced via a nested Menu so
+        // the user explicitly attributes the dislike.
+        .contextMenu {
+            Button {
+                fireMoreLikeThis()
+            } label: {
+                Label("Show more like this", systemImage: "heart.fill")
+            }
+            Menu {
+                ForEach(NotInterestedReason.allCases) { reason in
+                    Button(role: reason == .source ? .destructive : nil) {
+                        fireNotInterested(reason)
+                    } label: {
+                        Label(reason.title, systemImage: reason.systemImage)
+                    }
+                }
+            } label: {
+                Label("Not interested", systemImage: "hand.thumbsdown")
+            }
         }
         // Catch tdtopic://entity/<name> link taps from bullet attributed
         // text and forward the entity to the parent. Falls through to
@@ -645,6 +708,37 @@ struct ArticleCardContinuousView: View {
             withAnimation(.easeOut(duration: 0.2)) {
                 heartBurstActive = false
             }
+        }
+    }
+
+    /// Long-press → "Show more like this". Fires `article_more_like_this`
+    /// so the ranker boosts similar clusters.
+    private func fireMoreLikeThis() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        guard let numericId = Int(article.id.stringValue) else { return }
+        Task {
+            try? await AnalyticsService().track(
+                event: "article_more_like_this",
+                articleId: numericId,
+                category: article.category
+            )
+        }
+    }
+
+    /// Long-press → "Not interested → reason". Fires `article_not_interested`
+    /// with `metadata.reason ∈ {topic, duplicate, source, tone}` so the
+    /// ranker (Phase 3a) can learn typed aversion separately from one
+    /// undifferentiated "thumbs down."
+    private func fireNotInterested(_ reason: NotInterestedReason) {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        guard let numericId = Int(article.id.stringValue) else { return }
+        Task {
+            try? await AnalyticsService().track(
+                event: "article_not_interested",
+                articleId: numericId,
+                category: article.category,
+                metadata: ["reason": reason.rawValue]
+            )
         }
     }
 

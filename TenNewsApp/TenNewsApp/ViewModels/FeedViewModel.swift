@@ -31,6 +31,11 @@ final class FeedViewModel {
     // a 30-min phone lock produced a 1800s "absorbed" engagement.
     private var viewDwellAccum: [String: TimeInterval] = [:]
     private var dwellPaused = false
+    // Continuous-feed revisit tracking: ids the user has scrolled PAST at
+    // least once. On the next onAppear for the same id we fire
+    // article_revisit (X-style ranker's strongest positive, weight 12.0).
+    // Cleared on `refresh()` so a fresh feed starts clean.
+    private var departedArticleIds: Set<String> = []
     private(set) var lastRefreshTime: Date?
 
     // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
@@ -261,6 +266,7 @@ final class FeedViewModel {
         hasMoreBecameFalseAt = nil
         reRanker.reset()
         viewStartTimes.removeAll()
+        departedArticleIds.removeAll()
         isLoading = true
         errorMessage = nil
         do {
@@ -323,12 +329,21 @@ final class FeedViewModel {
 
     // MARK: - Swipe Signal Tracking
 
-    /// Call when a new card appears (user swiped to it)
+    /// Call when a new card appears (user scrolled to it). Fires
+    /// `article_revisit` if the user has departed this card before — the
+    /// X-style ranker (Phase 2) weights revisit at 12.0, the strongest
+    /// single positive. Without this hook revisit is never fired on the
+    /// continuous feed (the old VerticalPager-only `newIndex < oldIndex`
+    /// path is gone).
     func recordViewStart(at index: Int) {
         let arts = articles
         guard index < arts.count else { return }
         let id = arts[index].id.stringValue
-        // Reset accumulated for a fresh-card view (not coming back via revisit).
+        if departedArticleIds.contains(id) {
+            recordRevisit(at: index)
+        }
+        // Reset accumulated for a fresh dwell measurement (whether first view
+        // or revisit — we want time-on-card from each appearance separately).
         viewDwellAccum.removeValue(forKey: id)
         viewStartTimes[id] = Date()
     }
@@ -384,6 +399,9 @@ final class FeedViewModel {
         let arts = articles
         guard fromIndex < arts.count else { return }
         let article = arts[fromIndex]
+        // Mark the article as departed so the next onAppear is recognised as
+        // a revisit (continuous-feed scroll-back signal). See recordViewStart.
+        departedArticleIds.insert(article.id.stringValue)
         // Audit fix B11 (2026-05-06): pause-aware dwell. When the app is
         // backgrounded or a sheet is presented, pauseDwellTracking()
         // accumulates the in-flight elapsed into viewDwellAccum and clears
