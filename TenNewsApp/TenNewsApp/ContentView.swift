@@ -35,12 +35,17 @@ struct ContentView: View {
 
     private var onFeedTab: Bool { selectedTab == 0 }
 
+    /// Tab bar icon colors. Pre-2026-05-07 these were forced to white on the
+    /// feed tab because the feed had a dark photo background. The continuous
+    /// feed is now light (cream / white card surface), so we drop the
+    /// `onFeedTab` override and key purely off the system color scheme:
+    /// dark UI → white icons, light UI → near-black icons.
     private var iconActiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.9) : Color(white: 0.15)
+        isDark ? Color.white.opacity(0.9) : Color(white: 0.12)
     }
 
     private var iconInactiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.55) : Color(white: 0.5)
+        isDark ? Color.white.opacity(0.55) : Color(white: 0.40)
     }
 
     var body: some View {
@@ -182,6 +187,12 @@ struct ContentView: View {
                                 .font(.system(size: 23, weight: selectedTab == index ? .semibold : .regular))
                                 .foregroundStyle(selectedTab == index ? iconActiveColor : iconInactiveColor)
                                 .frame(width: 72, height: 40)
+                                // Non-selected tabs use `.identity` glassEffect, which renders
+                                // no material — so the hit area collapses to the SF symbol's
+                                // non-transparent pixels and the user's taps on the surrounding
+                                // capsule miss. Pinning contentShape to the full 72x40 capsule
+                                // restores hit-testing for inactive tabs (Chat/Profile bug).
+                                .contentShape(Capsule())
                                 .glassEffect(
                                     selectedTab == index
                                         ? .regular.interactive()

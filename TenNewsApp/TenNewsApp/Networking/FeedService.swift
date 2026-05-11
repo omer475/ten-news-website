@@ -77,6 +77,18 @@ struct FeedService {
         return result
     }
 
+    /// Fetch articles tagged with a given entity. Server matches both
+    /// `interest_tags` and `topics`. Used for the entity-tap topic page.
+    func fetchTopicFeed(
+        entity: String,
+        offset: Int = 0,
+        limit: Int = 20
+    ) async throws -> TopicFeedResponse {
+        let encoded = entity.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? entity
+        let path = "\(APIEndpoints.topicFeed)?entity=\(encoded)&offset=\(offset)&limit=\(limit)"
+        return try await client.get(path)
+    }
+
     func fetchForYouFeed(
         homeCountry: String,
         followedCountries: [String],

@@ -22,18 +22,23 @@ struct ExploreArticleSheet: View {
         ZStack(alignment: .topLeading) {
             Group {
                 if !articlePages.isEmpty {
-                    VerticalPager(
-                        currentIndex: $pagerIndex,
-                        pages: articlePages
-                    ) { article in
-                        ArticleCardView(
-                            article: article,
-                            accentColor: Self.accentColor(for: article)
-                        )
-                        // Article's `==` is id-only, so SwiftUI can't see when a stub
-                        // is hydrated with bullets. Keying on contentKey forces the
-                        // card to rebuild when content arrives.
-                        .id(article.contentKey)
+                    // Continuous-feed presentation: same LazyVStack rhythm as the
+                    // main feed. The old full-page VerticalPager + ArticleCardView
+                    // was deleted as part of the 2026-05-11 continuous-feed
+                    // migration (no per-article full screen).
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 28) {
+                            ForEach(Array(articlePages.enumerated()), id: \.offset) { _, article in
+                                ArticleCardContinuousView(
+                                    article: article,
+                                    accentColor: Self.accentColor(for: article),
+                                    showTopicTags: false
+                                )
+                                .id(article.contentKey)
+                            }
+                        }
+                        .padding(.top, 104)
+                        .padding(.bottom, 60)
                     }
                 } else {
                     Color.black

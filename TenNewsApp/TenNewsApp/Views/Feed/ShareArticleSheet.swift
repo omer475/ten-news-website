@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ShareArticleSheet: View {
     let article: Article
@@ -187,6 +188,15 @@ struct ShareArticleSheet: View {
                 withAnimation { sentTo.remove(user.id) }
                 HapticManager.error()
             } else {
+                // Friend-share completed successfully — fire article_shared
+                // so the ranker counts in-app sends. Phase 3c target: weight
+                // shares 3-5x a like.
+                try? await AnalyticsService().track(
+                    event: "article_shared",
+                    articleId: articleId,
+                    category: article.category,
+                    metadata: ["destination": "friend"]
+                )
                 try? await Task.sleep(nanoseconds: 150_000_000)
                 dismiss()
             }
@@ -218,10 +228,27 @@ struct ShareArticleSheet: View {
         let url = article.url ?? "https://tennews.ai"
         let items: [Any] = ["\(title)\n\(url)"]
         let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            rootVC.present(activityVC, animated: true)
+        // Fire article_shared only when the user actually completes the share
+        // (picks a destination). Tapping the share button and immediately
+        // dismissing the sheet should NOT count — that inflated shares ~3-5x.
+        let articleIdRaw = article.id.stringValue
+        let cat = article.category
+        activityVC.completionWithItemsHandler = { _, completed, _, _ in
+            guard completed, let numericId = Int(articleIdRaw) else { return }
+            Task {
+                try? await AnalyticsService().track(
+                    event: "article_shared",
+                    articleId: numericId,
+                    category: cat,
+                    metadata: ["destination": "external"]
+                )
+            }
         }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else { return }
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController { topVC = presented }
+        topVC.present(activityVC, animated: true)
     }
 }
