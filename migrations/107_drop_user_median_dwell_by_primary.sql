@@ -14,4 +14,8 @@
 --
 -- Safe to drop: idempotent, no downstream dependencies in current schema.
 
-DROP FUNCTION IF EXISTS public.user_median_dwell_by_primary(uuid);
+-- Note: the actual function signature in prod was (uuid, integer, integer),
+-- not just (uuid). The full signature must be specified for the IF EXISTS
+-- match to fire (Postgres treats different argument lists as different
+-- overloads).
+DROP FUNCTION IF EXISTS public.user_median_dwell_by_primary(uuid, integer, integer);

@@ -186,6 +186,22 @@ def fit_ridge_dwell(X, dwell, mask, w, scaler_means, scaler_stds):
 # DB load
 # ---------------------------------------------------------------------------
 
+def _build_ssl_context():
+    """Robust SSL context that prefers certifi, then macOS keychain, then default.
+
+    On Python 3.12 macOS framework installs, the default SSL store often
+    can't find a CA bundle and SSL handshake fails. Try certifi (typically
+    installed alongside scikit-learn deps); fall back to the system default
+    context which works on Linux + Vercel.
+    """
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
 def load_rows(days_back: int):
     """Fetch ranker_training_labels via Supabase REST.
 
@@ -194,6 +210,7 @@ def load_rows(days_back: int):
     """
     import urllib.request
     import urllib.parse
+    import datetime as dt
 
     url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -201,21 +218,30 @@ def load_rows(days_back: int):
         print("error: set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY env vars.", file=sys.stderr)
         sys.exit(1)
 
+    ssl_ctx = _build_ssl_context()
     base = url.rstrip("/") + "/rest/v1/ranker_training_labels"
     # PostgREST paginates; pull up to 50k rows. Adjust if dataset grows.
     select = "impression_id,user_id,article_id,bucket,article_quality,expected_read_seconds,max_dwell_seconds,read_fraction,label_engaged,label_skipped,label_saved,label_shared,label_liked,label_revisit,ips_weight,propensity_score,shown_at"
     page_size = 1000
     offset = 0
     all_rows = []
-    horizon = f"shown_at=gte.{(datetime.now(timezone.utc) - __import__('datetime').timedelta(days=days_back)).isoformat()}"
+    # Use 'Z' suffix instead of '+00:00' — PostgREST URL-decodes '+' as a space,
+    # corrupting the timestamp. 'Z' is the unambiguous UTC suffix.
+    horizon_iso = (datetime.now(timezone.utc) - dt.timedelta(days=days_back)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    horizon = f"shown_at=gte.{horizon_iso}"
     while True:
         q = f"?select={urllib.parse.quote(select)}&{horizon}&order=shown_at.desc&limit={page_size}&offset={offset}"
         req = urllib.request.Request(base + q, headers={
             "apikey": key,
             "Authorization": f"Bearer {key}",
         })
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            page = json.loads(resp.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(req, timeout=60, context=ssl_ctx) as resp:
+                page = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            print(f"  HTTP {e.code} for URL: {base + q}", file=sys.stderr)
+            print(f"  body: {e.read().decode('utf-8')[:500]}", file=sys.stderr)
+            raise
         all_rows.extend(page)
         if len(page) < page_size:
             break
