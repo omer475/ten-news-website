@@ -319,21 +319,25 @@ Only output topics with relevance >= 30. Only output countries with relevance >=
 
 ## FRESHNESS CLASSIFICATION
 
-IMPORTANT: Most news expires FAST. Default to 1 day unless there's a clear reason for longer.
+Today+ is a SOCIAL platform (TikTok / X / Threads peer), not a news desk.
+Most political/sports/breaking content still expires fast — but lifestyle,
+how-to, and explainer content stays valuable for WEEKS or MONTHS. The five
+buckets below reflect both kinds of content.
 
 | Category | freshness_category | shelf_life_days | Examples |
 |----------|-------------------|-----------------|----------|
 | Breaking | "breaking" | 1 | Wars, attacks, election results, disasters, major deaths, arrests, Oscar winners, game scores |
-| Short | "short" | 1-2 | Sports results, transfers, stock moves, product launches, album releases, political statements, crypto prices, weather events |
-| Medium | "medium" | 3-5 | In-depth investigations, feature interviews, policy analysis, deep explainers, documentary releases |
-| Evergreen | "evergreen" | 14-30 | Recipes, health guides, how-tos, workout routines, travel guides, educational content |
+| Short | "short" | 1-3 | Sports results, transfers, stock moves, product launches, album releases, political statements, crypto prices, weather events |
+| Analysis | "analysis" | 7-14 | In-depth investigations, feature interviews, policy analysis, deep explainers, documentary releases, opinion essays |
+| Lifestyle | "lifestyle" | 30-90 | Recipes, fashion how-tos, fitness routines, beauty tutorials, travel guides, pets, dance, photography, home design, productivity tips |
+| Evergreen | "evergreen" | 180-365 | History pieces, science explainers ("why is the sky blue"), foundational how-tos, philosophy, deep biography, timeless tutorials |
 
 CRITICAL RULES:
-- If the headline contains TODAY's date, a score, "wins", "loses", "signs", "announces", "launches", "crashes" → shelf_life = 1
-- Sports scores, transfer news, earnings reports, stock movements → ALWAYS 1 day
-- Oscar results, award shows, election results → ALWAYS 1 day
-- Default should be 1, not 5. Only increase if the article has lasting analytical value.
-- Ask yourself: "Will anyone care about this specific article in 3 days?" If no → shelf_life = 1
+- News-shaped headlines (today's date, a score, "wins", "loses", "signs", "announces", "launches", "crashes", earnings reports, transfers, election/award results) → shelf_life = 1 ("breaking" or "short").
+- Lifestyle content (recipes, workouts, fashion outfits, makeup tutorials, travel itineraries, pet-care tips) → ALWAYS at least "lifestyle" (30+). A recipe from 60 days ago is still a great recipe.
+- Evergreen explainers ("why X works", "how Y came to be", "the history of Z") → 180+. These never stale.
+- For political/economic ANALYSIS pieces (not headlines): use "analysis" 7-14, not "short."
+- When unsure between two adjacent buckets, ask: "Will anyone search for or share this 30 days from now?" If yes → push to "lifestyle" or higher. If no → push to "short."
 
 ---
 
@@ -348,8 +352,8 @@ Return ONLY a JSON object with the score, relevance, and freshness:
 - `topic_relevance`: only include topics with relevance >= 30
 - `country_relevance`: only include countries with relevance >= 20 (national importance, NOT geographic)
 - If no topics/countries are relevant, use empty objects: `{}`
-- `freshness_category`: one of "breaking", "short", "medium", "evergreen"
-- `shelf_life_days`: integer, how many days this article stays relevant
+- `freshness_category`: one of "breaking", "short", "analysis", "lifestyle", "evergreen"
+- `shelf_life_days`: integer (1-365), how many days this article stays relevant
 """
 
 
@@ -764,7 +768,7 @@ Both deserve visibility. Score accordingly.
     for bullet in bullets:
         article_text += f"- {bullet}\n"
     
-    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}, "freshness_category": "short|medium|breaking|evergreen", "shelf_life_days": N}'
+    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}, "freshness_category": "breaking|short|analysis|lifestyle|evergreen", "shelf_life_days": N}'
     
     # Prepare request
     request_data = {
@@ -869,9 +873,15 @@ Both deserve visibility. Score accordingly.
                         # Extract freshness fields
                         freshness_category = parsed.get('freshness_category', 'short') if isinstance(parsed, dict) else 'short'
                         shelf_life_days = parsed.get('shelf_life_days', 1) if isinstance(parsed, dict) else 1
-                        if freshness_category not in ('breaking', 'short', 'medium', 'evergreen'):
+                        # Five buckets (social-platform calibration, 2026-05-11). The old
+                        # 4-bucket schema ('breaking'/'short'/'medium'/'evergreen' capped at
+                        # 30d) was news-shaped and starved lifestyle content of inventory.
+                        # 'medium' rounds up to 'analysis' so old labels still validate.
+                        if freshness_category == 'medium':
+                            freshness_category = 'analysis'
+                        if freshness_category not in ('breaking', 'short', 'analysis', 'lifestyle', 'evergreen'):
                             freshness_category = 'short'
-                        shelf_life_days = max(1, min(30, int(shelf_life_days))) if shelf_life_days else 1
+                        shelf_life_days = max(1, min(365, int(shelf_life_days))) if shelf_life_days else 1
 
                         return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance, 'freshness_category': freshness_category, 'shelf_life_days': shelf_life_days}
 
