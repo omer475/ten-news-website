@@ -182,6 +182,12 @@ struct ContentView: View {
                                 .font(.system(size: 23, weight: selectedTab == index ? .semibold : .regular))
                                 .foregroundStyle(selectedTab == index ? iconActiveColor : iconInactiveColor)
                                 .frame(width: 72, height: 40)
+                                // Non-selected tabs use `.identity` glassEffect, which renders
+                                // no material — so the hit area collapses to the SF symbol's
+                                // non-transparent pixels and the user's taps on the surrounding
+                                // capsule miss. Pinning contentShape to the full 72x40 capsule
+                                // restores hit-testing for inactive tabs (Chat/Profile bug).
+                                .contentShape(Capsule())
                                 .glassEffect(
                                     selectedTab == index
                                         ? .regular.interactive()

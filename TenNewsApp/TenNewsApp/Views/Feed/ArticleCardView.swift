@@ -376,17 +376,18 @@ struct ArticleCardView: View {
                     }
                     showLeafFeedbackToast("We'll show more like this.")
                 },
-                onNotInterested: {
+                onNotInterested: { reason in
                     HapticManager.medium()
                     showNotInterestedSheet = false
                     Task {
                         try? await analytics.track(
                             event: "article_not_interested",
                             articleId: Int(article.id.stringValue),
-                            category: article.category
+                            category: article.category,
+                            metadata: ["reason": reason.rawValue]
                         )
                     }
-                    showLeafFeedbackToast("We'll show fewer like this.")
+                    showLeafFeedbackToast(reason.toastMessage)
                 },
                 onCancel: { showNotInterestedSheet = false }
             )
@@ -496,16 +497,19 @@ struct ArticleCardView: View {
 
     private var sourcePill: some View {
         Button {
-            if article.url != nil {
-                showSafari = true
-                Task {
-                    try? await analytics.track(
-                        event: "source_clicked",
-                        articleId: Int(article.id.stringValue),
-                        category: article.category,
-                        source: article.source
-                    )
-                }
+            // Publisher-name tap → opens the publisher profile (follow/unfollow).
+            // Previously this opened the source URL in Safari, but the follow
+            // retriever (Phase 1) and the algorithm's per-publisher signals
+            // need users to reach the profile from anywhere a publisher name
+            // appears. Safari access remains on the article detail view.
+            showCreatorProfile = true
+            Task {
+                try? await analytics.track(
+                    event: "source_clicked",
+                    articleId: Int(article.id.stringValue),
+                    category: article.category,
+                    source: article.source
+                )
             }
         } label: {
             HStack(spacing: 6) {
@@ -2272,92 +2276,97 @@ private extension Article {
     }
 }
 
+// MARK: - Not Interested Reasons
+// Typed reasons emitted alongside `article_not_interested` so the ranker can
+// learn topic-level vs. duplicate vs. source vs. tone aversion separately.
+// rawValue maps to the metadata.reason value the server reads.
+
+enum NotInterestedReason: String, CaseIterable, Identifiable {
+    case topic
+    case duplicate
+    case source
+    case tone
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .topic:     return "Not interested in this topic"
+        case .duplicate: return "Already saw this story"
+        case .source:    return "Don't like this source"
+        case .tone:      return "Wrong tone for me"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .topic:     return "tag.fill"
+        case .duplicate: return "rectangle.stack.fill"
+        case .source:    return "newspaper.fill"
+        case .tone:      return "quote.bubble.fill"
+        }
+    }
+
+    var toastMessage: String {
+        switch self {
+        case .topic:     return "We'll show fewer stories on this topic."
+        case .duplicate: return "We'll hide this story."
+        case .source:    return "We'll show fewer stories from this source."
+        case .tone:      return "We'll adjust the tone in your feed."
+        }
+    }
+}
+
 // MARK: - Leaf Feedback Sheet
 // Long-press gesture on an article card opens this sheet. Users can either
-// boost the cluster (Show more like this) or suppress it (Not interested).
+// boost the cluster (Show more like this) or, via a 4-reason submenu,
+// suppress it (Not interested → topic / duplicate / source / tone).
 
 private struct LeafFeedbackSheet: View {
     let onMoreLikeThis: () -> Void
-    let onNotInterested: () -> Void
+    let onNotInterested: (NotInterestedReason) -> Void
     let onCancel: () -> Void
+
+    @State private var showReasons = false
 
     var body: some View {
         VStack(spacing: 16) {
             // Title row
             VStack(spacing: 4) {
-                Text("Tune your feed")
+                Text(showReasons ? "Why not?" : "Tune your feed")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.Colors.primaryText)
-                Text("Tell us what to do with stories like this")
+                Text(showReasons
+                     ? "Tell us so we can learn faster"
+                     : "Tell us what to do with stories like this")
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.Colors.secondaryText)
             }
             .padding(.top, 16)
 
-            // Actions grouped card
-            VStack(spacing: 0) {
-                Button(action: onMoreLikeThis) {
-                    HStack(spacing: 14) {
-                        ZStack {
-                            Circle()
-                                .fill(Theme.Colors.boostBackground)
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Theme.Colors.boostText)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Show more like this")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Theme.Colors.primaryText)
-                            Text("Boost similar stories in your feed")
-                                .font(.system(size: 13))
-                                .foregroundStyle(Theme.Colors.secondaryText)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Divider()
-                    .padding(.leading, 66)
-
-                Button(action: onNotInterested) {
-                    HStack(spacing: 14) {
-                        ZStack {
-                            Circle()
-                                .fill(Theme.Colors.destructive.opacity(0.12))
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "hand.thumbsdown.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Theme.Colors.destructive)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Not interested")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Theme.Colors.primaryText)
-                            Text("Hide similar stories from your feed")
-                                .font(.system(size: 13))
-                                .foregroundStyle(Theme.Colors.secondaryText)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+            if showReasons {
+                reasonPicker
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
+            } else {
+                primaryActions
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
             }
-            .background(Theme.Colors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal, 16)
 
-            // Cancel as a separate grouped button (iOS action-sheet convention)
-            Button(action: onCancel) {
-                Text("Cancel")
+            // Cancel / Back
+            Button {
+                if showReasons {
+                    withAnimation(.smooth(duration: 0.25)) { showReasons = false }
+                } else {
+                    onCancel()
+                }
+            } label: {
+                Text(showReasons ? "Back" : "Cancel")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.Colors.primaryText)
                     .frame(maxWidth: .infinity)
@@ -2371,5 +2380,114 @@ private struct LeafFeedbackSheet: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(.smooth(duration: 0.25), value: showReasons)
+    }
+
+    // MARK: First view — boost / suppress
+
+    private var primaryActions: some View {
+        VStack(spacing: 0) {
+            Button(action: onMoreLikeThis) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.Colors.boostBackground)
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.boostText)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show more like this")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Theme.Colors.primaryText)
+                        Text("Boost similar stories in your feed")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.Colors.secondaryText)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+                .padding(.leading, 66)
+
+            Button {
+                HapticManager.light()
+                withAnimation(.smooth(duration: 0.25)) { showReasons = true }
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.Colors.destructive.opacity(0.12))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "hand.thumbsdown.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.destructive)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Not interested")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Theme.Colors.primaryText)
+                        Text("Hide similar stories from your feed")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.Colors.secondaryText)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.secondaryText)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .background(Theme.Colors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: Second view — typed reasons
+
+    private var reasonPicker: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(NotInterestedReason.allCases.enumerated()), id: \.element.id) { offset, reason in
+                Button {
+                    onNotInterested(reason)
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.Colors.destructive.opacity(0.12))
+                                .frame(width: 36, height: 36)
+                            Image(systemName: reason.icon)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Theme.Colors.destructive)
+                        }
+                        Text(reason.title)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Theme.Colors.primaryText)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                if offset < NotInterestedReason.allCases.count - 1 {
+                    Divider().padding(.leading, 66)
+                }
+            }
+        }
+        .background(Theme.Colors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 16)
     }
 }

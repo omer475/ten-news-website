@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Full article detail page with NavigationStack toolbar and ShareLink.
 struct ArticleDetailView: View {
@@ -38,20 +39,17 @@ struct ArticleDetailView: View {
                     }
 
                     if let article, let urlString = article.url, let url = URL(string: urlString) {
-                        ShareLink(item: url) {
+                        // article_shared used to fire on simultaneousGesture(TapGesture()),
+                        // which triggers when the user TAPS the share button — before
+                        // they pick a destination. That inflated share rates by ~3-5x.
+                        // Now we present UIActivityViewController directly and fire
+                        // article_shared only when completionWithItemsHandler reports
+                        // completed=true (user actually picked a destination).
+                        Button {
+                            ArticleDetailView.presentSystemShare(article: article, url: url)
+                        } label: {
                             Image(systemName: "square.and.arrow.up")
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            if let numericId = Int(article.id.stringValue) {
-                                Task {
-                                    try? await AnalyticsService().track(
-                                        event: "article_shared",
-                                        articleId: numericId,
-                                        category: article.category
-                                    )
-                                }
-                            }
-                        })
                     }
                 }
             }
@@ -259,6 +257,33 @@ struct ArticleDetailView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // Presents the system share sheet and only fires article_shared when the
+    // user actually completes a share (completionWithItemsHandler.completed
+    // is true). Kept static so the toolbar Button has no captured-self issues.
+    static func presentSystemShare(article: Article, url: URL) {
+        let title = article.displayTitle
+        let items: [Any] = ["\(title)\n\(url.absoluteString)"]
+        let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        vc.completionWithItemsHandler = { _, completed, _, _ in
+            guard completed, let numericId = Int(article.id.stringValue) else { return }
+            Task {
+                try? await AnalyticsService().track(
+                    event: "article_shared",
+                    articleId: numericId,
+                    category: article.category
+                )
+            }
+        }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else { return }
+        // Find the topmost presented controller so the share sheet appears on
+        // top of any modals/full-screen covers already on screen.
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController { topVC = presented }
+        topVC.present(vc, animated: true)
     }
 }
 
