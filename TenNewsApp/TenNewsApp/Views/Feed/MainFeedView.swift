@@ -236,6 +236,7 @@ struct ArticleCardContinuousView: View {
     @State private var saved = false
     @State private var following = false
     @State private var showShareSheet = false
+    @State private var showCreatorProfile = false
     @State private var graphExpanded = false
     @State private var graphAnimated = false
     @State private var mapExpanded = false
@@ -286,6 +287,19 @@ struct ArticleCardContinuousView: View {
         .sheet(isPresented: $showShareSheet) {
             ShareArticleSheet(article: article)
         }
+        // Tap the publisher avatar or source name in the headerRow to drill
+        // into that creator's profile. Same destination used by Search and
+        // FeedArticleCardView (now-deleted) — single source of truth via
+        // SampleCreators.find(bySource:). Uses fullScreenCover so the page
+        // gets its own navigation stack without a half-sheet feeling.
+        .fullScreenCover(isPresented: $showCreatorProfile) {
+            CreatorProfileView(
+                creator: SampleCreators.find(bySource: article.source ?? "Unknown"),
+                articles: [],
+                onDismiss: { showCreatorProfile = false },
+                publisherId: article.authorId
+            )
+        }
         // Catch tdtopic://entity/<name> link taps from bullet attributed
         // text and forward the entity to the parent. Falls through to
         // system handling for any other URL (none today, but safe).
@@ -312,23 +326,43 @@ struct ArticleCardContinuousView: View {
     // Header row above the article card. Avatar + source + time on the
     // left; bookmark icon on the right (Instagram pattern: separate
     // "save" from the photo's "react" cluster of heart + share).
+    //
+    // Avatar circle and source-name Text are both Buttons that open the
+    // publisher's CreatorProfileView (follow / unfollow / their articles).
+    // The inline `+` follow chip retains its own Button — taps there only
+    // toggle follow without leaving the feed.
     private var headerRow: some View {
         HStack(spacing: 10) {
-            Circle()
-                .fill(accentColor)
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text(String((article.source ?? "T").prefix(1)).uppercased())
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
-                )
+            Button {
+                showCreatorProfile = true
+                HapticManager.light()
+            } label: {
+                Circle()
+                    .fill(accentColor)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(String((article.source ?? "T").prefix(1)).uppercased())
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 5) {
-                    Text(article.source ?? "Today+")
-                        .font(.system(size: 14, weight: .semibold))
-                        .tracking(-0.1)
-                        .foregroundStyle(Color.primary)
+                    Button {
+                        showCreatorProfile = true
+                        HapticManager.light()
+                    } label: {
+                        Text(article.source ?? "Today+")
+                            .font(.system(size: 14, weight: .semibold))
+                            .tracking(-0.1)
+                            .foregroundStyle(Color.primary)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .layoutPriority(1)
 
                     // Country flag for international stories. Reuters‑style
                     // editorial geo cue — adds a single colorful glyph that
