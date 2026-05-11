@@ -232,6 +232,33 @@ enum TopicCategories {
             Topic(id: "sneakers_streetwear", name: "Sneakers & Streetwear", icon: "shoe.fill"),
             Topic(id: "celebrity_style", name: "Celebrity Style", icon: "sparkles"),
         ]),
+
+        // Social-platform expansion (2026-05-11): rebalance from ~60/40
+        // news-heavy to ~50/50. Codes mirror lib/coldStart.js exactly so
+        // the algorithm's ONBOARDING_TOPIC_MAP picks them up at retrieval
+        // time. Three new categories surfacing 15 new social topics.
+
+        TopicCategory(id: "home_living", name: "Home & Living", icon: "house.circle.fill", subtopics: [
+            Topic(id: "home_design", name: "Home Design", icon: "house.fill"),
+            Topic(id: "productivity", name: "Productivity", icon: "checkmark.circle.fill"),
+            Topic(id: "wellness_meditation", name: "Wellness & Meditation", icon: "leaf.fill"),
+            Topic(id: "diy_crafts", name: "DIY & Crafts", icon: "hammer.fill"),
+        ]),
+        TopicCategory(id: "creative_arts", name: "Creative", icon: "paintbrush.fill", subtopics: [
+            Topic(id: "dance", name: "Dance", icon: "figure.dance"),
+            Topic(id: "photography", name: "Photography", icon: "camera.fill"),
+        ]),
+        TopicCategory(id: "social", name: "Social", icon: "person.2.fill", subtopics: [
+            Topic(id: "indie_music", name: "Indie Music", icon: "guitars.fill"),
+            Topic(id: "podcasts", name: "Podcasts", icon: "mic.fill"),
+            Topic(id: "booktok", name: "BookTok", icon: "book.fill"),
+            Topic(id: "reality_tv", name: "Reality TV", icon: "tv.fill"),
+            Topic(id: "tv_recaps", name: "TV Recaps", icon: "play.rectangle.fill"),
+            Topic(id: "memes_humor", name: "Memes & Humor", icon: "face.smiling"),
+            Topic(id: "relationships_dating", name: "Relationships", icon: "heart.text.square.fill"),
+            Topic(id: "finance_youth", name: "Personal Finance", icon: "dollarsign.circle.fill"),
+            Topic(id: "tech_creators", name: "Tech Creators", icon: "person.crop.rectangle.fill"),
+        ]),
     ]
 }
 

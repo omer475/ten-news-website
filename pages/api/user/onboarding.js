@@ -197,6 +197,27 @@ export default async function handler(req, res) {
       'sneakers_streetwear': ['Sneakers & Streetwear'], 'celebrity_style': ['Celebrity News'],
       'bitcoin': ['Bitcoin'], 'defi_web3': ['DeFi & Web3'],
       'news': ['War & Conflict', 'US Politics', 'Middle East'],
+
+      // Social-platform expansion (2026-05-11). Until the V1.5 evergreen
+      // pipeline ships dedicated content, seed each new code with the
+      // CLOSEST existing subtopic so the user's taste vector still picks
+      // up some initial signal. When real content arrives, ranker_v1's
+      // onboarding floor + interest_tag match takes over.
+      'home_design':          ['Home & Garden'],
+      'productivity':         ['AI & Machine Learning'],
+      'wellness_meditation':  ['Mental Health', 'Fitness & Workout'],
+      'diy_crafts':           ['Home & Garden'],
+      'dance':                ['Music'],
+      'photography':          ['Movies & Film'],
+      'indie_music':          ['Music'],
+      'podcasts':             ['Comedy & Humor', 'Mental Health'],
+      'booktok':              ['Movies & Film'],
+      'reality_tv':           ['TV & Streaming'],
+      'tv_recaps':            ['TV & Streaming'],
+      'memes_humor':          ['Comedy & Humor'],
+      'relationships_dating': ['Mental Health'],
+      'finance_youth':        ['Stock Markets'],
+      'tech_creators':        ['AI & Machine Learning', 'Smartphones & Gadgets'],
     };
 
     // Resolve followed_topics to subtopic names

@@ -83,6 +83,32 @@ const TOPIC_CATEGORIES = [
     { id: "gaming", name: "Gaming", icon: "\u{1F3AE}" },
     { id: "travel", name: "Travel", icon: "\u2708\uFE0F" },
   ]},
+  // Social-platform expansion (2026-05-11). Ids match the algorithm
+  // ONBOARDING_TOPIC_MAP in lib/coldStart.js so the onboarding boost
+  // actually fires. (The older `politics`/`football`/`ai` short ids
+  // above don't match algo keys \u2014 pre-existing schema debt, not in
+  // this PR's scope.)
+  { name: "Home & Living", topics: [
+    { id: "home_design",         name: "Home Design",       icon: "\u{1F3E0}" },
+    { id: "productivity",        name: "Productivity",      icon: "\u2705" },
+    { id: "wellness_meditation", name: "Wellness",          icon: "\u{1F33F}" },
+    { id: "diy_crafts",          name: "DIY & Crafts",      icon: "\u{1F528}" },
+  ]},
+  { name: "Creative", topics: [
+    { id: "dance",       name: "Dance",       icon: "\u{1F483}" },
+    { id: "photography", name: "Photography", icon: "\u{1F4F7}" },
+  ]},
+  { name: "Social", topics: [
+    { id: "indie_music",          name: "Indie Music",   icon: "\u{1F3B8}" },
+    { id: "podcasts",             name: "Podcasts",      icon: "\u{1F3A7}" },
+    { id: "booktok",              name: "BookTok",       icon: "\u{1F4DA}" },
+    { id: "reality_tv",           name: "Reality TV",    icon: "\u{1F4FA}" },
+    { id: "tv_recaps",            name: "TV Recaps",     icon: "\u{1F39E}\uFE0F" },
+    { id: "memes_humor",          name: "Memes",         icon: "\u{1F602}" },
+    { id: "relationships_dating", name: "Relationships", icon: "\u{1F495}" },
+    { id: "finance_youth",        name: "Money & FIRE",  icon: "\u{1F4B0}" },
+    { id: "tech_creators",        name: "Tech Creators", icon: "\u{1F4F1}" },
+  ]},
 ];
 
 // ============================================
