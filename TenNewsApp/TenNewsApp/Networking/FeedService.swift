@@ -89,6 +89,23 @@ struct FeedService {
         return try await client.get(path)
     }
 
+    /// Pure-chronological feed of articles from the user's followed publishers.
+    /// Cursor-based pagination (ISO 8601 published_at). No algorithm, no
+    /// scoring — server just JOINs user_follows × published_articles and
+    /// orders by published_at DESC.
+    ///
+    /// Endpoint is owned by the algorithm terminal. Returns a 404 until the
+    /// API ships — `FollowingFeedViewModel` catches that case and surfaces
+    /// a "Coming soon" empty state.
+    func fetchFollowingFeed(
+        userId: String,
+        cursor: String? = nil,
+        limit: Int = 20
+    ) async throws -> FollowingFeedResponse {
+        let path = APIEndpoints.followingFeed(userId: userId, cursor: cursor, limit: limit)
+        return try await client.get(path)
+    }
+
     func fetchForYouFeed(
         homeCountry: String,
         followedCountries: [String],

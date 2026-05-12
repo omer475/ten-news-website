@@ -40,6 +40,32 @@ struct MainFeedResponse: Codable {
     }
 }
 
+// MARK: - Following Feed Response
+
+/// Cursor-paginated chronological feed for the new Following tab.
+/// `next_cursor` is the ISO 8601 `published_at` of the last article in the
+/// page; the client passes it back as `?cursor=` to get the next page.
+/// `has_more` lets the iOS view stop scrolling-fetch when the user reaches
+/// the end of their followed-publisher history.
+struct FollowingFeedResponse: Codable {
+    let articles: [Article]
+    let nextCursor: String?
+    let hasMore: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case articles
+        case nextCursor = "next_cursor"
+        case hasMore = "has_more"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        articles = try container.decodeIfPresent([Article].self, forKey: .articles) ?? []
+        nextCursor = try container.decodeIfPresent(String.self, forKey: .nextCursor)
+        hasMore = try container.decodeIfPresent(Bool.self, forKey: .hasMore) ?? false
+    }
+}
+
 // MARK: - Topic Feed Response
 
 struct TopicFeedResponse: Codable {

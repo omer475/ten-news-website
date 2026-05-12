@@ -34,6 +34,7 @@
 		4218129161AF630D15E355E1 /* WorldEventsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256AA505F6BD8CA6BC5FB31E /* WorldEventsViewModel.swift */; };
 		43A6CE3AA4A68A44CBD238DA /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC98594924413D0477F76ACB /* SearchViewModel.swift */; };
 		44C638C92544A7FFBE612B4B /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E628DADB6AD06DFA63E2DB /* FeedViewModel.swift */; };
+		FFVM01FOLLOWFEEDBUILD1 /* FollowingFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFVM02FOLLOWFEEDREF02 /* FollowingFeedViewModel.swift */; };
 		4DEB5F5B78C0071BB61C90EF /* WorldEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2151BEEA390C33ED08D5FF4D /* WorldEvent.swift */; };
 		500AE897FE3AC3A5C052FCDB /* TimeAgoText.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB015CE5A85DC874B6808805 /* TimeAgoText.swift */; };
 		50A635529C9EB12636167216 /* EventDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB29E702DF3EEC2EF60B18F6 /* EventDetailViewModel.swift */; };
@@ -158,6 +159,7 @@
 		TF02TOPICFEEDREF0000002 /* TopicFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicFeedView.swift; sourceTree = "<group>"; };
 		AC02ARTCOLORREF00000002 /* ArticleColorExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleColorExtractor.swift; sourceTree = "<group>"; };
 		63E628DADB6AD06DFA63E2DB /* FeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedViewModel.swift; sourceTree = "<group>"; };
+		FFVM02FOLLOWFEEDREF02 /* FollowingFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingFeedViewModel.swift; sourceTree = "<group>"; };
 		6432D45AFBF67883D24D3E13 /* TimeGreetingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeGreetingView.swift; sourceTree = "<group>"; };
 		643A3EF417E4D100D6884962 /* CaughtUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaughtUpView.swift; sourceTree = "<group>"; };
 		68C57E4DEDB7ED4F89823CCB /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 				FB29E702DF3EEC2EF60B18F6 /* EventDetailViewModel.swift */,
 				EX01EXPLOREVMFREF0001 /* ExploreViewModel.swift */,
 				63E628DADB6AD06DFA63E2DB /* FeedViewModel.swift */,
+				FFVM02FOLLOWFEEDREF02 /* FollowingFeedViewModel.swift */,
 				52FF32BE64E352B67772C2C7 /* OnboardingViewModel.swift */,
 				2823BB660358D39EE6C12C6D /* SettingsViewModel.swift */,
 				256AA505F6BD8CA6BC5FB31E /* WorldEventsViewModel.swift */,
@@ -687,6 +690,7 @@
 				FD6109C8D8F3F506CE6C2917 /* AuthViewModel.swift in Sources */,
 				50A635529C9EB12636167216 /* EventDetailViewModel.swift in Sources */,
 				44C638C92544A7FFBE612B4B /* FeedViewModel.swift in Sources */,
+				FFVM01FOLLOWFEEDBUILD1 /* FollowingFeedViewModel.swift in Sources */,
 				2A63F039B1EBB7359AF0F264 /* OnboardingViewModel.swift in Sources */,
 				7A96C15F94AD7952818655E7 /* SettingsViewModel.swift in Sources */,
 				4218129161AF630D15E355E1 /* WorldEventsViewModel.swift in Sources */,

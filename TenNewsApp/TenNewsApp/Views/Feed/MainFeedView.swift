@@ -2,7 +2,14 @@ import SwiftUI
 import MapKit
 
 /// Threads/X-style continuous vertical scroll feed of article cards.
+/// Two top-level tabs:
+///   - "For You": existing algorithmic feed (FeedViewModel + /api/feed/main)
+///   - "Following": pure chronological feed from publishers the user follows
+///     (FollowingFeedViewModel + /api/feed/following — owned by the
+///     algorithm terminal, may return 404 until shipped).
 struct MainFeedView: View {
+    enum FeedTab: String { case forYou, following }
+
     @Binding var currentPageIndex: Int
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var viewModel
@@ -13,32 +20,41 @@ struct MainFeedView: View {
     /// full-screen topic feed cover.
     @State private var topicTarget: TopicTarget? = nil
 
+    /// Per-tab persistent default. UserDefaults so the choice survives
+    /// app launches — matches Threads / Instagram behavior.
+    @AppStorage("feed_default_tab") private var selectedTabRaw: String = FeedTab.forYou.rawValue
+    @State private var followingVM = FollowingFeedViewModel()
+    @State private var followManager = FollowManager.shared
+    @Namespace private var tabSegmentNS
+
+    private var selectedTab: FeedTab {
+        get { FeedTab(rawValue: selectedTabRaw) ?? .forYou }
+    }
+
     /// Articles in server-provided order (embedding-personalized).
     private var sortedArticles: [Article] {
         viewModel.articles
     }
 
     var body: some View {
-        ZStack {
-            if viewModel.isLoading && sortedArticles.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(.opacity)
-            } else if let error = viewModel.errorMessage, sortedArticles.isEmpty {
-                errorView(error)
-                    .transition(.opacity)
-            } else if !sortedArticles.isEmpty {
-                feedContent
-                    .transition(.opacity)
-            } else {
-                // Empty articles + no error + not loading = transient state.
-                // Trinity v3 should never reach here (always returns ≥1 article
-                // and has_more=true). Show a quiet spinner rather than the v11
-                // "you're all caught up" page.
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(.opacity)
+        ZStack(alignment: .top) {
+            // Both tab contents stay mounted via opacity-toggle so each
+            // tab's scroll position is preserved when the user switches.
+            // SwiftUI tears down child state when views are removed via
+            // `if`, so we don't use that here.
+            ZStack {
+                forYouTabContent
+                    .opacity(selectedTab == .forYou ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .forYou)
+                followingTabContent
+                    .opacity(selectedTab == .following ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .following)
             }
+
+            // Sticky segmented control over the top of both feeds.
+            segmentedControl
+                .padding(.top, 56)
+                .padding(.horizontal, 16)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
@@ -95,12 +111,225 @@ struct MainFeedView: View {
             if requested {
                 tabBarState.feedRefreshRequested = false
                 Task {
-                    await viewModel.refresh()
-                    viewModel.currentIndex = 0
-                    viewModel.recordViewStart(at: 0)
+                    if selectedTab == .forYou {
+                        await viewModel.refresh()
+                        viewModel.currentIndex = 0
+                        viewModel.recordViewStart(at: 0)
+                    } else {
+                        await followingVM.refresh(userId: appViewModel.currentUser?.id)
+                    }
                 }
             }
         }
+        // First Following load happens when the tab becomes selected, OR
+        // immediately if the user's last-chosen tab was Following.
+        .task {
+            if selectedTab == .following {
+                await followingVM.loadInitialIfNeeded(userId: appViewModel.currentUser?.id)
+            }
+        }
+        // React to follow/unfollow events anywhere in the app — if the user
+        // goes from 0 → 1 follow, the Following tab should leave its empty
+        // state and try fetching.
+        .onChange(of: followManager.followedPublishers.count) { _, _ in
+            followingVM.handleFollowCountChange(userId: appViewModel.currentUser?.id)
+        }
+    }
+
+    // MARK: - Tab segmented control
+
+    /// Pill-style For You / Following toggle. Matches Threads' top-tab
+    /// pattern: minimal chrome, animated selection indicator.
+    private var segmentedControl: some View {
+        HStack(spacing: 0) {
+            tabButton(.forYou, label: "For You")
+            tabButton(.following, label: "Following")
+        }
+        .padding(4)
+        .background(
+            Capsule()
+                .fill(colorScheme == .dark ? Color(white: 0.13) : Color(white: 0.93))
+        )
+        .overlay(
+            Capsule().stroke(.separator.opacity(0.4), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+    }
+
+    private func tabButton(_ tab: FeedTab, label: String) -> some View {
+        let isSelected = selectedTab == tab
+        return Button {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
+                selectedTabRaw = tab.rawValue
+            }
+            HapticManager.selection()
+            // Cheap eager load when switching INTO Following for the first time.
+            if tab == .following {
+                Task { await followingVM.loadInitialIfNeeded(userId: appViewModel.currentUser?.id) }
+            }
+        } label: {
+            Text(label)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.7))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background {
+                    if isSelected {
+                        Capsule()
+                            .fill(Color.primary)
+                            .matchedGeometryEffect(id: "selectedTabBg", in: tabSegmentNS)
+                    }
+                }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - For You tab
+
+    @ViewBuilder
+    private var forYouTabContent: some View {
+        if viewModel.isLoading && sortedArticles.isEmpty {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let error = viewModel.errorMessage, sortedArticles.isEmpty {
+            errorView(error)
+        } else if !sortedArticles.isEmpty {
+            feedContent
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - Following tab
+
+    @ViewBuilder
+    private var followingTabContent: some View {
+        switch followingVM.apiState {
+        case .idle, .loading:
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(feedBackground)
+        case .loaded:
+            followingFeedScroll
+        case .notFollowingAnyone:
+            followingEmptyState(
+                icon: "person.crop.circle.badge.plus",
+                title: "You're not following anyone yet",
+                subtitle: "Tap any publisher byline to follow them. New posts from people you follow appear here in order.",
+                ctaLabel: "Browse popular publishers",
+                ctaEnabled: false
+            )
+        case .empty:
+            followingEmptyState(
+                icon: "tray",
+                title: "Caught up",
+                subtitle: "No new posts from people you follow.",
+                ctaLabel: nil,
+                ctaEnabled: false
+            )
+        case .comingSoon:
+            followingEmptyState(
+                icon: "clock.badge",
+                title: "Coming soon",
+                subtitle: "The Following feed is rolling out. You can still follow publishers — their posts will appear here as soon as it's live.",
+                ctaLabel: nil,
+                ctaEnabled: false
+            )
+        case .error(let message):
+            VStack(spacing: 14) {
+                Image(systemName: "wifi.slash").font(.system(size: 42)).foregroundStyle(.secondary)
+                Text("Couldn't load Following")
+                    .font(.system(size: 17, weight: .semibold))
+                Text(message)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                Button("Try Again") {
+                    Task { await followingVM.refresh(userId: appViewModel.currentUser?.id) }
+                }
+                .buttonStyle(.bordered)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(feedBackground)
+        }
+    }
+
+    private var followingFeedScroll: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(followingVM.allArticles.enumerated()), id: \.offset) { idx, article in
+                    ArticleCardContinuousView(
+                        article: article,
+                        accentColor: viewModel.accentColor(for: article),
+                        onTopicTap: { entity in
+                            topicTarget = TopicTarget(entity: entity)
+                        }
+                    )
+                    .padding(.vertical, 14)
+                    .onAppear {
+                        if idx >= followingVM.allArticles.count - 5 {
+                            Task { await followingVM.loadMoreIfNeeded(userId: appViewModel.currentUser?.id) }
+                        }
+                    }
+                    if idx < followingVM.allArticles.count - 1 {
+                        Rectangle()
+                            .fill(dividerColor)
+                            .frame(height: 0.5)
+                            .padding(.horizontal, 16)
+                    }
+                }
+                Spacer().frame(height: 100)
+            }
+            .padding(.top, 110) // segmented control height + breathing room
+        }
+        .background(feedBackground)
+        .refreshable {
+            await followingVM.refresh(userId: appViewModel.currentUser?.id)
+        }
+    }
+
+    private func followingEmptyState(
+        icon: String,
+        title: String,
+        subtitle: String,
+        ctaLabel: String?,
+        ctaEnabled: Bool
+    ) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 44))
+                .foregroundStyle(.tertiary)
+            Text(title)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color.primary)
+            Text(subtitle)
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            if let ctaLabel {
+                // Stub button — browse-publishers screen TBD.
+                Button(ctaLabel) {}
+                    .buttonStyle(.bordered)
+                    .disabled(!ctaEnabled)
+                    .padding(.top, 4)
+            }
+        }
+        .padding(.top, 120)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(feedBackground)
+    }
+
+    private var feedBackground: some View {
+        Group {
+            colorScheme == .dark
+                ? Color(red: 0.055, green: 0.055, blue: 0.055)
+                : Color(red: 0.965, green: 0.961, blue: 0.949)
+        }
+        .ignoresSafeArea()
     }
 
     // MARK: - Feed Content
@@ -138,7 +367,10 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            .padding(.top, 60)
+            // 110pt = ~56 status/safe-area + segmented control height + a bit.
+            // Both feed tabs use the same top padding so switching between
+            // them keeps the first card at the same Y position.
+            .padding(.top, 110)
         }
         .ignoresSafeArea()
         .background(

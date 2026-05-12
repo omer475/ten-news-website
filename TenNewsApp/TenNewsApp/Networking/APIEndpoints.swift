@@ -8,6 +8,19 @@ enum APIEndpoints {
     static let mainFeed = "/api/feed/main"
     static let forYouFeed = "/api/feed/for-you"
     static let topicFeed = "/api/feed/topic"
+    /// Pure-chronological feed of articles from publishers the user follows.
+    /// Server work: owned by the algorithm terminal (PR pending as of
+    /// 2026-05-12). Backed by `user_follows` (publisher graph) joined to
+    /// `published_articles`, ordered by `published_at` DESC, cursor paged.
+    static func followingFeed(userId: String, cursor: String? = nil, limit: Int = 20) -> String {
+        let encodedUser = userId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? userId
+        var path = "/api/feed/following?user_id=\(encodedUser)&limit=\(limit)"
+        if let c = cursor, !c.isEmpty {
+            let encodedCursor = c.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? c
+            path += "&cursor=\(encodedCursor)"
+        }
+        return path
+    }
 
     // MARK: - World Events
     static let worldEvents = "/api/world-events?limit=100"
