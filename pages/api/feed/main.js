@@ -19,7 +19,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { serveTrinityFeed } from '../../../lib/trinityServe.js'
-import { expectedReadSecondsForArticle } from '../../../lib/readingTime.js'
+import { formatArticle } from '../../../lib/formatArticle.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -77,113 +77,8 @@ async function coalescedSlate(key, run) {
   return { result, isOwner: true }
 }
 
-const safeJsonParse = (value, fallback = null) => {
-  if (!value) return fallback
-  if (typeof value !== 'string') return value
-  try { return JSON.parse(value) } catch { return fallback }
-}
-
-// ---------------------------------------------------------------------------
-// formatArticle — preserved verbatim from the pre-1.1 file. Shapes a
-// published_articles row to the JSON contract the iOS app expects.
-// ---------------------------------------------------------------------------
-function formatArticle(article, eventMap = {}) {
-  const summaryBulletsNews = safeJsonParse(article.summary_bullets_news, [])
-  const fiveWs = safeJsonParse(article.five_ws, null)
-  const timeline = safeJsonParse(article.timeline, null)
-  const graph = safeJsonParse(article.graph, null)
-  const details = safeJsonParse(article.details, [])
-  const components = article.components_order || safeJsonParse(article.components, null)
-  const countries = safeJsonParse(article.countries, [])
-  const topics = safeJsonParse(article.topics, [])
-  const countryRelevance = safeJsonParse(article.country_relevance, null)
-  const topicRelevance = safeJsonParse(article.topic_relevance, null)
-  const interestTags = safeJsonParse(article.interest_tags, [])
-
-  let map = null
-  const rawMap = safeJsonParse(article.map, null)
-  if (rawMap) {
-    if (Array.isArray(rawMap) && rawMap.length > 0) {
-      const primary = rawMap[0]
-      map = {
-        center: { lat: primary.coordinates?.lat || 0, lon: primary.coordinates?.lng || primary.coordinates?.lon || 0 },
-        markers: rawMap.slice(1).map(loc => ({ lat: loc.coordinates?.lat || 0, lon: loc.coordinates?.lng || loc.coordinates?.lon || 0 })),
-        name: primary.name,
-        location: [primary.name, primary.city, primary.country].filter(Boolean).join(', '),
-        city: primary.city,
-        country: primary.country,
-        region: primary.country,
-        description: primary.description,
-      }
-    } else if (!Array.isArray(rawMap)) {
-      map = {
-        center: { lat: rawMap.coordinates?.lat || rawMap.lat || 0, lon: rawMap.coordinates?.lng || rawMap.coordinates?.lon || rawMap.lon || 0 },
-        markers: [],
-        name: rawMap.name,
-        location: [rawMap.name, rawMap.city, rawMap.country].filter(Boolean).join(', ') || rawMap.name,
-        city: rawMap.city,
-        country: rawMap.country,
-        region: rawMap.country,
-        description: rawMap.description,
-      }
-    }
-  }
-
-  let imageUrl = null
-  const raw = article.image_url
-  if (raw) {
-    const s = typeof raw === 'string' ? raw.trim() : String(raw).trim()
-    if (s && s !== 'null' && s !== 'undefined' && s !== 'None' && s.length >= 5) {
-      imageUrl = s
-    }
-  }
-
-  const formatted = {
-    id: article.id,
-    title: article.title_news,
-    title_news: article.title_news || null,
-    url: article.url,
-    source: article.source || 'Ten News',
-    category: article.category,
-    emoji: article.emoji || '📰',
-    image_url: imageUrl,
-    urlToImage: imageUrl,
-    image_source: article.image_source || null,
-    publishedAt: article.published_at,
-    created_at: article.created_at,
-    ai_final_score: article.ai_final_score || 0,
-    final_score: article.ai_final_score || 0,
-    base_score: article.ai_final_score || 0,
-    summary_bullets_news: summaryBulletsNews,
-    summary_bullets: summaryBulletsNews,
-    summary_bullets_detailed: summaryBulletsNews,
-    content_news: null,
-    detailed_text: '',
-    five_ws: fiveWs,
-    timeline,
-    graph,
-    map,
-    details,
-    components,
-    countries,
-    topics,
-    country_relevance: countryRelevance,
-    topic_relevance: topicRelevance,
-    interest_tags: interestTags,
-    num_sources: article.num_sources,
-    cluster_id: article.cluster_id,
-    version_number: article.version_number,
-    views: article.view_count || 0,
-    author_id: article.author_id || null,
-    author_name: article.author_name || null,
-    // Kuaishou WTG / TikTok pCompletion analog. Lets the client derive
-    // read_ratio = dwell / expected_read_seconds for length-aware engagement.
-    expected_read_seconds: expectedReadSecondsForArticle(article),
-  }
-
-  if (eventMap[article.id]) formatted.world_event = eventMap[article.id]
-  return formatted
-}
+// formatArticle + safeJsonParse moved to lib/formatArticle.js (2026-05-12)
+// so /api/feed/following can reuse the same iOS contract.
 
 // ---------------------------------------------------------------------------
 // Handler.
