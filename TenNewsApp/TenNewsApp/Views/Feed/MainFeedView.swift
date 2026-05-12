@@ -56,14 +56,18 @@ struct MainFeedView: View {
             }
 
             segmentedControl
-                .padding(.vertical, 10)
+                .padding(.vertical, 2)
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity)
-                .background(
-                    feedBackgroundColor.opacity(0.94)
-                )
-                // Manually offset below the Dynamic Island / notch.
-                .padding(.top, deviceTopSafeAreaInset)
+                // No background — just the two labels floating over the feed,
+                // per design. Top offset is hardcoded to 52pt, the smallest
+                // value that reliably clears the Dynamic Island on the iPhone
+                // 17 Pro (island bottom ≈ y=44pt). Earlier dynamic UIWindow
+                // read sometimes returned 0 during launch because the window
+                // existed before its safeAreaInsets were populated, and 0
+                // didn't trip the nil-coalescing fallback — causing the
+                // labels to overlap the island.
+                .padding(.top, 52)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
@@ -285,9 +289,9 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // Clears the floating tabs: device safe-area top + tab vertical
-            // padding (20pt) + tab text height (~22pt) + small buffer.
-            .padding(.top, deviceTopSafeAreaInset + 50)
+            // Clears the floating tabs (52pt offset + 4pt vertical padding +
+            // ~22pt text height + breathing room).
+            .padding(.top, 96)
         }
         .background(feedBackground)
         .refreshable {
@@ -391,9 +395,9 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // Clears the floating tabs: device safe-area top + tab vertical
-            // padding (20pt) + tab text height (~22pt) + small buffer.
-            .padding(.top, deviceTopSafeAreaInset + 50)
+            // Clears the floating tabs (52pt offset + 4pt vertical padding +
+            // ~22pt text height + breathing room).
+            .padding(.top, 96)
         }
         .ignoresSafeArea()
         .background(
