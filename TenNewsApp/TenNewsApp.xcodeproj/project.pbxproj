@@ -50,6 +50,9 @@
 		6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F129A9689C3124330A2529 /* HapticManager.swift */; };
 		6F263CDE4FCCB7DF57F26C4C /* EventWhatToWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B837F3F530355509B049B4 /* EventWhatToWatchView.swift */; };
 		705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D0EF3C215540E9B1A3556E /* FollowManager.swift */; };
+		UFM01USERFOLLOWMGRBUILD /* UserFollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = UFM02USERFOLLOWMGRREF /* UserFollowManager.swift */; };
+		ULV01USERLISTBUILD0001 /* UserListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ULV02USERLISTREF00002 /* UserListView.swift */; };
+		UPV01USERPROFILEBUILD1 /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = UPV02USERPROFILEREF02 /* UserProfileView.swift */; };
 		77871AD6EB5C5E102DDAF4F0 /* ProfileAvatarPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */; };
 		78140DAB193698E9C4025989 /* TypingTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18437D9B26100FAFB13A8B23 /* TypingTextView.swift */; };
 		7A96C15F94AD7952818655E7 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2823BB660358D39EE6C12C6D /* SettingsViewModel.swift */; };
@@ -165,6 +168,9 @@
 		811ED4DFC1BD710AFFA5E6F9 /* SwipeHintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeHintView.swift; sourceTree = "<group>"; };
 		82B389AEDEB24311A078B964 /* PublisherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherService.swift; sourceTree = "<group>"; };
 		83D0EF3C215540E9B1A3556E /* FollowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowManager.swift; sourceTree = "<group>"; };
+		UFM02USERFOLLOWMGRREF /* UserFollowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFollowManager.swift; sourceTree = "<group>"; };
+		ULV02USERLISTREF00002 /* UserListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserListView.swift; sourceTree = "<group>"; };
+		UPV02USERPROFILEREF02 /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		8904F0C210340D87A9FB0D37 /* GlassExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassExampleView.swift; sourceTree = "<group>"; };
 		8A05D7B2DD94D51AEEB49A4C /* ExploreTopic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExploreTopic.swift; sourceTree = "<group>"; };
 		923612E5A474E6EA129FD083 /* TimeOfDayTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeOfDayTheme.swift; sourceTree = "<group>"; };
@@ -426,6 +432,7 @@
 				RM02REPOSTREF0000000002 /* RepostManager.swift */,
 				C00FE1345FEB46F0B5B6A9D0 /* ProfilePhotoManager.swift */,
 				83D0EF3C215540E9B1A3556E /* FollowManager.swift */,
+				UFM02USERFOLLOWMGRREF /* UserFollowManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -522,6 +529,8 @@
 			children = (
 				CR02CREATORPROFVFRF01 /* CreatorProfileView.swift */,
 				FL02FOLLOWLISTREF002 /* FollowingListView.swift */,
+				ULV02USERLISTREF00002 /* UserListView.swift */,
+				UPV02USERPROFILEREF02 /* UserProfileView.swift */,
 				E5B34C7A3E004DC6A24A9CF1 /* ProfilePhotoCropView.swift */,
 				D8D7533F1DC7837D775CCAC6 /* ProfileAvatarPickerView.swift */,
 			);
@@ -630,6 +639,8 @@
 				CR01CREATORMODELSBLD01 /* CreatorModels.swift in Sources */,
 				CR02CREATORPROFVBLD01 /* CreatorProfileView.swift in Sources */,
 				FL01FOLLOWLISTBUILD01 /* FollowingListView.swift in Sources */,
+				ULV01USERLISTBUILD0001 /* UserListView.swift in Sources */,
+				UPV01USERPROFILEBUILD1 /* UserProfileView.swift in Sources */,
 				58F8CFB62AAA40F296454425 /* ProfilePhotoCropView.swift in Sources */,
 				E5032C5771095F342C0ADB1F /* AsyncCachedImage.swift in Sources */,
 				F17D20C30CF120A3A0073125 /* CategoryBadge.swift in Sources */,
@@ -742,6 +753,7 @@
 				RM01REPOSTBUILD000000001 /* RepostManager.swift in Sources */,
 				3D741B987E814A038A713C7B /* ProfilePhotoManager.swift in Sources */,
 				705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */,
+				UFM01USERFOLLOWMGRBUILD /* UserFollowManager.swift in Sources */,
 				B726BB54C2ADB724A2195571 /* OtpVerificationView.swift in Sources */,
 				55FB04E4DF717C883199F3AE /* ShareArticleSheet.swift in Sources */,
 				77871AD6EB5C5E102DDAF4F0 /* ProfileAvatarPickerView.swift in Sources */,

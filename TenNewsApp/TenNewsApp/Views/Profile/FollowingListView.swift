@@ -9,16 +9,22 @@ struct FollowingListView: View {
     let onDismiss: () -> Void
 
     @State private var followManager = FollowManager.shared
+    @State private var userFollowManager = UserFollowManager.shared
     @State private var selectedPublisher: FollowedPublisher?
+    @State private var selectedUser: SocialProfile?
     @Environment(AppViewModel.self) private var appViewModel
+
+    private var hasAnyFollows: Bool {
+        !followManager.followedPublishers.isEmpty || !userFollowManager.followedUsers.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if followManager.followedPublishers.isEmpty {
+                if !hasAnyFollows {
                     emptyState
                 } else {
-                    publisherList
+                    combinedList
                 }
             }
             .navigationTitle("Following")
@@ -37,6 +43,117 @@ struct FollowingListView: View {
                 onDismiss: { selectedPublisher = nil },
                 publisherId: pub.id
             )
+        }
+        .fullScreenCover(item: $selectedUser) { user in
+            UserProfileView(profile: user, onDismiss: { selectedUser = nil })
+        }
+    }
+
+    /// Two-section combined list. People (user→user follows) on top so the
+    /// social-graph surface feels primary; Publishers (user→publisher
+    /// follows) below — they're the news-aggregator legacy half.
+    private var combinedList: some View {
+        ScrollView {
+            LazyVStack(spacing: 0, pinnedViews: []) {
+                if !userFollowManager.followedUsers.isEmpty {
+                    sectionHeader("People")
+                    ForEach(userFollowManager.followedUsers) { user in
+                        Button {
+                            selectedUser = user
+                            HapticManager.selection()
+                        } label: {
+                            userRow(user)
+                        }
+                        .buttonStyle(.plain)
+                        if user.id != userFollowManager.followedUsers.last?.id {
+                            Divider().padding(.leading, 76)
+                        }
+                    }
+                }
+                if !followManager.followedPublishers.isEmpty {
+                    sectionHeader("Publishers")
+                    ForEach(followManager.followedPublishers) { pub in
+                        Button {
+                            selectedPublisher = pub
+                            HapticManager.selection()
+                        } label: {
+                            row(pub)
+                        }
+                        .buttonStyle(.plain)
+                        if pub.id != followManager.followedPublishers.last?.id {
+                            Divider().padding(.leading, 76)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(Theme.Colors.secondaryText)
+            .tracking(0.5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 6)
+    }
+
+    private func userRow(_ user: SocialProfile) -> some View {
+        HStack(spacing: 14) {
+            userAvatar(for: user)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.renderedName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.primaryText)
+                    .lineLimit(1)
+                if let u = user.username, !u.isEmpty, user.renderedName != u {
+                    Text("@\(u)")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.Colors.secondaryText)
+                        .lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            Button {
+                userFollowManager.toggle(user)
+                HapticManager.medium()
+            } label: {
+                Text("Following")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.primaryText)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(.fill.tertiary, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder
+    private func userAvatar(for user: SocialProfile) -> some View {
+        let colors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
+        let color = colors[abs(user.id.hashValue) % colors.count]
+        if let urlString = user.avatarUrl, let url = URL(string: urlString) {
+            AsyncCachedImage(url: url, contentMode: .fill)
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(.separator, lineWidth: 0.5))
+        } else {
+            Circle()
+                .fill(color)
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Text(String(user.renderedName.prefix(1)).uppercased())
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                )
+                .overlay(Circle().stroke(.separator, lineWidth: 0.5))
         }
     }
 

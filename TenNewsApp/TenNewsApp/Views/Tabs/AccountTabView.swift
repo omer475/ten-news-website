@@ -18,7 +18,11 @@ struct AccountTabView: View {
     @State private var selectedDefaultAvatar: Int? = ProfilePhotoManager.shared.selectedDefaultAvatar()
     @State private var showAvatarPicker = false
     @State private var showFollowingList = false
+    @State private var showUserFollowersList = false
+    @State private var showUserFollowingList = false
+    @State private var showFindPeople = false
     @State private var followManager = FollowManager.shared
+    @State private var userFollowManager = UserFollowManager.shared
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
@@ -177,6 +181,11 @@ struct AccountTabView: View {
             withAnimation(.smooth(duration: 0.5)) {
                 appeared = true
             }
+            // Wire UserFollowManager to the current user so the Followers
+            // count + Following list stats reflect the right person. Triggers
+            // a passive refresh on every Account-tab appearance to keep the
+            // counts fresh after follows happen elsewhere in the app.
+            userFollowManager.setCurrentUser(appViewModel.currentUser?.id)
         }
         .onChange(of: selectedTab) { _, newTab in
             if newTab == .published && publishedArticles.isEmpty {
@@ -315,13 +324,21 @@ struct AccountTabView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            statItem(value: "0", label: "Followers", action: nil)
-            // Following stat opens a list of every publisher the user follows.
-            // Source of truth: FollowManager.shared.followedPublishers. Tap a
-            // row → CreatorProfileView; tap the "Following" pill on a row →
-            // unfollow (FollowManager removes the row + fires analytics).
+            // Real user→user follower count from UserFollowManager (driven by
+            // server count). Tap → list of users who follow the current user.
             statItem(
-                value: "\(followManager.followedPublishers.count)",
+                value: "\(userFollowManager.followerCount)",
+                label: "Followers",
+                action: {
+                    if user?.id != nil { showUserFollowersList = true }
+                }
+            )
+            // Following stat now shows TOTAL count of:
+            //   • Publishers (FollowManager) — sites / outlets the user follows
+            //   • People (UserFollowManager) — users the user follows
+            // Tap → sheet with both sections.
+            statItem(
+                value: "\(followManager.followedPublishers.count + userFollowManager.followingCount)",
                 label: "Following",
                 action: { showFollowingList = true }
             )
@@ -330,6 +347,19 @@ struct AccountTabView: View {
         .padding(.horizontal, 20)
         .sheet(isPresented: $showFollowingList) {
             FollowingListView(onDismiss: { showFollowingList = false })
+        }
+        .sheet(isPresented: $showUserFollowersList) {
+            if let uid = user?.id {
+                UserListView(mode: .followers(userId: uid), onDismiss: { showUserFollowersList = false })
+            }
+        }
+        .sheet(isPresented: $showUserFollowingList) {
+            if let uid = user?.id {
+                UserListView(mode: .following(userId: uid), onDismiss: { showUserFollowingList = false })
+            }
+        }
+        .sheet(isPresented: $showFindPeople) {
+            UserListView(mode: .search, onDismiss: { showFindPeople = false })
         }
     }
 
@@ -388,6 +418,22 @@ struct AccountTabView: View {
                 }
                 .buttonStyle(AccountButtonStyle())
             }
+
+            Button {
+                showFindPeople = true
+                HapticManager.light()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "person.crop.circle.badge.plus")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("Find people")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 34)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(AccountButtonStyle())
 
             Button {
                 showCreateContent = true

@@ -48,6 +48,26 @@ enum APIEndpoints {
     static let discoverPublishers = "/api/publishers/discover"
     static func searchPublishers(query: String) -> String { "/api/publishers/discover?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)" }
 
+    // MARK: - Users (social graph: user → user follows)
+    static func userFollowAction(id: String) -> String { "/api/users/\(id)/follow" }
+    static func userFollowers(id: String, limit: Int = 50, offset: Int = 0) -> String {
+        "/api/users/\(id)/followers?limit=\(limit)&offset=\(offset)"
+    }
+    static func userFollowing(id: String, limit: Int = 50, offset: Int = 0) -> String {
+        "/api/users/\(id)/following?limit=\(limit)&offset=\(offset)"
+    }
+    static func userProfileLookup(id: String, viewerId: String? = nil) -> String {
+        let base = "/api/users/\(id)/profile"
+        guard let viewerId else { return base }
+        return base + "?user_id=\(viewerId)"
+    }
+    static func userSearch(query: String, excludeId: String? = nil) -> String {
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        var url = "/api/users/search?q=\(encoded)&limit=20"
+        if let excludeId { url += "&exclude_id=\(excludeId)" }
+        return url
+    }
+
     // MARK: - Analytics
     static let analyticsTrack = "/api/analytics/track"
 }
