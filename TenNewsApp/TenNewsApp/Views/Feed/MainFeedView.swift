@@ -138,25 +138,19 @@ struct MainFeedView: View {
 
     // MARK: - Tab segmented control
 
-    /// Pill-style For You / Following toggle. Matches Threads' top-tab
-    /// pattern: minimal chrome, animated selection indicator.
+    /// TikTok / Instagram-style top tabs: just text, centred at the top of
+    /// the feed. The unselected tab is dim + slightly smaller; the selected
+    /// tab is bold and full-strength. A thin underline animates between the
+    /// two. No pill, no chrome.
     private var segmentedControl: some View {
-        HStack(spacing: 0) {
-            tabButton(.forYou, label: "For You")
-            tabButton(.following, label: "Following")
+        HStack(spacing: 28) {
+            tabLabel(.forYou, label: "For You")
+            tabLabel(.following, label: "Following")
         }
-        .padding(4)
-        .background(
-            Capsule()
-                .fill(colorScheme == .dark ? Color(white: 0.13) : Color(white: 0.93))
-        )
-        .overlay(
-            Capsule().stroke(.separator.opacity(0.4), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+        .frame(maxWidth: .infinity)
     }
 
-    private func tabButton(_ tab: FeedTab, label: String) -> some View {
+    private func tabLabel(_ tab: FeedTab, label: String) -> some View {
         let isSelected = selectedTab == tab
         return Button {
             withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
@@ -168,19 +162,32 @@ struct MainFeedView: View {
                 Task { await followingVM.loadInitialIfNeeded(userId: appViewModel.currentUser?.id) }
             }
         } label: {
-            Text(label)
-                .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
-                .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.7))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background {
-                    if isSelected {
-                        Capsule()
-                            .fill(Color.primary)
-                            .matchedGeometryEffect(id: "selectedTabBg", in: tabSegmentNS)
-                    }
+            VStack(spacing: 6) {
+                Text(label)
+                    .font(.system(
+                        size: isSelected ? 17 : 16,
+                        weight: isSelected ? .bold : .medium
+                    ))
+                    .foregroundStyle(
+                        isSelected
+                            ? Color.primary
+                            : Color.primary.opacity(0.45)
+                    )
+
+                // Thin underline only under the selected label. Slides between
+                // tabs via matchedGeometryEffect.
+                if isSelected {
+                    Capsule()
+                        .fill(Color.primary)
+                        .frame(width: 22, height: 2)
+                        .matchedGeometryEffect(id: "selectedTabUnderline", in: tabSegmentNS)
+                } else {
+                    Capsule()
+                        .fill(Color.clear)
+                        .frame(width: 22, height: 2)
                 }
-                .contentShape(Capsule())
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
