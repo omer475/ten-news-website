@@ -37,26 +37,32 @@ struct MainFeedView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // Both tab contents stay mounted via opacity-toggle so each
-            // tab's scroll position is preserved when the user switches.
-            // SwiftUI tears down child state when views are removed via
-            // `if`, so we don't use that here.
-            ZStack {
-                forYouTabContent
-                    .opacity(selectedTab == .forYou ? 1 : 0)
-                    .allowsHitTesting(selectedTab == .forYou)
-                followingTabContent
-                    .opacity(selectedTab == .following ? 1 : 0)
-                    .allowsHitTesting(selectedTab == .following)
-            }
-
-            // Sticky tab labels at the top of both feeds. Sits at the safe-area
-            // edge with a small 10pt breathing room — matches where TikTok and
-            // Instagram place their "Following / For You" header.
+        // Both tab contents stay mounted via opacity-toggle so each
+        // tab's scroll position is preserved when the user switches.
+        ZStack {
+            forYouTabContent
+                .opacity(selectedTab == .forYou ? 1 : 0)
+                .allowsHitTesting(selectedTab == .forYou)
+            followingTabContent
+                .opacity(selectedTab == .following ? 1 : 0)
+                .allowsHitTesting(selectedTab == .following)
+        }
+        // The tab labels live in the safe-area inset — that's how TikTok /
+        // Instagram / Threads place their top header. Using safeAreaInset
+        // (instead of an absolute-positioned overlay) means:
+        //   1. The labels sit BELOW the Dynamic Island automatically, no
+        //      matter the device.
+        //   2. SwiftUI auto-insets the inner ScrollViews so the first card
+        //      lands just below the tabs — no manual padding math.
+        .safeAreaInset(edge: .top, spacing: 0) {
             segmentedControl
-                .padding(.top, 10)
+                .padding(.vertical, 10)
                 .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity)
+                .background(
+                    feedBackgroundColor
+                        .opacity(0.94)
+                )
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
@@ -278,7 +284,8 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            .padding(.top, 88) // matches For You scroll inset; clears tab labels
+            // No top padding: safeAreaInset(top) on the parent ZStack
+            // already pushes the scroll content below the tab labels.
         }
         .background(feedBackground)
         .refreshable {
@@ -318,13 +325,18 @@ struct MainFeedView: View {
         .background(feedBackground)
     }
 
+    /// Plain color (no `.ignoresSafeArea` — that's applied at the call site
+    /// via the surrounding `.background(...)`/scroll). Used both as the
+    /// scroll background AND as the translucent backdrop behind the safe-area
+    /// tab labels so the cream / dark tone is consistent end to end.
+    private var feedBackgroundColor: Color {
+        colorScheme == .dark
+            ? Color(red: 0.055, green: 0.055, blue: 0.055)
+            : Color(red: 0.965, green: 0.961, blue: 0.949)
+    }
+
     private var feedBackground: some View {
-        Group {
-            colorScheme == .dark
-                ? Color(red: 0.055, green: 0.055, blue: 0.055)
-                : Color(red: 0.965, green: 0.961, blue: 0.949)
-        }
-        .ignoresSafeArea()
+        feedBackgroundColor.ignoresSafeArea()
     }
 
     // MARK: - Feed Content
@@ -362,10 +374,8 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // Clears the floating tab labels (safe-area + 10pt top inset +
-            // tab text height). Both tabs use the same value so switching
-            // keeps the first card at the same Y position.
-            .padding(.top, 88)
+            // No top padding: safeAreaInset(top) on the parent ZStack
+            // already pushes the scroll content below the tab labels.
         }
         .ignoresSafeArea()
         .background(
