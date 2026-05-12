@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import CryptoKit
 
 @MainActor @Observable
 final class AuthViewModel {
@@ -171,15 +172,21 @@ final class AuthViewModel {
         isLoading = true
         errorMessage = nil
 
-        // Build Google OAuth URL — iOS clients use reversed client ID as scheme
+        // Build Google OAuth URL — iOS clients use reversed client ID as scheme.
+        // iOS OAuth 2.0 clients in Google Cloud have no client_secret — we must
+        // use PKCE (RFC 7636) to exchange the auth code on the backend.
         let reversedClientId = "com.googleusercontent.apps.465407271728-t3osp3o35l4hs6ei9coddr24bbsmbkda"
         let redirectURI = "\(reversedClientId):/oauth2callback"
         let scope = "openid email profile"
+        let codeVerifier = Self.makePKCEVerifier()
+        let codeChallenge = Self.pkceChallenge(for: codeVerifier)
         let authURL = "https://accounts.google.com/o/oauth2/v2/auth"
             + "?client_id=\(googleClientId)"
             + "&redirect_uri=\(redirectURI.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? redirectURI)"
             + "&response_type=code"
             + "&scope=\(scope.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? scope)"
+            + "&code_challenge=\(codeChallenge)"
+            + "&code_challenge_method=S256"
             + "&nonce=\(UUID().uuidString)"
 
         guard let url = URL(string: authURL) else {
@@ -212,8 +219,8 @@ final class AuthViewModel {
                 return nil
             }
 
-            // Send auth code to backend for token exchange
-            let response = try await authService.googleAuth(idToken: code)
+            // Send auth code + PKCE verifier to backend for token exchange.
+            let response = try await authService.googleAuth(idToken: code, codeVerifier: codeVerifier)
             isLoading = false
 
             if let user = response.user {
@@ -297,6 +304,31 @@ final class AuthViewModel {
     func clearMessages() {
         errorMessage = nil
         successMessage = nil
+    }
+
+    // MARK: - PKCE helpers (RFC 7636) for Google OAuth on iOS
+
+    /// 64 random bytes → base64url-encoded → 86 char verifier.
+    private static func makePKCEVerifier() -> String {
+        var bytes = [UInt8](repeating: 0, count: 64)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        return Data(bytes).base64URLEncodedString()
+    }
+
+    /// code_challenge = base64url(SHA256(code_verifier))
+    private static func pkceChallenge(for verifier: String) -> String {
+        let digest = SHA256.hash(data: Data(verifier.utf8))
+        return Data(digest).base64URLEncodedString()
+    }
+}
+
+private extension Data {
+    /// Base64URL without padding (per RFC 4648 §5) — what OAuth PKCE needs.
+    func base64URLEncodedString() -> String {
+        base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 }
 

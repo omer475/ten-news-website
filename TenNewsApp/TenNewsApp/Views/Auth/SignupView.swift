@@ -12,6 +12,7 @@ struct SignupView: View {
     @State private var showPassword = false
     @State private var pendingGoogleAuth: (user: AuthUser, session: AuthSession?)?
     @State private var showCompleteProfile = false
+    @State private var goingBack: Bool = false
     @FocusState private var focusedField: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -177,7 +178,17 @@ struct SignupView: View {
     }
 
     private var stepTransition: AnyTransition {
-        .asymmetric(
+        // Forward (next step): new enters from the right, current exits left.
+        // Back (previous step): new enters from the left, current exits right.
+        // The direction flips on `goingBack` so the back gesture feels like a
+        // standard iOS pop instead of repeating the forward animation.
+        if goingBack {
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        }
+        return .asymmetric(
             insertion: .move(edge: .trailing).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
         )
@@ -192,6 +203,7 @@ struct SignupView: View {
                 if step == .email {
                     if let onBack { onBack() } else { dismiss() }
                 } else if let prev = SignupStep(rawValue: step.rawValue - 1) {
+                    goingBack = true
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                         step = prev
                     }
@@ -729,6 +741,7 @@ struct SignupView: View {
         switch step {
         case .email, .age, .username:
             if let next = SignupStep(rawValue: step.rawValue + 1) {
+                goingBack = false
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                     step = next
                 }

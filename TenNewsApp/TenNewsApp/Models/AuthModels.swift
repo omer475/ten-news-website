@@ -93,9 +93,11 @@ struct UserLikedResponse: Codable {
 
 struct GoogleAuthRequest: Codable {
     let idToken: String
+    let codeVerifier: String?
 
     enum CodingKeys: String, CodingKey {
         case idToken = "id_token"
+        case codeVerifier = "code_verifier"
     }
 }
 
