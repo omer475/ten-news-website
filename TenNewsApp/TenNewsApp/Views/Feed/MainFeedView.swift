@@ -51,9 +51,11 @@ struct MainFeedView: View {
                     .allowsHitTesting(selectedTab == .following)
             }
 
-            // Sticky segmented control over the top of both feeds.
+            // Sticky tab labels at the top of both feeds. Sits at the safe-area
+            // edge with a small 10pt breathing room — matches where TikTok and
+            // Instagram place their "Following / For You" header.
             segmentedControl
-                .padding(.top, 56)
+                .padding(.top, 10)
                 .padding(.horizontal, 16)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
@@ -138,12 +140,12 @@ struct MainFeedView: View {
 
     // MARK: - Tab segmented control
 
-    /// TikTok / Instagram-style top tabs: just text, centred at the top of
+    /// TikTok / Instagram-style top tabs: just text, centered at the top of
     /// the feed. The unselected tab is dim + slightly smaller; the selected
-    /// tab is bold and full-strength. A thin underline animates between the
-    /// two. No pill, no chrome.
+    /// tab is bold and full-strength. No underline, no pill, no chrome —
+    /// the type weight + opacity is the selection cue.
     private var segmentedControl: some View {
-        HStack(spacing: 28) {
+        HStack(spacing: 32) {
             tabLabel(.forYou, label: "For You")
             tabLabel(.following, label: "Following")
         }
@@ -162,32 +164,18 @@ struct MainFeedView: View {
                 Task { await followingVM.loadInitialIfNeeded(userId: appViewModel.currentUser?.id) }
             }
         } label: {
-            VStack(spacing: 6) {
-                Text(label)
-                    .font(.system(
-                        size: isSelected ? 17 : 16,
-                        weight: isSelected ? .bold : .medium
-                    ))
-                    .foregroundStyle(
-                        isSelected
-                            ? Color.primary
-                            : Color.primary.opacity(0.45)
-                    )
-
-                // Thin underline only under the selected label. Slides between
-                // tabs via matchedGeometryEffect.
-                if isSelected {
-                    Capsule()
-                        .fill(Color.primary)
-                        .frame(width: 22, height: 2)
-                        .matchedGeometryEffect(id: "selectedTabUnderline", in: tabSegmentNS)
-                } else {
-                    Capsule()
-                        .fill(Color.clear)
-                        .frame(width: 22, height: 2)
-                }
-            }
-            .contentShape(Rectangle())
+            Text(label)
+                .font(.system(
+                    size: isSelected ? 17 : 16,
+                    weight: isSelected ? .bold : .medium
+                ))
+                .foregroundStyle(
+                    isSelected
+                        ? Color.primary
+                        : Color.primary.opacity(0.42)
+                )
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -290,7 +278,7 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            .padding(.top, 110) // segmented control height + breathing room
+            .padding(.top, 88) // matches For You scroll inset; clears tab labels
         }
         .background(feedBackground)
         .refreshable {
@@ -374,10 +362,10 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // 110pt = ~56 status/safe-area + segmented control height + a bit.
-            // Both feed tabs use the same top padding so switching between
-            // them keeps the first card at the same Y position.
-            .padding(.top, 110)
+            // Clears the floating tab labels (safe-area + 10pt top inset +
+            // tab text height). Both tabs use the same value so switching
+            // keeps the first card at the same Y position.
+            .padding(.top, 88)
         }
         .ignoresSafeArea()
         .background(
