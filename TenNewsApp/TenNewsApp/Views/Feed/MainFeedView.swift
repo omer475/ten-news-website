@@ -27,6 +27,13 @@ struct MainFeedView: View {
     @State private var followManager = FollowManager.shared
     @Namespace private var tabSegmentNS
 
+    /// Scroll-driven visibility for the top tab labels.
+    /// - Visible at the very top of the feed (offset < ~16pt).
+    /// - Hides when the user scrolls DOWN (reading further into the feed).
+    /// - Re-appears as soon as the user scrolls UP — even a few pt.
+    /// Same pattern Safari, Twitter/X, and Threads use for their top chrome.
+    @State private var tabsVisible: Bool = true
+
     private var selectedTab: FeedTab {
         get { FeedTab(rawValue: selectedTabRaw) ?? .forYou }
     }
@@ -68,6 +75,11 @@ struct MainFeedView: View {
                 // didn't trip the nil-coalescing fallback — causing the
                 // labels to overlap the island.
                 .padding(.top, 52)
+                // Scroll-driven hide/reveal: fade + slide up when the user
+                // scrolls into the feed, slide back when they swipe up.
+                .opacity(tabsVisible ? 1 : 0)
+                .offset(y: tabsVisible ? 0 : -28)
+                .animation(.easeInOut(duration: 0.22), value: tabsVisible)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
@@ -294,6 +306,11 @@ struct MainFeedView: View {
             .padding(.top, 96)
         }
         .background(feedBackground)
+        .onScrollGeometryChange(for: CGFloat.self) { geo in
+            geo.contentOffset.y
+        } action: { oldValue, newValue in
+            handleScrollOffsetChange(old: oldValue, new: newValue)
+        }
         .refreshable {
             await followingVM.refresh(userId: appViewModel.currentUser?.id)
         }
@@ -405,10 +422,34 @@ struct MainFeedView: View {
                 ? Color(red: 0.055, green: 0.055, blue: 0.055)
                 : Color(red: 0.965, green: 0.961, blue: 0.949)
         )
+        .onScrollGeometryChange(for: CGFloat.self) { geo in
+            geo.contentOffset.y
+        } action: { oldValue, newValue in
+            handleScrollOffsetChange(old: oldValue, new: newValue)
+        }
         .refreshable {
             await viewModel.refresh()
             viewModel.currentIndex = 0
             viewModel.recordViewStart(at: 0)
+        }
+    }
+
+    /// Show / hide the top tab labels based on scroll direction.
+    ///   - At the very top of the feed (offset < 16pt) the tabs are always
+    ///     visible — opening the app or pull-to-refresh both end here.
+    ///   - Scrolling DOWN by more than 6pt hides them. The user is reading.
+    ///   - Scrolling UP by more than 4pt brings them back, even a slight
+    ///     drag. Matches Safari / Twitter / Threads behavior.
+    private func handleScrollOffsetChange(old: CGFloat, new: CGFloat) {
+        if new < 16 {
+            if !tabsVisible { tabsVisible = true }
+            return
+        }
+        let delta = new - old
+        if delta > 6 {
+            if tabsVisible { tabsVisible = false }
+        } else if delta < -4 {
+            if !tabsVisible { tabsVisible = true }
         }
     }
 
