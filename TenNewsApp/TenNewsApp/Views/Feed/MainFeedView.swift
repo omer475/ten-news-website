@@ -37,32 +37,33 @@ struct MainFeedView: View {
     }
 
     var body: some View {
-        // Both tab contents stay mounted via opacity-toggle so each
-        // tab's scroll position is preserved when the user switches.
-        ZStack {
-            forYouTabContent
-                .opacity(selectedTab == .forYou ? 1 : 0)
-                .allowsHitTesting(selectedTab == .forYou)
-            followingTabContent
-                .opacity(selectedTab == .following ? 1 : 0)
-                .allowsHitTesting(selectedTab == .following)
-        }
-        // The tab labels live in the safe-area inset — that's how TikTok /
-        // Instagram / Threads place their top header. Using safeAreaInset
-        // (instead of an absolute-positioned overlay) means:
-        //   1. The labels sit BELOW the Dynamic Island automatically, no
-        //      matter the device.
-        //   2. SwiftUI auto-insets the inner ScrollViews so the first card
-        //      lands just below the tabs — no manual padding math.
-        .safeAreaInset(edge: .top, spacing: 0) {
+        // The parent ContentView wraps MainFeedView with `.ignoresSafeArea()`,
+        // which RESETS SwiftUI's reported safe area to zero for everything
+        // inside — so `safeAreaInset(top)` would anchor tab labels at the
+        // absolute top of the screen, BEHIND the Dynamic Island. We read the
+        // device's actual safe area directly from UIWindow instead and use it
+        // as a manual top offset.
+        ZStack(alignment: .top) {
+            // Both tab contents stay mounted via opacity-toggle so each
+            // tab's scroll position is preserved when the user switches.
+            ZStack {
+                forYouTabContent
+                    .opacity(selectedTab == .forYou ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .forYou)
+                followingTabContent
+                    .opacity(selectedTab == .following ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .following)
+            }
+
             segmentedControl
                 .padding(.vertical, 10)
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity)
                 .background(
-                    feedBackgroundColor
-                        .opacity(0.94)
+                    feedBackgroundColor.opacity(0.94)
                 )
+                // Manually offset below the Dynamic Island / notch.
+                .padding(.top, deviceTopSafeAreaInset)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
@@ -284,8 +285,9 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // No top padding: safeAreaInset(top) on the parent ZStack
-            // already pushes the scroll content below the tab labels.
+            // Clears the floating tabs: device safe-area top + tab vertical
+            // padding (20pt) + tab text height (~22pt) + small buffer.
+            .padding(.top, deviceTopSafeAreaInset + 50)
         }
         .background(feedBackground)
         .refreshable {
@@ -339,6 +341,21 @@ struct MainFeedView: View {
         feedBackgroundColor.ignoresSafeArea()
     }
 
+    /// Actual device top safe area inset (Dynamic Island / notch / status-bar
+    /// space). Read directly from the key window because `ContentView` wraps
+    /// us in `.ignoresSafeArea()` and SwiftUI then reports an inset of 0 for
+    /// everything inside this view. Falls back to 47pt — the value for an
+    /// iPhone 17 Pro — if the window can't be resolved (preview, launch).
+    private var deviceTopSafeAreaInset: CGFloat {
+        UIApplication.shared
+            .connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .safeAreaInsets.top
+        ?? 47
+    }
+
     // MARK: - Feed Content
 
     private var feedContent: some View {
@@ -374,8 +391,9 @@ struct MainFeedView: View {
                 }
                 Spacer().frame(height: 100)
             }
-            // No top padding: safeAreaInset(top) on the parent ZStack
-            // already pushes the scroll content below the tab labels.
+            // Clears the floating tabs: device safe-area top + tab vertical
+            // padding (20pt) + tab text height (~22pt) + small buffer.
+            .padding(.top, deviceTopSafeAreaInset + 50)
         }
         .ignoresSafeArea()
         .background(
