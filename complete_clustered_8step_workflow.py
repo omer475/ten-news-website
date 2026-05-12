@@ -2307,9 +2307,10 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
 VOICE_PERSONAS = {
     "image_led": {
         "title_block": (
-            "LENGTH: 18-32 words. The title carries the FULL news because there are no bullets.\n"
-            "State what happened, who, when, where, and the key fact. Write it like a long,\n"
-            "informative caption to go under a single photo. Specific over vague."
+            "LENGTH: 16-22 words. HARD CAP: 22 words — never exceed. The title carries\n"
+            "the full news because there are no bullets. State what happened, who, when,\n"
+            "where, and the key fact in one informative caption-style line. Specific over\n"
+            "vague, but anything past 22 words reads as a paragraph, not a title."
         ),
         "bullet_block": (
             "BULLETS: ZERO. summary_bullets_news = []. The title carries the story. Do not\n"
@@ -3038,6 +3039,20 @@ Return ONLY valid JSON, no markdown, no explanations."""
             # doesn't render an empty-styled bullet list.
             if result['card_format'] == 'punchy_oneliner':
                 result['summary_bullets'] = []
+
+            # Hard cap on image_led titles. Without bullets, the title carries
+            # the whole story, but past 22 words it reads as a paragraph instead
+            # of a caption. The prompt also enforces this, but truncate as a
+            # safety net for the occasional runaway.
+            if persona['name'] == 'image_led':
+                _title = result.get('title', '')
+                _words = _title.split()
+                if len(_words) > 22:
+                    truncated = ' '.join(_words[:22]).rstrip(',;:—-')
+                    if not truncated.endswith(('.', '!', '?')):
+                        truncated += '.'
+                    print(f"   ✂️  image_led title was {len(_words)} words, truncated to 22: {truncated}")
+                    result['title'] = truncated
 
             # Map to old field names for backward compatibility (downstream
             # orchestrator code reads these old names).
