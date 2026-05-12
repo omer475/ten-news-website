@@ -54,7 +54,7 @@ struct MainFeedView: View {
                     //    an entity-signal at weight ~0.8 (between save and share).
                     //    Passive affordance — un-tapped chips never penalized.
                     Task {
-                        try? await AnalyticsService.shared.track(
+                        try? await AnalyticsService().track(
                             event: "entity_chip_tap",
                             articleId: nil,
                             category: nil,
