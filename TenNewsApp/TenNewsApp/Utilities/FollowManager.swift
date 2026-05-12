@@ -145,6 +145,38 @@ final class FollowManager {
         save()
     }
 
+    /// Sync local follow state with the server's authoritative `isFollowing`
+    /// flag for a publisher. Called from CreatorProfileView after loading the
+    /// publisher detail; without this the cached local set could drift from
+    /// the server (e.g. user followed on web, then opens iOS — server says
+    /// followed but FollowManager doesn't know).
+    func syncFromServer(
+        publisherId: String,
+        isFollowing: Bool,
+        name: String,
+        avatarUrl: String?,
+        category: String?
+    ) {
+        let alreadyHave = followedIDs.contains(publisherId)
+        if isFollowing && !alreadyHave {
+            followedIDs.insert(publisherId)
+            followedPublishers.removeAll { $0.id == publisherId }
+            followedPublishers.insert(
+                FollowedPublisher(id: publisherId, name: name, avatarUrl: avatarUrl, category: category),
+                at: 0
+            )
+            save()
+        } else if isFollowing && alreadyHave {
+            // Refresh metadata if newer info arrived from the server.
+            upsertMetadata(id: publisherId, name: name, avatarUrl: avatarUrl, category: category)
+        } else if !isFollowing && alreadyHave {
+            followedIDs.remove(publisherId)
+            followedPublishers.removeAll { $0.id == publisherId }
+            save()
+        }
+        // case: !isFollowing && !alreadyHave → nothing to do
+    }
+
     func clearAll() {
         followedIDs.removeAll()
         followedPublishers.removeAll()

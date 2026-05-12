@@ -9,7 +9,6 @@ struct CreatorProfileView: View {
     // Publisher data (fetched from API when publisherId is available)
     var publisherId: String?
 
-    @State private var isFollowing = false
     @State private var followerCount: Int = 0
     @State private var publisherArticles: [Article] = []
     @State private var isLoadingArticles = false
@@ -24,10 +23,20 @@ struct CreatorProfileView: View {
     @State private var articleCount: Int = 0
     @State private var followingCount: Int = 0
     @State private var hasLoaded = false
+    @State private var followManager = FollowManager.shared
 
     @Environment(AppViewModel.self) private var appViewModel
 
     private let publisherService = PublisherService()
+
+    /// Authoritative follow state: read from FollowManager so it stays in
+    /// sync with every other follow surface (article-card chip, Following
+    /// list pill). Previously CreatorProfileView held its own @State and
+    /// could diverge from FollowManager on a fetch-but-not-mutation failure.
+    private var isFollowing: Bool {
+        guard let pubId = publisherId else { return false }
+        return followManager.isFollowing(pubId)
+    }
 
     private let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
     private var logoColor: Color {
@@ -118,7 +127,16 @@ struct CreatorProfileView: View {
             displayAvatarUrl = pub.avatarUrl
             followerCount = pub.followerCount
             articleCount = pub.articleCount
-            isFollowing = response.isFollowing
+            // Sync FollowManager with the server's authoritative is_following
+            // flag (handles the cross-device case where the user followed on
+            // web but FollowManager's local cache doesn't know).
+            followManager.syncFromServer(
+                publisherId: pubId,
+                isFollowing: response.isFollowing,
+                name: pub.displayName,
+                avatarUrl: pub.avatarUrl,
+                category: pub.category
+            )
         } catch {
             print("Failed to load publisher: \(error)")
         }
@@ -142,17 +160,17 @@ struct CreatorProfileView: View {
     private func toggleFollow() {
         guard let pubId = publisherId else { return }
 
-        let wasFollowing = isFollowing
-        isFollowing.toggle()
-        followerCount += isFollowing ? 1 : -1
+        let willFollow = !isFollowing
+        followerCount += willFollow ? 1 : -1
         HapticManager.medium()
 
-        // Route through FollowManager so AccountTabView's Following list +
-        // stat count stay in sync. FollowManager handles its own API call
-        // and analytics; we just sync local follower-count from the response
-        // when it comes back. Previously CreatorProfileView called
-        // publisherService directly and skipped FollowManager, so unfollows
-        // from the profile didn't remove the row from the Following list.
+        // FollowManager is the single source of truth. It owns the API
+        // call, the optimistic update + revert on failure, and the
+        // publisher_followed / publisher_unfollowed analytics event.
+        // `isFollowing` here is a computed property reading FollowManager
+        // — no local @State to keep in sync. Previously CreatorProfileView
+        // held its own @State and could diverge from FollowManager on
+        // a fetch-but-not-mutation failure.
         FollowManager.shared.toggle(
             pubId,
             name: displayName,
@@ -162,17 +180,14 @@ struct CreatorProfileView: View {
             sourceArticleId: nil
         )
 
-        // Refresh follower count from server (FollowManager already issued
-        // the follow/unfollow call; this fetch reads the canonical count).
+        // Refresh canonical follower count from the server. This is purely
+        // informational — FollowManager has already handled the mutation.
+        // If the fetch fails we leave followerCount at the optimistic value;
+        // the next loadPublisherData call will fix it.
         guard let userId = appViewModel.currentUser?.id else { return }
         Task {
-            do {
-                let response = try await publisherService.fetchPublisher(id: pubId, userId: userId)
+            if let response = try? await publisherService.fetchPublisher(id: pubId, userId: userId) {
                 followerCount = response.publisher.followerCount
-            } catch {
-                // FollowManager already reverts its own state on failure.
-                isFollowing = wasFollowing
-                followerCount += wasFollowing ? 1 : -1
             }
         }
     }
@@ -248,9 +263,17 @@ struct CreatorProfileView: View {
                 if publisherId != nil {
                     toggleFollow()
                 } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        isFollowing.toggle()
-                    }
+                    // Sample-creator demo path — no real publisherId to
+                    // hit the API with. Use the local creator id so the
+                    // entry still appears on the Following list.
+                    FollowManager.shared.toggle(
+                        creator.id,
+                        name: displayName.isEmpty ? creator.name : displayName,
+                        avatarUrl: displayAvatarUrl ?? creator.avatarUrl,
+                        category: displayCategory ?? creator.category,
+                        userId: appViewModel.currentUser?.id,
+                        sourceArticleId: nil
+                    )
                     HapticManager.medium()
                 }
             } label: {

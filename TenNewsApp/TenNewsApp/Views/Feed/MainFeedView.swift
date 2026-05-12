@@ -267,7 +267,12 @@ struct ArticleCardContinuousView: View {
     @State private var liked = false
     @State private var saved = false
     @State private var reposted = false
-    @State private var following = false
+    /// Brief override that keeps the `+` chip visible during the
+    /// post-tap "+ → ✓" burst animation, even after FollowManager has
+    /// already flipped to following=true. Without this the chip would
+    /// vanish on tap before the user gets visual confirmation.
+    @State private var inFollowBurst = false
+    @State private var followManager = FollowManager.shared
     @State private var showShareSheet = false
     @State private var showCreatorProfile = false
     @State private var graphExpanded = false
@@ -279,6 +284,14 @@ struct ArticleCardContinuousView: View {
     @State private var heartBurstActive = false
     @State private var followBurstActive = false
     @Environment(AppViewModel.self) private var appViewModel
+
+    /// Reactive follow state read directly from FollowManager. When the
+    /// user unfollows inside CreatorProfileView and dismisses, the chip
+    /// reappears here automatically because FollowManager is @Observable
+    /// and this view re-evaluates the computed property.
+    private var following: Bool {
+        followManager.isFollowing(article.authorId)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -383,7 +396,10 @@ struct ArticleCardContinuousView: View {
             liked = LikeManager.shared.isLiked(article.id)
             saved = BookmarkManager.shared.isBookmarked(article.id)
             reposted = RepostManager.shared.isReposted(article.id)
-            following = FollowManager.shared.isFollowing(article.authorId)
+            // following is now a computed property reading from
+            // FollowManager directly, so it auto-refreshes when the
+            // user unfollows from inside CreatorProfileView and
+            // dismisses back to this card.
         }
     }
 
@@ -439,12 +455,16 @@ struct ArticleCardContinuousView: View {
 
                     // Inline + follow chip — only shown when the article
                     // has a matched publisher and the user isn't already
-                    // following them. Disappears as soon as they tap it.
-                    if !following, article.authorId != nil {
+                    // following them. Disappears after the burst animation
+                    // completes. We OR with `inFollowBurst` so the chip
+                    // stays visible during the burst even though FollowManager
+                    // already says following=true.
+                    if (!following || inFollowBurst), article.authorId != nil {
                         Button {
                             // Rich follow: pass name + avatar so the Following
                             // list on the Account tab renders a real row, not
                             // an id-only placeholder.
+                            inFollowBurst = true
                             FollowManager.shared.toggle(
                                 article.authorId,
                                 name: article.authorName ?? article.source,
@@ -454,11 +474,12 @@ struct ArticleCardContinuousView: View {
                                 sourceArticleId: Int(article.id.stringValue)
                             )
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            // Show "✓ Following" confirmation for ~0.7s,
-                            // THEN flip following=true so the chip
-                            // disappears. Visual sequence:
-                            //   tap → checkmark pops in → fades → chip
-                            //   removed from layout.
+                            // Show "✓ Following" confirmation for ~0.7s, then
+                            // drop `inFollowBurst` so the chip can hide. Now
+                            // that `following` is reactive on FollowManager,
+                            // dismissing this state plus an already-true
+                            // following gives the SwiftUI layout the cue to
+                            // remove the chip.
                             withAnimation(.spring(response: 0.18, dampingFraction: 0.6)) {
                                 followBurstActive = true
                             }
@@ -467,7 +488,7 @@ struct ArticleCardContinuousView: View {
                                     followBurstActive = false
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    following = true
+                                    inFollowBurst = false
                                 }
                             }
                         } label: {
