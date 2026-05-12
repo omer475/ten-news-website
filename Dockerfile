@@ -49,7 +49,6 @@ COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
 COPY step11_article_tagging.py .
 COPY article_deduplication.py .
-COPY sports_espn_poller.py .
 
 # Copy services/ directory (hierarchical clustering helpers).
 # Added 2026-04-23: the cluster_assign_helper import at

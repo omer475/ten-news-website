@@ -209,48 +209,6 @@ DO NOT SELECT IF:
 FREQUENCY: ~10% of stories
 
 ═══════════════════════════════════════════════════════════════
-🏆 SCORE CARD
-═══════════════════════════════════════════════════════════════
-
-Shows match/game results with scores.
-
-SELECT IF ANY OF THESE ARE TRUE:
-- Article is about a COMPLETED match/game with final scores
-- Article is a game RECAP or POST-MATCH analysis that mentions the score
-- Article discusses match HIGHLIGHTS with the result mentioned
-- Article headline or bullets contain a score (e.g., "3-1", "beat", "defeated", "won")
-- Any score or final result is clearly stated, even if the article also has analysis
-
-DO NOT SELECT IF:
-- Article is about transfers, signings, contracts, injuries with NO game score
-- Article is purely a match PREVIEW or prediction (no result yet)
-- Article is about sports politics, doping, coaching changes with no game result
-- No score or match result is mentioned anywhere
-
-WHEN SELECTED: Scorecard REPLACES all other components. Do NOT add details/timeline/graph/map alongside scorecard.
-
-FREQUENCY: ~50% of Sports articles (any article that mentions a game result)
-
-═══════════════════════════════════════════════════════════════
-🍳 RECIPE CARD
-═══════════════════════════════════════════════════════════════
-
-Shows recipe info: cook time, difficulty, servings.
-
-SELECT ONLY IF:
-- Article IS an actual recipe with ingredients and/or instructions
-- Has specific cooking details (time, servings, ingredients list)
-
-DO NOT SELECT IF:
-- Article is about restaurants, food industry, food trends
-- Article is a restaurant review or food news
-- No actual recipe with ingredients/instructions
-
-WHEN SELECTED: Recipe REPLACES all other components. Do NOT add details/timeline/graph/map alongside recipe.
-
-FREQUENCY: ~50% of Food articles
-
-═══════════════════════════════════════════════════════════════
 TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
@@ -259,8 +217,6 @@ Stories with useful extra facts: ["details"]
 Incidents with SPECIFIC location: ["map", "details"]
 Economic news with data: ["graph", "details"]
 Complex ongoing sagas (very rare, ~5%): ["timeline", "details"]
-Sports articles mentioning a game result/score: ["scorecard"] - EXCLUSIVE, no other components
-Actual recipes: ["recipe"] - EXCLUSIVE, no other components
 
 MISTAKES TO AVOID:
 ✗ Adding timeline to every story (timeline is for ~5% of stories only!)
@@ -270,8 +226,6 @@ MISTAKES TO AVOID:
 ✗ Adding timeline for single events (plane crash, earthquake, announcement)
 ✗ Adding graph with made-up data
 ✗ Adding details that duplicate bullets
-✗ Adding scorecard for sports articles with NO score/result (transfers, previews, opinions)
-✗ Adding recipe for food industry/restaurant news
 
 ═══════════════════════════════════════════════════════════════
 DECISION EXAMPLES
@@ -351,32 +305,20 @@ DECISION EXAMPLES
 → components: ["details"] or ["timeline", "details"], article_type: "standard"
 
 "Arsenal Beats Chelsea 3-1 in Premier League"
-→ SCORECARD: YES - Completed match with final scores
-→ components: ["scorecard"], article_type: "match_result"
-
-"Phoenix Rising Draws with Orange County in Opener"
-→ SCORECARD: YES - Game recap with result (1-1 draw) mentioned in bullets
-→ components: ["scorecard"], article_type: "match_result"
-
-"Sunderland Misses Opportunity, Charlton Secures Win"
-→ SCORECARD: YES - Post-match recap with result, scorers mentioned
-→ components: ["scorecard"], article_type: "match_result"
+→ Sports recap, no special component
+→ components: ["details"], article_type: "standard"
 
 "Mbappe Signs 5-Year Deal with Real Madrid"
-→ SCORECARD: NO - Transfer news, no game result
 → DETAILS: YES
 → components: ["details"], article_type: "standard"
 
 "Schumacher Slams F1 2026 Rules as Too Artificial"
-→ SCORECARD: NO - Opinion piece about rules, no match result
+→ Opinion piece, no extra component
 → components: [], article_type: "standard"
 
-"Easy 30-Minute Pasta Carbonara Recipe"
-→ RECIPE: YES - Actual recipe with cooking details
-→ components: ["recipe"], article_type: "recipe"
-
 "NYC's Best New Restaurants of 2026"
-→ RECIPE: NO - Restaurant news, not an actual recipe
+→ Restaurant news
+→ components: ["details"], article_type: "standard"
 → DETAILS: YES
 → components: ["details"], article_type: "standard"
 
@@ -415,7 +357,7 @@ RULES:
 - emoji: Single emoji for the story
 - graph_type: "line", "bar", or "area" if graph selected, null otherwise
 - map_locations: Array of specific locations if map selected, null otherwise
-- article_type: "standard", "match_result" (if scorecard), or "recipe" (if recipe)
+- article_type: "standard"
 """
 
 
@@ -608,15 +550,15 @@ class GeminiComponentSelector:
             return self._get_fallback_selection()
         
         # Filter out any non-string components
-        # NOTE: 'map' is now re-enabled, 'scorecard' and 'recipe' are exclusive components
-        valid_component_names = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
+        # 2026-05-12: scorecard + recipe components retired — not generated or rendered anymore.
+        valid_component_names = {'timeline', 'details', 'graph', 'map'}
         filtered_components = []
         for comp in components:
             if isinstance(comp, str):
                 if comp in valid_component_names:
                     filtered_components.append(comp)
                 else:
-                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map, scorecard, recipe)")
+                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map)")
             elif isinstance(comp, dict):
                 # Sometimes Gemini returns dicts - try to extract the component name
                 if 'name' in comp:
@@ -632,12 +574,6 @@ class GeminiComponentSelector:
 
         components = filtered_components
 
-        # Scorecard and recipe are exclusive — strip all other components if present
-        if 'scorecard' in components:
-            components = ['scorecard']
-        elif 'recipe' in components:
-            components = ['recipe']
-        
         # Ensure minimum components (now 0 is allowed — no components is a valid decision)
         if self.config.min_components > 0 and len(components) < self.config.min_components:
             print(f"  ⚠ Too few components ({len(components)}), using fallback")
@@ -744,8 +680,6 @@ class GeminiComponentSelector:
             'details': 0,
             'graph': 0,
             'map': 0,
-            'scorecard': 0,
-            'recipe': 0
         }
         
         for i, article in enumerate(articles, 1):
@@ -841,7 +775,7 @@ def validate_component_selections(articles: List[Dict]) -> tuple[bool, List[str]
             errors.append(f"Article {i} has {len(components)} components (max 4)")
         
         # Check valid component names
-        valid_components = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
+        valid_components = {'timeline', 'details', 'graph', 'map'}
         for comp in components:
             if comp not in valid_components:
                 errors.append(f"Article {i} has invalid component: {comp}")

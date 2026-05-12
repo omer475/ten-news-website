@@ -1650,8 +1650,8 @@ def run_complete_pipeline():
                 component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
-            # Components that need Google Search grounding: timeline, details, graph, map
-            # Components that DON'T need search: scorecard, recipe, or empty []
+            # Components that need Google Search grounding: timeline, details, graph, map.
+            # (scorecard + recipe retired 2026-05-12.)
             components_needing_search = [c for c in selected if c in ('timeline', 'details', 'graph', 'map')]
 
             gemini_result = None
@@ -1715,8 +1715,6 @@ def run_complete_pipeline():
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
                                 'map': generation_result.get('map'),
-                                'scorecard': generation_result.get('scorecard'),
-                                'recipe': generation_result.get('recipe')
                             }
                             components = {k: v for k, v in components.items() if v is not None}
 
@@ -2031,7 +2029,7 @@ def run_complete_pipeline():
 
             # If article has info box components, trim bullets to 450 max
             # Articles without components keep up to 550 chars
-            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
+            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map'])
             if has_components and isinstance(bullets, list):
                 total_bullet_chars = sum(len(b) for b in bullets)
                 if total_bullet_chars > 450:
@@ -2130,8 +2128,6 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'details': components.get('details'),
                 'graph': components.get('graph'),
                 'map': components.get('map'),
-                'scorecard': components.get('scorecard'),
-                'recipe': components.get('recipe'),
                 # Card-format hint from step4's social-voice synthesis takes
                 # priority over the legacy component_result.article_type
                 # (which was always 'standard' in practice anyway). iOS reads
@@ -2298,6 +2294,155 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
 # MULTI-SOURCE SYNTHESIS
 # ==========================================
 
+################################################################################
+# VOICE PERSONAS (2026-05-12)
+#
+# Without per-article voice variation, every article comes out the same length
+# and tone because Gemini regresses to the mean of one mega-prompt. Audit on
+# 2026-05-12 confirmed: title stddev 1.6 words, bullet stddev 2.8 — 50% of
+# every bullet in a 5-word band. Five structural personas rotate per article;
+# each enforces tight per-position length rules that the model actually obeys.
+################################################################################
+
+VOICE_PERSONAS = {
+    "image_led": {
+        "title_block": (
+            "LENGTH: 18-32 words. The title carries the FULL news because there are no bullets.\n"
+            "State what happened, who, when, where, and the key fact. Write it like a long,\n"
+            "informative caption to go under a single photo. Specific over vague."
+        ),
+        "bullet_block": (
+            "BULLETS: ZERO. summary_bullets_news = []. The title carries the story. Do not\n"
+            "add bullets even if you think one would be nice — the format is image + long title."
+        ),
+        "card_format_hint": "punchy_oneliner",
+    },
+    "news_flash": {
+        "title_block": (
+            "LENGTH: 8-12 words / 50-80 chars. Direct factual lead. State the news.\n"
+            "BANNED openers: 'Wait,', 'Here's why', 'You won't believe', 'BREAKING:',\n"
+            "any opening question mark. State the fact, do not bait the click."
+        ),
+        "bullet_block": (
+            "BULLETS: 2-3 short, with deliberate length variation.\n"
+            "Bullet 1: ≤ 9 words.\n"
+            "Bullet 2: 11-15 words.\n"
+            "Bullet 3 (optional): 14-18 words.\n"
+            "\n"
+            "Worked example (notice the word counts: 7 / 13 / 16):\n"
+            '  ["**Powell** signaled two more cuts.",                                    (7 words)\n'
+            '   "Services inflation slowed to **3.1%**, the lowest since 2024.",         (12 words)\n'
+            '   "Markets are now pricing a fourth cut by **March 2027**, says Goldman."] (15 words)\n'
+            "\n"
+            "FINAL CHECK before returning: count the words in each bullet. If any two\n"
+            "bullets are within 3 words of each other, REWRITE the offender to a\n"
+            "different length. Uniform-length bullets are the #1 AI tell."
+        ),
+        "card_format_hint": "standard",
+    },
+    "feature": {
+        "title_block": (
+            "LENGTH: 10-16 words. Often uses a colon for the subtitle half.\n"
+            "Direct, no cutesy openers. No 'Wait,', no 'Here's why', no clickbait Q-marks."
+        ),
+        "bullet_block": (
+            "BULLETS: 2-3 with EXPLICIT length staircase — short → medium → long.\n"
+            "Bullet 1: 5-9 words (a punch).\n"
+            "Bullet 2: 12-17 words (the meat).\n"
+            "Bullet 3 (optional): 18-24 words (the context / payoff).\n"
+            "\n"
+            "Worked example (4 / 14 / 22 words):\n"
+            '  ["**Dončić** went cold late.",                                                          (4 words)\n'
+            '   "He shot 4-of-17 in a brutal fourth-quarter collapse.",                                 (10 words — fine)\n'
+            '   "**Lakers** blew a 20-point lead, dropping the Western Conference series 2-1 with two road games next."] (19 words)\n'
+            "\n"
+            "FINAL CHECK: count words in each bullet. If any two are within 3 words of\n"
+            "each other, REWRITE the offender. The staircase short → medium → long is\n"
+            "the entire point — uniform bullets defeat the persona."
+        ),
+        "card_format_hint": "conversational",
+    },
+    "analysis": {
+        "title_block": (
+            "LENGTH: 11-16 words. Claim-led — state the finding directly.\n"
+            "BANNED: 'Here's why', 'The reason X is Y', 'Why X matters' (clickbait endings)."
+        ),
+        "bullet_block": (
+            "BULLETS: 2-3 long, dense bullets defending the thesis. Vary lengths:\n"
+            "Bullet 1: 14-20 words.\n"
+            "Bullet 2: 20-26 words.\n"
+            "Bullet 3 (optional): 22-30 words.\n"
+            "\n"
+            "Worked example (16 / 24 / 28 words):\n"
+            '  ["**Lakers** sent three first-round picks for a 26-year-old with a declining defensive box.",  (15 words)\n'
+            '   "Cap impact is **$53M** locked in through 2028, blocking any move for a second star next summer.",  (18 words)\n'
+            '   "**Dončić**\'s shot diet shifted from 38% to 51% mid-range over the last two seasons — high-volume mid-range scorers do not age well."]  (25 words)\n'
+            "\n"
+            "FINAL CHECK: count words. Two bullets within 3 words of each other =\n"
+            "REWRITE one. At least 5 words of spread across the bullets total."
+        ),
+        "card_format_hint": "conversational",
+    },
+    "hot_take": {
+        "title_block": (
+            "LENGTH: 9-14 words. Declarative opinion ('X is overrated.' / 'Y is the best Z').\n"
+            "BANNED: 'Here's why', any clickbait hook, opening question marks."
+        ),
+        "bullet_block": (
+            "BULLETS: 1-2 bullets defending the stance with specifics.\n"
+            "If 1: 14-22 words.\n"
+            "If 2: bullet 1 12-15 words, bullet 2 19-25 words (different lengths).\n"
+            "\n"
+            "Worked 2-bullet example (13 / 21 words):\n"
+            '  ["**BookTok** debuts now out-sell Big Five front-list titles 3:1.",          (10 words — within tolerance for ≤15)\n'
+            '   "The publishing industry is racing to acquire indie authors whose entire marketing engine is one viral video."]  (17 words)\n'
+            "\n"
+            "FINAL CHECK: if two bullets exist and are within 3 words of each other,\n"
+            "REWRITE one. Specific evidence (number / named actor) in every bullet."
+        ),
+        "card_format_hint": "hot_take",
+    },
+}
+
+# Base weights for the picker. Tuned so news_flash is the workhorse (35%) and
+# the other four split the remaining variety across the inventory.
+_PERSONA_BASE_WEIGHTS = {
+    "image_led":   0.10,
+    "news_flash":  0.35,
+    "feature":     0.20,
+    "analysis":    0.20,
+    "hot_take":    0.15,
+}
+
+
+def _pick_voice_persona(sources: List[Dict], cluster_id: int) -> Dict:
+    """Choose one voice persona per article. Weighted random, nudged by
+    source-shape signals (source count, image richness, dominant category)."""
+    import random
+
+    weights = dict(_PERSONA_BASE_WEIGHTS)
+
+    # Single-source articles with a strong image lean image_led more often.
+    if len(sources) == 1:
+        weights["image_led"] *= 2.0
+
+    # Multi-source heavy clusters lean feature/analysis (more to say).
+    if len(sources) >= 4:
+        weights["feature"] *= 1.5
+        weights["analysis"] *= 1.5
+        weights["image_led"] *= 0.5
+
+    # Cluster-id keyed deterministic salt so the same article doesn't flip
+    # personas on re-synthesis after a verification failure.
+    rng = random.Random(cluster_id)
+    keys = list(weights.keys())
+    values = [weights[k] for k in keys]
+    chosen = rng.choices(keys, weights=values, k=1)[0]
+    persona = dict(VOICE_PERSONAS[chosen])
+    persona["name"] = chosen
+    return persona
+
+
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
     Synthesize one article from multiple sources using Gemini.
@@ -2310,6 +2455,11 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import requests
     import json
     import time
+
+    # Pick a structural voice persona for this article. The persona overrides
+    # the global LENGTH rules in the prompt below — without this each article
+    # collapsed to ~12-word bullets and ~9-word titles regardless of content.
+    persona = _pick_voice_persona(sources, cluster_id)
 
     gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={gemini_key}"
     
@@ -2355,8 +2505,36 @@ ISSUES FOUND IN PREVIOUS VERSION:
     
     today_str = datetime.now().strftime('%B %d, %Y')
 
+    persona_addendum = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎚️ STRUCTURAL VOICE — '{persona['name']}'  (overrides the generic LENGTH rules below)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This article is being written in the '{persona['name']}' persona. The TITLE LENGTH
+and BULLET LENGTH rules below OVERRIDE any general '6-12 words' or '5-22 words'
+rules elsewhere in the prompt. These are non-negotiable.
+
+TITLE RULES (override prompt's generic title-length section):
+{persona['title_block']}
+
+BULLET RULES (override prompt's generic bullet-length section):
+{persona['bullet_block']}
+
+PREFERRED card_format: '{persona['card_format_hint']}' — but use your judgment if
+the content clearly needs a different shape. Don't force '{persona['card_format_hint']}'
+onto an article whose source material doesn't fit it.
+
+Two failure modes auto-reject this article:
+  • Title violates the per-persona length range above.
+  • Bullets violate the per-persona length pattern above (especially: two bullets
+    within 3 words of each other on persona 'feature' or 'news_flash').
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"""
+
     prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
 
+{persona_addendum}
 ⚠️ TODAY'S DATE: {today_str}
 All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
@@ -2383,7 +2561,7 @@ Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both
                             OK: "comeback," "bias," "ate," KST/JST date drops.
                             Not OK: distant third-person reporter framing.
 
-  Cooking / Food:           friend texting you a recipe at 11pm. Sensory, conspiratorial.
+  Cooking / Food:           friend texting you a kitchen tip at 11pm. Sensory, conspiratorial.
                             OK: "trust me," sensory verbs (sizzles, melts, browns).
                             Not OK: "delicious," "yummy," "amazing" — auto-banned.
 
