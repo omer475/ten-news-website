@@ -674,12 +674,10 @@ private struct WelcomeScene: View {
                         .font(.system(size: 14, weight: .semibold))
                         .tracking(-0.1)
                         .foregroundStyle(Color.primary)
-                        .contentTransition(.opacity)
                     if !article.relativeTime.isEmpty {
                         Text(article.relativeTime)
                             .font(.system(size: 11))
                             .foregroundStyle(Color.secondary)
-                            .contentTransition(.opacity)
                     }
                 }
                 Spacer()
@@ -707,7 +705,6 @@ private struct WelcomeScene: View {
                         .foregroundStyle(Color.primary)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentTransition(.opacity)
 
                     if let bullets = article.bullets, !bullets.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
@@ -723,7 +720,6 @@ private struct WelcomeScene: View {
                                         .lineSpacing(5)
                                         .multilineTextAlignment(.leading)
                                         .tint(Color.primary)
-                                        .contentTransition(.opacity)
                                 }
                             }
                         }
@@ -742,10 +738,19 @@ private struct WelcomeScene: View {
         // like a drop-shadow PNG from 2010.
         .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 8)
         .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
-        // No .id() on the card — SwiftUI diffs the inner content in place
-        // when `cardIndex` flips, which keeps AsyncCachedImage's cache hot
-        // across rotations. Text changes crossfade via .contentTransition.
-        .animation(.smooth(duration: 0.45), value: cardIndex)
+        // .id() forces SwiftUI to treat each rotation as a distinct view, so
+        // the OUTGOING card fades out + the INCOMING card fades in as two
+        // separate views (the user's "disappear and the new one comes" feel)
+        // instead of an in-place content swap. AsyncCachedImage still gets
+        // its UIImage from the static NSCache instantly, so the new card
+        // shows the photo without a shimmer if it's been loaded before.
+        .id("card-\(cardIndex)")
+        .transition(
+            .asymmetric(
+                insertion: .opacity.combined(with: .offset(y: 8)).animation(.easeOut(duration: 0.32).delay(0.18)),
+                removal:   .opacity.combined(with: .offset(y: -8)).animation(.easeIn(duration: 0.22))
+            )
+        )
     }
 
     /// Renders a bullet's `**bold**` markdown segments as bold text inline,
