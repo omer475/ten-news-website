@@ -1964,25 +1964,12 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
 
-            # Real-time global cluster assignment (Migration 046).
-            # Compares article embedding to last-nightly-run centroids and returns
-            # top-3 nearest leaves. Falls back to None fields if centroids aren't
-            # populated yet (nightly hasn't run) — article will be clustered in
-            # the next nightly batch.
-            cluster_super = None
-            cluster_leaf = None
-            cluster_assigns = None
-            if article_embedding_minilm:
-                try:
-                    from services.cluster_assign_helper import assign_clusters_for_embedding
-                    _ca = assign_clusters_for_embedding(article_embedding_minilm)
-                    cluster_super = _ca.get('super_cluster_id')
-                    cluster_leaf = _ca.get('leaf_cluster_id')
-                    cluster_assigns = _ca.get('cluster_assignments')
-                    if cluster_super is not None:
-                        print(f"   🗂️  [Cluster {cluster_id}] global cluster: super={cluster_super} leaf={cluster_leaf}")
-                except Exception as e:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Global cluster assignment failed: {e}")
+            # Cleanup (2026-05-11): removed v11-era global super/leaf cluster
+            # assignment + cluster_assign_helper import. The bandit system that
+            # consumed super_cluster_id/leaf_cluster_id (update_leaf_arm /
+            # update_super_arm) was already dropped in Phase 1.1, leaving these
+            # columns write-only. Trinity's vq_primary/vq_secondary stamping
+            # (step 12 below) is the live cluster hierarchy.
 
             # ANN concept entity tagging: find matching entities via embedding similarity
             # Then validate each match by checking if entity name/alias appears in article text
@@ -2178,9 +2165,10 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
                 'typed_signals': article_typed_signals,
                 'vq_primary': vq_primary,
                 'vq_secondary': vq_secondary,
-                'super_cluster_id': cluster_super,
-                'leaf_cluster_id': cluster_leaf,
-                'cluster_assignments': cluster_assigns,
+                # Cleanup (2026-05-11): super_cluster_id / leaf_cluster_id /
+                # cluster_assignments are no longer written. The v11 system
+                # that consumed them is gone; columns will be dropped via
+                # migration once production has gone one cycle without writes.
                 # Audit fix F4 (2026-05-06): write expected_read_seconds at
                 # insert so downstream qualifying gates / read-ratio scorers
                 # don't have to recompute per event. ~30s for a typical

@@ -3,8 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
-const GOOGLE_IOS_CLIENT_ID = process.env.GOOGLE_IOS_CLIENT_ID || '';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+// iOS OAuth clients in Google Cloud have no client secret — they use PKCE.
+// The client_id is the public identifier; hardcoded here so we don't fail
+// open if the env var is missing in any environment.
+const GOOGLE_IOS_CLIENT_ID =
+  process.env.GOOGLE_IOS_CLIENT_ID ||
+  '465407271728-t3osp3o35l4hs6ei9coddr24bbsmbkda.apps.googleusercontent.com';
 
 async function mintSessionForUser(supabase, email) {
   // We don't know the user's password, but we can issue a magic-link-style
@@ -31,9 +35,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { id_token: authCode } = req.body || {};
+  const { id_token: authCode, code_verifier: codeVerifier } = req.body || {};
   if (!authCode) {
     return res.status(400).json({ error: 'Missing auth code' });
+  }
+  if (!codeVerifier) {
+    return res.status(400).json({ error: 'Missing PKCE code_verifier' });
   }
 
   try {
@@ -44,6 +51,7 @@ export default async function handler(req, res) {
       body: new URLSearchParams({
         code: authCode,
         client_id: GOOGLE_IOS_CLIENT_ID,
+        code_verifier: codeVerifier,
         redirect_uri: `${reversedClientId}:/oauth2callback`,
         grant_type: 'authorization_code',
       }).toString(),

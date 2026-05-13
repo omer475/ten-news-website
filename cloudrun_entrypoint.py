@@ -15,57 +15,14 @@ from datetime import datetime, timedelta, timezone
 # Run lock timeout - if a run has been going for longer than this, assume it crashed
 RUN_LOCK_TIMEOUT_MINUTES = 30
 
-# Daily cluster-centroid rebuild window (UTC). Fires on the first
-# 20-min-cron tick whose hour falls in this range AND whose most-recent
-# centroid was rebuilt > 22 hours ago. The 22h gate prevents a re-run
-# if 03:00 and 03:20 both fall inside the window on reboot / clock drift.
-CLUSTER_REBUILD_HOUR_UTC = 3
-CLUSTER_REBUILD_MIN_AGE_HOURS = 22
-
-
-def should_rebuild_clusters(supabase) -> bool:
-    """True if now is in the rebuild window AND centroids are stale enough."""
-    now = datetime.now(timezone.utc)
-    if now.hour != CLUSTER_REBUILD_HOUR_UTC:
-        return False
-    try:
-        res = supabase.table('global_cluster_centroids') \
-            .select('last_rebuilt_at') \
-            .order('last_rebuilt_at', desc=True) \
-            .limit(1) \
-            .execute()
-        if not res.data:
-            # Table is empty — first run, rebuild.
-            return True
-        last = res.data[0]['last_rebuilt_at']
-        # Supabase returns ISO-8601 with timezone.
-        last_dt = datetime.fromisoformat(last.replace('Z', '+00:00'))
-        age_h = (now - last_dt).total_seconds() / 3600.0
-        return age_h >= CLUSTER_REBUILD_MIN_AGE_HOURS
-    except Exception as e:
-        print(f"⚠️ Could not check centroid staleness (skipping rebuild): {e}")
-        return False
-
-
-def run_cluster_rebuild():
-    """Invoke the global centroid rebuild. Swallows errors so the regular
-    workflow still runs even if the rebuild fails."""
-    try:
-        print("=" * 60)
-        print(f"🗂️  NIGHTLY CLUSTER REBUILD starting at {datetime.now(timezone.utc).isoformat()}")
-        print("=" * 60)
-        from services.global_cluster_builder import main as rebuild_main
-        # global_cluster_builder.main() uses argparse; fake empty args so it
-        # runs in default (full-rebuild) mode.
-        saved_argv = sys.argv
-        try:
-            sys.argv = ['global_cluster_builder.py']
-            rebuild_main()
-        finally:
-            sys.argv = saved_argv
-        print("✅ Cluster rebuild done")
-    except Exception as e:
-        print(f"❌ Cluster rebuild failed (continuing with regular workflow): {e}")
+# Cleanup (2026-05-11): removed nightly global-cluster rebuild + its predicate
+# (was should_rebuild_clusters / run_cluster_rebuild). The v11 hierarchical
+# super/leaf cluster system that consumed those centroids is gone (Phase 1.1
+# v11 deletion + Phase 0.1 broken-RPC cleanup). Trinity's J=256/K=2048
+# codebook (vq_primary / vq_secondary stamped per-article at publish time)
+# is the live hierarchy and doesn't need a nightly rebuild — its centroids
+# are static unless the codebook is retrained, which is a separate, manual
+# step (scripts/train_rq_vae.py).
 
 
 def acquire_run_lock(supabase):
@@ -155,16 +112,13 @@ def main():
             sys.exit(0)
 
         try:
-            # Nightly rebuild of 10 super + 100 leaf cluster centroids.
-            # Fires once per day (03:00 UTC tick when centroids > 22h old),
-            # takes ~10-15 min, swallows its own errors so the regular
-            # workflow still runs even if the rebuild bombs.
-            if should_rebuild_clusters(supabase):
-                run_cluster_rebuild()
-                # Same nightly slot — refresh the article_dwell_stats
-                # percentile table (Kuaishou EVV/FVV anchors). Cheap
-                # aggregate over user_article_events; runs in seconds.
-                # Source: Kuaishou CIKM 2023 (arXiv:2308.13249).
+            # Nightly window (~03:00 UTC) refreshes the article_dwell_stats
+            # percentile table — Kuaishou EVV/FVV anchors, cheap aggregate
+            # over user_article_events, runs in seconds. The previous nightly
+            # super/leaf cluster rebuild was removed (v11 system deletion).
+            # Source: Kuaishou CIKM 2023 (arXiv:2308.13249).
+            now_utc = datetime.now(timezone.utc)
+            if now_utc.hour == 3:
                 try:
                     rows = supabase.rpc('refresh_article_dwell_stats').execute()
                     print(f"🕒 article_dwell_stats refreshed ({rows.data} rows)")

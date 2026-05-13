@@ -37,8 +37,8 @@ struct AuthService {
         return try await client.post(APIEndpoints.resetPassword, body: body)
     }
 
-    func googleAuth(idToken: String) async throws -> LoginResponse {
-        let body = GoogleAuthRequest(idToken: idToken)
+    func googleAuth(idToken: String, codeVerifier: String? = nil) async throws -> LoginResponse {
+        let body = GoogleAuthRequest(idToken: idToken, codeVerifier: codeVerifier)
         return try await client.post(APIEndpoints.googleAuth, body: body)
     }
 }
