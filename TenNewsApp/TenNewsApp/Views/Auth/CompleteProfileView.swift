@@ -13,6 +13,12 @@ struct CompleteProfileView: View {
     @State private var pickerDate: Date = Calendar.current.date(byAdding: .year, value: -22, to: Date()) ?? Date()
     @State private var dobFocus: DobField?
     @State private var usernameInput: String = ""
+    /// Tracks whether the active step change is a back-pop so the asymmetric
+    /// transition can render the slide in the right direction.
+    @State private var goingBack: Bool = false
+    /// Locks back/continue for the duration of the slide so a fast double-tap
+    /// can't skip a step or fire the network call twice.
+    @State private var isStepChanging: Bool = false
     @FocusState private var usernameFocused: Bool
 
     var onComplete: (AuthUser) -> Void
@@ -88,14 +94,38 @@ struct CompleteProfileView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
-        .onAppear { dobFocus = .day }
-        .onChange(of: step) { _, _ in
-            viewModel.clearMessages()
+        .onAppear {
+            // Defer focus by one runloop tick so the field is mounted before
+            // we ask it to become first responder — otherwise the keyboard
+            // skips a frame or fails to appear at all on first show.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if step == .age { dobFocus = .day }
+            }
+        }
+        .onChange(of: step) { _, new in
+            // Re-bind focus AFTER the transition has mounted the new view —
+            // without this defer, the keyboard visibly drops then re-rises
+            // during the slide.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                switch new {
+                case .age:      dobFocus = .day
+                case .username: usernameFocused = true
+                }
+            }
         }
     }
 
     private var stepTransition: AnyTransition {
-        .asymmetric(
+        // Direction-aware: back-pop slides in from the left (current exits
+        // right) so it feels like a native iOS pop instead of repeating the
+        // forward animation.
+        if goingBack {
+            return .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        }
+        return .asymmetric(
             insertion: .move(edge: .trailing).combined(with: .opacity),
             removal: .move(edge: .leading).combined(with: .opacity)
         )
@@ -104,11 +134,18 @@ struct CompleteProfileView: View {
     private var topBar: some View {
         HStack {
             Button {
+                guard !isStepChanging else { return }
                 HapticManager.light()
-                if step == .age { return } // no back from age — google session already started
+                if step == .age { return } // no back from age — Google/Apple session already started
                 if let prev = Step(rawValue: step.rawValue - 1) {
+                    viewModel.clearMessages()
+                    goingBack = true
+                    isStepChanging = true
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                         step = prev
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                        isStepChanging = false
                     }
                 }
             } label: {
@@ -331,6 +368,7 @@ struct CompleteProfileView: View {
 
     private var continueButton: some View {
         Button {
+            guard !isStepChanging, canProceed, !viewModel.isLoading else { return }
             HapticManager.medium()
             handleContinue()
         } label: {
@@ -361,8 +399,14 @@ struct CompleteProfileView: View {
     private func handleContinue() {
         switch step {
         case .age:
+            viewModel.clearMessages()
+            goingBack = false
+            isStepChanging = true
             withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                 step = .username
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                isStepChanging = false
             }
         case .username:
             viewModel.username = usernameInput
