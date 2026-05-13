@@ -104,16 +104,23 @@ struct SignupView: View {
                     .padding(.top, 6)
                     .padding(.bottom, 20)
 
-                // Step content
-                Group {
+                // Step content. Each case carries its own `.transition` so
+                // SwiftUI sees a true insertion/removal pair when `step`
+                // changes — the previous Group-wrapper pattern collapsed the
+                // four cases into a single view identity, so the transition
+                // didn't always fire cleanly and the slide felt mushy.
+                ZStack(alignment: .top) {
                     switch step {
-                    case .email:    emailStep
-                    case .age:      ageStep
-                    case .username: usernameStep
-                    case .password: passwordStep
+                    case .email:
+                        emailStep.transition(stepTransition)
+                    case .age:
+                        ageStep.transition(stepTransition)
+                    case .username:
+                        usernameStep.transition(stepTransition)
+                    case .password:
+                        passwordStep.transition(stepTransition)
                     }
                 }
-                .transition(stepTransition)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 // Error banner
@@ -194,21 +201,27 @@ struct SignupView: View {
     }
 
     private var stepTransition: AnyTransition {
-        // Forward (next step): new enters from the right, current exits left.
-        // Back (previous step): new enters from the left, current exits right.
-        // The direction flips on `goingBack` so the back gesture feels like a
-        // standard iOS pop instead of repeating the forward animation.
+        // Pure slide, no opacity blend — opacity on top of a translate makes
+        // text look smeary mid-animation and is what was making the previous
+        // transition feel "mushy" instead of crisp like TikTok / IG.
+        // Forward: new enters from right, current exits left.
+        // Back:    new enters from left,  current exits right.
         if goingBack {
             return .asymmetric(
-                insertion: .move(edge: .leading).combined(with: .opacity),
-                removal: .move(edge: .trailing).combined(with: .opacity)
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
             )
         }
         return .asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
+            insertion: .move(edge: .trailing),
+            removal: .move(edge: .leading)
         )
     }
+
+    /// Spring used by both the back and continue handlers. Tuned to match
+    /// UINavigationController's push/pop curve — response ~0.35s, near-zero
+    /// bounce. Slower springs (the old 0.5/0.85) feel laggy at the start.
+    private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
 
     // MARK: - Top bar
 
@@ -226,10 +239,10 @@ struct SignupView: View {
                     viewModel.clearMessages()
                     goingBack = true
                     isStepChanging = true
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    withAnimation(Self.stepSpring) {
                         step = prev
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         isStepChanging = false
                     }
                 }
@@ -807,10 +820,10 @@ struct SignupView: View {
                 viewModel.clearMessages()
                 goingBack = false
                 isStepChanging = true
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                withAnimation(Self.stepSpring) {
                     step = next
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                     isStepChanging = false
                 }
             }

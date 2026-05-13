@@ -71,13 +71,17 @@ struct CompleteProfileView: View {
                 progressDots
                     .padding(.top, 6)
                     .padding(.bottom, 20)
-                Group {
+                // Per-case transitions so SwiftUI sees a real insert/remove
+                // pair when step flips (the previous Group-wrapper collapsed
+                // both cases to one identity and the slide felt mushy).
+                ZStack(alignment: .top) {
                     switch step {
-                    case .age:      ageStep
-                    case .username: usernameStep
+                    case .age:
+                        ageStep.transition(stepTransition)
+                    case .username:
+                        usernameStep.transition(stepTransition)
                     }
                 }
-                .transition(stepTransition)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 if let error = viewModel.errorMessage {
@@ -116,20 +120,23 @@ struct CompleteProfileView: View {
     }
 
     private var stepTransition: AnyTransition {
+        // Pure slide (no opacity blend) so text doesn't smear mid-animation.
         // Direction-aware: back-pop slides in from the left (current exits
-        // right) so it feels like a native iOS pop instead of repeating the
-        // forward animation.
+        // right) so it feels like a native iOS pop, forward slides from right.
         if goingBack {
             return .asymmetric(
-                insertion: .move(edge: .leading).combined(with: .opacity),
-                removal: .move(edge: .trailing).combined(with: .opacity)
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
             )
         }
         return .asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
+            insertion: .move(edge: .trailing),
+            removal: .move(edge: .leading)
         )
     }
+
+    /// Matches the SignupView spring — tight, near-zero bounce, ~0.35s.
+    private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
 
     private var topBar: some View {
         HStack {
@@ -141,10 +148,10 @@ struct CompleteProfileView: View {
                     viewModel.clearMessages()
                     goingBack = true
                     isStepChanging = true
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    withAnimation(Self.stepSpring) {
                         step = prev
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         isStepChanging = false
                     }
                 }
@@ -402,10 +409,10 @@ struct CompleteProfileView: View {
             viewModel.clearMessages()
             goingBack = false
             isStepChanging = true
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+            withAnimation(Self.stepSpring) {
                 step = .username
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 isStepChanging = false
             }
         case .username:
