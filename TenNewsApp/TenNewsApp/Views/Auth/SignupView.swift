@@ -13,6 +13,9 @@ struct SignupView: View {
     @State private var pendingGoogleAuth: (user: AuthUser, session: AuthSession?)?
     @State private var showCompleteProfile = false
     @State private var goingBack: Bool = false
+    /// Locks Continue + back-button during the ~0.5s step transition so a
+    /// double-tap can't skip a step (forward) or pop two steps (back).
+    @State private var isStepChanging: Bool = false
     @FocusState private var focusedField: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -149,31 +152,44 @@ struct SignupView: View {
             }
         }
         .onAppear {
-            focusedField = .email
             let args = ProcessInfo.processInfo.arguments
             if args.contains("--screenshot-signup-age") {
                 step = .age
                 focusedField = nil
                 dobFocus = .day
+                return
             } else if args.contains("--screenshot-signup-username") {
                 step = .username
                 focusedField = .username
+                return
             } else if args.contains("--screenshot-signup-password") {
                 step = .password
                 focusedField = .password
+                return
+            }
+            // Defer focus by one runloop tick so the TextField is fully
+            // mounted before we ask it to become first responder — without
+            // this the keyboard often takes 1-2 frames to appear or is
+            // dropped entirely on slow first launches.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if step == .email { focusedField = .email }
             }
         }
         .onChange(of: step) { _, new in
-            viewModel.clearMessages()
-            switch new {
-            case .email:    focusedField = .email
-            case .age:
-                focusedField = nil
-                dobFocus = .day
-            case .username: focusedField = .username
-            case .password: focusedField = .password
+            // Re-bind focus for the new step. Deferred one tick so the step's
+            // TextField has been inserted by the transition before we hand it
+            // focus — without the defer, the keyboard flickers (drops, then
+            // re-shows) during the cross-fade.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                switch new {
+                case .email:    focusedField = .email
+                case .age:
+                    focusedField = nil
+                    dobFocus = .day
+                case .username: focusedField = .username
+                case .password: focusedField = .password
+                }
             }
-            HapticManager.selection()
         }
     }
 
@@ -199,13 +215,22 @@ struct SignupView: View {
     private var topBar: some View {
         HStack {
             Button {
+                // Guard against a fast double-tap popping two steps at once.
+                guard !isStepChanging else { return }
                 HapticManager.light()
                 if step == .email {
                     if let onBack { onBack() } else { dismiss() }
                 } else if let prev = SignupStep(rawValue: step.rawValue - 1) {
+                    // Clear any stale error banner BEFORE the transition so it
+                    // doesn't sit visible across the animation.
+                    viewModel.clearMessages()
                     goingBack = true
+                    isStepChanging = true
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                         step = prev
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                        isStepChanging = false
                     }
                 }
             } label: {
@@ -222,6 +247,9 @@ struct SignupView: View {
             Text("Step \(step.rawValue + 1) of \(SignupStep.allCases.count)")
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.4))
+                // Smooth numeric tick instead of the digit popping instantly
+                .contentTransition(.numericText(value: Double(step.rawValue)))
+                .animation(.spring(response: 0.45, dampingFraction: 0.85), value: step)
 
             Spacer()
 
@@ -715,6 +743,9 @@ struct SignupView: View {
 
     private var continueButton: some View {
         Button {
+            // Guard against a fast double-tap skipping a step (forward) or
+            // firing the signup network call twice on .password.
+            guard !isStepChanging, canProceed, !viewModel.isLoading else { return }
             HapticManager.medium()
             handleContinue()
         } label: {
@@ -767,9 +798,16 @@ struct SignupView: View {
         switch step {
         case .email, .age, .username:
             if let next = SignupStep(rawValue: step.rawValue + 1) {
+                // Clear any prior error banner BEFORE the transition so it
+                // doesn't sit visible across the slide.
+                viewModel.clearMessages()
                 goingBack = false
+                isStepChanging = true
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                     step = next
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                    isStepChanging = false
                 }
             }
         case .password:
