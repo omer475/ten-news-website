@@ -10,6 +10,20 @@ struct AsyncCachedImage: View {
     @State private var image: UIImage?
     @State private var isLoading = true
     @State private var shimmerPhase: CGFloat = -1
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Background tone of the placeholder shimmer + failure tile. Adapts to
+    /// the parent color scheme so a light page doesn't show a black rectangle
+    /// (and vice versa).
+    private var placeholderBase: Color {
+        colorScheme == .dark ? Color(white: 0.15) : Color(white: 0.92)
+    }
+    private var shimmerHighlight: Color {
+        colorScheme == .dark ? Color.white.opacity(0.10) : Color.black.opacity(0.05)
+    }
+    private var failureIconColor: Color {
+        colorScheme == .dark ? Color(white: 0.3) : Color(white: 0.65)
+    }
 
     nonisolated(unsafe) static let cache: NSCache<NSURL, UIImage> = {
         let c = NSCache<NSURL, UIImage>()
@@ -32,7 +46,7 @@ struct AsyncCachedImage: View {
                     .transition(.opacity.animation(.easeOut(duration: 0.25)))
             } else if isLoading {
                 Rectangle()
-                    .fill(Color(white: 0.15))
+                    .fill(placeholderBase)
                     .overlay {
                         GeometryReader { geo in
                             Rectangle()
@@ -40,9 +54,9 @@ struct AsyncCachedImage: View {
                                     LinearGradient(
                                         colors: [
                                             .clear,
-                                            Color.white.opacity(0.06),
-                                            Color.white.opacity(0.1),
-                                            Color.white.opacity(0.06),
+                                            shimmerHighlight,
+                                            shimmerHighlight,
+                                            shimmerHighlight,
                                             .clear
                                         ],
                                         startPoint: .leading,
@@ -61,11 +75,11 @@ struct AsyncCachedImage: View {
                     }
             } else {
                 Rectangle()
-                    .fill(Color(white: 0.12))
+                    .fill(placeholderBase)
                     .overlay {
                         Image(systemName: "photo")
                             .font(.title2)
-                            .foregroundStyle(Color(white: 0.3))
+                            .foregroundStyle(failureIconColor)
                     }
             }
         }
@@ -98,10 +112,14 @@ struct AsyncCachedImage: View {
 
         isLoading = true
 
-        // Try up to 2 times (initial + 1 retry)
-        for attempt in 0..<2 {
-            if attempt > 0 {
-                try? await Task.sleep(for: .milliseconds(500))
+        // Try up to 3 times with exponential backoff (250ms, 750ms). Some
+        // CDN edges return 503 briefly during cache misses; a third attempt
+        // catches those without making the user stare at a shimmer for too
+        // long. URLSession timeoutIntervalForRequest=15s caps each attempt.
+        let backoffMs: [UInt64] = [0, 250, 750]
+        for attempt in 0..<3 {
+            if backoffMs[attempt] > 0 {
+                try? await Task.sleep(for: .milliseconds(Int(backoffMs[attempt])))
             }
             do {
                 var request = URLRequest(url: url)
@@ -118,6 +136,7 @@ struct AsyncCachedImage: View {
                     isLoading = false
                     return
                 }
+                // Non-2xx OR couldn't decode — retry with backoff.
             } catch {
                 continue
             }

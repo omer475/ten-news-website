@@ -651,8 +651,11 @@ private struct WelcomeScene: View {
         let publisherName = (article.category?.isEmpty == false ? article.category! : "Today+")
         let initial = String(publisherName.prefix(1)).uppercased()
 
-        // Outer VStack uses the same 8pt spacing as
-        // ArticleCardContinuousView.body — header + photo block + caption.
+        // Everything (creator row + photo + title + bullets) lives inside a
+        // single white card with a soft shadow — same surface treatment the
+        // user asked for on the welcome screen. Spacing inside still mirrors
+        // ArticleCardContinuousView (8pt between rows, 10pt between title
+        // and bullets).
         VStack(alignment: .leading, spacing: 8) {
             // Header row — 32pt avatar + 14pt semibold byline (mirrors
             // ArticleCardContinuousView.headerRow).
@@ -671,10 +674,12 @@ private struct WelcomeScene: View {
                         .font(.system(size: 14, weight: .semibold))
                         .tracking(-0.1)
                         .foregroundStyle(Color.primary)
+                        .contentTransition(.opacity)
                     if !article.relativeTime.isEmpty {
                         Text(article.relativeTime)
                             .font(.system(size: 11))
                             .foregroundStyle(Color.secondary)
+                            .contentTransition(.opacity)
                     }
                 }
                 Spacer()
@@ -687,7 +692,10 @@ private struct WelcomeScene: View {
             VStack(alignment: .leading, spacing: 0) {
                 AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    // Cap height so an unusually-tall portrait doesn't push
+                    // the bullets off-screen during rotation.
+                    .frame(maxHeight: 380)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .padding(.bottom, 12)
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -698,6 +706,7 @@ private struct WelcomeScene: View {
                         .foregroundStyle(Color.primary)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentTransition(.opacity)
 
                     if let bullets = article.bullets, !bullets.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
@@ -713,6 +722,7 @@ private struct WelcomeScene: View {
                                         .lineSpacing(5)
                                         .multilineTextAlignment(.leading)
                                         .tint(Color.primary)
+                                        .contentTransition(.opacity)
                                 }
                             }
                         }
@@ -721,8 +731,20 @@ private struct WelcomeScene: View {
                 .padding(.top, 4)
             }
         }
-        .id("front-\(cardIndex)")
-        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white)
+        )
+        // Soft shadow — visible but not heavy. Two layers (one tight, one
+        // wider) gives the card a clean lift off the page without looking
+        // like a drop-shadow PNG from 2010.
+        .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 8)
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
+        // No .id() on the card — SwiftUI diffs the inner content in place
+        // when `cardIndex` flips, which keeps AsyncCachedImage's cache hot
+        // across rotations. Text changes crossfade via .contentTransition.
+        .animation(.smooth(duration: 0.45), value: cardIndex)
     }
 
     /// Renders a bullet's `**bold**` markdown segments as bold text inline,
