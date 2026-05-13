@@ -724,6 +724,23 @@ private struct WelcomeScene: View {
                             }
                         }
                     }
+
+                    // Bottom action row — visual-only mock of the For You
+                    // card's like / save / repost / share buttons with
+                    // deterministic fake counts so the welcome preview reads
+                    // as a real social card. Right-aligned via a leading
+                    // Spacer (the For You actionRow has the same layout, but
+                    // its left edge holds the topic chips that don't apply
+                    // here).
+                    let metrics = sampleMetrics(for: article)
+                    HStack(spacing: 22) {
+                        Spacer()
+                        previewActionIcon("heart", count: metrics.likes)
+                        previewActionIcon("bookmark", count: metrics.saves)
+                        previewActionIcon("arrow.2.squarepath", count: metrics.shares)
+                        previewActionIcon("arrowshape.turn.up.right", count: metrics.comments)
+                    }
+                    .padding(.top, 8)
                 }
                 .padding(.top, 4)
             }
@@ -761,6 +778,22 @@ private struct WelcomeScene: View {
             return attr
         }
         return AttributedString(text)
+    }
+
+    /// One icon + count pair for the welcome card's action row. Visual only —
+    /// no tap target because the user isn't authenticated yet on this screen.
+    /// Matches the For You actionIcon's icon size (17pt) with the count
+    /// rendered to the right at 12pt semibold monospaced.
+    private func previewActionIcon(_ systemName: String, count: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemName)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundStyle(Color.secondary)
+            Text(count)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color.secondary)
+        }
     }
 
     // MARK: - Social rail
