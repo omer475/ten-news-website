@@ -630,11 +630,12 @@ private struct WelcomeScene: View {
         }
     }
 
-    /// Mirrors the live feed card's layout: small creator row on top, big
-    /// rounded photo, multi-line title underneath. No action rail (this is
-    /// a passive marketing preview), no bullets or info box (ExploreTopicArticle
-    /// doesn't carry that data — those slots are conditional on the live
-    /// feed and would always be empty here anyway).
+    /// Mirrors the live For You card's layout 1:1 — same avatar size, same
+    /// byline font, same photo treatment (AsyncCachedImage at natural aspect
+    /// with 18pt rounded corners, no title overlay), same 24pt bold title
+    /// below. The only differences from the real card are colors (white-on-
+    /// dark instead of primary-on-cream because the welcome bg is dark) and
+    /// no action row (this is a passive marketing preview).
     @ViewBuilder
     private func articleCard(at index: Int) -> some View {
         let article = articles[index]
@@ -643,61 +644,51 @@ private struct WelcomeScene: View {
         let publisherName = (article.category?.isEmpty == false ? article.category! : "Today+")
         let initial = String(publisherName.prefix(1)).uppercased()
 
-        VStack(alignment: .leading, spacing: 12) {
-            // Creator row (avatar + name + time-ago).
+        VStack(alignment: .leading, spacing: 8) {
+            // Header row — same 32pt avatar + 14pt semibold byline as the
+            // real ArticleCardContinuousView.headerRow.
             HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [color.opacity(0.95), color.opacity(0.6)],
-                                startPoint: .topLeading, endPoint: .bottomTrailing
-                            )
-                        )
-                    Text(initial)
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 32, height: 32)
-                .overlay(Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1))
+                Circle()
+                    .fill(color)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(initial)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(publisherName)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.92))
                         .tracking(-0.1)
+                        .foregroundStyle(.white)
                     if !article.relativeTime.isEmpty {
                         Text(article.relativeTime)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.42))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.5))
                     }
                 }
                 Spacer()
             }
 
-            // Photo (re-use ExploreArticleCard with no overlays so we get the
-            // same image-loading + dominant-color extraction as everywhere else).
-            ExploreArticleCard(
-                article: article,
-                fallbackColor: color,
-                cardWidth: UIScreen.main.bounds.width - 40,
-                cardHeight: 380,
-                showTags: false,
-                onDominantColorChanged: { c in
-                    articleColors[key] = c
-                }
-            )
-            .shadow(color: color.opacity(0.10), radius: 30)
+            // Photo — AsyncCachedImage at natural aspect, 18pt corners. Same
+            // setup as MainFeedView.photoBlock minus the heart-burst overlay.
+            // Critically: NO baked-in title text on the image.
+            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .padding(.top, 4)
 
-            // Title — multi-line, bold, the focal text element below the photo.
+            // Title — exact same 24pt bold / tracking -0.5 / lineSpacing 2
+            // as MainFeedView.singlePageCaption.
             Text(article.cleanTitle)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.white.opacity(0.96))
-                .tracking(-0.4)
+                .font(.system(size: 24, weight: .bold))
+                .tracking(-0.5)
                 .lineSpacing(2)
-                .lineLimit(3)
+                .foregroundStyle(.white)
                 .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 6)
         }
         .id("front-\(cardIndex)")
         .transition(.opacity.combined(with: .scale(scale: 0.98)))
