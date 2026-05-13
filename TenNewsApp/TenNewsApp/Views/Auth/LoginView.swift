@@ -29,6 +29,34 @@ struct LoginView: View {
                     .lineSpacing(4)
                     .padding(.top, 10)
 
+                // MARK: - Sign in with Apple
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        if let result = await viewModel.signInWithApple() {
+                            if viewModel.needsProfileCompletion {
+                                pendingGoogleAuth = result
+                                showCompleteProfile = true
+                            } else {
+                                onLogin?(result.user, result.session)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Continue with Apple")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(LoginPressStyle())
+                .padding(.top, 28)
+
                 // MARK: - Google Sign In
                 Button {
                     HapticManager.medium()
@@ -59,7 +87,7 @@ struct LoginView: View {
                     )
                 }
                 .buttonStyle(LoginPressStyle())
-                .padding(.top, 28)
+                .padding(.top, 12)
 
                 // Divider
                 HStack(spacing: 12) {

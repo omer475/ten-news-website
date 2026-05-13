@@ -41,6 +41,11 @@ struct AuthService {
         let body = GoogleAuthRequest(idToken: idToken, codeVerifier: codeVerifier)
         return try await client.post(APIEndpoints.googleAuth, body: body)
     }
+
+    func appleAuth(idToken: String, nonce: String, fullName: String?) async throws -> LoginResponse {
+        let body = AppleAuthRequest(idToken: idToken, nonce: nonce, fullName: fullName)
+        return try await client.post(APIEndpoints.appleAuth, body: body)
+    }
 }
 
 // MARK: - Empty Body for POST requests without a payload

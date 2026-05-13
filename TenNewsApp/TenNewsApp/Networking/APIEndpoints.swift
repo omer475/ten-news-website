@@ -37,6 +37,7 @@ enum APIEndpoints {
     static let forgotPassword = "/api/auth/forgot-password"
     static let resetPassword = "/api/auth/reset-password"
     static let googleAuth = "/api/auth/google"
+    static let appleAuth = "/api/auth/apple"
     static let completeProfile = "/api/auth/complete-profile"
 
     // MARK: - User

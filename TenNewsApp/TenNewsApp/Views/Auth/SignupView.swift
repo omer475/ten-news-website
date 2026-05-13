@@ -278,6 +278,32 @@ struct SignupView: View {
                 Button {
                     HapticManager.medium()
                     Task {
+                        if let result = await viewModel.signInWithApple() {
+                            if viewModel.needsProfileCompletion {
+                                pendingGoogleAuth = result
+                                showCompleteProfile = true
+                            } else {
+                                onSignup?(result.user, result.session)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Continue with Apple")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.white, in: Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    HapticManager.medium()
+                    Task {
                         if let result = await viewModel.signInWithGoogle() {
                             if viewModel.needsProfileCompletion {
                                 pendingGoogleAuth = result
