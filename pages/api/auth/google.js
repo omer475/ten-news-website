@@ -59,7 +59,15 @@ export default async function handler(req, res) {
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || !tokenData.id_token) {
       console.error('[google] token exchange failed:', tokenData);
-      return res.status(401).json({ error: 'Failed to exchange auth code' });
+      // Surface Google's actual error so the iOS app can show why it failed
+      // (e.g. invalid_grant, redirect_uri_mismatch, unauthorized_client).
+      const detail = tokenData?.error_description || tokenData?.error || 'unknown';
+      // Use 400 instead of 401 so the iOS APIClient surfaces the message via
+      // .badRequest rather than swallowing it as a generic "session expired".
+      return res.status(400).json({
+        error: `Google rejected the auth code: ${detail}`,
+        google_error: tokenData?.error || null,
+      });
     }
 
     const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${tokenData.id_token}`);

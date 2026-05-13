@@ -233,8 +233,12 @@ final class AuthViewModel {
         } catch {
             if (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
                 // User cancelled — don't show error
+            } else if let apiError = error as? APIError {
+                // Surface the backend's actual error message (e.g. the Google
+                // error_description) instead of a generic string.
+                errorMessage = apiError.errorDescription ?? "Google sign-in failed"
             } else {
-                errorMessage = "Google sign-in failed"
+                errorMessage = "Google sign-in failed: \(error.localizedDescription)"
             }
             isLoading = false
             return nil
