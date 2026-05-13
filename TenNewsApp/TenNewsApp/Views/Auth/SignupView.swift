@@ -104,24 +104,34 @@ struct SignupView: View {
                     .padding(.top, 6)
                     .padding(.bottom, 20)
 
-                // Step content. Each case carries its own `.transition` so
-                // SwiftUI sees a true insertion/removal pair when `step`
-                // changes — the previous Group-wrapper pattern collapsed the
-                // four cases into a single view identity, so the transition
-                // didn't always fire cleanly and the slide felt mushy.
-                ZStack(alignment: .top) {
-                    switch step {
-                    case .email:
-                        emailStep.transition(stepTransition)
-                    case .age:
-                        ageStep.transition(stepTransition)
-                    case .username:
-                        usernameStep.transition(stepTransition)
-                    case .password:
-                        passwordStep.transition(stepTransition)
+                // Step content as an offset-based carousel. All four steps
+                // live in the tree at once and are positioned by their index
+                // relative to the active step. When `step` changes, every
+                // child's offset re-computes inside a single animated
+                // transaction — no insertion/removal weirdness, no black
+                // flash between transitions, and the direction is implicit
+                // (going to a higher rawValue = current slides left, next
+                // slides in from right; going to a lower rawValue = the
+                // reverse). This is the pattern TikTok / IG / X actually
+                // use for their multi-step signups.
+                GeometryReader { geo in
+                    ZStack(alignment: .top) {
+                        ForEach(SignupStep.allCases, id: \.rawValue) { s in
+                            stepContent(for: s)
+                                .frame(width: geo.size.width, alignment: .top)
+                                .offset(x: CGFloat(s.rawValue - step.rawValue) * geo.size.width)
+                                // Hide the off-screen pages from accessibility
+                                // and disable hit-testing so they can't steal
+                                // taps mid-animation.
+                                .allowsHitTesting(s == step)
+                                .accessibilityHidden(s != step)
+                        }
                     }
+                    .frame(width: geo.size.width, alignment: .top)
+                    .clipped()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(Self.stepSpring, value: step)
 
                 // Error banner
                 if let error = viewModel.errorMessage {
@@ -200,28 +210,24 @@ struct SignupView: View {
         }
     }
 
-    private var stepTransition: AnyTransition {
-        // Pure slide, no opacity blend — opacity on top of a translate makes
-        // text look smeary mid-animation and is what was making the previous
-        // transition feel "mushy" instead of crisp like TikTok / IG.
-        // Forward: new enters from right, current exits left.
-        // Back:    new enters from left,  current exits right.
-        if goingBack {
-            return .asymmetric(
-                insertion: .move(edge: .leading),
-                removal: .move(edge: .trailing)
-            )
-        }
-        return .asymmetric(
-            insertion: .move(edge: .trailing),
-            removal: .move(edge: .leading)
-        )
-    }
-
-    /// Spring used by both the back and continue handlers. Tuned to match
+    /// Spring used for the offset-based carousel. Tuned to match
     /// UINavigationController's push/pop curve — response ~0.35s, near-zero
     /// bounce. Slower springs (the old 0.5/0.85) feel laggy at the start.
     private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
+
+    /// Returns the body for a specific step. Used by the ForEach in the
+    /// carousel so every step is in the tree at once (offset off-screen
+    /// when inactive). Switching on the step argument — NOT on the current
+    /// `step` — is what lets all four be rendered in parallel.
+    @ViewBuilder
+    private func stepContent(for s: SignupStep) -> some View {
+        switch s {
+        case .email:    emailStep
+        case .age:      ageStep
+        case .username: usernameStep
+        case .password: passwordStep
+        }
+    }
 
     // MARK: - Top bar
 

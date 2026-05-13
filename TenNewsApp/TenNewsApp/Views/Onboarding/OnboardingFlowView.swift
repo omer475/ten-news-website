@@ -395,19 +395,22 @@ private struct WelcomeScene: View {
                 .animation(.smooth(duration: 1.0), value: currentArticleColor)
 
             VStack(spacing: 0) {
-                // Fixed-height welcome slot — text bottom-anchored so 2-row entity
-                // names grow upward while the entity baseline (and the card below)
-                // stay in the same spot.
+                // Compact welcome slot — heading is small + sits high so the
+                // article preview below can take most of the screen real estate
+                // (the actual app's feed card is the star of the welcome page,
+                // not the marketing copy).
                 welcomeBlock
                     .frame(maxWidth: .infinity, alignment: .bottomLeading)
-                    .frame(height: 170, alignment: .bottomLeading)
+                    .frame(height: 86, alignment: .bottomLeading)
                     .padding(.horizontal, 24)
-                    .padding(.top, 40)
+                    .padding(.top, 12)
 
-                // Fixed gap, then the card — its top edge is now at a constant y.
+                // Big article preview using the same layout pattern as the
+                // real feed card (creator → photo → title), so what the user
+                // sees here is exactly what they'll see post-onboarding.
                 feedCardStack
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 14)
                     .opacity(taglineVisible ? 1 : 0)
                     .blur(radius: taglineVisible ? 0 : 14)
 
@@ -606,46 +609,98 @@ private struct WelcomeScene: View {
     private var feedCardStack: some View {
         Group {
             if articles.isEmpty {
-                // Loading / skeleton placeholder matching the card dimensions
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(white: 0.08))
-                    .frame(height: 380)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(.white.opacity(0.06), lineWidth: 1)
-                    )
+                // Loading / skeleton matching the new card dimensions —
+                // creator row, photo, title placeholders.
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        Circle().fill(Color(white: 0.12)).frame(width: 32, height: 32)
+                        VStack(alignment: .leading, spacing: 4) {
+                            RoundedRectangle(cornerRadius: 3).fill(Color(white: 0.12)).frame(width: 120, height: 11)
+                            RoundedRectangle(cornerRadius: 3).fill(Color(white: 0.08)).frame(width: 60, height: 9)
+                        }
+                        Spacer()
+                    }
+                    RoundedRectangle(cornerRadius: 18).fill(Color(white: 0.08)).frame(height: 380)
+                    RoundedRectangle(cornerRadius: 4).fill(Color(white: 0.12)).frame(height: 22)
+                    RoundedRectangle(cornerRadius: 4).fill(Color(white: 0.10)).frame(width: 220, height: 22)
+                }
             } else {
-                articleCard(at: cardIndex, depth: 0)
+                articleCard(at: cardIndex)
             }
         }
     }
 
+    /// Mirrors the live feed card's layout: small creator row on top, big
+    /// rounded photo, multi-line title underneath. No action rail (this is
+    /// a passive marketing preview), no bullets or info box (ExploreTopicArticle
+    /// doesn't carry that data — those slots are conditional on the live
+    /// feed and would always be empty here anyway).
     @ViewBuilder
-    private func articleCard(at index: Int, depth: Int) -> some View {
+    private func articleCard(at index: Int) -> some View {
         let article = articles[index]
         let key = article.id.stringValue
         let color = articleColors[key] ?? Color(white: 0.15)
-        let metrics = sampleMetrics(for: article)
+        let publisherName = (article.category?.isEmpty == false ? article.category! : "Today+")
+        let initial = String(publisherName.prefix(1)).uppercased()
 
-        ExploreArticleCard(
-            article: article,
-            fallbackColor: color,
-            cardWidth: UIScreen.main.bounds.width - 40,
-            cardHeight: 380,
-            showTags: false,
-            onDominantColorChanged: { c in
-                articleColors[key] = c
+        VStack(alignment: .leading, spacing: 12) {
+            // Creator row (avatar + name + time-ago).
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color.opacity(0.95), color.opacity(0.6)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            )
+                        )
+                    Text(initial)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 32, height: 32)
+                .overlay(Circle().strokeBorder(.white.opacity(0.18), lineWidth: 1))
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(publisherName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.92))
+                        .tracking(-0.1)
+                    if !article.relativeTime.isEmpty {
+                        Text(article.relativeTime)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.42))
+                    }
+                }
+                Spacer()
             }
-        )
-        .overlay(alignment: .trailing) {
-            socialRail(metrics: metrics, color: color)
-                .frame(width: 40)
-                .padding(.trailing, 10)
-                .padding(.bottom, 50)
+
+            // Photo (re-use ExploreArticleCard with no overlays so we get the
+            // same image-loading + dominant-color extraction as everywhere else).
+            ExploreArticleCard(
+                article: article,
+                fallbackColor: color,
+                cardWidth: UIScreen.main.bounds.width - 40,
+                cardHeight: 380,
+                showTags: false,
+                onDominantColorChanged: { c in
+                    articleColors[key] = c
+                }
+            )
+            .shadow(color: color.opacity(0.10), radius: 30)
+
+            // Title — multi-line, bold, the focal text element below the photo.
+            Text(article.cleanTitle)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(.white.opacity(0.96))
+                .tracking(-0.4)
+                .lineSpacing(2)
+                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .shadow(color: color.opacity(0.10), radius: 44)
         .id("front-\(cardIndex)")
-        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+        .transition(.opacity.combined(with: .scale(scale: 0.98)))
     }
 
     // MARK: - Social rail
@@ -731,26 +786,27 @@ private struct WelcomeScene: View {
     }
 
     private var welcomeBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 4) {
             Text("TRENDING NOW")
-                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                .font(.system(size: 10, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white.opacity(0.42))
-                .tracking(2.6)
+                .tracking(2.0)
 
-            // Hero entity — massive, tinted by card color
+            // Entity heading — smaller than before so the article preview
+            // below has room to be the focal point.
             if !primaryEntity.isEmpty {
                 Text(primaryEntity)
-                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
                     .foregroundStyle(primaryEntityColor)
-                    .tracking(-2.0)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
+                    .tracking(-0.8)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
                     .id(cardIndex)
-                    .transition(.opacity.combined(with: .offset(y: 6)))
+                    .transition(.opacity.combined(with: .offset(y: 4)))
             } else {
                 Text(" ")
-                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
             }
         }
         .opacity(taglineVisible ? 1 : 0)

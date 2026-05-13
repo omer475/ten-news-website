@@ -71,18 +71,23 @@ struct CompleteProfileView: View {
                 progressDots
                     .padding(.top, 6)
                     .padding(.bottom, 20)
-                // Per-case transitions so SwiftUI sees a real insert/remove
-                // pair when step flips (the previous Group-wrapper collapsed
-                // both cases to one identity and the slide felt mushy).
-                ZStack(alignment: .top) {
-                    switch step {
-                    case .age:
-                        ageStep.transition(stepTransition)
-                    case .username:
-                        usernameStep.transition(stepTransition)
+                // Offset-based carousel — same pattern as SignupView so the
+                // slide is buttery and the direction is implicit.
+                GeometryReader { geo in
+                    ZStack(alignment: .top) {
+                        ForEach(Step.allCases, id: \.rawValue) { s in
+                            stepContent(for: s)
+                                .frame(width: geo.size.width, alignment: .top)
+                                .offset(x: CGFloat(s.rawValue - step.rawValue) * geo.size.width)
+                                .allowsHitTesting(s == step)
+                                .accessibilityHidden(s != step)
+                        }
                     }
+                    .frame(width: geo.size.width, alignment: .top)
+                    .clipped()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(Self.stepSpring, value: step)
 
                 if let error = viewModel.errorMessage {
                     errorBanner(error)
@@ -119,24 +124,16 @@ struct CompleteProfileView: View {
         }
     }
 
-    private var stepTransition: AnyTransition {
-        // Pure slide (no opacity blend) so text doesn't smear mid-animation.
-        // Direction-aware: back-pop slides in from the left (current exits
-        // right) so it feels like a native iOS pop, forward slides from right.
-        if goingBack {
-            return .asymmetric(
-                insertion: .move(edge: .leading),
-                removal: .move(edge: .trailing)
-            )
-        }
-        return .asymmetric(
-            insertion: .move(edge: .trailing),
-            removal: .move(edge: .leading)
-        )
-    }
-
     /// Matches the SignupView spring — tight, near-zero bounce, ~0.35s.
     private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
+
+    @ViewBuilder
+    private func stepContent(for s: Step) -> some View {
+        switch s {
+        case .age:      ageStep
+        case .username: usernameStep
+        }
+    }
 
     private var topBar: some View {
         HStack {
