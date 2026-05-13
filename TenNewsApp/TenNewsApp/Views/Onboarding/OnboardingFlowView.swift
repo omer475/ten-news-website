@@ -692,10 +692,11 @@ private struct WelcomeScene: View {
             VStack(alignment: .leading, spacing: 0) {
                 AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    // Cap height so an unusually-tall portrait doesn't push
-                    // the bullets off-screen during rotation.
-                    .frame(maxHeight: 380)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    // 18pt corner radius matches MainFeedView.photoBlock so
+                    // the welcome photo reads as the same surface treatment
+                    // as the in-app feed. No height cap — photo sizes to its
+                    // natural aspect ratio and the card grows with it.
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .padding(.bottom, 12)
 
                 VStack(alignment: .leading, spacing: 10) {
