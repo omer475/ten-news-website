@@ -639,8 +639,11 @@ struct ArticleCardContinuousView: View {
         // SampleCreators.find(bySource:). Uses fullScreenCover so the page
         // gets its own navigation stack without a half-sheet feeling.
         .fullScreenCover(isPresented: $showCreatorProfile) {
+            // Look up by the synthesized publisher name (authorName) so the
+            // profile shown matches what the user just tapped — not the raw
+            // RSS source which differs from the followed entity.
             CreatorProfileView(
-                creator: SampleCreators.find(bySource: article.source ?? "Unknown"),
+                creator: SampleCreators.find(bySource: article.authorName ?? article.source ?? "Unknown"),
                 articles: [],
                 onDismiss: { showCreatorProfile = false },
                 publisherId: article.authorId
@@ -722,7 +725,10 @@ struct ArticleCardContinuousView: View {
                     .fill(accentColor)
                     .frame(width: 32, height: 32)
                     .overlay(
-                        Text(String((article.source ?? "T").prefix(1)).uppercased())
+                        // Show the synthesized publisher's initial (Middle Ground,
+                        // Global Wire) — the entity the user actually follows —
+                        // not the underlying RSS source (Fox News, Le Monde).
+                        Text(String((article.authorName ?? article.source ?? "T").prefix(1)).uppercased())
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.white)
                     )
@@ -736,7 +742,10 @@ struct ArticleCardContinuousView: View {
                         showCreatorProfile = true
                         HapticManager.light()
                     } label: {
-                        Text(article.source ?? "Today+")
+                        // Publisher name = the synthesized author (what's in
+                        // user_follows). Fall back to raw source only when no
+                        // publisher attribution exists for this article.
+                        Text(article.authorName ?? article.source ?? "Today+")
                             .font(.system(size: 14, weight: .semibold))
                             .tracking(-0.1)
                             .foregroundStyle(Color.primary)
