@@ -156,4 +156,115 @@ final class UserDefaultsManager: @unchecked Sendable {
         ]
         allKeys.forEach { defaults.removeObject(forKey: $0) }
     }
+
+    // MARK: - Pending Preferences Sync
+    //
+    // When the post-signup PATCH to /api/user/preferences fails (transient
+    // network error, app backgrounded mid-flight, etc.) we stash the prefs
+    // here so AppViewModel can re-attempt the sync on next launch or login.
+    // Without this, a user's onboarding selections could silently never reach
+    // the backend — that's the root cause of "new account gets cold-trending
+    // instead of personalized" we hit on 2026-05-13.
+
+    private static let pendingSyncKey = "pending_preferences_sync"
+
+    func queuePendingPreferencesSync(_ prefs: UserPreferences) {
+        if let data = try? JSONEncoder().encode(prefs) {
+            defaults.set(data, forKey: Self.pendingSyncKey)
+        }
+    }
+
+    func loadPendingPreferencesSync() -> UserPreferences? {
+        guard let data = defaults.data(forKey: Self.pendingSyncKey) else { return nil }
+        return try? JSONDecoder().decode(UserPreferences.self, from: data)
+    }
+
+    func clearPendingPreferencesSync() {
+        defaults.removeObject(forKey: Self.pendingSyncKey)
+    }
+}
+
+// MARK: - SessionManager
+//
+// Single source of truth for "who is logged in." Every store that holds
+// per-user state (photos, follows, likes, bookmarks, history, ...) registers
+// once with SessionManager. When the active user changes (login / logout /
+// account switch), SessionManager notifies every registered store BEFORE the
+// new identity is read anywhere — so leaked state from the previous user is
+// impossible by construction.
+//
+// Why a registry instead of just calling each manager from AppViewModel:
+//
+//   On 2026-05-13 a brand new account created on top of an existing session
+//   ended up showing the previous user's profile picture, follow graph, and
+//   onboarding-selected topics. The cause was that `ProfilePhotoManager`,
+//   `FollowManager`, and `UserFollowManager` had to be reset by hand in
+//   AppViewModel.logout() but were forgotten there. Future managers will
+//   make the same mistake unless wire-up is centralized.
+//
+// Pattern: conform to UserScopedStore. In your singleton's init, call
+// `SessionManager.shared.register(self)`. SessionManager calls back on user
+// switch. That's the whole contract.
+
+/// A store that holds state scoped to a single signed-in user. Implementers
+/// must drop the previous user's state in `resetForUserSwitch()` and rebind
+/// to the new user (if any) in `loadForActiveUser(_:)`.
+@MainActor
+protocol UserScopedStore: AnyObject {
+    /// Called when the active user is about to change. Drop all in-memory
+    /// state from the previous user. Persistent state should be namespaced
+    /// by user id so the disk file/key for the previous user remains intact
+    /// (so the same user can return later and recover).
+    func resetForUserSwitch()
+
+    /// Called immediately after `resetForUserSwitch` with the new active user
+    /// id (or nil for guest / signed-out). Re-bind to the new identity.
+    func loadForActiveUser(_ userId: String?)
+}
+
+@MainActor
+final class SessionManager {
+    static let shared = SessionManager()
+    private init() {}
+
+    /// The currently logged-in user id, or nil for guest/signed-out.
+    private(set) var activeUserId: String?
+
+    /// Weak references so a deallocated store doesn't keep us pinned.
+    private var stores: [WeakStoreRef] = []
+
+    func register(_ store: UserScopedStore) {
+        stores.removeAll { $0.value == nil }
+        if !stores.contains(where: { $0.value === store }) {
+            stores.append(WeakStoreRef(value: store))
+        }
+    }
+
+    /// Switch the active user. All registered stores are reset, then bound
+    /// to the new user id (or nil). Always call this — never set per-store
+    /// active users directly, or you reintroduce the wire-up gap that caused
+    /// the original cross-user leak.
+    func setActiveUser(_ newId: String?) {
+        let live = stores.compactMap(\.value)
+        live.forEach { $0.resetForUserSwitch() }
+        activeUserId = newId
+        live.forEach { $0.loadForActiveUser(newId) }
+
+        #if DEBUG
+        // Tripwire: anything that registers AFTER this point will miss the
+        // reset for this transition. Print a one-line warning so the bug is
+        // caught the first time it happens in a debug build.
+        Task { @MainActor in
+            let registeredCount = self.stores.compactMap(\.value).count
+            if registeredCount < live.count {
+                print("⚠️ SessionManager: store count dropped during setActiveUser — late registration?")
+            }
+        }
+        #endif
+    }
+}
+
+@MainActor
+private struct WeakStoreRef {
+    weak var value: (any UserScopedStore)?
 }

@@ -186,6 +186,18 @@ struct AccountTabView: View {
             // a passive refresh on every Account-tab appearance to keep the
             // counts fresh after follows happen elsewhere in the app.
             userFollowManager.setCurrentUser(appViewModel.currentUser?.id)
+            // Force-reload the avatar in case ProfilePhotoManager just got
+            // bound to a different user (e.g. signup-over-existing-session).
+            profileImage = ProfilePhotoManager.shared.load()
+            selectedDefaultAvatar = ProfilePhotoManager.shared.selectedDefaultAvatar()
+        }
+        // Rebind the avatar whenever the active user id changes — without
+        // this, a fresh login renders the previous user's locally-cached
+        // photo until the view tears down (bug 2026-05-13).
+        .onChange(of: appViewModel.currentUser?.id) { _, _ in
+            profileImage = ProfilePhotoManager.shared.load()
+            selectedDefaultAvatar = ProfilePhotoManager.shared.selectedDefaultAvatar()
+            userFollowManager.setCurrentUser(appViewModel.currentUser?.id)
         }
         .onChange(of: selectedTab) { _, newTab in
             if newTab == .published && publishedArticles.isEmpty {

@@ -29,7 +29,9 @@ final class UserFollowManager {
     private var currentUserId: String?
     private let service = UserService()
 
-    private init() {}
+    private init() {
+        SessionManager.shared.register(self)
+    }
 
     /// Inform the manager of the current logged-in user. Triggers an initial
     /// fetch of both sides of the graph. Called from AppViewModel.login and
@@ -45,6 +47,22 @@ final class UserFollowManager {
             followingCount = 0
         }
         Task { await refresh() }
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension UserFollowManager: UserScopedStore {
+    func resetForUserSwitch() {
+        currentUserId = nil
+        followedUserIDs.removeAll()
+        followedUsers.removeAll()
+        followers.removeAll()
+        followerCount = 0
+        followingCount = 0
+    }
+    func loadForActiveUser(_ userId: String?) {
+        setCurrentUser(userId)
     }
 
     /// Pull both followers and following lists from the server. Cheap enough

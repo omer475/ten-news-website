@@ -29,15 +29,42 @@ final class FollowManager {
     /// profile, which calls `upsert(publisher:)`.
     private(set) var followedPublishers: [FollowedPublisher] = []
 
-    private let idsKey = "followed_publisher_ids"
-    private let publishersKey = "followed_publishers_data"
+    /// Active user id. Storage keys are namespaced by this so each user has
+    /// their own follow set on disk — a previous user's follows can never
+    /// appear in a new user's session even if reset wiring is forgotten.
+    private var activeUserId: String?
+
+    // Legacy un-namespaced keys (pre-2026-05-13). Used by the migration in
+    // loadForActiveUser when the first real user logs in after upgrade.
+    private static let legacyIdsKey = "followed_publisher_ids"
+    private static let legacyPublishersKey = "followed_publishers_data"
+
+    private var idsKey: String {
+        (activeUserId?.isEmpty == false)
+            ? "followed_publisher_ids_\(activeUserId!)"
+            : "followed_publisher_ids_guest"
+    }
+    private var publishersKey: String {
+        (activeUserId?.isEmpty == false)
+            ? "followed_publishers_data_\(activeUserId!)"
+            : "followed_publishers_data_guest"
+    }
+
     private let publisherService = PublisherService()
 
     private init() {
+        SessionManager.shared.register(self)
+        // Defer actual data load until loadForActiveUser is called; this
+        // singleton may be touched before any user is logged in.
+    }
+
+    private func reloadFromDefaults() {
         followedIDs = Set(UserDefaults.standard.stringArray(forKey: idsKey) ?? [])
         if let data = UserDefaults.standard.data(forKey: publishersKey),
            let decoded = try? JSONDecoder().decode([FollowedPublisher].self, from: data) {
             followedPublishers = decoded
+        } else {
+            followedPublishers = []
         }
         // Backfill: any id in followedIDs without a publisher entry gets a
         // placeholder so the Following list can still render the row.
@@ -45,6 +72,28 @@ final class FollowManager {
         for id in followedIDs where !known.contains(id) {
             followedPublishers.append(FollowedPublisher(id: id, name: "Publisher", avatarUrl: nil, category: nil))
         }
+    }
+
+    /// One-shot migration: if the user has no follows in their namespaced
+    /// slot but the legacy un-namespaced keys hold data, attribute that data
+    /// to this user and clear the legacy keys. Runs only the first time a
+    /// real user signs in after the namespacing upgrade.
+    private func migrateLegacyIfNeeded() {
+        guard activeUserId?.isEmpty == false else { return }
+        // Only migrate when the namespaced slot is empty AND legacy has data.
+        let namespacedIds = UserDefaults.standard.stringArray(forKey: idsKey) ?? []
+        guard namespacedIds.isEmpty else { return }
+        let legacyIds = UserDefaults.standard.stringArray(forKey: Self.legacyIdsKey) ?? []
+        let legacyData = UserDefaults.standard.data(forKey: Self.legacyPublishersKey)
+        guard !legacyIds.isEmpty || legacyData != nil else { return }
+        if !legacyIds.isEmpty {
+            UserDefaults.standard.set(legacyIds, forKey: idsKey)
+        }
+        if let legacyData {
+            UserDefaults.standard.set(legacyData, forKey: publishersKey)
+        }
+        UserDefaults.standard.removeObject(forKey: Self.legacyIdsKey)
+        UserDefaults.standard.removeObject(forKey: Self.legacyPublishersKey)
     }
 
     func isFollowing(_ publisherId: String?) -> Bool {
@@ -189,5 +238,23 @@ final class FollowManager {
         if let data = try? JSONEncoder().encode(followedPublishers) {
             UserDefaults.standard.set(data, forKey: publishersKey)
         }
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension FollowManager: UserScopedStore {
+    func resetForUserSwitch() {
+        // In-memory wipe. Disk storage for the previous user stays under
+        // their namespaced key — if they sign back in, their follows reappear.
+        followedIDs.removeAll()
+        followedPublishers.removeAll()
+        activeUserId = nil
+    }
+
+    func loadForActiveUser(_ userId: String?) {
+        activeUserId = userId
+        migrateLegacyIfNeeded()
+        reloadFromDefaults()
     }
 }

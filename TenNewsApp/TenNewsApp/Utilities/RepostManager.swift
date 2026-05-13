@@ -23,6 +23,7 @@ final class RepostManager {
 
     private init() {
         load()
+        SessionManager.shared.register(self)
     }
 
     /// Switch to a different user's data (called after login / logout).
@@ -82,5 +83,17 @@ final class RepostManager {
         repostedArticleIDs.removeAll()
         repostedArticles.removeAll()
         save()
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension RepostManager: UserScopedStore {
+    func resetForUserSwitch() {
+        repostedArticleIDs.removeAll()
+        repostedArticles.removeAll()
+    }
+    func loadForActiveUser(_ userId: String?) {
+        switchUser(userId)
     }
 }

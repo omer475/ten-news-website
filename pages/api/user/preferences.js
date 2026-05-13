@@ -46,13 +46,51 @@ export default async function handler(req, res) {
 
   // PATCH - Update user preferences
   if (req.method === 'PATCH') {
-    const { user_id, auth_user_id, home_country, followed_countries, followed_topics } = req.body;
+    const {
+      user_id, auth_user_id,
+      home_country, followed_countries, followed_topics,
+      onboarding_completed
+    } = req.body;
 
     // Use auth_user_id as the profiles id, or fall back to user_id
     const profileId = auth_user_id || user_id;
 
     if (!profileId) {
       return res.status(400).json({ error: 'user_id or auth_user_id required' });
+    }
+
+    // --- Defense-in-depth: verify the JWT subject matches the target row.
+    //
+    // The body's auth_user_id could be spoofed (or just stale from a
+    // previous user's session on the same device — that was the original
+    // 2026-05-13 cross-user leak). When a Bearer token is supplied, decode
+    // it via Supabase and refuse the write unless the token's `sub` matches
+    // the row we're about to mutate. Same patch the iOS SessionManager
+    // refactor enforces client-side; this is the server-side backstop so
+    // an iOS bug can never silently write the wrong user's preferences.
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      if (token) {
+        try {
+          const { data: { user }, error: jwtErr } = await supabase.auth.getUser(token);
+          if (jwtErr || !user) {
+            return res.status(401).json({ error: 'Invalid or expired session token' });
+          }
+          if (user.id !== profileId) {
+            console.warn(
+              `[preferences] identity mismatch: jwt.sub=${user.id.slice(0,8)} body.auth_user_id=${profileId.slice(0,8)} — refusing`
+            );
+            return res.status(403).json({
+              error: 'auth_user_id does not match session token'
+            });
+          }
+        } catch (err) {
+          // Network/parse errors talking to Supabase — fail closed.
+          console.error('[preferences] JWT verification error:', err.message);
+          return res.status(401).json({ error: 'Could not verify session token' });
+        }
+      }
     }
 
     try {
@@ -101,6 +139,15 @@ export default async function handler(req, res) {
           });
         }
         updateData.followed_topics = followed_topics;
+      }
+
+      // Forward the onboarding flag. Previously this body field was silently
+      // dropped — iOS sent {onboarding_completed: true} after topic selection
+      // and the column stayed false in DB. The algorithm reads followed_topics
+      // independently so the bug didn't hard-break anything, but the column
+      // is the canonical "user finished setup" signal so set it.
+      if (onboarding_completed !== undefined) {
+        updateData.onboarding_completed = !!onboarding_completed;
       }
 
       if (Object.keys(updateData).length === 0) {
