@@ -25,7 +25,7 @@ struct TopicFeedView: View {
     @State private var errorMessage: String?
     @State private var nestedTarget: TopicTarget? = nil
 
-    private let pageSize = 20
+    private let pageSize = 30
     private let service = FeedService()
 
     var body: some View {
@@ -43,8 +43,12 @@ struct TopicFeedView: View {
 
     // MARK: - Header
 
+    /// Bare back button + entity title on the cream feed surface — no
+    /// white panel, no subtitle, no divider. Matches the rest of the
+    /// page so the header reads as a continuation of the feed rather
+    /// than a foreign Apple-News-style nav bar.
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             Button {
                 dismiss()
             } label: {
@@ -55,28 +59,17 @@ struct TopicFeedView: View {
                     .contentShape(Rectangle())
             }
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(entity)
-                    .font(.system(size: 19, weight: .bold))
-                    .tracking(-0.3)
-                    .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.06))
-                    .lineLimit(1)
-                Text("Topic")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color(white: 0.50))
-            }
+            Text(entity)
+                .font(.system(size: 19, weight: .bold))
+                .tracking(-0.3)
+                .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.06))
+                .lineLimit(1)
+
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
-        .background(
-            Color.white.ignoresSafeArea(edges: .top)
-        )
-        .overlay(
-            Divider().opacity(0.3),
-            alignment: .bottom
-        )
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Content
