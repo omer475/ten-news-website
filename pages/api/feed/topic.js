@@ -17,8 +17,15 @@
 //      builder extracted from `**Entity**` markdown but that didn't
 //      make it into interest_tags or the title — e.g. Whoop mentioned
 //      mid-bullet in a wearables roundup whose title is the parent brand)
-// Results from all three queries are merged + de-duplicated by id.
-// Pools are tiered (tag → title → bullet) so curated matches always lead.
+// Results from all three queries are merged + de-duplicated by id, then
+// re-ranked by a blended quality + recency score (see constants below).
+// Final pipeline:
+//   1) merge + dedupe by id
+//   2) drop anything older than 30 days
+//   3) blended score: 0.55 * log10(score)/3 + 0.45 * 2^(-hoursOld/36)
+//   4) cluster_id dedup — keep only one article per news cluster
+//   5) per-publisher cap — max 2 from the same author in the first 10 slots
+//   6) paginate
 // Pagination is offset-based to match what TopicFeedView passes
 // (offset = articles.count).
 //
@@ -36,6 +43,32 @@ const MAX_LIMIT = 40
 // cap it can dominate the page even when the curated tag has a richer
 // pool. 80 each is enough to fill 2-3 pages after dedup.
 const PER_SOURCE_FETCH = 80
+
+// ─── Ranking constants ──────────────────────────────────────────────
+// Topic pages are exploratory: the user just expressed intent ("what's
+// happening with X right now"), so recency weighs nearly as much as
+// quality. Numbers picked from published social/news platforms:
+//
+// QUALITY_WEIGHT / RECENCY_WEIGHT = 0.55 / 0.45 — quality slight edge,
+//   recency near-equal. Standard for topic pages on social platforms
+//   (vs ~0.7/0.3 for main feeds).
+// RECENCY_HALF_LIFE_HOURS = 36 — score halves every 36h. Between
+//   Reddit's ~12.5h (very fast) and HN's ~24h (fast); slightly slower
+//   because users land here intentionally rather than passively browsing.
+// MAX_AGE_HOURS = 30 days — hard cut, matches Google News' 30-day
+//   clustering window. Anything older drops off the topic page entirely.
+// QUALITY_NORM_DIVISOR = 3 — log10(1000)=3, so dividing by 3 maps the
+//   typical ai_final_score range (1..1000) into [0,1] same as recency.
+// PUBLISHER_CAP_IN_TOP_K — max 2 articles from any single publisher in
+//   the first 10 slots. Stops one outlet dominating page-1 of a topic.
+//   Standard practice across news-recommender literature.
+const QUALITY_WEIGHT = 0.55
+const RECENCY_WEIGHT = 0.45
+const RECENCY_HALF_LIFE_HOURS = 36
+const MAX_AGE_HOURS = 30 * 24
+const QUALITY_NORM_DIVISOR = 3
+const PUBLISHER_CAP_IN_TOP_K = 2
+const PUBLISHER_CAP_TOP_K = 10
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -116,51 +149,91 @@ export default async function handler(req, res) {
       console.error('[feed:topic] bullet query failed:', bulletResult.error.message)
     }
 
-    // Sort each pool independently by ai_final_score then recency.
-    // Title-ILIKE returns thousands of articles for common entities
-    // ("Trump" → 3000+), so it can't be merged flat with the small
-    // curated-tag pool — global score sort would let a high-scoring
-    // title-mention article outrank a curated tag hit on the same
-    // entity. Two-tier instead: all tag hits, then title fill.
-    const rankPool = (rows) => {
-      const out = (rows || []).slice()
-      out.sort((a, b) => {
-        const sa = a.ai_final_score || 0
-        const sb = b.ai_final_score || 0
-        if (sb !== sa) return sb - sa
-        const ta = a.created_at ? Date.parse(a.created_at) : 0
-        const tb = b.created_at ? Date.parse(b.created_at) : 0
-        return tb - ta
-      })
-      return out
-    }
-    const tagPool = rankPool(tagResult.data)
-    const titlePool = rankPool(titleResult.data)
-    const bulletPool = rankPool(bulletResult.data)
-
-    // Tier 1: curated interest_tags matches (high precision).
-    // Tier 2: title-ILIKE fill, excluding ids already in tier 1.
-    // Tier 3: bullet-ILIKE fill (catches `**Entity**` mentions inside
-    //         bullets that aren't tagged and aren't in the title).
+    // ── 1. Merge the three pools, dedupe by id ────────────────────
+    // Tier order (tag → title → bullet) only matters for which copy
+    // wins when the same article is in multiple pools; the global
+    // ranker below re-orders everything by blended score anyway, so
+    // a strong title hit can still outrank a weak tag hit.
     const seen = new Set()
     const merged = []
-    for (const row of tagPool) {
-      if (!seen.has(row.id)) { seen.add(row.id); merged.push(row) }
-    }
-    for (const row of titlePool) {
-      if (!seen.has(row.id)) { seen.add(row.id); merged.push(row) }
-    }
-    for (const row of bulletPool) {
-      if (!seen.has(row.id)) { seen.add(row.id); merged.push(row) }
+    for (const row of [
+      ...(tagResult.data || []),
+      ...(titleResult.data || []),
+      ...(bulletResult.data || []),
+    ]) {
+      if (!row || seen.has(row.id)) continue
+      seen.add(row.id)
+      merged.push(row)
     }
 
-    const page = merged.slice(offset, offset + limit)
+    // ── 2. Hard cut: drop anything older than MAX_AGE_HOURS ───────
+    const now = Date.now()
+    const cutoffMs = now - MAX_AGE_HOURS * 3600 * 1000
+    const fresh = merged.filter(row => {
+      const t = row.created_at ? Date.parse(row.created_at) : 0
+      return t >= cutoffMs
+    })
+
+    // ── 3. Compute blended score per article ──────────────────────
+    // qualityNorm = log10(score) / 3 → maps ai_final_score 1..1000 onto [0,1]
+    // recency    = 2^(-hoursOld / halfLife) → 1.0 at fresh, 0.5 at halfLife
+    // final      = 0.55 * qualityNorm + 0.45 * recency  (range ~ [0, 1])
+    const HALF_LIFE_LN2 = Math.LN2 / RECENCY_HALF_LIFE_HOURS
+    const scored = fresh.map(row => {
+      const rawScore = row.ai_final_score || 0
+      const qualityNorm = Math.log10(Math.max(rawScore, 1)) / QUALITY_NORM_DIVISOR
+      const tMs = row.created_at ? Date.parse(row.created_at) : now
+      const hoursOld = Math.max(0, (now - tMs) / (3600 * 1000))
+      const recency = Math.exp(-HALF_LIFE_LN2 * hoursOld)
+      const blended = QUALITY_WEIGHT * qualityNorm + RECENCY_WEIGHT * recency
+      return { row, blended }
+    })
+    scored.sort((a, b) => b.blended - a.blended)
+
+    // ── 4. Cluster dedup: keep only the highest-scored article per
+    //       cluster_id. Articles with null cluster_id all pass through. ─
+    const clusterSeen = new Set()
+    const deduped = []
+    for (const item of scored) {
+      const cid = item.row.cluster_id
+      if (cid != null) {
+        if (clusterSeen.has(cid)) continue
+        clusterSeen.add(cid)
+      }
+      deduped.push(item.row)
+    }
+
+    // ── 5. Per-publisher cap in the top K slots ───────────────────
+    // While filling positions 1..PUBLISHER_CAP_TOP_K, skip an article
+    // if its publisher already has PUBLISHER_CAP_IN_TOP_K hits. After
+    // position K, accept everything in score order. Overflow items
+    // (skipped early) are appended at the end so they're still
+    // reachable via pagination — just not in the headline slots.
+    const counts = new Map()
+    const top = []
+    const overflow = []
+    for (const row of deduped) {
+      const pub = row.author_id || row.source || 'unknown'
+      const cur = counts.get(pub) || 0
+      if (top.length < PUBLISHER_CAP_TOP_K && cur >= PUBLISHER_CAP_IN_TOP_K) {
+        overflow.push(row)
+      } else {
+        top.push(row)
+        counts.set(pub, cur + 1)
+      }
+    }
+    const ranked = [...top, ...overflow]
+
+    // ── 6. Paginate ───────────────────────────────────────────────
+    const page = ranked.slice(offset, offset + limit)
     const formatted = page.map(a => formatArticle(a, {}))
 
     console.log(
       `[feed:topic] entity="${entityLower}" tag=${(tagResult.data || []).length} ` +
       `title=${(titleResult.data || []).length} bullet=${(bulletResult.data || []).length} ` +
-      `merged=${merged.length} returned=${formatted.length} offset=${offset} ms=${Date.now() - t0}`
+      `merged=${merged.length} fresh=${fresh.length} ` +
+      `clusterDeduped=${deduped.length} ranked=${ranked.length} ` +
+      `returned=${formatted.length} offset=${offset} ms=${Date.now() - t0}`
     )
 
     res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=60')
