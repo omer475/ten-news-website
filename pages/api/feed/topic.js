@@ -13,9 +13,14 @@
 //   2) title_news (case-insensitive substring — fallback for compound
 //      chips like "US-Israel-Iran war" that are bold-emphasized in
 //      bullets but not curated into interest_tags)
-// Results from both queries are merged + de-duplicated by id, then
-// ranked by ai_final_score DESC, created_at DESC. Pagination is offset-
-// based to match what TopicFeedView passes (offset = articles.count).
+//   3) summary_bullets_news::text (catches entities that the iOS chip
+//      builder extracted from `**Entity**` markdown but that didn't
+//      make it into interest_tags or the title — e.g. Whoop mentioned
+//      mid-bullet in a wearables roundup whose title is the parent brand)
+// Results from all three queries are merged + de-duplicated by id.
+// Pools are tiered (tag → title → bullet) so curated matches always lead.
+// Pagination is offset-based to match what TopicFeedView passes
+// (offset = articles.count).
 //
 // Empty result still returns 200 with articles=[] — iOS surfaces the
 // "No articles tagged with X right now" empty state.
@@ -68,11 +73,16 @@ export default async function handler(req, res) {
   const t0 = Date.now()
 
   try {
-    // Run both queries in parallel. The supabase-js client escapes
+    // Run all three queries in parallel. The supabase-js client escapes
     // .contains() and .ilike() argument values correctly — we don't
     // build raw PostgREST `or` strings here because the entity may
     // contain commas/apostrophes that would need bespoke escaping.
-    const [tagResult, titleResult] = await Promise.all([
+    //
+    // The bullet search uses .filter('summary_bullets_news::text','ilike',...)
+    // — PostgREST casts the jsonb column to text and the ILIKE runs
+    // against the raw JSON serialization. That catches `**Entity**`
+    // markdown wrapped inside any bullet object, no jsonb path needed.
+    const [tagResult, titleResult, bulletResult] = await Promise.all([
       supabase
         .from('published_articles')
         .select(FEED_ARTICLE_COLUMNS)
@@ -87,6 +97,13 @@ export default async function handler(req, res) {
         .order('ai_final_score', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false, nullsFirst: false })
         .limit(PER_SOURCE_FETCH),
+      supabase
+        .from('published_articles')
+        .select(FEED_ARTICLE_COLUMNS)
+        .filter('summary_bullets_news::text', 'ilike', `%${entityLower}%`)
+        .order('ai_final_score', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false, nullsFirst: false })
+        .limit(PER_SOURCE_FETCH),
     ])
 
     if (tagResult.error) {
@@ -94,6 +111,9 @@ export default async function handler(req, res) {
     }
     if (titleResult.error) {
       console.error('[feed:topic] title query failed:', titleResult.error.message)
+    }
+    if (bulletResult.error) {
+      console.error('[feed:topic] bullet query failed:', bulletResult.error.message)
     }
 
     // Sort each pool independently by ai_final_score then recency.
@@ -116,9 +136,12 @@ export default async function handler(req, res) {
     }
     const tagPool = rankPool(tagResult.data)
     const titlePool = rankPool(titleResult.data)
+    const bulletPool = rankPool(bulletResult.data)
 
     // Tier 1: curated interest_tags matches (high precision).
     // Tier 2: title-ILIKE fill, excluding ids already in tier 1.
+    // Tier 3: bullet-ILIKE fill (catches `**Entity**` mentions inside
+    //         bullets that aren't tagged and aren't in the title).
     const seen = new Set()
     const merged = []
     for (const row of tagPool) {
@@ -127,14 +150,17 @@ export default async function handler(req, res) {
     for (const row of titlePool) {
       if (!seen.has(row.id)) { seen.add(row.id); merged.push(row) }
     }
+    for (const row of bulletPool) {
+      if (!seen.has(row.id)) { seen.add(row.id); merged.push(row) }
+    }
 
     const page = merged.slice(offset, offset + limit)
     const formatted = page.map(a => formatArticle(a, {}))
 
     console.log(
       `[feed:topic] entity="${entityLower}" tag=${(tagResult.data || []).length} ` +
-      `title=${(titleResult.data || []).length} merged=${merged.length} ` +
-      `returned=${formatted.length} offset=${offset} ms=${Date.now() - t0}`
+      `title=${(titleResult.data || []).length} bullet=${(bulletResult.data || []).length} ` +
+      `merged=${merged.length} returned=${formatted.length} offset=${offset} ms=${Date.now() - t0}`
     )
 
     res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=60')
