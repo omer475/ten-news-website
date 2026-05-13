@@ -47,6 +47,10 @@ struct ExploreTopicArticle: Identifiable, Decodable {
     let imageUrl: String?
     let category: String?
     let publishedAt: String?
+    /// Up to 2 bullets (already parsed server-side from summary_bullets_news).
+    /// Optional because the explore endpoint only added this field in 2026-05;
+    /// older cached responses or alternative pipelines may omit it.
+    let bullets: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -54,6 +58,7 @@ struct ExploreTopicArticle: Identifiable, Decodable {
         case imageUrl = "image_url"
         case category
         case publishedAt = "published_at"
+        case bullets
     }
 
     /// Title with markdown bold markers stripped

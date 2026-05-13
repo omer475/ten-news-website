@@ -990,7 +990,8 @@ struct EntityArticlesSheet: View {
             title: article.title ?? "Untitled",
             imageUrl: article.imageUrl,
             category: article.category,
-            publishedAt: article.publishedAt
+            publishedAt: article.publishedAt,
+            bullets: nil
         )
     }
 }

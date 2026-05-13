@@ -689,9 +689,43 @@ private struct WelcomeScene: View {
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 6)
+
+            // Bullets — same 16pt font / 4pt dot in accent / 5pt lineSpacing
+            // as MainFeedView.bulletList. The explore endpoint already returns
+            // these via article.bullets (up to 2). Skipped silently when the
+            // article has no bullets.
+            if let bullets = article.bullets, !bullets.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(bullets.prefix(3).enumerated()), id: \.offset) { _, bullet in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Circle()
+                                .fill(color.opacity(0.85))
+                                .frame(width: 4, height: 4)
+                                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 1 }
+                            Text(bulletAttributed(bullet))
+                                .font(.system(size: 16))
+                                .foregroundStyle(.white)
+                                .lineSpacing(5)
+                                .multilineTextAlignment(.leading)
+                                .tint(.white)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            }
         }
         .id("front-\(cardIndex)")
         .transition(.opacity.combined(with: .scale(scale: 0.98)))
+    }
+
+    /// Renders a bullet's `**bold**` markdown segments as bold text inline,
+    /// matching the For You card's bulletAttributed treatment. Falls back to
+    /// the raw string when the markdown parse fails.
+    private func bulletAttributed(_ text: String) -> AttributedString {
+        if let attr = try? AttributedString(markdown: text) {
+            return attr
+        }
+        return AttributedString(text)
     }
 
     // MARK: - Social rail
