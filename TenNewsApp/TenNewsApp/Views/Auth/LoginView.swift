@@ -11,7 +11,10 @@ struct LoginView: View {
     var onShowSignup: (() -> Void)?
     var onShowForgotPassword: (() -> Void)?
 
-    private let accent = Color(hex: "#3b82f6")
+    // Saturated blue accent — Apple's system blue is too bright for a CTA,
+    // and the previous #3b82f6 looked washed out on white. #2563EB is the
+    // standard "primary" blue used by Linear / Vercel / Notion CTAs.
+    private let accent = Color(hex: "#2563EB")
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -49,10 +52,13 @@ struct LoginView: View {
                         Text("Continue with Apple")
                             .font(.system(size: 16, weight: .semibold))
                     }
-                    .foregroundStyle(.black)
+                    // Apple HIG for light mode: black pill, white text.
+                    // (On dark pages it's white pill with black text — but
+                    // this sheet is now light.)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 14))
+                    .background(Color.black, in: RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(LoginPressStyle())
                 .padding(.top, 28)
@@ -77,13 +83,16 @@ struct LoginView: View {
                         Text("Continue with Google")
                             .font(.system(size: 16, weight: .semibold))
                     }
-                    .foregroundStyle(Color.primary)
+                    // Google branding HIG for light: white pill, dark text,
+                    // defined hairline border so it doesn't disappear into
+                    // the page bg.
+                    .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .strokeBorder(Color.black.opacity(0.12), lineWidth: 1)
+                            .strokeBorder(Color.black.opacity(0.18), lineWidth: 1)
                     )
                 }
                 .buttonStyle(LoginPressStyle())
@@ -153,10 +162,13 @@ struct LoginView: View {
                     .padding(.horizontal, 16)
                     .frame(height: 54)
                 }
-                .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 16))
+                // Slightly stronger fill + border so the input box reads as
+                // an actual interactive field on white (iOS Settings rows
+                // do roughly this contrast).
+                .background(Color(white: 0.95), in: RoundedRectangle(cornerRadius: 16))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(Color.black.opacity(0.10), lineWidth: 1)
+                        .strokeBorder(Color.black.opacity(0.14), lineWidth: 1)
                 }
 
                 // Forgot password
@@ -209,8 +221,11 @@ struct LoginView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(viewModel.canLogin ? accent : accent.opacity(0.35), in: Capsule())
-                    .shadow(color: accent.opacity(viewModel.canLogin ? 0.25 : 0), radius: 14, y: 6)
+                    // Disabled state stays the same blue, just darkened with
+                    // a 0.45 mix toward a neutral gray rather than dropping
+                    // opacity to 35% (which made it look like a placeholder).
+                    .background(viewModel.canLogin ? accent : Color(white: 0.78), in: Capsule())
+                    .shadow(color: accent.opacity(viewModel.canLogin ? 0.30 : 0), radius: 16, y: 8)
                     .contentShape(Capsule())
                 }
                 .buttonStyle(LoginPressStyle())
