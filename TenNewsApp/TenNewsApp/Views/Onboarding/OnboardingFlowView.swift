@@ -387,7 +387,9 @@ private struct WelcomeScene: View {
     @State private var articleEntities: [String: String] = [:] // article id -> topic display title
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            // White page bg — matches the For You feed surface so the welcome
+            // preview reads as a true sample of the in-app card style.
+            Color.white.ignoresSafeArea()
 
             // Ambient color wash — tints the whole screen toward the current card's dominant color
             ambientColorWash
@@ -421,6 +423,11 @@ private struct WelcomeScene: View {
                     .padding(.bottom, 32)
             }
         }
+        // Force light color scheme on the welcome screen only — parent body
+        // has preferredColorScheme(.dark) for the other onboarding steps, but
+        // here the bg is white so Color.primary / Color.secondary need to
+        // resolve to dark text to be readable.
+        .environment(\.colorScheme, .light)
         .onAppear {
             runEntryAnimation()
             Task { await fetchArticles() }
@@ -644,9 +651,11 @@ private struct WelcomeScene: View {
         let publisherName = (article.category?.isEmpty == false ? article.category! : "Today+")
         let initial = String(publisherName.prefix(1)).uppercased()
 
+        // Outer VStack uses the same 8pt spacing as
+        // ArticleCardContinuousView.body — header + photo block + caption.
         VStack(alignment: .leading, spacing: 8) {
-            // Header row — same 32pt avatar + 14pt semibold byline as the
-            // real ArticleCardContinuousView.headerRow.
+            // Header row — 32pt avatar + 14pt semibold byline (mirrors
+            // ArticleCardContinuousView.headerRow).
             HStack(spacing: 10) {
                 Circle()
                     .fill(color)
@@ -661,57 +670,55 @@ private struct WelcomeScene: View {
                     Text(publisherName)
                         .font(.system(size: 14, weight: .semibold))
                         .tracking(-0.1)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.primary)
                     if !article.relativeTime.isEmpty {
                         Text(article.relativeTime)
                             .font(.system(size: 11))
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(Color.secondary)
                     }
                 }
                 Spacer()
             }
 
-            // Photo — AsyncCachedImage at natural aspect, 18pt corners. Same
-            // setup as MainFeedView.photoBlock minus the heart-burst overlay.
-            // Critically: NO baked-in title text on the image.
-            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .padding(.top, 4)
+            // Photo + caption stacked exactly like MainFeedView: photo with
+            // padding-bottom 12, then a VStack(spacing: 10) holding the title
+            // and the bullets. The 10pt gap is what makes the title→bullets
+            // rhythm feel identical to the For You page.
+            VStack(alignment: .leading, spacing: 0) {
+                AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(.bottom, 12)
 
-            // Title — exact same 24pt bold / tracking -0.5 / lineSpacing 2
-            // as MainFeedView.singlePageCaption.
-            Text(article.cleanTitle)
-                .font(.system(size: 24, weight: .bold))
-                .tracking(-0.5)
-                .lineSpacing(2)
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 6)
-
-            // Bullets — same 16pt font / 4pt dot in accent / 5pt lineSpacing
-            // as MainFeedView.bulletList. The explore endpoint already returns
-            // these via article.bullets (up to 2). Skipped silently when the
-            // article has no bullets.
-            if let bullets = article.bullets, !bullets.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(bullets.prefix(3).enumerated()), id: \.offset) { _, bullet in
-                        HStack(alignment: .firstTextBaseline, spacing: 10) {
-                            Circle()
-                                .fill(color.opacity(0.85))
-                                .frame(width: 4, height: 4)
-                                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 1 }
-                            Text(bulletAttributed(bullet))
-                                .font(.system(size: 16))
-                                .foregroundStyle(.white)
-                                .lineSpacing(5)
-                                .multilineTextAlignment(.leading)
-                                .tint(.white)
+                    Text(article.cleanTitle)
+                        .font(.system(size: 24, weight: .bold))
+                        .tracking(-0.5)
+                        .lineSpacing(2)
+                        .foregroundStyle(Color.primary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if let bullets = article.bullets, !bullets.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(Array(bullets.prefix(3).enumerated()), id: \.offset) { _, bullet in
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Circle()
+                                        .fill(color.opacity(0.70))
+                                        .frame(width: 4, height: 4)
+                                        .alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 1 }
+                                    Text(bulletAttributed(bullet))
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Color.primary)
+                                        .lineSpacing(5)
+                                        .multilineTextAlignment(.leading)
+                                        .tint(Color.primary)
+                                }
+                            }
                         }
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
             }
         }
         .id("front-\(cardIndex)")
@@ -814,7 +821,7 @@ private struct WelcomeScene: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("TRENDING NOW")
                 .font(.system(size: 10, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.42))
+                .foregroundStyle(Color.black.opacity(0.42))
                 .tracking(2.0)
 
             // Entity heading — smaller than before so the article preview
@@ -854,12 +861,16 @@ private struct WelcomeScene: View {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 13, weight: .bold))
                 }
+                // White text on the entity-tinted button is fine on a
+                // white page bg because the button has its own fill.
+                // Solid pill (no glass) so contrast stays readable in
+                // light mode — glass shows the cream bg through too much.
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
+                .background(primaryEntityColor, in: Capsule())
             }
             .buttonStyle(.plain)
-            .glassEffect(.regular.tint(primaryEntityColor.opacity(0.28)).interactive(), in: Capsule())
             .animation(.smooth(duration: 0.5), value: primaryEntityColor)
 
             Button {
@@ -868,9 +879,9 @@ private struct WelcomeScene: View {
             } label: {
                 HStack(spacing: 4) {
                     Text("Already have an account?")
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.secondary)
                     Text("Sign In")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.primary)
                         .fontWeight(.semibold)
                 }
                 .font(.system(size: 14, weight: .medium, design: .rounded))
