@@ -234,7 +234,11 @@ struct SignupView: View {
                     }
                 }
             } label: {
-                Image(systemName: step == .email ? "xmark" : "chevron.left")
+                // Always chevron-left — even on the email step we go back to
+                // the onboarding flow (not close out), so the X icon was
+                // misleading. User is inside the create-account flow start
+                // to finish; the icon should reflect that.
+                Image(systemName: "chevron.left")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white.opacity(0.8))
                     .frame(width: 38, height: 38)
