@@ -83,7 +83,7 @@ struct MainFeedView: View {
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         .fullScreenCover(item: $topicTarget) { target in
-            TopicFeedView(entity: target.entity)
+            TopicFeedView(entity: target.entity, sourceId: target.sourceId)
         }
         .sheet(isPresented: $showFlashBrief) {
             FlashBriefSheet(
@@ -115,7 +115,10 @@ struct MainFeedView: View {
                     }
                     showFlashBrief = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        topicTarget = TopicTarget(entity: topic)
+                        // Flash brief is a summary surface with no single
+                        // source article — sourceId nil falls back to
+                        // lexical-only retrieval server-side.
+                        topicTarget = TopicTarget(entity: topic, sourceId: nil)
                     }
                 }
             )
@@ -282,8 +285,8 @@ struct MainFeedView: View {
                     ArticleCardContinuousView(
                         article: article,
                         accentColor: viewModel.accentColor(for: article),
-                        onTopicTap: { entity in
-                            topicTarget = TopicTarget(entity: entity)
+                        onTopicTap: { entity, sourceId in
+                            topicTarget = TopicTarget(entity: entity, sourceId: sourceId)
                         }
                     )
                     .padding(.vertical, 14)
@@ -386,8 +389,8 @@ struct MainFeedView: View {
                     ArticleCardContinuousView(
                         article: article,
                         accentColor: viewModel.accentColor(for: article),
-                        onTopicTap: { entity in
-                            topicTarget = TopicTarget(entity: entity)
+                        onTopicTap: { entity, sourceId in
+                            topicTarget = TopicTarget(entity: entity, sourceId: sourceId)
                         }
                     )
                     .padding(.vertical, 14)
@@ -554,10 +557,13 @@ enum NotInterestedReason: String, CaseIterable, Identifiable {
 struct ArticleCardContinuousView: View {
     let article: Article
     let accentColor: Color
-    /// Invoked when the user taps a bold entity (`**Word**`) in a
-    /// bullet. Wired through SwiftUI's `OpenURLAction` so the existing
-    /// AttributedString markdown link plumbing dispatches to us.
-    var onTopicTap: ((String) -> Void)? = nil
+    /// Invoked when the user taps a chip (either an inline bold entity
+    /// via tdtopic:// URL or one of the server-curated chip capsules
+    /// under the action row). The second arg is this article's id —
+    /// passed to /api/feed/topic as `source_id=` so the server can run
+    /// embedding-based retrieval lanes (cosine post-filter on bullet
+    /// ILIKE + kNN against the source vector).
+    var onTopicTap: ((String, String) -> Void)? = nil
     /// Show the topic-tag chips (search icon + 2 entity capsules) on the
     /// LEFT of the action row. Main feed = true (quick topic jumps).
     /// Explore page = false (the topic is already the section header
@@ -689,7 +695,7 @@ struct ArticleCardContinuousView: View {
                 let decoded = pathEntity.removingPercentEncoding ?? pathEntity
                 let trimmed = decoded.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
-                    onTopicTap?(trimmed)
+                    onTopicTap?(trimmed, article.id.stringValue)
                 }
                 return .handled
             }
@@ -875,14 +881,26 @@ struct ArticleCardContinuousView: View {
     /// the cream page bg so the chip reads as a "neighbour of the
     /// page", not a foreign gray box. Capped at 2 (research: more
     /// reads as SEO spam on news cards).
+    ///
+    /// Source of truth: `article.chipTags` — server-curated Goldilocks
+    /// tags from /api/feed/main (each guaranteed to lead to other
+    /// articles via the topic endpoint). Falls back to bold-bullet
+    /// parsing only when the field is nil (older payloads). Empty
+    /// array → render zero chips, no fallback (server explicitly
+    /// said "no useful chip exists for this article").
     @ViewBuilder
     private var topicTags: some View {
-        let entities = uniqueBulletEntities().prefix(2)
+        let entities: [String] = {
+            if let chips = article.chipTags { return chips }
+            return uniqueBulletEntities()
+        }().prefix(2).map { $0 }
         if !entities.isEmpty {
             HStack(spacing: 8) {
                 // Bare search icon — no background, leads the row.
                 Button {
-                    if let first = entities.first { onTopicTap?(first) }
+                    if let first = entities.first {
+                        onTopicTap?(first, article.id.stringValue)
+                    }
                 } label: {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 13, weight: .semibold))
@@ -894,7 +912,7 @@ struct ArticleCardContinuousView: View {
 
                 ForEach(Array(entities.enumerated()), id: \.offset) { _, tag in
                     Button {
-                        onTopicTap?(tag)
+                        onTopicTap?(tag, article.id.stringValue)
                     } label: {
                         Text(tag)
                             .font(.system(size: 12, weight: .medium))
