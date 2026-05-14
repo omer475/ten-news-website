@@ -213,12 +213,17 @@ struct ContentView: View {
                 .padding(.vertical, 4)
                 .glassEffect(.regular.tint(Color.black.opacity(0.2)), in: .capsule)
 
-                // Search circle
+                // Search circle. Just switches to the Search tab — the bar
+                // stays expanded the whole time (the search field lives
+                // inside SearchTabView at the top, so collapsing the bottom
+                // bar would leave the user with no bottom navigation).
                 Button {
                     withAnimation(.bouncy) {
                         selectedTab = 99
                         tabBarState.forceExpandedBar = false
-                        collapseBar()
+                        tabBarExpanded = true
+                        tabBarState.isVisible = true
+                        tabBarState.lastRevealedAt = Date()
                     }
                     HapticManager.light()
                 } label: {
@@ -282,55 +287,12 @@ struct ContentView: View {
 
     // MARK: - Helpers
 
-    private func collapseBar() {
-        withAnimation(.smooth(duration: 0.45)) {
-            tabBarExpanded = false
-            tabBarState.isVisible = false
-        }
-    }
-
     private let tabs: [(icon: String, selectedIcon: String, label: String)] = [
         ("newspaper", "newspaper.fill", "Feed"),
         ("safari", "safari.fill", "Explore"),
         ("text.bubble", "text.bubble.fill", "Chat"),
         ("person.crop.circle", "person.crop.circle.fill", "Profile"),
     ]
-}
-
-// MARK: - Scroll Collapse Modifier
-
-struct ScrollCollapseModifier: ViewModifier {
-    @Environment(TabBarState.self) private var tabBarState
-
-    func body(content: Content) -> some View {
-        content
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.y
-            } action: { oldValue, newValue in
-                guard tabBarState.isVisible else { return }
-                guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else { return }
-                let delta = abs(newValue - oldValue)
-                guard delta > 3 else { return }
-                tabBarState.collapseRequested = true
-            }
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 10, coordinateSpace: .local)
-                    .onChanged { value in
-                        guard tabBarState.isVisible else { return }
-                        guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else { return }
-                        let vertical = abs(value.translation.height)
-                        if vertical > 15 {
-                            tabBarState.collapseRequested = true
-                        }
-                    }
-            )
-    }
-}
-
-extension View {
-    func collapsesTabBarOnScroll() -> some View {
-        modifier(ScrollCollapseModifier())
-    }
 }
 
 #Preview {
