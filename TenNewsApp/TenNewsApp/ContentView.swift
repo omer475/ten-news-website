@@ -86,19 +86,11 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
-        // Only collapse on scroll for non-news pages
+        // Scroll-collapse used to fire only on the Search tab; user asked
+        // for the bar to stay open there too, so the only consumer is gone.
+        // Drain any pending request so callers don't see stuck state.
         .onChange(of: tabBarState.collapseRequested) { _, requested in
-            if requested {
-                // Only allow scroll-collapse on search tab
-                if tabBarExpanded && selectedTab == 99 {
-                    guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else {
-                        tabBarState.collapseRequested = false
-                        return
-                    }
-                    collapseBar()
-                }
-                tabBarState.collapseRequested = false
-            }
+            if requested { tabBarState.collapseRequested = false }
         }
         .onChange(of: tabBarState.pendingSearch) { _, newVal in
             // Cross-tab navigation requested with a pre-filled query.

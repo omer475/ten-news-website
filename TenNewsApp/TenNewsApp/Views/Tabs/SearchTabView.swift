@@ -79,7 +79,9 @@ struct SearchTabView: View {
                     }
                     .padding(.bottom, 100)
                 }
-                .collapsesTabBarOnScroll()
+                // Tab bar stays expanded on the Search tab — collapsing on
+                // scroll just hid the bottom navigation while the user was
+                // browsing results, which felt jumpy.
                 .scrollDismissesKeyboard(.interactively)
 
                 // Article card overlay — vertical pager through search results
