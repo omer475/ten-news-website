@@ -370,7 +370,9 @@ struct ExploreView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal article scroll
+            // Horizontal article scroll. Cards use the feed-card layout
+            // (creator row + photo + title) instead of the old overlay-
+            // on-photo design so Explore visually matches the For You feed.
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 12) {
                     ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
@@ -378,12 +380,11 @@ struct ExploreView: View {
                             trackArticleTap(article, topic: topic)
                             openArticle(article)
                         } label: {
-                            ExploreArticleCard(
+                            feedStyleCard(
                                 article: article,
-                                fallbackColor: catColor,
-                                cardWidth: cardWidth,
-                                cardHeight: cardHeight,
-                                relatedEntities: relatedEntityNames(for: article, excluding: topic)
+                                topic: topic,
+                                color: catColor,
+                                icon: icon
                             )
                         }
                         .buttonStyle(.plain)
@@ -429,6 +430,68 @@ struct ExploreView: View {
     }
 
     private var cardHeight: CGFloat { cardWidth }
+
+    // MARK: - Feed-style card (replaces ExploreArticleCard inside entitySection)
+
+    /// One article rendered in the same layout as the For You feed and
+    /// the welcome screen card: creator row on top (entity-colored circle
+    /// + topic name + relative time), photo at a fixed 4:3 aspect with
+    /// 16pt rounded corners, then a 3-line title underneath. Bullets are
+    /// skipped here — Explore cards stay compact for horizontal-scroll
+    /// browsing; full bullets show up when the user taps in.
+    @ViewBuilder
+    private func feedStyleCard(
+        article: ExploreTopicArticle,
+        topic: ExploreTopic,
+        color: Color,
+        icon: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Creator-style header row.
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(color)
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 30, height: 30)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(topic.displayTitle)
+                        .font(.system(size: 14, weight: .semibold))
+                        .tracking(-0.1)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if !article.relativeTime.isEmpty {
+                        Text(article.relativeTime)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+            }
+
+            // Photo — same 16pt corner treatment as MainFeedView.photoBlock,
+            // 4:3 aspect so all cards in the row line up vertically.
+            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fill)
+                .frame(width: cardWidth, height: cardWidth * 0.62)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            // Title — same hierarchy as the feed card (bold, tracking -0.3).
+            Text(article.cleanTitle)
+                .font(.system(size: 18, weight: .bold))
+                .tracking(-0.3)
+                .lineSpacing(2)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.leading)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(width: cardWidth, alignment: .leading)
+    }
 
     // MARK: - Loading
 
