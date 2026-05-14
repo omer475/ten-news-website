@@ -1,74 +1,98 @@
-// pages/api/feed/topic.js — entity-scoped article feed.
+// pages/api/feed/topic.js — entity-scoped article feed (4-lane retrieval).
 //
 // Powers the chip-tap drill-down on the iOS For You feed: when a user
-// taps a topic chip under an article (e.g. "Trump", "MagSafe", "Katie
-// Holmes"), iOS opens TopicFeedView which calls this endpoint to get
-// the list of recent articles tagged with that entity. Same JSON shape
-// as /api/feed/main / following so the existing ArticleCardContinuousView
-// renderer is reused without changes.
+// taps a topic chip under an article, iOS opens TopicFeedView which
+// calls this endpoint to get related articles. Same JSON shape as
+// /api/feed/main / following so ArticleCardContinuousView renders
+// unchanged.
 //
-// Match strategy: entity is lower-cased and matched against
-//   1) interest_tags (jsonb array of canonical concept entities tagged
-//      at publish time — highest precision)
-//   2) title_news (case-insensitive substring — fallback for compound
-//      chips like "US-Israel-Iran war" that are bold-emphasized in
-//      bullets but not curated into interest_tags)
-//   3) summary_bullets_news::text (catches entities that the iOS chip
-//      builder extracted from `**Entity**` markdown but that didn't
-//      make it into interest_tags or the title — e.g. Whoop mentioned
-//      mid-bullet in a wearables roundup whose title is the parent brand)
-// Results from all three queries are merged + de-duplicated by id, then
-// re-ranked by a blended quality + recency score (see constants below).
-// Final pipeline:
-//   1) merge + dedupe by id
-//   2) drop anything older than 30 days
-//   3) blended score: 0.55 * log10(score)/3 + 0.45 * 2^(-hoursOld/36)
-//   4) cluster_id dedup — keep only one article per news cluster
-//   5) per-publisher cap — max 2 from the same author in the first 10 slots
-//   6) paginate
-// Pagination is offset-based to match what TopicFeedView passes
-// (offset = articles.count).
+// Match strategy (4 parallel lanes, merged then re-ranked):
+//   A) interest_tags @> [entity]           — curated tag, highest precision
+//   B) title_news ILIKE %entity%           — headline lexical match
+//   C) summary_bullets_news::text ILIKE    — bullet text, post-filtered by
+//                                            embedding cosine ≥ 0.30 vs source
+//                                            (kills "Ford" matching surnames)
+//   D) topic_knn_candidates(source_vec)    — embedding kNN over HNSW, cosine
+//                                            ≥ 0.40 — semantic fallback that
+//                                            catches articles about the same
+//                                            topic area even without lexical
+//                                            overlap
 //
-// Empty result still returns 200 with articles=[] — iOS surfaces the
-// "No articles tagged with X right now" empty state.
+// Lanes C and D require source_id (chip-tap origin article). When absent,
+// the endpoint degrades gracefully to lanes A+B only and logs a warning so
+// adoption can be tracked.
 //
-// Cache: 120s public + 60s SWR. Entity-feed contents change slowly
-// (publish cadence) and the same chip taps repeat across users.
+// After merging:
+//   1) dedupe by id, exclude source_id (user already saw it)
+//   2) blended score: 0.55 * log10(score)/3 + 0.45 * 2^(-hoursOld/36)
+//      Recency half-life 36h matches Reddit/HN norms for topic surfaces.
+//   3) cluster_id dedup — keep one article per news cluster
+//   4) per-publisher cap — max 2 from the same author in the first 10 slots
+//   5) paginate
+//
+// No hard age cutoff (previously 30d). The recency-decay term naturally
+// pushes old articles toward 0; old strong articles only surface for niche
+// entities with sparse recent coverage, which is exactly when we want them.
+//
+// Cache: 120s public + 60s SWR.
 
 import { formatArticle, FEED_ARTICLE_COLUMNS } from '../../../lib/formatArticle.js'
 
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 40
-// Per-source-pool cap pre-merge. Title-ILIKE is a broad net; without a
-// cap it can dominate the page even when the curated tag has a richer
-// pool. 80 each is enough to fill 2-3 pages after dedup.
-const PER_SOURCE_FETCH = 80
 
-// ─── Ranking constants ──────────────────────────────────────────────
-// Topic pages are exploratory: the user just expressed intent ("what's
-// happening with X right now"), so recency weighs nearly as much as
-// quality. Numbers picked from published social/news platforms:
-//
-// QUALITY_WEIGHT / RECENCY_WEIGHT = 0.55 / 0.45 — quality slight edge,
-//   recency near-equal. Standard for topic pages on social platforms
-//   (vs ~0.7/0.3 for main feeds).
-// RECENCY_HALF_LIFE_HOURS = 36 — score halves every 36h. Between
-//   Reddit's ~12.5h (very fast) and HN's ~24h (fast); slightly slower
-//   because users land here intentionally rather than passively browsing.
-// MAX_AGE_HOURS = 30 days — hard cut, matches Google News' 30-day
-//   clustering window. Anything older drops off the topic page entirely.
-// QUALITY_NORM_DIVISOR = 3 — log10(1000)=3, so dividing by 3 maps the
-//   typical ai_final_score range (1..1000) into [0,1] same as recency.
-// PUBLISHER_CAP_IN_TOP_K — max 2 articles from any single publisher in
-//   the first 10 slots. Stops one outlet dominating page-1 of a topic.
-//   Standard practice across news-recommender literature.
+// Per-lane fetch cap. Title-ILIKE is a broad net; cap stops a popular entity
+// ("Trump" → 3000+ title matches) from drowning the curated tag pool.
+const PER_LANE_FETCH = 80
+// Lane C is the broadest lexical lane (bullet ILIKE). Cap tighter to bound
+// the cosine post-filter cost.
+const LANE_C_CANDIDATE_CAP = 100
+const LANE_D_K = 30
+
+// ─── Scoring constants ──────────────────────────────────────────────
+// Topic pages are exploratory — recency weighs nearly as much as quality.
 const QUALITY_WEIGHT = 0.55
 const RECENCY_WEIGHT = 0.45
-const RECENCY_HALF_LIFE_HOURS = 36
-const MAX_AGE_HOURS = 30 * 24
-const QUALITY_NORM_DIVISOR = 3
+const RECENCY_HALF_LIFE_HOURS = 36   // between Reddit (~12h) and HN (~24h)
+const QUALITY_NORM_DIVISOR = 3       // log10(1000) = 3 → maps score 1..1000 to [0,1]
 const PUBLISHER_CAP_IN_TOP_K = 2
 const PUBLISHER_CAP_TOP_K = 10
+
+// ─── Cosine thresholds (tuning knobs) ───────────────────────────────
+const LANE_C_MIN_COSINE = 0.30       // post-filter on bullet ILIKE; loose
+const LANE_D_MIN_COSINE = 0.40       // kNN floor; tighter because cosine is
+                                     // the only signal in lane D
+
+// Parse a pgvector text serialization "[0.1,0.2,...]" → Float32Array.
+function parseVector(raw) {
+  if (!raw) return null
+  if (Array.isArray(raw)) return Float32Array.from(raw)
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? Float32Array.from(parsed) : null
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+// Cosine similarity for two unit-magnitude vectors of identical dim.
+// pgvector text serialization preserves the original magnitudes, so we
+// compute the full normalized cosine inline — no shortcuts.
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length) return 0
+  let dot = 0, na = 0, nb = 0
+  for (let i = 0; i < a.length; i++) {
+    const av = a[i], bv = b[i]
+    dot += av * bv
+    na += av * av
+    nb += bv * bv
+  }
+  const denom = Math.sqrt(na) * Math.sqrt(nb)
+  return denom > 0 ? dot / denom : 0
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -95,6 +119,10 @@ export default async function handler(req, res) {
   const offset = Math.max(0, parseInt(req.query.offset, 10) || 0)
   const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_LIMIT))
 
+  // Optional source_id — when present, unlocks lanes C and D.
+  const sourceIdRaw = parseInt(req.query.source_id, 10)
+  const sourceId = Number.isFinite(sourceIdRaw) && sourceIdRaw > 0 ? sourceIdRaw : null
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!supabaseUrl || !supabaseKey) {
@@ -106,80 +134,134 @@ export default async function handler(req, res) {
   const t0 = Date.now()
 
   try {
-    // Run all three queries in parallel. The supabase-js client escapes
-    // .contains() and .ilike() argument values correctly — we don't
-    // build raw PostgREST `or` strings here because the entity may
-    // contain commas/apostrophes that would need bespoke escaping.
-    //
-    // The bullet search uses .filter('summary_bullets_news::text','ilike',...)
-    // — PostgREST casts the jsonb column to text and the ILIKE runs
-    // against the raw JSON serialization. That catches `**Entity**`
-    // markdown wrapped inside any bullet object, no jsonb path needed.
-    const [tagResult, titleResult, bulletResult] = await Promise.all([
-      supabase
+    // ── Step 1: fetch source embedding (single row, fast) ─────────
+    // Required for lanes C (post-filter) and D (kNN seed). When sourceId
+    // missing OR the row has no embedding, both lanes are skipped and
+    // the endpoint falls back to legacy 2-lane (A+B) behavior.
+    let sourceVec = null
+    let sourceVecText = null  // pgvector string form, needed by RPC
+    if (sourceId) {
+      const { data: srcRow, error: srcErr } = await supabase
         .from('published_articles')
-        .select(FEED_ARTICLE_COLUMNS)
-        .contains('interest_tags', [entityLower])
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false, nullsFirst: false })
-        .limit(PER_SOURCE_FETCH),
-      supabase
-        .from('published_articles')
-        .select(FEED_ARTICLE_COLUMNS)
-        .ilike('title_news', `%${entityLower}%`)
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false, nullsFirst: false })
-        .limit(PER_SOURCE_FETCH),
-      supabase
-        .from('published_articles')
-        .select(FEED_ARTICLE_COLUMNS)
-        .filter('summary_bullets_news::text', 'ilike', `%${entityLower}%`)
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false, nullsFirst: false })
-        .limit(PER_SOURCE_FETCH),
-    ])
+        .select('embedding_minilm_vec')
+        .eq('id', sourceId)
+        .maybeSingle()
+      if (srcErr) {
+        console.error('[feed:topic] source lookup failed:', srcErr.message)
+      }
+      if (srcRow?.embedding_minilm_vec) {
+        sourceVec = parseVector(srcRow.embedding_minilm_vec)
+        // Preserve the original string form for the RPC call — pgvector
+        // accepts the same "[...]" syntax it returns.
+        sourceVecText = typeof srcRow.embedding_minilm_vec === 'string'
+          ? srcRow.embedding_minilm_vec
+          : JSON.stringify(Array.from(sourceVec || []))
+      }
+    } else {
+      console.warn('[feed:topic] no source_id — lanes C/D skipped (legacy client)')
+    }
+    const withEmb = sourceVec !== null
 
-    if (tagResult.error) {
-      console.error('[feed:topic] tag query failed:', tagResult.error.message)
-    }
-    if (titleResult.error) {
-      console.error('[feed:topic] title query failed:', titleResult.error.message)
-    }
-    if (bulletResult.error) {
-      console.error('[feed:topic] bullet query failed:', bulletResult.error.message)
+    // ── Step 2: fire all 4 lanes in parallel ──────────────────────
+    const laneA = supabase
+      .from('published_articles')
+      .select(FEED_ARTICLE_COLUMNS)
+      .contains('interest_tags', [entityLower])
+      .order('ai_final_score', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
+      .limit(PER_LANE_FETCH)
+
+    const laneB = supabase
+      .from('published_articles')
+      .select(FEED_ARTICLE_COLUMNS)
+      .ilike('title_news', `%${entityLower}%`)
+      .order('ai_final_score', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
+      .limit(PER_LANE_FETCH)
+
+    // Lane C — bullet ILIKE plus a cosine post-filter in JS. We fetch
+    // the embedding here so the post-filter doesn't need a second query.
+    const laneC = withEmb
+      ? supabase
+          .from('published_articles')
+          .select(`${FEED_ARTICLE_COLUMNS}, embedding_minilm_vec`)
+          .filter('summary_bullets_news::text', 'ilike', `%${entityLower}%`)
+          .order('ai_final_score', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false, nullsFirst: false })
+          .limit(LANE_C_CANDIDATE_CAP)
+      : Promise.resolve({ data: [], error: null })
+
+    // Lane D — embedding kNN via the topic_knn_candidates SQL function.
+    // Returns ids + similarity; hydrate to full rows below.
+    const laneD = withEmb
+      ? supabase.rpc('topic_knn_candidates', {
+          source_vec: sourceVecText,
+          k: LANE_D_K,
+          min_sim: LANE_D_MIN_COSINE,
+        })
+      : Promise.resolve({ data: [], error: null })
+
+    const [aRes, bRes, cRes, dRes] = await Promise.all([laneA, laneB, laneC, laneD])
+
+    if (aRes.error) console.error('[feed:topic] lane A failed:', aRes.error.message)
+    if (bRes.error) console.error('[feed:topic] lane B failed:', bRes.error.message)
+    if (cRes.error) console.error('[feed:topic] lane C failed:', cRes.error.message)
+    if (dRes.error) console.error('[feed:topic] lane D failed:', dRes.error.message)
+
+    // ── Step 2b: post-filter lane C by cosine ─────────────────────
+    let laneCRows = []
+    if (withEmb && Array.isArray(cRes.data)) {
+      for (const row of cRes.data) {
+        const v = parseVector(row.embedding_minilm_vec)
+        if (!v) continue
+        const sim = cosineSim(sourceVec, v)
+        if (sim >= LANE_C_MIN_COSINE) {
+          // Strip the embedding before it joins the merge pool — keeps
+          // memory small and formatArticle doesn't need it.
+          // eslint-disable-next-line no-unused-vars
+          const { embedding_minilm_vec, ...rest } = row
+          laneCRows.push(rest)
+        }
+      }
     }
 
-    // ── 1. Merge the three pools, dedupe by id ────────────────────
-    // Tier order (tag → title → bullet) only matters for which copy
-    // wins when the same article is in multiple pools; the global
-    // ranker below re-orders everything by blended score anyway, so
-    // a strong title hit can still outrank a weak tag hit.
+    // ── Step 2c: hydrate lane D ids to full rows ──────────────────
+    let laneDRows = []
+    const laneDIds = (dRes.data || []).map(r => r.id).filter(id => id !== sourceId)
+    if (laneDIds.length > 0) {
+      const { data: hydrated, error: hErr } = await supabase
+        .from('published_articles')
+        .select(FEED_ARTICLE_COLUMNS)
+        .in('id', laneDIds)
+      if (hErr) {
+        console.error('[feed:topic] lane D hydrate failed:', hErr.message)
+      } else {
+        laneDRows = hydrated || []
+      }
+    }
+
+    // ── Step 3: merge + dedupe by id, exclude source_id ───────────
     const seen = new Set()
+    if (sourceId) seen.add(sourceId)
     const merged = []
     for (const row of [
-      ...(tagResult.data || []),
-      ...(titleResult.data || []),
-      ...(bulletResult.data || []),
+      ...(aRes.data || []),
+      ...(bRes.data || []),
+      ...laneCRows,
+      ...laneDRows,
     ]) {
       if (!row || seen.has(row.id)) continue
       seen.add(row.id)
       merged.push(row)
     }
 
-    // ── 2. Hard cut: drop anything older than MAX_AGE_HOURS ───────
+    // ── Step 4: blended quality+recency score ─────────────────────
+    // qualityNorm = log10(score)/3 → maps 1..1000 onto [0,1]
+    // recency    = 2^(-hoursOld/halfLife) → 1.0 at fresh, 0.5 at halfLife
+    // final      = 0.55 * qualityNorm + 0.45 * recency
     const now = Date.now()
-    const cutoffMs = now - MAX_AGE_HOURS * 3600 * 1000
-    const fresh = merged.filter(row => {
-      const t = row.created_at ? Date.parse(row.created_at) : 0
-      return t >= cutoffMs
-    })
-
-    // ── 3. Compute blended score per article ──────────────────────
-    // qualityNorm = log10(score) / 3 → maps ai_final_score 1..1000 onto [0,1]
-    // recency    = 2^(-hoursOld / halfLife) → 1.0 at fresh, 0.5 at halfLife
-    // final      = 0.55 * qualityNorm + 0.45 * recency  (range ~ [0, 1])
     const HALF_LIFE_LN2 = Math.LN2 / RECENCY_HALF_LIFE_HOURS
-    const scored = fresh.map(row => {
+    const scored = merged.map(row => {
       const rawScore = row.ai_final_score || 0
       const qualityNorm = Math.log10(Math.max(rawScore, 1)) / QUALITY_NORM_DIVISOR
       const tMs = row.created_at ? Date.parse(row.created_at) : now
@@ -190,8 +272,7 @@ export default async function handler(req, res) {
     })
     scored.sort((a, b) => b.blended - a.blended)
 
-    // ── 4. Cluster dedup: keep only the highest-scored article per
-    //       cluster_id. Articles with null cluster_id all pass through. ─
+    // ── Step 5: cluster_id dedup (one per news cluster) ───────────
     const clusterSeen = new Set()
     const deduped = []
     for (const item of scored) {
@@ -203,12 +284,7 @@ export default async function handler(req, res) {
       deduped.push(item.row)
     }
 
-    // ── 5. Per-publisher cap in the top K slots ───────────────────
-    // While filling positions 1..PUBLISHER_CAP_TOP_K, skip an article
-    // if its publisher already has PUBLISHER_CAP_IN_TOP_K hits. After
-    // position K, accept everything in score order. Overflow items
-    // (skipped early) are appended at the end so they're still
-    // reachable via pagination — just not in the headline slots.
+    // ── Step 6: per-publisher cap in top K ────────────────────────
     const counts = new Map()
     const top = []
     const overflow = []
@@ -224,15 +300,16 @@ export default async function handler(req, res) {
     }
     const ranked = [...top, ...overflow]
 
-    // ── 6. Paginate ───────────────────────────────────────────────
+    // ── Step 7: paginate ──────────────────────────────────────────
     const page = ranked.slice(offset, offset + limit)
     const formatted = page.map(a => formatArticle(a, {}))
 
     console.log(
-      `[feed:topic] entity="${entityLower}" tag=${(tagResult.data || []).length} ` +
-      `title=${(titleResult.data || []).length} bullet=${(bulletResult.data || []).length} ` +
-      `merged=${merged.length} fresh=${fresh.length} ` +
-      `clusterDeduped=${deduped.length} ranked=${ranked.length} ` +
+      `[feed:topic] entity="${entityLower}" src=${sourceId || 'none'} withEmb=${withEmb} ` +
+      `tag=${(aRes.data || []).length} title=${(bRes.data || []).length} ` +
+      `bullet=${(cRes.data || []).length}→${laneCRows.length} ` +
+      `knn=${(dRes.data || []).length}→${laneDRows.length} ` +
+      `merged=${merged.length} clusterDeduped=${deduped.length} ranked=${ranked.length} ` +
       `returned=${formatted.length} offset=${offset} ms=${Date.now() - t0}`
     )
 

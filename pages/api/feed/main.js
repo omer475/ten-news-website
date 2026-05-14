@@ -175,6 +175,30 @@ export default async function handler(req, res) {
     _trinity: true,
   }))
 
+  // ── Goldilocks chip tags ────────────────────────────────────────────
+  // The iOS card renders 2 topic chips under each article. Until 2026-05-14
+  // the iOS side parsed `**Bold**` markdown spans in the bullets, which
+  // produced hyper-specific entities (84% appeared in only 1 article →
+  // ~49% of chip taps were empty). The server now picks the chips from
+  // interest_tags filtered to the 3..200 article-count Goldilocks band
+  // (see migration interest_tag_frequency + RPC article_chip_tags). Each
+  // returned chip is guaranteed to have other articles backing it.
+  // Empty array when no tag qualifies — iOS shows no chips rather than
+  // sending the user to a dead page. Single RPC, ~25 ids, <20ms.
+  const chipIds = formatted.map(a => a.id)
+  if (chipIds.length > 0) {
+    const { data: chipRows, error: chipErr } = await supabase.rpc('article_chip_tags', {
+      article_ids: chipIds,
+    })
+    if (chipErr) {
+      console.error('[trinity.chip_tags] rpc failed:', chipErr.message)
+    }
+    const chipMap = new Map((chipRows || []).map(r => [r.id, r.chip_tags || []]))
+    for (const a of formatted) {
+      a.chip_tags = chipMap.get(a.id) || []
+    }
+  }
+
   // user_feed_impressions has user_id NOT NULL and NO guest_device_id column.
   // Skip impression logging for anonymous-device requests; Trinity bandit
   // updates already happened inside serveTrinityFeed.
