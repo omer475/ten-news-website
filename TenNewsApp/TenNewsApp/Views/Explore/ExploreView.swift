@@ -23,9 +23,15 @@ struct ExploreView: View {
     @State private var appeared = false
     @State private var lastLoadTime: Date?
     @State private var hasLoadedOnce = false
-    /// Drives the full-screen search overlay (IG / TikTok pattern — search
-    /// lives inside the discovery tab rather than its own tab).
-    @State private var showSearch = false
+    /// Inline search controller. Reused from SearchTabView so recents +
+    /// trending lists stay in lockstep across surfaces.
+    @State private var searchModel = SearchViewModel()
+    @FocusState private var searchFocused: Bool
+    /// True when the search bar should "take over" the page below it —
+    /// either the user is typing or the field is focused with no query.
+    private var isSearchActive: Bool {
+        searchFocused || !tabBarState.searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
     private let staleThreshold: TimeInterval = 180 // 3 minutes
 
     // Explore tracking state
@@ -91,24 +97,12 @@ struct ExploreView: View {
             // Cross-tab "open search with this query" — Flash Brief topic
             // chips, article-card entity chips, etc. set this flag (via
             // ContentView's pendingSearch handler) after switching to the
-            // Explore tab.
+            // Explore tab. We focus the inline search bar instead of
+            // presenting a sheet.
             .onChange(of: tabBarState.openSearchOnExplore) { _, requested in
                 if requested {
-                    showSearch = true
+                    searchFocused = true
                     tabBarState.openSearchOnExplore = false
-                }
-            }
-            .fullScreenCover(isPresented: $showSearch) {
-                NavigationStack {
-                    SearchTabView()
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel") {
-                                    showSearch = false
-                                    tabBarState.searchText = ""
-                                }
-                            }
-                        }
                 }
             }
 
@@ -158,55 +152,142 @@ struct ExploreView: View {
     private var mainContent: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 0) {
-                // Search bar at the top of Explore (IG / TikTok pattern —
-                // tapping opens the search overlay instead of navigating
-                // to a separate Search tab).
+                // Live search bar (TextField — not a button). When focused
+                // or carrying a query, the topics below are hidden and the
+                // recents list takes their place. IG / TikTok pattern.
                 exploreSearchBar
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 18)
 
-                // "Explore" label — smaller now that the search bar is the
-                // primary visual anchor at the top.
-                Text("Explore")
-                    .font(.system(size: 28, weight: .bold))
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                if isSearchActive {
+                    // Search is active — show recents list inline. No
+                    // separate page, no modal.
+                    inlineSearchRecents
+                        .padding(.top, 4)
+                } else {
+                    // Normal Explore layout.
+                    Text("Explore")
+                        .font(.system(size: 28, weight: .bold))
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
 
-                // Topics — already interleaved (2 personalized, 1 trending) from API
-                ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                    entitySection(topic)
-                        .sectionAppear(appeared: appeared, index: tIndex)
-                        .padding(.bottom, 32)
+                    ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
+                        entitySection(topic)
+                            .sectionAppear(appeared: appeared, index: tIndex)
+                            .padding(.bottom, 32)
+                    }
                 }
 
                 Spacer(minLength: 100)
             }
         }
+        .animation(.smooth(duration: 0.2), value: isSearchActive)
+        .scrollDismissesKeyboard(.interactively)
     }
 
-    /// Tap-target search bar. Doesn't host a TextField — it's a button that
-    /// opens the SearchTabView overlay. The real text field lives inside
-    /// SearchTabView so we don't have to keep two inputs in sync.
+    /// Inline search bar — TextField bound to `tabBarState.searchText` so
+    /// cross-tab deep links (Flash Brief chip taps) still pre-populate it.
+    /// Trailing X clears the query AND unfocuses the field so the user
+    /// returns to the Explore content with one tap.
     private var exploreSearchBar: some View {
-        Button {
-            showSearch = true
-            HapticManager.light()
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                Text("Search articles, publishers, topics")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
-                Spacer()
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            TextField(
+                "Search articles, publishers, topics",
+                text: Binding(
+                    get: { tabBarState.searchText },
+                    set: { tabBarState.searchText = $0 }
+                )
+            )
+            .font(.system(size: 16))
+            .foregroundStyle(.primary)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .focused($searchFocused)
+            .submitLabel(.search)
+
+            if isSearchActive {
+                Button {
+                    tabBarState.searchText = ""
+                    searchFocused = false
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.85)))
             }
-            .padding(.horizontal, 14)
-            .frame(height: 44)
-            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .frame(height: 44)
+        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .animation(.smooth(duration: 0.18), value: isSearchActive)
+    }
+
+    /// Recents list shown below the search bar when search is active.
+    /// Mirrors the row layout SearchTabView uses, but lives inline inside
+    /// ExploreView so there's no separate page.
+    private var inlineSearchRecents: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !searchModel.recentSearches.isEmpty {
+                HStack {
+                    Text("Recent")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Clear") {
+                        withAnimation { searchModel.clearRecentSearches() }
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 4)
+
+                ForEach(searchModel.recentSearches, id: \.self) { query in
+                    Button {
+                        tabBarState.searchText = query
+                        searchModel.selectRecent(query)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24)
+                            Text(query)
+                                .font(.system(size: 16))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            Button {
+                                withAnimation { searchModel.removeRecentSearch(query) }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: 24, height: 24)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Text("Your recent searches will show up here.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+            }
+        }
     }
 
     // MARK: - Category Group

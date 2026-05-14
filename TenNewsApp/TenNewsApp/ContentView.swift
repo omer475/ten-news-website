@@ -181,7 +181,7 @@ struct ContentView: View {
                             Image(systemName: selectedTab == index ? tab.selectedIcon : tab.icon)
                                 .font(.system(size: 23, weight: selectedTab == index ? .semibold : .regular))
                                 .foregroundStyle(selectedTab == index ? iconActiveColor : iconInactiveColor)
-                                .frame(width: 72, height: 40)
+                                .frame(width: 84, height: 42)
                                 // Non-selected tabs use `.identity` glassEffect, which renders
                                 // no material — so the hit area collapses to the SF symbol's
                                 // non-transparent pixels and the user's taps on the surrounding
