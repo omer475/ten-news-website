@@ -77,15 +77,22 @@ struct FeedService {
         return result
     }
 
-    /// Fetch articles tagged with a given entity. Server matches both
-    /// `interest_tags` and `topics`. Used for the entity-tap topic page.
+    /// Fetch articles tagged with a given entity. Server matches via 4
+    /// parallel lanes: interest_tags exact, title ILIKE, bullet ILIKE
+    /// with cosine post-filter, and embedding kNN. Lanes 3 and 4 require
+    /// `sourceId` (the article the chip was tapped from); when nil, the
+    /// server falls back to lexical-only retrieval and logs a warning.
     func fetchTopicFeed(
         entity: String,
+        sourceId: String? = nil,
         offset: Int = 0,
         limit: Int = 20
     ) async throws -> TopicFeedResponse {
         let encoded = entity.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? entity
-        let path = "\(APIEndpoints.topicFeed)?entity=\(encoded)&offset=\(offset)&limit=\(limit)"
+        var path = "\(APIEndpoints.topicFeed)?entity=\(encoded)&offset=\(offset)&limit=\(limit)"
+        if let sid = sourceId, !sid.isEmpty {
+            path += "&source_id=\(sid)"
+        }
         return try await client.get(path)
     }
 

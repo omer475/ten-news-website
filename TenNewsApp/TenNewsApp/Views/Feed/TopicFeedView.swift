@@ -1,9 +1,14 @@
 import SwiftUI
 
 /// Identifiable wrapper so SwiftUI's `fullScreenCover(item:)` can drive
-/// the topic-feed presentation from a plain entity string.
+/// the topic-feed presentation. `sourceId` is the article the chip was
+/// tapped from — forwarded to `/api/feed/topic` as `source_id=`, which
+/// unlocks the embedding-similarity retrieval lanes server-side.
 struct TopicTarget: Identifiable, Hashable {
     let entity: String
+    let sourceId: String?
+    /// Use entity as the SwiftUI item id so re-tapping the same chip
+    /// while a topic feed is already open is a no-op (don't replay).
     var id: String { entity }
 }
 
@@ -17,6 +22,11 @@ struct TopicTarget: Identifiable, Hashable {
 /// covering the current one, so users can drill down freely.
 struct TopicFeedView: View {
     let entity: String
+    /// Article the chip was tapped from. Passed to `/api/feed/topic` as
+    /// `source_id=`, which unlocks the embedding-similarity retrieval
+    /// lanes (lane C cosine filter + lane D kNN). Nil for legacy entry
+    /// points; endpoint falls back to lexical-only retrieval.
+    let sourceId: String?
 
     @Environment(\.dismiss) private var dismiss
     @State private var articles: [Article] = []
@@ -37,7 +47,7 @@ struct TopicFeedView: View {
         .ignoresSafeArea(edges: .bottom)
         .task { await loadInitial() }
         .fullScreenCover(item: $nestedTarget) { target in
-            TopicFeedView(entity: target.entity)
+            TopicFeedView(entity: target.entity, sourceId: target.sourceId)
         }
     }
 
@@ -97,8 +107,8 @@ struct TopicFeedView: View {
                         ArticleCardContinuousView(
                             article: article,
                             accentColor: accentColor(for: article),
-                            onTopicTap: { e in
-                                nestedTarget = TopicTarget(entity: e)
+                            onTopicTap: { e, srcId in
+                                nestedTarget = TopicTarget(entity: e, sourceId: srcId)
                             }
                         )
                         .onAppear {
@@ -164,7 +174,9 @@ struct TopicFeedView: View {
         errorMessage = nil
         defer { isLoading = false }
         do {
-            let resp = try await service.fetchTopicFeed(entity: entity, offset: 0, limit: pageSize)
+            let resp = try await service.fetchTopicFeed(
+                entity: entity, sourceId: sourceId, offset: 0, limit: pageSize
+            )
             articles = resp.articles
             hasMore = resp.articles.count >= pageSize
         } catch {
@@ -174,7 +186,9 @@ struct TopicFeedView: View {
 
     private func refresh() async {
         do {
-            let resp = try await service.fetchTopicFeed(entity: entity, offset: 0, limit: pageSize)
+            let resp = try await service.fetchTopicFeed(
+                entity: entity, sourceId: sourceId, offset: 0, limit: pageSize
+            )
             articles = resp.articles
             hasMore = resp.articles.count >= pageSize
         } catch {
@@ -189,6 +203,7 @@ struct TopicFeedView: View {
         do {
             let resp = try await service.fetchTopicFeed(
                 entity: entity,
+                sourceId: sourceId,
                 offset: articles.count,
                 limit: pageSize
             )
