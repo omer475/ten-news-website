@@ -143,16 +143,16 @@ struct ContentView: View {
     }
 
     // MARK: - Bottom Bar
+    //
+    // Bar is now always expanded. The collapsed-bar variant was a leftover
+    // from when scroll-collapse hid the nav on the Search tab — user
+    // couldn't find the bar when they needed to switch tabs, and nothing
+    // else in the app sets tabBarExpanded to false anymore. Single
+    // rendering path = no way the bar gets stuck collapsed.
 
-    @ViewBuilder
     private var bottomBar: some View {
-        if tabBarExpanded || tabBarState.forceExpandedBar {
-            expandedBar
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        } else {
-            collapsedBar
-                .transition(.scale(scale: 0.7).combined(with: .opacity))
-        }
+        expandedBar
+            .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     // MARK: - Expanded: glass tab bar pill + glass explore circle
@@ -234,54 +234,6 @@ struct ContentView: View {
                         .glassEffect(.regular.interactive(), in: .circle)
                 }
             }
-        }
-    }
-
-    // MARK: - Collapsed: glass tab icon + search field for Search tab
-
-    private var collapsedIcon: String {
-        if selectedTab == 99 { return "newspaper.fill" }
-        if selectedTab < tabs.count { return tabs[selectedTab].selectedIcon }
-        return "newspaper.fill"
-    }
-
-    private var collapsedBar: some View {
-        GlassEffectContainer {
-            HStack(spacing: 10) {
-                // Tab icon — left
-                Button {
-                    if selectedTab == 99 {
-                        withAnimation(.smooth(duration: 0.45)) {
-                            selectedTab = 0
-                            tabBarExpanded = true
-                            tabBarState.isVisible = true
-                            tabBarState.lastRevealedAt = Date()
-                        }
-                    } else {
-                        withAnimation(.smooth(duration: 0.45)) {
-                            tabBarExpanded = true
-                            tabBarState.isVisible = true
-                            tabBarState.lastRevealedAt = Date()
-                        }
-                    }
-                    HapticManager.light()
-                } label: {
-                    Image(systemName: collapsedIcon)
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(iconActiveColor)
-                        .frame(width: 52, height: 52)
-                        .glassEffect(.regular.tint(Color.black.opacity(0.15)), in: Circle())
-                }
-
-                // Tab bar no longer hosts an inline search field — the
-                // search bar lives at the top of SearchTabView (Instagram /
-                // TikTok pattern). The tab-bar icon still switches to the
-                // Search tab; tabBarState.searchText is the shared binding,
-                // so deep-links from other tabs ("search this topic") still
-                // work by simply setting the string + switching tabs.
-                Spacer()
-            }
-            .padding(.horizontal, 8)
         }
     }
 
