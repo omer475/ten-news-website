@@ -1,5 +1,197 @@
 import SwiftUI
 
+// MARK: - Article from ExploreTopicArticle
+//
+// Restored 2026-05-14 (originally from cbf7d561). Builds a slim Article
+// from the lightweight ExploreTopicArticle preview the explore endpoint
+// returns, so the Explore page can render the same full
+// ArticleCardContinuousView the For You feed uses. Title + bullets +
+// photo all carry over; everything else stays nil and the feed card
+// falls back to its simple title+bullets layout.
+
+extension Article {
+    static func fromExplore(_ e: ExploreTopicArticle, source: String? = nil) -> Article {
+        Article(
+            id: e.id,
+            title: e.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: e.bullets,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: e.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: source,
+            category: e.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: e.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: nil,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
+    }
+}
+
+/// Deterministic accent color from an article id so the same article
+/// gets the same color everywhere (Explore, Topic, Feed).
+private func exploreAccentColor(for id: FlexibleID) -> Color {
+    let s = id.stringValue
+    var hash: UInt64 = 14695981039346656037
+    for byte in s.utf8 {
+        hash = (hash ^ UInt64(byte)) &* 1099511628211
+    }
+    let hue = Double(hash % 360) / 360.0
+    return Color(hue: hue, saturation: 0.55, brightness: 0.85)
+}
+
+// MARK: - Per-card height measurement
+//
+// Each card in EntityArticleCarousel emits its measured height keyed by
+// index; the parent merges them. Without per-card heights we can't morph
+// the carousel container to fit whichever card is currently snapped.
+
+private struct CardHeightKey: PreferenceKey {
+    /// Computed default (not stored static var) for Swift 6 strict
+    /// concurrency.
+    static var defaultValue: [Int: CGFloat] { [:] }
+    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+        value.merge(nextValue(), uniquingKeysWith: { $1 })
+    }
+}
+
+// MARK: - Variable-height horizontal carousel
+//
+// Each card is a full ArticleCardContinuousView at its natural height
+// (photo aspect, full title, bullets, action row). The container morphs
+// to whichever card is currently snapped — so a tall card with many
+// bullets gets full vertical space, and a one-bullet card collapses
+// the section accordingly.
+//
+// `.fixedSize(horizontal: false, vertical: true)` on each card is
+// critical: without it, the parent's `.frame(height: currentHeight)`
+// would compress cards 2+ during measurement and they'd all report
+// card 1's height through the PreferenceKey, breaking the morph.
+
+private struct EntityArticleCarousel: View {
+    let topic: ExploreTopic
+    let cardWidth: CGFloat
+    let prefetchedArticles: [String: Article]
+    let preloadedArticles: [Article]
+    /// `(entityText, sourceArticleId)` — matches the upgraded
+    /// ArticleCardContinuousView signature so chip taps can pass the
+    /// source article for embedding kNN once that ships server-side.
+    var onTopicTap: (String, String) -> Void
+    var onSwipeDepth: (Int) -> Void
+    var onScrollHit: () -> Void
+
+    @State private var cardHeights: [Int: CGFloat] = [:]
+    @State private var currentIndex: Int = 0
+
+    private var currentHeight: CGFloat {
+        cardHeights[currentIndex] ?? 600
+    }
+
+    /// Prefer the fully-hydrated Article (from prefetch or feed cache) over
+    /// the slim explore proxy, so bullets etc. render whenever available.
+    private func resolvedArticle(at index: Int) -> Article {
+        let article = topic.articles[index]
+        let key = article.id.stringValue
+        if let pre = prefetchedArticles[key] { return pre }
+        if let loaded = preloadedArticles.first(where: { $0.id.stringValue == key }) { return loaded }
+        return Article.fromExplore(article, source: topic.displayTitle)
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 12) {
+                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
+                        ArticleCardContinuousView(
+                            article: resolvedArticle(at: index),
+                            accentColor: exploreAccentColor(for: article.id),
+                            onTopicTap: onTopicTap,
+                            showTopicTags: false
+                        )
+                        .frame(width: cardWidth)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: CardHeightKey.self,
+                                    value: [index: geo.size.height]
+                                )
+                            }
+                        )
+                        .onAppear {
+                            if index == 2 { onScrollHit() }
+                        }
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.horizontal, 20)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .onPreferenceChange(CardHeightKey.self) { heights in
+                cardHeights.merge(heights, uniquingKeysWith: { _, new in new })
+            }
+            .frame(height: currentHeight)
+            .clipped()
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, newOffset in
+                let page = Int(round(newOffset / (cardWidth + 12)))
+                let clamped = max(0, min(page, topic.articles.count - 1))
+                if clamped != currentIndex {
+                    let prev = currentIndex
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                        currentIndex = clamped
+                    }
+                    if clamped > prev { onSwipeDepth(clamped) }
+                }
+            }
+        }
+    }
+}
+
 struct ExploreView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
@@ -370,56 +562,33 @@ struct ExploreView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal article scroll. Cards use the feed-card layout
-            // (creator row + photo + title) instead of the old overlay-
-            // on-photo design so Explore visually matches the For You feed.
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
-                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
-                        Button {
-                            trackArticleTap(article, topic: topic)
-                            openArticle(article)
-                        } label: {
-                            feedStyleCard(
-                                article: article,
-                                topic: topic,
-                                color: catColor,
-                                icon: icon
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .onAppear {
-                            if index == 2 {
-                                trackScrollIfNeeded(topic)
-                            }
-                        }
-                    }
-                }
-                .scrollTargetLayout()
-                .padding(.horizontal, 20)
-            }
-            .scrollTargetBehavior(.viewAligned)
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.x
-            } action: { _, newOffset in
-                let page = Int(round(newOffset / (cardWidth + 12)))
-                let clamped = max(0, min(page, topic.articles.count - 1))
-                let previousIndex = scrolledIndices[topic.entityName] ?? 0
-                if clamped != previousIndex {
-                    scrolledIndices[topic.entityName] = clamped
-                    // Track swipe-right as interest signal (stronger than scroll, weaker than tap)
-                    if clamped > previousIndex {
-                        trackEntitySwipe(topic: topic, depth: clamped)
-                    }
-                }
-            }
+            // Variable-height horizontal carousel — each card is a full
+            // ArticleCardContinuousView at its natural height (photo +
+            // title + bullets + action row), and the carousel container
+            // morphs to fit whichever card is currently snapped. Same
+            // design as the For You feed cards, so Explore visually
+            // matches the feed exactly.
+            EntityArticleCarousel(
+                topic: topic,
+                cardWidth: cardWidth,
+                prefetchedArticles: prefetchedArticles,
+                preloadedArticles: feedViewModel.allArticles,
+                onTopicTap: { entity, _ in
+                    // Bridge through tabBarState.pendingSearch so a topic
+                    // chip tap drops the user into the search overlay
+                    // pre-filled with the entity (consistent with how
+                    // Flash Brief / feed chips behave). sourceId is
+                    // unused here for now — kept on the closure for
+                    // future use when the chip retrieval endpoint
+                    // accepts source_id for kNN.
+                    tabBarState.pendingSearch = entity
+                },
+                onSwipeDepth: { depth in
+                    scrolledIndices[topic.entityName] = depth
+                },
+                onScrollHit: { trackScrollIfNeeded(topic) }
+            )
 
-            // Page indicator dots (max 7 visible, iOS-style scaling)
-            if topic.articles.count > 1 {
-                PageDots(count: topic.articles.count, current: currentIndex)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
-            }
         }
     }
 
@@ -431,67 +600,6 @@ struct ExploreView: View {
 
     private var cardHeight: CGFloat { cardWidth }
 
-    // MARK: - Feed-style card (replaces ExploreArticleCard inside entitySection)
-
-    /// One article rendered in the same layout as the For You feed and
-    /// the welcome screen card: creator row on top (entity-colored circle
-    /// + topic name + relative time), photo at a fixed 4:3 aspect with
-    /// 16pt rounded corners, then a 3-line title underneath. Bullets are
-    /// skipped here — Explore cards stay compact for horizontal-scroll
-    /// browsing; full bullets show up when the user taps in.
-    @ViewBuilder
-    private func feedStyleCard(
-        article: ExploreTopicArticle,
-        topic: ExploreTopic,
-        color: Color,
-        icon: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Creator-style header row.
-            HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(color)
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 30, height: 30)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(topic.displayTitle)
-                        .font(.system(size: 14, weight: .semibold))
-                        .tracking(-0.1)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                    if !article.relativeTime.isEmpty {
-                        Text(article.relativeTime)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-            }
-
-            // Photo — same 16pt corner treatment as MainFeedView.photoBlock,
-            // 4:3 aspect so all cards in the row line up vertically.
-            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fill)
-                .frame(width: cardWidth, height: cardWidth * 0.62)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-            // Title — same hierarchy as the feed card (bold, tracking -0.3).
-            Text(article.cleanTitle)
-                .font(.system(size: 18, weight: .bold))
-                .tracking(-0.3)
-                .lineSpacing(2)
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.leading)
-                .lineLimit(3)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(width: cardWidth, alignment: .leading)
-    }
 
     // MARK: - Loading
 
