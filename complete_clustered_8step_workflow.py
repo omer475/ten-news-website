@@ -2260,6 +2260,35 @@ Example: ["Current solar panels max out at 25% efficiency commercially", "The th
             # The articles are already published; tagging is enrichment.
             print(f"   ⚠️ [Step 6] world-event detection failed (non-fatal): {e}")
 
+    # STEP 13 (mig 121, 2026-05-14): event-cluster redundancy decay.
+    #
+    # After step6 has tagged articles with event_ids, the same news event can
+    # be covered by 10-20+ outlets — each scored independently by step10 at
+    # 800+ because the per-article scorer has no view of other articles in
+    # the same cluster. Audit slate (2026-05-14 session 3): 21 cards from
+    # the same Trump-Beijing event filled 10 of 25 slate slots.
+    #
+    # apply_event_redundancy_decay (X's open-source diversity formula:
+    # decay=0.5, floor=0.25) re-scores so position-0 in each event cluster
+    # keeps full score, position-1 drops to 0.625×, position-5+ asymptotes
+    # at 0.25×. Stored in a separate column (redundancy_adjusted_score),
+    # JS rerank prefers it when present and falls back to ai_final_score.
+    # Idempotent — always re-derived from ai_final_score.
+    try:
+        print(f"\n📉 STEP 13 (mig 121): event-cluster redundancy decay (72h window)")
+        _client = get_supabase_client()
+        _decay_result = _client.rpc('apply_event_redundancy_decay', {
+            'p_decay': 0.5,
+            'p_floor': 0.25,
+            'p_hours_window': 72,
+        }).execute()
+        _updated = _decay_result.data if hasattr(_decay_result, 'data') else _decay_result
+        print(f"   ✅ [Step 13] redundancy-adjusted {_updated} articles within 72h window")
+    except Exception as e:
+        # Non-blocking: decay failure must not abort the pipeline.
+        # JS rerank falls back to ai_final_score when redundancy_adjusted_score is NULL.
+        print(f"   ⚠️ [Step 13] redundancy decay failed (non-fatal): {e}")
+
     # Summary
     print(f"\n{'='*80}")
     print(f"✅ PIPELINE COMPLETE")
