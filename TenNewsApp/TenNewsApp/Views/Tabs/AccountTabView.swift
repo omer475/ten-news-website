@@ -20,7 +20,6 @@ struct AccountTabView: View {
     @State private var showFollowingList = false
     @State private var showUserFollowersList = false
     @State private var showUserFollowingList = false
-    @State private var showFindPeople = false
     @State private var followManager = FollowManager.shared
     @State private var userFollowManager = UserFollowManager.shared
 
@@ -370,9 +369,6 @@ struct AccountTabView: View {
                 UserListView(mode: .following(userId: uid), onDismiss: { showUserFollowingList = false })
             }
         }
-        .sheet(isPresented: $showFindPeople) {
-            UserListView(mode: .search, onDismiss: { showFindPeople = false })
-        }
     }
 
     @ViewBuilder
@@ -431,21 +427,6 @@ struct AccountTabView: View {
                 .buttonStyle(AccountButtonStyle())
             }
 
-            Button {
-                showFindPeople = true
-                HapticManager.light()
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "person.crop.circle.badge.plus")
-                        .font(.system(size: 12, weight: .bold))
-                    Text("Find people")
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 34)
-                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(AccountButtonStyle())
 
             Button {
                 showCreateContent = true

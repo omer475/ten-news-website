@@ -11,6 +11,7 @@ struct SearchTabView: View {
     @State private var selectedPublisherId: String?
     @State private var selectedPublisher: SearchPublisher?
     @State private var showPublisherProfile = false
+    @FocusState private var searchFieldFocused: Bool
 
     private let articleService = ArticleService()
 
@@ -21,11 +22,21 @@ struct SearchTabView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .top) {
                 Theme.Colors.backgroundPrimary.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
+                        // Top search bar (Instagram-style — pinned at top,
+                        // scrolls under the content). Moved here from the
+                        // bottom tab bar because the user couldn't find it
+                        // easily and TikTok / IG both put their search at
+                        // the top.
+                        topSearchBar
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, 14)
+
                         // Filter tabs — only show when searching
                         if viewModel.hasSearched {
                             HStack(spacing: 0) {
@@ -100,9 +111,7 @@ struct SearchTabView: View {
                         .zIndex(2)
                 }
             }
-            .navigationTitle("Search")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar(selectedArticle != nil ? .hidden : .visible, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
             .task { await viewModel.loadTrending() }
             .onChange(of: tabBarState.searchText) { _, newValue in
                 guard viewModel.searchText != newValue else { return }
@@ -217,10 +226,53 @@ struct SearchTabView: View {
             if !viewModel.recentSearches.isEmpty {
                 recentSearchesSection
             }
-
-            // Browse Categories
-            browseCategoriesSection
         }
+    }
+
+    // MARK: - Top Search Bar
+    //
+    // Replaces the bottom-tab-bar search field. Pinned at the top of the
+    // Search tab so the user can always see + tap it (Instagram / TikTok
+    // pattern). Bound to the same tabBarState.searchText so any other tab
+    // that wants to deep-link a search ("Search this topic" from Explore)
+    // still works — just set tabBarState.searchText and switch tabs.
+    private var topSearchBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            TextField(
+                "Search articles, publishers, topics",
+                text: Binding(
+                    get: { tabBarState.searchText },
+                    set: { tabBarState.searchText = $0 }
+                )
+            )
+            .font(.system(size: 16))
+            .foregroundStyle(.primary)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .focused($searchFieldFocused)
+            .submitLabel(.search)
+
+            if !tabBarState.searchText.isEmpty {
+                Button {
+                    tabBarState.searchText = ""
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.85)))
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 44)
+        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .animation(.smooth(duration: 0.18), value: tabBarState.searchText.isEmpty)
     }
 
     // MARK: - Trending Section
@@ -312,62 +364,6 @@ struct SearchTabView: View {
                 .buttonStyle(.plain)
             }
         }
-    }
-
-    // MARK: - Browse Categories
-
-    private let browseColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
-
-    private var browseCategoriesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Browse")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 20)
-
-            LazyVGrid(columns: browseColumns, spacing: 12) {
-                ForEach(BrowseTopic.allTopics) { topic in
-                    Button {
-                        tabBarState.searchText = topic.name
-                        viewModel.searchText = topic.name
-                        Task { await viewModel.search(query: topic.name) }
-                    } label: {
-                        browseCard(topic)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 16)
-        }
-    }
-
-    private func browseCard(_ topic: BrowseTopic) -> some View {
-        RoundedRectangle(cornerRadius: 14)
-            .fill(
-                LinearGradient(
-                    colors: [topic.color, topic.color.opacity(0.7)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(height: 80)
-            .overlay(alignment: .topLeading) {
-                Text(topic.name)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(.leading, 14)
-                    .padding(.top, 12)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                Image(systemName: topic.icon)
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.3))
-                    .rotationEffect(.degrees(15))
-                    .offset(x: -10, y: -10)
-            }
     }
 
     // MARK: - Results Content

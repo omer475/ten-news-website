@@ -276,39 +276,13 @@ struct ContentView: View {
                         .glassEffect(.regular.tint(Color.black.opacity(0.15)), in: Circle())
                 }
 
-                // Search field — only on Search tab
-                if selectedTab == 99 {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(Color(white: 0.5))
-
-                        TextField(
-                            "Search...",
-                            text: Binding(
-                                get: { tabBarState.searchText },
-                                set: { tabBarState.searchText = $0 }
-                            )
-                        )
-                        .font(.system(size: 15))
-
-                        if !tabBarState.searchText.isEmpty {
-                            Button {
-                                tabBarState.searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color(white: 0.5))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .frame(height: 52)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .glassEffect(.regular.tint(Color.black.opacity(0.15)), in: Capsule())
-                } else {
-                    Spacer()
-                }
+                // Tab bar no longer hosts an inline search field — the
+                // search bar lives at the top of SearchTabView (Instagram /
+                // TikTok pattern). The tab-bar icon still switches to the
+                // Search tab; tabBarState.searchText is the shared binding,
+                // so deep-links from other tabs ("search this topic") still
+                // work by simply setting the string + switching tabs.
+                Spacer()
             }
             .padding(.horizontal, 8)
         }
