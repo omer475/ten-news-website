@@ -23,6 +23,9 @@ struct ExploreView: View {
     @State private var appeared = false
     @State private var lastLoadTime: Date?
     @State private var hasLoadedOnce = false
+    /// Drives the full-screen search overlay (IG / TikTok pattern — search
+    /// lives inside the discovery tab rather than its own tab).
+    @State private var showSearch = false
     private let staleThreshold: TimeInterval = 180 // 3 minutes
 
     // Explore tracking state
@@ -85,6 +88,29 @@ struct ExploreView: View {
                     Task { await loadTopics() }
                 }
             }
+            // Cross-tab "open search with this query" — Flash Brief topic
+            // chips, article-card entity chips, etc. set this flag (via
+            // ContentView's pendingSearch handler) after switching to the
+            // Explore tab.
+            .onChange(of: tabBarState.openSearchOnExplore) { _, requested in
+                if requested {
+                    showSearch = true
+                    tabBarState.openSearchOnExplore = false
+                }
+            }
+            .fullScreenCover(isPresented: $showSearch) {
+                NavigationStack {
+                    SearchTabView()
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") {
+                                    showSearch = false
+                                    tabBarState.searchText = ""
+                                }
+                            }
+                        }
+                }
+            }
 
             // Article overlay (single article from card tap)
             if let article = selectedArticle {
@@ -132,12 +158,20 @@ struct ExploreView: View {
     private var mainContent: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 0) {
-                // Title scrolls with content
-                Text("Explore")
-                    .font(.system(size: 34, weight: .bold))
-                    .padding(.horizontal, 20)
+                // Search bar at the top of Explore (IG / TikTok pattern —
+                // tapping opens the search overlay instead of navigating
+                // to a separate Search tab).
+                exploreSearchBar
+                    .padding(.horizontal, 16)
                     .padding(.top, 8)
-                    .padding(.bottom, 28)
+                    .padding(.bottom, 18)
+
+                // "Explore" label — smaller now that the search bar is the
+                // primary visual anchor at the top.
+                Text("Explore")
+                    .font(.system(size: 28, weight: .bold))
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
 
                 // Topics — already interleaved (2 personalized, 1 trending) from API
                 ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
@@ -149,6 +183,30 @@ struct ExploreView: View {
                 Spacer(minLength: 100)
             }
         }
+    }
+
+    /// Tap-target search bar. Doesn't host a TextField — it's a button that
+    /// opens the SearchTabView overlay. The real text field lives inside
+    /// SearchTabView so we don't have to keep two inputs in sync.
+    private var exploreSearchBar: some View {
+        Button {
+            showSearch = true
+            HapticManager.light()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Text("Search articles, publishers, topics")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 44)
+            .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Category Group

@@ -21,9 +21,10 @@ struct SearchTabView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .top) {
-                Theme.Colors.backgroundPrimary.ignoresSafeArea()
+        // No own NavigationStack — the parent (ExploreView's fullScreenCover)
+        // provides one so its Cancel toolbar button has somewhere to live.
+        ZStack(alignment: .top) {
+            Theme.Colors.backgroundPrimary.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -113,7 +114,6 @@ struct SearchTabView: View {
                         .zIndex(2)
                 }
             }
-            .toolbar(.hidden, for: .navigationBar)
             .task { await viewModel.loadTrending() }
             .onChange(of: tabBarState.searchText) { _, newValue in
                 guard viewModel.searchText != newValue else { return }
@@ -159,7 +159,6 @@ struct SearchTabView: View {
                     .navigationBarHidden(true)
                 }
             }
-        }
     }
 
     private func openArticle(_ article: SearchArticle) {

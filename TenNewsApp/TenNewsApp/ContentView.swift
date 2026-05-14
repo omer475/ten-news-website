@@ -13,10 +13,18 @@ final class TabBarState {
     var feedRefreshRequested = false
     var exploreRefreshRequested = false
     /// Cross-tab navigation request. When a child view (e.g. FlashBriefSheet's
-    /// trending-topic chip) wants to jump to the Search tab pre-filled with a
-    /// query, it sets this to the topic string. ContentView's onChange handler
-    /// switches selectedTab to 99 and sets searchText, then clears this.
+    /// trending-topic chip) wants to jump to search pre-filled with a query,
+    /// it sets this to the topic string. ContentView's onChange handler
+    /// switches selectedTab to 1 (Explore), sets searchText, and flips
+    /// `openSearchOnExplore` so ExploreView pops its search overlay.
     var pendingSearch: String?
+
+    /// Read by ExploreView — when set true, the search overlay opens
+    /// immediately (search field focused, pre-filled from `searchText` if
+    /// set). ExploreView clears the flag after acting on it. Replaces the
+    /// old "switch to a dedicated Search tab" pattern after merging
+    /// Search into Explore (IG / TikTok pattern, 2026-05-14).
+    var openSearchOnExplore = false
 }
 
 struct ContentView: View {
@@ -68,8 +76,6 @@ struct ContentView: View {
                     ChatListView()
                 case 3:
                     AccountTabView()
-                case 99:
-                    SearchTabView()
                 default:
                     EmptyView()
                 }
@@ -94,25 +100,22 @@ struct ContentView: View {
         }
         .onChange(of: tabBarState.pendingSearch) { _, newVal in
             // Cross-tab navigation requested with a pre-filled query.
-            // Switch to Search tab, then set the searchText AFTER the
-            // selectedTab onChange runs (which clears searchText on its own).
+            // Switch to Explore (which now owns search) and flip the
+            // overlay flag so ExploreView opens its search sheet with
+            // the query pre-loaded.
             guard let topic = newVal, !topic.isEmpty else { return }
-            selectedTab = 99
+            selectedTab = 1
             DispatchQueue.main.async {
                 tabBarState.searchText = topic
+                tabBarState.openSearchOnExplore = true
                 tabBarState.pendingSearch = nil
             }
         }
-        .onChange(of: selectedTab) { oldTab, newTab in
+        .onChange(of: selectedTab) { _, _ in
+            // Switching tabs clears the live search query so a fresh visit
+            // to Explore starts empty. Cross-tab pendingSearch handlers
+            // re-set this AFTER selectedTab changes, so they're unaffected.
             tabBarState.searchText = ""
-            // Always show expanded bar on main tabs
-            if newTab != 99 && !tabBarExpanded {
-                withAnimation(.smooth(duration: 0.45)) {
-                    tabBarExpanded = true
-                    tabBarState.isVisible = true
-                    tabBarState.lastRevealedAt = Date()
-                }
-            }
             // Feed tab: preserve state when switching tabs — no auto-refresh.
             // User's scroll position and loaded articles stay intact.
             // Refresh only happens on pull-to-refresh or app foreground after 5+ min.
@@ -213,26 +216,9 @@ struct ContentView: View {
                 .padding(.vertical, 4)
                 .glassEffect(.regular.tint(Color.black.opacity(0.2)), in: .capsule)
 
-                // Search circle. Just switches to the Search tab — the bar
-                // stays expanded the whole time (the search field lives
-                // inside SearchTabView at the top, so collapsing the bottom
-                // bar would leave the user with no bottom navigation).
-                Button {
-                    withAnimation(.bouncy) {
-                        selectedTab = 99
-                        tabBarState.forceExpandedBar = false
-                        tabBarExpanded = true
-                        tabBarState.isVisible = true
-                        tabBarState.lastRevealedAt = Date()
-                    }
-                    HapticManager.light()
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(iconActiveColor)
-                        .frame(width: 52, height: 52)
-                        .glassEffect(.regular.interactive(), in: .circle)
-                }
+                // Magnifying-glass circle removed 2026-05-14: search lives
+                // inside the Explore tab now (IG / TikTok pattern). The user
+                // taps the search bar at the top of Explore to open search.
             }
         }
     }
