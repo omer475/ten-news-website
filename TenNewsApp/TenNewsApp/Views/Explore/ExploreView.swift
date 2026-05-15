@@ -283,10 +283,28 @@ struct ExploreView: View {
     /// trending lists stay in lockstep across surfaces.
     @State private var searchModel = SearchViewModel()
     @FocusState private var searchFocused: Bool
+    /// Active tab inside the search overlay (Top / Articles / Publishers /
+    /// Topics). Defaults to Top — the synthesized "best of everything"
+    /// page IG / TikTok / X all open with.
+    @State private var selectedSearchTab: SearchResultsTab = .top
     /// True when the search bar should "take over" the page below it —
     /// either the user is typing or the field is focused with no query.
     private var isSearchActive: Bool {
         searchFocused || !tabBarState.searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// Top tab IS the default — replicates IG / TikTok / X / Threads.
+    enum SearchResultsTab: String, CaseIterable, Identifiable {
+        case top, articles, publishers, topics
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .top:        return "Top"
+            case .articles:   return "Articles"
+            case .publishers: return "Publishers"
+            case .topics:     return "Topics"
+            }
+        }
     }
     private let staleThreshold: TimeInterval = 180 // 3 minutes
 
@@ -443,31 +461,152 @@ struct ExploreView: View {
         .scrollDismissesKeyboard(.interactively)
         // Drive the search model whenever the bound query changes —
         // SearchViewModel.onSearchTextChanged debounces by 300ms and
-        // calls search(query:) for queries ≥ 2 chars.
+        // calls search(query:) for queries ≥ 2 chars. We ALSO fire the
+        // (cheaper, 80ms-debounced) autocomplete loader so the chip rail
+        // updates ahead of the full search.
         .onChange(of: tabBarState.searchText) { _, newValue in
             searchModel.searchText = newValue
             searchModel.onSearchTextChanged()
+            searchModel.loadAutocomplete(query: newValue)
+        }
+        // Fall back to the Top tab whenever a new query lands so the
+        // user lands on the most-useful screen by default.
+        .onChange(of: searchModel.hasSearched) { _, has in
+            if has { selectedSearchTab = .top }
         }
     }
 
     // MARK: - Inline search content
 
     /// State machine that fills the area below the search bar while the
-    /// user is searching. Branches on the SearchViewModel's loading /
-    /// hasSearched / results state.
+    /// user is searching. Branches:
+    ///   * has results        → autocomplete chip rail + segmented tabs + content
+    ///   * spinner (first run, no stale results) → loading
+    ///   * searched, no hits  → friendly empty
+    ///   * idle / typing      → autocomplete chip rail + recents
     @ViewBuilder
     private var inlineSearchContent: some View {
         let q = tabBarState.searchText.trimmingCharacters(in: .whitespaces)
 
-        if searchModel.isLoading && searchModel.articles.isEmpty {
-            inlineSearchSpinner
-        } else if searchModel.hasSearched && !searchModel.articles.isEmpty {
-            inlineSearchResults
-        } else if searchModel.hasSearched && searchModel.articles.isEmpty && !q.isEmpty {
-            inlineSearchEmpty(query: q)
-        } else {
-            inlineSearchRecents
+        VStack(alignment: .leading, spacing: 0) {
+            // Autocomplete chip rail — visible the moment we have any
+            // suggestions, even before the heavier full search returns.
+            // Hides on a clean empty state.
+            if !searchModel.suggestions.isEmpty {
+                inlineAutocompleteChips
+                    .padding(.bottom, 12)
+            }
+
+            if searchModel.isLoading && searchModel.articles.isEmpty {
+                inlineSearchSpinner
+            } else if searchModel.hasSearched && !searchModel.articles.isEmpty {
+                // Stale-while-revalidate — keep results visible at full
+                // opacity; the loading spinner fades in at the top while
+                // the new query is in flight.
+                if searchModel.isLoading {
+                    HStack(spacing: 8) {
+                        ProgressView().scaleEffect(0.7)
+                        Text("Updating…").font(.system(size: 11)).foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 6)
+                    .transition(.opacity)
+                }
+
+                searchTabSelector
+                    .padding(.bottom, 12)
+
+                Group {
+                    switch selectedSearchTab {
+                    case .top:        inlineSearchTopTab
+                    case .articles:   inlineSearchArticlesTab
+                    case .publishers: inlineSearchPublishersTab
+                    case .topics:     inlineSearchTopicsTab
+                    }
+                }
+            } else if searchModel.hasSearched && !q.isEmpty {
+                inlineSearchEmpty(query: q)
+            } else {
+                inlineSearchRecents
+            }
         }
+        .animation(.smooth(duration: 0.18), value: searchModel.hasSearched)
+        .animation(.smooth(duration: 0.18), value: selectedSearchTab)
+    }
+
+    // MARK: - Autocomplete chips
+
+    /// Horizontal scrolling chip rail. Each chip shows the suggestion's
+    /// label; tap fills the search field + runs a real search. Icon
+    /// hints at the kind (publisher / topic / article).
+    private var inlineAutocompleteChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(searchModel.suggestions) { suggestion in
+                    Button {
+                        HapticManager.light()
+                        tabBarState.searchText = suggestion.label
+                        Task { await searchModel.search(query: suggestion.label) }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: suggestionIcon(for: suggestion.type))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Text(suggestion.label)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(.fill.quaternary, in: Capsule())
+                        .overlay(Capsule().strokeBorder(.black.opacity(0.05), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func suggestionIcon(for type: String) -> String {
+        switch type {
+        case "publisher": return "person.crop.circle"
+        case "entity":    return "number"
+        case "article":   return "doc.text"
+        default:          return "magnifyingglass"
+        }
+    }
+
+    // MARK: - Tab selector
+
+    /// Segmented control above results. Pure SwiftUI Buttons — Picker's
+    /// .segmented style on iOS doesn't render flush with our light theme
+    /// and Forces a tap area we don't want.
+    private var searchTabSelector: some View {
+        HStack(spacing: 8) {
+            ForEach(SearchResultsTab.allCases) { tab in
+                Button {
+                    selectedSearchTab = tab
+                    HapticManager.light()
+                } label: {
+                    Text(tab.label)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(selectedSearchTab == tab ? Color.primary : Color.secondary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            selectedSearchTab == tab
+                                ? AnyShapeStyle(.fill.tertiary)
+                                : AnyShapeStyle(Color.clear),
+                            in: Capsule()
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
     }
 
     private var inlineSearchSpinner: some View {
@@ -497,12 +636,11 @@ struct ExploreView: View {
         .padding(.top, 40)
     }
 
-    /// Results list — each row is the same full ArticleCardContinuousView
-    /// the For You feed uses, so the search experience looks like a
-    /// pre-filtered feed instead of a compact list of thumbnails. Bullets
-    /// are absent (SearchArticle doesn't carry them), but the header /
-    /// photo / title / action row are identical to the feed.
-    private var inlineSearchResults: some View {
+    // MARK: - Tab content
+
+    /// Articles tab — vertical list of full feed cards. Same component
+    /// the For You feed uses so the search UX is "filtered feed."
+    private var inlineSearchArticlesTab: some View {
         VStack(spacing: 24) {
             ForEach(searchModel.articles) { result in
                 let hydrated = hydratedArticle(for: result)
@@ -519,6 +657,192 @@ struct ExploreView: View {
             }
         }
         .padding(.top, 4)
+    }
+
+    /// Top tab — synthesized "best of everything" view from the
+    /// server's typed top-rows payload. Renders each row according to
+    /// its kind (article = full feed card, publisher = follow row,
+    /// entity = tappable topic row).
+    private var inlineSearchTopTab: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            ForEach(searchModel.topRows) { row in
+                switch row {
+                case .article(let a):
+                    let hydrated = hydratedArticle(for: a)
+                    Button {
+                        openSearchResult(a)
+                    } label: {
+                        ArticleCardContinuousView(
+                            article: hydrated,
+                            accentColor: feedViewModel.accentColor(for: hydrated),
+                            showTopicTags: false
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                case .publisher(let p):
+                    publisherRow(p)
+
+                case .entity(let e):
+                    entityRow(e)
+                }
+            }
+
+            // Fallback: if the server didn't emit any top rows (rare —
+            // empty result set), fall through to the Articles list so
+            // the tab is never visually empty.
+            if searchModel.topRows.isEmpty {
+                inlineSearchArticlesTab
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Publishers tab — IG-style follow rows.
+    private var inlineSearchPublishersTab: some View {
+        VStack(spacing: 0) {
+            if searchModel.publishers.isEmpty {
+                tabEmpty(message: "No publishers match your search.")
+            } else {
+                ForEach(searchModel.publishers) { p in
+                    publisherRow(p)
+                    if p.id != searchModel.publishers.last?.id {
+                        Divider().padding(.leading, 76)
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Topics tab — vertical list of tappable entity rows. Tapping
+    /// pushes into TopicFeedView via the existing pendingSearch bridge.
+    private var inlineSearchTopicsTab: some View {
+        VStack(spacing: 0) {
+            if searchModel.entities.isEmpty {
+                tabEmpty(message: "No topics match your search.")
+            } else {
+                ForEach(searchModel.entities) { e in
+                    entityRow(e)
+                    if e.id != searchModel.entities.last?.id {
+                        Divider().padding(.leading, 76)
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private func tabEmpty(message: String) -> some View {
+        Text(message)
+            .font(.system(size: 14))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+    }
+
+    // MARK: - Row renderers shared by Top / Publishers / Topics tabs
+
+    /// Publisher row — avatar + display name + verified badge + meta
+    /// (follower / article count) + Follow chip on the right.
+    private func publisherRow(_ p: SearchPublisher) -> some View {
+        Button {
+            // The publisher's profile is the right destination — but we
+            // don't have direct navigation into CreatorProfileView from
+            // here. Until that's wired, bridge via pendingSearch so the
+            // chip rail at minimum surfaces their handle.
+            tabBarState.searchText = p.displayName
+            Task { await searchModel.search(query: p.displayName) }
+            HapticManager.light()
+        } label: {
+            HStack(spacing: 12) {
+                AsyncCachedImage(url: URL(string: p.avatarUrl ?? ""), contentMode: .fill)
+                    .frame(width: 48, height: 48)
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(.black.opacity(0.06), lineWidth: 0.5))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text(p.displayName)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if p.isVerified == true {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
+                        }
+                    }
+                    Text(publisherSubtitle(p))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func publisherSubtitle(_ p: SearchPublisher) -> String {
+        var parts: [String] = []
+        if let c = p.category, !c.isEmpty { parts.append(c) }
+        let followers = p.followerCount ?? 0
+        if followers > 0 { parts.append("\(formatCount(followers)) followers") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Entity row — emoji tile + display title + article-count subtitle.
+    private func entityRow(_ e: SearchEntity) -> some View {
+        Button {
+            tabBarState.searchText = e.displayTitle
+            Task { await searchModel.search(query: e.displayTitle) }
+            HapticManager.light()
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.fill.tertiary)
+                        .frame(width: 48, height: 48)
+                    Text(e.emoji)
+                        .font(.system(size: 22))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(e.displayTitle)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if let n = e.articleCount, n > 0 {
+                        Text("\(n) articles · \(e.category)")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    } else {
+                        Text(e.category)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func formatCount(_ n: Int) -> String {
+        if n >= 1_000_000 { return String(format: "%.1fM", Double(n) / 1_000_000) }
+        if n >= 1_000 { return String(format: "%.1fK", Double(n) / 1_000) }
+        return String(n)
     }
 
     /// Use the fully-loaded Article from the feed cache when available

@@ -50,6 +50,13 @@ enum APIEndpoints {
         "/api/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)&page=\(page)&limit=\(limit)"
     }
     static let searchTrending = "/api/search/trending"
+    /// As-you-type chip rail — sub-100ms server response, fires every
+    /// keystroke (debounced 80ms on the client). Returns up to 8 typed
+    /// suggestions interleaved by kind (publisher / entity / article).
+    static func searchAutocomplete(query: String) -> String {
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        return "/api/search/autocomplete?q=\(encoded)"
+    }
 
     // MARK: - Content Creation
     static let contentCreate = "/api/content/create"
