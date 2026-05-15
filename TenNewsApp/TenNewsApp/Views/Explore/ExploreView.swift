@@ -69,6 +69,70 @@ extension Article {
             expectedReadSeconds: nil
         )
     }
+
+    /// Slim Article built from a SearchArticle so search result rows can
+    /// render the full feed-card layout. Bullets / source / authorName are
+    /// nil here — search returns a lighter payload than the feed; the card
+    /// downgrades gracefully (no bullet section, no follow chip).
+    static func fromSearch(_ s: SearchArticle) -> Article {
+        Article(
+            id: s.id,
+            title: s.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: nil,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: s.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: nil,
+            category: s.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: s.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: nil,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
+    }
 }
 
 /// Deterministic accent color from an article id so the same article
@@ -433,47 +497,38 @@ struct ExploreView: View {
         .padding(.top, 40)
     }
 
-    /// Results list — each row is a compact tappable card: photo on the
-    /// left, title + relative time on the right. Tapping opens the full
-    /// ArticleSheet overlay using the same `selectedArticle` plumbing
-    /// the Explore topic cards use.
+    /// Results list — each row is the same full ArticleCardContinuousView
+    /// the For You feed uses, so the search experience looks like a
+    /// pre-filtered feed instead of a compact list of thumbnails. Bullets
+    /// are absent (SearchArticle doesn't carry them), but the header /
+    /// photo / title / action row are identical to the feed.
     private var inlineSearchResults: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 24) {
             ForEach(searchModel.articles) { result in
+                let hydrated = hydratedArticle(for: result)
                 Button {
                     openSearchResult(result)
                 } label: {
-                    HStack(alignment: .top, spacing: 12) {
-                        AsyncCachedImage(
-                            url: URL(string: result.imageUrl ?? ""),
-                            contentMode: .fill
-                        )
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(result.displayTitle)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.leading)
-                                .lineLimit(3)
-                                .tracking(-0.2)
-                            if !result.relativeTime.isEmpty {
-                                Text(result.relativeTime)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.vertical, 2)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
+                    ArticleCardContinuousView(
+                        article: hydrated,
+                        accentColor: feedViewModel.accentColor(for: hydrated),
+                        showTopicTags: false
+                    )
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.top, 4)
+    }
+
+    /// Use the fully-loaded Article from the feed cache when available
+    /// so we get bullets / action-row state / publisher attribution.
+    /// Falls back to a slim Article built from the SearchArticle payload.
+    private func hydratedArticle(for result: SearchArticle) -> Article {
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == result.id.stringValue }) {
+            return cached
+        }
+        return Article.fromSearch(result)
     }
 
     /// Fetch the full Article and open the existing sheet overlay.
