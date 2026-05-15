@@ -353,9 +353,10 @@ struct ExploreView: View {
                     .padding(.bottom, 18)
 
                 if isSearchActive {
-                    // Search is active — show recents list inline. No
-                    // separate page, no modal.
-                    inlineSearchRecents
+                    // Search is active — branch on whether a query is
+                    // in flight, has results, came back empty, or none
+                    // of the above (show recents).
+                    inlineSearchContent
                         .padding(.top, 4)
                 } else {
                     // Normal Explore layout.
@@ -376,12 +377,138 @@ struct ExploreView: View {
         }
         .animation(.smooth(duration: 0.2), value: isSearchActive)
         .scrollDismissesKeyboard(.interactively)
+        // Drive the search model whenever the bound query changes —
+        // SearchViewModel.onSearchTextChanged debounces by 300ms and
+        // calls search(query:) for queries ≥ 2 chars.
+        .onChange(of: tabBarState.searchText) { _, newValue in
+            searchModel.searchText = newValue
+            searchModel.onSearchTextChanged()
+        }
+    }
+
+    // MARK: - Inline search content
+
+    /// State machine that fills the area below the search bar while the
+    /// user is searching. Branches on the SearchViewModel's loading /
+    /// hasSearched / results state.
+    @ViewBuilder
+    private var inlineSearchContent: some View {
+        let q = tabBarState.searchText.trimmingCharacters(in: .whitespaces)
+
+        if searchModel.isLoading && searchModel.articles.isEmpty {
+            inlineSearchSpinner
+        } else if searchModel.hasSearched && !searchModel.articles.isEmpty {
+            inlineSearchResults
+        } else if searchModel.hasSearched && searchModel.articles.isEmpty && !q.isEmpty {
+            inlineSearchEmpty(query: q)
+        } else {
+            inlineSearchRecents
+        }
+    }
+
+    private var inlineSearchSpinner: some View {
+        HStack(spacing: 10) {
+            ProgressView().scaleEffect(0.9)
+            Text("Searching…")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
+    }
+
+    private func inlineSearchEmpty(query: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 30, weight: .light))
+                .foregroundStyle(.secondary)
+            Text("No results for \"\(query)\"")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text("Try a different word or check the spelling.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
+    }
+
+    /// Results list — each row is a compact tappable card: photo on the
+    /// left, title + relative time on the right. Tapping opens the full
+    /// ArticleSheet overlay using the same `selectedArticle` plumbing
+    /// the Explore topic cards use.
+    private var inlineSearchResults: some View {
+        VStack(spacing: 14) {
+            ForEach(searchModel.articles) { result in
+                Button {
+                    openSearchResult(result)
+                } label: {
+                    HStack(alignment: .top, spacing: 12) {
+                        AsyncCachedImage(
+                            url: URL(string: result.imageUrl ?? ""),
+                            contentMode: .fill
+                        )
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(result.displayTitle)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(3)
+                                .tracking(-0.2)
+                            if !result.relativeTime.isEmpty {
+                                Text(result.relativeTime)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 2)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Fetch the full Article and open the existing sheet overlay.
+    private func openSearchResult(_ result: SearchArticle) {
+        HapticManager.selection()
+        searchModel.addRecentSearch(tabBarState.searchText)
+
+        // Hit the feed cache first.
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == result.id.stringValue }) {
+            selectedArticle = cached
+            selectedArticleRev &+= 1
+            return
+        }
+
+        // Otherwise fetch by id.
+        Task { @MainActor in
+            do {
+                let response: ArticleDetailResponse = try await APIClient.shared.get(
+                    APIEndpoints.article(id: result.id.stringValue)
+                )
+                selectedArticle = response.article
+                selectedArticleRev &+= 1
+            } catch {
+                // Silent — leave the recents list visible; user can retry.
+            }
+        }
     }
 
     /// Inline search bar — TextField bound to `tabBarState.searchText` so
     /// cross-tab deep links (Flash Brief chip taps) still pre-populate it.
     /// Trailing X clears the query AND unfocuses the field so the user
-    /// returns to the Explore content with one tap.
+    /// returns to the Explore content with one tap. Typing here drives
+    /// the inline search results below (via onChange + onSubmit handlers
+    /// attached to mainContent so they fire even when the field isn't
+    /// the keyboard's first responder).
     private var exploreSearchBar: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
@@ -401,11 +528,23 @@ struct ExploreView: View {
             .autocorrectionDisabled()
             .focused($searchFocused)
             .submitLabel(.search)
+            .onSubmit {
+                // Enter key in the keyboard.
+                let q = tabBarState.searchText.trimmingCharacters(in: .whitespaces)
+                guard q.count >= 2 else { return }
+                Task { await searchModel.search(query: q) }
+            }
 
             if isSearchActive {
                 Button {
                     tabBarState.searchText = ""
                     searchFocused = false
+                    // Reset the search model so the recents view returns
+                    // instead of a stale results list.
+                    searchModel.articles = []
+                    searchModel.entities = []
+                    searchModel.publishers = []
+                    searchModel.hasSearched = false
                     HapticManager.light()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
