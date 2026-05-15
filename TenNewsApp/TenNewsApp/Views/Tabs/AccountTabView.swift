@@ -519,28 +519,34 @@ struct AccountTabView: View {
         }
     }
 
-    // MARK: - Article Card Grid (search-style)
+    // MARK: - Article Card Grid (feed-style)
+    //
+    // Liked / Saved / Published all render with the same full feed-card
+    // layout the For You tab uses — header (avatar + creator + time),
+    // natural-aspect photo, full title, bullets, action row. No more
+    // SearchResultCard with the title overlaid on the photo; matches
+    // what the user sees in the feed exactly.
 
     private func articleCardGrid(_ articles: [Article]) -> some View {
-        let screenW = UIScreen.main.bounds.width
-        let hPad: CGFloat = 16
-        let fullW = screenW - hPad * 2
-
-        return LazyVStack(spacing: 8) {
+        LazyVStack(spacing: 24) {
             ForEach(articles) { article in
+                // Wrap in a transparent Button so the whole card opens
+                // the article overlay, matching the existing tap target.
+                // Inside taps that ArticleCardContinuousView owns (the
+                // like / save / share row, the avatar tap → publisher
+                // profile) still fire because Button's hit area composes
+                // with the inner buttons.
                 Button { openArticle(article) } label: {
-                    SearchResultCard(
-                        article: article.toSearchArticle(),
-                        fallbackColor: categoryColor(for: article.category ?? ""),
-                        cardWidth: fullW,
-                        cardHeight: fullW * 0.65,
-                        hideCategory: true
+                    ArticleCardContinuousView(
+                        article: article,
+                        accentColor: feedViewModel.accentColor(for: article),
+                        showTopicTags: false
                     )
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, hPad)
+        .padding(.top, 8)
     }
 
     private func categoryColor(for category: String) -> Color {
