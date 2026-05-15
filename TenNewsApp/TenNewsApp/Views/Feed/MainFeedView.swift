@@ -259,21 +259,12 @@ struct MainFeedView: View {
                 ctaEnabled: false
             )
         case .error(let message):
-            VStack(spacing: 14) {
-                Image(systemName: "wifi.slash").font(.system(size: 42)).foregroundStyle(.secondary)
-                Text("Couldn't load Following")
-                    .font(.system(size: 17, weight: .semibold))
-                Text(message)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                Button("Try Again") {
-                    Task { await followingVM.refresh(userId: appViewModel.currentUser?.id) }
-                }
-                .buttonStyle(.bordered)
+            FeedErrorView(
+                title: "Articles aren't loading",
+                message: message
+            ) {
+                Task { await followingVM.refresh(userId: appViewModel.currentUser?.id) }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(feedBackground)
         }
     }
@@ -473,31 +464,119 @@ struct MainFeedView: View {
     // MARK: - Error
 
     private func errorView(_ message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "wifi.slash")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.Colors.secondaryText)
-
-            Text("Unable to load news")
-                .font(Theme.Fonts.title())
-                .foregroundStyle(Theme.Colors.primaryText)
-
-            Text(message)
-                .font(Theme.Fonts.body())
-                .foregroundStyle(Theme.Colors.secondaryText)
-                .multilineTextAlignment(.center)
-
-            GlassCTAButton(title: "Try Again") {
-                Task {
-                    await viewModel.loadInitialData(
-                        preferences: appViewModel.preferences,
-                        userId: appViewModel.currentUser?.id
-                    )
-                }
+        FeedErrorView(
+            title: "Articles aren't loading",
+            message: message
+        ) {
+            Task {
+                await viewModel.loadInitialData(
+                    preferences: appViewModel.preferences,
+                    userId: appViewModel.currentUser?.id
+                )
             }
-            .frame(width: 200)
         }
-        .padding(Theme.Spacing.xl)
+    }
+}
+
+// MARK: - Shared Feed Error View
+//
+// Used by the main feed, the Following tab, and TopicFeedView so every
+// "can't load" surface has the same illustrated treatment instead of a
+// flat wifi-slash icon.
+//
+// Visual: stacked SF Symbols inside a tinted rounded tile — newspaper
+// glyph as the primary anchor, a small exclamation triangle in the
+// corner for the "error" cue. Big bold title + soft subtitle + a clean
+// pill CTA in the accent color. Reads as "something we tried to deliver
+// got snagged" rather than "your wifi died."
+
+struct FeedErrorView: View {
+    let title: String
+    let message: String
+    let retry: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+    private var accent: Color { Color(red: 0.149, green: 0.388, blue: 0.922) } // #2563EB
+
+    var body: some View {
+        VStack(spacing: 22) {
+            // Illustrated icon block. The newspaper glyph is the "article"
+            // metaphor; the small triangle in the top-right is the
+            // "couldn't deliver it" cue. Tile fill is accent at 10%
+            // alpha so it reads as a quiet motif rather than a button.
+            ZStack(alignment: .topTrailing) {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(accent.opacity(colorScheme == .dark ? 0.18 : 0.10))
+                    .frame(width: 132, height: 132)
+
+                Image(systemName: "newspaper.fill")
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .frame(width: 132, height: 132)
+
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.98, green: 0.62, blue: 0.15))   // amber
+                    .background(
+                        Circle()
+                            .fill(Color(.systemBackground))
+                            .frame(width: 36, height: 36)
+                    )
+                    .offset(x: 10, y: -10)
+            }
+            .padding(.bottom, 4)
+
+            VStack(spacing: 10) {
+                Text(title)
+                    .font(.system(size: 24, weight: .bold))
+                    .tracking(-0.5)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+
+                Text(friendlySubtitle(message))
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .lineSpacing(3)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+
+            Button {
+                HapticManager.medium()
+                retry()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("Try Again")
+                        .font(.system(size: 16, weight: .semibold))
+                        .tracking(-0.2)
+                }
+                .foregroundStyle(.white)
+                .frame(width: 200, height: 50)
+                .background(accent, in: Capsule())
+                .shadow(color: accent.opacity(0.30), radius: 14, y: 6)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Trim the raw error to something friendly. Most networking errors
+    /// arrive as long URLSession descriptions; the user just needs to
+    /// know what to do, not the exact failure mode.
+    private func friendlySubtitle(_ raw: String) -> String {
+        let lower = raw.lowercased()
+        if lower.contains("offline") || lower.contains("internet") || lower.contains("network") || lower.contains("not connected") {
+            return "Looks like you're offline. Check your connection and pull to refresh."
+        }
+        if lower.contains("timeout") || lower.contains("timed out") {
+            return "The server's taking too long. Give it another shot."
+        }
+        return "Something hiccuped on our side. Try again in a moment."
     }
 }
 

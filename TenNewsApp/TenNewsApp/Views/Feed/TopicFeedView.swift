@@ -147,22 +147,11 @@ struct TopicFeedView: View {
     }
 
     private func errorView(_ message: String) -> some View {
-        VStack(spacing: 10) {
-            Spacer()
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(Color(white: 0.55))
-            Text(message)
-                .font(.system(size: 14))
-                .foregroundStyle(Color(white: 0.40))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Button("Retry") { Task { await loadInitial() } }
-                .font(.system(size: 14, weight: .semibold))
-                .padding(.horizontal, 18)
-                .padding(.vertical, 8)
-                .background(Color(white: 0.94), in: Capsule())
-            Spacer()
+        FeedErrorView(
+            title: "Articles aren't loading",
+            message: message
+        ) {
+            Task { await loadInitial() }
         }
     }
 
