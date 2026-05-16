@@ -634,7 +634,7 @@ struct SearchTabView: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
-                    Text("\(entity.articles.count) articles")
+                    Text("\((entity.articles ?? []).count) articles")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -650,7 +650,7 @@ struct SearchTabView: View {
             // Horizontal carousel
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 12) {
-                    ForEach(entity.articles) { article in
+                    ForEach(entity.articles ?? []) { article in
                         searchEntityCard(
                             article: article,
                             fallbackColor: catColor,
@@ -667,15 +667,15 @@ struct SearchTabView: View {
                 geo.contentOffset.x
             } action: { _, newOffset in
                 let page = Int(round(newOffset / (entityCardWidth + 12)))
-                let clamped = max(0, min(page, entity.articles.count - 1))
+                let clamped = max(0, min(page, (entity.articles ?? []).count - 1))
                 if scrolledIndices[entity.entityName] != clamped {
                     scrolledIndices[entity.entityName] = clamped
                 }
             }
 
             // Page dots
-            if entity.articles.count > 1 {
-                SearchPageDots(count: entity.articles.count, current: currentIndex)
+            if (entity.articles ?? []).count > 1 {
+                SearchPageDots(count: (entity.articles ?? []).count, current: currentIndex)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 4)
             }

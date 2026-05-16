@@ -13,6 +13,18 @@ struct SearchPublisher: Identifiable, Decodable {
     let articleCount: Int?
     let followerCount: Int?
     let isVerified: Bool?
+
+    // APIClient uses .useDefaultKeys, so the server's snake_case payload
+    // would otherwise miss displayName / avatarUrl / etc. and crash the
+    // entire SearchResponse decode.
+    enum CodingKeys: String, CodingKey {
+        case id, username, category, bio
+        case displayName = "display_name"
+        case avatarUrl = "avatar_url"
+        case articleCount = "article_count"
+        case followerCount = "follower_count"
+        case isVerified = "is_verified"
+    }
 }
 
 struct SearchResponse: Decodable {
@@ -137,7 +149,12 @@ struct SearchEntity: Identifiable, Decodable {
     let category: String
     let emoji: String
     let articleCount: Int?
-    let articles: [SearchArticle]
+    /// Populated for entities returned by /api/search top-level
+    /// `entities` (each carries up to 8 articles). The entity payload
+    /// embedded inside the Top tab's typed rows does NOT carry this
+    /// field, so it must be optional — without that, decoding the Top
+    /// array fails and the entire SearchResponse breaks.
+    let articles: [SearchArticle]?
 
     var id: String { entityName }
 
