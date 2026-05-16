@@ -295,6 +295,12 @@ struct ExploreView: View {
     private var isSearchActive: Bool {
         searchFocused || !tabBarState.searchText.trimmingCharacters(in: .whitespaces).isEmpty
     }
+    /// Scroll-driven reveal for the search bar. Down-scroll hides it,
+    /// up-scroll (even slightly) brings it back. Safari / IG / Threads
+    /// all do the same — saves vertical space while reading without
+    /// forcing the user to scroll all the way back to the top.
+    @State private var searchBarVisible: Bool = true
+    @State private var lastScrollY: CGFloat = 0
 
     /// Top tab IS the default — replicates IG / TikTok / X / Threads.
     enum SearchResultsTab: String, CaseIterable, Identifiable {
@@ -426,24 +432,22 @@ struct ExploreView: View {
 
     // MARK: - Main Content
 
-    private var mainContent: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                // Live search bar (TextField — not a button). When focused
-                // or carrying a query, the topics below are hidden and the
-                // recents list takes their place. IG / TikTok pattern.
-                exploreSearchBar
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
-                    .padding(.bottom, 18)
+    /// Height the floating search bar occupies (44pt bar + 8pt top
+    /// padding + 18pt bottom padding). Used as the scroll content's
+    /// `padding(.top, ...)` so cards aren't hidden behind it.
+    private let searchBarSlotHeight: CGFloat = 70
 
-                if isSearchActive {
-                    // Search is active — branch on whether a query is
-                    // in flight, has results, came back empty, or none
-                    // of the above (show recents).
-                    inlineSearchContent
-                        .padding(.top, 4)
-                } else {
+    private var mainContent: some View {
+        ZStack(alignment: .top) {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if isSearchActive {
+                        // Search is active — branch on whether a query is
+                        // in flight, has results, came back empty, or none
+                        // of the above (show recents).
+                        inlineSearchContent
+                            .padding(.top, 4)
+                    } else {
                     // Normal Explore layout.
                     Text("Explore")
                         .font(.system(size: 28, weight: .bold))
@@ -457,11 +461,47 @@ struct ExploreView: View {
                     }
                 }
 
-                Spacer(minLength: 100)
+                    Spacer(minLength: 100)
+                }
+                // Push content below the floating search bar.
+                .padding(.top, searchBarSlotHeight)
             }
+            .animation(.smooth(duration: 0.2), value: isSearchActive)
+            .scrollDismissesKeyboard(.interactively)
+            // Track scroll direction. Down (newer > older + threshold) hides
+            // the bar; up (any negative delta past a small threshold) shows
+            // it. Reset hide state at the very top so the user never gets
+            // stuck with a missing bar after a quick fling.
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y
+            } action: { oldY, newY in
+                let delta = newY - oldY
+                // Always force-show near the top.
+                if newY <= 4 {
+                    if !searchBarVisible {
+                        withAnimation(.smooth(duration: 0.2)) { searchBarVisible = true }
+                    }
+                } else if delta > 6 && searchBarVisible {
+                    withAnimation(.smooth(duration: 0.2)) { searchBarVisible = false }
+                } else if delta < -4 && !searchBarVisible {
+                    withAnimation(.smooth(duration: 0.2)) { searchBarVisible = true }
+                }
+                lastScrollY = newY
+            }
+
+            // Floating search bar — overlays the scroll view, hides on
+            // down-scroll, shows on up-scroll. Always force-visible while
+            // the user is typing / focused so the field can't disappear
+            // mid-edit.
+            exploreSearchBar
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 18)
+                .background(Theme.Colors.backgroundPrimary.opacity(0.96))
+                .offset(y: (searchBarVisible || isSearchActive) ? 0 : -searchBarSlotHeight)
+                .opacity((searchBarVisible || isSearchActive) ? 1 : 0)
+                .allowsHitTesting(searchBarVisible || isSearchActive)
         }
-        .animation(.smooth(duration: 0.2), value: isSearchActive)
-        .scrollDismissesKeyboard(.interactively)
         // Drive the search model whenever the bound query changes —
         // SearchViewModel.onSearchTextChanged debounces by 300ms and
         // calls search(query:) for queries ≥ 2 chars. We ALSO fire the
