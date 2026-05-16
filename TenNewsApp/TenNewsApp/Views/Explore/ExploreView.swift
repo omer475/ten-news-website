@@ -82,8 +82,11 @@ extension Article {
             summary: nil,
             summaryText: nil,
             summaryTextB2: nil,
-            summaryBullets: nil,
-            summaryBulletsNews: nil,
+            summaryBullets: s.bullets,
+            // The feed card reads bullets from summaryBulletsNews first
+            // (matches the field name on the live feed payload). Mirror
+            // the same bullets here so ArticleCardContinuousView lights up.
+            summaryBulletsNews: s.bullets,
             summaryBulletsB2: nil,
             details: nil,
             detailsB2: nil,
@@ -95,7 +98,7 @@ extension Article {
             imageUrl: s.imageUrl,
             urlToImage: nil,
             imageSource: nil,
-            source: nil,
+            source: s.source,
             category: s.category,
             emoji: nil,
             timeline: nil,
@@ -115,7 +118,7 @@ extension Article {
             worldEvent: nil,
             countries: nil,
             topics: nil,
-            interestTags: nil,
+            interestTags: s.interestTags,
             chipTags: nil,
             bucket: nil,
             resurfaced: nil,
@@ -127,8 +130,8 @@ extension Article {
             matchReasons: nil,
             scorecard: nil,
             articleType: nil,
-            authorId: nil,
-            authorName: nil,
+            authorId: s.authorId,
+            authorName: s.authorName,
             pages: nil,
             expectedReadSeconds: nil
         )

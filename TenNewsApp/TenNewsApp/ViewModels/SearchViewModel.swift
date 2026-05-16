@@ -110,21 +110,38 @@ struct SearchArticle: Identifiable, Decodable {
     let engagementCount: Int?
     let aiScore: Double?
     let publishedAt: String?
+    /// Bullet text from summary_bullets_news. Backend (PR #177) returns
+    /// the top 3 already normalized. Empty array on older servers /
+    /// articles without bullets.
+    let bullets: [String]?
+    /// Underlying RSS source name. Falls back when authorName is nil.
+    let source: String?
+    let authorId: String?
+    let authorName: String?
+    let interestTags: [String]?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, category
+        case id, title, category, bullets, source
         case imageUrl = "image_url"
         case likeCount = "like_count"
         case engagementCount = "engagement_count"
         case aiScore = "ai_score"
         case publishedAt = "published_at"
+        case authorId = "author_id"
+        case authorName = "author_name"
+        case interestTags = "interest_tags"
     }
 
     init(id: FlexibleID, title: String?, imageUrl: String?, category: String?,
-         likeCount: Int? = nil, engagementCount: Int? = nil, aiScore: Double? = nil, publishedAt: String? = nil) {
+         likeCount: Int? = nil, engagementCount: Int? = nil, aiScore: Double? = nil, publishedAt: String? = nil,
+         bullets: [String]? = nil, source: String? = nil, authorId: String? = nil,
+         authorName: String? = nil, interestTags: [String]? = nil) {
         self.id = id; self.title = title; self.imageUrl = imageUrl; self.category = category
         self.likeCount = likeCount; self.engagementCount = engagementCount
         self.aiScore = aiScore; self.publishedAt = publishedAt
+        self.bullets = bullets; self.source = source
+        self.authorId = authorId; self.authorName = authorName
+        self.interestTags = interestTags
     }
 
     var displayTitle: String {
