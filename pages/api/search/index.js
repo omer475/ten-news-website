@@ -122,7 +122,7 @@ async function searchArticles(supabase, query, queryLower, limit, offset) {
   // `textSearch` filter.
   const ftsPromise = supabase
     .from('published_articles')
-    .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, author_id, author_name')
+    .select('id, title_news, summary_bullets_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, source, author_id, author_name')
     .textSearch('search_vector', query, { type: 'websearch' })
     .lte('published_at', new Date().toISOString())
     .order('ai_final_score', { ascending: false, nullsFirst: false })
@@ -133,7 +133,7 @@ async function searchArticles(supabase, query, queryLower, limit, offset) {
   // articles_title_trgm_idx GIN index. Cheap.
   const trgmPromise = supabase
     .from('published_articles')
-    .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, author_id, author_name')
+    .select('id, title_news, summary_bullets_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, source, author_id, author_name')
     .ilike('title_news', `%${queryLower}%`)
     .lte('published_at', new Date().toISOString())
     .order('ai_final_score', { ascending: false, nullsFirst: false })
@@ -143,7 +143,7 @@ async function searchArticles(supabase, query, queryLower, limit, offset) {
   // (article tagged exactly with the query string).
   const tagPromise = supabase
     .from('published_articles')
-    .select('id, title_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, author_id, author_name')
+    .select('id, title_news, summary_bullets_news, image_url, category, interest_tags, ai_final_score, like_count, engagement_count, published_at, source, author_id, author_name')
     .contains('interest_tags', [queryLower])
     .lte('published_at', new Date().toISOString())
     .order('ai_final_score', { ascending: false, nullsFirst: false })
@@ -378,11 +378,33 @@ function formatArticle(article) {
   return {
     id: article.id,
     title: article.title_news,
+    // Bullets carried through so the iOS search-result card matches the
+    // For You feed card 1:1 (header + photo + title + bullets). Parsed
+    // server-side if the column is a JSON string instead of an array.
+    bullets: parseBullets(article.summary_bullets_news),
     image_url: article.image_url,
     category: article.category,
+    interest_tags: article.interest_tags || [],
+    source: article.source || null,
+    author_id: article.author_id || null,
+    author_name: article.author_name || null,
     like_count: article.like_count || 0,
     engagement_count: article.engagement_count || 0,
     ai_score: article.ai_final_score || 0,
     published_at: article.published_at,
   }
+}
+
+/// summary_bullets_news lands as a JSON string on some pipelines, as a
+/// jsonb array on others. Normalize to a string[] of up to 3 items.
+function parseBullets(raw) {
+  if (!raw) return []
+  let arr = raw
+  if (typeof raw === 'string') {
+    try { arr = JSON.parse(raw) } catch { return [] }
+  }
+  if (!Array.isArray(arr)) return []
+  return arr
+    .filter(b => typeof b === 'string' && b.trim().length > 0)
+    .slice(0, 3)
 }
