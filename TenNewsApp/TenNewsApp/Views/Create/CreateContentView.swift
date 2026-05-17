@@ -55,8 +55,14 @@ struct CreateContentView: View {
     ]
 
     private var canProceed: Bool {
-        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
-        bullets.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+        // Title is always required. The second piece can be EITHER a
+        // bullet OR a photo — supports two valid post shapes:
+        //   • Text post: title + bullets, no photo
+        //   • Photo post: title + cover photo, no bullets
+        let hasTitle = !title.trimmingCharacters(in: .whitespaces).isEmpty
+        let hasBullet = bullets.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+        let hasPhoto = coverImage != nil
+        return hasTitle && (hasBullet || hasPhoto)
     }
 
     private var cleanBullets: [String] {
@@ -278,8 +284,11 @@ struct CreateContentView: View {
         let initial = String(authorName.prefix(1)).uppercased()
 
         VStack(alignment: .leading, spacing: 10) {
-            // Header row — avatar + author + relative time (same shape
-            // as ArticleCardContinuousView.headerRow).
+            // Header row — avatar + author + relative time. No
+            // bookmark icon here: that lived on the right side of the
+            // creator name as a leftover from an earlier iteration of
+            // the feed card; users save from the action row, not the
+            // header.
             HStack(spacing: 10) {
                 Circle()
                     .fill(accent)
@@ -299,9 +308,6 @@ struct CreateContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "bookmark")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 4)
 
@@ -372,13 +378,15 @@ struct CreateContentView: View {
                 .padding(.bottom, 4)
             }
 
-            // Inert action row — matches the feed's heart/save/repost/share.
+            // Inert action row — right-aligned (Instagram/Threads/X
+            // pattern). Spacer goes first so the heart/save/repost/share
+            // cluster sits on the trailing edge instead of the leading.
             HStack(spacing: 22) {
+                Spacer()
                 Image(systemName: "heart")
                 Image(systemName: "bookmark")
                 Image(systemName: "arrow.2.squarepath")
                 Image(systemName: "arrowshape.turn.up.right")
-                Spacer()
             }
             .font(.system(size: 19))
             .foregroundStyle(.secondary)

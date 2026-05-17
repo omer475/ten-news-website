@@ -57,45 +57,35 @@ struct ChatDetailView: View {
 
     // MARK: - Top bar
 
+    // Minimal centered top bar — back chevron on the left, name
+    // centered, fixed 44pt height. Dropped the avatar circle because
+    // test users have no avatarUrl and the gray "S" placeholder
+    // looked broken; we already show the avatar in the chat list row.
     private var topBar: some View {
-        HStack(spacing: 12) {
-            Button {
-                HapticManager.light()
-                onDismiss?()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.primary)
-                    .frame(width: 38, height: 38)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if let avatarUrl = conversation.displayAvatar {
-                AsyncCachedImage(url: avatarUrl, contentMode: .fill)
-                    .frame(width: 32, height: 32)
-                    .clipShape(Circle())
-            } else {
-                Circle()
-                    .fill(.fill.tertiary)
-                    .frame(width: 32, height: 32)
-                    .overlay {
-                        Text(String(conversation.displayName.prefix(1)).uppercased())
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                    }
-            }
-
+        ZStack {
             Text(conversation.displayName)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
-                .truncationMode(.tail)
+                .truncationMode(.middle)
+                .padding(.horizontal, 56) // leave room for the back chevron
 
-            Spacer()
+            HStack {
+                Button {
+                    HapticManager.light()
+                    onDismiss?()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .frame(height: 44)
         .background(
             Theme.Colors.backgroundPrimary
                 .ignoresSafeArea(edges: .top)
@@ -150,32 +140,28 @@ struct ChatDetailView: View {
                 .padding(.bottom, 8)
                 .frame(maxWidth: .infinity)
             }
+            // `.defaultScrollAnchor(.bottom)` alone is enough — it keeps
+            // the last message at the bottom on first load AND when the
+            // viewport shrinks because the keyboard rose. The manual
+            // onChange(messages.count / isLoading / inputFocused)
+            // animated `scrollTo` calls we had earlier were competing
+            // with SwiftUI's own keyboard-animation transaction and
+            // making the messages visibly jump.
+            //
+            // For brand-new incoming messages we still want a smooth
+            // scroll-to-bottom, but the anchor does it implicitly when
+            // new rows extend the bottom of the content.
             .defaultScrollAnchor(.bottom)
             .scrollBounceBehavior(.basedOnSize)
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: messages.count) { _, _ in
+                // Only scroll when the user is already near the bottom
+                // (i.e. they didn't scroll up to read history). Without
+                // the proxy.scrollTo this is a no-op; with the anchor,
+                // new content sliding in at the bottom is naturally
+                // pinned.
                 guard let lastId = messages.last?.id else { return }
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo(lastId, anchor: .bottom)
-                }
-            }
-            .onChange(of: isLoading) { _, loading in
-                guard !loading, let lastId = messages.last?.id else { return }
-                // Defer one runloop tick so the rows are laid out
-                // before we ask the proxy to scroll. Without this
-                // delay, scrollTo can fire before SwiftUI has placed
-                // the final bubble and lands mid-stream.
-                DispatchQueue.main.async {
-                    proxy.scrollTo(lastId, anchor: .bottom)
-                }
-            }
-            .onChange(of: inputFocused) { _, focused in
-                guard focused, let lastId = messages.last?.id else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        proxy.scrollTo(lastId, anchor: .bottom)
-                    }
-                }
+                proxy.scrollTo(lastId, anchor: .bottom)
             }
         }
     }
