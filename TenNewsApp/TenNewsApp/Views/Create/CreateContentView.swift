@@ -242,155 +242,149 @@ struct CreateContentView: View {
         let pageImage = page.photo ?? contentPages[0].photo ?? coverImage
         let pageTitle = page.title.isEmpty ? (index == 0 ? title : "Page \(index + 1)") : page.title
         let pageBullets = page.bullets.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        let screenW = UIScreen.main.bounds.width - 32
-        let imageH: CGFloat = screenW * 0.65
 
-        return VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .bottom) {
+        return feedStylePreview(
+            pageTitle: pageTitle,
+            pageBullets: pageBullets,
+            pageImage: pageImage,
+            extractColorFromImage: index == 0
+        )
+    }
+
+    // Light-mode preview card matching the feed's ArticleCardContinuousView:
+    // header row above photo, no dark gradient overlay, primary-color text
+    // on the cream background. Inert action row at the bottom so the
+    // creator sees exactly what readers will see.
+    private var previewCard: some View {
+        feedStylePreview(
+            pageTitle: title,
+            pageBullets: cleanBullets,
+            pageImage: coverImage,
+            extractColorFromImage: true
+        )
+    }
+
+    @ViewBuilder
+    private func feedStylePreview(
+        pageTitle: String,
+        pageBullets: [String],
+        pageImage: UIImage?,
+        extractColorFromImage: Bool
+    ) -> some View {
+        let accent = previewDominantColor ?? .blue
+        let authorName = appViewModel.currentUser?.displayName
+            ?? appViewModel.currentUser?.email
+            ?? "You"
+        let initial = String(authorName.prefix(1)).uppercased()
+
+        VStack(alignment: .leading, spacing: 10) {
+            // Header row — avatar + author + relative time (same shape
+            // as ArticleCardContinuousView.headerRow).
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(accent)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(initial)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(authorName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                        .tracking(-0.1)
+                    Text("now")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "bookmark")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 4)
+
+            // Photo (or gradient placeholder), rounded — matches feed.
+            VStack(alignment: .leading, spacing: 0) {
                 if let image = pageImage {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: screenW, height: imageH)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 220)
                         .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .onAppear { if extractColorFromImage { extractPreviewColor() } }
                 } else {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            colors: [.blue.opacity(0.4), .blue.opacity(0.15), Color(white: 0.08)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: screenW, height: imageH)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.gray.opacity(0.15))
+                        .frame(height: 220)
+                        .overlay {
+                            VStack(spacing: 6) {
+                                Image(systemName: "photo")
+                                    .font(.system(size: 32))
+                                    .foregroundStyle(.tertiary)
+                                Text("Add a cover photo")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                 }
-                Rectangle()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: (previewBlurColor).opacity(0), location: 0),
-                            .init(color: (previewBlurColor).opacity(0.7), location: 0.55),
-                            .init(color: previewBlurColor, location: 0.8),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(height: imageH * 0.7)
-            }
-            .frame(height: imageH)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(selectedCategory)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .tracking(1)
-                Text(pageTitle)
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineSpacing(2)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, -50)
-            .padding(.bottom, 16)
+                // Section label + title — primary text on cream.
+                VStack(alignment: .leading, spacing: 10) {
+                    if !selectedCategory.isEmpty {
+                        Text(selectedCategory.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .tracking(1.4)
+                            .foregroundStyle(accent)
+                            .lineLimit(1)
+                    }
 
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(Array(pageBullets.enumerated()), id: \.offset) { _, bullet in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle()
-                            .fill(previewDominantColor ?? .blue)
-                            .frame(width: 5, height: 5)
-                            .padding(.top, 8)
-                        Text(bullet)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .lineSpacing(4)
+                    Text(pageTitle.isEmpty ? "Untitled" : pageTitle)
+                        .font(.system(size: 24, weight: .bold))
+                        .tracking(-0.5)
+                        .lineSpacing(2)
+                        .foregroundStyle(Color.primary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if !pageBullets.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ForEach(Array(pageBullets.enumerated()), id: \.offset) { _, bullet in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Circle()
+                                        .fill(accent)
+                                        .frame(width: 5, height: 5)
+                                        .padding(.top, 8)
+                                    Text(bullet)
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Color.primary.opacity(0.85))
+                                        .lineSpacing(4)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
                     }
                 }
+                .padding(.top, 14)
+                .padding(.bottom, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 20)
+
+            // Inert action row — matches the feed's heart/save/repost/share.
+            HStack(spacing: 22) {
+                Image(systemName: "heart")
+                Image(systemName: "bookmark")
+                Image(systemName: "arrow.2.squarepath")
+                Image(systemName: "arrowshape.turn.up.right")
+                Spacer()
+            }
+            .font(.system(size: 19))
+            .foregroundStyle(.secondary)
+            .padding(.top, 6)
         }
-        .background(previewBlurColor)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-    }
-
-    private var previewCard: some View {
-        let screenW = UIScreen.main.bounds.width - 32
-        let imageH: CGFloat = screenW * 0.65
-
-        return VStack(alignment: .leading, spacing: 0) {
-            // Image + gradient
-            ZStack(alignment: .bottom) {
-                if let image = coverImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: screenW, height: imageH)
-                        .clipped()
-                        .onAppear { extractPreviewColor() }
-                } else {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            colors: [.blue.opacity(0.4), .blue.opacity(0.15), Color(white: 0.08)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: screenW, height: imageH)
-                }
-
-                // Blur gradient
-                Rectangle()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: previewBlurColor.opacity(0), location: 0),
-                            .init(color: previewBlurColor.opacity(0.3), location: 0.3),
-                            .init(color: previewBlurColor.opacity(0.7), location: 0.55),
-                            .init(color: previewBlurColor, location: 0.8),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(height: imageH * 0.7)
-            }
-            .frame(height: imageH)
-
-            // Title — plain Text now that the word-highlight feature is
-            // gone; matches the feed card's title rendering.
-            VStack(alignment: .leading, spacing: 4) {
-                Text(selectedCategory)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .tracking(1)
-
-                Text(title)
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(Color.white)
-                    .lineSpacing(2)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, -50)
-            .padding(.bottom, 16)
-
-            // Bullets
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(Array(cleanBullets.enumerated()), id: \.offset) { _, bullet in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle()
-                            .fill(previewDominantColor ?? .blue)
-                            .frame(width: 5, height: 5)
-                            .padding(.top, 8)
-                        Text(bullet)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .lineSpacing(4)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 20)
-
-            // (Info boxes / map box removed — the article-page card we're
-            // matching doesn't render them in-card. Detail values + map
-            // are still captured on the compose step but are not visible
-            // in the preview.)
-        }
-        .background(previewBlurColor)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(.horizontal, 4)
     }
 
     private func previewMapBox(coord: CLLocationCoordinate2D) -> some View {
@@ -548,7 +542,7 @@ struct CreateContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Pages")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.secondary)
                 .textCase(.uppercase)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -571,20 +565,20 @@ struct CreateContentView: View {
                                     } label: {
                                         Image(systemName: "xmark")
                                             .font(.system(size: 9, weight: .bold))
-                                            .foregroundStyle(.white.opacity(0.5))
+                                            .foregroundStyle(.secondary)
                                     }
                                 }
                             }
-                            .foregroundStyle(currentPageIndex == index ? .white : .white.opacity(0.5))
+                            .foregroundStyle(currentPageIndex == index ? Color.primary : Color.secondary)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
-                                currentPageIndex == index ? .white.opacity(0.15) : .white.opacity(0.05),
+                                currentPageIndex == index ? AnyShapeStyle(.fill.secondary) : AnyShapeStyle(.fill.quaternary),
                                 in: RoundedRectangle(cornerRadius: 10)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .strokeBorder(currentPageIndex == index ? .white.opacity(0.2) : .clear, lineWidth: 1)
+                                    .strokeBorder(currentPageIndex == index ? Color.primary.opacity(0.15) : .clear, lineWidth: 1)
                             )
                         }
                     }

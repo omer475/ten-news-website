@@ -108,11 +108,26 @@ struct ChatDetailView: View {
     }
 
     // MARK: - Message list
+    //
+    // `.defaultScrollAnchor(.bottom)` is restored — without it, the
+    // scroll position defaulted to the top, so on first load the user
+    // saw the OLDEST messages and had to scroll down manually to find
+    // the latest. Combined with `.scrollBounceBehavior(.basedOnSize)`,
+    // short conversations no longer bounce, so the anchor doesn't
+    // cause the pull-down jankiness it used to.
+    //
+    // VStack (not LazyVStack) so every row lays out immediately — the
+    // `proxy.scrollTo(lastId)` calls would otherwise fire before the
+    // last bubble was rendered, leaving the scroll stuck in the
+    // middle (which is exactly what the user reported). For chats
+    // under a few hundred messages this is fine; once chat history
+    // gets long we can switch back to LazyVStack with a pagination
+    // strategy.
 
     private var messageList: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 2) {
+                VStack(spacing: 2) {
                     if isLoading {
                         ProgressView()
                             .padding(.top, 40)
@@ -129,34 +144,36 @@ struct ChatDetailView: View {
                         )
                         .id(message.id)
                     }
-
-                    Color.clear
-                        .frame(height: 1)
-                        .id("bottom")
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
                 .frame(maxWidth: .infinity)
             }
+            .defaultScrollAnchor(.bottom)
             .scrollBounceBehavior(.basedOnSize)
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: messages.count) { _, _ in
+                guard let lastId = messages.last?.id else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo("bottom", anchor: .bottom)
+                    proxy.scrollTo(lastId, anchor: .bottom)
                 }
             }
             .onChange(of: isLoading) { _, loading in
-                if !loading {
-                    proxy.scrollTo("bottom", anchor: .bottom)
+                guard !loading, let lastId = messages.last?.id else { return }
+                // Defer one runloop tick so the rows are laid out
+                // before we ask the proxy to scroll. Without this
+                // delay, scrollTo can fire before SwiftUI has placed
+                // the final bubble and lands mid-stream.
+                DispatchQueue.main.async {
+                    proxy.scrollTo(lastId, anchor: .bottom)
                 }
             }
             .onChange(of: inputFocused) { _, focused in
-                if focused {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            proxy.scrollTo("bottom", anchor: .bottom)
-                        }
+                guard focused, let lastId = messages.last?.id else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo(lastId, anchor: .bottom)
                     }
                 }
             }
