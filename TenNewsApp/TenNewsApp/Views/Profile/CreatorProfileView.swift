@@ -26,6 +26,7 @@ struct CreatorProfileView: View {
     @State private var followManager = FollowManager.shared
 
     @Environment(AppViewModel.self) private var appViewModel
+    @Environment(FeedViewModel.self) private var feedViewModel
 
     private let publisherService = PublisherService()
 
@@ -339,30 +340,25 @@ struct CreatorProfileView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
             } else {
-                let screenW = UIScreen.main.bounds.width
-                let hPad: CGFloat = 16
-                let gap: CGFloat = 8
-                let halfW = (screenW - hPad * 2 - gap) / 2
-
-                LazyVGrid(columns: [
-                    GridItem(.fixed(halfW), spacing: gap),
-                    GridItem(.fixed(halfW), spacing: gap)
-                ], spacing: gap) {
+                // Full feed-card layout — same component the For You
+                // feed uses (header + photo + title + bullets + action
+                // row). Vertical list with the feed's 24pt breathing
+                // room, replacing the 2-column SearchResultCard grid.
+                LazyVStack(spacing: 24) {
                     ForEach(allArticles) { article in
                         Button {
                             onArticleTap?(article)
                         } label: {
-                            SearchResultCard(
-                                article: article.toSearchArticle(),
-                                fallbackColor: logoColor,
-                                cardWidth: halfW,
-                                cardHeight: halfW * 1.35
+                            ArticleCardContinuousView(
+                                article: article,
+                                accentColor: feedViewModel.accentColor(for: article),
+                                showTopicTags: false
                             )
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, hPad)
+                .padding(.top, 4)
             }
         }
     }

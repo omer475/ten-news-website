@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChatDetailView: View {
     @Environment(AppViewModel.self) private var appViewModel
+    @Environment(FeedViewModel.self) private var feedViewModel
 
     let conversation: ChatConversation
     var onDismiss: (() -> Void)?
@@ -144,9 +145,20 @@ struct ChatDetailView: View {
             }
 
             VStack(alignment: isMe ? .trailing : .leading, spacing: 4) {
-                // Article share card
-                if message.isArticleShare, let article = message.article {
-                    ChatSharedArticleCard(article: article)
+                // Article share — full feed card so chat shares look
+                // identical to scrolling the feed. SharedArticle is
+                // slim (id + title + photo + source + category) so the
+                // card downgrades gracefully when bullets / action
+                // state aren't available. showTopicTags=false because
+                // chip taps inside a chat bubble would be confusing.
+                if message.isArticleShare, let shared = message.article {
+                    let hydrated = Article.fromShared(shared)
+                    ArticleCardContinuousView(
+                        article: hydrated,
+                        accentColor: feedViewModel.accentColor(for: hydrated),
+                        showTopicTags: false
+                    )
+                    .padding(.bottom, 4)
                 }
 
                 // Text content
@@ -488,5 +500,75 @@ struct ChatSharedArticleCard: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Article from SharedArticle
+//
+// SharedArticle is the slim payload chat messages carry (just id, title,
+// imageUrl, source, category — no bullets, no publisher). Building a slim
+// Article from it lets ChatDetailView render the full feed-card layout
+// uniformly with the rest of the app; missing fields downgrade
+// gracefully (no bullet section, no follow chip).
+
+extension Article {
+    static func fromShared(_ s: SharedArticle) -> Article {
+        Article(
+            id: FlexibleID(String(s.id)),
+            title: s.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: nil,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: s.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: s.source,
+            category: s.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: nil,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: nil,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
     }
 }
