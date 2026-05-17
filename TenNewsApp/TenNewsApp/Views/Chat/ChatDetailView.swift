@@ -1,5 +1,11 @@
 import SwiftUI
 
+// Rewrite — NavigationStack + .toolbar got us a broken nav bar where
+// the username rendered as a huge bold overlay on top of message
+// content, the underlying conversation list bled through, and the
+// send button vanished. Custom top bar + plain VStack avoids the
+// whole class of SwiftUI navigation-bar layout bugs that the older
+// .toolbar version was hitting on iOS 26.
 struct ChatDetailView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
@@ -16,13 +22,12 @@ struct ChatDetailView: View {
     private var userId: String? { appViewModel.currentUser?.id }
 
     var body: some View {
-        NavigationStack {
-            messagesContent
-                .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { toolbarContent }
-                .background(Theme.Colors.backgroundPrimary)
+        VStack(spacing: 0) {
+            topBar
+            messageList
         }
+        .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
         .swipeToDismiss { onDismiss?() }
         .onAppear {
             Task {
@@ -43,101 +48,124 @@ struct ChatDetailView: View {
         }
     }
 
-    // MARK: - Messages content
-    //
-    // Extracted out of `body` because the compiler couldn't type-check
-    // the original mega-expression in reasonable time once safeAreaInset +
-    // multiple onChange handlers + the ScrollViewReader closure were all
-    // composed together. Keeping each chunk small fixes the build.
+    // MARK: - Top bar
 
-    @ViewBuilder
-    private var messagesContent: some View {
-        // Messages — input bar pinned via safeAreaInset so the system
-        // shrinks the inset (not the scroll view) when the keyboard
-        // rises. Previously inputBar sat as a sibling in a VStack,
-        // which made every message visibly hop up as the safe area
-        // animated. `scrollDismissesKeyboard(.interactively)` lets
-        // a downward drag put the keyboard away without the bounce
-        // we got from `.defaultScrollAnchor(.bottom)` + pull gesture.
-        ScrollViewReader { proxy in
-            messagesScrollView
-                .scrollDismissesKeyboard(.interactively)
-                .onChange(of: messages.count) { _, _ in
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        proxy.scrollTo("bottom", anchor: .bottom)
-                    }
-                }
-                .onChange(of: isLoading) { _, loading in
-                    if !loading {
-                        proxy.scrollTo("bottom", anchor: .bottom)
-                    }
-                }
-                .onChange(of: inputFocused) { _, focused in
-                    if focused {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                proxy.scrollTo("bottom", anchor: .bottom)
-                            }
-                        }
-                    }
-                }
-        }
-    }
-
-    @ViewBuilder
-    private var messagesScrollView: some View {
-        // `.scrollBounceBehavior(.basedOnSize)` prevents the "messages
-        // bouncing on pull-down" jankiness for short conversations —
-        // the scroll only bounces when the content actually overflows
-        // the viewport, matching iMessage / Telegram.
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 2) {
-                if isLoading {
-                    ProgressView()
-                        .padding(.top, 40)
-                }
-
-                ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                    messageBubble(
-                        message,
-                        isMe: message.senderId == userId,
-                        showAvatar: shouldShowAvatar(at: index)
-                    )
-                    .id(message.id)
-                }
-
-                Color.clear
-                    .frame(height: 1)
-                    .id("bottom")
-            }
-            .padding(.horizontal, 8)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-    }
-
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+    private var topBar: some View {
+        HStack(spacing: 12) {
             Button {
+                HapticManager.light()
                 onDismiss?()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color.primary)
+                    .frame(width: 38, height: 38)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+
+            if let avatarUrl = conversation.displayAvatar {
+                AsyncCachedImage(url: avatarUrl, contentMode: .fill)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+            } else {
+                Circle()
+                    .fill(.fill.tertiary)
+                    .frame(width: 32, height: 32)
+                    .overlay {
+                        Text(String(conversation.displayName.prefix(1)).uppercased())
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+            }
+
+            Text(conversation.displayName)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer()
         }
-        ToolbarItem(placement: .principal) {
-            HStack(spacing: 8) {
-                if let avatarUrl = conversation.displayAvatar {
-                    AsyncCachedImage(url: avatarUrl, contentMode: .fill)
-                        .frame(width: 28, height: 28)
-                        .clipShape(Circle())
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            Theme.Colors.backgroundPrimary
+                .ignoresSafeArea(edges: .top)
+        )
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
+        }
+    }
+
+    // MARK: - Message list
+
+    private var messageList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 2) {
+                    if isLoading {
+                        ProgressView()
+                            .padding(.top, 40)
+                    } else if messages.isEmpty {
+                        emptyState
+                            .padding(.top, 80)
+                    }
+
+                    ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                        messageBubble(
+                            message,
+                            isMe: message.senderId == userId,
+                            showAvatar: shouldShowAvatar(at: index)
+                        )
+                        .id(message.id)
+                    }
+
+                    Color.clear
+                        .frame(height: 1)
+                        .id("bottom")
                 }
-                Text(conversation.displayName)
-                    .font(.system(size: 16, weight: .semibold))
+                .padding(.horizontal, 8)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
+            .onChange(of: messages.count) { _, _ in
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+            .onChange(of: isLoading) { _, loading in
+                if !loading {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+            .onChange(of: inputFocused) { _, focused in
+                if focused {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 36))
+                .foregroundStyle(.tertiary)
+            Text("No messages yet")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Helpers
@@ -194,21 +222,22 @@ struct ChatDetailView: View {
                     .padding(.bottom, 4)
                 }
 
-                // Text content
+                // Text content. Bubble colors:
+                //   • me     → blue fill (iMessage) with white text
+                //   • other  → light fill with primary text (was .white on
+                //              white-tinted glass, which read as invisible
+                //              on the cream background)
                 if let content = message.content, !content.isEmpty {
-                    GlassEffectContainer {
-                        Text(content)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 11)
-                            .glassEffect(
-                                isMe
-                                    ? .regular.tint(Color(hex: "#0A84FF").opacity(0.5)).interactive()
-                                    : .regular.tint(Color.white.opacity(0.08)),
-                                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            )
-                    }
+                    Text(content)
+                        .font(.system(size: 16))
+                        .foregroundStyle(isMe ? .white : Color.primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(isMe ? Color(hex: "#0A84FF") : Color.gray.opacity(0.15))
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 // Timestamp
@@ -240,30 +269,32 @@ struct ChatDetailView: View {
     // float underneath the bar mid-keyboard-animation.
 
     private var inputBar: some View {
-        HStack(spacing: 10) {
+        let canSend = !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return HStack(alignment: .bottom, spacing: 8) {
             TextField("Message...", text: $inputText, axis: .vertical)
                 .font(.system(size: 16))
+                .foregroundStyle(Color.primary)
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .glassEffect(
-                    .regular.tint(Color.white.opacity(0.05)),
-                    in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .padding(.vertical, 9)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.gray.opacity(0.12))
                 )
                 .focused($inputFocused)
+                .frame(maxWidth: .infinity)
 
             Button {
                 sendMessage()
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(
-                        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? Color.white.opacity(0.15)
-                            : Color(hex: "#0A84FF")
-                    )
+                    .font(.system(size: 30))
+                    .foregroundStyle(canSend ? Color(hex: "#0A84FF") : Color.gray.opacity(0.4))
             }
-            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .buttonStyle(.plain)
+            .disabled(!canSend)
+            .fixedSize()
+            .padding(.bottom, 4)
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)

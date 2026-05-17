@@ -155,33 +155,8 @@ struct CreateContentView: View {
     private var previewStep: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
-                // Highlight toggle
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        highlightMode.toggle()
-                    }
-                    HapticManager.selection()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: highlightMode ? "pencil.line" : "pencil")
-                            .font(.system(size: 13, weight: .semibold))
-                        Text(highlightMode ? "Done Highlighting" : "Highlight Words")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundStyle(highlightMode ? .white : .green)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(highlightMode ? AnyShapeStyle(Color.green.opacity(0.6)) : AnyShapeStyle(.ultraThinMaterial), in: Capsule())
-                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
-                }
-                .padding(.top, 8)
-
-                if highlightMode {
-                    Text("Tap any word in the title or bullets to highlight it")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
+                // (Highlight toggle removed — the article-page card has no
+                // word-highlight feature; preview should match it 1:1.)
 
                 // Preview card(s) — swipeable if multi-page
                 if contentPages.count > 1 {
@@ -372,22 +347,26 @@ struct CreateContentView: View {
             }
             .frame(height: imageH)
 
-            // Title (tap words to highlight)
+            // Title — plain Text now that the word-highlight feature is
+            // gone; matches the feed card's title rendering.
             VStack(alignment: .leading, spacing: 4) {
                 Text(selectedCategory)
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.white.opacity(0.5))
                     .tracking(1)
 
-                tappableText(title, fontSize: 26, fontWeight: .bold,
-                             baseColor: .white, highlightColor: previewDominantColor ?? .blue)
+                Text(title)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(Color.white)
                     .lineSpacing(2)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 16)
             .padding(.top, -50)
             .padding(.bottom, 16)
 
-            // Bullets (tap words to highlight)
+            // Bullets
             VStack(alignment: .leading, spacing: 14) {
                 ForEach(Array(cleanBullets.enumerated()), id: \.offset) { _, bullet in
                     HStack(alignment: .top, spacing: 10) {
@@ -395,90 +374,20 @@ struct CreateContentView: View {
                             .fill(previewDominantColor ?? .blue)
                             .frame(width: 5, height: 5)
                             .padding(.top, 8)
-                        tappableText(bullet, fontSize: 16, fontWeight: .regular,
-                                     baseColor: .white.opacity(0.75), highlightColor: .white.opacity(0.95))
+                        Text(bullet)
+                            .font(.system(size: 16))
+                            .foregroundStyle(.white.opacity(0.75))
                             .lineSpacing(4)
                     }
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, hasDetails || locationCoordinate != nil ? 12 : 20)
+            .padding(.bottom, 20)
 
-            // Info box area — exact same design as ArticleCardView
-            if hasDetails || locationCoordinate != nil {
-                HStack(spacing: 8) {
-                    if hasDetails {
-                        // Details info box — matches detailsInfoBox exactly
-                        GlassEffectContainer {
-                            HStack(spacing: 0) {
-                                let activeDetails = (0..<3).filter {
-                                    !detailLabels[$0].trimmingCharacters(in: .whitespaces).isEmpty
-                                }
-                                ForEach(Array(activeDetails.enumerated()), id: \.element) { idx, i in
-                                    if idx > 0 {
-                                        Rectangle().fill(.white.opacity(0.12)).frame(width: 1)
-                                            .padding(.vertical, 12)
-                                    }
-                                    VStack(spacing: 3) {
-                                        Text(detailLabels[i].uppercased())
-                                            .font(.system(size: 8, weight: .bold))
-                                            .foregroundStyle(.white.opacity(0.5))
-                                            .lineLimit(1)
-                                            .tracking(0.5)
-                                        Text(detailValues[i])
-                                            .font(.system(size: 22, weight: .heavy, design: .rounded))
-                                            .foregroundStyle(previewDominantColor ?? .blue)
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.5)
-                                        if !detailSubtitles[i].trimmingCharacters(in: .whitespaces).isEmpty {
-                                            Text(detailSubtitles[i])
-                                                .font(.system(size: 9, weight: .medium))
-                                                .foregroundStyle(.white.opacity(0.4))
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                            }
-                            .frame(height: 85)
-                            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
-                        }
-                    }
-
-                    if let coord = locationCoordinate, !hasDetails {
-                        // Map info box — matches compactMap exactly
-                        previewMapBox(coord: coord)
-                    }
-
-                    // Mode switcher column (when both exist)
-                    if hasDetails && locationCoordinate != nil {
-                        GlassEffectContainer {
-                            VStack(spacing: 0) {
-                                Image(systemName: "square.grid.2x2")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(previewDominantColor ?? .blue)
-                                    .frame(width: 28, height: 28)
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.35))
-                                    .frame(width: 28, height: 28)
-                            }
-                            .padding(.vertical, 2)
-                            .glassEffect(.regular.tint(.black.opacity(0.15)), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-                .environment(\.colorScheme, .dark)
-            }
-
-            // Map shown below details when both exist
-            if hasDetails, let coord = locationCoordinate {
-                previewMapBox(coord: coord)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-                    .environment(\.colorScheme, .dark)
-            }
+            // (Info boxes / map box removed — the article-page card we're
+            // matching doesn't render them in-card. Detail values + map
+            // are still captured on the compose step but are not visible
+            // in the preview.)
         }
         .background(previewBlurColor)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
