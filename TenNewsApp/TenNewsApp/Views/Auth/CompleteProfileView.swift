@@ -103,6 +103,15 @@ struct CompleteProfileView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
+        .swipeToDismiss {
+            // Step 0 (age) has no back — user is mid-auth and can't escape.
+            // Step 1 (username) pops back to age, mirroring the chevron.
+            guard step != .age, let prev = Step(rawValue: step.rawValue - 1) else { return }
+            HapticManager.light()
+            viewModel.clearMessages()
+            goingBack = true
+            withAnimation(Self.stepSpring) { step = prev }
+        }
         .onAppear {
             // Defer focus by one runloop tick so the field is mounted before
             // we ask it to become first responder — otherwise the keyboard

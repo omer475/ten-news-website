@@ -92,6 +92,7 @@ struct CreatorProfileView: View {
         }
         .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
         .ignoresSafeArea()
+        .swipeToDismiss { onDismiss() }
         .task {
             guard !hasLoaded else { return }
             hasLoaded = true
@@ -346,16 +347,17 @@ struct CreatorProfileView: View {
                 // room, replacing the 2-column SearchResultCard grid.
                 LazyVStack(spacing: 24) {
                     ForEach(allArticles) { article in
-                        Button {
-                            onArticleTap?(article)
-                        } label: {
-                            ArticleCardContinuousView(
-                                article: article,
-                                accentColor: feedViewModel.accentColor(for: article),
-                                showTopicTags: false
-                            )
-                        }
-                        .buttonStyle(.plain)
+                        // No outer Button wrap — that swallowed the inline
+                        // heart / save / share taps and bounced the user
+                        // back to their own Liked tab. Now the card opens
+                        // the overlay via `onTap` (fires on title/bullet
+                        // area only), and the action buttons keep working.
+                        ArticleCardContinuousView(
+                            article: article,
+                            accentColor: feedViewModel.accentColor(for: article),
+                            showTopicTags: false,
+                            onTap: { onArticleTap?(article) }
+                        )
                     }
                 }
                 .padding(.top, 4)

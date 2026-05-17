@@ -62,6 +62,7 @@ struct ExploreArticleSheet: View {
         .ignoresSafeArea()
         .background(Color.black)
         .persistentSystemOverlays(.hidden)
+        .swipeToDismiss { onDismiss() }
         .onAppear {
             articlePages = buildArticlePages()
         }

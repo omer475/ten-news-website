@@ -49,6 +49,7 @@
 		65FA954B15EBB1059F2B1CA4 /* FeedResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468D1B58E2F07B147E7E07A0 /* FeedResponse.swift */; };
 		69065BD0A55D2AF3C7F6AAB5 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3214E7F65E936CF2A39F234 /* SignupView.swift */; };
 		6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F129A9689C3124330A2529 /* HapticManager.swift */; };
+		STD01SWIPEDISMBUILD0001 /* SwipeToDismiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = STD02SWIPEDISMREF000001 /* SwipeToDismiss.swift */; };
 		6F263CDE4FCCB7DF57F26C4C /* EventWhatToWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B837F3F530355509B049B4 /* EventWhatToWatchView.swift */; };
 		705F1C2CB2314A438D0D2A9D /* FollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D0EF3C215540E9B1A3556E /* FollowManager.swift */; };
 		UFM01USERFOLLOWMGRBUILD /* UserFollowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = UFM02USERFOLLOWMGRREF /* UserFollowManager.swift */; };
@@ -135,6 +136,7 @@
 /* Begin PBXFileReference section */
 		014F6CDDDFC80D1228496091 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
 		07F129A9689C3124330A2529 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		STD02SWIPEDISMREF000001 /* SwipeToDismiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeToDismiss.swift; sourceTree = "<group>"; };
 		1543B8FB5E3D8D2BDBA2FE06 /* WorldEventsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldEventsListView.swift; sourceTree = "<group>"; };
 		18437D9B26100FAFB13A8B23 /* TypingTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingTextView.swift; sourceTree = "<group>"; };
 		1A5BB7CE05E33F3D5F881FAF /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -436,6 +438,7 @@
 				C00FE1345FEB46F0B5B6A9D0 /* ProfilePhotoManager.swift */,
 				83D0EF3C215540E9B1A3556E /* FollowManager.swift */,
 				UFM02USERFOLLOWMGRREF /* UserFollowManager.swift */,
+				STD02SWIPEDISMREF000001 /* SwipeToDismiss.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -683,6 +686,7 @@
 				AF9FE0A55AFFED8F9541ECDB /* TenNewsApp.swift in Sources */,
 				1B3E66A18B5174097204BD68 /* Extensions.swift in Sources */,
 				6C9F539F4AF76CC88C8287F7 /* HapticManager.swift in Sources */,
+				STD01SWIPEDISMBUILD0001 /* SwipeToDismiss.swift in Sources */,
 				SR01SESSION01BUILD00001 /* SessionReRanker.swift in Sources */,
 				34F5BECB4751CCFB5BCDD2C8 /* KeychainManager.swift in Sources */,
 				D38339DC8FFC3E2444B34296 /* UserDefaultsManager.swift in Sources */,

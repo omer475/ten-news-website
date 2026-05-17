@@ -1848,6 +1848,7 @@ struct EntityArticlesSheet: View {
                 .zIndex(1)
             }
         }
+        .swipeToDismiss { onDismiss() }
     }
 
     /// Find the matching ExploreTopicArticle for a full Article (for the card display)

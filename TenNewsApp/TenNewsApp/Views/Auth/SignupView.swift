@@ -158,6 +158,18 @@ struct SignupView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
+        .swipeToDismiss {
+            // Mirror the chevron's behavior: if we're on a later step,
+            // pop the step; on step 0, dismiss the entire signup flow.
+            HapticManager.light()
+            if step == .email {
+                if let onBack { onBack() } else { dismiss() }
+            } else if let prev = SignupStep(rawValue: step.rawValue - 1) {
+                viewModel.clearMessages()
+                goingBack = true
+                withAnimation(Self.stepSpring) { step = prev }
+            }
+        }
         .fullScreenCover(isPresented: $showCompleteProfile) {
             CompleteProfileView(viewModel: viewModel) { _ in
                 let pending = pendingGoogleAuth

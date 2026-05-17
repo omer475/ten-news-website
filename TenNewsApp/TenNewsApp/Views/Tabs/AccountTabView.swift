@@ -528,22 +528,21 @@ struct AccountTabView: View {
     // what the user sees in the feed exactly.
 
     private func articleCardGrid(_ articles: [Article]) -> some View {
+        // The outer Button wrap we used to have actually DID swallow the
+        // inline heart / save / share taps — liking a saved article from
+        // here was bouncing the user back to the Liked tab because the
+        // wrapper Button intercepted the tap before the heart button
+        // could fire. Now the card opens the overlay via `onTap` (fires
+        // on title / bullet area only), so the action buttons keep
+        // working in place.
         LazyVStack(spacing: 24) {
             ForEach(articles) { article in
-                // Wrap in a transparent Button so the whole card opens
-                // the article overlay, matching the existing tap target.
-                // Inside taps that ArticleCardContinuousView owns (the
-                // like / save / share row, the avatar tap → publisher
-                // profile) still fire because Button's hit area composes
-                // with the inner buttons.
-                Button { openArticle(article) } label: {
-                    ArticleCardContinuousView(
-                        article: article,
-                        accentColor: feedViewModel.accentColor(for: article),
-                        showTopicTags: false
-                    )
-                }
-                .buttonStyle(.plain)
+                ArticleCardContinuousView(
+                    article: article,
+                    accentColor: feedViewModel.accentColor(for: article),
+                    showTopicTags: false,
+                    onTap: { openArticle(article) }
+                )
             }
         }
         .padding(.top, 8)

@@ -17,77 +17,13 @@ struct ChatDetailView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Messages
-                ScrollViewReader { proxy in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack(spacing: 2) {
-                            if isLoading {
-                                ProgressView()
-                                    .padding(.top, 40)
-                            }
-
-                            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                                let isMe = message.senderId == userId
-                                let showAvatar = shouldShowAvatar(at: index)
-
-                                messageBubble(message, isMe: isMe, showAvatar: showAvatar)
-                                    .id(message.id)
-                            }
-
-                            // Invisible anchor at the very bottom
-                            Color.clear
-                                .frame(height: 1)
-                                .id("bottom")
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.top, 12)
-                        .padding(.bottom, 8)
-                    }
-                    .defaultScrollAnchor(.bottom)
-                    .onChange(of: messages.count) { _, _ in
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            proxy.scrollTo("bottom")
-                        }
-                    }
-                    .onChange(of: inputFocused) { _, focused in
-                        if focused {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    proxy.scrollTo("bottom")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Input bar
-                inputBar
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        onDismiss?()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        if let avatarUrl = conversation.displayAvatar {
-                            AsyncCachedImage(url: avatarUrl, contentMode: .fill)
-                                .frame(width: 28, height: 28)
-                                .clipShape(Circle())
-                        }
-                        Text(conversation.displayName)
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-            }
-            .background(Theme.Colors.backgroundPrimary)
+            messagesContent
+                .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { toolbarContent }
+                .background(Theme.Colors.backgroundPrimary)
         }
+        .swipeToDismiss { onDismiss?() }
         .onAppear {
             Task {
                 messages = await chatService.loadMessages(conversationId: conversation.id)
@@ -103,6 +39,98 @@ struct ChatDetailView: View {
             chatService.stopPolling()
             if let uid = userId {
                 Task { await chatService.loadConversations(userId: uid) }
+            }
+        }
+    }
+
+    // MARK: - Messages content
+    //
+    // Extracted out of `body` because the compiler couldn't type-check
+    // the original mega-expression in reasonable time once safeAreaInset +
+    // multiple onChange handlers + the ScrollViewReader closure were all
+    // composed together. Keeping each chunk small fixes the build.
+
+    @ViewBuilder
+    private var messagesContent: some View {
+        // Messages — input bar pinned via safeAreaInset so the system
+        // shrinks the inset (not the scroll view) when the keyboard
+        // rises. Previously inputBar sat as a sibling in a VStack,
+        // which made every message visibly hop up as the safe area
+        // animated. `scrollDismissesKeyboard(.interactively)` lets
+        // a downward drag put the keyboard away without the bounce
+        // we got from `.defaultScrollAnchor(.bottom)` + pull gesture.
+        ScrollViewReader { proxy in
+            messagesScrollView
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: messages.count) { _, _ in
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
+                }
+                .onChange(of: isLoading) { _, loading in
+                    if !loading {
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
+                }
+                .onChange(of: inputFocused) { _, focused in
+                    if focused {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                proxy.scrollTo("bottom", anchor: .bottom)
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    @ViewBuilder
+    private var messagesScrollView: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 2) {
+                if isLoading {
+                    ProgressView()
+                        .padding(.top, 40)
+                }
+
+                ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                    messageBubble(
+                        message,
+                        isMe: message.senderId == userId,
+                        showAvatar: shouldShowAvatar(at: index)
+                    )
+                    .id(message.id)
+                }
+
+                Color.clear
+                    .frame(height: 1)
+                    .id("bottom")
+            }
+            .padding(.horizontal, 8)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                onDismiss?()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+        }
+        ToolbarItem(placement: .principal) {
+            HStack(spacing: 8) {
+                if let avatarUrl = conversation.displayAvatar {
+                    AsyncCachedImage(url: avatarUrl, contentMode: .fill)
+                        .frame(width: 28, height: 28)
+                        .clipShape(Circle())
+                }
+                Text(conversation.displayName)
+                    .font(.system(size: 16, weight: .semibold))
             }
         }
     }
@@ -516,12 +544,12 @@ extension Article {
         Article(
             id: FlexibleID(String(s.id)),
             title: s.title,
-            titleNews: nil,
+            titleNews: s.title,
             summary: nil,
             summaryText: nil,
             summaryTextB2: nil,
             summaryBullets: nil,
-            summaryBulletsNews: nil,
+            summaryBulletsNews: s.bullets,
             summaryBulletsB2: nil,
             details: nil,
             detailsB2: nil,
@@ -544,7 +572,7 @@ extension Article {
             fiveWs: nil,
             components: nil,
             citations: nil,
-            publishedAt: nil,
+            publishedAt: s.publishedAt,
             createdAt: nil,
             aiFinalScore: nil,
             finalScore: nil,
@@ -566,7 +594,7 @@ extension Article {
             scorecard: nil,
             articleType: nil,
             authorId: nil,
-            authorName: nil,
+            authorName: s.authorName,
             pages: nil,
             expectedReadSeconds: nil
         )

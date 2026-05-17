@@ -45,6 +45,7 @@ struct TopicFeedView: View {
         }
         .background(Color(red: 0.949, green: 0.949, blue: 0.969))
         .ignoresSafeArea(edges: .bottom)
+        .swipeToDismiss { dismiss() }
         .task { await loadInitial() }
         .fullScreenCover(item: $nestedTarget) { target in
             TopicFeedView(entity: target.entity, sourceId: target.sourceId)

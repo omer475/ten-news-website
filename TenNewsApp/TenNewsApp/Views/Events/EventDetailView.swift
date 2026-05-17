@@ -32,6 +32,7 @@ struct EventDetailView: View {
         .ignoresSafeArea(edges: .top)
         .navigationBarHidden(true)
         .overlay(alignment: .top) { navigationOverlay }
+        .swipeToDismiss { dismiss() }
         .onAppear { tabBarState.hideBottomBar = true }
         .onDisappear { tabBarState.hideBottomBar = false }
         .task {

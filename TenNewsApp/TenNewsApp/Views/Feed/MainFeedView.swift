@@ -648,6 +648,16 @@ struct ArticleCardContinuousView: View {
     /// Explore page = false (the topic is already the section header
     /// above the card, so chips would be redundant clutter).
     var showTopicTags: Bool = true
+    /// Invoked when the user single-taps the title / bullet text area.
+    /// Set by surfaces that want the card to open into a full article
+    /// overlay (Account tab's article grid, other-user profile's
+    /// Published list). The feed itself doesn't pass this — it's a
+    /// continuous scroll, not a list to drill into. Routing the tap
+    /// here instead of wrapping the whole card in a Button means the
+    /// inline heart / save / share buttons keep working (the wrapper
+    /// Button used to swallow those taps and bounce the user back to
+    /// their own Liked tab whenever they liked from another profile).
+    var onTap: (() -> Void)? = nil
 
     @State private var liked = false
     @State private var saved = false
@@ -695,6 +705,12 @@ struct ArticleCardContinuousView: View {
                     photoBlock
                 }
                 captionBlock
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard let onTap else { return }
+                        HapticManager.light()
+                        onTap()
+                    }
             }
 
             // Page dots when the article has > 1 page. Sits between the

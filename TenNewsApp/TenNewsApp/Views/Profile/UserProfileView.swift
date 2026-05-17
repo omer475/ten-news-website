@@ -63,6 +63,7 @@ struct UserProfileView: View {
         }
         .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
         .ignoresSafeArea()
+        .swipeToDismiss { onDismiss() }
         .task { await load() }
     }
 
