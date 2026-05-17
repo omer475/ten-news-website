@@ -77,3 +77,4 @@ ten_news.db
 .env*.local
 public/_backup_sample_data/
 public/test_example_news.json.disabled
+.claude/
