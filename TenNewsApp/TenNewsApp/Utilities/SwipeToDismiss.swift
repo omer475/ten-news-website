@@ -33,7 +33,14 @@ struct SwipeToDismissModifier: ViewModifier {
     private let verticalSlack: CGFloat = 60
 
     func body(content: Content) -> some View {
-        content.gesture(
+        // `simultaneousGesture` instead of `.gesture` is critical here:
+        // `.gesture` competes with the child ScrollView's pan recognizer
+        // and stalls vertical scrolling near the leading edge while we
+        // wait to disambiguate. `simultaneousGesture` lets both fire,
+        // so the scroll is never blocked — and our onEnded guard only
+        // dismisses when the user actually performs an edge-right
+        // swipe (start ≤ 32pt, Δx ≥ 80, |Δy| ≤ 60).
+        content.simultaneousGesture(
             DragGesture(minimumDistance: 12, coordinateSpace: .local)
                 .onEnded { value in
                     guard value.startLocation.x <= edgeZoneWidth else { return }

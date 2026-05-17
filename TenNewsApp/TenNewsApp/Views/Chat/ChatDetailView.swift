@@ -86,6 +86,10 @@ struct ChatDetailView: View {
 
     @ViewBuilder
     private var messagesScrollView: some View {
+        // `.scrollBounceBehavior(.basedOnSize)` prevents the "messages
+        // bouncing on pull-down" jankiness for short conversations —
+        // the scroll only bounces when the content actually overflows
+        // the viewport, matching iMessage / Telegram.
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 2) {
                 if isLoading {
@@ -110,6 +114,7 @@ struct ChatDetailView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
         }
+        .scrollBounceBehavior(.basedOnSize)
     }
 
     @ToolbarContentBuilder
@@ -223,36 +228,54 @@ struct ChatDetailView: View {
     }
 
     // MARK: - Input Bar
+    //
+    // Lives inside `.safeAreaInset(.bottom)` on the messages scroll view,
+    // so the system pushes ONLY this bar above the keyboard (not the
+    // whole scroll view), which is what stopped the messages from
+    // hopping up and down as you typed.
+    //
+    // The bar gets a solid `backgroundPrimary` fill so the scroll
+    // content visibly stops at its top edge instead of bleeding through
+    // a transparent inset — without that, the last bubble appeared to
+    // float underneath the bar mid-keyboard-animation.
 
     private var inputBar: some View {
-        GlassEffectContainer {
-            HStack(spacing: 10) {
-                TextField("Message...", text: $inputText, axis: .vertical)
-                    .font(.system(size: 16))
-                    .lineLimit(1...5)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .glassEffect(
-                        .regular.tint(Color.white.opacity(0.05)),
-                        in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    )
-                    .focused($inputFocused)
+        HStack(spacing: 10) {
+            TextField("Message...", text: $inputText, axis: .vertical)
+                .font(.system(size: 16))
+                .lineLimit(1...5)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .glassEffect(
+                    .regular.tint(Color.white.opacity(0.05)),
+                    in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                )
+                .focused($inputFocused)
 
-                Button {
-                    sendMessage()
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(
-                            inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                ? Color.white.opacity(0.15)
-                                : Color(hex: "#0A84FF")
-                        )
-                }
-                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button {
+                sendMessage()
+            } label: {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(
+                        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? Color.white.opacity(0.15)
+                            : Color(hex: "#0A84FF")
+                    )
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(
+            Theme.Colors.backgroundPrimary
+                .ignoresSafeArea(edges: .bottom)
+        )
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
         }
     }
 
