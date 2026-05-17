@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+const safeJsonParse = (value, fallback = null) => {
+  if (!value) return fallback;
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return fallback; }
+};
+
 export default async function handler(req, res) {
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ error: 'Supabase not configured' });
@@ -40,7 +46,7 @@ export default async function handler(req, res) {
       if (articleIds.length > 0) {
         const { data: articles } = await supabase
           .from('published_articles')
-          .select('id, title_news, image_url, source, category')
+          .select('id, title_news, image_url, source, category, summary_bullets_news, author_name, published_at')
           .in('id', articleIds);
         for (const a of (articles || [])) {
           articleMap[a.id] = {
@@ -49,6 +55,9 @@ export default async function handler(req, res) {
             image_url: a.image_url,
             source: a.source,
             category: a.category,
+            bullets: safeJsonParse(a.summary_bullets_news, []),
+            author_name: a.author_name,
+            published_at: a.published_at,
           };
         }
       }
@@ -112,7 +121,7 @@ export default async function handler(req, res) {
       if (message.article_id) {
         const { data: article } = await supabase
           .from('published_articles')
-          .select('id, title_news, image_url, source, category')
+          .select('id, title_news, image_url, source, category, summary_bullets_news, author_name, published_at')
           .eq('id', message.article_id)
           .single();
         if (article) {
@@ -122,6 +131,9 @@ export default async function handler(req, res) {
             image_url: article.image_url,
             source: article.source,
             category: article.category,
+            bullets: safeJsonParse(article.summary_bullets_news, []),
+            author_name: article.author_name,
+            published_at: article.published_at,
           };
         }
       }
