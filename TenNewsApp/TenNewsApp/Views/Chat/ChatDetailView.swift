@@ -9,6 +9,7 @@ import SwiftUI
 struct ChatDetailView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
+    @Environment(TabBarState.self) private var tabBarState
 
     let conversation: ChatConversation
     var onDismiss: (() -> Void)?
@@ -30,6 +31,11 @@ struct ChatDetailView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
         .swipeToDismiss { onDismiss?() }
         .onAppear {
+            // Hide the bottom tab bar while a chat is open — without this
+            // the floating pill covers the bottom of the message list, so
+            // the latest messages can't be scrolled into view and it looks
+            // like the scroll is stuck in the middle.
+            tabBarState.hideBottomBar = true
             Task {
                 messages = await chatService.loadMessages(conversationId: conversation.id)
                 isLoading = false
@@ -41,6 +47,7 @@ struct ChatDetailView: View {
             }
         }
         .onDisappear {
+            tabBarState.hideBottomBar = false
             chatService.stopPolling()
             if let uid = userId {
                 Task { await chatService.loadConversations(userId: uid) }
