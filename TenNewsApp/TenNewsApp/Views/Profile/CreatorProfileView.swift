@@ -77,16 +77,17 @@ struct CreatorProfileView: View {
                 .padding(.bottom, 120)
             }
 
-            // Back button
+            // Back button — flat circle, no glass effect or shadow.
             Button {
                 onDismiss()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color.primary)
                     .frame(width: 38, height: 38)
-                    .glassEffect(.regular, in: Circle())
+                    .background(.fill.quaternary, in: Circle())
             }
+            .buttonStyle(.plain)
             .padding(.top, 56)
             .padding(.leading, 20)
         }

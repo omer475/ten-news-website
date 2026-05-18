@@ -92,8 +92,10 @@ struct AccountTabView: View {
                             )
                         } label: {
                             Image(systemName: "line.3.horizontal")
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(Color.primary)
                         }
+                        .buttonStyle(.borderless)
                     }
                 }
                 .background(Theme.Colors.backgroundPrimary)
@@ -465,7 +467,10 @@ struct AccountTabView: View {
     // MARK: - Glass Toggle
 
     private var glassToggle: some View {
-        GlassEffectContainer {
+        // Renamed semantically below — kept the property name so the
+        // body call site doesn't churn. No glass + no shadow: just a
+        // plain capsule with `.fill.quaternary` fill.
+        Group {
             HStack(spacing: 0) {
                 ForEach(ProfileTab.allCases, id: \.self) { tab in
                     Button {
@@ -493,7 +498,7 @@ struct AccountTabView: View {
                 }
             }
             .padding(4)
-            .glassEffect(.regular, in: Capsule())
+            .background(.fill.quaternary, in: Capsule())
         }
     }
 

@@ -33,6 +33,9 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                // Plain text button — `.buttonStyle(.borderless)` strips
+                // the iOS 26 toolbar capsule + shadow so it reads as a
+                // normal text action, not a floating pill.
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         let prefs = viewModel.save()
@@ -40,6 +43,7 @@ struct SettingsView: View {
                         dismiss()
                     }
                     .fontWeight(.semibold)
+                    .buttonStyle(.borderless)
                 }
             }
             .alert("Sign Out", isPresented: $showSignOutConfirm) {
