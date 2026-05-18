@@ -565,20 +565,17 @@ struct AccountTabView: View {
     // what the user sees in the feed exactly.
 
     private func articleCardGrid(_ articles: [Article]) -> some View {
-        // The outer Button wrap we used to have actually DID swallow the
-        // inline heart / save / share taps — liking a saved article from
-        // here was bouncing the user back to the Liked tab because the
-        // wrapper Button intercepted the tap before the heart button
-        // could fire. Now the card opens the overlay via `onTap` (fires
-        // on title / bullet area only), so the action buttons keep
-        // working in place.
+        // Cards render as passive feed-style previews — no tap opens
+        // an article overlay. Heart / save / repost / share buttons
+        // inside the card still work in place. (Previously a tap on
+        // the title opened ExploreArticleSheet, which used the legacy
+        // dark theme and looked like a black page.)
         LazyVStack(spacing: 24) {
             ForEach(articles) { article in
                 ArticleCardContinuousView(
                     article: article,
                     accentColor: feedViewModel.accentColor(for: article),
-                    showTopicTags: false,
-                    onTap: { openArticle(article) }
+                    showTopicTags: false
                 )
             }
         }

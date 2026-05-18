@@ -348,16 +348,15 @@ struct CreatorProfileView: View {
                 // room, replacing the 2-column SearchResultCard grid.
                 LazyVStack(spacing: 24) {
                     ForEach(allArticles) { article in
-                        // No outer Button wrap — that swallowed the inline
-                        // heart / save / share taps and bounced the user
-                        // back to their own Liked tab. Now the card opens
-                        // the overlay via `onTap` (fires on title/bullet
-                        // area only), and the action buttons keep working.
+                        // Passive cards — tapping does nothing; the
+                        // inline action buttons (heart/save/share)
+                        // still work. Previously a tap opened the
+                        // legacy ExploreArticleSheet which is dark-
+                        // themed and looks like a "black page".
                         ArticleCardContinuousView(
                             article: article,
                             accentColor: feedViewModel.accentColor(for: article),
-                            showTopicTags: false,
-                            onTap: { onArticleTap?(article) }
+                            showTopicTags: false
                         )
                     }
                 }

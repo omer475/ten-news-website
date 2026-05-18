@@ -18,6 +18,7 @@ struct ChatDetailView: View {
     @State private var inputText = ""
     @State private var isLoading = true
     @State private var chatService = ChatService.shared
+    @State private var keyboardHeight: CGFloat = 0
     @FocusState private var inputFocused: Bool
 
     private var userId: String? { appViewModel.currentUser?.id }
@@ -29,13 +30,19 @@ struct ChatDetailView: View {
         }
         .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
+        // Manual keyboard padding — the parent ContentView opted out
+        // of keyboard safe-area (so the For You feed isn't disturbed
+        // by an open search bar), and that propagates into this
+        // overlay view, which prevents `.safeAreaInset(.bottom)` from
+        // floating the input bar above the keyboard on its own. The
+        // NotificationCenter observers below restore the iMessage
+        // behavior without touching ContentView's global setting.
+        .padding(.bottom, keyboardHeight)
+        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
         .swipeToDismiss { onDismiss?() }
         .onAppear {
-            // Hide the bottom tab bar while a chat is open — without this
-            // the floating pill covers the bottom of the message list, so
-            // the latest messages can't be scrolled into view and it looks
-            // like the scroll is stuck in the middle.
             tabBarState.hideBottomBar = true
+            startObservingKeyboard()
             Task {
                 messages = await chatService.loadMessages(conversationId: conversation.id)
                 isLoading = false
@@ -48,11 +55,36 @@ struct ChatDetailView: View {
         }
         .onDisappear {
             tabBarState.hideBottomBar = false
+            stopObservingKeyboard()
             chatService.stopPolling()
             if let uid = userId {
                 Task { await chatService.loadConversations(userId: uid) }
             }
         }
+    }
+
+    // MARK: - Keyboard observation
+
+    private func startObservingKeyboard() {
+        let nc = NotificationCenter.default
+        nc.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { note in
+            guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            // Subtract the home-indicator safe area so the input bar
+            // sits flush against the keyboard top, not 34pt above it.
+            let inset = UIApplication.shared.connectedScenes
+                .compactMap { ($0 as? UIWindowScene)?.keyWindow?.safeAreaInsets.bottom }
+                .first ?? 0
+            keyboardHeight = max(0, frame.height - inset)
+        }
+        nc.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            keyboardHeight = 0
+        }
+    }
+
+    private func stopObservingKeyboard() {
+        let nc = NotificationCenter.default
+        nc.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        nc.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 
     // MARK: - Top bar

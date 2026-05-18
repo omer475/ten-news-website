@@ -121,6 +121,18 @@ struct CreateContentView: View {
                     .padding(.bottom, 40)
             }
             .padding(.bottom, 100)
+            // Tap anywhere on empty space → dismiss keyboard. The
+            // TextField / Button children still receive their own taps
+            // first because SwiftUI prefers the more specific gesture
+            // recognizer. This complements the existing interactive
+            // scroll-dismiss for users who don't want to scroll.
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil, from: nil, for: nil
+                )
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Create")
@@ -164,20 +176,30 @@ struct CreateContentView: View {
                 // (Highlight toggle removed — the article-page card has no
                 // word-highlight feature; preview should match it 1:1.)
 
-                // Preview card(s) — swipeable if multi-page
+                // Preview card(s). Action row is rendered ONCE after
+                // the page area — heart/save/repost/share act on the
+                // whole article, never on individual pages. Multi-page
+                // posts use a TabView for swipe; the action row lives
+                // outside it so it doesn't swipe with the pages.
                 if contentPages.count > 1 {
                     TabView {
                         ForEach(Array(contentPages.enumerated()), id: \.element.id) { index, page in
-                            previewCardForPage(index: index)
-                                .padding(.horizontal, 16)
+                            ScrollView {
+                                previewCardForPage(index: index)
+                                    .padding(.horizontal, 16)
+                            }
+                            .scrollDisabled(false)
                         }
                     }
                     .tabViewStyle(.page(indexDisplayMode: .always))
-                    .frame(height: UIScreen.main.bounds.width * 1.4)
+                    .frame(height: UIScreen.main.bounds.width * 1.6)
                 } else {
                     previewCard
                         .padding(.horizontal, 16)
                 }
+
+                previewActionRow
+                    .padding(.horizontal, 20)
 
                 // Tags preview
                 if !tags.isEmpty {
@@ -253,7 +275,8 @@ struct CreateContentView: View {
             pageTitle: pageTitle,
             pageBullets: pageBullets,
             pageImage: pageImage,
-            extractColorFromImage: index == 0
+            extractColorFromImage: index == 0,
+            showHeader: index == 0
         )
     }
 
@@ -266,7 +289,8 @@ struct CreateContentView: View {
             pageTitle: title,
             pageBullets: cleanBullets,
             pageImage: coverImage,
-            extractColorFromImage: true
+            extractColorFromImage: true,
+            showHeader: true
         )
     }
 
@@ -275,7 +299,8 @@ struct CreateContentView: View {
         pageTitle: String,
         pageBullets: [String],
         pageImage: UIImage?,
-        extractColorFromImage: Bool
+        extractColorFromImage: Bool,
+        showHeader: Bool
     ) -> some View {
         let accent = previewDominantColor ?? .blue
         let authorName = appViewModel.currentUser?.displayName
@@ -284,62 +309,50 @@ struct CreateContentView: View {
         let initial = String(authorName.prefix(1)).uppercased()
 
         VStack(alignment: .leading, spacing: 10) {
-            // Header row — avatar + author + relative time. No
-            // bookmark icon here: that lived on the right side of the
-            // creator name as a leftover from an earlier iteration of
-            // the feed card; users save from the action row, not the
-            // header.
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(accent)
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Text(initial)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
-                    )
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(authorName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.primary)
-                        .tracking(-0.1)
-                    Text("now")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+            if showHeader {
+                // Header row — only on the first page of a multi-page
+                // post (and always for single-page). Subsequent pages
+                // are continuations of the same article, so author /
+                // time would be repeated noise.
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(accent)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Text(initial)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                        )
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(authorName)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.primary)
+                            .tracking(-0.1)
+                        Text("now")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
                 }
-                Spacer()
+                .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 4)
 
-            // Photo (or gradient placeholder), rounded — matches feed.
+            // Photo at its natural aspect ratio (.fit, no fixed
+            // height) so wide photos stay wide and tall portraits
+            // stay tall — same shape as in the feed card.
             VStack(alignment: .leading, spacing: 0) {
                 if let image = pageImage {
                     Image(uiImage: image)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .aspectRatio(contentMode: .fit)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 220)
-                        .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .onAppear { if extractColorFromImage { extractPreviewColor() } }
-                } else {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.gray.opacity(0.15))
-                        .frame(height: 220)
-                        .overlay {
-                            VStack(spacing: 6) {
-                                Image(systemName: "photo")
-                                    .font(.system(size: 32))
-                                    .foregroundStyle(.tertiary)
-                                Text("Add a cover photo")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
                 }
+                // No photo → no placeholder. Title + bullets are a
+                // valid post shape (user already opted into this
+                // path; see canProceed).
 
-                // Title block. (No category label rail — user wants the
-                // preview to lead straight with the headline.)
                 VStack(alignment: .leading, spacing: 10) {
                     Text(pageTitle.isEmpty ? "Untitled" : pageTitle)
                         .font(.system(size: 24, weight: .bold))
@@ -367,25 +380,28 @@ struct CreateContentView: View {
                         }
                     }
                 }
-                .padding(.top, 14)
+                .padding(.top, pageImage == nil ? 0 : 14)
                 .padding(.bottom, 4)
             }
-
-            // Inert action row — right-aligned (Instagram/Threads/X
-            // pattern). Spacer goes first so the heart/save/repost/share
-            // cluster sits on the trailing edge instead of the leading.
-            HStack(spacing: 22) {
-                Spacer()
-                Image(systemName: "heart")
-                Image(systemName: "bookmark")
-                Image(systemName: "arrow.2.squarepath")
-                Image(systemName: "arrowshape.turn.up.right")
-            }
-            .font(.system(size: 19))
-            .foregroundStyle(.secondary)
-            .padding(.top, 6)
         }
         .padding(.horizontal, 4)
+    }
+
+    // Inert action row — rendered once below the page area, never
+    // per-page, since the heart/save/repost/share act on the whole
+    // article (not individual pages of a swipe carousel).
+    private var previewActionRow: some View {
+        HStack(spacing: 22) {
+            Spacer()
+            Image(systemName: "heart")
+            Image(systemName: "bookmark")
+            Image(systemName: "arrow.2.squarepath")
+            Image(systemName: "arrowshape.turn.up.right")
+        }
+        .font(.system(size: 19))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
+        .padding(.top, 6)
     }
 
     private func previewMapBox(coord: CLLocationCoordinate2D) -> some View {
@@ -633,14 +649,16 @@ struct CreateContentView: View {
     }
 
     private var coverImageSection: some View {
+        // Picker shows the photo at its natural aspect ratio — wide
+        // photos stay wide, portraits stay tall. Empty-state still
+        // has a fixed-height tap target so the user has something to
+        // press before they've picked anything.
         PhotosPicker(selection: $selectedPhoto, matching: .images) {
             if let image = coverImage {
                 Image(uiImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-                    .clipped()
                     .overlay(alignment: .bottomTrailing) {
                         HStack(spacing: 6) {
                             Image(systemName: "photo")
@@ -664,7 +682,7 @@ struct CreateContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 220)
+                .frame(height: 200)
                 .background(.fill.tertiary)
             }
         }
