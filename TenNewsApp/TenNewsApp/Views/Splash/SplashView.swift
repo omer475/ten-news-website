@@ -93,7 +93,8 @@ struct SplashView: View {
 
             Spacer()
 
-            // Sign up button
+            // Sign up button — flat capsule, no glass effect (matches
+            // the flat treatment we adopted across chat/create/account).
             Button {
                 onSignUp?()
             } label: {
@@ -102,7 +103,7 @@ struct SplashView: View {
                     .foregroundStyle(Theme.Colors.accent)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .glassEffect(.regular, in: Capsule())
+                    .background(.fill.quaternary, in: Capsule())
             }
             .buttonStyle(.plain)
         }
@@ -163,17 +164,54 @@ struct SplashView: View {
     // MARK: - Loading Placeholder
 
     private var eventLoadingPlaceholder: some View {
+        // Skeleton placeholder — the card shape is filled with a gentle
+        // shimmer (animated linear gradient) so the loading state reads
+        // as "content is coming" instead of a stray loading-dots widget
+        // floating in an empty grey rect.
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(0..<3, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                        .fill(Color(hex: "#e5e5ea").opacity(0.3))
+                    SkeletonRectangle()
                         .frame(width: 180, height: 120)
-                        .overlay { LoadingDotsView() }
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
                 }
             }
             .padding(.horizontal, Theme.Spacing.md)
         }
+    }
+}
+
+/// Lightweight shimmer for skeleton placeholders. Uses a horizontally-
+/// translating linear gradient over a base grey fill. Cheap and self-
+/// contained so we can drop it anywhere a list shape would otherwise be
+/// rendered with `LoadingDotsView`.
+private struct SkeletonRectangle: View {
+    @State private var phase: CGFloat = -1
+
+    var body: some View {
+        Rectangle()
+            .fill(Color(hex: "#e5e5ea").opacity(0.45))
+            .overlay {
+                GeometryReader { geo in
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .white.opacity(0.5), location: 0.5),
+                            .init(color: .clear, location: 1),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: geo.size.width)
+                    .offset(x: phase * geo.size.width)
+                }
+            }
+            .onAppear {
+                withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
+                    phase = 1
+                }
+            }
+            .allowsHitTesting(false)
     }
 }
 

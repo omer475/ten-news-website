@@ -277,6 +277,10 @@ struct OnboardingFlowView: View {
     // MARK: - Helpers
 
     private func goNext() {
+        // Light haptic on every step transition — without this, the
+        // step slide felt unresponsive on slower devices and users
+        // double-tapped Continue thinking the first tap missed.
+        HapticManager.light()
         viewModel.nextStep()
     }
 

@@ -272,7 +272,14 @@ struct SearchTabView: View {
         }
         .padding(.horizontal, 14)
         .frame(height: 44)
-        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        // Bump up to `.fill.secondary` + a hairline border so the
+        // search field reads as a tap target on the cream page bg —
+        // `.fill.tertiary` was too subtle and users missed the field.
+        .background(.fill.secondary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+        )
         .animation(.smooth(duration: 0.18), value: tabBarState.searchText.isEmpty)
     }
 
@@ -583,20 +590,20 @@ struct SearchTabView: View {
                             viewModel.searchText = topic
                             Task { await viewModel.search(query: topic) }
                         } label: {
-                            GlassEffectContainer {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "magnifyingglass")
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(.secondary)
-                                    Text(topic)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(1)
-                                }
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 9)
-                                .glassEffect(.regular.tint(.white.opacity(0.05)), in: Capsule())
+                            // Flat capsule chip — matches the rest of
+                            // the search UI (no glass-vs-flat split).
+                            HStack(spacing: 6) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                Text(topic)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 9)
+                            .background(.fill.tertiary, in: Capsule())
                         }
                         .buttonStyle(.plain)
                     }
