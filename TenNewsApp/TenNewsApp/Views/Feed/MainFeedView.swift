@@ -680,6 +680,20 @@ struct ArticleCardContinuousView: View {
     @State private var followBurstActive = false
     @Environment(AppViewModel.self) private var appViewModel
 
+    /// Reader text-size preference (Settings → Display → Text Size).
+    /// Only scales the article title + bullet text — everything else
+    /// (chrome, action row, chips) stays fixed so layout doesn't shift.
+    /// medium = 1.0 is the existing baseline; small/large bracket it
+    /// symmetrically (~ ±14%).
+    @AppStorage("settings_text_size") private var textSizePref: String = "medium"
+    private var textScale: CGFloat {
+        switch textSizePref {
+        case "small":  return 0.875
+        case "large":  return 1.15
+        default:       return 1.0
+        }
+    }
+
     /// Reactive follow state read directly from FollowManager. When the
     /// user unfollows inside CreatorProfileView and dismisses, the chip
     /// reappears here automatically because FollowManager is @Observable
@@ -1253,7 +1267,7 @@ struct ArticleCardContinuousView: View {
             }
 
             Text(article.plainTitle)
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 24 * textScale, weight: .bold))
                 .tracking(-0.5)
                 .lineSpacing(2)
                 .foregroundStyle(Color.primary)
@@ -1302,7 +1316,7 @@ struct ArticleCardContinuousView: View {
                         .lineLimit(1)
                 }
                 Text(article.plainTitle)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 24 * textScale, weight: .bold))
                     .tracking(-0.5)
                     .lineSpacing(2)
                     .foregroundStyle(Color.primary)
@@ -1313,7 +1327,7 @@ struct ArticleCardContinuousView: View {
                 // hierarchy reads "Recipe → Step 3" not two competing
                 // titles.
                 Text(heading)
-                    .font(.system(size: 19, weight: .semibold))
+                    .font(.system(size: 19 * textScale, weight: .semibold))
                     .tracking(-0.3)
                     .foregroundStyle(Color.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1343,7 +1357,7 @@ struct ArticleCardContinuousView: View {
                         .frame(width: 4, height: 4)
                         .alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 1 }
                     Text(bulletAttributed(bullet))
-                        .font(.system(size: 16))
+                        .font(.system(size: 16 * textScale))
                         .foregroundStyle(Color.primary)
                         .lineSpacing(5)
                         .multilineTextAlignment(.leading)
