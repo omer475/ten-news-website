@@ -475,7 +475,7 @@ struct AccountTabView: View {
                         HapticManager.selection()
                     } label: {
                         Image(systemName: tab.systemImage)
-                            .font(.system(size: 17, weight: selectedTab == tab ? .semibold : .regular))
+                            .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(selectedTab == tab ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 36)
