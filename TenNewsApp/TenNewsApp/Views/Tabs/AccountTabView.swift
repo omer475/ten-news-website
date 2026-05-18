@@ -56,8 +56,30 @@ struct AccountTabView: View {
             NavigationStack {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
+                        // Hamburger lives inside the scroll content so
+                        // it scrolls away as the user moves down —
+                        // sits at the top-right above the profile header.
+                        HStack {
+                            Spacer()
+                            NavigationLink {
+                                SettingsView(
+                                    preferences: appViewModel.preferences,
+                                    onSave: { appViewModel.updatePreferences($0) },
+                                    onSignOut: { appViewModel.logout() }
+                                )
+                            } label: {
+                                Image(systemName: "line.3.horizontal")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundStyle(Color.primary)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.top, 4)
+
                         profileHeader
-                            .padding(.top, 12)
 
                         statsRow
                             .padding(.top, 16)
@@ -83,26 +105,6 @@ struct AccountTabView: View {
                 .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(.hidden, for: .navigationBar)
-                .overlay(alignment: .topTrailing) {
-                    // Hamburger as a plain top-trailing overlay so it
-                    // sidesteps iOS 26's forced toolbar capsule + shadow.
-                    NavigationLink {
-                        SettingsView(
-                            preferences: appViewModel.preferences,
-                            onSave: { appViewModel.updatePreferences($0) },
-                            onSignOut: { appViewModel.logout() }
-                        )
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(Color.primary)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 8)
-                    .padding(.trailing, 8)
-                }
                 .background(Theme.Colors.backgroundPrimary)
             }
             .sheet(isPresented: $showSignUp) {
