@@ -35,6 +35,20 @@ struct AccountTabView: View {
         case reposted = "Reposted"
         case history = "History"
         case published = "Published"
+
+        /// SF Symbol used in the toggle bar. Text labels were squeezing
+        /// each other once Reposted made it five tabs, so the bar now
+        /// renders as icons (with the rawValue used as the accessibility
+        /// label and on long-press tooltip).
+        var systemImage: String {
+            switch self {
+            case .liked:     return "heart"
+            case .saved:     return "bookmark"
+            case .reposted:  return "arrow.2.squarepath"
+            case .history:   return "clock"
+            case .published: return "square.and.pencil"
+            }
+        }
     }
 
     var body: some View {
@@ -460,8 +474,8 @@ struct AccountTabView: View {
                         }
                         HapticManager.selection()
                     } label: {
-                        Text(tab.rawValue)
-                            .font(.system(size: 14, weight: selectedTab == tab ? .bold : .medium))
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 17, weight: selectedTab == tab ? .semibold : .regular))
                             .foregroundStyle(selectedTab == tab ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 36)
@@ -472,6 +486,8 @@ struct AccountTabView: View {
                                         .matchedGeometryEffect(id: "profileToggle", in: toggleNS)
                                 }
                             }
+                            .contentShape(Rectangle())
+                            .accessibilityLabel(tab.rawValue)
                     }
                     .buttonStyle(.plain)
                 }
