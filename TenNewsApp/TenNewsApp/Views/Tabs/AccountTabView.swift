@@ -26,11 +26,13 @@ struct AccountTabView: View {
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
     private var likes: LikeManager { LikeManager.shared }
+    private var reposts: RepostManager { RepostManager.shared }
     private var history: ReadingHistoryManager { ReadingHistoryManager.shared }
 
     enum ProfileTab: String, CaseIterable {
         case liked = "Liked"
         case saved = "Saved"
+        case reposted = "Reposted"
         case history = "History"
         case published = "Published"
     }
@@ -497,6 +499,13 @@ struct AccountTabView: View {
                            subtitle: "Tap the bookmark icon on any article to save it for later.")
             } else {
                 articleCardGrid(bookmarks.savedArticles)
+            }
+        case .reposted:
+            if reposts.repostedArticles.isEmpty {
+                emptyState(icon: "arrow.2.squarepath", title: "No Reposts",
+                           subtitle: "Tap the repost icon on any article to share it with your followers.")
+            } else {
+                articleCardGrid(reposts.repostedArticles)
             }
         case .history:
             if history.entries.isEmpty {
