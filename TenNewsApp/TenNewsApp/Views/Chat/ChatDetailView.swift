@@ -86,15 +86,10 @@ struct ChatDetailView: View {
             }
         }
         .frame(height: 44)
-        .background(
-            Theme.Colors.backgroundPrimary
-                .ignoresSafeArea(edges: .top)
-        )
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 0.5)
-        }
+        // No explicit background or bottom divider — the top bar
+        // inherits the page's cream backgroundPrimary, so chevron +
+        // name appear to float on the same surface as the messages
+        // (no visible "header strip" behind the username).
     }
 
     // MARK: - Message list

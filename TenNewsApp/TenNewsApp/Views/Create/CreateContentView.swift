@@ -338,16 +338,9 @@ struct CreateContentView: View {
                         }
                 }
 
-                // Section label + title — primary text on cream.
+                // Title block. (No category label rail — user wants the
+                // preview to lead straight with the headline.)
                 VStack(alignment: .leading, spacing: 10) {
-                    if !selectedCategory.isEmpty {
-                        Text(selectedCategory.uppercased())
-                            .font(.system(size: 11, weight: .semibold))
-                            .tracking(1.4)
-                            .foregroundStyle(accent)
-                            .lineLimit(1)
-                    }
-
                     Text(pageTitle.isEmpty ? "Untitled" : pageTitle)
                         .font(.system(size: 24, weight: .bold))
                         .tracking(-0.5)
