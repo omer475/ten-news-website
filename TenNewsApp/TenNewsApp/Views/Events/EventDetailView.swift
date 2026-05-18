@@ -28,7 +28,10 @@ struct EventDetailView: View {
                 }
             }
         }
-        .background(Color(hex: "#F2F2F7").ignoresSafeArea())
+        // Use the system grouped-background color (adaptive light/dark)
+        // instead of a hardcoded light hex — previously this read as
+        // unreadable white-on-near-white when the device was in dark mode.
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
         .navigationBarHidden(true)
         .overlay(alignment: .top) { navigationOverlay }
