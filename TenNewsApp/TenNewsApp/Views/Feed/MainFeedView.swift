@@ -74,7 +74,7 @@ struct MainFeedView: View {
                 // existed before its safeAreaInsets were populated, and 0
                 // didn't trip the nil-coalescing fallback — causing the
                 // labels to overlap the island.
-                .padding(.top, 52)
+                .padding(.top, 60)
                 // Scroll-driven hide/reveal: fade + slide up when the user
                 // scrolls into the feed, slide back when they swipe up.
                 .opacity(tabsVisible ? 1 : 0)
