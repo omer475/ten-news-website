@@ -158,6 +158,30 @@ struct SignupView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
+        // The signupFlow is a ZStack, not a ScrollView, so
+        // scrollDismissesKeyboard never fires on its own. Add:
+        //   • a tap anywhere off a field → resign first responder
+        //   • a downward drag on the background → resign first responder
+        // Both call UIResponder.resignFirstResponder via the UIKit
+        // bridge, which works regardless of which TextField (SwiftUI
+        // or our DobSegment UIViewRepresentable) is currently focused.
+        .contentShape(Rectangle())
+        .onTapGesture {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil, from: nil, for: nil
+            )
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12)
+                .onEnded { value in
+                    guard value.translation.height > 40 else { return }
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+        )
         .swipeToDismiss {
             // Mirror the chevron's behavior: if we're on a later step,
             // pop the step; on step 0, dismiss the entire signup flow.
@@ -524,6 +548,12 @@ struct SignupView: View {
                     .focused($focusedField, equals: .username)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundStyle(.white)
+                    // Force the alphabet keyboard explicitly — without
+                    // this iOS sometimes carried the .numberPad type
+                    // from the previous DOB step into this field, so
+                    // users landed on the numeric keyboard with no
+                    // letters available.
+                    .keyboardType(.default)
                     .textContentType(.username)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -1001,9 +1031,15 @@ struct DobSegment: UIViewRepresentable {
         if view.text != text { view.text = text }
         DispatchQueue.main.async {
             if isFocused, !view.isFirstResponder {
+                // Only claim first responder; never explicitly resign.
+                // When the user fills a segment, the NEXT segment calls
+                // becomeFirstResponder() and iOS transfers focus
+                // without animating the keyboard down + back up.
+                // Explicit resign on the old field was racing the
+                // become on the new field on separate runloop ticks,
+                // which was the source of the keyboard "going and
+                // coming back" between DD/MM/YYYY fields.
                 view.becomeFirstResponder()
-            } else if !isFocused, view.isFirstResponder {
-                view.resignFirstResponder()
             }
         }
     }

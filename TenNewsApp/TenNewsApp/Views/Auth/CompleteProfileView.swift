@@ -103,6 +103,26 @@ struct CompleteProfileView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
+        // Tap + drag-down to dismiss the keyboard (same pattern as
+        // SignupView — this view is a ZStack so scrollDismissesKeyboard
+        // alone doesn't fire).
+        .contentShape(Rectangle())
+        .onTapGesture {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil, from: nil, for: nil
+            )
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12)
+                .onEnded { value in
+                    guard value.translation.height > 40 else { return }
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+        )
         .swipeToDismiss {
             // Step 0 (age) has no back — user is mid-auth and can't escape.
             // Step 1 (username) pops back to age, mirroring the chevron.
@@ -306,6 +326,9 @@ struct CompleteProfileView: View {
                     .focused($usernameFocused)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundStyle(.white)
+                    // Explicit .default keyboard — otherwise iOS carries
+                    // the .numberPad from the DOB step over to here.
+                    .keyboardType(.default)
                     .textContentType(.username)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
