@@ -31,7 +31,30 @@ final class FeedViewModel {
     // a 30-min phone lock produced a 1800s "absorbed" engagement.
     private var viewDwellAccum: [String: TimeInterval] = [:]
     private var dwellPaused = false
-    private(set) var lastRefreshTime: Date?
+
+    // 2026-05-19 (PR9) — `lastRefreshTime` is persisted to UserDefaults so
+    // the 5-minute staleness check survives a cold start (app killed from
+    // the app switcher → reopened). Previously this was in-memory only;
+    // when the user killed the app and reopened a minute later,
+    // `lastRefreshTime` was nil → `isStale` returned true → fresh feed
+    // always generated. User saw "feed moved to top + same articles I
+    // already saw" because the cache loaded instantly, then `refresh()`
+    // overwrote it with a new fetch that included recently-impressed
+    // articles. With persistence, a reopen within 5 minutes skips
+    // `refreshIfStale` and continues with cached content untouched.
+    private static let lastRefreshTimeKey = "feed_last_refresh_time"
+    private(set) var lastRefreshTime: Date? = {
+        let stored = UserDefaults.standard.double(forKey: lastRefreshTimeKey)
+        return stored > 0 ? Date(timeIntervalSince1970: stored) : nil
+    }() {
+        didSet {
+            if let t = lastRefreshTime {
+                UserDefaults.standard.set(t.timeIntervalSince1970, forKey: Self.lastRefreshTimeKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.lastRefreshTimeKey)
+            }
+        }
+    }
 
     // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
     // Set the instant an engagement/skip POST is fired; loadMoreIfNeeded
@@ -118,6 +141,19 @@ final class FeedViewModel {
             feedLog.warning("loadInitialData: showing \(cached.count) cached articles instantly")
         } else {
             isLoading = true  // first-ever load, must wait
+        }
+
+        // 2026-05-19 (PR9) — when the user reopens the app within the
+        // 5-minute staleness window AND we have a cache, SKIP the network
+        // fetch entirely. This preserves "continue where I left off"
+        // behavior across cold-starts (app killed). Pre-PR9 the fetch ran
+        // unconditionally, overwriting the cache with a new slate that
+        // jumped scroll to top and often re-served articles the user had
+        // just scrolled past.
+        if !isStale && !allArticles.isEmpty {
+            feedLog.warning("loadInitialData: cache fresh (<5min since last refresh), skipping network fetch")
+            isRefreshing = false
+            return
         }
 
         // Step 2: Fetch fresh feed (runs regardless, replaces cache)
