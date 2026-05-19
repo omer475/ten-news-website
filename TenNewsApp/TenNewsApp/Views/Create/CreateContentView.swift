@@ -110,15 +110,12 @@ struct CreateContentView: View {
 
                 tagsSection
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
-
-                detailsSection
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
-
-                mapSection
-                    .padding(.horizontal, 20)
                     .padding(.bottom, 40)
+
+                // (Details info box + map section removed — info boxes
+                // are no longer rendered in the feed card, and we've
+                // frozen their generation on the Cloud Run pipeline to
+                // reduce costs.)
             }
             .padding(.bottom, 100)
             // Tap anywhere on empty space → dismiss keyboard. The

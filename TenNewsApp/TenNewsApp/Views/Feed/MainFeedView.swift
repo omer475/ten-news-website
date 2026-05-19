@@ -1417,36 +1417,14 @@ struct ArticleCardContinuousView: View {
 
     @ViewBuilder
     private var componentSections: some View {
-        let comps = availableComponents
-        if !comps.isEmpty {
-            // Active component renders, with the glass-pill switcher
-            // overlaid at top-LEFT (only when >1 component exists). The
-            // expand button stays top-RIGHT — the two share the top row
-            // of the info box, matching the original `ArticleCardView`
-            // pattern.
-            VStack(alignment: .leading, spacing: 8) {
-                componentRow(activeComponent(in: comps))
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        // Tap on the body of the info box advances to
-                        // the next component in the rotation. Switcher
-                        // pills + expand button remain higher-priority
-                        // taps (Button > parent .onTapGesture in SwiftUI).
-                        guard comps.count > 1 else { return }
-                        advanceComponent(in: comps)
-                    }
-                if comps.count > 1 {
-                    HStack {
-                        Spacer()
-                        IconOnlyComponentSwitcher(
-                            components: comps,
-                            selected: switcherBinding(for: comps)
-                        )
-                        Spacer()
-                    }
-                }
-            }
-        }
+        // Info boxes (details / map / graph / timeline) are no longer
+        // rendered in the feed card. Generation has also been frozen on
+        // the Cloud Run pipeline to cut costs, so existing articles
+        // simply won't show the boxes and new ones won't have the
+        // payload at all. Renderer is intentionally short-circuited
+        // here rather than ripped out so we can re-enable it via one
+        // edit if the product decision changes.
+        EmptyView()
     }
 
     /// Resolved active component: `selectedComponent` if it's still in

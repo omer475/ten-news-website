@@ -1617,37 +1617,29 @@ def run_complete_pipeline():
 
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
 
-            # --- STEP 6: Decide which components this article needs ---
-            print(f"\n📋 [Cluster {cluster_id}] STEP 6: GEMINI COMPONENT SELECTION")
-
-            article_for_selection = {
-                'title': synthesized['title_news'],
-                'text': bullets_text,
-                'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
-            }
-
+            # --- STEP 6: FROZEN — all info-box generation is disabled
+            # to cut Cloud Run costs. The iOS feed no longer renders
+            # details/map/graph/timeline boxes, so generating them is
+            # pure waste. We keep the step structure so re-enabling is
+            # one delete: remove the hard-coded `selected = []` lines
+            # and restore the Gemini selector call below.
+            print(f"\n📋 [Cluster {cluster_id}] STEP 6: SKIPPED (info-box generation frozen for cost)")
             selected = []
-            component_result = {}
-            try:
-                with gemini_semaphore:
-                    component_result = component_selector.select_components(article_for_selection)
-                selected = component_result.get('components', []) if isinstance(component_result, dict) else []
-                # Remove "details" — the 3-column stat grid was retired
-                # 2026-05-10. Spec said it shipped with rigid label-≤12-chars +
-                # value-must-have-digit + exactly-3-columns shape that produced
-                # truncated output ("LOTTERY PICK | Projected #6-10..."). High
-                # creator friction (you have to hunt for 3 quantitative facts)
-                # and low engagement payoff vs the alternatives. Filtered here
-                # rather than rewriting step5's 55-reference prompt — single-
-                # point fix and doesn't risk breaking anything else.
-                selected = [c for c in selected if c != 'details']
-                print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
-            except Exception as comp_error:
-                print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                # Fallback used to default to ['details'] — now empty list
-                # (no info box) since details is retired.
-                selected = []
-                component_result = {'components': selected, 'emoji': '📰'}
+            component_result = {'components': [], 'emoji': '📰'}
+            # Original logic (kept for reference, currently dead):
+            # article_for_selection = {
+            #     'title': synthesized['title_news'],
+            #     'text': bullets_text,
+            #     'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
+            # }
+            # try:
+            #     with gemini_semaphore:
+            #         component_result = component_selector.select_components(article_for_selection)
+            #     selected = component_result.get('components', []) if isinstance(component_result, dict) else []
+            #     selected = [c for c in selected if c != 'details']
+            # except Exception:
+            #     selected = []
+            #     component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
             # Components that need Google Search grounding: timeline, details, graph, map
