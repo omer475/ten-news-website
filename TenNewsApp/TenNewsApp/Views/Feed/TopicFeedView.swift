@@ -55,8 +55,10 @@ struct TopicFeedView: View {
                 .offset(y: headerVisible ? 0 : -50)
                 .animation(.easeInOut(duration: 0.2), value: headerVisible)
         }
-        .background(Color(red: 0.949, green: 0.949, blue: 0.969))
-        .ignoresSafeArea(edges: .bottom)
+        .background(
+            Color(red: 0.949, green: 0.949, blue: 0.969)
+                .ignoresSafeArea()
+        )
         .swipeToDismiss { dismiss() }
         .task { await loadInitial() }
         .fullScreenCover(item: $nestedTarget) { target in
