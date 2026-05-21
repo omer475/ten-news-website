@@ -49,7 +49,6 @@ struct TopicFeedView: View {
         // re-show on up-scroll).
         ZStack(alignment: .top) {
             content
-                .padding(.top, 8) // small breathing room — no fixed header eating space
             header
                 .opacity(headerVisible ? 1 : 0)
                 .offset(y: headerVisible ? 0 : -50)
@@ -108,10 +107,12 @@ struct TopicFeedView: View {
         } else {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 12) {
-                    // Top spacer so the first article doesn't sit
-                    // under the floating header at rest. ~52pt
-                    // covers status bar + chevron + name height.
-                    Color.clear.frame(height: 52)
+                    // No top spacer — the first article starts at the
+                    // very top edge. The floating chevron + topic name
+                    // overlay the article's own header row; we accept
+                    // a tiny visual overlap on first render in exchange
+                    // for no empty "white strip" between status bar and
+                    // photo, which is what the user kept flagging.
 
                     ForEach(Array(articles.enumerated()), id: \.offset) { idx, article in
                         ArticleCardContinuousView(
