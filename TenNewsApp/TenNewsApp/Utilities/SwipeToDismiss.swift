@@ -28,6 +28,11 @@ struct InteractiveSwipeDismissModifier: ViewModifier {
 
     @State private var offset: CGFloat = 0
     @State private var isDragging = false
+    /// Latches once `action()` fires so a second gesture during the
+    /// parent's dismiss-transition can't fire action() a second time.
+    /// Without this the parent saw two `.move(.trailing)` runs in a
+    /// row and the screen looked like it dismissed twice.
+    @State private var didDismiss = false
 
     private let edgeZoneWidth: CGFloat = 60
     private let activationDistance: CGFloat = 120
@@ -40,6 +45,7 @@ struct InteractiveSwipeDismissModifier: ViewModifier {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 8, coordinateSpace: .local)
                     .onChanged { value in
+                        guard !didDismiss else { return }
                         // Only engage when the gesture started near the
                         // leading edge — anywhere else, leave child
                         // scrolls alone.
@@ -61,7 +67,7 @@ struct InteractiveSwipeDismissModifier: ViewModifier {
                         offset = dx
                     }
                     .onEnded { value in
-                        guard isDragging else { return }
+                        guard isDragging, !didDismiss else { return }
                         isDragging = false
 
                         let actual = value.translation.width
@@ -69,18 +75,18 @@ struct InteractiveSwipeDismissModifier: ViewModifier {
                         let velocity = predicted - actual
 
                         if actual >= activationDistance || velocity >= velocityCutoff {
-                            // Slide out off the trailing edge, then fire
-                            // action so the dismiss animation feels
-                            // continuous with the gesture.
-                            let screenWidth = UIScreen.main.bounds.width
-                            withAnimation(.easeOut(duration: 0.18)) {
-                                offset = screenWidth
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-                                action()
-                                // Reset for next presentation.
-                                offset = 0
-                            }
+                            // Latch BEFORE firing so a follow-up drag
+                            // during the parent's transition doesn't
+                            // re-trigger action().
+                            didDismiss = true
+                            // Let the PARENT animate the slide-out via
+                            // `.transition(.move(.trailing))` on its
+                            // overlay — fire action() right away. Our
+                            // own offset animation was racing the
+                            // parent's transition and the user saw the
+                            // view dismiss twice.
+                            action()
+                            offset = 0
                         } else {
                             // Spring back to home position.
                             withAnimation(.spring(response: 0.28, dampingFraction: 0.85)) {

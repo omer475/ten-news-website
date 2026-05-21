@@ -76,7 +76,11 @@ struct TopicFeedView: View {
                 .animation(.easeInOut(duration: 0.2), value: headerVisible)
         }
         .background(
-            Color(red: 0.949, green: 0.949, blue: 0.969)
+            // Adaptive system color — light cream in light mode,
+            // near-black in dark mode. Previously hardcoded to
+            // (0.949, 0.949, 0.969) which stayed cream in dark mode
+            // and broke against the rest of the app.
+            Color(.systemGroupedBackground)
                 .ignoresSafeArea()
         )
         .swipeToDismiss { performDismiss() }
@@ -179,13 +183,13 @@ struct TopicFeedView: View {
             Spacer()
             Image(systemName: "tray")
                 .font(.system(size: 32, weight: .light))
-                .foregroundStyle(Color(white: 0.55))
+                .foregroundStyle(.tertiary)
             Text("No articles yet")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color(white: 0.30))
+                .foregroundStyle(.primary)
             Text("Nothing tagged with \"\(entity)\" right now.")
                 .font(.system(size: 14))
-                .foregroundStyle(Color(white: 0.50))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Spacer()
