@@ -50,6 +50,17 @@ struct TopicFeedView: View {
         if let onDismiss { onDismiss() } else { dismiss() }
     }
 
+    /// The parent (MainFeedView) calls `.ignoresSafeArea()` which
+    /// propagates into this overlay, so SwiftUI's automatic safe-area
+    /// insets give us 0 at the top. Read the real status-bar height
+    /// off the active UIWindow so the chevron + topic title sit BELOW
+    /// the dynamic island instead of behind it.
+    private var statusBarHeight: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow?.safeAreaInsets.top }
+            .first ?? 50
+    }
+
     var body: some View {
         // ZStack so the chevron + topic name float OVER the scroll
         // content with no white header strip behind them. Header
@@ -57,7 +68,9 @@ struct TopicFeedView: View {
         // re-show on up-scroll).
         ZStack(alignment: .top) {
             content
+                .padding(.top, statusBarHeight)
             header
+                .padding(.top, statusBarHeight)
                 .opacity(headerVisible ? 1 : 0)
                 .offset(y: headerVisible ? 0 : -50)
                 .animation(.easeInOut(duration: 0.2), value: headerVisible)
