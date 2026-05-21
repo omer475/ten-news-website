@@ -27,6 +27,10 @@ struct TopicFeedView: View {
     /// lanes (lane C cosine filter + lane D kNN). Nil for legacy entry
     /// points; endpoint falls back to lexical-only retrieval.
     let sourceId: String?
+    /// When set, overrides the system `dismiss` action — used when the
+    /// view is shown as an in-tree ZStack overlay (so the bottom tab
+    /// bar can stay visible behind it) instead of a fullScreenCover.
+    var onDismiss: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var articles: [Article] = []
@@ -41,6 +45,10 @@ struct TopicFeedView: View {
 
     private let pageSize = 20
     private let service = FeedService()
+
+    private func performDismiss() {
+        if let onDismiss { onDismiss() } else { dismiss() }
+    }
 
     var body: some View {
         // ZStack so the chevron + topic name float OVER the scroll
@@ -58,7 +66,7 @@ struct TopicFeedView: View {
             Color(red: 0.949, green: 0.949, blue: 0.969)
                 .ignoresSafeArea()
         )
-        .swipeToDismiss { dismiss() }
+        .swipeToDismiss { performDismiss() }
         .task { await loadInitial() }
         .fullScreenCover(item: $nestedTarget) { target in
             TopicFeedView(entity: target.entity, sourceId: target.sourceId)
@@ -70,7 +78,7 @@ struct TopicFeedView: View {
     private var header: some View {
         HStack(spacing: 12) {
             Button {
-                dismiss()
+                performDismiss()
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 17, weight: .bold))
@@ -107,12 +115,11 @@ struct TopicFeedView: View {
         } else {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 12) {
-                    // No top spacer — the first article starts at the
-                    // very top edge. The floating chevron + topic name
-                    // overlay the article's own header row; we accept
-                    // a tiny visual overlap on first render in exchange
-                    // for no empty "white strip" between status bar and
-                    // photo, which is what the user kept flagging.
+                    // 44pt gap — clears the floating chevron + topic
+                    // header so the first article's avatar row isn't
+                    // colliding with it, but tight enough that the
+                    // cream strip above doesn't read as empty.
+                    Color.clear.frame(height: 44)
 
                     ForEach(Array(articles.enumerated()), id: \.offset) { idx, article in
                         ArticleCardContinuousView(

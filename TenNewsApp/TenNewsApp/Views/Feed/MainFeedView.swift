@@ -82,9 +82,27 @@ struct MainFeedView: View {
                 .animation(.easeInOut(duration: 0.22), value: tabsVisible)
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
-        .fullScreenCover(item: $topicTarget) { target in
-            TopicFeedView(entity: target.entity, sourceId: target.sourceId)
+        // Topic feed shown as an in-tree overlay (NOT fullScreenCover)
+        // so the floating tab bar at the bottom of the screen stays
+        // visible behind it. fullScreenCover would have covered the
+        // tab bar; the user explicitly wants the tab bar always
+        // visible when drilling into a topic.
+        .overlay {
+            if let target = topicTarget {
+                TopicFeedView(
+                    entity: target.entity,
+                    sourceId: target.sourceId,
+                    onDismiss: {
+                        withAnimation(.easeInOut(duration: 0.28)) {
+                            topicTarget = nil
+                        }
+                    }
+                )
+                .transition(.move(edge: .trailing))
+                .zIndex(2)
+            }
         }
+        .animation(.easeInOut(duration: 0.28), value: topicTarget?.entity)
         .sheet(isPresented: $showFlashBrief) {
             FlashBriefSheet(
                 articles: sortedArticles,
