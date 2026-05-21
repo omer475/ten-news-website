@@ -34,14 +34,26 @@ struct TopicFeedView: View {
     @State private var hasMore = true
     @State private var errorMessage: String?
     @State private var nestedTarget: TopicTarget? = nil
+    /// Tracks scroll offset so the floating header can hide on
+    /// downward scroll and re-show on upward scroll (slide-up gesture).
+    @State private var headerVisible = true
+    @State private var lastScrollOffset: CGFloat = 0
 
     private let pageSize = 20
     private let service = FeedService()
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        // ZStack so the chevron + topic name float OVER the scroll
+        // content with no white header strip behind them. Header
+        // visibility tracks scroll direction (hide on down-scroll,
+        // re-show on up-scroll).
+        ZStack(alignment: .top) {
             content
+                .padding(.top, 8) // small breathing room — no fixed header eating space
+            header
+                .opacity(headerVisible ? 1 : 0)
+                .offset(y: headerVisible ? 0 : -50)
+                .animation(.easeInOut(duration: 0.2), value: headerVisible)
         }
         .background(Color(red: 0.949, green: 0.949, blue: 0.969))
         .ignoresSafeArea(edges: .bottom)
@@ -52,7 +64,7 @@ struct TopicFeedView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Header (floats over content, no background fill)
 
     private var header: some View {
         HStack(spacing: 12) {
@@ -60,34 +72,24 @@ struct TopicFeedView: View {
                 dismiss()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color(white: 0.20))
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Color.primary)
                     .frame(width: 36, height: 36)
                     .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(entity)
-                    .font(.system(size: 19, weight: .bold))
-                    .tracking(-0.3)
-                    .foregroundStyle(Color(red: 0.06, green: 0.06, blue: 0.06))
-                    .lineLimit(1)
-                Text("Topic")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color(white: 0.50))
-            }
+            Text(entity)
+                .font(.system(size: 22, weight: .bold))
+                .tracking(-0.3)
+                .foregroundStyle(Color.primary)
+                .lineLimit(1)
+
             Spacer()
         }
         .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
-        .background(
-            Color.white.ignoresSafeArea(edges: .top)
-        )
-        .overlay(
-            Divider().opacity(0.3),
-            alignment: .bottom
-        )
+        .padding(.top, 8)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Content
@@ -104,6 +106,11 @@ struct TopicFeedView: View {
         } else {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 12) {
+                    // Top spacer so the first article doesn't sit
+                    // under the floating header at rest. ~52pt
+                    // covers status bar + chevron + name height.
+                    Color.clear.frame(height: 52)
+
                     ForEach(Array(articles.enumerated()), id: \.offset) { idx, article in
                         ArticleCardContinuousView(
                             article: article,
@@ -123,9 +130,24 @@ struct TopicFeedView: View {
                     }
                     Spacer().frame(height: 80)
                 }
-                .padding(.top, 12)
             }
             .refreshable { await refresh() }
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y
+            } action: { oldOffset, newOffset in
+                // Hide header on downward scroll past ~30pt; show
+                // immediately on any upward motion. Matches IG /
+                // Threads / TikTok scroll-driven chrome behavior.
+                let delta = newOffset - oldOffset
+                if newOffset < 10 {
+                    if !headerVisible { headerVisible = true }
+                } else if delta > 4 {
+                    if headerVisible { headerVisible = false }
+                } else if delta < -4 {
+                    if !headerVisible { headerVisible = true }
+                }
+                lastScrollOffset = newOffset
+            }
         }
     }
 
