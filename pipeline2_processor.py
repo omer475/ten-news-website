@@ -6,7 +6,9 @@ Turns `pending` curated_briefs into published multi-page articles.
 Per brief:
   1. research_brief()      — Gemini 2.5 Flash + Google Search grounding ->
                              intro_text + one entity/item per content page.
-  2. source_image_for_page — Wikimedia (free) -> Unsplash -> og:image, each
+  2. assign_images         — Wikimedia (free) -> one pooled Unsplash query/brief
+                             -> og:image, each candidate through the same Gemini
+                             Vision gate; best secured image reused for any miss; each
                              candidate passed through the SAME Gemini Vision
                              quality gate Pipeline 1 uses.
   3. write_post()          — Gemini 2.5 Flash (JSON) -> pages[{title,bullets,body}].
@@ -212,21 +214,25 @@ def _wikimedia_image(query: str) -> Optional[str]:
     return None
 
 
-def _unsplash_image(query: str) -> Optional[str]:
+def _unsplash_pool(query: str, count: int = 8) -> List[str]:
+    """ONE Unsplash search -> a pool of candidate image URLs. Replaces per-page
+    Unsplash calls (demo tier = 50 req/hour) with one pooled query per brief."""
     key = os.getenv('UNSPLASH_ACCESS_KEY')
     if not key:
-        return None
+        return []
     try:
         r = requests.get('https://api.unsplash.com/search/photos',
-                         params={'query': query, 'per_page': 1, 'orientation': 'landscape'},
+                         params={'query': query, 'per_page': count, 'orientation': 'landscape'},
                          headers={'Authorization': f'Client-ID {key}'}, timeout=10)
         if r.status_code == 200:
-            results = r.json().get('results', [])
-            if results:
-                return results[0].get('urls', {}).get('regular')
+            return [x.get('urls', {}).get('regular')
+                    for x in r.json().get('results', [])
+                    if x.get('urls', {}).get('regular')]
+        if r.status_code == 403:
+            print("      ⚠️ Unsplash 403 (rate limit / demo cap) — falling back to Wikimedia/og")
     except Exception:
         pass
-    return None
+    return []
 
 
 def _og_image_from_url(url: str) -> Optional[str]:
@@ -264,33 +270,73 @@ def _qc_check(url: str) -> tuple:
         return True, 70
 
 
-def source_image_for_page(page_title: str, brief: Dict, research_sources: List[str]) -> tuple:
-    """Try image sources in priority order; return (url, qc_confidence) for the
-    first candidate that passes the QC gate, or (None, -1) if none do."""
+def assign_images(brief: Dict, pages: List[Dict], research_sources: List[str]) -> bool:
+    """Give every page an image while minimizing Unsplash usage:
+      - Wikimedia (free, unlimited) per page title.
+      - ONE pooled Unsplash query per brief (lazy — only fetched if a page needs
+        it — combined query = the brief topic), drawn distinct per page + cached.
+      - og:image from research sources as a last resort.
+      - Any page still missing reuses the highest-confidence image already secured
+        in the brief (one good image saves the whole brief).
+    Returns True iff every page ends with an image."""
     prefer_wikimedia = (brief['brief_type'] in WIKIMEDIA_FIRST_TYPES
                         or brief['category'] in WIKIMEDIA_FIRST_CATEGORIES)
-    getters = ([_wikimedia_image, _unsplash_image] if prefer_wikimedia
-               else [_unsplash_image, _wikimedia_image])
 
-    queries = [page_title]
-    if brief.get('topic') and brief['topic'] != page_title:
-        queries.append(brief['topic'])
-    for q in queries:
-        for get in getters:
-            url = get(q)
-            if url:
-                ok, conf = _qc_check(url)
-                if ok:
-                    return url, conf
+    pool = {'items': None, 'idx': 0}  # lazy + cached: at most ONE Unsplash call/brief
 
-    # last resort: og:image from a research source
-    for src in (research_sources or [])[:3]:
-        url = _og_image_from_url(src)
-        if url:
+    def _from_pool(_title):
+        if pool['items'] is None:
+            pool['items'] = _unsplash_pool(brief['topic'], count=max(len(pages) + 3, 6))
+        while pool['idx'] < len(pool['items']):
+            url = pool['items'][pool['idx']]
+            pool['idx'] += 1
             ok, conf = _qc_check(url)
             if ok:
                 return url, conf
-    return None, -1
+        return None, -1
+
+    def _from_wiki(title):
+        wu = _wikimedia_image(title)
+        if wu:
+            ok, conf = _qc_check(wu)
+            if ok:
+                return wu, conf
+        return None, -1
+
+    confidences = [-1] * len(pages)
+    for i, page in enumerate(pages):
+        order = [_from_wiki, _from_pool] if prefer_wikimedia else [_from_pool, _from_wiki]
+        url, conf = None, -1
+        for fn in order:
+            u, c = fn(page['title'])
+            if u:
+                url, conf = u, c
+                break
+        if not url:  # og:image last resort
+            for src in (research_sources or [])[:3]:
+                ou = _og_image_from_url(src)
+                if ou:
+                    ok, c = _qc_check(ou)
+                    if ok:
+                        url, conf = ou, c
+                        break
+        page['image_url'] = url
+        confidences[i] = conf if url else -1
+
+    # Global reuse: fill any missing page with the best secured image in the brief.
+    best_url, best_conf = None, -1
+    for i, page in enumerate(pages):
+        if page.get('image_url') and confidences[i] > best_conf:
+            best_url, best_conf = page['image_url'], confidences[i]
+    if best_url is None:
+        return False  # no page got any image — can't fabricate one
+    reused = sum(1 for p in pages if not p.get('image_url'))
+    for page in pages:
+        if not page.get('image_url'):
+            page['image_url'] = best_url
+    if reused:
+        print(f"      ↺ reused best image (conf {best_conf}) for {reused} page(s)")
+    return True
 
 
 # ── Stage 5: writer ───────────────────────────────────────────────────────────
@@ -599,34 +645,12 @@ def process_brief(supabase, brief: Dict) -> bool:
         # Fact-check is ADVISORY: logged, never blocks (content is web-grounded).
         fc = run_fact_check(brief, post, research)
 
-        # Source images per page, tracking Vision-QC confidence so we can promote
-        # the best content-page image to the intro if the intro misses.
-        srcs = research.get('research_sources', [])
-        confidences = []
-        for page in post['pages']:
-            url, conf = source_image_for_page(page['title'], brief, srcs)
-            page['image_url'] = url
-            confidences.append(conf if url else -1)
-
-        # The intro (page 1) often has a thematic title stock search can't match.
-        # If it missed, reuse the highest-confidence CONTENT-page image (no extra
-        # API call) rather than killing the whole brief — same image appears twice
-        # in a 6-8 page carousel, which is acceptable.
-        # TODO: smarter intro covers later (Imagen-generated cover / collage).
-        if post['pages'] and not post['pages'][0].get('image_url') and len(post['pages']) > 1:
-            best_i, best_conf = None, -1
-            for i in range(1, len(post['pages'])):
-                if post['pages'][i].get('image_url') and confidences[i] > best_conf:
-                    best_i, best_conf = i, confidences[i]
-            if best_i is not None:
-                post['pages'][0]['image_url'] = post['pages'][best_i]['image_url']
-                print(f"      ↺ intro image reused from page {best_i+1} (conf {best_conf})")
-
-        # Every page must still have an image.
-        for i, page in enumerate(post['pages']):
-            if not page.get('image_url'):
-                mark_brief(supabase, bid, 'failed', failure_reason=f'no_image_page_{i+1}')
-                return False
+        # Assign images: Wikimedia + one pooled Unsplash query/brief + og, reusing
+        # the best secured image for any page that misses. One good image per brief
+        # is enough to publish (so a single match saves the whole carousel).
+        if not assign_images(brief, post['pages'], research.get('research_sources', [])):
+            mark_brief(supabase, bid, 'failed', failure_reason='no_image_any_page')
+            return False
 
         article_id = publish_curated(supabase, brief, post)
         if not article_id:
