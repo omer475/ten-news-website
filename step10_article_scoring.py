@@ -843,6 +843,7 @@ Does it make you hungry, teach a usable trick, or surprise you?
 | Type | Score |
 |------|-------|
 | Specific, surprising, actionable ("saunas work your heart like cardio" + the mechanism) | 700-840 |
+| First-person health journey / cautionary tale with a takeaway ("my daughter's headaches were a brain tumor — the signs I missed") | 700-820 |
 | Useful guide with concrete steps / named places | 620-770 |
 | Generic wellness platitude ("drink more water") | 250-450 |
 
@@ -888,6 +889,8 @@ Does it make you hungry, teach a usable trick, or surprise you?
 |------|-------|
 | Individual crime / single accident | 100-300 |
 | Systemic event with a genuinely surprising/important specific angle (judged as a read) | up to 700 |
+
+**NOTE:** The individual-incident penalty applies to crime/accidents reported as raw news. It does NOT apply to a first-person, well-told **personal story or cautionary tale** ("I'm a nurse and I missed my own daughter's brain-tumor signs") — those carry an emotional/useful hook and are highly shareable. Score them on the read (600-820), not as a tragedy.
 
 ---
 
