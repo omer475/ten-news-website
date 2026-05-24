@@ -125,11 +125,39 @@ def main():
                 except Exception as e:
                     print(f"⚠️ article_dwell_stats refresh failed (non-blocking): {e}")
 
-            # Run a single cycle of the workflow
+            # ── Pipeline 2 (curated content) runs CONCURRENTLY with Pipeline 1
+            # in a daemon thread, so total cycle time stays ~max(P1, P2) rather
+            # than the sum. Fully non-fatal: any P2 error is swallowed so it can
+            # never break Pipeline 1 or the lock release. Toggle PIPELINE2_ENABLED=0
+            # to disable (instant rollback without a redeploy).
+            p2_thread = None
+            if os.getenv('PIPELINE2_ENABLED', '1') == '1':
+                import threading
+
+                def _run_pipeline2():
+                    try:
+                        from pipeline2_ai_editor import run_ai_editor_cycle
+                        from pipeline2_processor import run_pipeline2_processor
+                        run_ai_editor_cycle(supabase)
+                        run_pipeline2_processor(supabase)
+                    except Exception as e:
+                        print(f"⚠️ Pipeline 2 failed (non-fatal): {e}")
+
+                p2_thread = threading.Thread(target=_run_pipeline2, name='pipeline2', daemon=True)
+                p2_thread.start()
+
+            # Run a single cycle of the workflow (Pipeline 1)
             result = run_single_cycle()
 
             if result:
                 stats.update(result)
+
+            # Let Pipeline 2 finish (bounded) before we exit / release the lock —
+            # a daemon thread is killed at process exit, so we must join it here.
+            if p2_thread is not None:
+                p2_thread.join(timeout=600)
+                if p2_thread.is_alive():
+                    print("⚠️ Pipeline 2 still running after 600s — exiting anyway")
 
             elapsed = time.time() - start_time
             print(f"\n✅ Workflow completed in {elapsed:.1f} seconds")
