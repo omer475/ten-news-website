@@ -1921,6 +1921,20 @@ def run_complete_pipeline():
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
+            # PIPELINE 1 PUBLISH GATE (2026-05-24): drop low-importance articles
+            # HERE — after scoring but BEFORE the expensive embedding / NER /
+            # Trinity-VQ / page-2 / publisher-match work below — so dropped
+            # articles cost no extra Gemini/compute. Aggressive default (>=800)
+            # keeps ~the top half of scored articles, leaving daily budget for
+            # Pipeline 2. Override with PIPELINE1_MIN_SCORE (e.g. 750) to relax
+            # if Pipeline 2 stalls and total volume needs propping up.
+            MIN_PUBLISH_SCORE = int(os.getenv('PIPELINE1_MIN_SCORE', '800'))
+            if article_score < MIN_PUBLISH_SCORE:
+                print(f"   ⏭️ [Cluster {cluster_id}] DROPPED: ai_final_score {article_score} < {MIN_PUBLISH_SCORE} (publish gate)")
+                update_cluster_status(cluster_id, 'skipped', 'low_score',
+                    f'ai_final_score {article_score} below publish threshold {MIN_PUBLISH_SCORE}')
+                return False
+
             # NOTE: enrich_with_subtopics REMOVED — it was appending onboarding
             # subtopic names ("Soccer/Football", "AI & Machine Learning", etc.)
             # to interest_tags, causing wrong articles to appear under Explore entities.
@@ -2303,7 +2317,12 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import json
     import time
 
-    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={gemini_key}"
+    # Writing model: upgraded from flash-lite. Flash-lite is too weak to follow the
+    # social-copy prompt (drops voice/banned-word/extend-don't-recap rules), which is the
+    # root cause of flat titles + vapor bullets. Scoring stays on flash-lite (unchanged).
+    # Override via env: WRITING_MODEL=gemini-2.5-flash-lite reverts; =gemini-2.5-pro = max quality.
+    writing_model = os.getenv('WRITING_MODEL', 'gemini-2.5-flash')
+    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/{writing_model}:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -2693,7 +2712,10 @@ Return ONLY valid JSON, no markdown, no explanations."""
             request_data = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
-                    "temperature": 0,
+                    # temperature 0 forced the blandest, most generic phrasing — a major cause
+                    # of flat copy. Raised for social voice/variety; fact-verification (Step 8)
+                    # still catches hallucinations. Override via WRITING_TEMPERATURE env.
+                    "temperature": float(os.getenv('WRITING_TEMPERATURE', '0.85')),
                     "maxOutputTokens": 2048,
                     "responseMimeType": "application/json"
                 }
