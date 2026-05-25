@@ -1185,6 +1185,25 @@ struct ArticleCardContinuousView: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
+        // Multi-page affordance: an Instagram-style "N pages" / "1/N" pill on the
+        // image so users SEE the article is swipeable (the bottom dots sit below a
+        // 380pt carousel and are easy to miss). Updates as the carousel pages.
+        .overlay(alignment: .topTrailing) {
+            if carouselPages.count > 1 {
+                HStack(spacing: 4) {
+                    Image(systemName: "rectangle.stack.fill")
+                        .font(.system(size: 10, weight: .bold))
+                    Text("\(currentPage + 1)/\(carouselPages.count)")
+                        .font(.system(size: 13, weight: .bold))
+                        .monospacedDigit()
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.black.opacity(0.55), in: Capsule())
+                .padding(12)
+            }
+        }
         .padding(.bottom, 12)
     }
 
