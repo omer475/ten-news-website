@@ -693,6 +693,7 @@ struct ArticleCardContinuousView: View {
     @State private var mapExpanded = false
     @State private var timelineExpanded = false
     @State private var currentPage = 0
+    @State private var pageHeights: [Int: CGFloat] = [:]  // per-page measured heights (dynamic carousel)
     @State private var selectedComponent: String = ""
     @State private var heartBurstActive = false
     @State private var followBurstActive = false
@@ -1344,16 +1345,49 @@ struct ArticleCardContinuousView: View {
     /// own bullets. Components stay anchored to page 0 because they
     /// describe the article overall, not a step.
     private var multiPageCaption: some View {
-        TabView(selection: $currentPage) {
-            ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
-                pageContent(idx: idx, page: page)
-                    .tag(idx)
-                    .padding(.top, hasImage ? 4 : 18)
-                    .padding(.bottom, 12)
+        // Card content width (body has 16pt horizontal padding each side).
+        let measureWidth = UIScreen.main.bounds.width - 32
+        return ZStack(alignment: .top) {
+            // OFF-LAYOUT MEASUREMENT: render each page at its natural (un-clipped)
+            // height at the real content width, invisibly, in a 0×0 frame so it
+            // doesn't affect layout. This gives correct per-page heights WITHOUT
+            // the circular clipping you get when measuring inside the sized TabView.
+            ZStack(alignment: .top) {
+                ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                    pageContent(idx: idx, page: page)
+                        .padding(.top, hasImage ? 4 : 18)
+                        .padding(.bottom, 12)
+                        .frame(width: measureWidth, alignment: .top)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: PageHeightKey.self, value: [idx: geo.size.height])
+                        })
+                }
+            }
+            .frame(width: 0, height: 0)
+            .hidden()
+            .allowsHitTesting(false)
+
+            // Visible carousel, sized to the CURRENT page's measured height —
+            // no fixed box, no gap; height animates as you swipe.
+            TabView(selection: $currentPage) {
+                ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                    pageContent(idx: idx, page: page)
+                        .padding(.top, hasImage ? 4 : 18)
+                        .padding(.bottom, 12)
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        .tag(idx)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: max(pageHeights[currentPage] ?? 200, 60))
+            .animation(.easeInOut(duration: 0.28), value: currentPage)
+        }
+        .onPreferenceChange(PageHeightKey.self) { heights in
+            for (k, v) in heights where pageHeights[k] != v {
+                pageHeights[k] = v
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .frame(height: 380)  // fixed safe height for multi-page mode
     }
 
     @ViewBuilder
@@ -1375,13 +1409,14 @@ struct ArticleCardContinuousView: View {
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if let heading = page.title, !heading.isEmpty {
-                // Sub-page heading — smaller than the main title so the
-                // hierarchy reads "Recipe → Step 3" not two competing
-                // titles.
+                // Page heading uses the SAME style as the page-1 title so every
+                // page reads consistently (user request 2026-05-25).
                 Text(heading)
-                    .font(.system(size: 19 * textScale, weight: .semibold))
-                    .tracking(-0.3)
+                    .font(.system(size: 24 * textScale, weight: .bold))
+                    .tracking(-0.5)
+                    .lineSpacing(2)
                     .foregroundStyle(Color.primary)
+                    .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -1404,8 +1439,6 @@ struct ArticleCardContinuousView: View {
             if idx == 0 {
                 componentSections
             }
-
-            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -2136,6 +2169,15 @@ private extension Date {
 /// Press-state for topic chips: subtle scale + dim on tap. The
 /// pill shape carries the tap affordance — no need for color
 /// shouting; the press state is enough.
+/// Reports each carousel page's natural content height so the multi-page
+/// TabView can size to the current page instead of a fixed box.
+private struct PageHeightKey: PreferenceKey {
+    static let defaultValue: [Int: CGFloat] = [:]
+    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
 private struct TopicChipButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
