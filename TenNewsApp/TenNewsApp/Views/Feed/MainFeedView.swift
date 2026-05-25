@@ -734,7 +734,10 @@ struct ArticleCardContinuousView: View {
             // else is just typography on the surface. Article-to-article
             // separation comes from the LazyVStack spacing only.
             VStack(alignment: .leading, spacing: 0) {
-                if hasImage {
+                // Single-page hero only. Multi-page slides and photo galleries
+                // render their images INSIDE the carousel so they swipe with the
+                // content.
+                if carouselPages.isEmpty, hasImage {
                     photoBlock
                 }
                 captionBlock
@@ -746,9 +749,11 @@ struct ArticleCardContinuousView: View {
                     }
             }
 
-            // Page dots when the article has > 1 page. Sits between the
-            // white box and the action row, centered.
-            pageDots
+            // Page dots under the multi-page carousel. (Photo galleries render
+            // their own dots UNDER the photo, inside photoGalleryCarousel.)
+            if !isPhotoGallery {
+                pageDots
+            }
 
             // Action row directly under the box, left-aligned. All
             // three buttons (like / share / save) share the bookmark's
@@ -1153,28 +1158,41 @@ struct ArticleCardContinuousView: View {
         return lower != "null" && lower != "none" && lower != "undefined" && s.count >= 5
     }
 
-    // Photo only — no overlay buttons. Like / share / save have moved
-    // to the action row beneath the article. Corners are uniform now
-    // that there's no surrounding card to match against. Double-tap
-    // anywhere on the photo likes the article (Instagram pattern).
+    /// Reusable rounded card image (natural aspect — DO NOT add aspectRatio /
+    /// contentMode .fill; asked twice). Double-tap anywhere likes the article.
+    private func cardImage(_ url: String?) -> some View {
+        AsyncCachedImage(url: URL(string: url ?? ""), contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .onTapGesture(count: 2) { handleDoubleTapLike() }
+    }
+
+    /// Instagram-style "1/N" page-count pill, overlaid on a multi-page slide's image.
+    @ViewBuilder
+    private var pagePill: some View {
+        if carouselPages.count > 1 {
+            HStack(spacing: 4) {
+                Image(systemName: "rectangle.stack.fill")
+                    .font(.system(size: 10, weight: .bold))
+                Text("\(currentPage + 1)/\(carouselPages.count)")
+                    .font(.system(size: 13, weight: .bold))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(.black.opacity(0.55), in: Capsule())
+            .padding(12)
+        }
+    }
+
+    // Single-page hero photo. Multi-page & gallery render their images INSIDE
+    // the carousel (so they swipe with the content), so this is single-page only.
     private var photoBlock: some View {
         ZStack {
-            // Natural aspect — every photo at its original proportions.
-            // Cards end up different heights, which the user explicitly
-            // wants. DO NOT add aspectRatio or contentMode: .fill here;
-            // that forces every image into the same shape. Asked twice
-            // already.
-            AsyncCachedImage(url: URL(string: currentImageUrl ?? ""), contentMode: .fit)
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .id(currentImageUrl)
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.2), value: currentImageUrl)
-                .onTapGesture(count: 2) { handleDoubleTapLike() }
-
-            // Heart burst — pops over the photo center for ~0.6s after a
-            // double-tap. Pure visual feedback; doesn't block taps.
+            cardImage(article.imageUrl)
+            // Heart burst — pops over the photo center for ~0.6s after a double-tap.
             if heartBurstActive {
                 Image(systemName: "heart.fill")
                     .font(.system(size: 96, weight: .heavy))
@@ -1184,25 +1202,6 @@ struct ArticleCardContinuousView: View {
                     .opacity(heartBurstActive ? 1.0 : 0.0)
                     .allowsHitTesting(false)
                     .transition(.scale.combined(with: .opacity))
-            }
-        }
-        // Multi-page affordance: an Instagram-style "N pages" / "1/N" pill on the
-        // image so users SEE the article is swipeable (the bottom dots sit below a
-        // 380pt carousel and are easy to miss). Updates as the carousel pages.
-        .overlay(alignment: .topTrailing) {
-            if carouselPages.count > 1 {
-                HStack(spacing: 4) {
-                    Image(systemName: "rectangle.stack.fill")
-                        .font(.system(size: 10, weight: .bold))
-                    Text("\(currentPage + 1)/\(carouselPages.count)")
-                        .font(.system(size: 13, weight: .bold))
-                        .monospacedDigit()
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(.black.opacity(0.55), in: Capsule())
-                .padding(12)
             }
         }
         .padding(.bottom, 12)
@@ -1286,22 +1285,25 @@ struct ArticleCardContinuousView: View {
         return p.count > 1 ? p : []
     }
 
-    /// Image shown above the carousel. In multi-page mode it tracks the current
-    /// page's own image (curated content has a distinct image per page); falls
-    /// back to the article's hero image when a page has none.
-    private var currentImageUrl: String? {
-        if !carouselPages.isEmpty, currentPage >= 0, currentPage < carouselPages.count,
-           let u = carouselPages[currentPage].imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !u.isEmpty {
-            return u
+    /// A "photo gallery" = multi-image content where every page shares the SAME
+    /// text and only the image differs. Shown as an image carousel with dots
+    /// UNDER the photo (so it reads as "more photos", not "more pages").
+    private var isPhotoGallery: Bool {
+        guard carouselPages.count > 1 else { return false }
+        func textKey(_ p: ArticlePage) -> String {
+            let parts: [String] = [p.title ?? "", p.bullets?.joined(separator: " ") ?? "", p.body ?? ""]
+            return parts.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return article.imageUrl
+        let distinct = Set(carouselPages.map(textKey).filter { !$0.isEmpty })
+        return distinct.count <= 1   // one shared text (or none) → gallery
     }
 
     @ViewBuilder
     private var captionBlock: some View {
         if carouselPages.isEmpty {
             singlePageCaption
+        } else if isPhotoGallery {
+            photoGalleryCarousel
         } else {
             multiPageCaption
         }
@@ -1345,18 +1347,15 @@ struct ArticleCardContinuousView: View {
     /// own bullets. Components stay anchored to page 0 because they
     /// describe the article overall, not a step.
     private var multiPageCaption: some View {
-        // Card content width (body has 16pt horizontal padding each side).
         let measureWidth = UIScreen.main.bounds.width - 32
         return ZStack(alignment: .top) {
-            // OFF-LAYOUT MEASUREMENT: render each page at its natural (un-clipped)
-            // height at the real content width, invisibly, in a 0×0 frame so it
-            // doesn't affect layout. This gives correct per-page heights WITHOUT
-            // the circular clipping you get when measuring inside the sized TabView.
+            // OFF-LAYOUT MEASUREMENT of each FULL slide (image + text) at natural
+            // height, invisibly in a 0×0 frame (doesn't affect layout) — gives
+            // correct per-slide heights without the circular clipping you'd get
+            // measuring inside the height-constrained TabView.
             ZStack(alignment: .top) {
                 ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
-                    pageContent(idx: idx, page: page)
-                        .padding(.top, hasImage ? 4 : 18)
-                        .padding(.bottom, 12)
+                    slideContent(idx: idx, page: page)
                         .frame(width: measureWidth, alignment: .top)
                         .fixedSize(horizontal: false, vertical: true)
                         .background(GeometryReader { geo in
@@ -1368,25 +1367,83 @@ struct ArticleCardContinuousView: View {
             .hidden()
             .allowsHitTesting(false)
 
-            // Visible carousel, sized to the CURRENT page's measured height —
-            // no fixed box, no gap; height animates as you swipe.
+            // Visible carousel: each slide is image + text TOGETHER, so the image
+            // swipes with the text (no decoupled pop). Height tracks the current
+            // slide — no fixed box, no gap.
             TabView(selection: $currentPage) {
                 ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
-                    pageContent(idx: idx, page: page)
-                        .padding(.top, hasImage ? 4 : 18)
-                        .padding(.bottom, 12)
+                    slideContent(idx: idx, page: page)
                         .frame(maxWidth: .infinity, alignment: .top)
                         .tag(idx)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: max(pageHeights[currentPage] ?? 200, 60))
+            .frame(height: max(pageHeights[currentPage] ?? 320, 80))
             .animation(.easeInOut(duration: 0.28), value: currentPage)
         }
         .onPreferenceChange(PageHeightKey.self) { heights in
             for (k, v) in heights where pageHeights[k] != v {
                 pageHeights[k] = v
             }
+        }
+    }
+
+    /// One multi-page slide: the page's own image (with the "1/N" pill) + that
+    /// page's text, together, so the whole slide swipes as a unit.
+    @ViewBuilder
+    private func slideContent(idx: Int, page: ArticlePage) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            let imgUrl = (page.imageUrl ?? (idx == 0 ? article.imageUrl : nil))?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let s = imgUrl, !s.isEmpty {
+                cardImage(s)
+                    .overlay(alignment: .topTrailing) { pagePill }
+                    .padding(.bottom, 12)
+            }
+            pageContent(idx: idx, page: page)
+        }
+        .padding(.top, hasImage ? 4 : 18)
+        .padding(.bottom, 12)
+    }
+
+    /// Photo-gallery carousel: swipe the IMAGES (dots UNDER the photo) with one
+    /// shared text block below. Used when every page carries the same text.
+    private var photoGalleryCarousel: some View {
+        let measureWidth = UIScreen.main.bounds.width - 32
+        return VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .top) {
+                ZStack(alignment: .top) {
+                    ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                        cardImage(page.imageUrl ?? (idx == 0 ? article.imageUrl : nil))
+                            .frame(width: measureWidth, alignment: .top)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .background(GeometryReader { geo in
+                                Color.clear.preference(key: PageHeightKey.self, value: [idx: geo.size.height])
+                            })
+                    }
+                }
+                .frame(width: 0, height: 0).hidden().allowsHitTesting(false)
+
+                TabView(selection: $currentPage) {
+                    ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                        cardImage(page.imageUrl ?? (idx == 0 ? article.imageUrl : nil))
+                            .tag(idx)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(height: max(pageHeights[currentPage] ?? 240, 80))
+                .animation(.easeInOut(duration: 0.28), value: currentPage)
+            }
+            .onPreferenceChange(PageHeightKey.self) { heights in
+                for (k, v) in heights where pageHeights[k] != v { pageHeights[k] = v }
+            }
+            // Dots UNDER the photo so it reads as "more photos", not "more pages".
+            pageDots
+                .padding(.top, 6)
+            // One shared text block.
+            pageContent(idx: 0, page: carouselPages[0])
+                .padding(.top, 8)
+                .padding(.bottom, 12)
         }
     }
 
