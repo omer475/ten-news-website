@@ -782,13 +782,16 @@ A war you already heard about, recapped with no new angle, is boring → low. A 
 
 Yes → 750+. Maybe → 450–749. No → below 450.
 
-Five drivers earn the score — nothing else does:
+Six drivers earn the score — nothing else does:
 
 1. **Surprise / curiosity** — "wait, what?" / "huh, didn't know that."
 2. **Specific payoff** — real numbers, names, outcomes, or a usable takeaway.
-3. **Shareability hook** — would you forward it or bring it up at dinner?
-4. **Unique angle** — says something the other 19 articles on the same thing don't.
-5. **Narrative or sensory pull** — a story with a turn; or for lifestyle, it makes you want to cook it / buy it / go there.
+3. **Insight / makes you smarter** — a sharp explainer or analysis that genuinely answers "why did this happen?", "how does this work?", or "what does this mean?". A great breakdown of AI, markets, science, tech, or a news event is HIGHLY shareable to a curious reader — score it like a top story, NOT like fluff.
+4. **Shareability hook** — would you forward it or bring it up at dinner?
+5. **Unique angle** — says something the other 19 articles on the same thing don't.
+6. **Narrative or sensory pull** — a story with a turn; or for lifestyle, it makes you want to cook it / buy it / go there.
+
+**"Interesting" is NOT the same as "light/fun."** A substantive Tech, Business, Science, or explainer piece that teaches you something real is exactly what this audience reads and forwards. NEVER under-score it just because it is factual, serious, or "news-like." Dry-but-informative still beats fun-but-empty.
 
 ---
 
@@ -800,6 +803,8 @@ Five drivers earn the score — nothing else does:
 - "Scale" / "how many people are affected."
 
 Judge a big-event article exactly like a small one: **is THIS piece a compelling read?** A specific, surprising, well-told story about a major event scores high because it reads well — not because the event is big. A generic recap of the same event scores low.
+
+**Crucial nuance for explainers (do not get this wrong):** "Importance = 0 points" kills the GENERIC RECAP of a big event — NOT a piece that actually teaches you something about it. "Leaders met and agreed to keep talking" → low. "Why Ukraine aid was actually blocked — the three votes that flipped" → HIGH (it delivers real insight). Reward the answer, not the topic. A well-told "Why X happened" / "How Y works" / "What Z means" explainer is among the MOST shareable content on this platform — score it 750-880, never tank it as "news."
 
 ---
 
@@ -834,10 +839,10 @@ Does it make you hungry, teach a usable trick, or surprise you?
 ### FASHION & STYLE
 | Type | Score |
 |------|-------|
-| Trend with a clear visual/cultural hook, named designer/brand + specifics | 700-840 |
-| Specific styling tip / "how to wear X" with real payoff | 640-780 |
+| Genuinely fresh trend/story with a real cultural hook or surprise, named + specific | 680-800 |
 | Notable industry move (named brand, real $/outcome) | 650-800 |
-| Vague "elevate your wardrobe" filler | 300-450 |
+| Routine "[product] is back" / "X sneakers return" / seasonal trend roundup with no real hook | 450-600 |
+| Vague "elevate your wardrobe" filler | 250-420 |
 
 ### LIFESTYLE / HEALTH HOW-TO / TRAVEL
 | Type | Score |
@@ -852,15 +857,17 @@ Does it make you hungry, teach a usable trick, or surprise you?
 |------|-------|
 | Surprising / mystifying finding with the mechanism or a "huh" anchor | 800-900 |
 | "World's first" / record with specifics | 800-880 |
+| Clear explainer of how/why something works (well-told, delivers the answer) | 740-860 |
 | Interesting concrete research, named | 650-790 |
 | Vague "study suggests link between…" | 350-500 |
 
-### BUSINESS & TECH
+### BUSINESS & TECH  (a curious reader's CORE interest — score substance HIGH, never mid-by-default)
 | Type | Score |
 |------|-------|
 | Genuinely surprising move / unexpected acquisition / real capability leap, with $ + names | 800-900 |
-| Solid named development with specifics | 680-820 |
-| Routine earnings / "X considers Y" / press-release | 250-480 |
+| Sharp explainer / analysis answering "why/how/what it means" (AI shift, market move, strategy breakdown) | 760-870 |
+| Solid named development with specifics (product launch, funding, earnings surprise, exec change) | 700-830 |
+| Routine earnings with no story / "X considers Y" / corporate press-release | 300-500 |
 
 ### SPORTS
 | Type | Score |
@@ -915,8 +922,9 @@ Does it make you hungry, teach a usable trick, or surprise you?
 | PR / press-release tone | -80 |
 | Individual crime / single accident (not shareable) | -150 |
 | Vague headline with no specific payoff ("Study suggests…", "ways to improve your life") | -60 |
+| Ranked listicle / roundup with no real argument or surprise ("TV antiheroes, ranked", "X sneakers are back") | -70 |
 
-**Do NOT penalize a recipe, how-to, or roundup that names specific, useful, or surprising content — those ARE shareable. Penalize only when there is no payoff.**
+**Two clarifications:** (1) Do NOT penalize a recipe, how-to, or roundup that names specific, useful, or surprising content — those ARE shareable. (2) Do NOT apply the vague-headline or recap penalty to a real EXPLAINER that delivers an answer ("Why X happened", "How Y works", "What Z means") — those are high-value content; penalize only the empty ones with no actual answer.
 
 ---
 
@@ -928,6 +936,7 @@ Does it make you hungry, teach a usable trick, or surprise you?
 4. **Specifics & surprise beat everything.**
 5. **Same event, decreasing score:** first specific break > analysis > follow-up > wire recap.
 6. **All scored articles are published** — your score only affects ranking.
+7. **Substance is interesting.** A sharp tech/business/science piece or a real explainer is highly shareable — score it like a top story (750-880), NEVER default it to the mid range just because it is factual or serious. Fun-but-empty content (trend roundups, ranked listicles) is NOT automatically high — it must clear a real hook to beat 600.
 
 ---
 
@@ -955,6 +964,10 @@ Ask: "Is this article a better or worse READ than each anchor?"
 | "AI chatbot recovered $400K in Bitcoin lost for 11 years" | **840** | Surprise + number + unique angle |
 | "Mini-Neptune found orbiting too close to its star, defying expectations" | **835** | Surprise, named specific |
 | "Nvidia H200 approved for 10 named Chinese firms" | **800** | Concrete, named, specific outcome |
+| "Why Nvidia's H200 export deal reshapes the AI-chip war" | **825** | Tech explainer — delivers insight, score HIGH |
+| "How a single config typo took down half the internet for 3 hours" | **835** | Tech explainer, surprise + mechanism |
+| "OpenAI's $14B raise, explained: what it buys and who it threatens" | **810** | Business explainer, specifics + insight |
+| "Why Ukraine aid was actually blocked — the 3 votes that flipped" | **800** | News explainer that ANSWERS — high, not a recap |
 | "Russia launches full-scale invasion — first concrete report" | **870** | Gripping + specific (NOT 960 — importance ≠ points) |
 | "Miso-butter sheet-pan chicken is the 20-minute weeknight hack" | **770** | Specific, sensory, useful |
 | "Freeze eggs with stuff you already own — here's how" | **720** | Useful, mildly surprising trick |
@@ -964,6 +977,8 @@ Ask: "Is this article a better or worse READ than each anchor?"
 | "Trump and Xi conclude talks with no agreement" | **300** | Generic recap, no new info |
 | "Leaders warn of consequences, urge restraint" | **280** | Pure speculation/recap |
 | "10 ways to elevate your life" (no specifics) | **320** | Vague filler, -60 |
+| "TV's most ruthless antiheroes, ranked" | **480** | Listicle, no real argument |
+| "Espadrille sandals are back for summer" | **520** | Seasonal trend, no real hook |
 | "Brand opens new center in small town" | **220** | Hyper-local PR |
 | "Man arrested for stabbing family member" | **180** | Individual crime, not shareable |
 | "Local council approves new parking regulation" | **150** | Procedural -100 |
@@ -1118,10 +1133,12 @@ def score_article(
         Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     
-    # V20 (2026-05-24): scoring model bumped flash-lite -> flash. Lite couldn't
-    # follow the "would you text this?" judgement and fell back to keyword-impact
-    # heuristics (war/billions/emergency = high). Flash follows the rubric.
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    # V20.1 (2026-05-25): KEEP gemini-2.5-flash-lite. The earlier flash bump
+    # (V20) collapsed pipeline throughput ~75% (flash quota << flash-lite) and
+    # starved the feed — production incident, reverted. flash-lite is the
+    # throughput-safe model; interestingness comes from the PROMPT, not a bigger
+    # model. thinkingBudget=0 below keeps it deterministic + fast.
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
 
     # V19 (2026-05-14): social-platform framing replaces V18 news-editor.
     # V18 starts with "You are a news editor scoring articles for a global
