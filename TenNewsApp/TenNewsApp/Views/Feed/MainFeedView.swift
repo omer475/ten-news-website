@@ -1163,10 +1163,13 @@ struct ArticleCardContinuousView: View {
             // wants. DO NOT add aspectRatio or contentMode: .fill here;
             // that forces every image into the same shape. Asked twice
             // already.
-            AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
+            AsyncCachedImage(url: URL(string: currentImageUrl ?? ""), contentMode: .fit)
                 .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .id(currentImageUrl)
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.2), value: currentImageUrl)
                 .onTapGesture(count: 2) { handleDoubleTapLike() }
 
             // Heart burst — pops over the photo center for ~0.6s after a
@@ -1263,6 +1266,18 @@ struct ArticleCardContinuousView: View {
         return p.count > 1 ? p : []
     }
 
+    /// Image shown above the carousel. In multi-page mode it tracks the current
+    /// page's own image (curated content has a distinct image per page); falls
+    /// back to the article's hero image when a page has none.
+    private var currentImageUrl: String? {
+        if !carouselPages.isEmpty, currentPage >= 0, currentPage < carouselPages.count,
+           let u = carouselPages[currentPage].imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !u.isEmpty {
+            return u
+        }
+        return article.imageUrl
+    }
+
     @ViewBuilder
     private var captionBlock: some View {
         if carouselPages.isEmpty {
@@ -1354,6 +1369,17 @@ struct ArticleCardContinuousView: View {
             let pageBullets = page.bullets ?? (idx == 0 ? article.displayBullets : [])
             if !pageBullets.isEmpty {
                 bulletList(pageBullets)
+            }
+
+            // Page prose (curated explainers/recipes carry a `body` per page).
+            if let body = page.body?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !body.isEmpty {
+                Text(body)
+                    .font(.system(size: 16 * textScale))
+                    .foregroundStyle(Color.primary.opacity(0.92))
+                    .lineSpacing(5)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if idx == 0 {

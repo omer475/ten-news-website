@@ -65,11 +65,13 @@ struct ArticlePage: Codable, Hashable {
     let title: String?
     let imageUrl: String?
     let bullets: [String]?
+    let body: String?
 
     enum CodingKeys: String, CodingKey {
         case title
         case imageUrl = "image_url"
         case bullets
+        case body
     }
 }
 
