@@ -1360,6 +1360,7 @@ struct ArticleCardContinuousView: View {
                     ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
                         slideContent(idx: idx, page: page)
                             .frame(width: measureWidth, alignment: .top)
+                            .fixedSize(horizontal: false, vertical: true)  // natural height — never truncate text
                             .id(idx)
                     }
                 }
