@@ -694,6 +694,7 @@ struct ArticleCardContinuousView: View {
     @State private var timelineExpanded = false
     @State private var currentPage = 0
     @State private var pageHeights: [Int: CGFloat] = [:]  // per-page measured heights (dynamic carousel)
+    @State private var carouselScrollX: CGFloat = 0        // live horizontal scroll offset (height interpolation)
     @State private var selectedComponent: String = ""
     @State private var heartBurstActive = false
     @State private var followBurstActive = false
@@ -1168,25 +1169,6 @@ struct ArticleCardContinuousView: View {
             .onTapGesture(count: 2) { handleDoubleTapLike() }
     }
 
-    /// Instagram-style "1/N" page-count pill, overlaid on a multi-page slide's image.
-    @ViewBuilder
-    private var pagePill: some View {
-        if carouselPages.count > 1 {
-            HStack(spacing: 4) {
-                Image(systemName: "rectangle.stack.fill")
-                    .font(.system(size: 10, weight: .bold))
-                Text("\(currentPage + 1)/\(carouselPages.count)")
-                    .font(.system(size: 13, weight: .bold))
-                    .monospacedDigit()
-            }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(.black.opacity(0.55), in: Capsule())
-            .padding(12)
-        }
-    }
-
     // Single-page hero photo. Multi-page & gallery render their images INSIDE
     // the carousel (so they swipe with the content), so this is single-page only.
     private var photoBlock: some View {
@@ -1367,25 +1349,50 @@ struct ArticleCardContinuousView: View {
             .hidden()
             .allowsHitTesting(false)
 
-            // Visible carousel: each slide is image + text TOGETHER, so the image
-            // swipes with the text (no decoupled pop). Height tracks the current
-            // slide — no fixed box, no gap.
-            TabView(selection: $currentPage) {
-                ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
-                    slideContent(idx: idx, page: page)
-                        .frame(maxWidth: .infinity, alignment: .top)
-                        .tag(idx)
+            // Native paging ScrollView — system-quality 1:1 finger tracking +
+            // momentum snap, and it nests safely inside the vertical feed (no
+            // gesture conflict). Each slide is image+text together, so the image
+            // swipes with the text. Height interpolates with the LIVE scroll
+            // offset so it grows/shrinks smoothly between slides of different
+            // lengths — no clip-then-jump like TabView.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                        slideContent(idx: idx, page: page)
+                            .frame(width: measureWidth, alignment: .top)
+                            .id(idx)
+                    }
                 }
+                .scrollTargetLayout()
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: max(pageHeights[currentPage] ?? 320, 80))
-            .animation(.easeInOut(duration: 0.28), value: currentPage)
+            .scrollTargetBehavior(.paging)
+            .frame(height: interpolatedCarouselHeight(measureWidth))
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, x in
+                carouselScrollX = x
+                let p = Int((x / measureWidth).rounded())
+                if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
+            }
         }
         .onPreferenceChange(PageHeightKey.self) { heights in
             for (k, v) in heights where pageHeights[k] != v {
                 pageHeights[k] = v
             }
         }
+    }
+
+    /// Carousel height interpolated from the live horizontal scroll offset, so it
+    /// transitions smoothly between slides of different heights as you swipe.
+    private func interpolatedCarouselHeight(_ pageWidth: CGFloat) -> CGFloat {
+        guard pageWidth > 0, !carouselPages.isEmpty else { return max(pageHeights[currentPage] ?? 320, 80) }
+        let raw = max(0, min(carouselScrollX / pageWidth, CGFloat(carouselPages.count - 1)))
+        let lower = Int(floor(raw))
+        let upper = min(lower + 1, carouselPages.count - 1)
+        let frac = raw - CGFloat(lower)
+        let h0 = pageHeights[lower] ?? 320
+        let h1 = pageHeights[upper] ?? h0
+        return max(h0 + (h1 - h0) * frac, 80)
     }
 
     /// One multi-page slide: the page's own image (with the "1/N" pill) + that
@@ -1397,7 +1404,6 @@ struct ArticleCardContinuousView: View {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if let s = imgUrl, !s.isEmpty {
                 cardImage(s)
-                    .overlay(alignment: .topTrailing) { pagePill }
                     .padding(.bottom, 12)
             }
             pageContent(idx: idx, page: page)
