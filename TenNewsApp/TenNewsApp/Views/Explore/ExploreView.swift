@@ -279,6 +279,9 @@ struct ExploreView: View {
     @State private var selectedTopic: ExploreTopic?
     @State private var topicArticles: [Article] = []
     @State private var loadingTopicArticles = false
+    /// Set when the user taps a topic chip on a feed card — drives the
+    /// TopicFeedView overlay (same pattern as the main feed).
+    @State private var topicTarget: TopicTarget? = nil
     @State private var appeared = false
     @State private var lastLoadTime: Date?
     @State private var hasLoadedOnce = false
@@ -339,6 +342,31 @@ struct ExploreView: View {
 
     private var trendingTopics: [ExploreTopic] {
         filteredTopics.filter(\.isTrending)
+    }
+
+    /// All Explore articles flattened into ONE de-duplicated list for the
+    /// vertical feed (no per-topic horizontal carousels). An article that
+    /// appears under several topics is shown once. Prefers the fully-hydrated
+    /// Article from the feed cache (so components/pages render), then any
+    /// prefetched copy, then a lightweight stub built from the Explore payload.
+    private var feedArticles: [Article] {
+        var seen = Set<String>()
+        var out: [Article] = []
+        for topic in filteredTopics {
+            for ta in topic.articles {
+                let key = ta.id.stringValue
+                if seen.contains(key) { continue }
+                seen.insert(key)
+                if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == key }) {
+                    out.append(cached)
+                } else if let pre = prefetchedArticles[key] {
+                    out.append(pre)
+                } else {
+                    out.append(Article.fromExplore(ta, source: topic.displayTitle))
+                }
+            }
+        }
+        return out
     }
 
     var body: some View {
@@ -427,7 +455,24 @@ struct ExploreView: View {
                 .ignoresSafeArea()
                 .zIndex(2)
             }
+
+            // Topic feed overlay — tapping a topic chip on a feed card drills
+            // into that entity's feed (same in-tree overlay as the main feed,
+            // so the tab bar stays visible behind it).
+            if let target = topicTarget {
+                TopicFeedView(
+                    entity: target.entity,
+                    sourceId: target.sourceId,
+                    onDismiss: {
+                        withAnimation(.easeInOut(duration: 0.28)) { topicTarget = nil }
+                    }
+                )
+                .transition(.move(edge: .trailing))
+                .ignoresSafeArea()
+                .zIndex(3)
+            }
         }
+        .animation(.easeInOut(duration: 0.28), value: topicTarget?.entity)
     }
 
     // MARK: - Main Content
@@ -454,10 +499,25 @@ struct ExploreView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 24)
 
-                    ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                        entitySection(topic)
-                            .sectionAppear(appeared: appeared, index: tIndex)
-                            .padding(.bottom, 32)
+                    // Vertical feed — same card design as the main feed. No
+                    // per-topic horizontal carousels; everything scrolls straight
+                    // down as one merged feed (user direction 2026-05-27).
+                    ForEach(Array(feedArticles.enumerated()), id: \.offset) { idx, article in
+                        ArticleCardContinuousView(
+                            article: article,
+                            accentColor: feedViewModel.accentColor(for: article),
+                            onTopicTap: { entity, sourceId in
+                                topicTarget = TopicTarget(entity: entity, sourceId: sourceId)
+                            }
+                        )
+                        .padding(.vertical, 14)
+
+                        if idx < feedArticles.count - 1 {
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.08))
+                                .frame(height: 0.5)
+                                .padding(.horizontal, 16)
+                        }
                     }
                 }
 
