@@ -557,8 +557,10 @@ struct ExploreView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 18)
-                // No background panel — just the search field itself; content
-                // scrolls behind it (user direction 2026-05-27).
+                // Frosted-glass backdrop (iOS/other-platforms standard): content
+                // BLURS behind the bar instead of showing through it sharply, and
+                // it's not a flat solid panel like before.
+                .background(.regularMaterial)
                 .offset(y: (searchBarVisible || isSearchActive) ? 0 : -searchBarSlotHeight)
                 .opacity((searchBarVisible || isSearchActive) ? 1 : 0)
                 .allowsHitTesting(searchBarVisible || isSearchActive)
