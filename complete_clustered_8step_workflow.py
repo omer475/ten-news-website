@@ -23,6 +23,7 @@ import sys
 from datetime import datetime, timedelta
 import feedparser
 import requests
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional
 import os
@@ -1231,6 +1232,83 @@ def fetch_rss_articles(max_articles_per_source=10):
 
 
 # ==========================================
+# MULTI-PAGE DEEPER PAGES (Today+ "swipe for more")
+# ==========================================
+
+def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None):
+    """Generate one deeper page (a list of 2-3 bullet strings) for a multi-page post.
+
+    Uses the SAME proven REST pattern as the main synthesis (flash-lite, JSON
+    response, thinkingBudget=0) instead of the old SDK `.text` accessor — that
+    accessor was never the bug, but the REST path gives us thinking control and
+    forced-JSON output so flash-lite can't "think" away the whole response.
+
+    kind:
+      'context'  → page 2: WHY it matters / background / how it works.
+      'whatsnext' → page 3: what comes next, the stakes, who's affected.
+
+    Returns a list of 2-4 clean bullet strings, or None on any failure (caller
+    treats None as "no extra page" — never fatal).
+    """
+    gemini_key = os.getenv('GEMINI_API_KEY')
+    if not gemini_key:
+        return None
+    model = os.getenv('MULTIPAGE_MODEL', 'gemini-2.5-flash-lite')
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+
+    if kind == 'whatsnext':
+        instruction = (
+            "Write a SHORT page about what comes NEXT or the bigger picture. "
+            "Do NOT repeat the story or the context already given.\n"
+            f"Already covered as context: {' | '.join(prev_bullets or [])}\n"
+            "Rules:\n"
+            "- 2-3 short bullets: what to watch for, likely next steps, who's affected, or what's at stake\n"
+            "- Present tense, short sentences, concrete and specific — no filler\n"
+            "- Don't restate page 1 or the context page"
+        )
+    else:  # 'context'
+        instruction = (
+            "Write a SHORT page that gives the reader deeper context. NOT a summary of page 1.\n"
+            "Instead: explain WHY this matters, the background context, or how it works in simple terms.\n"
+            "Rules:\n"
+            "- 2-3 short bullets, each a specific fact or context that helps understand the story\n"
+            "- Present tense, short sentences, no academic language\n"
+            "- No \"Here's why this matters\" — just state the context directly\n"
+            "- Each bullet should make the reader go \"oh, that makes more sense now\""
+        )
+
+    prompt = (
+        f"This is a Today+ social post:\n"
+        f"Title: {title}\n"
+        f"Bullets: {' | '.join(bullets)}\n"
+        f"Category: {category}\n\n"
+        f"{instruction}\n\n"
+        f"Return ONLY a JSON array of 2-3 bullet strings."
+    )
+    request_data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": float(os.getenv('MULTIPAGE_TEMPERATURE', '0.7')),
+            "maxOutputTokens": 1024,
+            "responseMimeType": "application/json",
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
+    try:
+        resp = requests.post(url, json=request_data, timeout=45)
+        if resp.status_code != 200:
+            return None
+        text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+        parsed = json.loads(text)
+        if not isinstance(parsed, list):
+            return None
+        out = [str(b).strip() for b in parsed if str(b).strip()]
+        return out if 2 <= len(out) <= 4 else None
+    except Exception:
+        return None
+
+
+# ==========================================
 # COMPLETE PIPELINE
 # ==========================================
 
@@ -2059,47 +2137,43 @@ def run_complete_pipeline():
                 interest_tags, synthesized.get('category', 'Other'), publishers_cache, article_id=cluster_id
             )
 
-            # MULTI-PAGE: Generate a "deeper context" page 2 for articles that deserve it
-            # Only for analysis/evergreen articles with 3+ bullets and high score
+            # MULTI-PAGE: deeper "swipe for more" pages.
+            # Substance-based (NOT importance-based — we don't gate depth on the
+            # news-importance score): any story with enough material gets a
+            # deeper context page. The feed algorithm decides what surfaces; this
+            # just makes depth available so multi-page is common, not rare.
+            #   - page 2 (context): needs >=3 bullets AND >=2 sources.
+            #   - page 3 (what's next): only when the cluster is rich (>=4 sources),
+            #     and only if page 2 was produced.
+            # Env knobs: MULTIPAGE_MIN_BULLETS (3), MULTIPAGE_MIN_SOURCES (2),
+            # MULTIPAGE_P3_MIN_SOURCES (4), MULTIPAGE_DISABLE=1 to turn off.
             article_pages = None
-            if article_score >= 700 and len(bullets) >= 3 and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing'):
+            mp_disabled = os.getenv('MULTIPAGE_DISABLE') == '1'
+            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '3'))
+            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '2'))
+            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '4'))
+            n_sources = len(cluster_sources)
+            if (not mp_disabled) and len(bullets) >= mp_min_bullets and n_sources >= mp_min_sources:
                 try:
-                    page2_prompt = f"""This news article just published:
-Title: {title}
-Bullets: {' | '.join(bullets)}
-Category: {synthesized.get('category', 'Other')}
-
-Write a SHORT second page that gives the reader deeper context. NOT a summary of page 1.
-Instead: explain WHY this matters, the background context, or how it works in simple terms.
-
-Rules:
-- 2-3 short bullets, each a specific fact or context that helps understand the news
-- Present tense, short sentences, no academic language
-- No "Here's why this matters" — just state the context directly
-- Each bullet should make the reader go "oh, that makes more sense now"
-
-Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
-Example: ["Current solar panels max out at 25% efficiency commercially", "The theoretical limit has been 33% since 1961 — this breaks that barrier", "If scalable, this could cut solar farm sizes by half"]"""
-
+                    article_category = synthesized.get('category', 'Other')
+                    extra_pages = []
                     with gemini_semaphore:
-                        import google.generativeai as _p2_genai
-                        _p2_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-                        _p2_model = _p2_genai.GenerativeModel('gemini-2.5-flash-lite')
-                        page2_response = _p2_model.generate_content(page2_prompt)
-                    page2_text = page2_response.text.strip()
-                    if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
-                    if page2_text.endswith('```'): page2_text = page2_text[:-3]
-                    if page2_text.startswith('json'): page2_text = page2_text[4:]
-                    page2_bullets = json.loads(page2_text.strip())
-
-                    if isinstance(page2_bullets, list) and len(page2_bullets) >= 2:
-                        article_pages = [
-                            {"title": title, "image_url": None, "bullets": bullets},
-                            {"title": None, "image_url": None, "bullets": page2_bullets},
-                        ]
-                        print(f"   📄 [Cluster {cluster_id}] Added context page 2 ({len(page2_bullets)} bullets)")
-                except Exception as page2_err:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Page 2 generation failed: {page2_err}")
+                        page2_bullets = _generate_deeper_page(title, bullets, article_category, kind='context')
+                    if page2_bullets:
+                        extra_pages.append({"title": None, "image_url": None, "bullets": page2_bullets})
+                        # Page 3 only for source-rich clusters (more material = more to say).
+                        if n_sources >= mp_p3_min_sources:
+                            with gemini_semaphore:
+                                page3_bullets = _generate_deeper_page(
+                                    title, bullets, article_category, kind='whatsnext', prev_bullets=page2_bullets
+                                )
+                            if page3_bullets:
+                                extra_pages.append({"title": None, "image_url": None, "bullets": page3_bullets})
+                    if extra_pages:
+                        article_pages = [{"title": title, "image_url": None, "bullets": bullets}] + extra_pages
+                        print(f"   📄 [Cluster {cluster_id}] Multi-page: {len(article_pages)} pages ({n_sources} sources)")
+                except Exception as page_err:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Multi-page generation failed: {page_err}")
 
             # STEP 12: Trinity 2-level cluster assignment.
             vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
