@@ -539,12 +539,12 @@ struct ExploreView: View {
                 // Always force-show near the top.
                 if newY <= 4 {
                     if !searchBarVisible {
-                        withAnimation(.smooth(duration: 0.2)) { searchBarVisible = true }
+                        withAnimation(.snappy(duration: 0.2)) { searchBarVisible = true }
                     }
                 } else if delta > 6 && searchBarVisible {
-                    withAnimation(.smooth(duration: 0.2)) { searchBarVisible = false }
+                    withAnimation(.snappy(duration: 0.2)) { searchBarVisible = false }
                 } else if delta < -4 && !searchBarVisible {
-                    withAnimation(.smooth(duration: 0.2)) { searchBarVisible = true }
+                    withAnimation(.snappy(duration: 0.2)) { searchBarVisible = true }
                 }
                 lastScrollY = newY
             }
