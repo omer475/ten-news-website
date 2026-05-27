@@ -557,7 +557,8 @@ struct ExploreView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 18)
-                .background(Theme.Colors.backgroundPrimary.opacity(0.96))
+                // No background panel — just the search field itself; content
+                // scrolls behind it (user direction 2026-05-27).
                 .offset(y: (searchBarVisible || isSearchActive) ? 0 : -searchBarSlotHeight)
                 .opacity((searchBarVisible || isSearchActive) ? 1 : 0)
                 .allowsHitTesting(searchBarVisible || isSearchActive)
