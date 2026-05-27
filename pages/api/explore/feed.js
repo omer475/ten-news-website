@@ -10,6 +10,11 @@ import { randomUUID } from 'crypto'
 import { serveExploreFeed } from '../../../lib/exploreServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
 
+// Discovery does 5 parallel candidate lanes + ANN; a cold lambda can exceed the
+// default 10s function limit and 500. Give it headroom (Vercel caps to the plan
+// max if lower). Warm requests return in ~2-4s.
+export const config = { maxDuration: 30 }
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
