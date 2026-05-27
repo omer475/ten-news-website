@@ -654,11 +654,12 @@ def process_brief(supabase, brief: Dict) -> bool:
         fc = run_fact_check(brief, post, research)
 
         # Assign images: Wikimedia + one pooled Unsplash query/brief + og, reusing
-        # the best secured image for any page that misses. One good image per brief
-        # is enough to publish (so a single match saves the whole carousel).
+        # the best secured image for any page that misses. Images are BEST-EFFORT —
+        # text-only articles are fine (user direction 2026-05-27). If no image is
+        # found we publish anyway with null image_url (the iOS card/carousel renders
+        # text-only pages); we no longer fail the whole brief on a missing image.
         if not assign_images(brief, post['pages'], research.get('research_sources', [])):
-            mark_brief(supabase, bid, 'failed', failure_reason='no_image_any_page')
-            return False
+            print(f"      🖼️ no image found — publishing text-only")
 
         article_id = publish_curated(supabase, brief, post)
         if not article_id:
