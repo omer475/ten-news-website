@@ -20,7 +20,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { serveTrinityFeed } from '../../../lib/trinityServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
-import { MULTIPAGE_RATIO, applyMultiPageQuota } from '../../../lib/multiPageQuota.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -133,26 +132,11 @@ export default async function handler(req, res) {
   const cKey = coalesceKey(userId, seenIds, limit)
   let trinityResult, isOwner = true
   try {
-    const coalesced = await coalescedSlate(cKey, async () => {
-      const r = await serveTrinityFeed(supabase, {
+    const coalesced = await coalescedSlate(cKey, () =>
+      serveTrinityFeed(supabase, {
         userId, seenIds, feedSize: limit, recentEngagementZ,
       })
-      // Multi-page quota runs INSIDE the coalesced run so the shared slate is
-      // adjusted exactly once (concurrent non-owners get the same result) and
-      // the owner's impression log reflects the final order. Env-gated and
-      // wrapped — a topup failure leaves the un-adjusted slate intact.
-      if (MULTIPAGE_RATIO > 0 && r && Array.isArray(r.articles) && r.articles.length > 0) {
-        try {
-          await applyMultiPageQuota(supabase, r, {
-            limit, seenIds,
-            personalPrimaries: r.debug?.personalPrimaries || [],
-          })
-        } catch (e) {
-          console.error('[trinity.multipage] quota step failed (non-fatal):', e?.message)
-        }
-      }
-      return r
-    })
+    )
     trinityResult = coalesced.result
     isOwner = coalesced.isOwner
   } catch (trinityErr) {
@@ -182,8 +166,7 @@ export default async function handler(req, res) {
     `bucketCounts=${JSON.stringify(dbg.bucketCounts || {})} ` +
     `windowH=${dbg.mTier1WindowH || 0}/${dbg.ltWindowH || 0} ` +
     `synth=${dbg.synthApplied ? `yes(f=${dbg.synthFactor})` : 'no'} ` +
-    `durationMs=${Date.now() - t0}` +
-    (dbg.multipage ? ` multipage=${dbg.multipage.before}->${dbg.multipage.after}/${dbg.multipage.target}` : '')
+    `durationMs=${Date.now() - t0}`
   )
 
   const formatted = trinityResult.articles.map((a, idx) => ({
