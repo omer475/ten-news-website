@@ -521,13 +521,16 @@ def log_fact_check(supabase, brief: Dict, article_id: int, fc: Optional[Dict]):
 
 
 # ── Stage 8: publish (full feed parity) ─────────────────────────────────────────
-def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
+def publish_curated(supabase, brief: Dict, post: Dict, ai_raw_override: Optional[int] = None) -> Optional[int]:
     """
     Insert the curated post into published_articles with the same feed-critical
     fields Pipeline 1 stamps (embedding_minilm + Trinity vq codes + score + tags),
     so the recommender can actually serve it. Lazy-imports the heavy workflow
     helpers (only succeeds where GEMINI/BRIGHTDATA/Supabase secrets exist, i.e.
     in prod).
+
+    `ai_raw_override`: if the caller already computed the raw score (e.g. for the
+    no-image quality gate), pass it in to skip the duplicate scoring call.
     """
     from step1_5_event_clustering import get_embedding_minilm
     from step10_article_scoring import score_article_with_references, generate_interest_tags
@@ -549,11 +552,14 @@ def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
 
     gemini_key = os.getenv('GEMINI_API_KEY')
     category = canonicalize_category(brief.get('category', 'Other'))
-    try:
-        score_res = score_article_with_references(title, all_bullets, gemini_key, supabase)
-        ai_raw = score_res.get('score', 600) if isinstance(score_res, dict) else 600
-    except Exception:
-        ai_raw = 600
+    if ai_raw_override is not None:
+        ai_raw = ai_raw_override
+    else:
+        try:
+            score_res = score_article_with_references(title, all_bullets, gemini_key, supabase)
+            ai_raw = score_res.get('score', 600) if isinstance(score_res, dict) else 600
+        except Exception:
+            ai_raw = 600
     # Curated score FLOOR (2026-05-24): the news-importance scorer rates evergreen
     # content low (~350), which would bury it in ranked views. Floor at 650 (env
     # PIPELINE2_SCORE_FLOOR); keep the raw score in ai_final_score_raw.
@@ -654,14 +660,32 @@ def process_brief(supabase, brief: Dict) -> bool:
         fc = run_fact_check(brief, post, research)
 
         # Assign images: Wikimedia + one pooled Unsplash query/brief + og, reusing
-        # the best secured image for any page that misses. Images are BEST-EFFORT —
-        # text-only articles are fine (user direction 2026-05-27). If no image is
-        # found we publish anyway with null image_url (the iOS card/carousel renders
-        # text-only pages); we no longer fail the whole brief on a missing image.
+        # the best secured image for any page that misses. Text-only must be EARNED
+        # (user direction 2026-05-28): if no image is found we score the article
+        # first and only publish text-only when the raw quality score clears
+        # PIPELINE2_TEXT_ONLY_MIN_RAW (default 750 = above the score floor). Otherwise
+        # drop it — mediocre image-less briefs shouldn't slip into the feed just
+        # because the picture search failed.
+        pre_scored_raw: Optional[int] = None
         if not assign_images(brief, post['pages'], research.get('research_sources', [])):
-            print(f"      🖼️ no image found — publishing text-only")
+            text_only_min = int(os.getenv('PIPELINE2_TEXT_ONLY_MIN_RAW', '750'))
+            try:
+                from step10_article_scoring import score_article_with_references
+                title = post['pages'][0]['title']
+                all_bullets = [b for p in post['pages'] for b in p.get('bullets', [])]
+                score_res = score_article_with_references(title, all_bullets, os.getenv('GEMINI_API_KEY'), supabase)
+                pre_scored_raw = int(score_res.get('score', 600)) if isinstance(score_res, dict) else 600
+            except Exception as e:
+                print(f"      ⚠️ no-image quality scoring failed ({str(e)[:60]}) — treating as low quality")
+                pre_scored_raw = 0
+            if pre_scored_raw < text_only_min:
+                mark_brief(supabase, bid, 'failed',
+                           failure_reason=f'no_image_low_quality_raw{pre_scored_raw}')
+                print(f"      ✗ no image AND raw={pre_scored_raw} < {text_only_min} — dropping (text-only must be earned)")
+                return False
+            print(f"      🖼️ no image but raw={pre_scored_raw} ≥ {text_only_min} — publishing text-only (earned)")
 
-        article_id = publish_curated(supabase, brief, post)
+        article_id = publish_curated(supabase, brief, post, ai_raw_override=pre_scored_raw)
         if not article_id:
             mark_brief(supabase, bid, 'failed', failure_reason='publish_failed')
             return False
