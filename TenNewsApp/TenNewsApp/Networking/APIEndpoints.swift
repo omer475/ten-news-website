@@ -8,6 +8,11 @@ enum APIEndpoints {
     static let mainFeed = "/api/feed/main"
     static let forYouFeed = "/api/feed/for-you"
     static let topicFeed = "/api/feed/topic"
+    /// Discovery feed for the Explore tab (deliberately broader than For You —
+    /// down-weights core taste, surfaces adjacent interests + Pipeline-2 curated
+    /// + trending + fresh-broad + a Thompson-sampling bandit over unexplored
+    /// clusters). Server: lib/exploreServe.js. PR #212, shipped 2026-05-27.
+    static let exploreFeed = "/api/explore/feed"
     /// Pure-chronological feed of articles from publishers the user follows.
     /// Server work: owned by the algorithm terminal (PR pending as of
     /// 2026-05-12). Backed by `user_follows` (publisher graph) joined to
