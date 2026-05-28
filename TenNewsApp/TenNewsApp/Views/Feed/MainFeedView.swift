@@ -695,6 +695,7 @@ struct ArticleCardContinuousView: View {
     @State private var currentPage = 0
     @State private var pageHeights: [Int: CGFloat] = [:]  // per-page measured heights (dynamic carousel)
     @State private var carouselScrollX: CGFloat = 0        // live horizontal scroll offset (height interpolation)
+    @State private var sharedPhotoHeight: CGFloat = 0      // measured height of the fixed shared photo
     @State private var selectedComponent: String = ""
     @State private var heartBurstActive = false
     @State private var followBurstActive = false
@@ -1153,10 +1154,19 @@ struct ArticleCardContinuousView: View {
     /// strings the same as missing — the photo block disappears and the
     /// title leads the white box.
     private var hasImage: Bool {
-        guard let s = article.imageUrl?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !s.isEmpty else { return false }
-        let lower = s.lowercased()
-        return lower != "null" && lower != "none" && lower != "undefined" && s.count >= 5
+        func looksReal(_ raw: String?) -> Bool {
+            guard let s = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty else { return false }
+            let lower = s.lowercased()
+            return lower != "null" && lower != "none" && lower != "undefined" && s.count >= 5
+        }
+        if looksReal(article.imageUrl) { return true }
+        // Multi-page articles often carry their image on the pages rather than
+        // the article root — count those so top-padding alignment treats them
+        // as a photo article (same Y offset as single-page heroes).
+        if let pages = article.pages {
+            for p in pages where looksReal(p.imageUrl) { return true }
+        }
+        return false
     }
 
     /// Reusable rounded card image (natural aspect — DO NOT add aspectRatio /
@@ -1280,12 +1290,39 @@ struct ArticleCardContinuousView: View {
         return distinct.count <= 1   // one shared text (or none) → gallery
     }
 
+    /// Resolve a page's image URL, falling back to the article hero on page 0
+    /// (matches how slideContent picks the image). Returns a non-empty trimmed
+    /// string or nil.
+    private func pageImageURL(idx: Int, page: ArticlePage) -> String? {
+        let raw = page.imageUrl ?? (idx == 0 ? article.imageUrl : nil)
+        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// Multi-page where every page resolves to the SAME image URL (and there
+    /// are actually multiple pages). For these we render the photo ONCE on top
+    /// (fixed in place) and only the TEXT slides — see `sharedPhotoMultiPageCaption`.
+    private var isSharedImageMultiPage: Bool {
+        guard carouselPages.count > 1, !isPhotoGallery else { return false }
+        let urls = carouselPages.enumerated().map { pageImageURL(idx: $0.offset, page: $0.element) }
+        guard urls.allSatisfy({ $0 != nil }) else { return false }
+        return Set(urls.compactMap { $0 }).count == 1
+    }
+
+    /// The single shared image URL when `isSharedImageMultiPage` is true.
+    private var sharedImageURL: String {
+        guard let first = carouselPages.first else { return "" }
+        return pageImageURL(idx: 0, page: first) ?? ""
+    }
+
     @ViewBuilder
     private var captionBlock: some View {
         if carouselPages.isEmpty {
             singlePageCaption
         } else if isPhotoGallery {
             photoGalleryCarousel
+        } else if isSharedImageMultiPage {
+            sharedPhotoMultiPageCaption
         } else {
             multiPageCaption
         }
@@ -1381,6 +1418,79 @@ struct ArticleCardContinuousView: View {
                 pageHeights[k] = v
             }
         }
+    }
+
+    /// Shared-photo multi-page: when every page uses the SAME image, render the
+    /// photo ONCE on top (it never moves) and only the TEXT slides under it. The
+    /// photo overlay has `.allowsHitTesting(false)` so swipes ON the photo area
+    /// still drive the text slide. Each invisible slide is a transparent spacer
+    /// (the photo's vertical space) + that page's text, so the swipe region
+    /// covers the WHOLE card.
+    private var sharedPhotoMultiPageCaption: some View {
+        let measureWidth = UIScreen.main.bounds.width - 32
+        let photoGapBelow: CGFloat = 12
+        let totalHeight = sharedPhotoHeight + photoGapBelow + interpolatedCarouselHeight(measureWidth)
+
+        return ZStack(alignment: .top) {
+            // Off-layout measurement of each page's TEXT height (no photo here —
+            // the photo is shared and rendered ONCE on top, not per slide).
+            ZStack(alignment: .top) {
+                ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                    pageContent(idx: idx, page: page)
+                        .frame(width: measureWidth, alignment: .top)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: PageHeightKey.self, value: [idx: geo.size.height])
+                        })
+                }
+            }
+            .frame(width: 0, height: 0).hidden().allowsHitTesting(false)
+
+            // Horizontal-paging swipe area covers the FULL card (photo region +
+            // gap + text). Each slide = transparent photo-spacer + that page's
+            // text; the actual photo is overlaid on top with hit-testing off, so
+            // a swipe anywhere (incl. on the photo) drives the text slide.
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
+                        VStack(alignment: .leading, spacing: 0) {
+                            Color.clear.frame(height: sharedPhotoHeight + photoGapBelow)
+                            pageContent(idx: idx, page: page)
+                        }
+                        .frame(width: measureWidth, alignment: .top)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .id(idx)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .frame(height: totalHeight)
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, x in
+                carouselScrollX = x
+                let p = Int((x / measureWidth).rounded())
+                if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
+            }
+
+            // The FIXED shared photo, rendered ONCE on top. Doesn't move — the
+            // ScrollView under it does. hit-testing off so finger swipes (incl.
+            // on the photo) pass through to the ScrollView.
+            cardImage(sharedImageURL)
+                .background(GeometryReader { geo in
+                    Color.clear.preference(key: PhotoHeightKey.self, value: geo.size.height)
+                })
+                .allowsHitTesting(false)
+        }
+        .onPreferenceChange(PageHeightKey.self) { heights in
+            for (k, v) in heights where pageHeights[k] != v { pageHeights[k] = v }
+        }
+        .onPreferenceChange(PhotoHeightKey.self) { h in
+            if h > 0, abs(sharedPhotoHeight - h) > 0.5 { sharedPhotoHeight = h }
+        }
+        .padding(.top, hasImage ? 4 : 18)
+        .padding(.bottom, 12)
     }
 
     /// Carousel height interpolated from the live horizontal scroll offset, so it
@@ -2239,6 +2349,14 @@ private struct PageHeightKey: PreferenceKey {
     static let defaultValue: [Int: CGFloat] = [:]
     static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
         value.merge(nextValue()) { _, new in new }
+    }
+}
+
+/// Measured height of the fixed shared photo in `sharedPhotoMultiPageCaption`.
+private struct PhotoHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
