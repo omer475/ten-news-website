@@ -285,6 +285,12 @@ struct ExploreView: View {
     @State private var appeared = false
     @State private var lastLoadTime: Date?
     @State private var hasLoadedOnce = false
+    /// Discovery feed from `/api/explore/feed` (lib/exploreServe.js — PR #212).
+    /// This is the PRIMARY source for the vertical feed in the idle state. The
+    /// topic-flatten fallback in `feedArticles` only fires while searching or
+    /// if this fetch hasn't returned (or failed) — so the surface is never
+    /// blank. Populated by a background Task inside `loadTopics()`.
+    @State private var discoveryArticles: [Article] = []
     /// Inline search controller. Reused from SearchTabView so recents +
     /// trending lists stay in lockstep across surfaces.
     @State private var searchModel = SearchViewModel()
@@ -344,12 +350,22 @@ struct ExploreView: View {
         filteredTopics.filter(\.isTrending)
     }
 
-    /// All Explore articles flattened into ONE de-duplicated list for the
-    /// vertical feed (no per-topic horizontal carousels). An article that
-    /// appears under several topics is shown once. Prefers the fully-hydrated
-    /// Article from the feed cache (so components/pages render), then any
-    /// prefetched copy, then a lightweight stub built from the Explore payload.
+    /// Articles for the vertical feed.
+    ///
+    /// PRIMARY (idle state): `discoveryArticles` from `/api/explore/feed` —
+    /// the dedicated discovery algorithm (broad, distinct from For-You). These
+    /// arrive fully hydrated (server uses `formatArticle`), so they render
+    /// the full feed card without a stub→hydrate flicker.
+    ///
+    /// FALLBACK (while searching, or before discovery returns / on failure):
+    /// flatten the topic-grouped articles from `/api/explore/topics` so the
+    /// surface is never blank. Prefers the hydrated Article from the feed
+    /// cache, then any prefetched copy, then a lightweight Explore stub.
     private var feedArticles: [Article] {
+        // Idle (not searching) AND discovery feed has loaded → use it.
+        if searchText.isEmpty && !discoveryArticles.isEmpty {
+            return discoveryArticles
+        }
         var seen = Set<String>()
         var out: [Article] = []
         for topic in filteredTopics {
@@ -1290,6 +1306,25 @@ struct ExploreView: View {
         dwellTracked.removeAll()
         scrollTracked.removeAll()
         scrolledIndices.removeAll()
+
+        // Discovery feed — kicked off in parallel so it doesn't slow topics.
+        // /api/explore/feed (lib/exploreServe.js) returns the dedicated
+        // discovery slate. We pass the user's For-You feed cache ids as
+        // seen_ids so Explore doesn't repeat what they already see in the
+        // main feed. Non-blocking: when it returns, the @State write triggers
+        // a re-render and `feedArticles` switches over to the discovery list.
+        // Wrapped in try? — if it fails (cold-start timeout, network), we
+        // fall back to the topic-flatten path in feedArticles.
+        let exploreUserId = userId
+        let exploreSeenIds = feedViewModel.allArticles.prefix(80).map { $0.id.stringValue }
+        Task {
+            let svc = FeedService()
+            if let r = try? await svc.fetchExploreFeed(userId: exploreUserId, seenIds: exploreSeenIds, limit: 25),
+               !r.articles.isEmpty {
+                discoveryArticles = r.articles
+            }
+        }
+
         var params: [String] = []
         if let uid = userId {
             params.append("user_id=\(uid)")

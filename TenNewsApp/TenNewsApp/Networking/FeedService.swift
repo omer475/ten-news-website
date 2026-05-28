@@ -113,6 +113,44 @@ struct FeedService {
         return try await client.get(path)
     }
 
+    /// Discovery feed for the Explore tab. Distinct algorithm from the For-You
+    /// feed (see lib/exploreServe.js, PR #212): 5 candidate lanes (adjacent
+    /// one-hop-out ANN, Thompson-sampling bandit over unexplored clusters,
+    /// trending, Pipeline-2 curated, fresh-broad) → light rerank that DOWN-
+    /// weights the user's core taste → diversity caps + adjacent/new
+    /// guarantees. Server returns a single slate (no cursor); we re-fetch on
+    /// pull-to-refresh.
+    ///
+    /// - Parameters:
+    ///   - userId: signed-in user id (drives histogram + impression logging).
+    ///             Nil = guest (cold start: trending + curated + fresh broad).
+    ///   - seenIds: ids already shown in the user's For-You feed cache; the
+    ///              server drops them from candidates so Explore doesn't
+    ///              repeat content the user already encountered. Capped to
+    ///              the last 200 here; server caps internally too.
+    ///   - limit: slate size (server caps at 50).
+    func fetchExploreFeed(
+        userId: String? = nil,
+        seenIds: [String] = [],
+        limit: Int = 25
+    ) async throws -> ExploreFeedResponse {
+        var params = "?limit=\(limit)"
+        if let uid = userId {
+            params += "&user_id=\(uid)"
+        }
+        // Else: explore endpoint accepts guest requests (server falls back to
+        // its cold path). No guest_device_id parameter needed — explore is
+        // read-only for guests (no impression logging path).
+        if !seenIds.isEmpty {
+            params += "&seen_ids=\(seenIds.suffix(200).joined(separator: ","))"
+        }
+        let fullURL = "\(APIEndpoints.exploreFeed)\(params)"
+        feedLog.warning("EXPLORE API CALL: \(fullURL.prefix(200), privacy: .public)")
+        let result: ExploreFeedResponse = try await client.get(fullURL)
+        feedLog.warning("EXPLORE API RESULT: \(result.articles.count) articles, req=\(result.requestId ?? "-", privacy: .public)")
+        return result
+    }
+
     func fetchForYouFeed(
         homeCountry: String,
         followedCountries: [String],

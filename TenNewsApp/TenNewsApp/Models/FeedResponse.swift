@@ -89,6 +89,31 @@ struct TopicFeedResponse: Codable {
     }
 }
 
+// MARK: - Explore Feed Response (discovery)
+
+/// Server response shape for `/api/explore/feed` (lib/exploreServe.js). The
+/// discovery endpoint returns a single slate (no cursor pagination — the
+/// Explore page re-fetches a fresh slate on refresh) plus a `request_id` for
+/// impression-correlation and an optional `debug` block (categoryCounts /
+/// bucketCounts) we surface to the device log when diagnosing.
+struct ExploreFeedResponse: Codable {
+    let articles: [Article]
+    let count: Int?
+    let requestId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case articles, count
+        case requestId = "request_id"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        articles = try container.decodeIfPresent([Article].self, forKey: .articles) ?? []
+        count = try container.decodeIfPresent(Int.self, forKey: .count)
+        requestId = try container.decodeIfPresent(String.self, forKey: .requestId)
+    }
+}
+
 // MARK: - For You Feed Response
 
 struct ForYouFeedResponse: Codable {
