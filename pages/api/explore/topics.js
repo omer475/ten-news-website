@@ -229,14 +229,77 @@ export default async function handler(req, res) {
     if (user_id) {
       const { data } = await supabase
         .from('profiles')
-        .select('tag_profile, skip_profile, followed_topics, home_country')
+        .select('followed_topics, home_country')
         .eq('id', user_id)
         .single()
       profile = data
     }
 
-    const tagProfile = profile?.tag_profile || {}
-    const skipProfile = profile?.skip_profile || {}
+    // ──────────────────────────────────────────────
+    // Rebuild tag_profile / skip_profile from user_entity_signals.
+    //
+    // The legacy profiles.tag_profile / profiles.skip_profile JSONB columns
+    // were DROPPED in the typed-signals migration. Selecting them threw
+    // "column profiles.tag_profile does not exist", the whole handler fell
+    // into its catch block, and every logged-in user silently got the
+    // cold-start fallback (a narrow, generic slate — the "horrible" Explore)
+    // instead of their real interests.
+    //
+    // user_entity_signals stores typed/namespaced entities — e.g.
+    // "topic:artificial_intelligence", "loc:germany", "lang:en". This block
+    // reconstructs the { plainEntity: weight∈[0,1] } shape the rest of this
+    // file already expects:
+    //   • strip the type prefix and turn "_" into spaces
+    //     ("topic:artificial_intelligence" -> "artificial intelligence")
+    //   • drop lang:*  (language isn't a discovery topic)
+    //   • tagProfile weight = log-normalised positive volume — the signal
+    //     counts span ~10000 down to single digits, so a linear scale would
+    //     crush the long tail below the 0.05 / 0.15 gates. log-norm keeps the
+    //     top entity ≈ 1.0 while the tail still clears the thresholds.
+    //   • skipProfile only flags genuine dislikes (negatives clearly outweigh
+    //     positives on real volume) so we never nuke a topic the user
+    //     actually engages with.
+    const tagProfile = {}
+    const skipProfile = {}
+    if (user_id) {
+      const { data: signals } = await supabase
+        .from('user_entity_signals')
+        .select('entity, positive_count, negative_count')
+        .eq('user_id', user_id)
+        .order('positive_count', { ascending: false })
+        .limit(300)
+
+      const cleanEntity = (e) => {
+        if (!e || typeof e !== 'string') return null
+        const idx = e.indexOf(':')
+        const type = idx >= 0 ? e.slice(0, idx) : ''
+        if (type === 'lang') return null
+        const raw = idx >= 0 ? e.slice(idx + 1) : e
+        return raw.replace(/_/g, ' ').trim().toLowerCase()
+      }
+
+      let maxPos = 0
+      for (const s of (signals || [])) {
+        if ((s.positive_count || 0) > maxPos) maxPos = s.positive_count || 0
+      }
+      const denom = Math.log(1 + Math.max(maxPos, 1))
+
+      for (const s of (signals || [])) {
+        const name = cleanEntity(s.entity)
+        if (!name) continue
+        const pos = s.positive_count || 0
+        const neg = s.negative_count || 0
+        if (pos > 0 && denom > 0) {
+          const w = Math.min(1, Math.log(1 + pos) / denom)
+          // Keep the strongest signal if two raw entities clean to the same name.
+          if (w > (tagProfile[name] || 0)) tagProfile[name] = w
+        }
+        // Genuine dislike: real negative volume that clearly outweighs positives.
+        if (neg >= 10 && neg > pos * 1.5) {
+          skipProfile[name] = Math.max(skipProfile[name] || 0, 0.5)
+        }
+      }
+    }
 
     // Fetch seen article IDs for this user (last 7 days) to exclude from carousels
     let seenArticleIds = new Set()
