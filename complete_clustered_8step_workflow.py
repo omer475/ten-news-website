@@ -1287,7 +1287,7 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
             "from the source material — not vague speculation.\n"
             "HARD BANS: defining common nouns; restating earlier pages; generic 'experts say' "
             "filler; 'here's why this matters' framing; inventing anything not in the sources.\n"
-            "2-4 bullets, 5-28 words each. Present tense, concrete, social voice."
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, concrete, social voice."
         )
     else:  # 'context'
         instruction = (
@@ -1303,8 +1303,8 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
             "- Generic background the reader could have guessed (\"crowd pressure can affect players\").\n"
             "- \"Here's why this matters\" framing — just state the thing.\n"
             "- Inventing anything not in the sources.\n"
-            "2-4 bullets, 5-28 words each. Present tense, short sentences, mix lengths; one detail "
-            "may run long if it earns it.\n"
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, short "
+            "sentences, mix lengths; one detail may run long if it earns it.\n"
             "THE BAR: if the sources don't give you at least 2 genuinely NEW, specific facts, "
             "return [] — a thin page is worse than none."
         )
@@ -1341,9 +1341,9 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
         parsed = json.loads(text)
         if not isinstance(parsed, list):
             return None
-        out = [str(b).strip() for b in parsed if str(b).strip()]
+        out = [str(b).strip() for b in parsed if str(b).strip()][:3]  # iOS card renders max 3 bullets/page (MainFeedView bulletList prefix(3))
         # Empty/short array is a VALID signal: "no new substance, don't make a page."
-        return out if 2 <= len(out) <= 4 else None
+        return out if len(out) >= 2 else None
 
     except Exception:
         return None
@@ -2552,6 +2552,45 @@ Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both
 If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 THE WIRE-SERVICE TRAP — the #1 reason posts read BORING. Kill it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your sources ARE wire copy (Reuters/AP register). Your job is to NOT sound like them.
+The failure mode is "neutral record-keeping": passive, hedged, no stakes, no specifics
+— the single thing that makes a feed feel like a 1990s newspaper. This is most common
+on World / Politics stories. Banish it.
+
+BANNED — never write these or anything like them:
+  ✗ Passive state-of-record: "has been sworn in", "was caused by", "is set to",
+    "talks have stalled", "a deal was reached", "is working to", "was found near".
+  ✗ Hedge / non-fact filler: "may resume", "is expected to", "faces challenges
+    ahead", "remains far apart", "on key issues", "both sides", "officials say",
+    "according to a report", "still investigating", "in the coming days", "could see".
+  ✗ Empty bullets that carry NO name / number / quote — DELETE them, don't pad.
+
+Every line must be ACTIVE, CONCRETE, and carry a real detail. Real before → after:
+
+  ✗ "German justice system strained." / "The sheer volume of cases is overwhelming
+     courts." / "This strain threatens the rule of law, according to a report."
+  ✓ Title: "Germany's courts are so backed up, prosecutors are giving up."
+     • "Frankfurt alone dropped **8,000** cases last year — too few judges."
+     • "A judges' union warns serious crimes are now expiring before trial."
+
+  ✗ "Oman detects suspected naval mine in Hormuz Strait." / "The mine was found near
+     shipping lanes." / "Oman's navy is working to neutralize the device."
+  ✓ Title: "A loose mine is drifting in the world's busiest oil chokepoint."
+     • "**20%** of global oil ships through Hormuz — insurers are already twitchy."
+     • "**Oman**'s navy is racing to defuse it before a tanker finds it first."
+
+  ✗ "Talks between the US and Iran have stalled." / "Both sides remain far apart on
+     key issues." / "Negotiations may resume next month."
+  ✓ Title: "The US–Iran nuclear talks just fell apart again."
+     • "Dealbreaker: **Iran** won't cap enrichment, **Washington** won't lift sanctions first."
+     • "Third round since **April** to collapse with nothing signed."
+
+Two sharp bullets always beat three with a dud. Quality over quota.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ STEP 2 — TITLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2564,6 +2603,8 @@ LEAD WITH ONE OF:
   • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
 
 Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
+Do NOT lead with the state-of-record fact of an event happening ("X has been sworn in",
+"Cyclone hits coast", "Talks stalled"). Lead with the CONSEQUENCE or TENSION instead.
 
 PERSON / TENSE:
   • First-person ("I tried...") — opinion / personal angle.
@@ -2775,7 +2816,8 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title with 1-2 **bold** entities",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
+    "0-3 bullets, MAX 3 (a 4th never renders). Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths.",
+    "DEAD-BULLET TEST: read each bullet alone — if it has no name/number/date/quote, or could sit in a story about anything ('faces challenges ahead', 'remains tense', 'more to come'), DELETE it. Never pad to 3. Two real bullets beat three with a dud."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
@@ -2807,6 +2849,17 @@ SPORTS (hot_take):
   ],
   "card_format": "hot_take",
   "category": "Sports"
+}}
+
+WORLD (standard) — the hard one. NOT wire voice, real stakes + specifics:
+{{
+  "title": "A loose mine is drifting in the world's busiest oil chokepoint.",
+  "summary_bullets": [
+    "**20%** of global oil ships through the **Strait of Hormuz**.",
+    "**Oman**'s navy is racing to defuse it before a tanker finds it."
+  ],
+  "card_format": "standard",
+  "category": "World"
 }}
 
 K-POP (story_arc):
