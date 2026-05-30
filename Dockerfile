@@ -58,14 +58,6 @@ COPY sports_espn_poller.py .
 COPY pipeline2_ai_editor.py .
 COPY pipeline2_processor.py .
 
-# Copy services/ directory (hierarchical clustering helpers).
-# Added 2026-04-23: the cluster_assign_helper import at
-# complete_clustered_8step_workflow.py:1664 was silently failing because
-# the services/ tree was never copied, leaving every article since
-# 2026-04-21 with super_cluster_id / leaf_cluster_id = NULL. Copying the
-# whole directory avoids maintaining a per-file list as new helpers land.
-COPY services/ services/
-
 # Copy the Cloud Run entrypoint
 COPY cloudrun_entrypoint.py .
 

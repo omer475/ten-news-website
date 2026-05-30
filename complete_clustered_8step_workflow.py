@@ -1235,7 +1235,7 @@ def fetch_rss_articles(max_articles_per_source=10):
 # MULTI-PAGE DEEPER PAGES (Today+ "swipe for more")
 # ==========================================
 
-def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None):
+def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sources=None):
     """Generate one deeper page (a list of 2-3 bullet strings) for a multi-page post.
 
     Uses the SAME proven REST pattern as the main synthesis (flash-lite, JSON
@@ -1253,37 +1253,76 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None):
     gemini_key = os.getenv('GEMINI_API_KEY')
     if not gemini_key:
         return None
-    model = os.getenv('MULTIPAGE_MODEL', 'gemini-2.5-flash-lite')
+    # Upgraded from flash-lite: the deeper page now reasons over real source
+    # text, and flash-lite was too weak to mine it — it fell back to glossary
+    # definitions ("Everest is the tallest mountain"). Default tracks the
+    # WRITING_MODEL used for page 1 so voice/quality match. flash-lite revertible.
+    model = os.getenv('MULTIPAGE_MODEL', os.getenv('WRITING_MODEL', 'gemini-2.5-flash'))
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+
+    # Build the REAL source material this page draws from. Without it the model
+    # can only pad with general knowledge — the root cause of glossary page 2s.
+    sources_block = ""
+    if sources:
+        _src_texts = []
+        for i, s in enumerate(sources[:6]):
+            body = (s.get('full_text') or s.get('description') or '').strip()
+            if body:
+                _src_texts.append(
+                    f"SOURCE {i+1} ({s.get('source_name', s.get('source', 'Unknown'))}):\n{body[:2500]}"
+                )
+        if _src_texts:
+            sources_block = (
+                "\nFULL SOURCE MATERIAL — every new fact on this page must come from here:\n"
+                + "\n\n".join(_src_texts) + "\n"
+            )
 
     if kind == 'whatsnext':
         instruction = (
-            "Write a SHORT page about what comes NEXT or the bigger picture. "
-            "Do NOT repeat the story or the context already given.\n"
-            f"Already covered as context: {' | '.join(prev_bullets or [])}\n"
-            "Rules:\n"
-            "- 2-3 short bullets: what to watch for, likely next steps, who's affected, or what's at stake\n"
-            "- Present tense, short sentences, concrete and specific — no filler\n"
-            "- Don't restate page 1 or the context page"
+            "The reader swiped past the story AND the context page. This page is the bigger "
+            "picture: what happens next, who's exposed, what's actually at stake.\n"
+            f"ALREADY SAID on page 1 — never repeat or rephrase: {' | '.join(bullets)}\n"
+            f"ALREADY SAID on the context page — never repeat: {' | '.join(prev_bullets or [])}\n"
+            "Each bullet must add a NEW concrete fact, name, number, date, or named consequence "
+            "from the source material — not vague speculation.\n"
+            "HARD BANS: defining common nouns; restating earlier pages; generic 'experts say' "
+            "filler; 'here's why this matters' framing; inventing anything not in the sources.\n"
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, concrete, social voice."
         )
     else:  # 'context'
         instruction = (
-            "Write a SHORT page that gives the reader deeper context. NOT a summary of page 1.\n"
-            "Instead: explain WHY this matters, the background context, or how it works in simple terms.\n"
-            "Rules:\n"
-            "- 2-3 short bullets, each a specific fact or context that helps understand the story\n"
-            "- Present tense, short sentences, no academic language\n"
-            "- No \"Here's why this matters\" — just state the context directly\n"
-            "- Each bullet should make the reader go \"oh, that makes more sense now\""
+            "The reader tapped PAGE 1 for MORE. Give them the texture a great BBC / Independent "
+            "long-read adds — the telling detail, the number behind the number, the backstory beat, "
+            "the quote — but in fast social voice. NOT a summary of page 1.\n"
+            f"ALREADY SAID on page 1 — never repeat, rephrase, or summarize: {' | '.join(bullets)}\n"
+            "Each bullet must carry a NEW fact pulled from the source material below — a name, "
+            "number, date, quote, or concrete consequence that is NOT on page 1.\n"
+            "HARD BANS (these make the page worthless):\n"
+            "- Defining common nouns (\"The Orange Cap goes to the top scorer\", \"Everest is the tallest mountain\").\n"
+            "- Restating or rephrasing page 1.\n"
+            "- Generic background the reader could have guessed (\"crowd pressure can affect players\").\n"
+            "- \"Here's why this matters\" framing — just state the thing.\n"
+            "- Inventing anything not in the sources.\n"
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, short "
+            "sentences, mix lengths; one detail may run long if it earns it.\n"
+            "THE BAR: if the sources don't give you at least 2 genuinely NEW, specific facts, "
+            "return [] — a thin page is worse than none."
         )
 
+    voice_line = (
+        "Match the story's vertical voice: sports = group-chat hot-take; tech = analyst-with-a-wink; "
+        "world/politics = plainspoken consequence; entertainment = fandom insider; business = numbers + stakes. "
+        "Bold ONLY named people/places/orgs/products/numbers with **double asterisks**, max 1 per bullet."
+    )
+
     prompt = (
-        f"This is a Today+ social post:\n"
-        f"Title: {title}\n"
-        f"Bullets: {' | '.join(bullets)}\n"
-        f"Category: {category}\n\n"
+        f"You write for Today+, a fast-read social platform (peer to TikTok, Instagram, Threads).\n"
+        f"STORY TITLE: {title}\n"
+        f"CATEGORY: {category}\n"
+        f"{sources_block}\n"
         f"{instruction}\n\n"
-        f"Return ONLY a JSON array of 2-3 bullet strings."
+        f"{voice_line}\n\n"
+        f"Return ONLY a JSON array of bullet strings (or [] if there isn't enough new material)."
     )
     request_data = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -1302,8 +1341,10 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None):
         parsed = json.loads(text)
         if not isinstance(parsed, list):
             return None
-        out = [str(b).strip() for b in parsed if str(b).strip()]
-        return out if 2 <= len(out) <= 4 else None
+        out = [str(b).strip() for b in parsed if str(b).strip()][:3]  # iOS card renders max 3 bullets/page (MainFeedView bulletList prefix(3))
+        # Empty/short array is a VALID signal: "no new substance, don't make a page."
+        return out if len(out) >= 2 else None
+
     except Exception:
         return None
 
@@ -2158,14 +2199,14 @@ def run_complete_pipeline():
                     article_category = synthesized.get('category', 'Other')
                     extra_pages = []
                     with gemini_semaphore:
-                        page2_bullets = _generate_deeper_page(title, bullets, article_category, kind='context')
+                        page2_bullets = _generate_deeper_page(title, bullets, article_category, kind='context', sources=cluster_sources)
                     if page2_bullets:
                         extra_pages.append({"title": None, "image_url": None, "bullets": page2_bullets})
                         # Page 3 only for source-rich clusters (more material = more to say).
                         if n_sources >= mp_p3_min_sources:
                             with gemini_semaphore:
                                 page3_bullets = _generate_deeper_page(
-                                    title, bullets, article_category, kind='whatsnext', prev_bullets=page2_bullets
+                                    title, bullets, article_category, kind='whatsnext', prev_bullets=page2_bullets, sources=cluster_sources
                                 )
                             if page3_bullets:
                                 extra_pages.append({"title": None, "image_url": None, "bullets": page3_bullets})
@@ -2460,6 +2501,8 @@ ISSUES FOUND IN PREVIOUS VERSION:
 
     prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
 
+THE BAR: think BBC / The Independent reporting standards — accurate, specific, genuinely informative — but written for a fast vertical feed. Voice-driven and quick to read, never dumbed-down. Every line earns its place: a real fact, a real name, a real number, a real stake. A reader should feel smarter in 5 seconds, the way the best journalism makes you feel — just faster. No hype, no filler, no copywriter clichés.
+
 ⚠️ TODAY'S DATE: {today_str}
 All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
@@ -2509,6 +2552,45 @@ Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both
 If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 THE WIRE-SERVICE TRAP — the #1 reason posts read BORING. Kill it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your sources ARE wire copy (Reuters/AP register). Your job is to NOT sound like them.
+The failure mode is "neutral record-keeping": passive, hedged, no stakes, no specifics
+— the single thing that makes a feed feel like a 1990s newspaper. This is most common
+on World / Politics stories. Banish it.
+
+BANNED — never write these or anything like them:
+  ✗ Passive state-of-record: "has been sworn in", "was caused by", "is set to",
+    "talks have stalled", "a deal was reached", "is working to", "was found near".
+  ✗ Hedge / non-fact filler: "may resume", "is expected to", "faces challenges
+    ahead", "remains far apart", "on key issues", "both sides", "officials say",
+    "according to a report", "still investigating", "in the coming days", "could see".
+  ✗ Empty bullets that carry NO name / number / quote — DELETE them, don't pad.
+
+Every line must be ACTIVE, CONCRETE, and carry a real detail. Real before → after:
+
+  ✗ "German justice system strained." / "The sheer volume of cases is overwhelming
+     courts." / "This strain threatens the rule of law, according to a report."
+  ✓ Title: "Germany's courts are so backed up, prosecutors are giving up."
+     • "Frankfurt alone dropped **8,000** cases last year — too few judges."
+     • "A judges' union warns serious crimes are now expiring before trial."
+
+  ✗ "Oman detects suspected naval mine in Hormuz Strait." / "The mine was found near
+     shipping lanes." / "Oman's navy is working to neutralize the device."
+  ✓ Title: "A loose mine is drifting in the world's busiest oil chokepoint."
+     • "**20%** of global oil ships through Hormuz — insurers are already twitchy."
+     • "**Oman**'s navy is racing to defuse it before a tanker finds it first."
+
+  ✗ "Talks between the US and Iran have stalled." / "Both sides remain far apart on
+     key issues." / "Negotiations may resume next month."
+  ✓ Title: "The US–Iran nuclear talks just fell apart again."
+     • "Dealbreaker: **Iran** won't cap enrichment, **Washington** won't lift sanctions first."
+     • "Third round since **April** to collapse with nothing signed."
+
+Two sharp bullets always beat three with a dud. Quality over quota.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ STEP 2 — TITLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2521,6 +2603,8 @@ LEAD WITH ONE OF:
   • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
 
 Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
+Do NOT lead with the state-of-record fact of an event happening ("X has been sworn in",
+"Cyclone hits coast", "Talks stalled"). Lead with the CONSEQUENCE or TENSION instead.
 
 PERSON / TENSE:
   • First-person ("I tried...") — opinion / personal angle.
@@ -2732,7 +2816,8 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title with 1-2 **bold** entities",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
+    "0-3 bullets, MAX 3 (a 4th never renders). Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths.",
+    "DEAD-BULLET TEST: read each bullet alone — if it has no name/number/date/quote, or could sit in a story about anything ('faces challenges ahead', 'remains tense', 'more to come'), DELETE it. Never pad to 3. Two real bullets beat three with a dud."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
@@ -2764,6 +2849,17 @@ SPORTS (hot_take):
   ],
   "card_format": "hot_take",
   "category": "Sports"
+}}
+
+WORLD (standard) — the hard one. NOT wire voice, real stakes + specifics:
+{{
+  "title": "A loose mine is drifting in the world's busiest oil chokepoint.",
+  "summary_bullets": [
+    "**20%** of global oil ships through the **Strait of Hormuz**.",
+    "**Oman**'s navy is racing to defuse it before a tanker finds it."
+  ],
+  "card_format": "standard",
+  "category": "World"
 }}
 
 K-POP (story_arc):

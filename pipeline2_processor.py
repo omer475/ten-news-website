@@ -367,11 +367,22 @@ Page 1 = INTRO (theme + hook + why-this-matters)
 Pages 2..N = ONE entity/concept per page (in the given order)
 
 For each page, write:
-- title (5-10 words, no clickbait, no wire-speak)
-- bullets (0-3, each 8-15 words, full sentences, concrete facts)
+- title (5-10 words, no clickbait, no wire-speak; lead with the consequence or tension, NOT "X is a..." or "X announced...")
+- bullets (0-3 — MAX 3, a 4th never renders — each 8-15 words, full sentences, concrete facts)
 - body (only for longer explainers: 2-3 sentences of prose; otherwise null)
 
-VOICE: Clear, curious, factual, conversational. A smart friend explaining something well.
+VOICE: Clear, curious, factual, conversational. A smart friend explaining something well — NOT a textbook or a wire reporter.
+
+DEAD-BULLET TEST (the #1 thing that makes a page boring): every bullet must carry a
+real name, number, date, or quote. Read each bullet alone — if it has none, or could
+sit in a story about almost anything ("it's important to many people", "this is a
+popular topic", "experts have differing views"), DELETE it. Never pad to 3. Two
+concrete bullets beat three vague ones.
+
+BANNED (passive/hedge wire-speak — never write these or anything like them):
+  according to a report, is working to, remains far apart, both sides, faces challenges,
+  still investigating, may resume, has been sworn in, officials say, is expected to,
+  is set to, was caused by. Write active, specific, human sentences instead.
 
 BANNED WORDS (do NOT use any): {', '.join(BANNED_WORDS)}
 BANNED PUNCTUATION: em-dashes, hashtags.
