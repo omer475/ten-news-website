@@ -364,7 +364,11 @@ PER-PAGE LENGTH (match the text to what carries the page):
 - VARY length deliberately page to page. Uniform-length pages are the AI tell.
 
 For each page, write:
-- title (3-12 words, no clickbait, no wire-speak). On the cover it is the hook; on interior pages it names the one idea.
+- title (3-12 words, no clickbait, no wire-speak). On the cover it is the hook.
+  On INTERIOR pages, write a punchy one-line take a friend would text, NOT a textbook section header.
+  It should make a point or surprise, not just label the topic.
+    GOOD: "Salt earlier, not more"  /  "The Romans cracked it with a screw"  /  "Then the streak hit 27 years"
+    BAD (header-speak, avoid): "Roman Engineering for Oil Extraction"  /  "Physiological Stressors Mount"  /  "Playoff Struggles Begin"
 - bullets (0-3, each 5-22 words, full sentences; every bullet carries a number/name/place/quote and never recaps the title)
 - body (long-form prose for TEXT-LED pages: 2-4 specific sentences; null on image-led/short pages)
 
