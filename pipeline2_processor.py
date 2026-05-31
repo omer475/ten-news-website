@@ -354,16 +354,21 @@ RESEARCH (use these as your source of truth):
 
 INTRO CONTEXT: {research.get('intro_text', '')}
 
-PAGES TO WRITE:
-Page 1 = INTRO (theme + hook + why-this-matters)
-Pages 2..N = ONE entity/concept per page (in the given order)
+PAGES TO WRITE (carousel structure):
+Page 1 = COVER. One scroll-stopping hook: a surprising number, a bold claim, or a sharp question. NOT "why this matters", NOT a summary. Make the reader need page 2. Keep it short: a title, optional one-line subline.
+Pages 2..N = ONE idea per page, one researched entity each, in the given order. Each page delivers a single concrete unit carried by a real number, name, place, or quote. Land the FINAL page on a payoff: its last sentence delivers the closing point, it does not trail off.
+
+PER-PAGE LENGTH (match the text to what carries the page):
+- TEXT-LED page (the writing IS the value: science, history, how/why): write a dense `body` of 2-4 full sentences packed with specifics (numbers, mechanism, names). This is the default for explainer/history/surprising-fact entities. Bullets optional on top.
+- IMAGE-LED page (a product, place, car, dish, or person the photo carries): keep it SHORT. A label-style title plus at most one bullet. Do not pad; let the image work.
+- VARY length deliberately page to page. Uniform-length pages are the AI tell.
 
 For each page, write:
-- title (5-10 words, no clickbait, no wire-speak)
-- bullets (0-3, each 8-15 words, full sentences, concrete facts)
-- body (only for longer explainers: 2-3 sentences of prose; otherwise null)
+- title (3-12 words, no clickbait, no wire-speak). On the cover it is the hook; on interior pages it names the one idea.
+- bullets (0-3, each 5-22 words, full sentences; every bullet carries a number/name/place/quote and never recaps the title)
+- body (long-form prose for TEXT-LED pages: 2-4 specific sentences; null on image-led/short pages)
 
-VOICE: Clear, curious, factual, conversational. A smart friend explaining something well.
+VOICE: Clear, curious, specific. A smart friend who actually knows the subject. Confident, never padded, no "here's why this matters".
 
 BANNED WORDS (do NOT use any): {', '.join(BANNED_WORDS)}
 BANNED PUNCTUATION: em-dashes, hashtags.

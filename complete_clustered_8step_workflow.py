@@ -2076,16 +2076,15 @@ Bullets: {' | '.join(bullets)}
 Category: {synthesized.get('category', 'Other')}
 
 Write a SHORT second page that gives the reader deeper context. NOT a summary of page 1.
-Instead: explain WHY this matters, the background context, or how it works in simple terms.
 
 Rules:
-- 2-3 short bullets, each a specific fact or context that helps understand the news
-- Present tense, short sentences, no academic language
-- No "Here's why this matters" — just state the context directly
-- Each bullet should make the reader go "oh, that makes more sense now"
+- 2-3 bullets. Each adds a NEW specific fact, number, name, place, or quote the reader did not get on page 1.
+- Never restate, summarize, or re-define page 1. If you can only restate page 1, return [].
+- Prefer concrete substance over framing. No "here's why this matters", no generic background.
+- Each bullet 8-22 words, full sentence, plainspoken present tense.
 
 Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
-Example: ["Current solar panels max out at 25% efficiency commercially", "The theoretical limit has been 33% since 1961 — this breaks that barrier", "If scalable, this could cut solar farm sizes by half"]"""
+Example: ["Current commercial solar panels max out near 25% efficiency, capping rooftop output for two decades.", "The Shockley-Queisser limit pinned single-junction cells at 33% since 1961, a wall this design finally clears.", "Doubling panel yield could halve the land a utility solar farm needs, researchers estimate."]"""
 
                     with gemini_semaphore:
                         import google.generativeai as _p2_genai
