@@ -112,7 +112,12 @@ const formatArticle = (article) => {
     countries: safeJsonParse(article.countries, []),
     topics: safeJsonParse(article.topics, []),
     topic_relevance: safeJsonParse(article.topic_relevance, {}),
-    country_relevance: safeJsonParse(article.country_relevance, {})
+    country_relevance: safeJsonParse(article.country_relevance, {}),
+    // Multi-page carousel (curated content has 3-8 pages). Without this the
+    // app collapses every article to a single title+photo page.
+    pages: safeJsonParse(article.pages, null),
+    format: article.format || null,
+    source_type: article.source_type || null
   };
 };
 

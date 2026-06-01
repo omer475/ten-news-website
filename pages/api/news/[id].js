@@ -45,6 +45,7 @@ export default async function handler(req, res) {
     const countries = safeJsonParse(article.countries, []);
     const topics = safeJsonParse(article.topics, []);
     const interestTags = safeJsonParse(article.interest_tags, []);
+    const pages = safeJsonParse(article.pages, null);
 
     // Parse map data
     let map = null;
@@ -120,6 +121,12 @@ export default async function handler(req, res) {
       cluster_id: article.cluster_id,
       version_number: article.version_number,
       views: article.view_count || 0,
+      // Multi-page carousel. Without this the Explore prefetch hydrates an
+      // Article with pages=null, so curated 3-8 page carousels collapse to a
+      // single title+photo card. iOS Article.pages drives the swipe carousel.
+      pages: pages,
+      format: article.format || null,
+      source_type: article.source_type || null,
     };
 
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');

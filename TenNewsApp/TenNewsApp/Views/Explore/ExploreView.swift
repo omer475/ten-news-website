@@ -65,7 +65,7 @@ extension Article {
             articleType: nil,
             authorId: nil,
             authorName: nil,
-            pages: nil,
+            pages: e.pages,
             expectedReadSeconds: nil
         )
     }
@@ -1961,7 +1961,8 @@ struct EntityArticlesSheet: View {
             imageUrl: article.imageUrl,
             category: article.category,
             publishedAt: article.publishedAt,
-            bullets: nil
+            bullets: nil,
+            pages: article.pages
         )
     }
 }
