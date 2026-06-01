@@ -166,6 +166,21 @@ def mark_brief(supabase, brief_id: str, status: str, **fields):
         print(f"      ⚠️ could not update brief {brief_id}: {str(e)[:60]}")
 
 
+def claim_brief(supabase, brief_id: str) -> bool:
+    """Atomically claim a brief for processing. Flips pending -> in_progress ONLY
+    if it is still pending, so two overlapping job executions can't both grab the
+    same brief and double-publish it. Returns True if THIS worker won the claim,
+    False if another worker already took it (skip)."""
+    try:
+        res = supabase.table('curated_briefs') \
+            .update({'status': 'in_progress'}) \
+            .eq('id', brief_id).eq('status', 'pending').execute()
+        return bool(res.data)  # non-empty => we flipped the row; empty => already claimed
+    except Exception as e:
+        print(f"      ⚠️ could not claim brief {brief_id}: {str(e)[:60]}")
+        return False
+
+
 # ── Stage 2: research ──────────────────────────────────────────────────────────
 def research_brief(brief: Dict) -> Optional[Dict]:
     n_items = max(2, brief['page_count'] - 1)  # page 1 is the intro
@@ -542,6 +557,24 @@ def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
     all_bullets = [b for p in pages for b in p.get('bullets', [])]
     embed_text = f"{title} {' '.join(all_bullets)}"
 
+    # Title-dedup guard: distinct briefs on near-identical topics (and same-brief
+    # races across overlapping runs) can converge on the SAME cover title. Skip if
+    # a curated article with this exact title was published in the dedup window, so
+    # the feed never shows two identical-titled carousels.
+    try:
+        norm_title = ' '.join(title.lower().split())
+        since = (datetime.now(timezone.utc) - timedelta(days=int(os.getenv('PIPELINE2_TITLE_DEDUP_DAYS', '7')))).isoformat()
+        existing = supabase.table('published_articles') \
+            .select('id,title_news') \
+            .eq('source_type', 'curated_brief') \
+            .gte('published_at', since).execute()
+        for r in (existing.data or []):
+            if ' '.join((r.get('title_news') or '').lower().split()) == norm_title:
+                print(f"      ⏭ duplicate title already published (#{r['id']}): {title!r} — skipping")
+                return None
+    except Exception as e:
+        print(f"      ⚠️ title-dedup check failed (continuing): {str(e)[:60]}")
+
     embedding_minilm = get_embedding_minilm(embed_text)
     vq_primary, vq_secondary = assign_vq_clusters(embedding_minilm, supabase)
     if vq_primary is None:
@@ -623,8 +656,13 @@ def track_cooldown(supabase, brief: Dict):
 def process_brief(supabase, brief: Dict) -> bool:
     bid = brief['id']
     label = brief['topic'][:55]
+    # Atomic claim: only ONE worker/execution can flip this brief pending->in_progress.
+    # If another already claimed it (overlapping cron + manual run), skip to avoid
+    # double-publishing the same brief.
+    if not claim_brief(supabase, bid):
+        print(f"\n   ⏭ [{brief['brief_type']}] {label} — already claimed, skipping")
+        return False
     print(f"\n   ▶ [{brief['brief_type']}] {label}")
-    mark_brief(supabase, bid, 'in_progress')
     try:
         research = research_brief(brief)
         if not research:
