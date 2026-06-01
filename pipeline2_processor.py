@@ -373,10 +373,21 @@ PAGES TO WRITE (carousel structure):
 Page 1 = COVER. One scroll-stopping hook: a surprising number, a bold claim, or a sharp question. NOT "why this matters", NOT a summary. Make the reader need page 2. Keep it short: a title, optional one-line subline.
 Pages 2..N = ONE idea per page, one researched entity each, in the given order. Each page delivers a single concrete unit carried by a real number, name, place, or quote. Land the FINAL page on a payoff: its last sentence delivers the closing point, it does not trail off.
 
-PER-PAGE LENGTH (match the text to what carries the page):
-- TEXT-LED page (the writing IS the value: science, history, how/why): write a dense `body` of 2-4 full sentences packed with specifics (numbers, mechanism, names). This is the default for explainer/history/surprising-fact entities. Bullets optional on top.
-- IMAGE-LED page (a product, place, car, dish, or person the photo carries): keep it SHORT. A label-style title plus at most one bullet. Do not pad; let the image work.
-- VARY length deliberately page to page. Uniform-length pages are the AI tell.
+PER-PAGE LENGTH — SHORT BY DEFAULT. The carousels you're modeled on are mostly
+ONE tight line per page ("Italy is offering $1 homes in Sicily to revive villages",
+"McLaren Elva — $2 million+", a single term + its definition). Length is a tool you
+spend only when an idea genuinely needs it, NOT a quota to fill.
+- DEFAULT (most pages): the title carries the idea + ONE short bullet (or a tight
+  1-2 sentence body), and that's it. Don't add a second/third bullet just because
+  you can. Don't write a paragraph when one line lands the point.
+- LONG (the EXCEPTION, only when the idea truly can't be said briefly): a denser
+  body of 2-3 sentences — use it for a genuinely layered mechanism or a story beat
+  that loses meaning when cut. Most pages are NOT this.
+- A page may even be title-only when the title fully delivers the idea.
+- VARY length deliberately. If every page is the same length (all long OR all short)
+  that's the AI tell — mix tight one-liners with the occasional fuller page.
+- Hard rule: NEVER put both a 2+ sentence body AND multiple bullets on the same
+  page. Pick one carrier per page.
 
 For each page, write:
 - title (3-12 words, no clickbait, no wire-speak). On the cover it is the hook.
@@ -384,8 +395,8 @@ For each page, write:
   It should make a point or surprise, not just label the topic.
     GOOD: "Salt earlier, not more"  /  "The Romans cracked it with a screw"  /  "Then the streak hit 27 years"
     BAD (header-speak, avoid): "Roman Engineering for Oil Extraction"  /  "Physiological Stressors Mount"  /  "Playoff Struggles Begin"
-- bullets (0-3, each 5-22 words, full sentences; every bullet carries a number/name/place/quote and never recaps the title)
-- body (long-form prose for TEXT-LED pages: 2-4 specific sentences; null on image-led/short pages)
+- bullets (0-3, default ONE; each 5-22 words, full sentence carrying a number/name/place/quote, never recapping the title)
+- body (use SPARINGLY: a tight 1-2 sentences, or null. Only stretch to 3 sentences for a genuinely layered idea. Never both a long body and bullets on the same page.)
 
 VOICE: Clear, curious, specific. A smart friend who actually knows the subject. Confident, never padded, no "here's why this matters".
 

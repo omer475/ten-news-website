@@ -694,7 +694,6 @@ struct ArticleCardContinuousView: View {
     @State private var timelineExpanded = false
     @State private var currentPage = 0
     @State private var pageHeights: [Int: CGFloat] = [:]  // per-page measured heights (dynamic carousel)
-    @State private var carouselScrollX: CGFloat = 0        // live horizontal scroll offset (height interpolation)
     @State private var sharedPhotoHeight: CGFloat = 0      // measured height of the fixed shared photo
     @State private var selectedComponent: String = ""
     @State private var heartBurstActive = false
@@ -1179,6 +1178,31 @@ struct ArticleCardContinuousView: View {
             .onTapGesture(count: 2) { handleDoubleTapLike() }
     }
 
+    /// Fixed-height photo for the multi-page carousel. Every page's image fills the
+    /// SAME box (3:2, cropped) so all photos sit at the identical top level and the
+    /// text always begins at the same Y — only the text below grows downward as you
+    /// swipe. This is what keeps the carousel from "jumping" between pages.
+    private var carouselImageHeight: CGFloat {
+        (UIScreen.main.bounds.width - 32) * (2.0 / 3.0)   // 3:2 landscape
+    }
+
+    private func carouselImage(_ url: String?) -> some View {
+        AsyncCachedImage(url: URL(string: url ?? ""), contentMode: .fill)
+            .frame(width: UIScreen.main.bounds.width - 32, height: carouselImageHeight)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .onTapGesture(count: 2) { handleDoubleTapLike() }
+    }
+
+    /// STABLE carousel height = tallest measured page. Fixed for the whole swipe so
+    /// the card never resizes mid-drag (the old per-frame interpolation was the
+    /// source of the janky scroll). Short pages simply leave space below — the photo
+    /// and text stay put; nothing reflows while your finger moves.
+    private func stableCarouselHeight(_ pageWidth: CGFloat) -> CGFloat {
+        let measured = carouselPages.indices.compactMap { pageHeights[$0] }
+        return max(measured.max() ?? 320, 80)
+    }
+
     // Single-page hero photo. Multi-page & gallery render their images INSIDE
     // the carousel (so they swipe with the content), so this is single-page only.
     private var photoBlock: some View {
@@ -1404,11 +1428,10 @@ struct ArticleCardContinuousView: View {
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.paging)
-            .frame(height: interpolatedCarouselHeight(measureWidth))
+            .frame(height: stableCarouselHeight(measureWidth))
             .onScrollGeometryChange(for: CGFloat.self) { geo in
                 geo.contentOffset.x
             } action: { _, x in
-                carouselScrollX = x
                 let p = Int((x / measureWidth).rounded())
                 if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
             }
@@ -1429,7 +1452,10 @@ struct ArticleCardContinuousView: View {
     private var sharedPhotoMultiPageCaption: some View {
         let measureWidth = UIScreen.main.bounds.width - 32
         let photoGapBelow: CGFloat = 12
-        let totalHeight = sharedPhotoHeight + photoGapBelow + interpolatedCarouselHeight(measureWidth)
+        // STABLE total height (photo + gap + tallest text page). Fixed for the
+        // whole swipe so the card never resizes mid-drag — text just grows
+        // downward into the reserved space; short pages leave room below.
+        let totalHeight = sharedPhotoHeight + photoGapBelow + stableCarouselHeight(measureWidth)
 
         return ZStack(alignment: .top) {
             // Off-layout measurement of each page's TEXT height (no photo here —
@@ -1469,7 +1495,6 @@ struct ArticleCardContinuousView: View {
             .onScrollGeometryChange(for: CGFloat.self) { geo in
                 geo.contentOffset.x
             } action: { _, x in
-                carouselScrollX = x
                 let p = Int((x / measureWidth).rounded())
                 if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
             }
@@ -1493,19 +1518,6 @@ struct ArticleCardContinuousView: View {
         .padding(.bottom, 12)
     }
 
-    /// Carousel height interpolated from the live horizontal scroll offset, so it
-    /// transitions smoothly between slides of different heights as you swipe.
-    private func interpolatedCarouselHeight(_ pageWidth: CGFloat) -> CGFloat {
-        guard pageWidth > 0, !carouselPages.isEmpty else { return max(pageHeights[currentPage] ?? 320, 80) }
-        let raw = max(0, min(carouselScrollX / pageWidth, CGFloat(carouselPages.count - 1)))
-        let lower = Int(floor(raw))
-        let upper = min(lower + 1, carouselPages.count - 1)
-        let frac = raw - CGFloat(lower)
-        let h0 = pageHeights[lower] ?? 320
-        let h1 = pageHeights[upper] ?? h0
-        return max(h0 + (h1 - h0) * frac, 80)
-    }
-
     /// One multi-page slide: the page's own image (with the "1/N" pill) + that
     /// page's text, together, so the whole slide swipes as a unit.
     @ViewBuilder
@@ -1514,10 +1526,13 @@ struct ArticleCardContinuousView: View {
             let imgUrl = (page.imageUrl ?? (idx == 0 ? article.imageUrl : nil))?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if let s = imgUrl, !s.isEmpty {
-                cardImage(s)
+                // Fixed-height image so every page's photo top-aligns and the text
+                // starts at the same Y on every slide (only text grows downward).
+                carouselImage(s)
                     .padding(.bottom, 12)
             }
             pageContent(idx: idx, page: page)
+            Spacer(minLength: 0)   // text expands downward; short pages pad below
         }
         .padding(.top, hasImage ? 4 : 18)
         .padding(.bottom, 12)
