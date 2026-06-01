@@ -18,12 +18,16 @@
 // deletion from regressing brand-new-user UX.
 
 import { createClient } from '@supabase/supabase-js'
-import { serveTrinityFeed } from '../../../lib/trinityServe.js'
+import { serveTrinityFeed, recordSlateExposure } from '../../../lib/trinityServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
+import { readFeedCache, writeFeedCache, buildExposureMeta, expandExposureMeta } from '../../../lib/feedCache.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const TRINITY_DISABLED_GLOBAL = process.env.TRINITY_DISABLE === '1'
+// Precompute-cache fast path (lib/feedCache.js). On by default; set
+// FEED_CACHE=0 to disable and always recompute live (instant rollback).
+const FEED_CACHE_ENABLED = process.env.FEED_CACHE !== '0'
 
 // Phase A.1 (Pinterest playbook, 2026-05-11) — request coalescing.
 //
@@ -125,6 +129,53 @@ export default async function handler(req, res) {
   const totN = engN + glnN + skpN
   const recentEngagementZ = totN >= 5 ? (engN + 0.3 * glnN - skpN) / totN : 0
 
+  // ────────────────────────────────────────────────────────────────────
+  // Serve-from-cache fast path (precompute model — see lib/feedCache.js).
+  // First page only; the cron warmer (warmer=1) and paginated loads (cursor)
+  // always recompute. ANY miss / staleness / too-few-unseen / error falls
+  // through to the live Trinity compute below, so this is strictly
+  // non-regressive — worst case it behaves exactly like before, just slower
+  // than a hit. A hit turns the ~8s recompute into a sub-ms PK lookup.
+  // ────────────────────────────────────────────────────────────────────
+  const isFirstPage = !req.query.cursor
+  const isWarmer = req.query.warmer === '1'
+  if (FEED_CACHE_ENABLED && userId && isFirstPage && !isWarmer) {
+    const cacheT0 = Date.now()
+    try {
+      const cached = await readFeedCache(supabase, userId, { limit, seenIds })
+      if (cached) {
+        // Record exposure + impressions for the slate we ACTUALLY serve, just
+        // like a live serve would (the precompute ran with skipExposureWrites).
+        await recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure))
+        const impressionRows = cached.articles.map((a, i) => ({
+          user_id: userId,
+          article_id: a.id,
+          bucket: a._bucket,
+          slot_index: i,
+          pool_size: cached.poolSize,
+          propensity_score: cached.poolSize > 0 ? 1.0 / cached.poolSize : null,
+          slots_pattern: 'trinity-cache',
+          request_id: requestId,
+        }))
+        const { error: impErr } = await supabase.from('user_feed_impressions').insert(impressionRows)
+        if (impErr) console.error('[trinity.cache] impression log failed:', impErr.message)
+        console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
+        return res.status(200).json({
+          articles: cached.articles,
+          next_cursor: null,
+          has_more: true,
+          total: cached.articles.length,
+          feed_state: 'normal',
+          fresh_count: cached.articles.length,
+          caught_up_message: null,
+          _trinity_debug: { path: 'cache', ageMs: cached.ageMs },
+        })
+      }
+    } catch (cacheErr) {
+      console.error('[trinity.cache] read path error, falling through to live:', cacheErr.message)
+    }
+  }
+
   const t0 = Date.now()
   // Phase A.1 — request coalescing. Concurrent loadMore calls with same
   // (userId, seenIds, limit) share one slate; non-owners skip the
@@ -223,6 +274,19 @@ export default async function handler(req, res) {
     if (impErr) console.error('[trinity] impression log failed:', impErr.message)
   } else if (userId && !isOwner) {
     console.log(`[trinity.coalesce] non-owner: skipping impression write key=${cKey.slice(0, 40)}`)
+  }
+
+  // Cache-aside: persist this freshly computed first-page slate so the next
+  // cold open for this user is an instant cache hit. Owner-only / first-page /
+  // not the warmer. exposureMeta is built from the RAW slate (which still
+  // carries _retriever / vq_* / source), 1:1 with `formatted`.
+  if (FEED_CACHE_ENABLED && userId && isOwner && isFirstPage && !isWarmer) {
+    try {
+      const exposureMeta = buildExposureMeta(trinityResult.articles)
+      await writeFeedCache(supabase, userId, formatted, exposureMeta, dbg.poolSize || formatted.length)
+    } catch (e) {
+      console.error('[trinity.cache] write failed:', e.message)
+    }
   }
 
   return res.status(200).json({
