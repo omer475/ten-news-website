@@ -370,7 +370,37 @@ RESEARCH (use these as your source of truth):
 INTRO CONTEXT: {research.get('intro_text', '')}
 
 PAGES TO WRITE (carousel structure):
-Page 1 = COVER. One scroll-stopping hook: a surprising number, a bold claim, or a sharp question. NOT "why this matters", NOT a summary. Make the reader need page 2. Keep it short: a title, optional one-line subline.
+Page 1 = COVER TITLE. This is the ONLY thing most people see in the feed — it decides
+whether they tap. Write it on research-backed rules for what makes a social headline
+get opened by a young audience:
+  • LEAD WITH A CONCRETE SPECIFIC, not a vague question. Studies show vague
+    curiosity-gap headlines ("Why do we still eat this?", "Only 4 ingredients?")
+    UNDER-perform; the winner is a specific fact + a small gap. Open with a real
+    number, name, place, or stake the reader can picture.
+  • USE A NUMBER when you have one — headlines with numbers get ~36% more
+    engagement. Prefer the surprising exact figure ($7.4B, 216 children, 71%, 9th-
+    century) over round/approx. One strong number, not three.
+  • SPECIFICITY + EMOTION are the two biggest drivers. Name the actual thing
+    (the place, person, dish, company), and let the stake carry feeling — without
+    hype words.
+  • LEAVE A SMALL GAP, don't slam it shut. Tell them WHAT and let them tap for
+    WHY/HOW. "Ukraine lost 71% of its power. Its economy still grew." beats both
+    "Ukraine economy update" (no gap) and "You won't believe what happened" (no fact).
+  • A question is allowed ONLY if it still carries a concrete specific
+    ("306 rescuers killed by double-tap strikes. Why?" is fine; "Why do strikes
+    happen?" is not). Don't default to the question template — most covers should
+    be declarative statements with a number/name.
+  • Length 6-14 words / up to ~70 chars. Short-but-vague is the failure mode; a
+    slightly longer title that lands a specific beats a clipped empty one.
+  • BANNED on the cover: "you won't believe", "shocking", "this is why", bare
+    "Why...?"/"How...?" with no number/name, and generic teases.
+  GOOD covers: "Ukraine lost 71% of its power. Its economy still grew."  /
+    "216 children died when the aid trucks stopped."  /  "Drake just parked
+    $29M of cars in one music video."  /  "The 9th-century Sicilian ice that's
+    beating gelato this summer."
+  BAD covers (vague/empty, avoid): "Why do we still eat this?"  /  "Only 4
+    ingredients?"  /  "Tired of the same old summer salad?"  /  "Seven lives lost."
+The cover may carry an optional one-line subline, but the title does the work.
 Pages 2..N = ONE idea per page, one researched entity each, in the given order. Each page delivers a single concrete unit carried by a real number, name, place, or quote. Land the FINAL page on a payoff: its last sentence delivers the closing point, it does not trail off.
 
 PER-PAGE LENGTH — SHORT BY DEFAULT. The carousels you're modeled on are mostly
@@ -463,12 +493,12 @@ def quality_gate_text(post: Dict, brief: Dict) -> Optional[str]:
         # banned punctuation
         if '—' in blob or '#' in blob:
             return f"banned_punctuation@page{i+1}"
-        # title length 3-12 words. (Spec said 5-12 for a social headline, but
-        # curated PAGE titles are section headers — 3-4 word headers like
-        # "Understanding ADHD: Beyond Hyperactivity" are good; only 1-2 word
-        # stubs are junk.)
+        # title length 3-14 words. Interior PAGE titles are section headers (3-4
+        # words fine); the COVER title (page 1) is a social headline that often
+        # needs up to ~14 words to land a concrete specific + small gap. Only
+        # 1-2 word stubs are junk.
         tw = len(title.split())
-        if tw < 3 or tw > 12:
+        if tw < 3 or tw > 14:
             return f"title_len:{tw}w@page{i+1}"
         # bullet length 5-22 words
         for b in bullets:
@@ -491,7 +521,7 @@ def _feedback_for(reason: str) -> str:
         word = reason.split("'")[1] if "'" in reason else 'a banned word'
         return f'Your previous version used the banned word "{word}". Rewrite without it; avoid every banned word.'
     if reason.startswith('title_len'):
-        return 'A page title was the wrong length. Keep every page title between 3 and 12 words.'
+        return 'A page title was the wrong length. Keep every page title between 3 and 14 words.'
     if reason.startswith('bullet_len'):
         return 'A bullet was the wrong length. Keep every bullet between 5 and 22 words.'
     if reason.startswith('banned_punctuation'):
