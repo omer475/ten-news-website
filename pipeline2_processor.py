@@ -617,6 +617,39 @@ def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
         print(f"      ⚠️ title-dedup check failed (continuing): {str(e)[:60]}")
 
     embedding_minilm = get_embedding_minilm(embed_text)
+
+    # Semantic content-dedup: the topic-level dedup in the AI editor only compares
+    # brief TOPIC STRINGS (and only vs already-published cooldown topics), so two
+    # differently-worded briefs on the SAME story (e.g. "Why do responders keep
+    # dying?" vs "58 double-tap strikes. Why target rescuers?") both get published.
+    # Here we compare the FINAL article's content embedding against recently-
+    # published curated articles and skip near-duplicates. Catches the cross-cycle
+    # races and the semantic variants the title check can't.
+    try:
+        sim_threshold = float(os.getenv('PIPELINE2_CONTENT_DEDUP_THRESHOLD', '0.90'))
+        since = (datetime.now(timezone.utc) - timedelta(days=int(os.getenv('PIPELINE2_CONTENT_DEDUP_DAYS', '5')))).isoformat()
+        recent = supabase.table('published_articles') \
+            .select('id,title_news,embedding_minilm') \
+            .eq('source_type', 'curated_brief') \
+            .gte('published_at', since) \
+            .not_.is_('embedding_minilm', 'null') \
+            .order('published_at', desc=True) \
+            .limit(300).execute()
+        for r in (recent.data or []):
+            prev = r.get('embedding_minilm')
+            if isinstance(prev, str):
+                try:
+                    prev = json.loads(prev)
+                except Exception:
+                    prev = None
+            if not prev:
+                continue
+            if _cosine(embedding_minilm, prev) >= sim_threshold:
+                print(f"      ⏭ semantic duplicate of #{r['id']} ({r.get('title_news','')!r}) — skipping {title!r}")
+                return None
+    except Exception as e:
+        print(f"      ⚠️ content-dedup check failed (continuing): {str(e)[:60]}")
+
     vq_primary, vq_secondary = assign_vq_clusters(embedding_minilm, supabase)
     if vq_primary is None:
         print(f"      ❌ Trinity stamping failed — skipping (would be invisible to feed)")
