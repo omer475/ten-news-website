@@ -146,7 +146,8 @@ export default async function handler(req, res) {
       if (cached) {
         // Record exposure + impressions for the slate we ACTUALLY serve, just
         // like a live serve would (the precompute ran with skipExposureWrites).
-        await recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure))
+        // Both writes run in parallel — they're independent — so the cache-hit
+        // critical path is one DB round-trip, not two.
         const impressionRows = cached.articles.map((a, i) => ({
           user_id: userId,
           article_id: a.id,
@@ -157,9 +158,12 @@ export default async function handler(req, res) {
           slots_pattern: 'trinity-cache',
           request_id: requestId,
         }))
-        const { error: impErr } = await supabase.from('user_feed_impressions').insert(impressionRows)
-        if (impErr) console.error('[trinity.cache] impression log failed:', impErr.message)
-        console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
+        const [, impInsert] = await Promise.all([
+          recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure)),
+          supabase.from('user_feed_impressions').insert(impressionRows),
+        ])
+        if (impInsert?.error) console.error('[trinity.cache] impression log failed:', impInsert.error.message)
+        console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} poolStored=${cached.poolSize} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
         return res.status(200).json({
           articles: cached.articles,
           next_cursor: null,

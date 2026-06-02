@@ -22,7 +22,12 @@ import { writeFeedCache, buildExposureMeta } from '../../../lib/feedCache.js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-const FEED_SIZE = 25
+// Precompute a POOL larger than a single page (the client requests 25). The
+// cache read filters out the caller's seen_ids and serves the top `limit`
+// unseen — so a heavy user whose seen set overlaps the slate still gets a full
+// fresh page from the buffer instead of falling through to the ~8s live path.
+// With a 25-only slate, any overlap starved the page → cache miss.
+const FEED_SIZE = 50
 const CONCURRENCY = 3
 const TIME_BUDGET_MS = 50_000
 
