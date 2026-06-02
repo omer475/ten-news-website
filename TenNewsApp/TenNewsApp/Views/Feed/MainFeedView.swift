@@ -695,6 +695,7 @@ struct ArticleCardContinuousView: View {
     @State private var currentPage = 0
     @State private var pageHeights: [Int: CGFloat] = [:]  // per-page measured heights (dynamic carousel)
     @State private var sharedPhotoHeight: CGFloat = 0      // measured height of the fixed shared photo
+    @State private var carouselScrollID: Int? = 0          // paging ScrollView position → drives currentPage
     @State private var selectedComponent: String = ""
     @State private var heartBurstActive = false
     @State private var followBurstActive = false
@@ -1194,13 +1195,19 @@ struct ArticleCardContinuousView: View {
             .onTapGesture(count: 2) { handleDoubleTapLike() }
     }
 
-    /// STABLE carousel height = tallest measured page. Fixed for the whole swipe so
-    /// the card never resizes mid-drag (the old per-frame interpolation was the
-    /// source of the janky scroll). Short pages simply leave space below — the photo
-    /// and text stay put; nothing reflows while your finger moves.
-    private func stableCarouselHeight(_ pageWidth: CGFloat) -> CGFloat {
-        let measured = carouselPages.indices.compactMap { pageHeights[$0] }
-        return max(measured.max() ?? 320, 80)
+    /// The current page's own measured height — the card hugs each page's content
+    /// (short page → short card). Changes animate on currentPage (see call site).
+    private func currentPageHeight() -> CGFloat {
+        max(pageHeights[currentPage] ?? 320, 80)
+    }
+
+    /// Card height = the current page's own measured height. It changes only when
+    /// `currentPage` settles, and that change is animated with a single .smooth
+    /// curve (keyed on currentPage), so the page-dots + action row + next article
+    /// below it GLIDE to their new position instead of jumping. Each page hugs its
+    /// content (no permanent empty space).
+    private func carouselFrameHeight() -> CGFloat {
+        currentPageHeight()
     }
 
     // Single-page hero photo. Multi-page & gallery render their images INSIDE
@@ -1410,31 +1417,31 @@ struct ArticleCardContinuousView: View {
             .hidden()
             .allowsHitTesting(false)
 
-            // Native paging ScrollView — system-quality 1:1 finger tracking +
-            // momentum snap, and it nests safely inside the vertical feed (no
-            // gesture conflict). Each slide is image+text together, so the image
-            // swipes with the text. Height interpolates with the LIVE scroll
-            // offset so it grows/shrinks smoothly between slides of different
-            // lengths — no clip-then-jump like TabView.
+            // Paging ScrollView (native 1:1 finger tracking + momentum snap). We
+            // detect scroll PHASE so the card can be tallest-height WHILE swiping
+            // (incoming page never clips → no text reveal; nothing resizes mid-drag
+            // → smooth) and shrink to the landed page's own height AT REST (each
+            // page hugs its content). Each slide is top-anchored.
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
                         slideContent(idx: idx, page: page)
                             .frame(width: measureWidth, alignment: .top)
-                            .fixedSize(horizontal: false, vertical: true)  // natural height — never truncate text
+                            .frame(maxHeight: .infinity, alignment: .top)
                             .id(idx)
                     }
                 }
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.paging)
-            .frame(height: stableCarouselHeight(measureWidth))
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.x
-            } action: { _, x in
-                let p = Int((x / measureWidth).rounded())
-                if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
-            }
+            .scrollPosition(id: $carouselScrollID)
+            .frame(height: carouselFrameHeight())
+            // Height changes only when the page settles (currentPage), and glides
+            // via one .smooth curve — so the content below slides, never jumps.
+            .animation(.interpolatingSpring(stiffness: 170, damping: 26), value: currentPage)
+        }
+        .onChange(of: carouselScrollID) { _, newID in
+            if let p = newID, p != currentPage { currentPage = p }
         }
         .onPreferenceChange(PageHeightKey.self) { heights in
             for (k, v) in heights where pageHeights[k] != v {
@@ -1452,10 +1459,6 @@ struct ArticleCardContinuousView: View {
     private var sharedPhotoMultiPageCaption: some View {
         let measureWidth = UIScreen.main.bounds.width - 32
         let photoGapBelow: CGFloat = 12
-        // STABLE total height (photo + gap + tallest text page). Fixed for the
-        // whole swipe so the card never resizes mid-drag — text just grows
-        // downward into the reserved space; short pages leave room below.
-        let totalHeight = sharedPhotoHeight + photoGapBelow + stableCarouselHeight(measureWidth)
 
         return ZStack(alignment: .top) {
             // Off-layout measurement of each page's TEXT height (no photo here —
@@ -1472,10 +1475,11 @@ struct ArticleCardContinuousView: View {
             }
             .frame(width: 0, height: 0).hidden().allowsHitTesting(false)
 
-            // Horizontal-paging swipe area covers the FULL card (photo region +
-            // gap + text). Each slide = transparent photo-spacer + that page's
-            // text; the actual photo is overlaid on top with hit-testing off, so
-            // a swipe anywhere (incl. on the photo) drives the text slide.
+            // Paging ScrollView for the TEXT (same grow-while-swiping / shrink-at-
+            // rest height logic as multiPageCaption). Each slide = transparent
+            // photo-spacer (so text starts below the shared photo) + that page's
+            // text, top-anchored. The photo is overlaid on top with hit-testing off
+            // so swiping on the photo still pages the text.
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(carouselPages.enumerated()), id: \.offset) { idx, page in
@@ -1484,29 +1488,28 @@ struct ArticleCardContinuousView: View {
                             pageContent(idx: idx, page: page)
                         }
                         .frame(width: measureWidth, alignment: .top)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxHeight: .infinity, alignment: .top)
                         .id(idx)
                     }
                 }
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.paging)
-            .frame(height: totalHeight)
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.x
-            } action: { _, x in
-                let p = Int((x / measureWidth).rounded())
-                if p != currentPage, p >= 0, p < carouselPages.count { currentPage = p }
-            }
+            .scrollPosition(id: $carouselScrollID)
+            .frame(height: sharedPhotoHeight + photoGapBelow + carouselFrameHeight())
+            .animation(.interpolatingSpring(stiffness: 170, damping: 26), value: currentPage)
 
             // The FIXED shared photo, rendered ONCE on top. Doesn't move — the
             // ScrollView under it does. hit-testing off so finger swipes (incl.
-            // on the photo) pass through to the ScrollView.
+            // on the photo) pass through to the pager.
             cardImage(sharedImageURL)
                 .background(GeometryReader { geo in
                     Color.clear.preference(key: PhotoHeightKey.self, value: geo.size.height)
                 })
                 .allowsHitTesting(false)
+        }
+        .onChange(of: carouselScrollID) { _, newID in
+            if let p = newID, p != currentPage { currentPage = p }
         }
         .onPreferenceChange(PageHeightKey.self) { heights in
             for (k, v) in heights where pageHeights[k] != v { pageHeights[k] = v }
@@ -1527,15 +1530,15 @@ struct ArticleCardContinuousView: View {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if let s = imgUrl, !s.isEmpty {
                 // Fixed-height image so every page's photo top-aligns and the text
-                // starts at the same Y on every slide (only text grows downward).
+                // starts at the same Y on every slide.
                 carouselImage(s)
                     .padding(.bottom, 12)
             }
             pageContent(idx: idx, page: page)
-            Spacer(minLength: 0)   // text expands downward; short pages pad below
         }
         .padding(.top, hasImage ? 4 : 18)
         .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Photo-gallery carousel: swipe the IMAGES (dots UNDER the photo) with one
@@ -1614,8 +1617,12 @@ struct ArticleCardContinuousView: View {
                 bulletList(pageBullets)
             }
 
-            // Page prose (curated explainers/recipes carry a `body` per page).
-            if let body = page.body?.trimmingCharacters(in: .whitespacesAndNewlines),
+            // Page prose. A page should carry EITHER bullets OR a body, not both —
+            // older content (generated before the short-by-default prompt) often
+            // has both, which renders as "3 bullets + a redundant paragraph". When
+            // bullets exist, suppress the body so each page has a single carrier.
+            if pageBullets.isEmpty,
+               let body = page.body?.trimmingCharacters(in: .whitespacesAndNewlines),
                !body.isEmpty {
                 Text(body)
                     .font(.system(size: 16 * textScale))
