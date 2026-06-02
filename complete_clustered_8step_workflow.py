@@ -2623,8 +2623,16 @@ WITHHOLD ONE THING:
 
 NUMBERS:
   • Specific > round. "$317K" beats "$300K." "27%" beats "about a quarter."
+  • Lead with the number when you have one — headlines with numbers get ~36% more engagement.
   • One number per title max. Two competes for attention.
   • Don't force a number where there isn't one. Cooking and fashion titles often don't need one.
+
+NO VAGUE QUESTIONS:
+  • A bare question with no concrete fact ("Why does this happen?", "What's next?")
+    is the weakest title type — research shows vague curiosity-gap headlines
+    under-perform. Lead with the specific instead.
+  • A question is OK only if it still carries a number/name/stake
+    ("Russia's budget deficit doubled. Can Putin keep funding the war?").
 
 NAME RECOGNITION:
   • Globally known figures (Musk, Trump, Biden, Putin, Taylor Swift, Ronaldo): name only.
@@ -2637,19 +2645,24 @@ BOLD HIGHLIGHTS:
   • NEVER bold verbs, adjectives, or articles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 STEP 3 — BULLETS (0-3, you decide)
+🔹 STEP 3 — BULLETS (2-3 by DEFAULT)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Bullets are NOT mandatory. Self-contained titles emit ZERO bullets. Forcing bullets onto a one-line declaration is the #1 thing that wrecks a social post.
+DEFAULT = 2-3 bullets. A bare title + photo with nothing else is a dead card —
+the reader gets no payoff. Almost every post should carry 2-3 bullets that
+deliver the specifics behind the title. Write them unless the title is a TRUE
+one-liner (below).
 
-WHEN TO RETURN ZERO BULLETS:
-  • Title is a complete declaration ("Messi just retired.")
-  • Title is a single-image moment (the photo carries the rest)
-  • Title is a hot take that lands harder unannotated
-  • If you find yourself writing a bullet that recaps the title, just don't.
+WHEN TO RETURN ZERO BULLETS (the rare exception — only a genuine one-liner):
+  • Title is a fully self-contained declaration that needs nothing ("Messi just retired.")
+  • Title is a single-image moment where the photo IS the whole story
+  • If the only bullet you can write would recap the title, drop to zero — but
+    first try harder to find 2-3 real extending facts from the sources.
+  Do NOT emit zero bullets just because it's breaking news or you're unsure. If
+  the sources contain ANY specific facts (numbers/names/quotes/context), pull 2-3.
 
-WHEN TO RETURN 1-3 BULLETS:
-  • The title raises a question the reader will want answered.
+WHEN TO RETURN 2-3 BULLETS (the norm):
+  • The title raises a question or names a stake the reader wants resolved.
   • There are specific stakes / numbers / quotes worth pulling out.
   • Mix the count by content. 1 short + 1 medium > 3 uniform.
 
