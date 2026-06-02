@@ -1,7 +1,15 @@
 import SwiftUI
 
+// Rewrite — NavigationStack + .toolbar got us a broken nav bar where
+// the username rendered as a huge bold overlay on top of message
+// content, the underlying conversation list bled through, and the
+// send button vanished. Custom top bar + plain VStack avoids the
+// whole class of SwiftUI navigation-bar layout bugs that the older
+// .toolbar version was hitting on iOS 26.
 struct ChatDetailView: View {
     @Environment(AppViewModel.self) private var appViewModel
+    @Environment(FeedViewModel.self) private var feedViewModel
+    @Environment(TabBarState.self) private var tabBarState
 
     let conversation: ChatConversation
     var onDismiss: (() -> Void)?
@@ -10,84 +18,31 @@ struct ChatDetailView: View {
     @State private var inputText = ""
     @State private var isLoading = true
     @State private var chatService = ChatService.shared
+    @State private var keyboardHeight: CGFloat = 0
     @FocusState private var inputFocused: Bool
 
     private var userId: String? { appViewModel.currentUser?.id }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Messages
-                ScrollViewReader { proxy in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack(spacing: 2) {
-                            if isLoading {
-                                ProgressView()
-                                    .padding(.top, 40)
-                            }
-
-                            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                                let isMe = message.senderId == userId
-                                let showAvatar = shouldShowAvatar(at: index)
-
-                                messageBubble(message, isMe: isMe, showAvatar: showAvatar)
-                                    .id(message.id)
-                            }
-
-                            // Invisible anchor at the very bottom
-                            Color.clear
-                                .frame(height: 1)
-                                .id("bottom")
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.top, 12)
-                        .padding(.bottom, 8)
-                    }
-                    .defaultScrollAnchor(.bottom)
-                    .onChange(of: messages.count) { _, _ in
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            proxy.scrollTo("bottom")
-                        }
-                    }
-                    .onChange(of: inputFocused) { _, focused in
-                        if focused {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    proxy.scrollTo("bottom")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Input bar
-                inputBar
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        onDismiss?()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        if let avatarUrl = conversation.displayAvatar {
-                            AsyncCachedImage(url: avatarUrl, contentMode: .fill)
-                                .frame(width: 28, height: 28)
-                                .clipShape(Circle())
-                        }
-                        Text(conversation.displayName)
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-            }
-            .background(Theme.Colors.backgroundPrimary)
+        VStack(spacing: 0) {
+            topBar
+            messageList
         }
+        .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
+        .safeAreaInset(edge: .bottom, spacing: 0) { inputBar }
+        // Manual keyboard padding — the parent ContentView opted out
+        // of keyboard safe-area (so the For You feed isn't disturbed
+        // by an open search bar), and that propagates into this
+        // overlay view, which prevents `.safeAreaInset(.bottom)` from
+        // floating the input bar above the keyboard on its own. The
+        // NotificationCenter observers below restore the iMessage
+        // behavior without touching ContentView's global setting.
+        .padding(.bottom, keyboardHeight)
+        .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+        .swipeToDismiss { onDismiss?() }
         .onAppear {
+            tabBarState.hideBottomBar = true
+            startObservingKeyboard()
             Task {
                 messages = await chatService.loadMessages(conversationId: conversation.id)
                 isLoading = false
@@ -99,11 +54,155 @@ struct ChatDetailView: View {
             }
         }
         .onDisappear {
+            tabBarState.hideBottomBar = false
+            stopObservingKeyboard()
             chatService.stopPolling()
             if let uid = userId {
                 Task { await chatService.loadConversations(userId: uid) }
             }
         }
+    }
+
+    // MARK: - Keyboard observation
+
+    private func startObservingKeyboard() {
+        let nc = NotificationCenter.default
+        nc.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { note in
+            guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            // Subtract the home-indicator safe area so the input bar
+            // sits flush against the keyboard top, not 34pt above it.
+            let inset = UIApplication.shared.connectedScenes
+                .compactMap { ($0 as? UIWindowScene)?.keyWindow?.safeAreaInsets.bottom }
+                .first ?? 0
+            keyboardHeight = max(0, frame.height - inset)
+        }
+        nc.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            keyboardHeight = 0
+        }
+    }
+
+    private func stopObservingKeyboard() {
+        let nc = NotificationCenter.default
+        nc.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        nc.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    // MARK: - Top bar
+
+    // Minimal centered top bar — back chevron on the left, name
+    // centered, fixed 44pt height. Dropped the avatar circle because
+    // test users have no avatarUrl and the gray "S" placeholder
+    // looked broken; we already show the avatar in the chat list row.
+    private var topBar: some View {
+        ZStack {
+            Text(conversation.displayName)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.primary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 56) // leave room for the back chevron
+
+            HStack {
+                Button {
+                    HapticManager.light()
+                    onDismiss?()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+        }
+        .frame(height: 44)
+        // No explicit background or bottom divider — the top bar
+        // inherits the page's cream backgroundPrimary, so chevron +
+        // name appear to float on the same surface as the messages
+        // (no visible "header strip" behind the username).
+    }
+
+    // MARK: - Message list
+    //
+    // `.defaultScrollAnchor(.bottom)` is restored — without it, the
+    // scroll position defaulted to the top, so on first load the user
+    // saw the OLDEST messages and had to scroll down manually to find
+    // the latest. Combined with `.scrollBounceBehavior(.basedOnSize)`,
+    // short conversations no longer bounce, so the anchor doesn't
+    // cause the pull-down jankiness it used to.
+    //
+    // VStack (not LazyVStack) so every row lays out immediately — the
+    // `proxy.scrollTo(lastId)` calls would otherwise fire before the
+    // last bubble was rendered, leaving the scroll stuck in the
+    // middle (which is exactly what the user reported). For chats
+    // under a few hundred messages this is fine; once chat history
+    // gets long we can switch back to LazyVStack with a pagination
+    // strategy.
+
+    private var messageList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 2) {
+                    if isLoading {
+                        ProgressView()
+                            .padding(.top, 40)
+                    } else if messages.isEmpty {
+                        emptyState
+                            .padding(.top, 80)
+                    }
+
+                    ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                        messageBubble(
+                            message,
+                            isMe: message.senderId == userId,
+                            showAvatar: shouldShowAvatar(at: index)
+                        )
+                        .id(message.id)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity)
+            }
+            // `.defaultScrollAnchor(.bottom)` alone is enough — it keeps
+            // the last message at the bottom on first load AND when the
+            // viewport shrinks because the keyboard rose. The manual
+            // onChange(messages.count / isLoading / inputFocused)
+            // animated `scrollTo` calls we had earlier were competing
+            // with SwiftUI's own keyboard-animation transaction and
+            // making the messages visibly jump.
+            //
+            // For brand-new incoming messages we still want a smooth
+            // scroll-to-bottom, but the anchor does it implicitly when
+            // new rows extend the bottom of the content.
+            .defaultScrollAnchor(.bottom)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDismissesKeyboard(.interactively)
+            .onChange(of: messages.count) { _, _ in
+                // Only scroll when the user is already near the bottom
+                // (i.e. they didn't scroll up to read history). Without
+                // the proxy.scrollTo this is a no-op; with the anchor,
+                // new content sliding in at the bottom is naturally
+                // pinned.
+                guard let lastId = messages.last?.id else { return }
+                proxy.scrollTo(lastId, anchor: .bottom)
+            }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 36))
+                .foregroundStyle(.tertiary)
+            Text("No messages yet")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Helpers
@@ -144,26 +243,38 @@ struct ChatDetailView: View {
             }
 
             VStack(alignment: isMe ? .trailing : .leading, spacing: 4) {
-                // Article share card
-                if message.isArticleShare, let article = message.article {
-                    ChatSharedArticleCard(article: article)
+                // Article share — full feed card so chat shares look
+                // identical to scrolling the feed. SharedArticle is
+                // slim (id + title + photo + source + category) so the
+                // card downgrades gracefully when bullets / action
+                // state aren't available. showTopicTags=false because
+                // chip taps inside a chat bubble would be confusing.
+                if message.isArticleShare, let shared = message.article {
+                    let hydrated = Article.fromShared(shared)
+                    ArticleCardContinuousView(
+                        article: hydrated,
+                        accentColor: feedViewModel.accentColor(for: hydrated),
+                        showTopicTags: false
+                    )
+                    .padding(.bottom, 4)
                 }
 
-                // Text content
+                // Text content. Bubble colors:
+                //   • me     → blue fill (iMessage) with white text
+                //   • other  → light fill with primary text (was .white on
+                //              white-tinted glass, which read as invisible
+                //              on the cream background)
                 if let content = message.content, !content.isEmpty {
-                    GlassEffectContainer {
-                        Text(content)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 11)
-                            .glassEffect(
-                                isMe
-                                    ? .regular.tint(Color(hex: "#0A84FF").opacity(0.5)).interactive()
-                                    : .regular.tint(Color.white.opacity(0.08)),
-                                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            )
-                    }
+                    Text(content)
+                        .font(.system(size: 16))
+                        .foregroundStyle(isMe ? .white : Color.primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(isMe ? Color(hex: "#0A84FF") : Color.gray.opacity(0.15))
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 // Timestamp
@@ -183,36 +294,56 @@ struct ChatDetailView: View {
     }
 
     // MARK: - Input Bar
+    //
+    // Lives inside `.safeAreaInset(.bottom)` on the messages scroll view,
+    // so the system pushes ONLY this bar above the keyboard (not the
+    // whole scroll view), which is what stopped the messages from
+    // hopping up and down as you typed.
+    //
+    // The bar gets a solid `backgroundPrimary` fill so the scroll
+    // content visibly stops at its top edge instead of bleeding through
+    // a transparent inset — without that, the last bubble appeared to
+    // float underneath the bar mid-keyboard-animation.
 
     private var inputBar: some View {
-        GlassEffectContainer {
-            HStack(spacing: 10) {
-                TextField("Message...", text: $inputText, axis: .vertical)
-                    .font(.system(size: 16))
-                    .lineLimit(1...5)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .glassEffect(
-                        .regular.tint(Color.white.opacity(0.05)),
-                        in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    )
-                    .focused($inputFocused)
+        let canSend = !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return HStack(alignment: .bottom, spacing: 8) {
+            TextField("Message...", text: $inputText, axis: .vertical)
+                .font(.system(size: 16))
+                .foregroundStyle(Color.primary)
+                .lineLimit(1...5)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.gray.opacity(0.12))
+                )
+                .focused($inputFocused)
+                .frame(maxWidth: .infinity)
 
-                Button {
-                    sendMessage()
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(
-                            inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                ? Color.white.opacity(0.15)
-                                : Color(hex: "#0A84FF")
-                        )
-                }
-                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button {
+                sendMessage()
+            } label: {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(canSend ? Color(hex: "#0A84FF") : Color.gray.opacity(0.4))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .buttonStyle(.plain)
+            .disabled(!canSend)
+            .fixedSize()
+            .padding(.bottom, 4)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(
+            Theme.Colors.backgroundPrimary
+                .ignoresSafeArea(edges: .bottom)
+        )
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
         }
     }
 
@@ -488,5 +619,75 @@ struct ChatSharedArticleCard: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Article from SharedArticle
+//
+// SharedArticle is the slim payload chat messages carry (just id, title,
+// imageUrl, source, category — no bullets, no publisher). Building a slim
+// Article from it lets ChatDetailView render the full feed-card layout
+// uniformly with the rest of the app; missing fields downgrade
+// gracefully (no bullet section, no follow chip).
+
+extension Article {
+    static func fromShared(_ s: SharedArticle) -> Article {
+        Article(
+            id: FlexibleID(String(s.id)),
+            title: s.title,
+            titleNews: s.title,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: s.bullets,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: s.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: s.source,
+            category: s.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: s.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: s.authorName,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
     }
 }

@@ -25,7 +25,43 @@ struct EventsTabView: View {
             Group {
                 if viewModel.isLoading && viewModel.events.isEmpty {
                     ProgressView()
+                        .tint(.white)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let error = viewModel.errorMessage, viewModel.events.isEmpty {
+                    // Error state — failed load no longer leaves the
+                    // tab blank. Retry button calls loadEvents() again
+                    // and clears the message on success.
+                    VStack(spacing: 14) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 36))
+                            .foregroundStyle(.quaternary)
+                        Text("Couldn't load events")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                        Text(error)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                        Button {
+                            HapticManager.light()
+                            Task {
+                                await viewModel.loadEvents()
+                                await loadHeroImages()
+                                await preloadImagesAndExtractColors()
+                            }
+                        } label: {
+                            Text("Try Again")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(Color(white: 0.25), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 6)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.events.isEmpty {
                     ContentUnavailableView(
                         "No Events",
@@ -40,6 +76,11 @@ struct EventsTabView: View {
             .navigationTitle("Events")
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            // Force the nav bar to keep its dark background so the
+            // "Events" title doesn't blend with the page background
+            // when the user scrolls the list under the large title.
+            .toolbarBackground(Color(white: 0.1), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .navigationDestination(for: WorldEvent.self) { event in
                 EventDetailView(event: event)
                     .environment(\.colorScheme, .light)

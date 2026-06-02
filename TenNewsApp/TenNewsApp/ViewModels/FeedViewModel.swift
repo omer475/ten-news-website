@@ -31,30 +31,12 @@ final class FeedViewModel {
     // a 30-min phone lock produced a 1800s "absorbed" engagement.
     private var viewDwellAccum: [String: TimeInterval] = [:]
     private var dwellPaused = false
-
-    // 2026-05-19 (PR9) — `lastRefreshTime` is persisted to UserDefaults so
-    // the 5-minute staleness check survives a cold start (app killed from
-    // the app switcher → reopened). Previously this was in-memory only;
-    // when the user killed the app and reopened a minute later,
-    // `lastRefreshTime` was nil → `isStale` returned true → fresh feed
-    // always generated. User saw "feed moved to top + same articles I
-    // already saw" because the cache loaded instantly, then `refresh()`
-    // overwrote it with a new fetch that included recently-impressed
-    // articles. With persistence, a reopen within 5 minutes skips
-    // `refreshIfStale` and continues with cached content untouched.
-    private static let lastRefreshTimeKey = "feed_last_refresh_time"
-    private(set) var lastRefreshTime: Date? = {
-        let stored = UserDefaults.standard.double(forKey: lastRefreshTimeKey)
-        return stored > 0 ? Date(timeIntervalSince1970: stored) : nil
-    }() {
-        didSet {
-            if let t = lastRefreshTime {
-                UserDefaults.standard.set(t.timeIntervalSince1970, forKey: Self.lastRefreshTimeKey)
-            } else {
-                UserDefaults.standard.removeObject(forKey: Self.lastRefreshTimeKey)
-            }
-        }
-    }
+    // Continuous-feed revisit tracking: ids the user has scrolled PAST at
+    // least once. On the next onAppear for the same id we fire
+    // article_revisit (X-style ranker's strongest positive, weight 12.0).
+    // Cleared on `refresh()` so a fresh feed starts clean.
+    private var departedArticleIds: Set<String> = []
+    private(set) var lastRefreshTime: Date?
 
     // Phase 9.2 (2026-04-24): prefetch-vs-freshness coordination.
     // Set the instant an engagement/skip POST is fired; loadMoreIfNeeded
@@ -141,19 +123,6 @@ final class FeedViewModel {
             feedLog.warning("loadInitialData: showing \(cached.count) cached articles instantly")
         } else {
             isLoading = true  // first-ever load, must wait
-        }
-
-        // 2026-05-19 (PR9) — when the user reopens the app within the
-        // 5-minute staleness window AND we have a cache, SKIP the network
-        // fetch entirely. This preserves "continue where I left off"
-        // behavior across cold-starts (app killed). Pre-PR9 the fetch ran
-        // unconditionally, overwriting the cache with a new slate that
-        // jumped scroll to top and often re-served articles the user had
-        // just scrolled past.
-        if !isStale && !allArticles.isEmpty {
-            feedLog.warning("loadInitialData: cache fresh (<5min since last refresh), skipping network fetch")
-            isRefreshing = false
-            return
         }
 
         // Step 2: Fetch fresh feed (runs regardless, replaces cache)
@@ -297,6 +266,7 @@ final class FeedViewModel {
         hasMoreBecameFalseAt = nil
         reRanker.reset()
         viewStartTimes.removeAll()
+        departedArticleIds.removeAll()
         isLoading = true
         errorMessage = nil
         do {
@@ -359,12 +329,21 @@ final class FeedViewModel {
 
     // MARK: - Swipe Signal Tracking
 
-    /// Call when a new card appears (user swiped to it)
+    /// Call when a new card appears (user scrolled to it). Fires
+    /// `article_revisit` if the user has departed this card before — the
+    /// X-style ranker (Phase 2) weights revisit at 12.0, the strongest
+    /// single positive. Without this hook revisit is never fired on the
+    /// continuous feed (the old VerticalPager-only `newIndex < oldIndex`
+    /// path is gone).
     func recordViewStart(at index: Int) {
         let arts = articles
         guard index < arts.count else { return }
         let id = arts[index].id.stringValue
-        // Reset accumulated for a fresh-card view (not coming back via revisit).
+        if departedArticleIds.contains(id) {
+            recordRevisit(at: index)
+        }
+        // Reset accumulated for a fresh dwell measurement (whether first view
+        // or revisit — we want time-on-card from each appearance separately).
         viewDwellAccum.removeValue(forKey: id)
         viewStartTimes[id] = Date()
     }
@@ -420,6 +399,9 @@ final class FeedViewModel {
         let arts = articles
         guard fromIndex < arts.count else { return }
         let article = arts[fromIndex]
+        // Mark the article as departed so the next onAppear is recognised as
+        // a revisit (continuous-feed scroll-back signal). See recordViewStart.
+        departedArticleIds.insert(article.id.stringValue)
         // Audit fix B11 (2026-05-06): pause-aware dwell. When the app is
         // backgrounded or a sheet is presented, pauseDwellTracking()
         // accumulates the in-flight elapsed into viewDwellAccum and clears

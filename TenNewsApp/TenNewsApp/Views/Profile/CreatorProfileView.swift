@@ -9,7 +9,6 @@ struct CreatorProfileView: View {
     // Publisher data (fetched from API when publisherId is available)
     var publisherId: String?
 
-    @State private var isFollowing = false
     @State private var followerCount: Int = 0
     @State private var publisherArticles: [Article] = []
     @State private var isLoadingArticles = false
@@ -24,10 +23,21 @@ struct CreatorProfileView: View {
     @State private var articleCount: Int = 0
     @State private var followingCount: Int = 0
     @State private var hasLoaded = false
+    @State private var followManager = FollowManager.shared
 
     @Environment(AppViewModel.self) private var appViewModel
+    @Environment(FeedViewModel.self) private var feedViewModel
 
     private let publisherService = PublisherService()
+
+    /// Authoritative follow state: read from FollowManager so it stays in
+    /// sync with every other follow surface (article-card chip, Following
+    /// list pill). Previously CreatorProfileView held its own @State and
+    /// could diverge from FollowManager on a fetch-but-not-mutation failure.
+    private var isFollowing: Bool {
+        guard let pubId = publisherId else { return false }
+        return followManager.isFollowing(pubId)
+    }
 
     private let logoColors: [Color] = [.blue, .purple, .pink, .orange, .teal, .indigo, .mint, .cyan]
     private var logoColor: Color {
@@ -67,21 +77,23 @@ struct CreatorProfileView: View {
                 .padding(.bottom, 120)
             }
 
-            // Back button
+            // Back button — flat circle, no glass effect or shadow.
             Button {
                 onDismiss()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color.primary)
                     .frame(width: 38, height: 38)
-                    .glassEffect(.regular, in: Circle())
+                    .background(.fill.quaternary, in: Circle())
             }
+            .buttonStyle(.plain)
             .padding(.top, 56)
             .padding(.leading, 20)
         }
         .background(Theme.Colors.backgroundPrimary.ignoresSafeArea())
         .ignoresSafeArea()
+        .swipeToDismiss { onDismiss() }
         .task {
             guard !hasLoaded else { return }
             hasLoaded = true
@@ -118,7 +130,16 @@ struct CreatorProfileView: View {
             displayAvatarUrl = pub.avatarUrl
             followerCount = pub.followerCount
             articleCount = pub.articleCount
-            isFollowing = response.isFollowing
+            // Sync FollowManager with the server's authoritative is_following
+            // flag (handles the cross-device case where the user followed on
+            // web but FollowManager's local cache doesn't know).
+            followManager.syncFromServer(
+                publisherId: pubId,
+                isFollowing: response.isFollowing,
+                name: pub.displayName,
+                avatarUrl: pub.avatarUrl,
+                category: pub.category
+            )
         } catch {
             print("Failed to load publisher: \(error)")
         }
@@ -140,25 +161,36 @@ struct CreatorProfileView: View {
     }
 
     private func toggleFollow() {
-        guard let pubId = publisherId, let userId = appViewModel.currentUser?.id else { return }
+        guard let pubId = publisherId else { return }
 
-        let wasFollowing = isFollowing
-        isFollowing.toggle()
-        followerCount += isFollowing ? 1 : -1
+        let willFollow = !isFollowing
+        followerCount += willFollow ? 1 : -1
         HapticManager.medium()
 
+        // FollowManager is the single source of truth. It owns the API
+        // call, the optimistic update + revert on failure, and the
+        // publisher_followed / publisher_unfollowed analytics event.
+        // `isFollowing` here is a computed property reading FollowManager
+        // — no local @State to keep in sync. Previously CreatorProfileView
+        // held its own @State and could diverge from FollowManager on
+        // a fetch-but-not-mutation failure.
+        FollowManager.shared.toggle(
+            pubId,
+            name: displayName,
+            avatarUrl: displayAvatarUrl,
+            category: displayCategory,
+            userId: appViewModel.currentUser?.id,
+            sourceArticleId: nil
+        )
+
+        // Refresh canonical follower count from the server. This is purely
+        // informational — FollowManager has already handled the mutation.
+        // If the fetch fails we leave followerCount at the optimistic value;
+        // the next loadPublisherData call will fix it.
+        guard let userId = appViewModel.currentUser?.id else { return }
         Task {
-            do {
-                let response: FollowResponse
-                if !wasFollowing {
-                    response = try await publisherService.follow(publisherId: pubId, userId: userId)
-                } else {
-                    response = try await publisherService.unfollow(publisherId: pubId, userId: userId)
-                }
-                followerCount = response.followerCount
-            } catch {
-                isFollowing = wasFollowing
-                followerCount += wasFollowing ? 1 : -1
+            if let response = try? await publisherService.fetchPublisher(id: pubId, userId: userId) {
+                followerCount = response.publisher.followerCount
             }
         }
     }
@@ -234,9 +266,17 @@ struct CreatorProfileView: View {
                 if publisherId != nil {
                     toggleFollow()
                 } else {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        isFollowing.toggle()
-                    }
+                    // Sample-creator demo path — no real publisherId to
+                    // hit the API with. Use the local creator id so the
+                    // entry still appears on the Following list.
+                    FollowManager.shared.toggle(
+                        creator.id,
+                        name: displayName.isEmpty ? creator.name : displayName,
+                        avatarUrl: displayAvatarUrl ?? creator.avatarUrl,
+                        category: displayCategory ?? creator.category,
+                        userId: appViewModel.currentUser?.id,
+                        sourceArticleId: nil
+                    )
                     HapticManager.medium()
                 }
             } label: {
@@ -302,30 +342,25 @@ struct CreatorProfileView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
             } else {
-                let screenW = UIScreen.main.bounds.width
-                let hPad: CGFloat = 16
-                let gap: CGFloat = 8
-                let halfW = (screenW - hPad * 2 - gap) / 2
-
-                LazyVGrid(columns: [
-                    GridItem(.fixed(halfW), spacing: gap),
-                    GridItem(.fixed(halfW), spacing: gap)
-                ], spacing: gap) {
+                // Full feed-card layout — same component the For You
+                // feed uses (header + photo + title + bullets + action
+                // row). Vertical list with the feed's 24pt breathing
+                // room, replacing the 2-column SearchResultCard grid.
+                LazyVStack(spacing: 24) {
                     ForEach(allArticles) { article in
-                        Button {
-                            onArticleTap?(article)
-                        } label: {
-                            SearchResultCard(
-                                article: article.toSearchArticle(),
-                                fallbackColor: logoColor,
-                                cardWidth: halfW,
-                                cardHeight: halfW * 1.35
-                            )
-                        }
-                        .buttonStyle(.plain)
+                        // Passive cards — tapping does nothing; the
+                        // inline action buttons (heart/save/share)
+                        // still work. Previously a tap opened the
+                        // legacy ExploreArticleSheet which is dark-
+                        // themed and looks like a "black page".
+                        ArticleCardContinuousView(
+                            article: article,
+                            accentColor: feedViewModel.accentColor(for: article),
+                            showTopicTags: false
+                        )
                     }
                 }
-                .padding(.horizontal, hPad)
+                .padding(.top, 4)
             }
         }
     }

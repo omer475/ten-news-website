@@ -234,11 +234,48 @@ final class AuthViewModel {
             if (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
                 // User cancelled — don't show error
             } else if let apiError = error as? APIError {
-                // Surface the backend's actual error message (e.g. the Google
-                // error_description) instead of a generic string.
                 errorMessage = apiError.errorDescription ?? "Google sign-in failed"
             } else {
                 errorMessage = "Google sign-in failed: \(error.localizedDescription)"
+            }
+            isLoading = false
+            return nil
+        }
+    }
+
+    // MARK: - Sign in with Apple
+
+    func signInWithApple() async -> (user: AuthUser, session: AuthSession?)? {
+        guard !isLoading else { return nil }
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let apple = try await AppleSignInCoordinator.shared.signIn()
+            let response = try await authService.appleAuth(
+                idToken: apple.idToken,
+                nonce: apple.nonce,
+                fullName: apple.fullName
+            )
+            isLoading = false
+            if let user = response.user {
+                needsProfileCompletion = response.needsProfile ?? false
+                return (user, response.session)
+            } else {
+                errorMessage = response.error ?? "Apple sign-in failed"
+                return nil
+            }
+        } catch {
+            let nsErr = error as NSError
+            // ASAuthorizationError.canceled = 1001
+            let isCancelled = nsErr.domain == "com.apple.AuthenticationServices.AuthorizationError"
+                && nsErr.code == 1001
+            if isCancelled {
+                // User dismissed the Apple sheet — silent.
+            } else if let apiError = error as? APIError {
+                errorMessage = apiError.errorDescription ?? "Apple sign-in failed"
+            } else {
+                errorMessage = "Apple sign-in failed: \(error.localizedDescription)"
             }
             isLoading = false
             return nil
@@ -347,5 +384,123 @@ final class GoogleAuthContextProvider: NSObject, ASWebAuthenticationPresentation
             return ASPresentationAnchor()
         }
         return window
+    }
+}
+
+// MARK: - Apple Sign In Coordinator
+//
+// Wraps ASAuthorizationController in an async API. Uses a PKCE-style nonce:
+// rawNonce is held locally, sha256Hex(rawNonce) is what we send to Apple in
+// the request, and Apple's identity_token has a `nonce` claim equal to that
+// hash. Supabase's signInWithIdToken on the backend takes the rawNonce and
+// verifies sha256(raw) matches the JWT — that's what protects against
+// replay of a stolen token.
+@MainActor
+final class AppleSignInCoordinator: NSObject {
+    static let shared = AppleSignInCoordinator()
+    private override init() { super.init() }
+
+    private var continuation: CheckedContinuation<AppleResult, Error>?
+    private var currentNonce: String?
+    private var delegate: Delegate?
+
+    struct AppleResult {
+        let idToken: String
+        let nonce: String        // raw nonce
+        let fullName: String?    // only present on first sign-in
+    }
+
+    func signIn() async throws -> AppleResult {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<AppleResult, Error>) in
+            self.continuation = cont
+            let nonce = Self.randomNonceString()
+            self.currentNonce = nonce
+
+            let provider = ASAuthorizationAppleIDProvider()
+            let request = provider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = Self.sha256Hex(nonce)
+
+            let delegate = Delegate(owner: self)
+            self.delegate = delegate
+
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = delegate
+            controller.presentationContextProvider = delegate
+            controller.performRequests()
+        }
+    }
+
+    fileprivate func finishSuccess(idToken: String, fullName: String?) {
+        guard let cont = continuation, let nonce = currentNonce else { return }
+        continuation = nil
+        currentNonce = nil
+        delegate = nil
+        cont.resume(returning: AppleResult(idToken: idToken, nonce: nonce, fullName: fullName))
+    }
+
+    fileprivate func finishFailure(_ error: Error) {
+        guard let cont = continuation else { return }
+        continuation = nil
+        currentNonce = nil
+        delegate = nil
+        cont.resume(throwing: error)
+    }
+
+    // MARK: - Nonce helpers
+
+    private static func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var bytes = [UInt8](repeating: 0, count: length)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        precondition(status == errSecSuccess, "Unable to generate nonce")
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
+        return String(bytes.map { charset[Int($0) % charset.count] })
+    }
+
+    private static func sha256Hex(_ input: String) -> String {
+        let digest = SHA256.hash(data: Data(input.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    // Delegate kept separate so the coordinator stays @MainActor while the
+    // ASAuthorizationController callbacks can land on the main queue.
+    @MainActor
+    private final class Delegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+        weak var owner: AppleSignInCoordinator?
+        init(owner: AppleSignInCoordinator) {
+            self.owner = owner
+            super.init()
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let idTokenData = credential.identityToken,
+                  let idTokenString = String(data: idTokenData, encoding: .utf8) else {
+                owner?.finishFailure(NSError(
+                    domain: "AppleSignIn",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Apple returned no identity token"]
+                ))
+                return
+            }
+            let parts = [credential.fullName?.givenName, credential.fullName?.familyName]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+            let fullName = parts.isEmpty ? nil : parts.joined(separator: " ")
+            owner?.finishSuccess(idToken: idTokenString, fullName: fullName)
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+            owner?.finishFailure(error)
+        }
+
+        func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = scene.windows.first else {
+                return ASPresentationAnchor()
+            }
+            return window
+        }
     }
 }

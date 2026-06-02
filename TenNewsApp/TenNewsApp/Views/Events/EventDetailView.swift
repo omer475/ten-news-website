@@ -28,10 +28,14 @@ struct EventDetailView: View {
                 }
             }
         }
-        .background(Color(hex: "#F2F2F7").ignoresSafeArea())
+        // Use the system grouped-background color (adaptive light/dark)
+        // instead of a hardcoded light hex — previously this read as
+        // unreadable white-on-near-white when the device was in dark mode.
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .ignoresSafeArea(edges: .top)
         .navigationBarHidden(true)
         .overlay(alignment: .top) { navigationOverlay }
+        .swipeToDismiss { dismiss() }
         .onAppear { tabBarState.hideBottomBar = true }
         .onDisappear { tabBarState.hideBottomBar = false }
         .task {
@@ -92,13 +96,28 @@ struct EventDetailView: View {
 
     private func toggleFollow() {
         var saved = Set(UserDefaults.standard.stringArray(forKey: followKey) ?? [])
-        if isFollowed {
+        let wasFollowing = isFollowed
+        if wasFollowing {
             saved.remove(event.slug)
         } else {
             saved.insert(event.slug)
         }
         UserDefaults.standard.set(Array(saved), forKey: followKey)
-        isFollowed = !isFollowed
+        isFollowed = !wasFollowing
+        HapticManager.medium()
+        // Fire analytics so the ranker can use event-follow as a signal.
+        // Previously this toggle persisted to UserDefaults only — Trinity
+        // had no idea the user followed an event, which is the strongest
+        // single positive signal for that event's article cluster.
+        Task {
+            try? await AnalyticsService().track(
+                event: wasFollowing ? "event_unfollowed" : "event_followed",
+                metadata: [
+                    "event_slug": event.slug,
+                    "event_name": event.name
+                ]
+            )
+        }
     }
 
     // MARK: - Hero Image URL

@@ -47,6 +47,14 @@ struct ExploreTopicArticle: Identifiable, Decodable {
     let imageUrl: String?
     let category: String?
     let publishedAt: String?
+    /// Up to 2 bullets (already parsed server-side from summary_bullets_news).
+    /// Optional because the explore endpoint only added this field in 2026-05;
+    /// older cached responses or alternative pipelines may omit it.
+    let bullets: [String]?
+    /// Multi-page carousel pages (curated content has 3-8). Optional: only
+    /// present on responses from the updated /api/explore/topics. Carried into
+    /// the feed card so a curated carousel shows all pages, not just the cover.
+    let pages: [ArticlePage]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -54,6 +62,8 @@ struct ExploreTopicArticle: Identifiable, Decodable {
         case imageUrl = "image_url"
         case category
         case publishedAt = "published_at"
+        case bullets
+        case pages
     }
 
     /// Title with markdown bold markers stripped

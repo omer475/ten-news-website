@@ -31,15 +31,18 @@ final class AppViewModel {
             currentUser = user
             isGuest = UserDefaults.standard.bool(forKey: "is_guest_user")
             isAuthenticated = !isGuest
-            // Load this user's likes/bookmarks from their per-user storage
-            LikeManager.shared.switchUser(user.id)
-            BookmarkManager.shared.switchUser(user.id)
+            // SessionManager fans out to every user-scoped store. After this
+            // call, every Like/Bookmark/Follow/Photo/History manager is bound
+            // to this user. No per-manager wiring needed here.
+            SessionManager.shared.setActiveUser(user.id)
             LikeManager.shared.restoreFromServer(userId: user.id)
             BookmarkManager.shared.restoreFromServer(userId: user.id)
-            // Sync read count from server
             Task.detached {
                 await Self.syncReadCount(userId: user.id)
             }
+            // Re-attempt any preferences sync that was queued from a previous
+            // launch (e.g. PATCH failed during onboarding).
+            retryPendingPreferencesSyncIfNeeded(userId: user.id)
         }
         if keychain.accessToken != nil { isAuthenticated = true; isGuest = false }
     }
@@ -50,21 +53,48 @@ final class AppViewModel {
         defaults.savePreferences(prefs)
         defaults.isOnboardingCompleted = true
 
-        // Sync preferences to server — use Task.detached so it survives view dismissal
-        // (the sheet closes immediately after onSignup, cancelling regular Tasks)
-        if let userId = currentUser?.id {
-            let home = prefs.homeCountry
-            let countries = prefs.followedCountries
-            let topics = prefs.followedTopics
-            let token = keychain.accessToken
-            Task.detached {
-                await Self.syncPreferencesToServer(
-                    userId: userId,
-                    homeCountry: home,
-                    followedCountries: countries,
-                    followedTopics: topics,
-                    accessToken: token
-                )
+        // Sync preferences to server. Detached so it survives view dismissal
+        // (the signup sheet closes immediately after onSignup, cancelling
+        // any regular Task). Includes retries on transient failures + queues
+        // the prefs to disk if the PATCH never lands, so the next launch can
+        // re-try and the user's selections still reach the backend.
+        guard let userId = currentUser?.id else {
+            print("⚠️ completeOnboarding: no currentUser, queuing prefs for next launch")
+            defaults.queuePendingPreferencesSync(prefs)
+            return
+        }
+        let token = keychain.accessToken
+        Task.detached {
+            let ok = await Self.syncPreferencesToServerWithRetry(
+                userId: userId,
+                prefs: prefs,
+                accessToken: token,
+                attempts: 5
+            )
+            if !ok {
+                await MainActor.run {
+                    UserDefaultsManager.shared.queuePendingPreferencesSync(prefs)
+                }
+            }
+        }
+    }
+
+    /// Re-try a previously failed preferences sync. Called from loadState
+    /// and login so a PATCH that died mid-flight gets a second chance.
+    private func retryPendingPreferencesSyncIfNeeded(userId: String) {
+        guard let pending = defaults.loadPendingPreferencesSync() else { return }
+        let token = keychain.accessToken
+        Task.detached {
+            let ok = await Self.syncPreferencesToServerWithRetry(
+                userId: userId,
+                prefs: pending,
+                accessToken: token,
+                attempts: 3
+            )
+            if ok {
+                await MainActor.run {
+                    UserDefaultsManager.shared.clearPendingPreferencesSync()
+                }
             }
         }
     }
@@ -87,12 +117,26 @@ final class AppViewModel {
     }
 
     func login(user: AuthUser, session: AuthSession?) {
-        // Switch to this user's data (per-user storage, no data loss)
-        LikeManager.shared.switchUser(user.id)
-        BookmarkManager.shared.switchUser(user.id)
-        // Restore from server if local is empty (e.g., first login on new device, or after data wipe)
+        // If a different identity was active (or the user was a guest), wipe
+        // every per-user store first so we never inherit the previous user's
+        // photo, follows, likes, history, etc. SessionManager fans this out
+        // to every registered UserScopedStore — no per-manager wire-up needed.
+        if let previous = currentUser?.id, previous != user.id {
+            SessionManager.shared.setActiveUser(nil)
+            keychain.accessToken = nil
+            keychain.refreshToken = nil
+            defaults.clearAll()
+            UserDefaults.standard.removeObject(forKey: "is_guest_user")
+            UserDefaults.standard.removeObject(forKey: "auth_user_id")
+            UserDefaults.standard.removeObject(forKey: "user_id")
+            UserDefaults.standard.removeObject(forKey: "followed_event_slugs")
+        }
+
+        // Bind every store to the new user.
+        SessionManager.shared.setActiveUser(user.id)
         LikeManager.shared.restoreFromServer(userId: user.id)
         BookmarkManager.shared.restoreFromServer(userId: user.id)
+
         currentUser = user
         isAuthenticated = true
         isGuest = false
@@ -100,9 +144,13 @@ final class AppViewModel {
         UserDefaults.standard.set(false, forKey: "is_guest_user")
         if let token = session?.accessToken { keychain.accessToken = token }
         if let refresh = session?.refreshToken { keychain.refreshToken = refresh }
+
+        // Re-try any preferences sync queued by a previous session.
+        retryPendingPreferencesSyncIfNeeded(userId: user.id)
     }
 
     func logout() {
+        SessionManager.shared.setActiveUser(nil)
         currentUser = nil
         isAuthenticated = false
         isGuest = false
@@ -112,11 +160,8 @@ final class AppViewModel {
         keychain.refreshToken = nil
         defaults.clearAll()
         UserDefaults.standard.removeObject(forKey: "is_guest_user")
-        // Switch managers to guest — each user's data stays in their own keys
-        LikeManager.shared.switchUser(nil)
-        BookmarkManager.shared.switchUser(nil)
-        ReadingHistoryManager.shared.clearHistory()
-        FollowManager.shared.clearAll()
+        UserDefaults.standard.removeObject(forKey: "auth_user_id")
+        UserDefaults.standard.removeObject(forKey: "user_id")
         UserDefaults.standard.removeObject(forKey: "followed_event_slugs")
     }
 
@@ -144,9 +189,10 @@ final class AppViewModel {
         } catch { }
     }
 
-    /// Direct HTTP sync — static + detached to survive view dismissal
-    private static func syncPreferencesToServer(userId: String, homeCountry: String?, followedCountries: [String], followedTopics: [String], accessToken: String?) async {
-        guard let url = URL(string: "https://www.tennews.ai/api/user/preferences") else { return }
+    /// One HTTP attempt. Returns true on 2xx so callers can decide whether
+    /// to retry. Static + detached-friendly so it survives view dismissal.
+    private static func syncPreferencesToServer(userId: String, homeCountry: String?, followedCountries: [String], followedTopics: [String], accessToken: String?) async -> Bool {
+        guard let url = URL(string: "https://www.tennews.ai/api/user/preferences") else { return false }
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -166,9 +212,38 @@ final class AppViewModel {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             let responseStr = String(data: data, encoding: .utf8) ?? ""
             print("Preferences sync: status=\(status) response=\(responseStr)")
+            return (200...299).contains(status)
         } catch {
             print("Preferences sync error: \(error.localizedDescription)")
+            return false
         }
+    }
+
+    /// Try the PATCH with exponential backoff. Survives transient network
+    /// failures + brief auth-token races right after signup. Returns true
+    /// only when the server actually accepted the write.
+    private static func syncPreferencesToServerWithRetry(
+        userId: String,
+        prefs: UserPreferences,
+        accessToken: String?,
+        attempts: Int
+    ) async -> Bool {
+        var delayNs: UInt64 = 1_000_000_000 // 1s
+        for attempt in 1...attempts {
+            let ok = await syncPreferencesToServer(
+                userId: userId,
+                homeCountry: prefs.homeCountry,
+                followedCountries: prefs.followedCountries,
+                followedTopics: prefs.followedTopics,
+                accessToken: accessToken
+            )
+            if ok { return true }
+            if attempt < attempts {
+                try? await Task.sleep(nanoseconds: delayNs)
+                delayNs = min(delayNs * 2, 16_000_000_000) // cap at 16s
+            }
+        }
+        return false
     }
 
 

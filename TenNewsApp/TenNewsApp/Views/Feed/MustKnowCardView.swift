@@ -23,7 +23,10 @@ struct MustKnowCardView: View {
                         }
                 }
 
-                // Category badge top-left
+                // Category badge top-left — flat translucent black
+                // capsule. Previously this used glassEffect AND the
+                // bottom bar used glassEffect → glass-on-glass on a
+                // 280×180 card read as visual noise.
                 if let category = article.category {
                     VStack {
                         HStack {
@@ -33,7 +36,7 @@ struct MustKnowCardView: View {
                                 .tracking(0.5)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .glassEffect(.regular.tint(.black.opacity(0.3)).interactive(), in: Capsule())
+                                .background(Color.black.opacity(0.4), in: Capsule())
                             Spacer()
                         }
                         Spacer()

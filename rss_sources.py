@@ -533,11 +533,42 @@ RSS_FEEDS = [
     {'name': 'Digital Trends', 'url': 'https://www.digitaltrends.com/feed/', 'category': 'technology', 'tier': 'premium'},
 
     # ========================================
-    # TECHNOLOGY - GENERAL
+    # TECHNOLOGY - GENERAL (expanded 2026-05-19: 40% engagement was
+    # going hungry on 26 feeds; the additions below favor outlets
+    # with daily news posting, not weekly opinion blogs.)
     # ========================================
     {'name': 'How-To Geek', 'url': 'https://www.howtogeek.com/feed/', 'category': 'technology', 'tier': 'premium'},
     {'name': 'Ars Technica', 'url': 'https://arstechnica.com/feed/', 'category': 'technology', 'tier': 'premium'},
     {'name': 'TechRadar', 'url': 'https://www.techradar.com/rss', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'The Verge', 'url': 'https://www.theverge.com/rss/index.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'TechCrunch', 'url': 'https://techcrunch.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Wired', 'url': 'https://www.wired.com/feed/rss', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Engadget', 'url': 'https://www.engadget.com/rss.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'AnandTech', 'url': 'https://www.anandtech.com/rss/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'The Information', 'url': 'https://www.theinformation.com/feed', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'MIT Technology Review', 'url': 'https://www.technologyreview.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'IEEE Spectrum', 'url': 'https://spectrum.ieee.org/rss/fulltext', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'VentureBeat', 'url': 'https://venturebeat.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'The Register', 'url': 'https://www.theregister.com/headlines.atom', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'ZDNet', 'url': 'https://www.zdnet.com/news/rss.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Mashable Tech', 'url': 'https://mashable.com/feeds/rss/tech', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Gizmodo', 'url': 'https://gizmodo.com/rss', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Slashdot', 'url': 'https://rss.slashdot.org/Slashdot/slashdotMain', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'Hacker News (Front Page)', 'url': 'https://hnrss.org/frontpage', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Stratechery', 'url': 'https://stratechery.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Daring Fireball', 'url': 'https://daringfireball.net/feeds/main', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'GitHub Blog', 'url': 'https://github.blog/feed/', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'OpenAI Blog', 'url': 'https://openai.com/blog/rss.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Anthropic News', 'url': 'https://www.anthropic.com/news/rss.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Google DeepMind Blog', 'url': 'https://deepmind.google/blog/rss.xml', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Hugging Face Blog', 'url': 'https://huggingface.co/blog/feed.xml', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'PCMag News', 'url': 'https://www.pcmag.com/feeds/rss/latest', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'GSMArena', 'url': 'https://www.gsmarena.com/rss-news-reviews.php3', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'Phandroid', 'url': 'https://phandroid.com/feed/', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'AppleInsider', 'url': 'https://appleinsider.com/news.rss', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'XDA Developers', 'url': 'https://www.xda-developers.com/feed/', 'category': 'technology', 'tier': 'premium'},
+    {'name': 'NVIDIA Blog', 'url': 'https://blogs.nvidia.com/feed/', 'category': 'technology', 'tier': 'standard'},
+    {'name': 'Cloudflare Blog', 'url': 'https://blog.cloudflare.com/rss/', 'category': 'technology', 'tier': 'standard'},
 
     # ========================================
     # MAJOR SCIENCE JOURNALS
@@ -618,6 +649,28 @@ RSS_FEEDS = [
     {'name': 'RealClearScience', 'url': 'https://www.realclearscience.com/index.xml', 'category': 'science', 'tier': 'standard'},
     {'name': 'Knowable Magazine', 'url': 'https://knowablemagazine.org/rss', 'category': 'science', 'tier': 'premium'},
     {'name': 'Nautilus', 'url': 'https://nautil.us/feed/', 'category': 'science', 'tier': 'premium'},
+    # --- Added 2026-05-19: 43% engagement on only 28 articles/day means
+    # demand massively exceeds supply. Daily-output journals + research
+    # PR feeds preferred over weekly opinion sites.
+    {'name': 'Quanta Magazine', 'url': 'https://www.quantamagazine.org/feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Eos', 'url': 'https://eos.org/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'PNAS', 'url': 'https://www.pnas.org/rss/current.xml', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Cell Press', 'url': 'https://www.cell.com/cell/inpress.rss', 'category': 'science', 'tier': 'premium'},
+    {'name': 'eLife', 'url': 'https://elifesciences.org/rss/recent.xml', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Earth.com', 'url': 'https://www.earth.com/feed/', 'category': 'science', 'tier': 'standard'},
+    {'name': 'SciTechDaily', 'url': 'https://scitechdaily.com/feed/', 'category': 'science', 'tier': 'standard'},
+    {'name': 'EurekAlert!', 'url': 'https://www.eurekalert.org/rss/breaking_news.xml', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Science News', 'url': 'https://www.sciencenews.org/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Inverse Science', 'url': 'https://www.inverse.com/rss/science', 'category': 'science', 'tier': 'premium'},
+    {'name': 'BBC Science Focus', 'url': 'https://www.sciencefocus.com/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Cosmos Magazine', 'url': 'https://cosmosmagazine.com/feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'Sci.News', 'url': 'https://www.sci.news/feed', 'category': 'science', 'tier': 'standard'},
+    {'name': 'NIH News', 'url': 'https://www.nih.gov/news-releases/feed.xml', 'category': 'science', 'tier': 'premium'},
+    {'name': 'CDC Newsroom', 'url': 'https://tools.cdc.gov/api/v2/resources/media/316422.rss', 'category': 'science', 'tier': 'premium'},
+    {'name': 'NOAA News', 'url': 'https://www.noaa.gov/news/all/feed', 'category': 'science', 'tier': 'premium'},
+    {'name': 'NASA Image of the Day', 'url': 'https://www.nasa.gov/feeds/iotd-feed/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'JPL News', 'url': 'https://www.jpl.nasa.gov/feeds/news/', 'category': 'science', 'tier': 'premium'},
+    {'name': 'European Space Agency', 'url': 'https://www.esa.int/rssfeed/Our_Activities/Space_News', 'category': 'science', 'tier': 'premium'},
 
     # ========================================
     # UNIVERSITY & RESEARCH INSTITUTIONS
@@ -2018,38 +2071,30 @@ RSS_FEEDS = [
     {'name': 'CryptoSlate', 'url': 'https://cryptoslate.com/feed/', 'category': 'crypto', 'tier': 'premium'},
 
     # ========================================
-    # TRAVEL (5 feeds)
+    # TRAVEL (20 feeds — expanded 2026-05-19: previously 5; engagement
+    # was 43% with only 12 articles/day so the appetite is clearly
+    # there. The added feeds favor editorial brands with daily output.)
     # ========================================
-    {
-        'name': 'Conde Nast Traveler',
-        'url': 'https://www.cntraveler.com/feed/rss',
-        'category': 'travel',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Atlas Obscura',
-        'url': 'https://www.atlasobscura.com/feeds/latest',
-        'category': 'travel',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Nomadic Matt',
-        'url': 'https://www.nomadicmatt.com/travel-blog/feed/',
-        'category': 'travel',
-        'tier': 'standard'
-    },
-    {
-        'name': 'Matador Network',
-        'url': 'https://matadornetwork.com/feed/',
-        'category': 'travel',
-        'tier': 'standard'
-    },
-    {
-        'name': 'The Points Guy',
-        'url': 'https://thepointsguy.com/feed/',
-        'category': 'travel',
-        'tier': 'premium'
-    },
+    {'name': 'Conde Nast Traveler', 'url': 'https://www.cntraveler.com/feed/rss', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Atlas Obscura', 'url': 'https://www.atlasobscura.com/feeds/latest', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Nomadic Matt', 'url': 'https://www.nomadicmatt.com/travel-blog/feed/', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'Matador Network', 'url': 'https://matadornetwork.com/feed/', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'The Points Guy', 'url': 'https://thepointsguy.com/feed/', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Travel + Leisure', 'url': 'https://www.travelandleisure.com/feeds/all.rss', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Lonely Planet', 'url': 'https://www.lonelyplanet.com/articles.rss', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'AFAR', 'url': 'https://www.afar.com/rss', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'BBC Travel', 'url': 'https://www.bbc.com/travel/feed.rss', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'NYT Travel', 'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Travel.xml', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'National Geographic Travel', 'url': 'https://www.nationalgeographic.com/travel/rss/index.xml', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Outside Online', 'url': 'https://www.outsideonline.com/feed/', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Skift', 'url': 'https://skift.com/feed/', 'category': 'travel', 'tier': 'premium'},
+    {'name': 'Travel Weekly', 'url': 'https://www.travelweekly.com/RSS/News.aspx', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'Travel Pulse', 'url': 'https://www.travelpulse.com/rss/news.xml', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'Frommer\'s', 'url': 'https://www.frommers.com/feeds/articles.xml', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'Fodor\'s Travel', 'url': 'https://www.fodors.com/news/feed', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'View From The Wing', 'url': 'https://viewfromthewing.com/feed/', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'One Mile at a Time', 'url': 'https://onemileatatime.com/feed/', 'category': 'travel', 'tier': 'standard'},
+    {'name': 'Roadtrippers', 'url': 'https://roadtrippers.com/magazine/feed/', 'category': 'travel', 'tier': 'standard'},
 
     # ========================================
     # DESIGN & ARCHITECTURE (5 feeds)

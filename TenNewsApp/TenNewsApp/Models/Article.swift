@@ -65,11 +65,13 @@ struct ArticlePage: Codable, Hashable {
     let title: String?
     let imageUrl: String?
     let bullets: [String]?
+    let body: String?
 
     enum CodingKeys: String, CodingKey {
         case title
         case imageUrl = "image_url"
         case bullets
+        case body
     }
 }
 
@@ -116,6 +118,13 @@ struct Article: Codable, Identifiable, Hashable {
     let countries: [String]?
     let topics: [String]?
     let interestTags: [String]?
+    /// Server-curated Goldilocks-band chips (interest_tags filtered to
+    /// tags that appear in 3..200 articles in the last 30 days). Up to 2
+    /// per article, ordered by article_count DESC. Empty array when no
+    /// tag qualifies → card shows zero chips rather than sending the
+    /// user to a dead topic page. Populated by /api/feed/main since
+    /// 2026-05-14 (mig 120 + article_chip_tags RPC).
+    let chipTags: [String]?
     let bucket: String?
     let resurfaced: Bool?
     let isResurfaced: Bool?
@@ -165,6 +174,7 @@ struct Article: Codable, Identifiable, Hashable {
         case worldEvent = "world_event"
         case countries, topics
         case interestTags = "interest_tags"
+        case chipTags = "chip_tags"
         case countryRelevance = "country_relevance"
         case topicRelevance = "topic_relevance"
         case matchReasons = "match_reasons"

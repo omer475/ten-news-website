@@ -101,6 +101,25 @@ struct GoogleAuthRequest: Codable {
     }
 }
 
+// MARK: - Apple Auth
+
+struct AppleAuthRequest: Codable {
+    let idToken: String
+    /// Raw nonce (not the SHA256 hash). Backend forwards this to Supabase
+    /// signInWithIdToken so the server can verify Apple's `nonce` claim
+    /// matches sha256(rawNonce).
+    let nonce: String
+    /// Optional. Apple only includes the user's name on the FIRST sign-in,
+    /// so iOS captures it once and forwards it here for the profile row.
+    let fullName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case idToken = "id_token"
+        case nonce
+        case fullName = "full_name"
+    }
+}
+
 // MARK: - Forgot Password
 
 struct ForgotPasswordRequest: Codable {

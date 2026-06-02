@@ -9,51 +9,67 @@ struct ChatListView: View {
     private var userId: String? { appViewModel.currentUser?.id }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if appViewModel.isGuest {
-                    guestPrompt
-                } else if chatService.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if chatService.conversations.isEmpty {
-                    emptyState
-                } else {
-                    conversationList
+        ZStack {
+            NavigationStack {
+                Group {
+                    if appViewModel.isGuest {
+                        guestPrompt
+                    } else if chatService.isLoading {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if chatService.conversations.isEmpty {
+                        emptyState
+                    } else {
+                        conversationList
+                    }
                 }
-            }
-            .navigationTitle("Messages")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if !appViewModel.isGuest {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showNewChat = true
-                            HapticManager.light()
-                        } label: {
-                            Image(systemName: "square.and.pencil")
-                                .font(.system(size: 18, weight: .medium))
+                .navigationTitle("Messages")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    if !appViewModel.isGuest {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                showNewChat = true
+                                HapticManager.light()
+                            } label: {
+                                Image(systemName: "square.and.pencil")
+                                    .font(.system(size: 18, weight: .medium))
+                            }
                         }
                     }
                 }
-            }
-            .background(Theme.Colors.backgroundPrimary)
-            .refreshable {
-                if let uid = userId {
-                    await chatService.loadConversations(userId: uid)
+                .background(Theme.Colors.backgroundPrimary)
+                .refreshable {
+                    if let uid = userId {
+                        await chatService.loadConversations(userId: uid)
+                    }
                 }
+            }
+
+            // ChatDetailView is presented as a sibling overlay (not a
+            // fullScreenCover) so it slides in horizontally — matching
+            // the iOS NavigationStack push animation. fullScreenCover's
+            // default transition is bottom-up/top-down, which felt like
+            // the chat was popping vertically. The .move(.trailing)
+            // transition makes the chat slide in from the right edge
+            // and slide back out the same way on dismiss.
+            if let conversation = selectedConversation {
+                ChatDetailView(conversation: conversation, onDismiss: {
+                    withAnimation(.easeInOut(duration: 0.28)) {
+                        selectedConversation = nil
+                    }
+                })
+                .transition(.move(edge: .trailing))
+                .zIndex(1)
             }
         }
         .sheet(isPresented: $showNewChat) {
             NewChatView { conversation in
                 showNewChat = false
-                selectedConversation = conversation
+                withAnimation(.easeInOut(duration: 0.28)) {
+                    selectedConversation = conversation
+                }
             }
-        }
-        .fullScreenCover(item: $selectedConversation) { conversation in
-            ChatDetailView(conversation: conversation, onDismiss: {
-                selectedConversation = nil
-            })
         }
         .onAppear {
             if let uid = userId {
@@ -69,8 +85,10 @@ struct ChatListView: View {
             LazyVStack(spacing: 0) {
                 ForEach(chatService.conversations) { conversation in
                     Button {
-                        selectedConversation = conversation
                         HapticManager.selection()
+                        withAnimation(.easeInOut(duration: 0.28)) {
+                            selectedConversation = conversation
+                        }
                     } label: {
                         conversationRow(conversation)
                     }

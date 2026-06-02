@@ -13,22 +13,92 @@ struct SearchPublisher: Identifiable, Decodable {
     let articleCount: Int?
     let followerCount: Int?
     let isVerified: Bool?
+
+    // APIClient uses .useDefaultKeys, so the server's snake_case payload
+    // would otherwise miss displayName / avatarUrl / etc. and crash the
+    // entire SearchResponse decode.
+    enum CodingKeys: String, CodingKey {
+        case id, username, category, bio
+        case displayName = "display_name"
+        case avatarUrl = "avatar_url"
+        case articleCount = "article_count"
+        case followerCount = "follower_count"
+        case isVerified = "is_verified"
+    }
 }
 
 struct SearchResponse: Decodable {
     let articles: [SearchArticle]
     let entities: [SearchEntity]
     let publishers: [SearchPublisher]?
+    /// Synthesized "Top" tab payload — typed rows mixing best article(s),
+    /// publishers, and entities. Server populates only on page 0. iOS
+    /// renders this in the Top tab; absent for paginated pages.
+    let top: [TopRow]?
     let totalArticles: Int?
     let page: Int?
     let hasMore: Bool?
     let query: String?
 
     enum CodingKeys: String, CodingKey {
-        case articles, entities, publishers, page, query
+        case articles, entities, publishers, top, page, query
         case totalArticles = "total_articles"
         case hasMore = "has_more"
     }
+}
+
+/// One row of the Top tab. The server emits a discriminated union with
+/// `type` + `payload`; we decode by switching on `type` and routing the
+/// payload to the right concrete model.
+enum TopRow: Identifiable, Decodable {
+    case article(SearchArticle)
+    case publisher(SearchPublisher)
+    case entity(SearchEntity)
+
+    var id: String {
+        switch self {
+        case .article(let a):   return "a-\(a.id.stringValue)"
+        case .publisher(let p): return "p-\(p.id)"
+        case .entity(let e):    return "e-\(e.entityName)"
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey { case type, payload }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let kind = try c.decode(String.self, forKey: .type)
+        switch kind {
+        case "article":
+            self = .article(try c.decode(SearchArticle.self, forKey: .payload))
+        case "publisher":
+            self = .publisher(try c.decode(SearchPublisher.self, forKey: .payload))
+        case "entity":
+            self = .entity(try c.decode(SearchEntity.self, forKey: .payload))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type, in: c, debugDescription: "Unknown top-row type: \(kind)"
+            )
+        }
+    }
+}
+
+// MARK: - Autocomplete
+
+struct AutocompleteResponse: Decodable {
+    let suggestions: [Suggestion]
+}
+
+/// One chip in the as-you-type rail. The payload varies by type — for now
+/// iOS only needs the label for rendering and a coarse type tag so we
+/// know whether to render an account-style row, a topic emoji, or an
+/// article icon.
+struct Suggestion: Identifiable, Decodable, Hashable {
+    let type: String      // "publisher" | "entity" | "article"
+    let label: String
+    /// Stable id per chip so SwiftUI ForEach is happy. Built from
+    /// type + label since the server payload doesn't share a uniform id.
+    var id: String { "\(type)-\(label)" }
 }
 
 struct SearchArticle: Identifiable, Decodable {
@@ -40,21 +110,38 @@ struct SearchArticle: Identifiable, Decodable {
     let engagementCount: Int?
     let aiScore: Double?
     let publishedAt: String?
+    /// Bullet text from summary_bullets_news. Backend (PR #177) returns
+    /// the top 3 already normalized. Empty array on older servers /
+    /// articles without bullets.
+    let bullets: [String]?
+    /// Underlying RSS source name. Falls back when authorName is nil.
+    let source: String?
+    let authorId: String?
+    let authorName: String?
+    let interestTags: [String]?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, category
+        case id, title, category, bullets, source
         case imageUrl = "image_url"
         case likeCount = "like_count"
         case engagementCount = "engagement_count"
         case aiScore = "ai_score"
         case publishedAt = "published_at"
+        case authorId = "author_id"
+        case authorName = "author_name"
+        case interestTags = "interest_tags"
     }
 
     init(id: FlexibleID, title: String?, imageUrl: String?, category: String?,
-         likeCount: Int? = nil, engagementCount: Int? = nil, aiScore: Double? = nil, publishedAt: String? = nil) {
+         likeCount: Int? = nil, engagementCount: Int? = nil, aiScore: Double? = nil, publishedAt: String? = nil,
+         bullets: [String]? = nil, source: String? = nil, authorId: String? = nil,
+         authorName: String? = nil, interestTags: [String]? = nil) {
         self.id = id; self.title = title; self.imageUrl = imageUrl; self.category = category
         self.likeCount = likeCount; self.engagementCount = engagementCount
         self.aiScore = aiScore; self.publishedAt = publishedAt
+        self.bullets = bullets; self.source = source
+        self.authorId = authorId; self.authorName = authorName
+        self.interestTags = interestTags
     }
 
     var displayTitle: String {
@@ -79,7 +166,12 @@ struct SearchEntity: Identifiable, Decodable {
     let category: String
     let emoji: String
     let articleCount: Int?
-    let articles: [SearchArticle]
+    /// Populated for entities returned by /api/search top-level
+    /// `entities` (each carries up to 8 articles). The entity payload
+    /// embedded inside the Top tab's typed rows does NOT carry this
+    /// field, so it must be optional — without that, decoding the Top
+    /// array fails and the entire SearchResponse breaks.
+    let articles: [SearchArticle]?
 
     var id: String { entityName }
 
@@ -120,6 +212,11 @@ final class SearchViewModel {
     var articles: [SearchArticle] = []
     var entities: [SearchEntity] = []
     var publishers: [SearchPublisher] = []
+    /// Synthesized Top tab rows from the server. Populated only on
+    /// page-0 search responses.
+    var topRows: [TopRow] = []
+    /// As-you-type autocomplete chips. Refreshed by loadAutocomplete().
+    var suggestions: [Suggestion] = []
     var trending: [TrendingEntity] = []
     var recentSearches: [String] = []
     var isLoading = false
@@ -130,10 +227,40 @@ final class SearchViewModel {
     var currentPage = 0
 
     private var debounceTask: Task<Void, Never>?
+    private var autocompleteTask: Task<Void, Never>?
     private let recentSearchesKey = "recent_searches"
 
     init() {
         recentSearches = UserDefaults.standard.stringArray(forKey: recentSearchesKey) ?? []
+    }
+
+    // MARK: - Autocomplete
+
+    /// Cheap typeahead — fires on every keystroke with a tight 80ms
+    /// debounce. The autocomplete endpoint is sub-100ms so the chips
+    /// land before the user has finished typing the next char.
+    func loadAutocomplete(query: String) {
+        autocompleteTask?.cancel()
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            suggestions = []
+            return
+        }
+        autocompleteTask = Task {
+            try? await Task.sleep(nanoseconds: 80_000_000) // 80ms
+            guard !Task.isCancelled else { return }
+            do {
+                let response: AutocompleteResponse = try await APIClient.shared.get(
+                    APIEndpoints.searchAutocomplete(query: trimmed)
+                )
+                guard !Task.isCancelled else { return }
+                self.suggestions = response.suggestions
+            } catch is CancellationError {
+                // Drop silently — newer keystroke superseded this one.
+            } catch {
+                // Soft fail — chip rail just stays empty.
+            }
+        }
     }
 
     // MARK: - Debounced Search
@@ -172,6 +299,7 @@ final class SearchViewModel {
             articles = response.articles
             entities = response.entities
             publishers = response.publishers ?? []
+            topRows = response.top ?? []
             hasMore = response.hasMore ?? false
             addRecentSearch(query)
         } catch is CancellationError {

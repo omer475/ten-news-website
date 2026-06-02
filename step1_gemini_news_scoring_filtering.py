@@ -8,6 +8,7 @@ Input: RSS articles with title, source, description, url
 Output: Approved articles (with category) or eliminated articles
 """
 
+import os
 import requests
 import json
 import time
@@ -146,6 +147,8 @@ We need a **diverse, well-rounded feed** — not just hard news. Users follow Sp
 
 We serve users from **15 countries** with personalized interests across many topics. Approve real news that matters — to any of our user segments. A Premier League fan cares about match results. A tech enthusiast cares about product launches. A science reader cares about new discoveries. **Serve all of them.**
 
+**NOVELTY BAR (be strict):** Only APPROVE articles a reader would genuinely want to read TODAY. Reject anything that is already commodity coverage, a repetitive follow-up, or low-novelty (a story already everywhere with nothing new). Variety across verticals is good, but every approved item must clear the "actually worth someone's time right now" test — not merely "technically a real event."
+
 **Our 15 countries:** USA, UK, Canada, Australia, India, Germany, France, Spain, Italy, Ukraine, Russia, Türkiye, China, Japan, Israel
 
 ---
@@ -182,6 +185,8 @@ For each APPROVED article, also output an **interest score from 1-10**. Score fr
 | 1-2 | Filler | Barely newsworthy to anyone |
 
 **Key instruction:** A Premier League match result is a 6-7 for sports followers. A notable tech product launch is a 6. A celebrity health diagnosis is a 5-6. Turkish domestic news is a 7 if Türkiye followers would care. Only score 1-3 for truly routine filler or non-covered country local news with zero topic appeal.
+
+**PUBLISH BAR (2026 tightening):** We now publish ONLY articles scoring **interest 8-10**. Reserve 8-10 for stories a reader would genuinely stop and read TODAY — novel, consequential, or surprising; the standout of the cycle, not the routine. Be strict: commodity coverage, repetitive follow-ups, mid-table results, and low-novelty rewrites should score 5-7 and will NOT publish. When torn between 7 and 8, choose 7. It is correct for most approved articles to land at 5-7.
 
 ---
 
@@ -588,13 +593,22 @@ If yes → APPROVE it.
                 if 0 <= article_id < len(articles):
                     original_article = articles[article_id].copy()
                     decision = result_item.get('decision', 'ELIMINATED').upper()
-                    
-                    if decision == 'APPROVED':
+                    interest = result_item.get('interest', 5)
+
+                    # PIPELINE 1 TIGHTENING (2026-05-24): publish only genuinely
+                    # high-interest items. Gate at interest >= 8 (override via
+                    # PIPELINE1_MIN_INTEREST) — keeps roughly the top ~30% of
+                    # approvable articles so the daily budget has room for
+                    # Pipeline 2. APPROVED-but-below-bar items fall through to
+                    # `filtered` with a 'low_interest' disqualifier.
+                    min_interest = int(os.getenv('PIPELINE1_MIN_INTEREST', '8'))
+
+                    if decision == 'APPROVED' and interest >= min_interest:
                         original_article['status'] = 'APPROVED'
                         original_article['category'] = result_item.get('category', 'Other')
                         original_article['score'] = 750  # Default score, will be updated after writing
                         original_article['path'] = 'A'  # Default path
-                        original_article['interest_score'] = result_item.get('interest', 5)
+                        original_article['interest_score'] = interest
                         
                         # Validate category
                         valid_categories = ['World', 'Politics', 'Business', 'Tech', 'Science',
@@ -626,7 +640,13 @@ If yes → APPROVE it.
                         original_article['category'] = 'Other'
                         original_article['score'] = 0
                         original_article['path'] = 'DISQUALIFIED'
-                        original_article['disqualifier'] = 'not_globally_relevant'
+                        # Distinguish "approved by the model but below the interest
+                        # bar" from a genuine editorial rejection — useful when
+                        # tuning the threshold from the filtered_articles table.
+                        original_article['disqualifier'] = (
+                            'low_interest' if decision == 'APPROVED' else 'not_globally_relevant'
+                        )
+                        original_article['interest_score'] = interest
                         filtered.append(original_article)
             
             # Handle any articles not in results (mark as filtered)

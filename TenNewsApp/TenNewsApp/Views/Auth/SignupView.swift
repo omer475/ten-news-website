@@ -13,6 +13,9 @@ struct SignupView: View {
     @State private var pendingGoogleAuth: (user: AuthUser, session: AuthSession?)?
     @State private var showCompleteProfile = false
     @State private var goingBack: Bool = false
+    /// Locks Continue + back-button during the ~0.5s step transition so a
+    /// double-tap can't skip a step (forward) or pop two steps (back).
+    @State private var isStepChanging: Bool = false
     @FocusState private var focusedField: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -101,17 +104,34 @@ struct SignupView: View {
                     .padding(.top, 6)
                     .padding(.bottom, 20)
 
-                // Step content
-                Group {
-                    switch step {
-                    case .email:    emailStep
-                    case .age:      ageStep
-                    case .username: usernameStep
-                    case .password: passwordStep
+                // Step content as an offset-based carousel. All four steps
+                // live in the tree at once and are positioned by their index
+                // relative to the active step. When `step` changes, every
+                // child's offset re-computes inside a single animated
+                // transaction — no insertion/removal weirdness, no black
+                // flash between transitions, and the direction is implicit
+                // (going to a higher rawValue = current slides left, next
+                // slides in from right; going to a lower rawValue = the
+                // reverse). This is the pattern TikTok / IG / X actually
+                // use for their multi-step signups.
+                GeometryReader { geo in
+                    ZStack(alignment: .top) {
+                        ForEach(SignupStep.allCases, id: \.rawValue) { s in
+                            stepContent(for: s)
+                                .frame(width: geo.size.width, alignment: .top)
+                                .offset(x: CGFloat(s.rawValue - step.rawValue) * geo.size.width)
+                                // Hide the off-screen pages from accessibility
+                                // and disable hit-testing so they can't steal
+                                // taps mid-animation.
+                                .allowsHitTesting(s == step)
+                                .accessibilityHidden(s != step)
+                        }
                     }
+                    .frame(width: geo.size.width, alignment: .top)
+                    .clipped()
                 }
-                .transition(stepTransition)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(Self.stepSpring, value: step)
 
                 // Error banner
                 if let error = viewModel.errorMessage {
@@ -138,6 +158,42 @@ struct SignupView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
+        // The signupFlow is a ZStack, not a ScrollView, so
+        // scrollDismissesKeyboard never fires on its own. Add:
+        //   • a tap anywhere off a field → resign first responder
+        //   • a downward drag on the background → resign first responder
+        // Both call UIResponder.resignFirstResponder via the UIKit
+        // bridge, which works regardless of which TextField (SwiftUI
+        // or our DobSegment UIViewRepresentable) is currently focused.
+        .contentShape(Rectangle())
+        .onTapGesture {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil, from: nil, for: nil
+            )
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12)
+                .onEnded { value in
+                    guard value.translation.height > 40 else { return }
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+        )
+        .swipeToDismiss {
+            // Mirror the chevron's behavior: if we're on a later step,
+            // pop the step; on step 0, dismiss the entire signup flow.
+            HapticManager.light()
+            if step == .email {
+                if let onBack { onBack() } else { dismiss() }
+            } else if let prev = SignupStep(rawValue: step.rawValue - 1) {
+                viewModel.clearMessages()
+                goingBack = true
+                withAnimation(Self.stepSpring) { step = prev }
+            }
+        }
         .fullScreenCover(isPresented: $showCompleteProfile) {
             CompleteProfileView(viewModel: viewModel) { _ in
                 let pending = pendingGoogleAuth
@@ -149,49 +205,64 @@ struct SignupView: View {
             }
         }
         .onAppear {
-            focusedField = .email
             let args = ProcessInfo.processInfo.arguments
             if args.contains("--screenshot-signup-age") {
                 step = .age
                 focusedField = nil
                 dobFocus = .day
+                return
             } else if args.contains("--screenshot-signup-username") {
                 step = .username
                 focusedField = .username
+                return
             } else if args.contains("--screenshot-signup-password") {
                 step = .password
                 focusedField = .password
+                return
+            }
+            // Defer focus by one runloop tick so the TextField is fully
+            // mounted before we ask it to become first responder — without
+            // this the keyboard often takes 1-2 frames to appear or is
+            // dropped entirely on slow first launches.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if step == .email { focusedField = .email }
             }
         }
         .onChange(of: step) { _, new in
-            viewModel.clearMessages()
-            switch new {
-            case .email:    focusedField = .email
-            case .age:
-                focusedField = nil
-                dobFocus = .day
-            case .username: focusedField = .username
-            case .password: focusedField = .password
+            // Re-bind focus for the new step. Deferred one tick so the step's
+            // TextField has been inserted by the transition before we hand it
+            // focus — without the defer, the keyboard flickers (drops, then
+            // re-shows) during the cross-fade.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                switch new {
+                case .email:    focusedField = .email
+                case .age:
+                    focusedField = nil
+                    dobFocus = .day
+                case .username: focusedField = .username
+                case .password: focusedField = .password
+                }
             }
-            HapticManager.selection()
         }
     }
 
-    private var stepTransition: AnyTransition {
-        // Forward (next step): new enters from the right, current exits left.
-        // Back (previous step): new enters from the left, current exits right.
-        // The direction flips on `goingBack` so the back gesture feels like a
-        // standard iOS pop instead of repeating the forward animation.
-        if goingBack {
-            return .asymmetric(
-                insertion: .move(edge: .leading).combined(with: .opacity),
-                removal: .move(edge: .trailing).combined(with: .opacity)
-            )
+    /// Spring used for the offset-based carousel. Tuned to match
+    /// UINavigationController's push/pop curve — response ~0.35s, near-zero
+    /// bounce. Slower springs (the old 0.5/0.85) feel laggy at the start.
+    private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
+
+    /// Returns the body for a specific step. Used by the ForEach in the
+    /// carousel so every step is in the tree at once (offset off-screen
+    /// when inactive). Switching on the step argument — NOT on the current
+    /// `step` — is what lets all four be rendered in parallel.
+    @ViewBuilder
+    private func stepContent(for s: SignupStep) -> some View {
+        switch s {
+        case .email:    emailStep
+        case .age:      ageStep
+        case .username: usernameStep
+        case .password: passwordStep
         }
-        return .asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
-        )
     }
 
     // MARK: - Top bar
@@ -199,17 +270,30 @@ struct SignupView: View {
     private var topBar: some View {
         HStack {
             Button {
+                // Guard against a fast double-tap popping two steps at once.
+                guard !isStepChanging else { return }
                 HapticManager.light()
                 if step == .email {
                     if let onBack { onBack() } else { dismiss() }
                 } else if let prev = SignupStep(rawValue: step.rawValue - 1) {
+                    // Clear any stale error banner BEFORE the transition so it
+                    // doesn't sit visible across the animation.
+                    viewModel.clearMessages()
                     goingBack = true
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    isStepChanging = true
+                    withAnimation(Self.stepSpring) {
                         step = prev
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        isStepChanging = false
                     }
                 }
             } label: {
-                Image(systemName: step == .email ? "xmark" : "chevron.left")
+                // Always chevron-left — even on the email step we go back to
+                // the onboarding flow (not close out), so the X icon was
+                // misleading. User is inside the create-account flow start
+                // to finish; the icon should reflect that.
+                Image(systemName: "chevron.left")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white.opacity(0.8))
                     .frame(width: 38, height: 38)
@@ -222,6 +306,9 @@ struct SignupView: View {
             Text("Step \(step.rawValue + 1) of \(SignupStep.allCases.count)")
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.4))
+                // Smooth numeric tick instead of the digit popping instantly
+                .contentTransition(.numericText(value: Double(step.rawValue)))
+                .animation(.spring(response: 0.45, dampingFraction: 0.85), value: step)
 
             Spacer()
 
@@ -274,6 +361,32 @@ struct SignupView: View {
                         .tracking(0.8)
                     Rectangle().fill(.white.opacity(0.1)).frame(height: 1)
                 }
+
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        if let result = await viewModel.signInWithApple() {
+                            if viewModel.needsProfileCompletion {
+                                pendingGoogleAuth = result
+                                showCompleteProfile = true
+                            } else {
+                                onSignup?(result.user, result.session)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Continue with Apple")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(.white, in: Capsule())
+                }
+                .buttonStyle(.plain)
 
                 Button {
                     HapticManager.medium()
@@ -435,6 +548,12 @@ struct SignupView: View {
                     .focused($focusedField, equals: .username)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundStyle(.white)
+                    // Force the alphabet keyboard explicitly — without
+                    // this iOS sometimes carried the .numberPad type
+                    // from the previous DOB step into this field, so
+                    // users landed on the numeric keyboard with no
+                    // letters available.
+                    .keyboardType(.default)
                     .textContentType(.username)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -689,6 +808,9 @@ struct SignupView: View {
 
     private var continueButton: some View {
         Button {
+            // Guard against a fast double-tap skipping a step (forward) or
+            // firing the signup network call twice on .password.
+            guard !isStepChanging, canProceed, !viewModel.isLoading else { return }
             HapticManager.medium()
             handleContinue()
         } label: {
@@ -741,9 +863,16 @@ struct SignupView: View {
         switch step {
         case .email, .age, .username:
             if let next = SignupStep(rawValue: step.rawValue + 1) {
+                // Clear any prior error banner BEFORE the transition so it
+                // doesn't sit visible across the slide.
+                viewModel.clearMessages()
                 goingBack = false
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                isStepChanging = true
+                withAnimation(Self.stepSpring) {
                     step = next
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    isStepChanging = false
                 }
             }
         case .password:
@@ -902,9 +1031,15 @@ struct DobSegment: UIViewRepresentable {
         if view.text != text { view.text = text }
         DispatchQueue.main.async {
             if isFocused, !view.isFirstResponder {
+                // Only claim first responder; never explicitly resign.
+                // When the user fills a segment, the NEXT segment calls
+                // becomeFirstResponder() and iOS transfers focus
+                // without animating the keyboard down + back up.
+                // Explicit resign on the old field was racing the
+                // become on the new field on separate runloop ticks,
+                // which was the source of the keyboard "going and
+                // coming back" between DD/MM/YYYY fields.
                 view.becomeFirstResponder()
-            } else if !isFocused, view.isFirstResponder {
-                view.resignFirstResponder()
             }
         }
     }

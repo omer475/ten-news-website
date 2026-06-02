@@ -11,20 +11,69 @@ final class ReadingHistoryManager {
     /// Count of articles read for more than 3 seconds
     private(set) var readCount: Int = 0
 
-    private let storageKey = "reading_history_entries"
-    private let readCountKey = "articles_read_count"
-    private let readArticleIdsKey = "articles_read_ids"
+    /// Active user id used to namespace persistence so reading history for
+    /// the previous user can never appear under a different account. nil = guest.
+    private var activeUserId: String?
+
+    // Legacy un-namespaced keys (pre-2026-05-13). Migrated to the first real
+    // user that signs in after the namespacing upgrade.
+    private static let legacyStorageKey = "reading_history_entries"
+    private static let legacyReadCountKey = "articles_read_count"
+    private static let legacyReadArticleIdsKey = "articles_read_ids"
+
+    private var storageKey: String {
+        (activeUserId?.isEmpty == false) ? "reading_history_entries_\(activeUserId!)" : "reading_history_entries_guest"
+    }
+    private var readCountKey: String {
+        (activeUserId?.isEmpty == false) ? "articles_read_count_\(activeUserId!)" : "articles_read_count_guest"
+    }
+    private var readArticleIdsKey: String {
+        (activeUserId?.isEmpty == false) ? "articles_read_ids_\(activeUserId!)" : "articles_read_ids_guest"
+    }
     private let maxEntries = 500
 
     /// Set of article IDs that have been counted as "read" (>3s dwell)
     private var readArticleIds: Set<String> = []
 
     private init() {
+        SessionManager.shared.register(self)
+        // Don't load anything yet — wait for loadForActiveUser. Guest data
+        // becomes accessible once the active user is set to nil explicitly.
+    }
+
+    private func reloadFromDefaults() {
         load()
         readCount = UserDefaults.standard.integer(forKey: readCountKey)
         if let ids = UserDefaults.standard.array(forKey: readArticleIdsKey) as? [String] {
             readArticleIds = Set(ids)
+        } else {
+            readArticleIds = []
         }
+    }
+
+    /// Move legacy un-namespaced keys to the first real user's slot the first
+    /// time they sign in. Same migration pattern as FollowManager.
+    private func migrateLegacyIfNeeded() {
+        guard activeUserId?.isEmpty == false else { return }
+        let namespacedHas = UserDefaults.standard.data(forKey: storageKey) != nil
+            || UserDefaults.standard.integer(forKey: readCountKey) > 0
+        guard !namespacedHas else { return }
+        let legacyData = UserDefaults.standard.data(forKey: Self.legacyStorageKey)
+        let legacyCount = UserDefaults.standard.integer(forKey: Self.legacyReadCountKey)
+        let legacyIds = UserDefaults.standard.array(forKey: Self.legacyReadArticleIdsKey) as? [String]
+        guard legacyData != nil || legacyCount > 0 || (legacyIds?.isEmpty == false) else { return }
+        if let legacyData {
+            UserDefaults.standard.set(legacyData, forKey: storageKey)
+        }
+        if legacyCount > 0 {
+            UserDefaults.standard.set(legacyCount, forKey: readCountKey)
+        }
+        if let legacyIds {
+            UserDefaults.standard.set(legacyIds, forKey: readArticleIdsKey)
+        }
+        UserDefaults.standard.removeObject(forKey: Self.legacyStorageKey)
+        UserDefaults.standard.removeObject(forKey: Self.legacyReadCountKey)
+        UserDefaults.standard.removeObject(forKey: Self.legacyReadArticleIdsKey)
     }
 
     struct HistoryEntry: Codable, Identifiable {
@@ -124,5 +173,21 @@ final class ReadingHistoryManager {
         if let data = try? JSONEncoder().encode(entries) {
             UserDefaults.standard.set(data, forKey: storageKey)
         }
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension ReadingHistoryManager: UserScopedStore {
+    func resetForUserSwitch() {
+        entries.removeAll()
+        readCount = 0
+        readArticleIds.removeAll()
+        activeUserId = nil
+    }
+    func loadForActiveUser(_ userId: String?) {
+        activeUserId = userId
+        migrateLegacyIfNeeded()
+        reloadFromDefaults()
     }
 }

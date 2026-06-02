@@ -277,6 +277,10 @@ struct OnboardingFlowView: View {
     // MARK: - Helpers
 
     private func goNext() {
+        // Light haptic on every step transition — without this, the
+        // step slide felt unresponsive on slower devices and users
+        // double-tapped Continue thinking the first tap missed.
+        HapticManager.light()
         viewModel.nextStep()
     }
 
@@ -387,7 +391,9 @@ private struct WelcomeScene: View {
     @State private var articleEntities: [String: String] = [:] // article id -> topic display title
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            // White page bg — matches the For You feed surface so the welcome
+            // preview reads as a true sample of the in-app card style.
+            Color.white.ignoresSafeArea()
 
             // Ambient color wash — tints the whole screen toward the current card's dominant color
             ambientColorWash
@@ -395,19 +401,22 @@ private struct WelcomeScene: View {
                 .animation(.smooth(duration: 1.0), value: currentArticleColor)
 
             VStack(spacing: 0) {
-                // Fixed-height welcome slot — text bottom-anchored so 2-row entity
-                // names grow upward while the entity baseline (and the card below)
-                // stay in the same spot.
+                // Compact welcome slot — heading is small + sits high so the
+                // article preview below can take most of the screen real estate
+                // (the actual app's feed card is the star of the welcome page,
+                // not the marketing copy).
                 welcomeBlock
                     .frame(maxWidth: .infinity, alignment: .bottomLeading)
-                    .frame(height: 170, alignment: .bottomLeading)
+                    .frame(height: 86, alignment: .bottomLeading)
                     .padding(.horizontal, 24)
-                    .padding(.top, 40)
+                    .padding(.top, 12)
 
-                // Fixed gap, then the card — its top edge is now at a constant y.
+                // Big article preview using the same layout pattern as the
+                // real feed card (creator → photo → title), so what the user
+                // sees here is exactly what they'll see post-onboarding.
                 feedCardStack
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 14)
                     .opacity(taglineVisible ? 1 : 0)
                     .blur(radius: taglineVisible ? 0 : 14)
 
@@ -418,6 +427,11 @@ private struct WelcomeScene: View {
                     .padding(.bottom, 32)
             }
         }
+        // Force light color scheme on the welcome screen only — parent body
+        // has preferredColorScheme(.dark) for the other onboarding steps, but
+        // here the bg is white so Color.primary / Color.secondary need to
+        // resolve to dark text to be readable.
+        .environment(\.colorScheme, .light)
         .onAppear {
             runEntryAnimation()
             Task { await fetchArticles() }
@@ -606,46 +620,184 @@ private struct WelcomeScene: View {
     private var feedCardStack: some View {
         Group {
             if articles.isEmpty {
-                // Loading / skeleton placeholder matching the card dimensions
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(white: 0.08))
-                    .frame(height: 380)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .strokeBorder(.white.opacity(0.06), lineWidth: 1)
-                    )
+                // Loading / skeleton matching the new card dimensions —
+                // creator row, photo, title placeholders.
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        Circle().fill(Color(white: 0.12)).frame(width: 32, height: 32)
+                        VStack(alignment: .leading, spacing: 4) {
+                            RoundedRectangle(cornerRadius: 3).fill(Color(white: 0.12)).frame(width: 120, height: 11)
+                            RoundedRectangle(cornerRadius: 3).fill(Color(white: 0.08)).frame(width: 60, height: 9)
+                        }
+                        Spacer()
+                    }
+                    RoundedRectangle(cornerRadius: 18).fill(Color(white: 0.08)).frame(height: 380)
+                    RoundedRectangle(cornerRadius: 4).fill(Color(white: 0.12)).frame(height: 22)
+                    RoundedRectangle(cornerRadius: 4).fill(Color(white: 0.10)).frame(width: 220, height: 22)
+                }
             } else {
-                articleCard(at: cardIndex, depth: 0)
+                articleCard(at: cardIndex)
             }
         }
     }
 
+    /// Mirrors the live For You card's layout 1:1 — same avatar size, same
+    /// byline font, same photo treatment (AsyncCachedImage at natural aspect
+    /// with 18pt rounded corners, no title overlay), same 24pt bold title
+    /// below. The only differences from the real card are colors (white-on-
+    /// dark instead of primary-on-cream because the welcome bg is dark) and
+    /// no action row (this is a passive marketing preview).
     @ViewBuilder
-    private func articleCard(at index: Int, depth: Int) -> some View {
+    private func articleCard(at index: Int) -> some View {
         let article = articles[index]
         let key = article.id.stringValue
         let color = articleColors[key] ?? Color(white: 0.15)
-        let metrics = sampleMetrics(for: article)
+        let publisherName = (article.category?.isEmpty == false ? article.category! : "Today+")
+        let initial = String(publisherName.prefix(1)).uppercased()
 
-        ExploreArticleCard(
-            article: article,
-            fallbackColor: color,
-            cardWidth: UIScreen.main.bounds.width - 40,
-            cardHeight: 380,
-            showTags: false,
-            onDominantColorChanged: { c in
-                articleColors[key] = c
+        // Everything (creator row + photo + title + bullets) lives inside a
+        // single white card with a soft shadow — same surface treatment the
+        // user asked for on the welcome screen. Spacing inside still mirrors
+        // ArticleCardContinuousView (8pt between rows, 10pt between title
+        // and bullets).
+        VStack(alignment: .leading, spacing: 8) {
+            // Header row — 32pt avatar + 14pt semibold byline (mirrors
+            // ArticleCardContinuousView.headerRow).
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(initial)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(publisherName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .tracking(-0.1)
+                        .foregroundStyle(Color.primary)
+                    if !article.relativeTime.isEmpty {
+                        Text(article.relativeTime)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+                Spacer()
             }
-        )
-        .overlay(alignment: .trailing) {
-            socialRail(metrics: metrics, color: color)
-                .frame(width: 40)
-                .padding(.trailing, 10)
-                .padding(.bottom, 50)
+
+            // Photo + caption stacked exactly like MainFeedView: photo with
+            // padding-bottom 12, then a VStack(spacing: 10) holding the title
+            // and the bullets. The 10pt gap is what makes the title→bullets
+            // rhythm feel identical to the For You page.
+            VStack(alignment: .leading, spacing: 0) {
+                AsyncCachedImage(url: URL(string: article.imageUrl ?? ""), contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    // 18pt corner radius matches MainFeedView.photoBlock so
+                    // the welcome photo reads as the same surface treatment
+                    // as the in-app feed. No height cap — photo sizes to its
+                    // natural aspect ratio and the card grows with it.
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(.bottom, 12)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(article.cleanTitle)
+                        .font(.system(size: 24, weight: .bold))
+                        .tracking(-0.5)
+                        .lineSpacing(2)
+                        .foregroundStyle(Color.primary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if let bullets = article.bullets, !bullets.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(Array(bullets.prefix(3).enumerated()), id: \.offset) { _, bullet in
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Circle()
+                                        .fill(color.opacity(0.70))
+                                        .frame(width: 4, height: 4)
+                                        .alignmentGuide(.firstTextBaseline) { d in d[.bottom] + 1 }
+                                    Text(bulletAttributed(bullet))
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Color.primary)
+                                        .lineSpacing(5)
+                                        .multilineTextAlignment(.leading)
+                                        .tint(Color.primary)
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom action row — visual-only mock of the For You
+                    // card's like / save / repost / share buttons with
+                    // deterministic fake counts so the welcome preview reads
+                    // as a real social card. Right-aligned via a leading
+                    // Spacer (the For You actionRow has the same layout, but
+                    // its left edge holds the topic chips that don't apply
+                    // here).
+                    let metrics = sampleMetrics(for: article)
+                    HStack(spacing: 22) {
+                        Spacer()
+                        previewActionIcon("heart", count: metrics.likes)
+                        previewActionIcon("bookmark", count: metrics.saves)
+                        previewActionIcon("arrow.2.squarepath", count: metrics.shares)
+                        previewActionIcon("arrowshape.turn.up.right", count: metrics.comments)
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(.top, 4)
+            }
         }
-        .shadow(color: color.opacity(0.10), radius: 44)
-        .id("front-\(cardIndex)")
-        .transition(.opacity.combined(with: .scale(scale: 0.97)))
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white)
+        )
+        // Soft shadow — visible but not heavy. Two layers (one tight, one
+        // wider) gives the card a clean lift off the page without looking
+        // like a drop-shadow PNG from 2010.
+        .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 8)
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
+        // .id() forces SwiftUI to treat each rotation as a distinct view, so
+        // the OUTGOING card fades out + the INCOMING card fades in as two
+        // separate views (the user's "disappear and the new one comes" feel)
+        // instead of an in-place content swap. AsyncCachedImage still gets
+        // its UIImage from the static NSCache instantly, so the new card
+        // shows the photo without a shimmer if it's been loaded before.
+        .id("card-\(cardIndex)")
+        .transition(
+            .asymmetric(
+                insertion: .opacity.combined(with: .offset(y: 8)).animation(.easeOut(duration: 0.32).delay(0.18)),
+                removal:   .opacity.combined(with: .offset(y: -8)).animation(.easeIn(duration: 0.22))
+            )
+        )
+    }
+
+    /// Renders a bullet's `**bold**` markdown segments as bold text inline,
+    /// matching the For You card's bulletAttributed treatment. Falls back to
+    /// the raw string when the markdown parse fails.
+    private func bulletAttributed(_ text: String) -> AttributedString {
+        if let attr = try? AttributedString(markdown: text) {
+            return attr
+        }
+        return AttributedString(text)
+    }
+
+    /// One icon + count pair for the welcome card's action row. Visual only —
+    /// no tap target because the user isn't authenticated yet on this screen.
+    /// Matches the For You actionIcon's icon size (17pt) with the count
+    /// rendered to the right at 12pt semibold monospaced.
+    private func previewActionIcon(_ systemName: String, count: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemName)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundStyle(Color.secondary)
+            Text(count)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color.secondary)
+        }
     }
 
     // MARK: - Social rail
@@ -731,26 +883,27 @@ private struct WelcomeScene: View {
     }
 
     private var welcomeBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 4) {
             Text("TRENDING NOW")
-                .font(.system(size: 11, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.42))
-                .tracking(2.6)
+                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color.black.opacity(0.42))
+                .tracking(2.0)
 
-            // Hero entity — massive, tinted by card color
+            // Entity heading — smaller than before so the article preview
+            // below has room to be the focal point.
             if !primaryEntity.isEmpty {
                 Text(primaryEntity)
-                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
                     .foregroundStyle(primaryEntityColor)
-                    .tracking(-2.0)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
+                    .tracking(-0.8)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
                     .id(cardIndex)
-                    .transition(.opacity.combined(with: .offset(y: 6)))
+                    .transition(.opacity.combined(with: .offset(y: 4)))
             } else {
                 Text(" ")
-                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
             }
         }
         .opacity(taglineVisible ? 1 : 0)
@@ -773,12 +926,16 @@ private struct WelcomeScene: View {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 13, weight: .bold))
                 }
+                // White text on the entity-tinted button is fine on a
+                // white page bg because the button has its own fill.
+                // Solid pill (no glass) so contrast stays readable in
+                // light mode — glass shows the cream bg through too much.
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
+                .background(primaryEntityColor, in: Capsule())
             }
             .buttonStyle(.plain)
-            .glassEffect(.regular.tint(primaryEntityColor.opacity(0.28)).interactive(), in: Capsule())
             .animation(.smooth(duration: 0.5), value: primaryEntityColor)
 
             Button {
@@ -787,9 +944,9 @@ private struct WelcomeScene: View {
             } label: {
                 HStack(spacing: 4) {
                     Text("Already have an account?")
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.secondary)
                     Text("Sign In")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.primary)
                         .fontWeight(.semibold)
                 }
                 .font(.system(size: 14, weight: .medium, design: .rounded))

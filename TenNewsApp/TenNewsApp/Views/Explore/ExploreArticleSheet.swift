@@ -22,34 +22,40 @@ struct ExploreArticleSheet: View {
         ZStack(alignment: .topLeading) {
             Group {
                 if !articlePages.isEmpty {
-                    VerticalPager(
-                        currentIndex: $pagerIndex,
-                        pages: articlePages
-                    ) { article in
-                        ArticleCardView(
-                            article: article,
-                            accentColor: Self.accentColor(for: article)
-                        )
-                        // Article's `==` is id-only, so SwiftUI can't see when a stub
-                        // is hydrated with bullets. Keying on contentKey forces the
-                        // card to rebuild when content arrives.
-                        .id(article.contentKey)
+                    // Continuous-feed presentation: same LazyVStack rhythm as the
+                    // main feed. The old full-page VerticalPager + ArticleCardView
+                    // was deleted as part of the 2026-05-11 continuous-feed
+                    // migration (no per-article full screen).
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 28) {
+                            ForEach(Array(articlePages.enumerated()), id: \.offset) { _, article in
+                                ArticleCardContinuousView(
+                                    article: article,
+                                    accentColor: Self.accentColor(for: article),
+                                    showTopicTags: false
+                                )
+                                .id(article.contentKey)
+                            }
+                        }
+                        .padding(.top, 104)
+                        .padding(.bottom, 60)
                     }
                 } else {
                     Color.black
                 }
             }
 
-            // Back button
+            // Back button — flat circle, no glass effect or shadow.
             Button {
                 onDismiss()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Color.primary)
                     .frame(width: 38, height: 38)
-                    .glassEffect(.regular, in: Circle())
+                    .background(.fill.quaternary, in: Circle())
             }
+            .buttonStyle(.plain)
             .padding(.top, 56)
             .padding(.leading, 20)
             .zIndex(10)
@@ -57,6 +63,7 @@ struct ExploreArticleSheet: View {
         .ignoresSafeArea()
         .background(Color.black)
         .persistentSystemOverlays(.hidden)
+        .swipeToDismiss { onDismiss() }
         .onAppear {
             articlePages = buildArticlePages()
         }

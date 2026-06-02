@@ -13,6 +13,12 @@ struct CompleteProfileView: View {
     @State private var pickerDate: Date = Calendar.current.date(byAdding: .year, value: -22, to: Date()) ?? Date()
     @State private var dobFocus: DobField?
     @State private var usernameInput: String = ""
+    /// Tracks whether the active step change is a back-pop so the asymmetric
+    /// transition can render the slide in the right direction.
+    @State private var goingBack: Bool = false
+    /// Locks back/continue for the duration of the slide so a fast double-tap
+    /// can't skip a step or fire the network call twice.
+    @State private var isStepChanging: Bool = false
     @FocusState private var usernameFocused: Bool
 
     var onComplete: (AuthUser) -> Void
@@ -65,14 +71,23 @@ struct CompleteProfileView: View {
                 progressDots
                     .padding(.top, 6)
                     .padding(.bottom, 20)
-                Group {
-                    switch step {
-                    case .age:      ageStep
-                    case .username: usernameStep
+                // Offset-based carousel — same pattern as SignupView so the
+                // slide is buttery and the direction is implicit.
+                GeometryReader { geo in
+                    ZStack(alignment: .top) {
+                        ForEach(Step.allCases, id: \.rawValue) { s in
+                            stepContent(for: s)
+                                .frame(width: geo.size.width, alignment: .top)
+                                .offset(x: CGFloat(s.rawValue - step.rawValue) * geo.size.width)
+                                .allowsHitTesting(s == step)
+                                .accessibilityHidden(s != step)
+                        }
                     }
+                    .frame(width: geo.size.width, alignment: .top)
+                    .clipped()
                 }
-                .transition(stepTransition)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(Self.stepSpring, value: step)
 
                 if let error = viewModel.errorMessage {
                     errorBanner(error)
@@ -88,27 +103,82 @@ struct CompleteProfileView: View {
         }
         .background(Color.black)
         .scrollDismissesKeyboard(.interactively)
-        .onAppear { dobFocus = .day }
-        .onChange(of: step) { _, _ in
+        // Tap + drag-down to dismiss the keyboard (same pattern as
+        // SignupView — this view is a ZStack so scrollDismissesKeyboard
+        // alone doesn't fire).
+        .contentShape(Rectangle())
+        .onTapGesture {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil, from: nil, for: nil
+            )
+        }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12)
+                .onEnded { value in
+                    guard value.translation.height > 40 else { return }
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+        )
+        .swipeToDismiss {
+            // Step 0 (age) has no back — user is mid-auth and can't escape.
+            // Step 1 (username) pops back to age, mirroring the chevron.
+            guard step != .age, let prev = Step(rawValue: step.rawValue - 1) else { return }
+            HapticManager.light()
             viewModel.clearMessages()
+            goingBack = true
+            withAnimation(Self.stepSpring) { step = prev }
+        }
+        .onAppear {
+            // Defer focus by one runloop tick so the field is mounted before
+            // we ask it to become first responder — otherwise the keyboard
+            // skips a frame or fails to appear at all on first show.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if step == .age { dobFocus = .day }
+            }
+        }
+        .onChange(of: step) { _, new in
+            // Re-bind focus AFTER the transition has mounted the new view —
+            // without this defer, the keyboard visibly drops then re-rises
+            // during the slide.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                switch new {
+                case .age:      dobFocus = .day
+                case .username: usernameFocused = true
+                }
+            }
         }
     }
 
-    private var stepTransition: AnyTransition {
-        .asymmetric(
-            insertion: .move(edge: .trailing).combined(with: .opacity),
-            removal: .move(edge: .leading).combined(with: .opacity)
-        )
+    /// Matches the SignupView spring — tight, near-zero bounce, ~0.35s.
+    private static let stepSpring: Animation = .spring(response: 0.35, dampingFraction: 0.92, blendDuration: 0)
+
+    @ViewBuilder
+    private func stepContent(for s: Step) -> some View {
+        switch s {
+        case .age:      ageStep
+        case .username: usernameStep
+        }
     }
 
     private var topBar: some View {
         HStack {
             Button {
+                guard !isStepChanging else { return }
                 HapticManager.light()
-                if step == .age { return } // no back from age — google session already started
+                if step == .age { return } // no back from age — Google/Apple session already started
                 if let prev = Step(rawValue: step.rawValue - 1) {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                    viewModel.clearMessages()
+                    goingBack = true
+                    isStepChanging = true
+                    withAnimation(Self.stepSpring) {
                         step = prev
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        isStepChanging = false
                     }
                 }
             } label: {
@@ -256,6 +326,9 @@ struct CompleteProfileView: View {
                     .focused($usernameFocused)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                     .foregroundStyle(.white)
+                    // Explicit .default keyboard — otherwise iOS carries
+                    // the .numberPad from the DOB step over to here.
+                    .keyboardType(.default)
                     .textContentType(.username)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -331,6 +404,7 @@ struct CompleteProfileView: View {
 
     private var continueButton: some View {
         Button {
+            guard !isStepChanging, canProceed, !viewModel.isLoading else { return }
             HapticManager.medium()
             handleContinue()
         } label: {
@@ -361,8 +435,14 @@ struct CompleteProfileView: View {
     private func handleContinue() {
         switch step {
         case .age:
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+            viewModel.clearMessages()
+            goingBack = false
+            isStepChanging = true
+            withAnimation(Self.stepSpring) {
                 step = .username
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                isStepChanging = false
             }
         case .username:
             viewModel.username = usernameInput

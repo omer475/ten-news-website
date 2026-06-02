@@ -16,11 +16,16 @@ struct SettingsView: View {
     @State private var safariURL: URL?
 
     var body: some View {
-        NavigationStack {
+        // System nav bar hidden — iOS 26 toolbar items get a forced
+        // glass capsule + shadow we couldn't strip via .buttonStyle.
+        // Custom top bar gives us plain back chevron + Save text.
+        VStack(spacing: 0) {
+            customTopBar
             ScrollView {
                 VStack(spacing: Theme.Spacing.lg) {
                     profileHeader
                     contentPreferencesSection
+                    displaySection
                     supportSection
                     aboutSection
                     accountSection
@@ -29,18 +34,9 @@ struct SettingsView: View {
                 .padding(.vertical, Theme.Spacing.md)
             }
             .background(Theme.Colors.backgroundPrimary)
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
-                        let prefs = viewModel.save()
-                        onSave?(prefs)
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .alert("Sign Out", isPresented: $showSignOutConfirm) {
                 Button("Cancel", role: .cancel) { }
                 Button("Sign Out", role: .destructive) {
@@ -71,6 +67,46 @@ struct SettingsView: View {
         .onAppear {
             viewModel.loadFromPreferences(preferences)
         }
+    }
+
+    // MARK: - Custom top bar
+
+    private var customTopBar: some View {
+        HStack(spacing: 12) {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Color.primary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Text("Settings")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Color.primary)
+
+            Spacer()
+
+            Button {
+                let prefs = viewModel.save()
+                onSave?(prefs)
+                dismiss()
+            } label: {
+                Text("Save")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 8)
+                    .frame(height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 44)
+        .background(Theme.Colors.backgroundPrimary)
     }
 
     // MARK: - Profile Header

@@ -7,6 +7,25 @@ enum APIEndpoints {
     static let newsFeed = "/api/news"
     static let mainFeed = "/api/feed/main"
     static let forYouFeed = "/api/feed/for-you"
+    static let topicFeed = "/api/feed/topic"
+    /// Discovery feed for the Explore tab (deliberately broader than For You —
+    /// down-weights core taste, surfaces adjacent interests + Pipeline-2 curated
+    /// + trending + fresh-broad + a Thompson-sampling bandit over unexplored
+    /// clusters). Server: lib/exploreServe.js. PR #212, shipped 2026-05-27.
+    static let exploreFeed = "/api/explore/feed"
+    /// Pure-chronological feed of articles from publishers the user follows.
+    /// Server work: owned by the algorithm terminal (PR pending as of
+    /// 2026-05-12). Backed by `user_follows` (publisher graph) joined to
+    /// `published_articles`, ordered by `published_at` DESC, cursor paged.
+    static func followingFeed(userId: String, cursor: String? = nil, limit: Int = 20) -> String {
+        let encodedUser = userId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? userId
+        var path = "/api/feed/following?user_id=\(encodedUser)&limit=\(limit)"
+        if let c = cursor, !c.isEmpty {
+            let encodedCursor = c.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? c
+            path += "&cursor=\(encodedCursor)"
+        }
+        return path
+    }
 
     // MARK: - World Events
     static let worldEvents = "/api/world-events?limit=100"
@@ -23,6 +42,7 @@ enum APIEndpoints {
     static let forgotPassword = "/api/auth/forgot-password"
     static let resetPassword = "/api/auth/reset-password"
     static let googleAuth = "/api/auth/google"
+    static let appleAuth = "/api/auth/apple"
     static let completeProfile = "/api/auth/complete-profile"
 
     // MARK: - User
@@ -35,6 +55,13 @@ enum APIEndpoints {
         "/api/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)&page=\(page)&limit=\(limit)"
     }
     static let searchTrending = "/api/search/trending"
+    /// As-you-type chip rail — sub-100ms server response, fires every
+    /// keystroke (debounced 80ms on the client). Returns up to 8 typed
+    /// suggestions interleaved by kind (publisher / entity / article).
+    static func searchAutocomplete(query: String) -> String {
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        return "/api/search/autocomplete?q=\(encoded)"
+    }
 
     // MARK: - Content Creation
     static let contentCreate = "/api/content/create"
@@ -46,6 +73,26 @@ enum APIEndpoints {
     static func publisherFollow(id: String) -> String { "/api/publishers/\(id)/follow" }
     static let discoverPublishers = "/api/publishers/discover"
     static func searchPublishers(query: String) -> String { "/api/publishers/discover?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)" }
+
+    // MARK: - Users (social graph: user → user follows)
+    static func userFollowAction(id: String) -> String { "/api/users/\(id)/follow" }
+    static func userFollowers(id: String, limit: Int = 50, offset: Int = 0) -> String {
+        "/api/users/\(id)/followers?limit=\(limit)&offset=\(offset)"
+    }
+    static func userFollowing(id: String, limit: Int = 50, offset: Int = 0) -> String {
+        "/api/users/\(id)/following?limit=\(limit)&offset=\(offset)"
+    }
+    static func userProfileLookup(id: String, viewerId: String? = nil) -> String {
+        let base = "/api/users/\(id)/profile"
+        guard let viewerId else { return base }
+        return base + "?user_id=\(viewerId)"
+    }
+    static func userSearch(query: String, excludeId: String? = nil) -> String {
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        var url = "/api/users/search?q=\(encoded)&limit=20"
+        if let excludeId { url += "&exclude_id=\(excludeId)" }
+        return url
+    }
 
     // MARK: - Analytics
     static let analyticsTrack = "/api/analytics/track"

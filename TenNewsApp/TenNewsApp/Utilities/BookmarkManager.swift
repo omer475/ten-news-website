@@ -15,6 +15,7 @@ final class BookmarkManager {
 
     private init() {
         load()
+        SessionManager.shared.register(self)
     }
 
     /// Switch to a different user's data
@@ -109,5 +110,17 @@ final class BookmarkManager {
         if let data = try? JSONEncoder().encode(savedArticles) {
             UserDefaults.standard.set(data, forKey: articlesKey)
         }
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension BookmarkManager: UserScopedStore {
+    func resetForUserSwitch() {
+        savedArticleIDs.removeAll()
+        savedArticles.removeAll()
+    }
+    func loadForActiveUser(_ userId: String?) {
+        switchUser(userId)
     }
 }

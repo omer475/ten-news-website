@@ -11,7 +11,10 @@ struct LoginView: View {
     var onShowSignup: (() -> Void)?
     var onShowForgotPassword: (() -> Void)?
 
-    private let accent = Color(hex: "#3b82f6")
+    // Saturated blue accent — Apple's system blue is too bright for a CTA,
+    // and the previous #3b82f6 looked washed out on white. #2563EB is the
+    // standard "primary" blue used by Linear / Vercel / Notion CTAs.
+    private let accent = Color(hex: "#2563EB")
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -21,13 +24,44 @@ struct LoginView: View {
                 Text("Welcome back")
                     .font(.system(size: 30, weight: .bold))
                     .tracking(-0.8)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.primary)
 
                 Text("Sign in to your Today+ account\nto continue reading.")
                     .font(.system(size: 15))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Color.secondary)
                     .lineSpacing(4)
                     .padding(.top, 10)
+
+                // MARK: - Sign in with Apple
+                Button {
+                    HapticManager.medium()
+                    Task {
+                        if let result = await viewModel.signInWithApple() {
+                            if viewModel.needsProfileCompletion {
+                                pendingGoogleAuth = result
+                                showCompleteProfile = true
+                            } else {
+                                onLogin?(result.user, result.session)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Continue with Apple")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    // Apple HIG for light mode: black pill, white text.
+                    // (On dark pages it's white pill with black text — but
+                    // this sheet is now light.)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.black, in: RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(LoginPressStyle())
+                .padding(.top, 28)
 
                 // MARK: - Google Sign In
                 Button {
@@ -49,25 +83,28 @@ struct LoginView: View {
                         Text("Continue with Google")
                             .font(.system(size: 16, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    // Google branding HIG for light: white pill, dark text,
+                    // defined hairline border so it doesn't disappear into
+                    // the page bg.
+                    .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .strokeBorder(.white.opacity(0.15), lineWidth: 1)
+                            .strokeBorder(Color.black.opacity(0.18), lineWidth: 1)
                     )
                 }
                 .buttonStyle(LoginPressStyle())
-                .padding(.top, 28)
+                .padding(.top, 12)
 
                 // Divider
                 HStack(spacing: 12) {
-                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                    Rectangle().fill(Color.black.opacity(0.1)).frame(height: 1)
                     Text("or")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.35))
-                    Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                        .foregroundStyle(Color.secondary)
+                    Rectangle().fill(Color.black.opacity(0.1)).frame(height: 1)
                 }
                 .padding(.top, 20)
                 .padding(.bottom, 20)
@@ -78,7 +115,7 @@ struct LoginView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "envelope")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(Color.secondary)
                             .frame(width: 20)
                         TextField("Email address", text: $viewModel.email)
                             .textContentType(.emailAddress)
@@ -86,18 +123,18 @@ struct LoginView: View {
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
                             .font(.system(size: 16))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.primary)
                     }
                     .padding(.horizontal, 16)
                     .frame(height: 54)
 
-                    Divider().overlay(.white.opacity(0.1)).padding(.leading, 50)
+                    Divider().overlay(Color.black.opacity(0.08)).padding(.leading, 50)
 
                     // Password
                     HStack(spacing: 14) {
                         Image(systemName: "lock")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(Color.secondary)
                             .frame(width: 20)
 
                         Group {
@@ -109,7 +146,7 @@ struct LoginView: View {
                         }
                         .textContentType(.password)
                         .font(.system(size: 16))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.primary)
 
                         Button {
                             showPassword.toggle()
@@ -117,7 +154,7 @@ struct LoginView: View {
                         } label: {
                             Image(systemName: showPassword ? "eye.slash" : "eye")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.4))
+                                .foregroundStyle(Color.secondary)
                                 .frame(width: 28, height: 28)
                                 .contentShape(Rectangle())
                         }
@@ -125,10 +162,13 @@ struct LoginView: View {
                     .padding(.horizontal, 16)
                     .frame(height: 54)
                 }
-                .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
+                // Slightly stronger fill + border so the input box reads as
+                // an actual interactive field on white (iOS Settings rows
+                // do roughly this contrast).
+                .background(Color(white: 0.95), in: RoundedRectangle(cornerRadius: 16))
                 .overlay {
                     RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(.white.opacity(0.1), lineWidth: 1)
+                        .strokeBorder(Color.black.opacity(0.14), lineWidth: 1)
                 }
 
                 // Forgot password
@@ -168,7 +208,7 @@ struct LoginView: View {
                     HStack(spacing: 8) {
                         if viewModel.isLoading {
                             ProgressView()
-                                .tint(.green)
+                                .tint(.white)
                                 .scaleEffect(0.85)
                         } else {
                             Image(systemName: "arrow.right")
@@ -178,12 +218,14 @@ struct LoginView: View {
                                 .tracking(-0.2)
                         }
                     }
-                    .foregroundStyle(viewModel.canLogin ? .green : .white.opacity(0.3))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
-                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+                    // Disabled state stays the same blue, just darkened with
+                    // a 0.45 mix toward a neutral gray rather than dropping
+                    // opacity to 35% (which made it look like a placeholder).
+                    .background(viewModel.canLogin ? accent : Color(white: 0.78), in: Capsule())
+                    .shadow(color: accent.opacity(viewModel.canLogin ? 0.30 : 0), radius: 16, y: 8)
                     .contentShape(Capsule())
                 }
                 .buttonStyle(LoginPressStyle())
@@ -193,7 +235,7 @@ struct LoginView: View {
                 // MARK: - Switch to Signup
                 HStack(spacing: 4) {
                     Text("Don't have an account?")
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.secondary)
                     Button {
                         onShowSignup?()
                     } label: {
@@ -210,7 +252,10 @@ struct LoginView: View {
             .padding(.top, 28)
             .padding(.bottom, 40)
         }
-        .background(Color.black.ignoresSafeArea())
+        .background(Color.white.ignoresSafeArea())
+        // Force light scheme on the sign-in sheet to match the welcome
+        // screen — Color.primary / Color.secondary resolve to dark text.
+        .environment(\.colorScheme, .light)
         .scrollDismissesKeyboard(.interactively)
         .fullScreenCover(isPresented: $showCompleteProfile) {
             CompleteProfileView(viewModel: viewModel) { _ in

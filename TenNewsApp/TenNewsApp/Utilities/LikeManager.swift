@@ -15,6 +15,7 @@ final class LikeManager {
 
     private init() {
         load()
+        SessionManager.shared.register(self)
     }
 
     /// Switch to a different user's data
@@ -112,5 +113,17 @@ final class LikeManager {
         if let data = try? JSONEncoder().encode(likedArticles) {
             UserDefaults.standard.set(data, forKey: articlesKey)
         }
+    }
+}
+
+// MARK: - UserScopedStore conformance
+
+extension LikeManager: UserScopedStore {
+    func resetForUserSwitch() {
+        likedArticleIDs.removeAll()
+        likedArticles.removeAll()
+    }
+    func loadForActiveUser(_ userId: String?) {
+        switchUser(userId)
     }
 }

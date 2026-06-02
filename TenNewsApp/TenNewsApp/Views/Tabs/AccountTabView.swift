@@ -17,17 +17,38 @@ struct AccountTabView: View {
     @State private var profileImage: UIImage? = ProfilePhotoManager.shared.load()
     @State private var selectedDefaultAvatar: Int? = ProfilePhotoManager.shared.selectedDefaultAvatar()
     @State private var showAvatarPicker = false
+    @State private var showFollowingList = false
+    @State private var showUserFollowersList = false
+    @State private var showUserFollowingList = false
+    @State private var followManager = FollowManager.shared
+    @State private var userFollowManager = UserFollowManager.shared
 
     private var user: AuthUser? { appViewModel.currentUser }
     private var bookmarks: BookmarkManager { BookmarkManager.shared }
     private var likes: LikeManager { LikeManager.shared }
+    private var reposts: RepostManager { RepostManager.shared }
     private var history: ReadingHistoryManager { ReadingHistoryManager.shared }
 
     enum ProfileTab: String, CaseIterable {
         case liked = "Liked"
         case saved = "Saved"
+        case reposted = "Reposted"
         case history = "History"
         case published = "Published"
+
+        /// SF Symbol used in the toggle bar. Text labels were squeezing
+        /// each other once Reposted made it five tabs, so the bar now
+        /// renders as icons (with the rawValue used as the accessibility
+        /// label and on long-press tooltip).
+        var systemImage: String {
+            switch self {
+            case .liked:     return "heart"
+            case .saved:     return "bookmark"
+            case .reposted:  return "arrow.2.squarepath"
+            case .history:   return "clock"
+            case .published: return "square.and.pencil"
+            }
+        }
     }
 
     var body: some View {
@@ -35,8 +56,30 @@ struct AccountTabView: View {
             NavigationStack {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
+                        // Hamburger lives inside the scroll content so
+                        // it scrolls away as the user moves down —
+                        // sits at the top-right above the profile header.
+                        HStack {
+                            Spacer()
+                            NavigationLink {
+                                SettingsView(
+                                    preferences: appViewModel.preferences,
+                                    onSave: { appViewModel.updatePreferences($0) },
+                                    onSignOut: { appViewModel.logout() }
+                                )
+                            } label: {
+                                Image(systemName: "line.3.horizontal")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundStyle(Color.primary)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.top, 4)
+
                         profileHeader
-                            .padding(.top, 12)
 
                         statsRow
                             .padding(.top, 16)
@@ -59,22 +102,9 @@ struct AccountTabView: View {
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 20)
                 }
-                .navigationTitle(user?.displayName ?? "Guest")
+                .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink {
-                            SettingsView(
-                                preferences: appViewModel.preferences,
-                                onSave: { appViewModel.updatePreferences($0) },
-                                onSignOut: { appViewModel.logout() }
-                            )
-                        } label: {
-                            Image(systemName: "line.3.horizontal")
-                                .font(.system(size: 20, weight: .medium))
-                        }
-                    }
-                }
+                .toolbar(.hidden, for: .navigationBar)
                 .background(Theme.Colors.backgroundPrimary)
             }
             .sheet(isPresented: $showSignUp) {
@@ -175,6 +205,23 @@ struct AccountTabView: View {
             withAnimation(.smooth(duration: 0.5)) {
                 appeared = true
             }
+            // Wire UserFollowManager to the current user so the Followers
+            // count + Following list stats reflect the right person. Triggers
+            // a passive refresh on every Account-tab appearance to keep the
+            // counts fresh after follows happen elsewhere in the app.
+            userFollowManager.setCurrentUser(appViewModel.currentUser?.id)
+            // Force-reload the avatar in case ProfilePhotoManager just got
+            // bound to a different user (e.g. signup-over-existing-session).
+            profileImage = ProfilePhotoManager.shared.load()
+            selectedDefaultAvatar = ProfilePhotoManager.shared.selectedDefaultAvatar()
+        }
+        // Rebind the avatar whenever the active user id changes — without
+        // this, a fresh login renders the previous user's locally-cached
+        // photo until the view tears down (bug 2026-05-13).
+        .onChange(of: appViewModel.currentUser?.id) { _, _ in
+            profileImage = ProfilePhotoManager.shared.load()
+            selectedDefaultAvatar = ProfilePhotoManager.shared.selectedDefaultAvatar()
+            userFollowManager.setCurrentUser(appViewModel.currentUser?.id)
         }
         .onChange(of: selectedTab) { _, newTab in
             if newTab == .published && publishedArticles.isEmpty {
@@ -226,6 +273,11 @@ struct AccountTabView: View {
                         .background(Color.accentColor, in: Circle())
                         .overlay(Circle().stroke(Color(.systemBackground), lineWidth: 2))
                 }
+                // Pin the hit area to the full 86x86 circle. Without this the
+                // tap target collapses to the image's non-transparent pixels
+                // (transparent during AsyncCachedImage load → guest users
+                // saw no tap response at all).
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .sheet(isPresented: $showAvatarPicker) {
@@ -258,16 +310,28 @@ struct AccountTabView: View {
                 .presentationCornerRadius(28)
             }
 
-            VStack(spacing: 4) {
-                Text(user?.displayName ?? "Guest")
-                    .font(.system(size: 16, weight: .semibold))
+            // Display name routes to the same avatar picker — there's no
+            // dedicated "edit profile" page yet, and the avatar picker is
+            // the only profile-editing surface. Both elements act as the
+            // single tap target so the user doesn't get a dead zone here.
+            Button {
+                showAvatarPicker = true
+                HapticManager.light()
+            } label: {
+                VStack(spacing: 4) {
+                    Text(user?.displayName ?? "Guest")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.primary)
 
-                if appViewModel.isGuest {
-                    Text("Browsing as Guest")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                    if appViewModel.isGuest {
+                        Text("Browsing as Guest")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -296,17 +360,60 @@ struct AccountTabView: View {
 
     private var statsRow: some View {
         HStack(spacing: 0) {
-            statItem(value: "0", label: "Followers")
-            statItem(value: "0", label: "Following")
-            statItem(value: "\(history.readCount)", label: "Read")
+            // Real user→user follower count from UserFollowManager (driven by
+            // server count). Tap → list of users who follow the current user.
+            statItem(
+                value: "\(userFollowManager.followerCount)",
+                label: "Followers",
+                action: {
+                    if user?.id != nil { showUserFollowersList = true }
+                }
+            )
+            // Following stat now shows TOTAL count of:
+            //   • Publishers (FollowManager) — sites / outlets the user follows
+            //   • People (UserFollowManager) — users the user follows
+            // Tap → sheet with both sections.
+            statItem(
+                value: "\(followManager.followedPublishers.count + userFollowManager.followingCount)",
+                label: "Following",
+                action: { showFollowingList = true }
+            )
+            statItem(value: "\(history.readCount)", label: "Read", action: nil)
         }
         .padding(.horizontal, 20)
+        .sheet(isPresented: $showFollowingList) {
+            FollowingListView(onDismiss: { showFollowingList = false })
+        }
+        .sheet(isPresented: $showUserFollowersList) {
+            if let uid = user?.id {
+                UserListView(mode: .followers(userId: uid), onDismiss: { showUserFollowersList = false })
+            }
+        }
+        .sheet(isPresented: $showUserFollowingList) {
+            if let uid = user?.id {
+                UserListView(mode: .following(userId: uid), onDismiss: { showUserFollowingList = false })
+            }
+        }
     }
 
-    private func statItem(value: String, label: String) -> some View {
+    @ViewBuilder
+    private func statItem(value: String, label: String, action: (() -> Void)?) -> some View {
+        if let action {
+            Button(action: action) {
+                statItemContent(value: value, label: label)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        } else {
+            statItemContent(value: value, label: label)
+        }
+    }
+
+    private func statItemContent(value: String, label: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Color.primary)
             Text(label)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
@@ -345,6 +452,7 @@ struct AccountTabView: View {
                 .buttonStyle(AccountButtonStyle())
             }
 
+
             Button {
                 showCreateContent = true
                 HapticManager.light()
@@ -366,7 +474,10 @@ struct AccountTabView: View {
     // MARK: - Glass Toggle
 
     private var glassToggle: some View {
-        GlassEffectContainer {
+        // Renamed semantically below — kept the property name so the
+        // body call site doesn't churn. No glass + no shadow: just a
+        // plain capsule with `.fill.quaternary` fill.
+        Group {
             HStack(spacing: 0) {
                 ForEach(ProfileTab.allCases, id: \.self) { tab in
                     Button {
@@ -375,8 +486,8 @@ struct AccountTabView: View {
                         }
                         HapticManager.selection()
                     } label: {
-                        Text(tab.rawValue)
-                            .font(.system(size: 14, weight: selectedTab == tab ? .bold : .medium))
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(selectedTab == tab ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 36)
@@ -387,12 +498,14 @@ struct AccountTabView: View {
                                         .matchedGeometryEffect(id: "profileToggle", in: toggleNS)
                                 }
                             }
+                            .contentShape(Rectangle())
+                            .accessibilityLabel(tab.rawValue)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(4)
-            .glassEffect(.regular, in: Capsule())
+            .background(.fill.quaternary, in: Capsule())
         }
     }
 
@@ -415,6 +528,13 @@ struct AccountTabView: View {
             } else {
                 articleCardGrid(bookmarks.savedArticles)
             }
+        case .reposted:
+            if reposts.repostedArticles.isEmpty {
+                emptyState(icon: "arrow.2.squarepath", title: "No Reposts",
+                           subtitle: "Tap the repost icon on any article to share it with your followers.")
+            } else {
+                articleCardGrid(reposts.repostedArticles)
+            }
         case .history:
             if history.entries.isEmpty {
                 emptyState(icon: "clock", title: "No Reading History",
@@ -436,28 +556,30 @@ struct AccountTabView: View {
         }
     }
 
-    // MARK: - Article Card Grid (search-style)
+    // MARK: - Article Card Grid (feed-style)
+    //
+    // Liked / Saved / Published all render with the same full feed-card
+    // layout the For You tab uses — header (avatar + creator + time),
+    // natural-aspect photo, full title, bullets, action row. No more
+    // SearchResultCard with the title overlaid on the photo; matches
+    // what the user sees in the feed exactly.
 
     private func articleCardGrid(_ articles: [Article]) -> some View {
-        let screenW = UIScreen.main.bounds.width
-        let hPad: CGFloat = 16
-        let fullW = screenW - hPad * 2
-
-        return LazyVStack(spacing: 8) {
+        // Cards render as passive feed-style previews — no tap opens
+        // an article overlay. Heart / save / repost / share buttons
+        // inside the card still work in place. (Previously a tap on
+        // the title opened ExploreArticleSheet, which used the legacy
+        // dark theme and looked like a black page.)
+        LazyVStack(spacing: 24) {
             ForEach(articles) { article in
-                Button { openArticle(article) } label: {
-                    SearchResultCard(
-                        article: article.toSearchArticle(),
-                        fallbackColor: categoryColor(for: article.category ?? ""),
-                        cardWidth: fullW,
-                        cardHeight: fullW * 0.65,
-                        hideCategory: true
-                    )
-                }
-                .buttonStyle(.plain)
+                ArticleCardContinuousView(
+                    article: article,
+                    accentColor: feedViewModel.accentColor(for: article),
+                    showTopicTags: false
+                )
             }
         }
-        .padding(.horizontal, hPad)
+        .padding(.top, 8)
     }
 
     private func categoryColor(for category: String) -> Color {

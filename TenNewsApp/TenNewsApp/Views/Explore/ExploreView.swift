@@ -1,5 +1,264 @@
 import SwiftUI
 
+// MARK: - Article from ExploreTopicArticle
+//
+// Restored 2026-05-14 (originally from cbf7d561). Builds a slim Article
+// from the lightweight ExploreTopicArticle preview the explore endpoint
+// returns, so the Explore page can render the same full
+// ArticleCardContinuousView the For You feed uses. Title + bullets +
+// photo all carry over; everything else stays nil and the feed card
+// falls back to its simple title+bullets layout.
+
+extension Article {
+    static func fromExplore(_ e: ExploreTopicArticle, source: String? = nil) -> Article {
+        Article(
+            id: e.id,
+            title: e.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: nil,
+            summaryBulletsNews: e.bullets,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: e.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: source,
+            category: e.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: e.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: nil,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: nil,
+            authorName: nil,
+            pages: e.pages,
+            expectedReadSeconds: nil
+        )
+    }
+
+    /// Slim Article built from a SearchArticle so search result rows can
+    /// render the full feed-card layout. Bullets / source / authorName are
+    /// nil here — search returns a lighter payload than the feed; the card
+    /// downgrades gracefully (no bullet section, no follow chip).
+    static func fromSearch(_ s: SearchArticle) -> Article {
+        Article(
+            id: s.id,
+            title: s.title,
+            titleNews: nil,
+            summary: nil,
+            summaryText: nil,
+            summaryTextB2: nil,
+            summaryBullets: s.bullets,
+            // The feed card reads bullets from summaryBulletsNews first
+            // (matches the field name on the live feed payload). Mirror
+            // the same bullets here so ArticleCardContinuousView lights up.
+            summaryBulletsNews: s.bullets,
+            summaryBulletsB2: nil,
+            details: nil,
+            detailsB2: nil,
+            detailedText: nil,
+            contentNews: nil,
+            detailedBullets: nil,
+            detailedBulletsB2: nil,
+            url: nil,
+            imageUrl: s.imageUrl,
+            urlToImage: nil,
+            imageSource: nil,
+            source: s.source,
+            category: s.category,
+            emoji: nil,
+            timeline: nil,
+            graph: nil,
+            graphData: nil,
+            map: nil,
+            mapData: nil,
+            fiveWs: nil,
+            components: nil,
+            citations: nil,
+            publishedAt: s.publishedAt,
+            createdAt: nil,
+            aiFinalScore: nil,
+            finalScore: nil,
+            baseScore: nil,
+            rank: nil,
+            worldEvent: nil,
+            countries: nil,
+            topics: nil,
+            interestTags: s.interestTags,
+            chipTags: nil,
+            bucket: nil,
+            resurfaced: nil,
+            isResurfaced: nil,
+            firstSeenAt: nil,
+            wasEngaged: nil,
+            countryRelevance: nil,
+            topicRelevance: nil,
+            matchReasons: nil,
+            scorecard: nil,
+            articleType: nil,
+            authorId: s.authorId,
+            authorName: s.authorName,
+            pages: nil,
+            expectedReadSeconds: nil
+        )
+    }
+}
+
+/// Deterministic accent color from an article id so the same article
+/// gets the same color everywhere (Explore, Topic, Feed).
+private func exploreAccentColor(for id: FlexibleID) -> Color {
+    let s = id.stringValue
+    var hash: UInt64 = 14695981039346656037
+    for byte in s.utf8 {
+        hash = (hash ^ UInt64(byte)) &* 1099511628211
+    }
+    let hue = Double(hash % 360) / 360.0
+    return Color(hue: hue, saturation: 0.55, brightness: 0.85)
+}
+
+// MARK: - Per-card height measurement
+//
+// Each card in EntityArticleCarousel emits its measured height keyed by
+// index; the parent merges them. Without per-card heights we can't morph
+// the carousel container to fit whichever card is currently snapped.
+
+private struct CardHeightKey: PreferenceKey {
+    /// Computed default (not stored static var) for Swift 6 strict
+    /// concurrency.
+    static var defaultValue: [Int: CGFloat] { [:] }
+    static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+        value.merge(nextValue(), uniquingKeysWith: { $1 })
+    }
+}
+
+// MARK: - Variable-height horizontal carousel
+//
+// Each card is a full ArticleCardContinuousView at its natural height
+// (photo aspect, full title, bullets, action row). The container morphs
+// to whichever card is currently snapped — so a tall card with many
+// bullets gets full vertical space, and a one-bullet card collapses
+// the section accordingly.
+//
+// `.fixedSize(horizontal: false, vertical: true)` on each card is
+// critical: without it, the parent's `.frame(height: currentHeight)`
+// would compress cards 2+ during measurement and they'd all report
+// card 1's height through the PreferenceKey, breaking the morph.
+
+private struct EntityArticleCarousel: View {
+    let topic: ExploreTopic
+    let cardWidth: CGFloat
+    let prefetchedArticles: [String: Article]
+    let preloadedArticles: [Article]
+    /// `(entityText, sourceArticleId)` — matches the upgraded
+    /// ArticleCardContinuousView signature so chip taps can pass the
+    /// source article for embedding kNN once that ships server-side.
+    var onTopicTap: (String, String) -> Void
+    var onSwipeDepth: (Int) -> Void
+    var onScrollHit: () -> Void
+
+    @State private var cardHeights: [Int: CGFloat] = [:]
+    @State private var currentIndex: Int = 0
+
+    private var currentHeight: CGFloat {
+        cardHeights[currentIndex] ?? 600
+    }
+
+    /// Prefer the fully-hydrated Article (from prefetch or feed cache) over
+    /// the slim explore proxy, so bullets etc. render whenever available.
+    private func resolvedArticle(at index: Int) -> Article {
+        let article = topic.articles[index]
+        let key = article.id.stringValue
+        if let pre = prefetchedArticles[key] { return pre }
+        if let loaded = preloadedArticles.first(where: { $0.id.stringValue == key }) { return loaded }
+        return Article.fromExplore(article, source: topic.displayTitle)
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 12) {
+                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
+                        ArticleCardContinuousView(
+                            article: resolvedArticle(at: index),
+                            accentColor: exploreAccentColor(for: article.id),
+                            onTopicTap: onTopicTap,
+                            showTopicTags: false
+                        )
+                        .frame(width: cardWidth)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: CardHeightKey.self,
+                                    value: [index: geo.size.height]
+                                )
+                            }
+                        )
+                        .onAppear {
+                            if index == 2 { onScrollHit() }
+                        }
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.horizontal, 20)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .onPreferenceChange(CardHeightKey.self) { heights in
+                cardHeights.merge(heights, uniquingKeysWith: { _, new in new })
+            }
+            .frame(height: currentHeight)
+            .clipped()
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.x
+            } action: { _, newOffset in
+                let page = Int(round(newOffset / (cardWidth + 12)))
+                let clamped = max(0, min(page, topic.articles.count - 1))
+                if clamped != currentIndex {
+                    let prev = currentIndex
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+                        currentIndex = clamped
+                    }
+                    if clamped > prev { onSwipeDepth(clamped) }
+                }
+            }
+        }
+    }
+}
+
 struct ExploreView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @Environment(FeedViewModel.self) private var feedViewModel
@@ -20,9 +279,51 @@ struct ExploreView: View {
     @State private var selectedTopic: ExploreTopic?
     @State private var topicArticles: [Article] = []
     @State private var loadingTopicArticles = false
+    /// Set when the user taps a topic chip on a feed card — drives the
+    /// TopicFeedView overlay (same pattern as the main feed).
+    @State private var topicTarget: TopicTarget? = nil
     @State private var appeared = false
     @State private var lastLoadTime: Date?
     @State private var hasLoadedOnce = false
+    /// Discovery feed from `/api/explore/feed` (lib/exploreServe.js — PR #212).
+    /// This is the PRIMARY source for the vertical feed in the idle state. The
+    /// topic-flatten fallback in `feedArticles` only fires while searching or
+    /// if this fetch hasn't returned (or failed) — so the surface is never
+    /// blank. Populated by a background Task inside `loadTopics()`.
+    @State private var discoveryArticles: [Article] = []
+    /// Inline search controller. Reused from SearchTabView so recents +
+    /// trending lists stay in lockstep across surfaces.
+    @State private var searchModel = SearchViewModel()
+    @FocusState private var searchFocused: Bool
+    /// Active tab inside the search overlay (Top / Articles / Publishers /
+    /// Topics). Defaults to Top — the synthesized "best of everything"
+    /// page IG / TikTok / X all open with.
+    @State private var selectedSearchTab: SearchResultsTab = .top
+    /// True when the search bar should "take over" the page below it —
+    /// either the user is typing or the field is focused with no query.
+    private var isSearchActive: Bool {
+        searchFocused || !tabBarState.searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    /// Scroll-driven reveal for the search bar. Down-scroll hides it,
+    /// up-scroll (even slightly) brings it back. Safari / IG / Threads
+    /// all do the same — saves vertical space while reading without
+    /// forcing the user to scroll all the way back to the top.
+    @State private var searchBarVisible: Bool = true
+    @State private var lastScrollY: CGFloat = 0
+
+    /// Top tab IS the default — replicates IG / TikTok / X / Threads.
+    enum SearchResultsTab: String, CaseIterable, Identifiable {
+        case top, articles, publishers, topics
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .top:        return "Top"
+            case .articles:   return "Articles"
+            case .publishers: return "Publishers"
+            case .topics:     return "Topics"
+            }
+        }
+    }
     private let staleThreshold: TimeInterval = 180 // 3 minutes
 
     // Explore tracking state
@@ -47,6 +348,41 @@ struct ExploreView: View {
 
     private var trendingTopics: [ExploreTopic] {
         filteredTopics.filter(\.isTrending)
+    }
+
+    /// Articles for the vertical feed.
+    ///
+    /// PRIMARY (idle state): `discoveryArticles` from `/api/explore/feed` —
+    /// the dedicated discovery algorithm (broad, distinct from For-You). These
+    /// arrive fully hydrated (server uses `formatArticle`), so they render
+    /// the full feed card without a stub→hydrate flicker.
+    ///
+    /// FALLBACK (while searching, or before discovery returns / on failure):
+    /// flatten the topic-grouped articles from `/api/explore/topics` so the
+    /// surface is never blank. Prefers the hydrated Article from the feed
+    /// cache, then any prefetched copy, then a lightweight Explore stub.
+    private var feedArticles: [Article] {
+        // Idle (not searching) AND discovery feed has loaded → use it.
+        if searchText.isEmpty && !discoveryArticles.isEmpty {
+            return discoveryArticles
+        }
+        var seen = Set<String>()
+        var out: [Article] = []
+        for topic in filteredTopics {
+            for ta in topic.articles {
+                let key = ta.id.stringValue
+                if seen.contains(key) { continue }
+                seen.insert(key)
+                if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == key }) {
+                    out.append(cached)
+                } else if let pre = prefetchedArticles[key] {
+                    out.append(pre)
+                } else {
+                    out.append(Article.fromExplore(ta, source: topic.displayTitle))
+                }
+            }
+        }
+        return out
     }
 
     var body: some View {
@@ -83,6 +419,17 @@ struct ExploreView: View {
                 if requested {
                     tabBarState.exploreRefreshRequested = false
                     Task { await loadTopics() }
+                }
+            }
+            // Cross-tab "open search with this query" — Flash Brief topic
+            // chips, article-card entity chips, etc. set this flag (via
+            // ContentView's pendingSearch handler) after switching to the
+            // Explore tab. We focus the inline search bar instead of
+            // presenting a sheet.
+            .onChange(of: tabBarState.openSearchOnExplore) { _, requested in
+                if requested {
+                    searchFocused = true
+                    tabBarState.openSearchOnExplore = false
                 }
             }
 
@@ -124,29 +471,653 @@ struct ExploreView: View {
                 .ignoresSafeArea()
                 .zIndex(2)
             }
+
+            // Topic feed overlay — tapping a topic chip on a feed card drills
+            // into that entity's feed (same in-tree overlay as the main feed,
+            // so the tab bar stays visible behind it).
+            if let target = topicTarget {
+                TopicFeedView(
+                    entity: target.entity,
+                    sourceId: target.sourceId,
+                    onDismiss: {
+                        withAnimation(.easeInOut(duration: 0.28)) { topicTarget = nil }
+                    }
+                )
+                .transition(.move(edge: .trailing))
+                .ignoresSafeArea()
+                .zIndex(3)
+            }
         }
+        .animation(.easeInOut(duration: 0.28), value: topicTarget?.entity)
     }
 
     // MARK: - Main Content
 
-    private var mainContent: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                // Title scrolls with content
-                Text("Explore")
-                    .font(.system(size: 34, weight: .bold))
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .padding(.bottom, 28)
+    /// Height the floating search bar occupies (44pt bar + 8pt top
+    /// padding + 18pt bottom padding). Used as the scroll content's
+    /// `padding(.top, ...)` so cards aren't hidden behind it.
+    private let searchBarSlotHeight: CGFloat = 70
 
-                // Topics — already interleaved (2 personalized, 1 trending) from API
-                ForEach(Array(filteredTopics.enumerated()), id: \.element.id) { tIndex, topic in
-                    entitySection(topic)
-                        .sectionAppear(appeared: appeared, index: tIndex)
-                        .padding(.bottom, 32)
+    private var mainContent: some View {
+        ZStack(alignment: .top) {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if isSearchActive {
+                        // Search is active — branch on whether a query is
+                        // in flight, has results, came back empty, or none
+                        // of the above (show recents).
+                        inlineSearchContent
+                            .padding(.top, 4)
+                    } else {
+                    // Normal Explore layout.
+                    Text("Explore")
+                        .font(.system(size: 28, weight: .bold))
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
+
+                    // Vertical feed — same card design as the main feed. No
+                    // per-topic horizontal carousels; everything scrolls straight
+                    // down as one merged feed (user direction 2026-05-27).
+                    ForEach(Array(feedArticles.enumerated()), id: \.offset) { idx, article in
+                        ArticleCardContinuousView(
+                            article: article,
+                            accentColor: feedViewModel.accentColor(for: article),
+                            onTopicTap: { entity, sourceId in
+                                topicTarget = TopicTarget(entity: entity, sourceId: sourceId)
+                            }
+                        )
+                        .padding(.vertical, 14)
+
+                        if idx < feedArticles.count - 1 {
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.08))
+                                .frame(height: 0.5)
+                                .padding(.horizontal, 16)
+                        }
+                    }
                 }
 
-                Spacer(minLength: 100)
+                    Spacer(minLength: 100)
+                }
+                // Push content below the floating search bar.
+                .padding(.top, searchBarSlotHeight)
+            }
+            .animation(.smooth(duration: 0.2), value: isSearchActive)
+            .scrollDismissesKeyboard(.interactively)
+            // Track scroll direction. Down (newer > older + threshold) hides
+            // the bar; up (any negative delta past a small threshold) shows
+            // it. Reset hide state at the very top so the user never gets
+            // stuck with a missing bar after a quick fling.
+            .onScrollGeometryChange(for: CGFloat.self) { geo in
+                geo.contentOffset.y
+            } action: { oldY, newY in
+                let delta = newY - oldY
+                // Always force-show near the top.
+                if newY <= 4 {
+                    if !searchBarVisible {
+                        withAnimation(.snappy(duration: 0.2)) { searchBarVisible = true }
+                    }
+                } else if delta > 6 && searchBarVisible {
+                    withAnimation(.snappy(duration: 0.2)) { searchBarVisible = false }
+                } else if delta < -4 && !searchBarVisible {
+                    withAnimation(.snappy(duration: 0.2)) { searchBarVisible = true }
+                }
+                lastScrollY = newY
+            }
+
+            // Floating search bar — overlays the scroll view, hides on
+            // down-scroll, shows on up-scroll. Always force-visible while
+            // the user is typing / focused so the field can't disappear
+            // mid-edit.
+            exploreSearchBar
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 18)
+                // Frosted-glass backdrop (iOS/other-platforms standard): content
+                // BLURS behind the bar instead of showing through it sharply, and
+                // it's not a flat solid panel like before.
+                .background(.regularMaterial)
+                .offset(y: (searchBarVisible || isSearchActive) ? 0 : -searchBarSlotHeight)
+                .opacity((searchBarVisible || isSearchActive) ? 1 : 0)
+                .allowsHitTesting(searchBarVisible || isSearchActive)
+        }
+        // Drive the search model whenever the bound query changes —
+        // SearchViewModel.onSearchTextChanged debounces by 300ms and
+        // calls search(query:) for queries ≥ 2 chars. We ALSO fire the
+        // (cheaper, 80ms-debounced) autocomplete loader so the chip rail
+        // updates ahead of the full search.
+        .onChange(of: tabBarState.searchText) { _, newValue in
+            searchModel.searchText = newValue
+            searchModel.onSearchTextChanged()
+            searchModel.loadAutocomplete(query: newValue)
+        }
+        // Fall back to the Top tab whenever a new query lands so the
+        // user lands on the most-useful screen by default.
+        .onChange(of: searchModel.hasSearched) { _, has in
+            if has { selectedSearchTab = .top }
+        }
+    }
+
+    // MARK: - Inline search content
+
+    /// State machine that fills the area below the search bar while the
+    /// user is searching. Branches:
+    ///   * has results        → autocomplete chip rail + segmented tabs + content
+    ///   * spinner (first run, no stale results) → loading
+    ///   * searched, no hits  → friendly empty
+    ///   * idle / typing      → autocomplete chip rail + recents
+    @ViewBuilder
+    private var inlineSearchContent: some View {
+        let q = tabBarState.searchText.trimmingCharacters(in: .whitespaces)
+
+        VStack(alignment: .leading, spacing: 0) {
+            // Autocomplete chip rail — visible the moment we have any
+            // suggestions, even before the heavier full search returns.
+            // Hides on a clean empty state.
+            if !searchModel.suggestions.isEmpty {
+                inlineAutocompleteChips
+                    .padding(.bottom, 12)
+            }
+
+            if searchModel.isLoading && searchModel.articles.isEmpty {
+                inlineSearchSpinner
+            } else if searchModel.hasSearched && !searchModel.articles.isEmpty {
+                // Stale-while-revalidate — keep results visible at full
+                // opacity; the loading spinner fades in at the top while
+                // the new query is in flight.
+                if searchModel.isLoading {
+                    HStack(spacing: 8) {
+                        ProgressView().scaleEffect(0.7)
+                        Text("Updating…").font(.system(size: 11)).foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 6)
+                    .transition(.opacity)
+                }
+
+                searchTabSelector
+                    .padding(.bottom, 12)
+
+                Group {
+                    switch selectedSearchTab {
+                    case .top:        inlineSearchTopTab
+                    case .articles:   inlineSearchArticlesTab
+                    case .publishers: inlineSearchPublishersTab
+                    case .topics:     inlineSearchTopicsTab
+                    }
+                }
+            } else if searchModel.hasSearched && !q.isEmpty {
+                inlineSearchEmpty(query: q)
+            } else {
+                inlineSearchRecents
+            }
+        }
+        .animation(.smooth(duration: 0.18), value: searchModel.hasSearched)
+        .animation(.smooth(duration: 0.18), value: selectedSearchTab)
+    }
+
+    // MARK: - Autocomplete chips
+
+    /// Horizontal scrolling chip rail. Each chip shows the suggestion's
+    /// label; tap fills the search field + runs a real search. Icon
+    /// hints at the kind (publisher / topic / article).
+    private var inlineAutocompleteChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(searchModel.suggestions) { suggestion in
+                    Button {
+                        HapticManager.light()
+                        tabBarState.searchText = suggestion.label
+                        Task { await searchModel.search(query: suggestion.label) }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: suggestionIcon(for: suggestion.type))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Text(suggestion.label)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(.fill.quaternary, in: Capsule())
+                        .overlay(Capsule().strokeBorder(.black.opacity(0.05), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func suggestionIcon(for type: String) -> String {
+        switch type {
+        case "publisher": return "person.crop.circle"
+        case "entity":    return "number"
+        case "article":   return "doc.text"
+        default:          return "magnifyingglass"
+        }
+    }
+
+    // MARK: - Tab selector
+
+    /// Segmented control above results. Pure SwiftUI Buttons — Picker's
+    /// .segmented style on iOS doesn't render flush with our light theme
+    /// and Forces a tap area we don't want.
+    private var searchTabSelector: some View {
+        HStack(spacing: 8) {
+            ForEach(SearchResultsTab.allCases) { tab in
+                Button {
+                    selectedSearchTab = tab
+                    HapticManager.light()
+                } label: {
+                    Text(tab.label)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(selectedSearchTab == tab ? Color.primary : Color.secondary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            selectedSearchTab == tab
+                                ? AnyShapeStyle(.fill.tertiary)
+                                : AnyShapeStyle(Color.clear),
+                            in: Capsule()
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var inlineSearchSpinner: some View {
+        HStack(spacing: 10) {
+            ProgressView().scaleEffect(0.9)
+            Text("Searching…")
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
+    }
+
+    private func inlineSearchEmpty(query: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 30, weight: .light))
+                .foregroundStyle(.secondary)
+            Text("No results for \"\(query)\"")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text("Try a different word or check the spelling.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
+    }
+
+    // MARK: - Tab content
+
+    /// Articles tab — vertical list of full feed cards. Same component
+    /// the For You feed uses so the search UX is "filtered feed."
+    private var inlineSearchArticlesTab: some View {
+        VStack(spacing: 24) {
+            ForEach(searchModel.articles) { result in
+                let hydrated = hydratedArticle(for: result)
+                Button {
+                    openSearchResult(result)
+                } label: {
+                    ArticleCardContinuousView(
+                        article: hydrated,
+                        accentColor: feedViewModel.accentColor(for: hydrated),
+                        showTopicTags: false
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Top tab — synthesized "best of everything" view from the
+    /// server's typed top-rows payload. Renders each row according to
+    /// its kind (article = full feed card, publisher = follow row,
+    /// entity = tappable topic row).
+    private var inlineSearchTopTab: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            ForEach(searchModel.topRows) { row in
+                switch row {
+                case .article(let a):
+                    let hydrated = hydratedArticle(for: a)
+                    Button {
+                        openSearchResult(a)
+                    } label: {
+                        ArticleCardContinuousView(
+                            article: hydrated,
+                            accentColor: feedViewModel.accentColor(for: hydrated),
+                            showTopicTags: false
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                case .publisher(let p):
+                    publisherRow(p)
+
+                case .entity(let e):
+                    entityRow(e)
+                }
+            }
+
+            // Fallback: if the server didn't emit any top rows (rare —
+            // empty result set), fall through to the Articles list so
+            // the tab is never visually empty.
+            if searchModel.topRows.isEmpty {
+                inlineSearchArticlesTab
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Publishers tab — IG-style follow rows.
+    private var inlineSearchPublishersTab: some View {
+        VStack(spacing: 0) {
+            if searchModel.publishers.isEmpty {
+                tabEmpty(message: "No publishers match your search.")
+            } else {
+                ForEach(searchModel.publishers) { p in
+                    publisherRow(p)
+                    if p.id != searchModel.publishers.last?.id {
+                        Divider().padding(.leading, 76)
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Topics tab — vertical list of tappable entity rows. Tapping
+    /// pushes into TopicFeedView via the existing pendingSearch bridge.
+    private var inlineSearchTopicsTab: some View {
+        VStack(spacing: 0) {
+            if searchModel.entities.isEmpty {
+                tabEmpty(message: "No topics match your search.")
+            } else {
+                ForEach(searchModel.entities) { e in
+                    entityRow(e)
+                    if e.id != searchModel.entities.last?.id {
+                        Divider().padding(.leading, 76)
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private func tabEmpty(message: String) -> some View {
+        Text(message)
+            .font(.system(size: 14))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+    }
+
+    // MARK: - Row renderers shared by Top / Publishers / Topics tabs
+
+    /// Publisher row — avatar + display name + verified badge + meta
+    /// (follower / article count) + Follow chip on the right.
+    private func publisherRow(_ p: SearchPublisher) -> some View {
+        Button {
+            // The publisher's profile is the right destination — but we
+            // don't have direct navigation into CreatorProfileView from
+            // here. Until that's wired, bridge via pendingSearch so the
+            // chip rail at minimum surfaces their handle.
+            tabBarState.searchText = p.displayName
+            Task { await searchModel.search(query: p.displayName) }
+            HapticManager.light()
+        } label: {
+            HStack(spacing: 12) {
+                AsyncCachedImage(url: URL(string: p.avatarUrl ?? ""), contentMode: .fill)
+                    .frame(width: 48, height: 48)
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(.black.opacity(0.06), lineWidth: 0.5))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text(p.displayName)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        if p.isVerified == true {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color(red: 0.0, green: 0.48, blue: 1.0))
+                        }
+                    }
+                    Text(publisherSubtitle(p))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func publisherSubtitle(_ p: SearchPublisher) -> String {
+        var parts: [String] = []
+        if let c = p.category, !c.isEmpty { parts.append(c) }
+        let followers = p.followerCount ?? 0
+        if followers > 0 { parts.append("\(formatCount(followers)) followers") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Entity row — emoji tile + display title + article-count subtitle.
+    private func entityRow(_ e: SearchEntity) -> some View {
+        Button {
+            tabBarState.searchText = e.displayTitle
+            Task { await searchModel.search(query: e.displayTitle) }
+            HapticManager.light()
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.fill.tertiary)
+                        .frame(width: 48, height: 48)
+                    Text(e.emoji)
+                        .font(.system(size: 22))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(e.displayTitle)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if let n = e.articleCount, n > 0 {
+                        Text("\(n) articles · \(e.category)")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    } else {
+                        Text(e.category)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func formatCount(_ n: Int) -> String {
+        if n >= 1_000_000 { return String(format: "%.1fM", Double(n) / 1_000_000) }
+        if n >= 1_000 { return String(format: "%.1fK", Double(n) / 1_000) }
+        return String(n)
+    }
+
+    /// Use the fully-loaded Article from the feed cache when available
+    /// so we get bullets / action-row state / publisher attribution.
+    /// Falls back to a slim Article built from the SearchArticle payload.
+    private func hydratedArticle(for result: SearchArticle) -> Article {
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == result.id.stringValue }) {
+            return cached
+        }
+        return Article.fromSearch(result)
+    }
+
+    /// Fetch the full Article and open the existing sheet overlay.
+    private func openSearchResult(_ result: SearchArticle) {
+        HapticManager.selection()
+        searchModel.addRecentSearch(tabBarState.searchText)
+
+        // Hit the feed cache first.
+        if let cached = feedViewModel.allArticles.first(where: { $0.id.stringValue == result.id.stringValue }) {
+            selectedArticle = cached
+            selectedArticleRev &+= 1
+            return
+        }
+
+        // Otherwise fetch by id.
+        Task { @MainActor in
+            do {
+                let response: ArticleDetailResponse = try await APIClient.shared.get(
+                    APIEndpoints.article(id: result.id.stringValue)
+                )
+                selectedArticle = response.article
+                selectedArticleRev &+= 1
+            } catch {
+                // Silent — leave the recents list visible; user can retry.
+            }
+        }
+    }
+
+    /// Inline search bar — TextField bound to `tabBarState.searchText` so
+    /// cross-tab deep links (Flash Brief chip taps) still pre-populate it.
+    /// Trailing X clears the query AND unfocuses the field so the user
+    /// returns to the Explore content with one tap. Typing here drives
+    /// the inline search results below (via onChange + onSubmit handlers
+    /// attached to mainContent so they fire even when the field isn't
+    /// the keyboard's first responder).
+    private var exploreSearchBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            TextField(
+                "Search articles, publishers, topics",
+                text: Binding(
+                    get: { tabBarState.searchText },
+                    set: { tabBarState.searchText = $0 }
+                )
+            )
+            .font(.system(size: 16))
+            .foregroundStyle(.primary)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .focused($searchFocused)
+            .submitLabel(.search)
+            .onSubmit {
+                // Enter key in the keyboard.
+                let q = tabBarState.searchText.trimmingCharacters(in: .whitespaces)
+                guard q.count >= 2 else { return }
+                Task { await searchModel.search(query: q) }
+            }
+
+            if isSearchActive {
+                Button {
+                    tabBarState.searchText = ""
+                    searchFocused = false
+                    // Reset the search model so the recents view returns
+                    // instead of a stale results list.
+                    searchModel.articles = []
+                    searchModel.entities = []
+                    searchModel.publishers = []
+                    searchModel.hasSearched = false
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.85)))
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 44)
+        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .animation(.smooth(duration: 0.18), value: isSearchActive)
+    }
+
+    /// Recents list shown below the search bar when search is active.
+    /// Mirrors the row layout SearchTabView uses, but lives inline inside
+    /// ExploreView so there's no separate page.
+    private var inlineSearchRecents: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !searchModel.recentSearches.isEmpty {
+                HStack {
+                    Text("Recent")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Clear") {
+                        withAnimation { searchModel.clearRecentSearches() }
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 4)
+
+                ForEach(searchModel.recentSearches, id: \.self) { query in
+                    Button {
+                        tabBarState.searchText = query
+                        searchModel.selectRecent(query)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24)
+                            Text(query)
+                                .font(.system(size: 16))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            Button {
+                                withAnimation { searchModel.removeRecentSearch(query) }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.tertiary)
+                                    .frame(width: 24, height: 24)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Text("Your recent searches will show up here.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
             }
         }
     }
@@ -231,55 +1202,33 @@ struct ExploreView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
 
-            // Horizontal article scroll
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
-                    ForEach(Array(topic.articles.enumerated()), id: \.element.id) { index, article in
-                        Button {
-                            trackArticleTap(article, topic: topic)
-                            openArticle(article)
-                        } label: {
-                            ExploreArticleCard(
-                                article: article,
-                                fallbackColor: catColor,
-                                cardWidth: cardWidth,
-                                cardHeight: cardHeight,
-                                relatedEntities: relatedEntityNames(for: article, excluding: topic)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .onAppear {
-                            if index == 2 {
-                                trackScrollIfNeeded(topic)
-                            }
-                        }
-                    }
-                }
-                .scrollTargetLayout()
-                .padding(.horizontal, 20)
-            }
-            .scrollTargetBehavior(.viewAligned)
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.x
-            } action: { _, newOffset in
-                let page = Int(round(newOffset / (cardWidth + 12)))
-                let clamped = max(0, min(page, topic.articles.count - 1))
-                let previousIndex = scrolledIndices[topic.entityName] ?? 0
-                if clamped != previousIndex {
-                    scrolledIndices[topic.entityName] = clamped
-                    // Track swipe-right as interest signal (stronger than scroll, weaker than tap)
-                    if clamped > previousIndex {
-                        trackEntitySwipe(topic: topic, depth: clamped)
-                    }
-                }
-            }
+            // Variable-height horizontal carousel — each card is a full
+            // ArticleCardContinuousView at its natural height (photo +
+            // title + bullets + action row), and the carousel container
+            // morphs to fit whichever card is currently snapped. Same
+            // design as the For You feed cards, so Explore visually
+            // matches the feed exactly.
+            EntityArticleCarousel(
+                topic: topic,
+                cardWidth: cardWidth,
+                prefetchedArticles: prefetchedArticles,
+                preloadedArticles: feedViewModel.allArticles,
+                onTopicTap: { entity, _ in
+                    // Bridge through tabBarState.pendingSearch so a topic
+                    // chip tap drops the user into the search overlay
+                    // pre-filled with the entity (consistent with how
+                    // Flash Brief / feed chips behave). sourceId is
+                    // unused here for now — kept on the closure for
+                    // future use when the chip retrieval endpoint
+                    // accepts source_id for kNN.
+                    tabBarState.pendingSearch = entity
+                },
+                onSwipeDepth: { depth in
+                    scrolledIndices[topic.entityName] = depth
+                },
+                onScrollHit: { trackScrollIfNeeded(topic) }
+            )
 
-            // Page indicator dots (max 7 visible, iOS-style scaling)
-            if topic.articles.count > 1 {
-                PageDots(count: topic.articles.count, current: currentIndex)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
-            }
         }
     }
 
@@ -290,6 +1239,7 @@ struct ExploreView: View {
     }
 
     private var cardHeight: CGFloat { cardWidth }
+
 
     // MARK: - Loading
 
@@ -356,6 +1306,25 @@ struct ExploreView: View {
         dwellTracked.removeAll()
         scrollTracked.removeAll()
         scrolledIndices.removeAll()
+
+        // Discovery feed — kicked off in parallel so it doesn't slow topics.
+        // /api/explore/feed (lib/exploreServe.js) returns the dedicated
+        // discovery slate. We pass the user's For-You feed cache ids as
+        // seen_ids so Explore doesn't repeat what they already see in the
+        // main feed. Non-blocking: when it returns, the @State write triggers
+        // a re-render and `feedArticles` switches over to the discovery list.
+        // Wrapped in try? — if it fails (cold-start timeout, network), we
+        // fall back to the topic-flatten path in feedArticles.
+        let exploreUserId = userId
+        let exploreSeenIds = feedViewModel.allArticles.prefix(80).map { $0.id.stringValue }
+        Task {
+            let svc = FeedService()
+            if let r = try? await svc.fetchExploreFeed(userId: exploreUserId, seenIds: exploreSeenIds, limit: 25),
+               !r.articles.isEmpty {
+                discoveryArticles = r.articles
+            }
+        }
+
         var params: [String] = []
         if let uid = userId {
             params.append("user_id=\(uid)")
@@ -977,6 +1946,7 @@ struct EntityArticlesSheet: View {
                 .zIndex(1)
             }
         }
+        .swipeToDismiss { onDismiss() }
     }
 
     /// Find the matching ExploreTopicArticle for a full Article (for the card display)
@@ -990,7 +1960,9 @@ struct EntityArticlesSheet: View {
             title: article.title ?? "Untitled",
             imageUrl: article.imageUrl,
             category: article.category,
-            publishedAt: article.publishedAt
+            publishedAt: article.publishedAt,
+            bullets: nil,
+            pages: article.pages
         )
     }
 }

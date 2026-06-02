@@ -55,8 +55,14 @@ struct CreateContentView: View {
     ]
 
     private var canProceed: Bool {
-        !title.trimmingCharacters(in: .whitespaces).isEmpty &&
-        bullets.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+        // Title is always required. The second piece can be EITHER a
+        // bullet OR a photo — supports two valid post shapes:
+        //   • Text post: title + bullets, no photo
+        //   • Photo post: title + cover photo, no bullets
+        let hasTitle = !title.trimmingCharacters(in: .whitespaces).isEmpty
+        let hasBullet = bullets.contains(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+        let hasPhoto = coverImage != nil
+        return hasTitle && (hasBullet || hasPhoto)
     }
 
     private var cleanBullets: [String] {
@@ -104,17 +110,26 @@ struct CreateContentView: View {
 
                 tagsSection
                     .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
-
-                detailsSection
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
-
-                mapSection
-                    .padding(.horizontal, 20)
                     .padding(.bottom, 40)
+
+                // (Details info box + map section removed — info boxes
+                // are no longer rendered in the feed card, and we've
+                // frozen their generation on the Cloud Run pipeline to
+                // reduce costs.)
             }
             .padding(.bottom, 100)
+            // Tap anywhere on empty space → dismiss keyboard. The
+            // TextField / Button children still receive their own taps
+            // first because SwiftUI prefers the more specific gesture
+            // recognizer. This complements the existing interactive
+            // scroll-dismiss for users who don't want to scroll.
+            .contentShape(Rectangle())
+            .onTapGesture {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil, from: nil, for: nil
+                )
+            }
         }
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Create")
@@ -155,48 +170,33 @@ struct CreateContentView: View {
     private var previewStep: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
-                // Highlight toggle
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        highlightMode.toggle()
-                    }
-                    HapticManager.selection()
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: highlightMode ? "pencil.line" : "pencil")
-                            .font(.system(size: 13, weight: .semibold))
-                        Text(highlightMode ? "Done Highlighting" : "Highlight Words")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundStyle(highlightMode ? .white : .green)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(highlightMode ? AnyShapeStyle(Color.green.opacity(0.6)) : AnyShapeStyle(.ultraThinMaterial), in: Capsule())
-                    .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 0.5))
-                }
-                .padding(.top, 8)
+                // (Highlight toggle removed — the article-page card has no
+                // word-highlight feature; preview should match it 1:1.)
 
-                if highlightMode {
-                    Text("Tap any word in the title or bullets to highlight it")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                // Preview card(s) — swipeable if multi-page
+                // Preview card(s). Action row is rendered ONCE after
+                // the page area — heart/save/repost/share act on the
+                // whole article, never on individual pages. Multi-page
+                // posts use a TabView for swipe; the action row lives
+                // outside it so it doesn't swipe with the pages.
                 if contentPages.count > 1 {
                     TabView {
                         ForEach(Array(contentPages.enumerated()), id: \.element.id) { index, page in
-                            previewCardForPage(index: index)
-                                .padding(.horizontal, 16)
+                            ScrollView {
+                                previewCardForPage(index: index)
+                                    .padding(.horizontal, 16)
+                            }
+                            .scrollDisabled(false)
                         }
                     }
                     .tabViewStyle(.page(indexDisplayMode: .always))
-                    .frame(height: UIScreen.main.bounds.width * 1.4)
+                    .frame(height: UIScreen.main.bounds.width * 1.6)
                 } else {
                     previewCard
                         .padding(.horizontal, 16)
                 }
+
+                previewActionRow
+                    .padding(.horizontal, 20)
 
                 // Tags preview
                 if !tags.isEmpty {
@@ -267,221 +267,138 @@ struct CreateContentView: View {
         let pageImage = page.photo ?? contentPages[0].photo ?? coverImage
         let pageTitle = page.title.isEmpty ? (index == 0 ? title : "Page \(index + 1)") : page.title
         let pageBullets = page.bullets.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-        let screenW = UIScreen.main.bounds.width - 32
-        let imageH: CGFloat = screenW * 0.65
 
-        return VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .bottom) {
+        return feedStylePreview(
+            pageTitle: pageTitle,
+            pageBullets: pageBullets,
+            pageImage: pageImage,
+            extractColorFromImage: index == 0,
+            showHeader: index == 0
+        )
+    }
+
+    // Light-mode preview card matching the feed's ArticleCardContinuousView:
+    // header row above photo, no dark gradient overlay, primary-color text
+    // on the cream background. Inert action row at the bottom so the
+    // creator sees exactly what readers will see.
+    private var previewCard: some View {
+        feedStylePreview(
+            pageTitle: title,
+            pageBullets: cleanBullets,
+            pageImage: coverImage,
+            extractColorFromImage: true,
+            showHeader: true
+        )
+    }
+
+    @ViewBuilder
+    private func feedStylePreview(
+        pageTitle: String,
+        pageBullets: [String],
+        pageImage: UIImage?,
+        extractColorFromImage: Bool,
+        showHeader: Bool
+    ) -> some View {
+        let accent = previewDominantColor ?? .blue
+        let authorName = appViewModel.currentUser?.displayName
+            ?? appViewModel.currentUser?.email
+            ?? "You"
+        let initial = String(authorName.prefix(1)).uppercased()
+
+        VStack(alignment: .leading, spacing: 10) {
+            if showHeader {
+                // Header row — only on the first page of a multi-page
+                // post (and always for single-page). Subsequent pages
+                // are continuations of the same article, so author /
+                // time would be repeated noise.
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(accent)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Text(initial)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white)
+                        )
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(authorName)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.primary)
+                            .tracking(-0.1)
+                        Text("now")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
+            }
+
+            // Photo at its natural aspect ratio (.fit, no fixed
+            // height) so wide photos stay wide and tall portraits
+            // stay tall — same shape as in the feed card.
+            VStack(alignment: .leading, spacing: 0) {
                 if let image = pageImage {
                     Image(uiImage: image)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: screenW, height: imageH)
-                        .clipped()
-                } else {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            colors: [.blue.opacity(0.4), .blue.opacity(0.15), Color(white: 0.08)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: screenW, height: imageH)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .onAppear { if extractColorFromImage { extractPreviewColor() } }
                 }
-                Rectangle()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: (previewBlurColor).opacity(0), location: 0),
-                            .init(color: (previewBlurColor).opacity(0.7), location: 0.55),
-                            .init(color: previewBlurColor, location: 0.8),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(height: imageH * 0.7)
-            }
-            .frame(height: imageH)
+                // No photo → no placeholder. Title + bullets are a
+                // valid post shape (user already opted into this
+                // path; see canProceed).
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(selectedCategory)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .tracking(1)
-                Text(pageTitle)
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineSpacing(2)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, -50)
-            .padding(.bottom, 16)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(pageTitle.isEmpty ? "Untitled" : pageTitle)
+                        .font(.system(size: 24, weight: .bold))
+                        .tracking(-0.5)
+                        .lineSpacing(2)
+                        .foregroundStyle(Color.primary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(Array(pageBullets.enumerated()), id: \.offset) { _, bullet in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle()
-                            .fill(previewDominantColor ?? .blue)
-                            .frame(width: 5, height: 5)
-                            .padding(.top, 8)
-                        Text(bullet)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .lineSpacing(4)
+                    if !pageBullets.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ForEach(Array(pageBullets.enumerated()), id: \.offset) { _, bullet in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Circle()
+                                        .fill(accent)
+                                        .frame(width: 5, height: 5)
+                                        .padding(.top, 8)
+                                    Text(bullet)
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Color.primary.opacity(0.85))
+                                        .lineSpacing(4)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
                     }
                 }
+                .padding(.top, pageImage == nil ? 0 : 14)
+                .padding(.bottom, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 20)
         }
-        .background(previewBlurColor)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .padding(.horizontal, 4)
     }
 
-    private var previewCard: some View {
-        let screenW = UIScreen.main.bounds.width - 32
-        let imageH: CGFloat = screenW * 0.65
-
-        return VStack(alignment: .leading, spacing: 0) {
-            // Image + gradient
-            ZStack(alignment: .bottom) {
-                if let image = coverImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: screenW, height: imageH)
-                        .clipped()
-                        .onAppear { extractPreviewColor() }
-                } else {
-                    Rectangle()
-                        .fill(LinearGradient(
-                            colors: [.blue.opacity(0.4), .blue.opacity(0.15), Color(white: 0.08)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: screenW, height: imageH)
-                }
-
-                // Blur gradient
-                Rectangle()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: previewBlurColor.opacity(0), location: 0),
-                            .init(color: previewBlurColor.opacity(0.3), location: 0.3),
-                            .init(color: previewBlurColor.opacity(0.7), location: 0.55),
-                            .init(color: previewBlurColor, location: 0.8),
-                        ],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(height: imageH * 0.7)
-            }
-            .frame(height: imageH)
-
-            // Title (tap words to highlight)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(selectedCategory)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .tracking(1)
-
-                tappableText(title, fontSize: 26, fontWeight: .bold,
-                             baseColor: .white, highlightColor: previewDominantColor ?? .blue)
-                    .lineSpacing(2)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, -50)
-            .padding(.bottom, 16)
-
-            // Bullets (tap words to highlight)
-            VStack(alignment: .leading, spacing: 14) {
-                ForEach(Array(cleanBullets.enumerated()), id: \.offset) { _, bullet in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle()
-                            .fill(previewDominantColor ?? .blue)
-                            .frame(width: 5, height: 5)
-                            .padding(.top, 8)
-                        tappableText(bullet, fontSize: 16, fontWeight: .regular,
-                                     baseColor: .white.opacity(0.75), highlightColor: .white.opacity(0.95))
-                            .lineSpacing(4)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, hasDetails || locationCoordinate != nil ? 12 : 20)
-
-            // Info box area — exact same design as ArticleCardView
-            if hasDetails || locationCoordinate != nil {
-                HStack(spacing: 8) {
-                    if hasDetails {
-                        // Details info box — matches detailsInfoBox exactly
-                        GlassEffectContainer {
-                            HStack(spacing: 0) {
-                                let activeDetails = (0..<3).filter {
-                                    !detailLabels[$0].trimmingCharacters(in: .whitespaces).isEmpty
-                                }
-                                ForEach(Array(activeDetails.enumerated()), id: \.element) { idx, i in
-                                    if idx > 0 {
-                                        Rectangle().fill(.white.opacity(0.12)).frame(width: 1)
-                                            .padding(.vertical, 12)
-                                    }
-                                    VStack(spacing: 3) {
-                                        Text(detailLabels[i].uppercased())
-                                            .font(.system(size: 8, weight: .bold))
-                                            .foregroundStyle(.white.opacity(0.5))
-                                            .lineLimit(1)
-                                            .tracking(0.5)
-                                        Text(detailValues[i])
-                                            .font(.system(size: 22, weight: .heavy, design: .rounded))
-                                            .foregroundStyle(previewDominantColor ?? .blue)
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.5)
-                                        if !detailSubtitles[i].trimmingCharacters(in: .whitespaces).isEmpty {
-                                            Text(detailSubtitles[i])
-                                                .font(.system(size: 9, weight: .medium))
-                                                .foregroundStyle(.white.opacity(0.4))
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                            }
-                            .frame(height: 85)
-                            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
-                        }
-                    }
-
-                    if let coord = locationCoordinate, !hasDetails {
-                        // Map info box — matches compactMap exactly
-                        previewMapBox(coord: coord)
-                    }
-
-                    // Mode switcher column (when both exist)
-                    if hasDetails && locationCoordinate != nil {
-                        GlassEffectContainer {
-                            VStack(spacing: 0) {
-                                Image(systemName: "square.grid.2x2")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(previewDominantColor ?? .blue)
-                                    .frame(width: 28, height: 28)
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.35))
-                                    .frame(width: 28, height: 28)
-                            }
-                            .padding(.vertical, 2)
-                            .glassEffect(.regular.tint(.black.opacity(0.15)), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-                .environment(\.colorScheme, .dark)
-            }
-
-            // Map shown below details when both exist
-            if hasDetails, let coord = locationCoordinate {
-                previewMapBox(coord: coord)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-                    .environment(\.colorScheme, .dark)
-            }
+    // Inert action row — rendered once below the page area, never
+    // per-page, since the heart/save/repost/share act on the whole
+    // article (not individual pages of a swipe carousel).
+    private var previewActionRow: some View {
+        HStack(spacing: 22) {
+            Spacer()
+            Image(systemName: "heart")
+            Image(systemName: "bookmark")
+            Image(systemName: "arrow.2.squarepath")
+            Image(systemName: "arrowshape.turn.up.right")
         }
-        .background(previewBlurColor)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .font(.system(size: 19))
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
+        .padding(.top, 6)
     }
 
     private func previewMapBox(coord: CLLocationCoordinate2D) -> some View {
@@ -639,7 +556,7 @@ struct CreateContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Pages")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.secondary)
                 .textCase(.uppercase)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -662,20 +579,20 @@ struct CreateContentView: View {
                                     } label: {
                                         Image(systemName: "xmark")
                                             .font(.system(size: 9, weight: .bold))
-                                            .foregroundStyle(.white.opacity(0.5))
+                                            .foregroundStyle(.secondary)
                                     }
                                 }
                             }
-                            .foregroundStyle(currentPageIndex == index ? .white : .white.opacity(0.5))
+                            .foregroundStyle(currentPageIndex == index ? Color.primary : Color.secondary)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
-                                currentPageIndex == index ? .white.opacity(0.15) : .white.opacity(0.05),
+                                currentPageIndex == index ? AnyShapeStyle(.fill.secondary) : AnyShapeStyle(.fill.quaternary),
                                 in: RoundedRectangle(cornerRadius: 10)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10)
-                                    .strokeBorder(currentPageIndex == index ? .white.opacity(0.2) : .clear, lineWidth: 1)
+                                    .strokeBorder(currentPageIndex == index ? Color.primary.opacity(0.15) : .clear, lineWidth: 1)
                             )
                         }
                     }
@@ -729,14 +646,16 @@ struct CreateContentView: View {
     }
 
     private var coverImageSection: some View {
+        // Picker shows the photo at its natural aspect ratio — wide
+        // photos stay wide, portraits stay tall. Empty-state still
+        // has a fixed-height tap target so the user has something to
+        // press before they've picked anything.
         PhotosPicker(selection: $selectedPhoto, matching: .images) {
             if let image = coverImage {
                 Image(uiImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-                    .clipped()
                     .overlay(alignment: .bottomTrailing) {
                         HStack(spacing: 6) {
                             Image(systemName: "photo")
@@ -760,7 +679,7 @@ struct CreateContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 220)
+                .frame(height: 200)
                 .background(.fill.tertiary)
             }
         }

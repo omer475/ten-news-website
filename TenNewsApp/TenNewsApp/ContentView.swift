@@ -13,10 +13,18 @@ final class TabBarState {
     var feedRefreshRequested = false
     var exploreRefreshRequested = false
     /// Cross-tab navigation request. When a child view (e.g. FlashBriefSheet's
-    /// trending-topic chip) wants to jump to the Search tab pre-filled with a
-    /// query, it sets this to the topic string. ContentView's onChange handler
-    /// switches selectedTab to 99 and sets searchText, then clears this.
+    /// trending-topic chip) wants to jump to search pre-filled with a query,
+    /// it sets this to the topic string. ContentView's onChange handler
+    /// switches selectedTab to 1 (Explore), sets searchText, and flips
+    /// `openSearchOnExplore` so ExploreView pops its search overlay.
     var pendingSearch: String?
+
+    /// Read by ExploreView — when set true, the search overlay opens
+    /// immediately (search field focused, pre-filled from `searchText` if
+    /// set). ExploreView clears the flag after acting on it. Replaces the
+    /// old "switch to a dedicated Search tab" pattern after merging
+    /// Search into Explore (IG / TikTok pattern, 2026-05-14).
+    var openSearchOnExplore = false
 }
 
 struct ContentView: View {
@@ -35,12 +43,17 @@ struct ContentView: View {
 
     private var onFeedTab: Bool { selectedTab == 0 }
 
+    /// Tab bar icon colors. Pre-2026-05-07 these were forced to white on the
+    /// feed tab because the feed had a dark photo background. The continuous
+    /// feed is now light (cream / white card surface), so we drop the
+    /// `onFeedTab` override and key purely off the system color scheme:
+    /// dark UI → white icons, light UI → near-black icons.
     private var iconActiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.9) : Color(white: 0.15)
+        isDark ? Color.white.opacity(0.9) : Color(white: 0.12)
     }
 
     private var iconInactiveColor: Color {
-        (isDark || onFeedTab) ? Color.white.opacity(0.55) : Color(white: 0.5)
+        isDark ? Color.white.opacity(0.55) : Color(white: 0.40)
     }
 
     var body: some View {
@@ -63,8 +76,6 @@ struct ContentView: View {
                     ChatListView()
                 case 3:
                     AccountTabView()
-                case 99:
-                    SearchTabView()
                 default:
                     EmptyView()
                 }
@@ -81,41 +92,30 @@ struct ContentView: View {
             }
         }
         .ignoresSafeArea(.keyboard)
-        // Only collapse on scroll for non-news pages
+        // Scroll-collapse used to fire only on the Search tab; user asked
+        // for the bar to stay open there too, so the only consumer is gone.
+        // Drain any pending request so callers don't see stuck state.
         .onChange(of: tabBarState.collapseRequested) { _, requested in
-            if requested {
-                // Only allow scroll-collapse on search tab
-                if tabBarExpanded && selectedTab == 99 {
-                    guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else {
-                        tabBarState.collapseRequested = false
-                        return
-                    }
-                    collapseBar()
-                }
-                tabBarState.collapseRequested = false
-            }
+            if requested { tabBarState.collapseRequested = false }
         }
         .onChange(of: tabBarState.pendingSearch) { _, newVal in
             // Cross-tab navigation requested with a pre-filled query.
-            // Switch to Search tab, then set the searchText AFTER the
-            // selectedTab onChange runs (which clears searchText on its own).
+            // Switch to Explore (which now owns search) and flip the
+            // overlay flag so ExploreView opens its search sheet with
+            // the query pre-loaded.
             guard let topic = newVal, !topic.isEmpty else { return }
-            selectedTab = 99
+            selectedTab = 1
             DispatchQueue.main.async {
                 tabBarState.searchText = topic
+                tabBarState.openSearchOnExplore = true
                 tabBarState.pendingSearch = nil
             }
         }
-        .onChange(of: selectedTab) { oldTab, newTab in
+        .onChange(of: selectedTab) { _, _ in
+            // Switching tabs clears the live search query so a fresh visit
+            // to Explore starts empty. Cross-tab pendingSearch handlers
+            // re-set this AFTER selectedTab changes, so they're unaffected.
             tabBarState.searchText = ""
-            // Always show expanded bar on main tabs
-            if newTab != 99 && !tabBarExpanded {
-                withAnimation(.smooth(duration: 0.45)) {
-                    tabBarExpanded = true
-                    tabBarState.isVisible = true
-                    tabBarState.lastRevealedAt = Date()
-                }
-            }
             // Feed tab: preserve state when switching tabs — no auto-refresh.
             // User's scroll position and loaded articles stay intact.
             // Refresh only happens on pull-to-refresh or app foreground after 5+ min.
@@ -146,16 +146,16 @@ struct ContentView: View {
     }
 
     // MARK: - Bottom Bar
+    //
+    // Bar is now always expanded. The collapsed-bar variant was a leftover
+    // from when scroll-collapse hid the nav on the Search tab — user
+    // couldn't find the bar when they needed to switch tabs, and nothing
+    // else in the app sets tabBarExpanded to false anymore. Single
+    // rendering path = no way the bar gets stuck collapsed.
 
-    @ViewBuilder
     private var bottomBar: some View {
-        if tabBarExpanded || tabBarState.forceExpandedBar {
-            expandedBar
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        } else {
-            collapsedBar
-                .transition(.scale(scale: 0.7).combined(with: .opacity))
-        }
+        expandedBar
+            .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     // MARK: - Expanded: glass tab bar pill + glass explore circle
@@ -181,7 +181,13 @@ struct ContentView: View {
                             Image(systemName: selectedTab == index ? tab.selectedIcon : tab.icon)
                                 .font(.system(size: 23, weight: selectedTab == index ? .semibold : .regular))
                                 .foregroundStyle(selectedTab == index ? iconActiveColor : iconInactiveColor)
-                                .frame(width: 72, height: 40)
+                                .frame(width: 84, height: 42)
+                                // Non-selected tabs use `.identity` glassEffect, which renders
+                                // no material — so the hit area collapses to the SF symbol's
+                                // non-transparent pixels and the user's taps on the surrounding
+                                // capsule miss. Pinning contentShape to the full 72x40 capsule
+                                // restores hit-testing for inactive tabs (Chat/Profile bug).
+                                .contentShape(Capsule())
                                 .glassEffect(
                                     selectedTab == index
                                         ? .regular.interactive()
@@ -210,107 +216,14 @@ struct ContentView: View {
                 .padding(.vertical, 4)
                 .glassEffect(.regular.tint(Color.black.opacity(0.2)), in: .capsule)
 
-                // Search circle
-                Button {
-                    withAnimation(.bouncy) {
-                        selectedTab = 99
-                        tabBarState.forceExpandedBar = false
-                        collapseBar()
-                    }
-                    HapticManager.light()
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(iconActiveColor)
-                        .frame(width: 52, height: 52)
-                        .glassEffect(.regular.interactive(), in: .circle)
-                }
+                // Magnifying-glass circle removed 2026-05-14: search lives
+                // inside the Explore tab now (IG / TikTok pattern). The user
+                // taps the search bar at the top of Explore to open search.
             }
-        }
-    }
-
-    // MARK: - Collapsed: glass tab icon + search field for Search tab
-
-    private var collapsedIcon: String {
-        if selectedTab == 99 { return "newspaper.fill" }
-        if selectedTab < tabs.count { return tabs[selectedTab].selectedIcon }
-        return "newspaper.fill"
-    }
-
-    private var collapsedBar: some View {
-        GlassEffectContainer {
-            HStack(spacing: 10) {
-                // Tab icon — left
-                Button {
-                    if selectedTab == 99 {
-                        withAnimation(.smooth(duration: 0.45)) {
-                            selectedTab = 0
-                            tabBarExpanded = true
-                            tabBarState.isVisible = true
-                            tabBarState.lastRevealedAt = Date()
-                        }
-                    } else {
-                        withAnimation(.smooth(duration: 0.45)) {
-                            tabBarExpanded = true
-                            tabBarState.isVisible = true
-                            tabBarState.lastRevealedAt = Date()
-                        }
-                    }
-                    HapticManager.light()
-                } label: {
-                    Image(systemName: collapsedIcon)
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(iconActiveColor)
-                        .frame(width: 52, height: 52)
-                        .glassEffect(.regular.tint(Color.black.opacity(0.15)), in: Circle())
-                }
-
-                // Search field — only on Search tab
-                if selectedTab == 99 {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(Color(white: 0.5))
-
-                        TextField(
-                            "Search...",
-                            text: Binding(
-                                get: { tabBarState.searchText },
-                                set: { tabBarState.searchText = $0 }
-                            )
-                        )
-                        .font(.system(size: 15))
-
-                        if !tabBarState.searchText.isEmpty {
-                            Button {
-                                tabBarState.searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color(white: 0.5))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .frame(height: 52)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .glassEffect(.regular.tint(Color.black.opacity(0.15)), in: Capsule())
-                } else {
-                    Spacer()
-                }
-            }
-            .padding(.horizontal, 8)
         }
     }
 
     // MARK: - Helpers
-
-    private func collapseBar() {
-        withAnimation(.smooth(duration: 0.45)) {
-            tabBarExpanded = false
-            tabBarState.isVisible = false
-        }
-    }
 
     private let tabs: [(icon: String, selectedIcon: String, label: String)] = [
         ("newspaper", "newspaper.fill", "Feed"),
@@ -318,42 +231,6 @@ struct ContentView: View {
         ("text.bubble", "text.bubble.fill", "Chat"),
         ("person.crop.circle", "person.crop.circle.fill", "Profile"),
     ]
-}
-
-// MARK: - Scroll Collapse Modifier
-
-struct ScrollCollapseModifier: ViewModifier {
-    @Environment(TabBarState.self) private var tabBarState
-
-    func body(content: Content) -> some View {
-        content
-            .onScrollGeometryChange(for: CGFloat.self) { geo in
-                geo.contentOffset.y
-            } action: { oldValue, newValue in
-                guard tabBarState.isVisible else { return }
-                guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else { return }
-                let delta = abs(newValue - oldValue)
-                guard delta > 3 else { return }
-                tabBarState.collapseRequested = true
-            }
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 10, coordinateSpace: .local)
-                    .onChanged { value in
-                        guard tabBarState.isVisible else { return }
-                        guard Date().timeIntervalSince(tabBarState.lastRevealedAt) > 0.8 else { return }
-                        let vertical = abs(value.translation.height)
-                        if vertical > 15 {
-                            tabBarState.collapseRequested = true
-                        }
-                    }
-            )
-    }
-}
-
-extension View {
-    func collapsesTabBarOnScroll() -> some View {
-        modifier(ScrollCollapseModifier())
-    }
 }
 
 #Preview {

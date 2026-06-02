@@ -121,10 +121,15 @@ struct SharedArticle: Codable {
     let imageUrl: String?
     let source: String?
     let category: String?
+    let bullets: [String]?
+    let authorName: String?
+    let publishedAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, source, category
+        case id, title, source, category, bullets
         case imageUrl = "image_url"
+        case authorName = "author_name"
+        case publishedAt = "published_at"
     }
 
     var displayImage: URL? {
