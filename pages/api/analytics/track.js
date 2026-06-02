@@ -698,7 +698,7 @@ export default async function handler(req, res) {
           try {
             const { data: art } = await admin
               .from('published_articles')
-              .select('vq_secondary, vq_primary, source')
+              .select('vq_secondary, vq_primary, author_id')
               .eq('id', article_id)
               .single()
             if (!art) return
@@ -719,11 +719,19 @@ export default async function handler(req, res) {
                 p_weight: skipWeight,
               }))
             }
-            if (art.source) {
+            // Switched 'source' → 'author' (mig 119). Today+ is a social
+            // platform — every author writes independently, so per-publisher
+            // penalties wrongly punish good writers at otherwise-fast-skipped
+            // publications. X RealGraph applies all negative-graph signals
+            // per-author (InteractionGraphNegativeJob.scala). Old 'source'
+            // rows decay out via the 13.5-day half-life in
+            // get_user_negative_dimensions; the source code path in
+            // trinityServe.js rerank() stays active during the transition.
+            if (art.author_id) {
               writes.push(admin.rpc('bump_user_negative_dim', {
                 p_user_id: effectiveUserId,
-                p_dim_type: 'source',
-                p_dim_value: art.source.toLowerCase(),
+                p_dim_type: 'author',
+                p_dim_value: String(art.author_id),
                 p_weight: skipWeight,
               }))
             }
@@ -1192,15 +1200,15 @@ export default async function handler(req, res) {
             }
 
             if (bestIdx >= 0) {
-              // Fix M: bandit weight combines explicit-action elevation with
-              // dwell magnitude. For implicit events (dwell-classified), use
-              // the sigmoid weight directly. For explicit, use legacy weights.
-              const explicitWeight = event_type === 'article_saved' ? 3.0
-                : event_type === 'article_shared' ? 2.0
-                : event_type === 'article_liked' ? 1.5
-                : event_type === 'article_revisit' ? 4.0
-                : null
-              const banditWeight = explicitWeight != null ? explicitWeight : _banditSig.weight
+              // Bandit weight: use the canonical effort-weighted score for
+              // explicit events (mirrors mig 119 + lib/signals/weights.js);
+              // fall back to the dwell-derived sigmoid weight for implicit
+              // events. Mig 119 cleaned up the local hand-coded ladder that
+              // diverged from the canonical table on shared/liked/revisit.
+              const canonicalExplicit = explicitWeight(event_type)
+              const banditWeight = canonicalExplicit > 0
+                ? canonicalExplicit
+                : _banditSig.weight
               const { error: armErr } = await admin.rpc('update_bandit_arm', {
                 p_user_id: effectiveUserId,
                 p_arm_key: `cluster:${bestIdx}`,

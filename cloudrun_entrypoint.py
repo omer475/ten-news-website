@@ -125,11 +125,11 @@ def main():
                 except Exception as e:
                     print(f"⚠️ article_dwell_stats refresh failed (non-blocking): {e}")
 
-            # ── Pipeline 2 (curated content) runs CONCURRENTLY with Pipeline 1
-            # in a daemon thread, so total cycle time stays ~max(P1, P2) rather
-            # than the sum. Fully non-fatal: any P2 error is swallowed so it can
-            # never break Pipeline 1 or the lock release. Toggle PIPELINE2_ENABLED=0
-            # to disable (instant rollback without a redeploy).
+            # Pipeline 2 (curated content) — runs in parallel with Pipeline 1
+            # in a daemon thread so the curated factory and the RSS factory
+            # share one 20-min cycle. Fully non-fatal: any P2 error is swallowed
+            # so it can never break Pipeline 1 or the lock release. Set
+            # PIPELINE2_ENABLED=0 to disable (instant rollback, no redeploy).
             p2_thread = None
             if os.getenv('PIPELINE2_ENABLED', '1') == '1':
                 import threading

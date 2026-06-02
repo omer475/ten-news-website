@@ -41,6 +41,10 @@ DEDUP_SIMILARITY_THRESHOLD = float(os.getenv('PIPELINE2_DEDUP_THRESHOLD', '0.85'
 VALID_BRIEF_TYPES = {
     'list', 'surprising_fact', 'explainer', 'recipe',
     'history', 'comparison', 'how_to', 'myth_busting',
+    # High-engagement social/carousel formats (added 2026-05-27).
+    'person_profile', 'money_numbers', 'records_extremes', 'wild_story',
+    'timeline', 'ranked', 'origins', 'behind_scenes', 'then_vs_now',
+    'day_in_life', 'future',
 }
 VALID_ENTITY_SOURCES = {
     'google_places', 'books_api', 'tmdb', 'web_search', 'wikipedia', 'recipe_api',
@@ -167,6 +171,10 @@ REQUIRED CATEGORY DISTRIBUTION (HARD QUOTAS — must be met):
 - At least 1 brief in: fitness / health / lifestyle
 - At least 1 brief in: travel / places / culture
 - At least 1 surprising fact (any domain — counter-intuitive, mind-bending)
+- At least 3 briefs using the HIGH-ENGAGEMENT SOCIAL FORMATS below (person_profile,
+  money_numbers, records_extremes, wild_story, timeline, ranked, origins,
+  behind_scenes, then_vs_now, day_in_life, future) — these are the swipe-native
+  formats readers save & share most. Vary which ones you pick across cycles.
 
 BRIEF TYPES YOU CAN USE:
 1. list — "Top N X in Y" → uses Google Places, Books API, TMDB for entity data
@@ -178,10 +186,34 @@ BRIEF TYPES YOU CAN USE:
 7. how_to — step-by-step skill → uses web search
 8. myth_busting — common belief vs reality → uses web search
 
+HIGH-ENGAGEMENT SOCIAL FORMATS (these are what swipe/carousel readers save & share most — use them often):
+9. person_profile — surprising facts about a notable person → wikipedia + web search
+   e.g. "7 things you didn't know about Emmanuel Macron", "Before Nvidia: Jensen Huang washed dishes at Denny's"
+10. money_numbers — a 'wait, HOW much?' wealth/salary/cost/revenue story → web search
+   e.g. "South Korea's highest-paid tutor makes $115M a year", "What a Times Square billboard actually costs"
+11. records_extremes — superlatives & outliers (biggest/oldest/fastest/most remote) → web search + wikipedia
+   e.g. "The most isolated town on Earth", "The oldest company still operating (founded 578 AD)"
+12. wild_story — a surprising TRUE story told across pages with a curiosity hook → web search
+   e.g. "The man who lived in an airport for 18 years", "The typo that cost a company $10 billion"
+13. timeline — how something evolved over time → web search + wikipedia
+   e.g. "How McDonald's menu changed every decade", "The evolution of the smartphone in 10 steps"
+14. ranked — items ranked best→worst with a clear verdict → web search + TMDB/Books
+   e.g. "Every Christopher Nolan film, ranked", "The 10 hardest languages to learn, ranked"
+15. origins — the origin / "why we do this" of an everyday thing → web search + wikipedia
+   e.g. "The real reason stop signs are red", "Why wedding rings go on the left hand"
+16. behind_scenes — how something is actually made / what really happens → web search
+   e.g. "What really happens to your recycling", "How a $300 omakase is actually made"
+17. then_vs_now — before-and-after / transformation over time → web search
+   e.g. "Dubai in 1990 vs today", "What 10 famous logos used to look like"
+18. day_in_life — a day in the life of an unusual job/role → web search
+   e.g. "A day in the life of a deep-sea welder ($200k/yr)", "24 hours in a Michelin kitchen"
+19. future — what's next / how X could look in the future → web search
+   e.g. "What air travel could look like by 2035", "The jobs AI can't replace by 2030"
+
 FOR EACH BRIEF, OUTPUT JSON:
 {{
   "topic": "specific topic statement (5-12 words, NEVER generic)",
-  "brief_type": "list | surprising_fact | explainer | recipe | history | comparison | how_to | myth_busting",
+  "brief_type": "list | surprising_fact | explainer | recipe | history | comparison | how_to | myth_busting | person_profile | money_numbers | records_extremes | wild_story | timeline | ranked | origins | behind_scenes | then_vs_now | day_in_life | future",
   "category": "food | science | history | fitness | travel | news | culture | etc.",
   "hook_angle": "curiosity | contrarian | surprising_fact | promise | utility",
   "page_count": 3-8,

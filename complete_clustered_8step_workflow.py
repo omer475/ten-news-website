@@ -23,6 +23,7 @@ import sys
 from datetime import datetime, timedelta
 import feedparser
 import requests
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Optional
 import os
@@ -1231,6 +1232,124 @@ def fetch_rss_articles(max_articles_per_source=10):
 
 
 # ==========================================
+# MULTI-PAGE DEEPER PAGES (Today+ "swipe for more")
+# ==========================================
+
+def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sources=None):
+    """Generate one deeper page (a list of 2-3 bullet strings) for a multi-page post.
+
+    Uses the SAME proven REST pattern as the main synthesis (flash-lite, JSON
+    response, thinkingBudget=0) instead of the old SDK `.text` accessor — that
+    accessor was never the bug, but the REST path gives us thinking control and
+    forced-JSON output so flash-lite can't "think" away the whole response.
+
+    kind:
+      'context'  → page 2: WHY it matters / background / how it works.
+      'whatsnext' → page 3: what comes next, the stakes, who's affected.
+
+    Returns a list of 2-4 clean bullet strings, or None on any failure (caller
+    treats None as "no extra page" — never fatal).
+    """
+    gemini_key = os.getenv('GEMINI_API_KEY')
+    if not gemini_key:
+        return None
+    # Upgraded from flash-lite: the deeper page now reasons over real source
+    # text, and flash-lite was too weak to mine it — it fell back to glossary
+    # definitions ("Everest is the tallest mountain"). Default tracks the
+    # WRITING_MODEL used for page 1 so voice/quality match. flash-lite revertible.
+    model = os.getenv('MULTIPAGE_MODEL', os.getenv('WRITING_MODEL', 'gemini-2.5-flash'))
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+
+    # Build the REAL source material this page draws from. Without it the model
+    # can only pad with general knowledge — the root cause of glossary page 2s.
+    sources_block = ""
+    if sources:
+        _src_texts = []
+        for i, s in enumerate(sources[:6]):
+            body = (s.get('full_text') or s.get('description') or '').strip()
+            if body:
+                _src_texts.append(
+                    f"SOURCE {i+1} ({s.get('source_name', s.get('source', 'Unknown'))}):\n{body[:2500]}"
+                )
+        if _src_texts:
+            sources_block = (
+                "\nFULL SOURCE MATERIAL — every new fact on this page must come from here:\n"
+                + "\n\n".join(_src_texts) + "\n"
+            )
+
+    if kind == 'whatsnext':
+        instruction = (
+            "The reader swiped past the story AND the context page. This page is the bigger "
+            "picture: what happens next, who's exposed, what's actually at stake.\n"
+            f"ALREADY SAID on page 1 — never repeat or rephrase: {' | '.join(bullets)}\n"
+            f"ALREADY SAID on the context page — never repeat: {' | '.join(prev_bullets or [])}\n"
+            "Each bullet must add a NEW concrete fact, name, number, date, or named consequence "
+            "from the source material — not vague speculation.\n"
+            "HARD BANS: defining common nouns; restating earlier pages; generic 'experts say' "
+            "filler; 'here's why this matters' framing; inventing anything not in the sources.\n"
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, concrete, social voice."
+        )
+    else:  # 'context'
+        instruction = (
+            "The reader tapped PAGE 1 for MORE. Give them the texture a great BBC / Independent "
+            "long-read adds — the telling detail, the number behind the number, the backstory beat, "
+            "the quote — but in fast social voice. NOT a summary of page 1.\n"
+            f"ALREADY SAID on page 1 — never repeat, rephrase, or summarize: {' | '.join(bullets)}\n"
+            "Each bullet must carry a NEW fact pulled from the source material below — a name, "
+            "number, date, quote, or concrete consequence that is NOT on page 1.\n"
+            "HARD BANS (these make the page worthless):\n"
+            "- Defining common nouns (\"The Orange Cap goes to the top scorer\", \"Everest is the tallest mountain\").\n"
+            "- Restating or rephrasing page 1.\n"
+            "- Generic background the reader could have guessed (\"crowd pressure can affect players\").\n"
+            "- \"Here's why this matters\" framing — just state the thing.\n"
+            "- Inventing anything not in the sources.\n"
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, short "
+            "sentences, mix lengths; one detail may run long if it earns it.\n"
+            "THE BAR: if the sources don't give you at least 2 genuinely NEW, specific facts, "
+            "return [] — a thin page is worse than none."
+        )
+
+    voice_line = (
+        "Match the story's vertical voice: sports = group-chat hot-take; tech = analyst-with-a-wink; "
+        "world/politics = plainspoken consequence; entertainment = fandom insider; business = numbers + stakes. "
+        "Bold ONLY named people/places/orgs/products/numbers with **double asterisks**, max 1 per bullet."
+    )
+
+    prompt = (
+        f"You write for Today+, a fast-read social platform (peer to TikTok, Instagram, Threads).\n"
+        f"STORY TITLE: {title}\n"
+        f"CATEGORY: {category}\n"
+        f"{sources_block}\n"
+        f"{instruction}\n\n"
+        f"{voice_line}\n\n"
+        f"Return ONLY a JSON array of bullet strings (or [] if there isn't enough new material)."
+    )
+    request_data = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": float(os.getenv('MULTIPAGE_TEMPERATURE', '0.7')),
+            "maxOutputTokens": 1024,
+            "responseMimeType": "application/json",
+            "thinkingConfig": {"thinkingBudget": 0},
+        },
+    }
+    try:
+        resp = requests.post(url, json=request_data, timeout=45)
+        if resp.status_code != 200:
+            return None
+        text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+        parsed = json.loads(text)
+        if not isinstance(parsed, list):
+            return None
+        out = [str(b).strip() for b in parsed if str(b).strip()][:3]  # iOS card renders max 3 bullets/page (MainFeedView bulletList prefix(3))
+        # Empty/short array is a VALID signal: "no new substance, don't make a page."
+        return out if len(out) >= 2 else None
+
+    except Exception:
+        return None
+
+
+# ==========================================
 # COMPLETE PIPELINE
 # ==========================================
 
@@ -1617,29 +1736,37 @@ def run_complete_pipeline():
 
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
 
-            # --- STEP 6: FROZEN — all info-box generation is disabled
-            # to cut Cloud Run costs. The iOS feed no longer renders
-            # details/map/graph/timeline boxes, so generating them is
-            # pure waste. We keep the step structure so re-enabling is
-            # one delete: remove the hard-coded `selected = []` lines
-            # and restore the Gemini selector call below.
-            print(f"\n📋 [Cluster {cluster_id}] STEP 6: SKIPPED (info-box generation frozen for cost)")
+            # --- STEP 6: Decide which components this article needs ---
+            print(f"\n📋 [Cluster {cluster_id}] STEP 6: GEMINI COMPONENT SELECTION")
+
+            article_for_selection = {
+                'title': synthesized['title_news'],
+                'text': bullets_text,
+                'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
+            }
+
             selected = []
-            component_result = {'components': [], 'emoji': '📰'}
-            # Original logic (kept for reference, currently dead):
-            # article_for_selection = {
-            #     'title': synthesized['title_news'],
-            #     'text': bullets_text,
-            #     'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
-            # }
-            # try:
-            #     with gemini_semaphore:
-            #         component_result = component_selector.select_components(article_for_selection)
-            #     selected = component_result.get('components', []) if isinstance(component_result, dict) else []
-            #     selected = [c for c in selected if c != 'details']
-            # except Exception:
-            #     selected = []
-            #     component_result = {'components': selected, 'emoji': '📰'}
+            component_result = {}
+            try:
+                with gemini_semaphore:
+                    component_result = component_selector.select_components(article_for_selection)
+                selected = component_result.get('components', []) if isinstance(component_result, dict) else []
+                # Remove "details" — the 3-column stat grid was retired
+                # 2026-05-10. Spec said it shipped with rigid label-≤12-chars +
+                # value-must-have-digit + exactly-3-columns shape that produced
+                # truncated output ("LOTTERY PICK | Projected #6-10..."). High
+                # creator friction (you have to hunt for 3 quantitative facts)
+                # and low engagement payoff vs the alternatives. Filtered here
+                # rather than rewriting step5's 55-reference prompt — single-
+                # point fix and doesn't risk breaking anything else.
+                selected = [c for c in selected if c != 'details']
+                print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
+            except Exception as comp_error:
+                print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
+                # Fallback used to default to ['details'] — now empty list
+                # (no info box) since details is retired.
+                selected = []
+                component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
             # Components that need Google Search grounding: timeline, details, graph, map
@@ -1921,20 +2048,6 @@ def run_complete_pipeline():
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
-            # PIPELINE 1 PUBLISH GATE (2026-05-24): drop low-importance articles
-            # HERE — after scoring but BEFORE the expensive embedding / NER /
-            # Trinity-VQ / page-2 / publisher-match work below — so dropped
-            # articles cost no extra Gemini/compute. Aggressive default (>=800)
-            # keeps ~the top half of scored articles, leaving daily budget for
-            # Pipeline 2. Override with PIPELINE1_MIN_SCORE (e.g. 750) to relax
-            # if Pipeline 2 stalls and total volume needs propping up.
-            MIN_PUBLISH_SCORE = int(os.getenv('PIPELINE1_MIN_SCORE', '800'))
-            if article_score < MIN_PUBLISH_SCORE:
-                print(f"   ⏭️ [Cluster {cluster_id}] DROPPED: ai_final_score {article_score} < {MIN_PUBLISH_SCORE} (publish gate)")
-                update_cluster_status(cluster_id, 'skipped', 'low_score',
-                    f'ai_final_score {article_score} below publish threshold {MIN_PUBLISH_SCORE}')
-                return False
-
             # NOTE: enrich_with_subtopics REMOVED — it was appending onboarding
             # subtopic names ("Soccer/Football", "AI & Machine Learning", etc.)
             # to interest_tags, causing wrong articles to appear under Explore entities.
@@ -2065,46 +2178,43 @@ def run_complete_pipeline():
                 interest_tags, synthesized.get('category', 'Other'), publishers_cache, article_id=cluster_id
             )
 
-            # MULTI-PAGE: Generate a "deeper context" page 2 for articles that deserve it
-            # Only for analysis/evergreen articles with 3+ bullets and high score
+            # MULTI-PAGE: deeper "swipe for more" pages.
+            # Substance-based (NOT importance-based — we don't gate depth on the
+            # news-importance score): any story with enough material gets a
+            # deeper context page. The feed algorithm decides what surfaces; this
+            # just makes depth available so multi-page is common, not rare.
+            #   - page 2 (context): needs >=3 bullets AND >=2 sources.
+            #   - page 3 (what's next): only when the cluster is rich (>=4 sources),
+            #     and only if page 2 was produced.
+            # Env knobs: MULTIPAGE_MIN_BULLETS (3), MULTIPAGE_MIN_SOURCES (2),
+            # MULTIPAGE_P3_MIN_SOURCES (4), MULTIPAGE_DISABLE=1 to turn off.
             article_pages = None
-            if article_score >= 700 and len(bullets) >= 3 and freshness_category in ('analysis', 'evergreen', 'timeless', 'developing'):
+            mp_disabled = os.getenv('MULTIPAGE_DISABLE') == '1'
+            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '3'))
+            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '2'))
+            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '4'))
+            n_sources = len(cluster_sources)
+            if (not mp_disabled) and len(bullets) >= mp_min_bullets and n_sources >= mp_min_sources:
                 try:
-                    page2_prompt = f"""This news article just published:
-Title: {title}
-Bullets: {' | '.join(bullets)}
-Category: {synthesized.get('category', 'Other')}
-
-Write a SHORT second page that gives the reader deeper context. NOT a summary of page 1.
-
-Rules:
-- 2-3 bullets. Each adds a NEW specific fact, number, name, place, or quote the reader did not get on page 1.
-- Never restate, summarize, or re-define page 1. If you can only restate page 1, return [].
-- Prefer concrete substance over framing. No "here's why this matters", no generic background.
-- Each bullet 8-22 words, full sentence, plainspoken present tense.
-
-Return ONLY a JSON array of 2-3 bullet strings. Nothing else.
-Example: ["Current commercial solar panels max out near 25% efficiency, capping rooftop output for two decades.", "The Shockley-Queisser limit pinned single-junction cells at 33% since 1961, a wall this design finally clears.", "Doubling panel yield could halve the land a utility solar farm needs, researchers estimate."]"""
-
+                    article_category = synthesized.get('category', 'Other')
+                    extra_pages = []
                     with gemini_semaphore:
-                        import google.generativeai as _p2_genai
-                        _p2_genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-                        _p2_model = _p2_genai.GenerativeModel('gemini-2.5-flash-lite')
-                        page2_response = _p2_model.generate_content(page2_prompt)
-                    page2_text = page2_response.text.strip()
-                    if page2_text.startswith('```'): page2_text = page2_text.split('\n', 1)[1] if '\n' in page2_text else page2_text[3:]
-                    if page2_text.endswith('```'): page2_text = page2_text[:-3]
-                    if page2_text.startswith('json'): page2_text = page2_text[4:]
-                    page2_bullets = json.loads(page2_text.strip())
-
-                    if isinstance(page2_bullets, list) and len(page2_bullets) >= 2:
-                        article_pages = [
-                            {"title": title, "image_url": None, "bullets": bullets},
-                            {"title": None, "image_url": None, "bullets": page2_bullets},
-                        ]
-                        print(f"   📄 [Cluster {cluster_id}] Added context page 2 ({len(page2_bullets)} bullets)")
-                except Exception as page2_err:
-                    print(f"   ⚠️ [Cluster {cluster_id}] Page 2 generation failed: {page2_err}")
+                        page2_bullets = _generate_deeper_page(title, bullets, article_category, kind='context', sources=cluster_sources)
+                    if page2_bullets:
+                        extra_pages.append({"title": None, "image_url": None, "bullets": page2_bullets})
+                        # Page 3 only for source-rich clusters (more material = more to say).
+                        if n_sources >= mp_p3_min_sources:
+                            with gemini_semaphore:
+                                page3_bullets = _generate_deeper_page(
+                                    title, bullets, article_category, kind='whatsnext', prev_bullets=page2_bullets, sources=cluster_sources
+                                )
+                            if page3_bullets:
+                                extra_pages.append({"title": None, "image_url": None, "bullets": page3_bullets})
+                    if extra_pages:
+                        article_pages = [{"title": title, "image_url": None, "bullets": bullets}] + extra_pages
+                        print(f"   📄 [Cluster {cluster_id}] Multi-page: {len(article_pages)} pages ({n_sources} sources)")
+                except Exception as page_err:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Multi-page generation failed: {page_err}")
 
             # STEP 12: Trinity 2-level cluster assignment.
             vq_primary, vq_secondary = assign_vq_clusters(article_embedding_minilm, supabase)
@@ -2265,6 +2375,35 @@ Example: ["Current commercial solar panels max out near 25% efficiency, capping 
             # The articles are already published; tagging is enrichment.
             print(f"   ⚠️ [Step 6] world-event detection failed (non-fatal): {e}")
 
+    # STEP 13 (mig 121, 2026-05-14): event-cluster redundancy decay.
+    #
+    # After step6 has tagged articles with event_ids, the same news event can
+    # be covered by 10-20+ outlets — each scored independently by step10 at
+    # 800+ because the per-article scorer has no view of other articles in
+    # the same cluster. Audit slate (2026-05-14 session 3): 21 cards from
+    # the same Trump-Beijing event filled 10 of 25 slate slots.
+    #
+    # apply_event_redundancy_decay (X's open-source diversity formula:
+    # decay=0.5, floor=0.25) re-scores so position-0 in each event cluster
+    # keeps full score, position-1 drops to 0.625×, position-5+ asymptotes
+    # at 0.25×. Stored in a separate column (redundancy_adjusted_score),
+    # JS rerank prefers it when present and falls back to ai_final_score.
+    # Idempotent — always re-derived from ai_final_score.
+    try:
+        print(f"\n📉 STEP 13 (mig 121): event-cluster redundancy decay (72h window)")
+        _client = get_supabase_client()
+        _decay_result = _client.rpc('apply_event_redundancy_decay', {
+            'p_decay': 0.5,
+            'p_floor': 0.25,
+            'p_hours_window': 72,
+        }).execute()
+        _updated = _decay_result.data if hasattr(_decay_result, 'data') else _decay_result
+        print(f"   ✅ [Step 13] redundancy-adjusted {_updated} articles within 72h window")
+    except Exception as e:
+        # Non-blocking: decay failure must not abort the pipeline.
+        # JS rerank falls back to ai_final_score when redundancy_adjusted_score is NULL.
+        print(f"   ⚠️ [Step 13] redundancy decay failed (non-fatal): {e}")
+
     # Summary
     print(f"\n{'='*80}")
     print(f"✅ PIPELINE COMPLETE")
@@ -2316,12 +2455,7 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import json
     import time
 
-    # Writing model: upgraded from flash-lite. Flash-lite is too weak to follow the
-    # social-copy prompt (drops voice/banned-word/extend-don't-recap rules), which is the
-    # root cause of flat titles + vapor bullets. Scoring stays on flash-lite (unchanged).
-    # Override via env: WRITING_MODEL=gemini-2.5-flash-lite reverts; =gemini-2.5-pro = max quality.
-    writing_model = os.getenv('WRITING_MODEL', 'gemini-2.5-flash')
-    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/{writing_model}:generateContent?key={gemini_key}"
+    gemini_synthesis_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -2366,6 +2500,8 @@ ISSUES FOUND IN PREVIOUS VERSION:
     today_str = datetime.now().strftime('%B %d, %Y')
 
     prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
+
+THE BAR: think BBC / The Independent reporting standards — accurate, specific, genuinely informative — but written for a fast vertical feed. Voice-driven and quick to read, never dumbed-down. Every line earns its place: a real fact, a real name, a real number, a real stake. A reader should feel smarter in 5 seconds, the way the best journalism makes you feel — just faster. No hype, no filler, no copywriter clichés.
 
 ⚠️ TODAY'S DATE: {today_str}
 All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
@@ -2416,6 +2552,45 @@ Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both
 If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 THE WIRE-SERVICE TRAP — the #1 reason posts read BORING. Kill it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your sources ARE wire copy (Reuters/AP register). Your job is to NOT sound like them.
+The failure mode is "neutral record-keeping": passive, hedged, no stakes, no specifics
+— the single thing that makes a feed feel like a 1990s newspaper. This is most common
+on World / Politics stories. Banish it.
+
+BANNED — never write these or anything like them:
+  ✗ Passive state-of-record: "has been sworn in", "was caused by", "is set to",
+    "talks have stalled", "a deal was reached", "is working to", "was found near".
+  ✗ Hedge / non-fact filler: "may resume", "is expected to", "faces challenges
+    ahead", "remains far apart", "on key issues", "both sides", "officials say",
+    "according to a report", "still investigating", "in the coming days", "could see".
+  ✗ Empty bullets that carry NO name / number / quote — DELETE them, don't pad.
+
+Every line must be ACTIVE, CONCRETE, and carry a real detail. Real before → after:
+
+  ✗ "German justice system strained." / "The sheer volume of cases is overwhelming
+     courts." / "This strain threatens the rule of law, according to a report."
+  ✓ Title: "Germany's courts are so backed up, prosecutors are giving up."
+     • "Frankfurt alone dropped **8,000** cases last year — too few judges."
+     • "A judges' union warns serious crimes are now expiring before trial."
+
+  ✗ "Oman detects suspected naval mine in Hormuz Strait." / "The mine was found near
+     shipping lanes." / "Oman's navy is working to neutralize the device."
+  ✓ Title: "A loose mine is drifting in the world's busiest oil chokepoint."
+     • "**20%** of global oil ships through Hormuz — insurers are already twitchy."
+     • "**Oman**'s navy is racing to defuse it before a tanker finds it first."
+
+  ✗ "Talks between the US and Iran have stalled." / "Both sides remain far apart on
+     key issues." / "Negotiations may resume next month."
+  ✓ Title: "The US–Iran nuclear talks just fell apart again."
+     • "Dealbreaker: **Iran** won't cap enrichment, **Washington** won't lift sanctions first."
+     • "Third round since **April** to collapse with nothing signed."
+
+Two sharp bullets always beat three with a dud. Quality over quota.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ STEP 2 — TITLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2428,6 +2603,8 @@ LEAD WITH ONE OF:
   • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
 
 Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
+Do NOT lead with the state-of-record fact of an event happening ("X has been sworn in",
+"Cyclone hits coast", "Talks stalled"). Lead with the CONSEQUENCE or TENSION instead.
 
 PERSON / TENSE:
   • First-person ("I tried...") — opinion / personal angle.
@@ -2446,16 +2623,8 @@ WITHHOLD ONE THING:
 
 NUMBERS:
   • Specific > round. "$317K" beats "$300K." "27%" beats "about a quarter."
-  • Lead with the number when you have one — headlines with numbers get ~36% more engagement.
   • One number per title max. Two competes for attention.
   • Don't force a number where there isn't one. Cooking and fashion titles often don't need one.
-
-NO VAGUE QUESTIONS:
-  • A bare question with no concrete fact ("Why does this happen?", "What's next?")
-    is the weakest title type — research shows vague curiosity-gap headlines
-    under-perform. Lead with the specific instead.
-  • A question is OK only if it still carries a number/name/stake
-    ("Russia's budget deficit doubled. Can Putin keep funding the war?").
 
 NAME RECOGNITION:
   • Globally known figures (Musk, Trump, Biden, Putin, Taylor Swift, Ronaldo): name only.
@@ -2468,26 +2637,20 @@ BOLD HIGHLIGHTS:
   • NEVER bold verbs, adjectives, or articles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 STEP 3 — BULLETS (2-3 by DEFAULT)
+🔹 STEP 3 — BULLETS (0-3, you decide)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DEFAULT = 2-3 bullets. A bare title + photo with nothing else is a dead card —
-the reader gets no payoff. Almost every post should carry 2-3 bullets that
-deliver the specifics behind the title. Write them unless the title is a TRUE
-one-liner (see below).
+Bullets are NOT mandatory. Self-contained titles emit ZERO bullets. Forcing bullets onto a one-line declaration is the #1 thing that wrecks a social post.
 
-WHEN TO RETURN ZERO BULLETS (the rare exception — only a genuine one-liner):
-  • Title is a fully self-contained declaration that needs nothing ("Messi just retired.")
-  • Title is a single-image moment where the photo IS the whole story
-  • If the only bullet you can write would recap the title, drop to zero —
-    but first try harder to find 2-3 real extending facts from the sources.
-  Do NOT emit zero bullets just because it's breaking news or you're unsure.
-  If the sources contain ANY specific facts (numbers/names/quotes/context),
-  pull 2-3 of them into bullets.
+WHEN TO RETURN ZERO BULLETS:
+  • Title is a complete declaration ("Messi just retired.")
+  • Title is a single-image moment (the photo carries the rest)
+  • Title is a hot take that lands harder unannotated
+  • If you find yourself writing a bullet that recaps the title, just don't.
 
-WHEN TO RETURN 2-3 BULLETS (the norm):
-  • The title raises a question or names a stake the reader wants resolved.
-  • There are specific numbers / names / quotes / context worth pulling out.
+WHEN TO RETURN 1-3 BULLETS:
+  • The title raises a question the reader will want answered.
+  • There are specific stakes / numbers / quotes worth pulling out.
   • Mix the count by content. 1 short + 1 medium > 3 uniform.
 
 EVERY BULLET MUST:
@@ -2653,7 +2816,8 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title with 1-2 **bold** entities",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
+    "0-3 bullets, MAX 3 (a 4th never renders). Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths.",
+    "DEAD-BULLET TEST: read each bullet alone — if it has no name/number/date/quote, or could sit in a story about anything ('faces challenges ahead', 'remains tense', 'more to come'), DELETE it. Never pad to 3. Two real bullets beat three with a dud."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
@@ -2685,6 +2849,17 @@ SPORTS (hot_take):
   ],
   "card_format": "hot_take",
   "category": "Sports"
+}}
+
+WORLD (standard) — the hard one. NOT wire voice, real stakes + specifics:
+{{
+  "title": "A loose mine is drifting in the world's busiest oil chokepoint.",
+  "summary_bullets": [
+    "**20%** of global oil ships through the **Strait of Hormuz**.",
+    "**Oman**'s navy is racing to defuse it before a tanker finds it."
+  ],
+  "card_format": "standard",
+  "category": "World"
 }}
 
 K-POP (story_arc):
@@ -2725,10 +2900,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
             request_data = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
-                    # temperature 0 forced the blandest, most generic phrasing — a major cause
-                    # of flat copy. Raised for social voice/variety; fact-verification (Step 8)
-                    # still catches hallucinations. Override via WRITING_TEMPERATURE env.
-                    "temperature": float(os.getenv('WRITING_TEMPERATURE', '0.85')),
+                    "temperature": 0,
                     "maxOutputTokens": 2048,
                     "responseMimeType": "application/json"
                 }

@@ -51,11 +51,18 @@ RECAP_SIM_THRESHOLD = float(os.getenv('PIPELINE2_RECAP_THRESHOLD', '0.9'))
 COOLDOWN_BY_TYPE = {
     'list': 45, 'surprising_fact': 180, 'explainer': 120, 'recipe': 90,
     'history': 365, 'comparison': 60, 'how_to': 60, 'myth_busting': 120,
+    # High-engagement social formats (added 2026-05-27). Facts about a person /
+    # a record / a story don't change, so long cooldowns avoid repeats.
+    'person_profile': 180, 'money_numbers': 120, 'records_extremes': 180,
+    'wild_story': 365, 'timeline': 180, 'ranked': 90, 'origins': 365,
+    'behind_scenes': 180, 'then_vs_now': 180, 'day_in_life': 180, 'future': 90,
 }
 
 # Wikimedia-first categories/types (history / science / cultural). Everything
-# else gets Unsplash first. Per user direction 2026-05-24.
-WIKIMEDIA_FIRST_TYPES = {'history'}
+# else gets Unsplash first. Per user direction 2026-05-24. person_profile and
+# then_vs_now/timeline lean on real people/places — Wikimedia has the portraits
+# and archival shots Unsplash lacks.
+WIKIMEDIA_FIRST_TYPES = {'history', 'person_profile', 'then_vs_now', 'timeline'}
 WIKIMEDIA_FIRST_CATEGORIES = {'history', 'science', 'culture', 'cultural', 'space'}
 
 BANNED_WORDS = [
@@ -166,21 +173,6 @@ def mark_brief(supabase, brief_id: str, status: str, **fields):
         print(f"      ⚠️ could not update brief {brief_id}: {str(e)[:60]}")
 
 
-def claim_brief(supabase, brief_id: str) -> bool:
-    """Atomically claim a brief for processing. Flips pending -> in_progress ONLY
-    if it is still pending, so two overlapping job executions can't both grab the
-    same brief and double-publish it. Returns True if THIS worker won the claim,
-    False if another worker already took it (skip)."""
-    try:
-        res = supabase.table('curated_briefs') \
-            .update({'status': 'in_progress'}) \
-            .eq('id', brief_id).eq('status', 'pending').execute()
-        return bool(res.data)  # non-empty => we flipped the row; empty => already claimed
-    except Exception as e:
-        print(f"      ⚠️ could not claim brief {brief_id}: {str(e)[:60]}")
-        return False
-
-
 # ── Stage 2: research ──────────────────────────────────────────────────────────
 def research_brief(brief: Dict) -> Optional[Dict]:
     n_items = max(2, brief['page_count'] - 1)  # page 1 is the intro
@@ -203,6 +195,7 @@ Rules:
 - Return EXACTLY {n_items} entities, one per content page, in a sensible order.
 - Each fact must be concrete and verifiable (numbers, names, dates). No fluff.
 - For list/comparison: each entity is one list item / one side. For explainer/how_to: each entity is one step/concept. For history: chronological beats. For surprising_fact/myth_busting: each entity is one fact/myth+reality.
+- For person_profile/records_extremes/money_numbers: each entity is ONE surprising, concrete fact (a number, name, date, or specific detail) — the kind that makes a reader stop and swipe. For ranked: each entity is one ranked item, best→worst, with the reason. For timeline/then_vs_now: each entity is one era/moment in chronological order. For wild_story: each entity is one beat of the story in narrative order (setup → turn → payoff). For origins/behind_scenes: each entity is one step/reason in the real explanation. For day_in_life/future: each entity is one moment/development in time order.
 - research_sources: the actual URLs you used.
 Return ONLY the JSON object."""
     raw = _gemini_grounded_text(prompt, RESEARCH_MODEL)
@@ -369,66 +362,27 @@ RESEARCH (use these as your source of truth):
 
 INTRO CONTEXT: {research.get('intro_text', '')}
 
-PAGES TO WRITE (carousel structure):
-Page 1 = COVER TITLE. This is the ONLY thing most people see in the feed — it decides
-whether they tap. Write it on research-backed rules for what makes a social headline
-get opened by a young audience:
-  • LEAD WITH A CONCRETE SPECIFIC, not a vague question. Studies show vague
-    curiosity-gap headlines ("Why do we still eat this?", "Only 4 ingredients?")
-    UNDER-perform; the winner is a specific fact + a small gap. Open with a real
-    number, name, place, or stake the reader can picture.
-  • USE A NUMBER when you have one — headlines with numbers get ~36% more
-    engagement. Prefer the surprising exact figure ($7.4B, 216 children, 71%, 9th-
-    century) over round/approx. One strong number, not three.
-  • SPECIFICITY + EMOTION are the two biggest drivers. Name the actual thing
-    (the place, person, dish, company), and let the stake carry feeling — without
-    hype words.
-  • LEAVE A SMALL GAP, don't slam it shut. Tell them WHAT and let them tap for
-    WHY/HOW. "Ukraine lost 71% of its power. Its economy still grew." beats both
-    "Ukraine economy update" (no gap) and "You won't believe what happened" (no fact).
-  • A question is allowed ONLY if it still carries a concrete specific
-    ("306 rescuers killed by double-tap strikes. Why?" is fine; "Why do strikes
-    happen?" is not). Don't default to the question template — most covers should
-    be declarative statements with a number/name.
-  • Length 6-14 words / up to ~70 chars. Short-but-vague is the failure mode; a
-    slightly longer title that lands a specific beats a clipped empty one.
-  • BANNED on the cover: "you won't believe", "shocking", "this is why", bare
-    "Why...?"/"How...?" with no number/name, and generic teases.
-  GOOD covers: "Ukraine lost 71% of its power. Its economy still grew."  /
-    "216 children died when the aid trucks stopped."  /  "Drake just parked
-    $29M of cars in one music video."  /  "The 9th-century Sicilian ice that's
-    beating gelato this summer."
-  BAD covers (vague/empty, avoid): "Why do we still eat this?"  /  "Only 4
-    ingredients?"  /  "Tired of the same old summer salad?"  /  "Seven lives lost."
-The cover may carry an optional one-line subline, but the title does the work.
-Pages 2..N = ONE idea per page, one researched entity each, in the given order. Each page delivers a single concrete unit carried by a real number, name, place, or quote. Land the FINAL page on a payoff: its last sentence delivers the closing point, it does not trail off.
-
-PER-PAGE LENGTH — SHORT BY DEFAULT. The carousels you're modeled on are mostly
-ONE tight line per page ("Italy is offering $1 homes in Sicily to revive villages",
-"McLaren Elva — $2 million+", a single term + its definition). Length is a tool you
-spend only when an idea genuinely needs it, NOT a quota to fill.
-- DEFAULT (most pages): the title carries the idea + ONE short bullet (or a tight
-  1-2 sentence body), and that's it. Don't add a second/third bullet just because
-  you can. Don't write a paragraph when one line lands the point.
-- LONG (the EXCEPTION, only when the idea truly can't be said briefly): a denser
-  body of 2-3 sentences — use it for a genuinely layered mechanism or a story beat
-  that loses meaning when cut. Most pages are NOT this.
-- A page may even be title-only when the title fully delivers the idea.
-- VARY length deliberately. If every page is the same length (all long OR all short)
-  that's the AI tell — mix tight one-liners with the occasional fuller page.
-- Hard rule: NEVER put both a 2+ sentence body AND multiple bullets on the same
-  page. Pick one carrier per page.
+PAGES TO WRITE:
+Page 1 = INTRO (theme + hook + why-this-matters)
+Pages 2..N = ONE entity/concept per page (in the given order)
 
 For each page, write:
-- title (3-12 words, no clickbait, no wire-speak). On the cover it is the hook.
-  On INTERIOR pages, write a punchy one-line take a friend would text, NOT a textbook section header.
-  It should make a point or surprise, not just label the topic.
-    GOOD: "Salt earlier, not more"  /  "The Romans cracked it with a screw"  /  "Then the streak hit 27 years"
-    BAD (header-speak, avoid): "Roman Engineering for Oil Extraction"  /  "Physiological Stressors Mount"  /  "Playoff Struggles Begin"
-- bullets (0-3, default ONE; each 5-22 words, full sentence carrying a number/name/place/quote, never recapping the title)
-- body (use SPARINGLY: a tight 1-2 sentences, or null. Only stretch to 3 sentences for a genuinely layered idea. Never both a long body and bullets on the same page.)
+- title (5-10 words, no clickbait, no wire-speak; lead with the consequence or tension, NOT "X is a..." or "X announced...")
+- bullets (0-3 — MAX 3, a 4th never renders — each 8-15 words, full sentences, concrete facts)
+- body (only for longer explainers: 2-3 sentences of prose; otherwise null)
 
-VOICE: Clear, curious, specific. A smart friend who actually knows the subject. Confident, never padded, no "here's why this matters".
+VOICE: Clear, curious, factual, conversational. A smart friend explaining something well — NOT a textbook or a wire reporter.
+
+DEAD-BULLET TEST (the #1 thing that makes a page boring): every bullet must carry a
+real name, number, date, or quote. Read each bullet alone — if it has none, or could
+sit in a story about almost anything ("it's important to many people", "this is a
+popular topic", "experts have differing views"), DELETE it. Never pad to 3. Two
+concrete bullets beat three vague ones.
+
+BANNED (passive/hedge wire-speak — never write these or anything like them):
+  according to a report, is working to, remains far apart, both sides, faces challenges,
+  still investigating, may resume, has been sworn in, officials say, is expected to,
+  is set to, was caused by. Write active, specific, human sentences instead.
 
 BANNED WORDS (do NOT use any): {', '.join(BANNED_WORDS)}
 BANNED PUNCTUATION: em-dashes, hashtags.
@@ -493,12 +447,12 @@ def quality_gate_text(post: Dict, brief: Dict) -> Optional[str]:
         # banned punctuation
         if '—' in blob or '#' in blob:
             return f"banned_punctuation@page{i+1}"
-        # title length 3-14 words. Interior PAGE titles are section headers (3-4
-        # words fine); the COVER title (page 1) is a social headline that often
-        # needs up to ~14 words to land a concrete specific + small gap. Only
-        # 1-2 word stubs are junk.
+        # title length 3-12 words. (Spec said 5-12 for a social headline, but
+        # curated PAGE titles are section headers — 3-4 word headers like
+        # "Understanding ADHD: Beyond Hyperactivity" are good; only 1-2 word
+        # stubs are junk.)
         tw = len(title.split())
-        if tw < 3 or tw > 14:
+        if tw < 3 or tw > 12:
             return f"title_len:{tw}w@page{i+1}"
         # bullet length 5-22 words
         for b in bullets:
@@ -521,7 +475,7 @@ def _feedback_for(reason: str) -> str:
         word = reason.split("'")[1] if "'" in reason else 'a banned word'
         return f'Your previous version used the banned word "{word}". Rewrite without it; avoid every banned word.'
     if reason.startswith('title_len'):
-        return 'A page title was the wrong length. Keep every page title between 3 and 14 words.'
+        return 'A page title was the wrong length. Keep every page title between 3 and 12 words.'
     if reason.startswith('bullet_len'):
         return 'A bullet was the wrong length. Keep every bullet between 5 and 22 words.'
     if reason.startswith('banned_punctuation'):
@@ -578,13 +532,16 @@ def log_fact_check(supabase, brief: Dict, article_id: int, fc: Optional[Dict]):
 
 
 # ── Stage 8: publish (full feed parity) ─────────────────────────────────────────
-def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
+def publish_curated(supabase, brief: Dict, post: Dict, ai_raw_override: Optional[int] = None) -> Optional[int]:
     """
     Insert the curated post into published_articles with the same feed-critical
     fields Pipeline 1 stamps (embedding_minilm + Trinity vq codes + score + tags),
     so the recommender can actually serve it. Lazy-imports the heavy workflow
     helpers (only succeeds where GEMINI/BRIGHTDATA/Supabase secrets exist, i.e.
     in prod).
+
+    `ai_raw_override`: if the caller already computed the raw score (e.g. for the
+    no-image quality gate), pass it in to skip the duplicate scoring call.
     """
     from step1_5_event_clustering import get_embedding_minilm
     from step10_article_scoring import score_article_with_references, generate_interest_tags
@@ -598,58 +555,7 @@ def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
     all_bullets = [b for p in pages for b in p.get('bullets', [])]
     embed_text = f"{title} {' '.join(all_bullets)}"
 
-    # Title-dedup guard: distinct briefs on near-identical topics (and same-brief
-    # races across overlapping runs) can converge on the SAME cover title. Skip if
-    # a curated article with this exact title was published in the dedup window, so
-    # the feed never shows two identical-titled carousels.
-    try:
-        norm_title = ' '.join(title.lower().split())
-        since = (datetime.now(timezone.utc) - timedelta(days=int(os.getenv('PIPELINE2_TITLE_DEDUP_DAYS', '7')))).isoformat()
-        existing = supabase.table('published_articles') \
-            .select('id,title_news') \
-            .eq('source_type', 'curated_brief') \
-            .gte('published_at', since).execute()
-        for r in (existing.data or []):
-            if ' '.join((r.get('title_news') or '').lower().split()) == norm_title:
-                print(f"      ⏭ duplicate title already published (#{r['id']}): {title!r} — skipping")
-                return None
-    except Exception as e:
-        print(f"      ⚠️ title-dedup check failed (continuing): {str(e)[:60]}")
-
     embedding_minilm = get_embedding_minilm(embed_text)
-
-    # Semantic content-dedup: the topic-level dedup in the AI editor only compares
-    # brief TOPIC STRINGS (and only vs already-published cooldown topics), so two
-    # differently-worded briefs on the SAME story (e.g. "Why do responders keep
-    # dying?" vs "58 double-tap strikes. Why target rescuers?") both get published.
-    # Here we compare the FINAL article's content embedding against recently-
-    # published curated articles and skip near-duplicates. Catches the cross-cycle
-    # races and the semantic variants the title check can't.
-    try:
-        sim_threshold = float(os.getenv('PIPELINE2_CONTENT_DEDUP_THRESHOLD', '0.90'))
-        since = (datetime.now(timezone.utc) - timedelta(days=int(os.getenv('PIPELINE2_CONTENT_DEDUP_DAYS', '5')))).isoformat()
-        recent = supabase.table('published_articles') \
-            .select('id,title_news,embedding_minilm') \
-            .eq('source_type', 'curated_brief') \
-            .gte('published_at', since) \
-            .not_.is_('embedding_minilm', 'null') \
-            .order('published_at', desc=True) \
-            .limit(300).execute()
-        for r in (recent.data or []):
-            prev = r.get('embedding_minilm')
-            if isinstance(prev, str):
-                try:
-                    prev = json.loads(prev)
-                except Exception:
-                    prev = None
-            if not prev:
-                continue
-            if _cosine(embedding_minilm, prev) >= sim_threshold:
-                print(f"      ⏭ semantic duplicate of #{r['id']} ({r.get('title_news','')!r}) — skipping {title!r}")
-                return None
-    except Exception as e:
-        print(f"      ⚠️ content-dedup check failed (continuing): {str(e)[:60]}")
-
     vq_primary, vq_secondary = assign_vq_clusters(embedding_minilm, supabase)
     if vq_primary is None:
         print(f"      ❌ Trinity stamping failed — skipping (would be invisible to feed)")
@@ -657,11 +563,14 @@ def publish_curated(supabase, brief: Dict, post: Dict) -> Optional[int]:
 
     gemini_key = os.getenv('GEMINI_API_KEY')
     category = canonicalize_category(brief.get('category', 'Other'))
-    try:
-        score_res = score_article_with_references(title, all_bullets, gemini_key, supabase)
-        ai_raw = score_res.get('score', 600) if isinstance(score_res, dict) else 600
-    except Exception:
-        ai_raw = 600
+    if ai_raw_override is not None:
+        ai_raw = ai_raw_override
+    else:
+        try:
+            score_res = score_article_with_references(title, all_bullets, gemini_key, supabase)
+            ai_raw = score_res.get('score', 600) if isinstance(score_res, dict) else 600
+        except Exception:
+            ai_raw = 600
     # Curated score FLOOR (2026-05-24): the news-importance scorer rates evergreen
     # content low (~350), which would bury it in ranked views. Floor at 650 (env
     # PIPELINE2_SCORE_FLOOR); keep the raw score in ai_final_score_raw.
@@ -730,13 +639,8 @@ def track_cooldown(supabase, brief: Dict):
 def process_brief(supabase, brief: Dict) -> bool:
     bid = brief['id']
     label = brief['topic'][:55]
-    # Atomic claim: only ONE worker/execution can flip this brief pending->in_progress.
-    # If another already claimed it (overlapping cron + manual run), skip to avoid
-    # double-publishing the same brief.
-    if not claim_brief(supabase, bid):
-        print(f"\n   ⏭ [{brief['brief_type']}] {label} — already claimed, skipping")
-        return False
     print(f"\n   ▶ [{brief['brief_type']}] {label}")
+    mark_brief(supabase, bid, 'in_progress')
     try:
         research = research_brief(brief)
         if not research:
@@ -767,13 +671,32 @@ def process_brief(supabase, brief: Dict) -> bool:
         fc = run_fact_check(brief, post, research)
 
         # Assign images: Wikimedia + one pooled Unsplash query/brief + og, reusing
-        # the best secured image for any page that misses. One good image per brief
-        # is enough to publish (so a single match saves the whole carousel).
+        # the best secured image for any page that misses. Text-only must be EARNED
+        # (user direction 2026-05-28): if no image is found we score the article
+        # first and only publish text-only when the raw quality score clears
+        # PIPELINE2_TEXT_ONLY_MIN_RAW (default 750 = above the score floor). Otherwise
+        # drop it — mediocre image-less briefs shouldn't slip into the feed just
+        # because the picture search failed.
+        pre_scored_raw: Optional[int] = None
         if not assign_images(brief, post['pages'], research.get('research_sources', [])):
-            mark_brief(supabase, bid, 'failed', failure_reason='no_image_any_page')
-            return False
+            text_only_min = int(os.getenv('PIPELINE2_TEXT_ONLY_MIN_RAW', '750'))
+            try:
+                from step10_article_scoring import score_article_with_references
+                title = post['pages'][0]['title']
+                all_bullets = [b for p in post['pages'] for b in p.get('bullets', [])]
+                score_res = score_article_with_references(title, all_bullets, os.getenv('GEMINI_API_KEY'), supabase)
+                pre_scored_raw = int(score_res.get('score', 600)) if isinstance(score_res, dict) else 600
+            except Exception as e:
+                print(f"      ⚠️ no-image quality scoring failed ({str(e)[:60]}) — treating as low quality")
+                pre_scored_raw = 0
+            if pre_scored_raw < text_only_min:
+                mark_brief(supabase, bid, 'failed',
+                           failure_reason=f'no_image_low_quality_raw{pre_scored_raw}')
+                print(f"      ✗ no image AND raw={pre_scored_raw} < {text_only_min} — dropping (text-only must be earned)")
+                return False
+            print(f"      🖼️ no image but raw={pre_scored_raw} ≥ {text_only_min} — publishing text-only (earned)")
 
-        article_id = publish_curated(supabase, brief, post)
+        article_id = publish_curated(supabase, brief, post, ai_raw_override=pre_scored_raw)
         if not article_id:
             mark_brief(supabase, bid, 'failed', failure_reason='publish_failed')
             return False

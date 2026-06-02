@@ -18,12 +18,16 @@
 // deletion from regressing brand-new-user UX.
 
 import { createClient } from '@supabase/supabase-js'
-import { serveTrinityFeed } from '../../../lib/trinityServe.js'
+import { serveTrinityFeed, recordSlateExposure } from '../../../lib/trinityServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
+import { readFeedCache, writeFeedCache, buildExposureMeta, expandExposureMeta } from '../../../lib/feedCache.js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const TRINITY_DISABLED_GLOBAL = process.env.TRINITY_DISABLE === '1'
+// Precompute-cache fast path (lib/feedCache.js). On by default; set
+// FEED_CACHE=0 to disable and always recompute live (instant rollback).
+const FEED_CACHE_ENABLED = process.env.FEED_CACHE !== '0'
 
 // Phase A.1 (Pinterest playbook, 2026-05-11) — request coalescing.
 //
@@ -125,6 +129,57 @@ export default async function handler(req, res) {
   const totN = engN + glnN + skpN
   const recentEngagementZ = totN >= 5 ? (engN + 0.3 * glnN - skpN) / totN : 0
 
+  // ────────────────────────────────────────────────────────────────────
+  // Serve-from-cache fast path (precompute model — see lib/feedCache.js).
+  // First page only; the cron warmer (warmer=1) and paginated loads (cursor)
+  // always recompute. ANY miss / staleness / too-few-unseen / error falls
+  // through to the live Trinity compute below, so this is strictly
+  // non-regressive — worst case it behaves exactly like before, just slower
+  // than a hit. A hit turns the ~8s recompute into a sub-ms PK lookup.
+  // ────────────────────────────────────────────────────────────────────
+  const isFirstPage = !req.query.cursor
+  const isWarmer = req.query.warmer === '1'
+  if (FEED_CACHE_ENABLED && userId && isFirstPage && !isWarmer) {
+    const cacheT0 = Date.now()
+    try {
+      const cached = await readFeedCache(supabase, userId, { limit, seenIds })
+      if (cached) {
+        // Record exposure + impressions for the slate we ACTUALLY serve, just
+        // like a live serve would (the precompute ran with skipExposureWrites).
+        // Both writes run in parallel — they're independent — so the cache-hit
+        // critical path is one DB round-trip, not two.
+        const impressionRows = cached.articles.map((a, i) => ({
+          user_id: userId,
+          article_id: a.id,
+          bucket: a._bucket,
+          slot_index: i,
+          pool_size: cached.poolSize,
+          propensity_score: cached.poolSize > 0 ? 1.0 / cached.poolSize : null,
+          slots_pattern: 'trinity-cache',
+          request_id: requestId,
+        }))
+        const [, impInsert] = await Promise.all([
+          recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure)),
+          supabase.from('user_feed_impressions').insert(impressionRows),
+        ])
+        if (impInsert?.error) console.error('[trinity.cache] impression log failed:', impInsert.error.message)
+        console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} poolStored=${cached.poolSize} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
+        return res.status(200).json({
+          articles: cached.articles,
+          next_cursor: null,
+          has_more: true,
+          total: cached.articles.length,
+          feed_state: 'normal',
+          fresh_count: cached.articles.length,
+          caught_up_message: null,
+          _trinity_debug: { path: 'cache', ageMs: cached.ageMs },
+        })
+      }
+    } catch (cacheErr) {
+      console.error('[trinity.cache] read path error, falling through to live:', cacheErr.message)
+    }
+  }
+
   const t0 = Date.now()
   // Phase A.1 — request coalescing. Concurrent loadMore calls with same
   // (userId, seenIds, limit) share one slate; non-owners skip the
@@ -175,6 +230,30 @@ export default async function handler(req, res) {
     _trinity: true,
   }))
 
+  // ── Goldilocks chip tags ────────────────────────────────────────────
+  // The iOS card renders 2 topic chips under each article. Until 2026-05-14
+  // the iOS side parsed `**Bold**` markdown spans in the bullets, which
+  // produced hyper-specific entities (84% appeared in only 1 article →
+  // ~49% of chip taps were empty). The server now picks the chips from
+  // interest_tags filtered to the 3..200 article-count Goldilocks band
+  // (see migration interest_tag_frequency + RPC article_chip_tags). Each
+  // returned chip is guaranteed to have other articles backing it.
+  // Empty array when no tag qualifies — iOS shows no chips rather than
+  // sending the user to a dead page. Single RPC, ~25 ids, <20ms.
+  const chipIds = formatted.map(a => a.id)
+  if (chipIds.length > 0) {
+    const { data: chipRows, error: chipErr } = await supabase.rpc('article_chip_tags', {
+      article_ids: chipIds,
+    })
+    if (chipErr) {
+      console.error('[trinity.chip_tags] rpc failed:', chipErr.message)
+    }
+    const chipMap = new Map((chipRows || []).map(r => [r.id, r.chip_tags || []]))
+    for (const a of formatted) {
+      a.chip_tags = chipMap.get(a.id) || []
+    }
+  }
+
   // user_feed_impressions has user_id NOT NULL and NO guest_device_id column.
   // Skip impression logging for anonymous-device requests; Trinity bandit
   // updates already happened inside serveTrinityFeed.
@@ -199,6 +278,19 @@ export default async function handler(req, res) {
     if (impErr) console.error('[trinity] impression log failed:', impErr.message)
   } else if (userId && !isOwner) {
     console.log(`[trinity.coalesce] non-owner: skipping impression write key=${cKey.slice(0, 40)}`)
+  }
+
+  // Cache-aside: persist this freshly computed first-page slate so the next
+  // cold open for this user is an instant cache hit. Owner-only / first-page /
+  // not the warmer. exposureMeta is built from the RAW slate (which still
+  // carries _retriever / vq_* / source), 1:1 with `formatted`.
+  if (FEED_CACHE_ENABLED && userId && isOwner && isFirstPage && !isWarmer) {
+    try {
+      const exposureMeta = buildExposureMeta(trinityResult.articles)
+      await writeFeedCache(supabase, userId, formatted, exposureMeta, dbg.poolSize || formatted.length)
+    } catch (e) {
+      console.error('[trinity.cache] write failed:', e.message)
+    }
   }
 
   return res.status(200).json({
