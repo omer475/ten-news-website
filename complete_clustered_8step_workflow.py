@@ -1303,10 +1303,11 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
             "- Generic background the reader could have guessed (\"crowd pressure can affect players\").\n"
             "- \"Here's why this matters\" framing — just state the thing.\n"
             "- Inventing anything not in the sources.\n"
-            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, short "
+            "1-3 bullets (the card never shows a 4th), 5-28 words each. Present tense, short "
             "sentences, mix lengths; one detail may run long if it earns it.\n"
-            "THE BAR: if the sources don't give you at least 2 genuinely NEW, specific facts, "
-            "return [] — a thin page is worse than none."
+            "THE BAR: give the reader at least ONE genuinely NEW, specific fact (a name, "
+            "number, date, quote, or concrete consequence not on page 1) — two or three is "
+            "better. Only return [] if the sources truly contain NOTHING new beyond page 1."
         )
 
     voice_line = (
@@ -1342,8 +1343,12 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
         if not isinstance(parsed, list):
             return None
         out = [str(b).strip() for b in parsed if str(b).strip()][:3]  # iOS card renders max 3 bullets/page (MainFeedView bulletList prefix(3))
-        # Empty/short array is a VALID signal: "no new substance, don't make a page."
-        return out if len(out) >= 2 else None
+        # Empty array is a VALID signal: "no new substance, don't make a page."
+        # The context page (page 2 — what makes a story multi-page) accepts a single
+        # strong bullet so breaking/single-source stories still get a carousel; the
+        # bonus whatsnext page (page 3) still needs >=2 to be worth a third slide.
+        min_bullets = 1 if kind == 'context' else 2
+        return out if len(out) >= min_bullets else None
 
     except Exception:
         return None
