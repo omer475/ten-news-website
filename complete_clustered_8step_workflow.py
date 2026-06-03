@@ -2181,18 +2181,20 @@ def run_complete_pipeline():
             # MULTI-PAGE: deeper "swipe for more" pages.
             # Substance-based (NOT importance-based — we don't gate depth on the
             # news-importance score): any story with enough material gets a
-            # deeper context page. The feed algorithm decides what surfaces; this
-            # just makes depth available so multi-page is common, not rare.
-            #   - page 2 (context): needs >=3 bullets AND >=2 sources.
-            #   - page 3 (what's next): only when the cluster is rich (>=4 sources),
+            # deeper context page. Multi-page should be the NORM, not rare — the
+            # user wants very few single-page (title+photo) cards in the feed.
+            #   - page 2 (context): needs >=2 bullets AND >=1 source (i.e. almost
+            #     every story; _generate_deeper_page returns [] when there's
+            #     genuinely no new material, so this never pads).
+            #   - page 3 (what's next): only when the cluster is rich (>=3 sources),
             #     and only if page 2 was produced.
-            # Env knobs: MULTIPAGE_MIN_BULLETS (3), MULTIPAGE_MIN_SOURCES (2),
-            # MULTIPAGE_P3_MIN_SOURCES (4), MULTIPAGE_DISABLE=1 to turn off.
+            # Env knobs: MULTIPAGE_MIN_BULLETS (2), MULTIPAGE_MIN_SOURCES (1),
+            # MULTIPAGE_P3_MIN_SOURCES (3), MULTIPAGE_DISABLE=1 to turn off.
             article_pages = None
             mp_disabled = os.getenv('MULTIPAGE_DISABLE') == '1'
-            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '3'))
-            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '2'))
-            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '4'))
+            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '2'))
+            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '1'))
+            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '3'))
             n_sources = len(cluster_sources)
             if (not mp_disabled) and len(bullets) >= mp_min_bullets and n_sources >= mp_min_sources:
                 try:
