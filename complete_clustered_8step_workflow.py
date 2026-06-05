@@ -1303,11 +1303,10 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
             "- Generic background the reader could have guessed (\"crowd pressure can affect players\").\n"
             "- \"Here's why this matters\" framing — just state the thing.\n"
             "- Inventing anything not in the sources.\n"
-            "1-3 bullets (the card never shows a 4th), 5-28 words each. Present tense, short "
+            "2-3 bullets MAX (the card never shows a 4th), 5-28 words each. Present tense, short "
             "sentences, mix lengths; one detail may run long if it earns it.\n"
-            "THE BAR: give the reader at least ONE genuinely NEW, specific fact (a name, "
-            "number, date, quote, or concrete consequence not on page 1) — two or three is "
-            "better. Only return [] if the sources truly contain NOTHING new beyond page 1."
+            "THE BAR: if the sources don't give you at least 2 genuinely NEW, specific facts, "
+            "return [] — a thin page is worse than none."
         )
 
     voice_line = (
@@ -1343,12 +1342,8 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
         if not isinstance(parsed, list):
             return None
         out = [str(b).strip() for b in parsed if str(b).strip()][:3]  # iOS card renders max 3 bullets/page (MainFeedView bulletList prefix(3))
-        # Empty array is a VALID signal: "no new substance, don't make a page."
-        # The context page (page 2 — what makes a story multi-page) accepts a single
-        # strong bullet so breaking/single-source stories still get a carousel; the
-        # bonus whatsnext page (page 3) still needs >=2 to be worth a third slide.
-        min_bullets = 1 if kind == 'context' else 2
-        return out if len(out) >= min_bullets else None
+        # Empty/short array is a VALID signal: "no new substance, don't make a page."
+        return out if len(out) >= 2 else None
 
     except Exception:
         return None
@@ -2186,20 +2181,18 @@ def run_complete_pipeline():
             # MULTI-PAGE: deeper "swipe for more" pages.
             # Substance-based (NOT importance-based — we don't gate depth on the
             # news-importance score): any story with enough material gets a
-            # deeper context page. Multi-page should be the NORM, not rare — the
-            # user wants very few single-page (title+photo) cards in the feed.
-            #   - page 2 (context): needs >=2 bullets AND >=1 source (i.e. almost
-            #     every story; _generate_deeper_page returns [] when there's
-            #     genuinely no new material, so this never pads).
-            #   - page 3 (what's next): only when the cluster is rich (>=3 sources),
+            # deeper context page. The feed algorithm decides what surfaces; this
+            # just makes depth available so multi-page is common, not rare.
+            #   - page 2 (context): needs >=3 bullets AND >=2 sources.
+            #   - page 3 (what's next): only when the cluster is rich (>=4 sources),
             #     and only if page 2 was produced.
-            # Env knobs: MULTIPAGE_MIN_BULLETS (2), MULTIPAGE_MIN_SOURCES (1),
-            # MULTIPAGE_P3_MIN_SOURCES (3), MULTIPAGE_DISABLE=1 to turn off.
+            # Env knobs: MULTIPAGE_MIN_BULLETS (3), MULTIPAGE_MIN_SOURCES (2),
+            # MULTIPAGE_P3_MIN_SOURCES (4), MULTIPAGE_DISABLE=1 to turn off.
             article_pages = None
             mp_disabled = os.getenv('MULTIPAGE_DISABLE') == '1'
-            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '2'))
-            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '1'))
-            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '3'))
+            mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '3'))
+            mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '2'))
+            mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '4'))
             n_sources = len(cluster_sources)
             if (not mp_disabled) and len(bullets) >= mp_min_bullets and n_sources >= mp_min_sources:
                 try:
@@ -2630,16 +2623,8 @@ WITHHOLD ONE THING:
 
 NUMBERS:
   • Specific > round. "$317K" beats "$300K." "27%" beats "about a quarter."
-  • Lead with the number when you have one — headlines with numbers get ~36% more engagement.
   • One number per title max. Two competes for attention.
   • Don't force a number where there isn't one. Cooking and fashion titles often don't need one.
-
-NO VAGUE QUESTIONS:
-  • A bare question with no concrete fact ("Why does this happen?", "What's next?")
-    is the weakest title type — research shows vague curiosity-gap headlines
-    under-perform. Lead with the specific instead.
-  • A question is OK only if it still carries a number/name/stake
-    ("Russia's budget deficit doubled. Can Putin keep funding the war?").
 
 NAME RECOGNITION:
   • Globally known figures (Musk, Trump, Biden, Putin, Taylor Swift, Ronaldo): name only.
@@ -2652,24 +2637,19 @@ BOLD HIGHLIGHTS:
   • NEVER bold verbs, adjectives, or articles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 STEP 3 — BULLETS (2-3 by DEFAULT)
+🔹 STEP 3 — BULLETS (0-3, you decide)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DEFAULT = 2-3 bullets. A bare title + photo with nothing else is a dead card —
-the reader gets no payoff. Almost every post should carry 2-3 bullets that
-deliver the specifics behind the title. Write them unless the title is a TRUE
-one-liner (below).
+Bullets are NOT mandatory. Self-contained titles emit ZERO bullets. Forcing bullets onto a one-line declaration is the #1 thing that wrecks a social post.
 
-WHEN TO RETURN ZERO BULLETS (the rare exception — only a genuine one-liner):
-  • Title is a fully self-contained declaration that needs nothing ("Messi just retired.")
-  • Title is a single-image moment where the photo IS the whole story
-  • If the only bullet you can write would recap the title, drop to zero — but
-    first try harder to find 2-3 real extending facts from the sources.
-  Do NOT emit zero bullets just because it's breaking news or you're unsure. If
-  the sources contain ANY specific facts (numbers/names/quotes/context), pull 2-3.
+WHEN TO RETURN ZERO BULLETS:
+  • Title is a complete declaration ("Messi just retired.")
+  • Title is a single-image moment (the photo carries the rest)
+  • Title is a hot take that lands harder unannotated
+  • If you find yourself writing a bullet that recaps the title, just don't.
 
-WHEN TO RETURN 2-3 BULLETS (the norm):
-  • The title raises a question or names a stake the reader wants resolved.
+WHEN TO RETURN 1-3 BULLETS:
+  • The title raises a question the reader will want answered.
   • There are specific stakes / numbers / quotes worth pulling out.
   • Mix the count by content. 1 short + 1 medium > 3 uniform.
 
