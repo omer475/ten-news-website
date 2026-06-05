@@ -2507,8 +2507,6 @@ ISSUES FOUND IN PREVIOUS VERSION:
 
     prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
 
-THE BAR: think BBC / The Independent reporting standards — accurate, specific, genuinely informative — but written for a fast vertical feed. Voice-driven and quick to read, never dumbed-down. Every line earns its place: a real fact, a real name, a real number, a real stake. A reader should feel smarter in 5 seconds, the way the best journalism makes you feel — just faster. No hype, no filler, no copywriter clichés.
-
 ⚠️ TODAY'S DATE: {today_str}
 All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
 
@@ -2558,45 +2556,6 @@ Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both
 If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 THE WIRE-SERVICE TRAP — the #1 reason posts read BORING. Kill it.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Your sources ARE wire copy (Reuters/AP register). Your job is to NOT sound like them.
-The failure mode is "neutral record-keeping": passive, hedged, no stakes, no specifics
-— the single thing that makes a feed feel like a 1990s newspaper. This is most common
-on World / Politics stories. Banish it.
-
-BANNED — never write these or anything like them:
-  ✗ Passive state-of-record: "has been sworn in", "was caused by", "is set to",
-    "talks have stalled", "a deal was reached", "is working to", "was found near".
-  ✗ Hedge / non-fact filler: "may resume", "is expected to", "faces challenges
-    ahead", "remains far apart", "on key issues", "both sides", "officials say",
-    "according to a report", "still investigating", "in the coming days", "could see".
-  ✗ Empty bullets that carry NO name / number / quote — DELETE them, don't pad.
-
-Every line must be ACTIVE, CONCRETE, and carry a real detail. Real before → after:
-
-  ✗ "German justice system strained." / "The sheer volume of cases is overwhelming
-     courts." / "This strain threatens the rule of law, according to a report."
-  ✓ Title: "Germany's courts are so backed up, prosecutors are giving up."
-     • "Frankfurt alone dropped **8,000** cases last year — too few judges."
-     • "A judges' union warns serious crimes are now expiring before trial."
-
-  ✗ "Oman detects suspected naval mine in Hormuz Strait." / "The mine was found near
-     shipping lanes." / "Oman's navy is working to neutralize the device."
-  ✓ Title: "A loose mine is drifting in the world's busiest oil chokepoint."
-     • "**20%** of global oil ships through Hormuz — insurers are already twitchy."
-     • "**Oman**'s navy is racing to defuse it before a tanker finds it first."
-
-  ✗ "Talks between the US and Iran have stalled." / "Both sides remain far apart on
-     key issues." / "Negotiations may resume next month."
-  ✓ Title: "The US–Iran nuclear talks just fell apart again."
-     • "Dealbreaker: **Iran** won't cap enrichment, **Washington** won't lift sanctions first."
-     • "Third round since **April** to collapse with nothing signed."
-
-Two sharp bullets always beat three with a dud. Quality over quota.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ STEP 2 — TITLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2609,8 +2568,6 @@ LEAD WITH ONE OF:
   • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
 
 Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
-Do NOT lead with the state-of-record fact of an event happening ("X has been sworn in",
-"Cyclone hits coast", "Talks stalled"). Lead with the CONSEQUENCE or TENSION instead.
 
 PERSON / TENSE:
   • First-person ("I tried...") — opinion / personal angle.
@@ -2687,73 +2644,31 @@ BOLD HIGHLIGHTS PER BULLET:
   • 1 entity bolded. NEVER more than 2. Bold makes it tappable in the app.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎴 STEP 4 — CARD FORMAT (think like a reader, not an editor)
+🎴 STEP 4 — CARD FORMAT (you choose one)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You're NOT choosing how to summarize the content. You're choosing **how a social-media reader would most want to consume it.** Same story can be standard or hot_take depending on whether the reader is going to nod along or react. Ask: how does the reader engage with this story?
+Pick the card_format that fits the content shape. The iOS app uses this to choose layout. When in doubt, return "standard."
 
-Most articles ARE standard. That's correct — standard is the baseline post type. But when ONE of the cues below clearly fires, pick the matching non-standard format. Don't stretch — if it's not obvious, standard is right. If it IS obvious, picking standard is wrong because you're hiding the format the reader expected.
+  punchy_oneliner — declaration / hot-take / awe-moment / single-image moment.
+                    Title is the entire payload. ZERO bullets.
+                    "Messi just retired." | "BREAKING: Fed cuts rates 50 bps."
 
-  punchy_oneliner — Reader sees the title and there's nothing more to say.
-                    The reaction IS the post. Use when the fact is fully self-
-                    contained AND emotionally complete on its own line.
-                    Cues:
-                      • Title is a one-line declaration ("Messi just retired.")
-                      • Title is a single-line breaking moment ("Fed cuts 50 bps.")
-                      • Title is a one-line hot take that lands without backup
-                    When this fires, summary_bullets = [] (zero bullets).
-                    DO NOT pick this if the reader needs a single fact to
-                    understand what happened — those are standard.
+  listicle        — multiple distinct sub-events of equal weight, ordering matters.
+                    Title signals a count: "3 things you missed in the Lakers game."
 
-  listicle        — Reader expects an enumerated, scannable list.
-                    Cues:
-                      • Sources literally count items ("3 takeaways," "5 ways")
-                      • Article is a ranked / recap roundup of distinct events
-                      • Title says "X things..." or "Top N..."
-                    Bullets carry distinct, parallel items in a clear order.
+  hot_take        — opinion / contrarian stance / call-out.
+                    Title is the take, bullets justify it: "X is a scam." | "The new iPhone is the most boring phone in a decade."
 
-  hot_take        — Reader is going to react with agree/disagree, not just
-                    nod along. The post is taking a stance.
-                    Cues:
-                      • Source is opinion / editorial / column
-                      • Title is contrarian, calls something a scam / overrated
-                        / underrated / dead / done
-                      • Bullets defend the take with specific evidence
-                    DO NOT pick for normal hard news (consequence-led plain
-                    titles are standard, not hot_take, even if punchy).
+  conversational  — explainer / deep-dive with chapters (setup → turn → payoff).
+                    Multiple beats that build on each other.
 
-  conversational  — Reader needs multiple beats to follow the story. There's
-                    a setup, a turn, and a payoff that don't fit one card.
-                    Cues:
-                      • Story has a "wait for it" reveal mid-way through
-                      • Multi-step explainer where each step depends on the
-                        previous (how something happened, why it matters)
-                      • A how-to or guide with sequenced steps
+  comparison      — explicit X-vs-Y framing.
+                    Use when sources compare two named entities.
 
-  comparison      — Reader wants to mentally hold X and Y side by side.
-                    Cues:
-                      • Sources explicitly frame "X vs Y," "before/after,"
-                        "old vs new"
-                      • Article's whole point is which-one-wins or how-they-differ
-                      • Two named entities receive equal billing in sources
+  story_arc       — narrative with momentum (recap, recipe, reveal, comeback).
+                    Clear beginning-middle-end with payoff.
 
-  story_arc       — Reader wants the whole arc, not a summary. Beginning,
-                    middle, end — with momentum.
-                    Cues:
-                      • Sports recap with a comeback / collapse moment
-                      • Recipe that builds (raw → cooked → plated)
-                      • Reveal-style narrative (setup → reveal → reaction)
-                      • Fashion show recap (look 1 → look 12 → closer)
-
-  standard        — Default. Reader reads the title, scans the bullets, gets
-                    the picture. The most common case across news / tech /
-                    business / general updates. If none of the cues above
-                    obviously fire, standard is correct.
-
-The audit: after you pick, ask yourself "would a real reader think this
-post is in the right shape?" If standard feels lazy because there's a
-clear cue you ignored, switch. If a non-standard format feels stretchy
-because you wanted variety, go back to standard.
+  standard        — none of the above. Default. Most articles will be standard.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚫 BANNED — auto-fail (these will be regenerated)
@@ -2822,8 +2737,7 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title with 1-2 **bold** entities",
   "summary_bullets": [
-    "0-3 bullets, MAX 3 (a 4th never renders). Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths.",
-    "DEAD-BULLET TEST: read each bullet alone — if it has no name/number/date/quote, or could sit in a story about anything ('faces challenges ahead', 'remains tense', 'more to come'), DELETE it. Never pad to 3. Two real bullets beat three with a dud."
+    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
@@ -2855,17 +2769,6 @@ SPORTS (hot_take):
   ],
   "card_format": "hot_take",
   "category": "Sports"
-}}
-
-WORLD (standard) — the hard one. NOT wire voice, real stakes + specifics:
-{{
-  "title": "A loose mine is drifting in the world's busiest oil chokepoint.",
-  "summary_bullets": [
-    "**20%** of global oil ships through the **Strait of Hormuz**.",
-    "**Oman**'s navy is racing to defuse it before a tanker finds it."
-  ],
-  "card_format": "standard",
-  "category": "World"
 }}
 
 K-POP (story_arc):
