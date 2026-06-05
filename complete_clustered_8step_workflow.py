@@ -2148,20 +2148,26 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
 
-            # If article has info box components, trim bullets to 450 max
-            # Articles without components keep up to 550 chars
+            # TOTAL-CHARACTER CAP on combined bullet text (restored 2026-06-05 to
+            # the ~few-weeks-ago behavior the user wants). Cap = 450 chars when the
+            # article carries info-box components, else 550 chars. Applies to EVERY
+            # article (components are currently frozen, so 550 is the effective cap),
+            # which is what gives bullets their natural short/long mix instead of
+            # uniform medium length. Env-overridable: BULLET_CHARS_MAX / _WITH_COMPONENTS.
             has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
-            if has_components and isinstance(bullets, list):
+            char_cap = int(os.getenv('BULLET_CHARS_MAX_WITH_COMPONENTS', '450')) if has_components \
+                else int(os.getenv('BULLET_CHARS_MAX', '550'))
+            if isinstance(bullets, list):
                 total_bullet_chars = sum(len(b) for b in bullets)
-                if total_bullet_chars > 450:
+                if total_bullet_chars > char_cap:
                     trimmed = []
                     running = 0
                     for b in bullets:
-                        if running + len(b) <= 450:
+                        if running + len(b) <= char_cap:
                             trimmed.append(b)
                             running += len(b)
                         else:
-                            remaining = 450 - running
+                            remaining = char_cap - running
                             if remaining > 30:
                                 truncated = b[:remaining]
                                 cut_at = max(truncated.rfind('.'), truncated.rfind(','))
@@ -2171,7 +2177,7 @@ def run_complete_pipeline():
                                     trimmed.append(truncated.rsplit(' ', 1)[0])
                             break
                     bullets = trimmed
-                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (has components)")
+                    print(f"   ✂️ [Cluster {cluster_id}] Trimmed bullets to {sum(len(b) for b in bullets)} chars (cap {char_cap})")
 
             # Match article to a publisher account
             matched_author_id, matched_author_name = match_publisher(
