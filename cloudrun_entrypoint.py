@@ -130,8 +130,21 @@ def main():
             # share one 20-min cycle. Fully non-fatal: any P2 error is swallowed
             # so it can never break Pipeline 1 or the lock release. Set
             # PIPELINE2_ENABLED=0 to disable (instant rollback, no redeploy).
+            #
+            # FREQUENCY GATE (cost control, 2026-06-06): curated is expensive
+            # (brief-gen + grounded research + image QC + scoring per item) and
+            # the user wants it <10% of total content. PIPELINE2_RUN_EVERY_N makes
+            # Pipeline 2 run only once every N cycles (default 1 = every cycle).
+            # The cycle index is derived from the wall-clock 20-min slot so it's
+            # stable & stateless across job runs. Skipped cycles cost $0 for P2.
             p2_thread = None
-            if os.getenv('PIPELINE2_ENABLED', '1') == '1':
+            _p2_every_n = int(os.getenv('PIPELINE2_RUN_EVERY_N', '1'))
+            import time as _time
+            _cycle_idx = int(_time.time() // 1200)  # 1200s = 20-min cron slot
+            _p2_due = (_p2_every_n <= 1) or (_cycle_idx % _p2_every_n == 0)
+            if os.getenv('PIPELINE2_ENABLED', '1') == '1' and not _p2_due:
+                print(f"⏭️ Pipeline 2 skipped this cycle (RUN_EVERY_N={_p2_every_n}, cycle_idx={_cycle_idx}) — cost saving")
+            if os.getenv('PIPELINE2_ENABLED', '1') == '1' and _p2_due:
                 import threading
 
                 def _run_pipeline2():
