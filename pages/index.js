@@ -3346,6 +3346,40 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return <TodayPlusLoader />;
   }
 
+  // Memoized feed list — rebuilt only when the underlying data changes, NOT on
+  // every scroll tick. (A scroll listener updates maxScrollPercent → Home
+  // re-renders; rebuilding ~2000 cards each time was freezing the page.)
+  const feedCards = useMemo(() => (
+    stories.filter(s => s.type === 'news').map((story, fIndex) => {
+      if (!user && fIndex >= paywallThreshold) {
+        if (fIndex === paywallThreshold) {
+          return (
+            <div key="paywall" className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
+              <h2>Create your free account</h2>
+              <p>Sign up to keep reading the news.</p>
+              {authError && <div className="auth-error" style={{ marginBottom: 16 }}>{authError}</div>}
+              <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
+              <p style={{ marginTop: 12 }}>Already have an account?{' '}
+                <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button>
+              </p>
+            </div>
+          );
+        }
+        return null;
+      }
+      return (
+        <LazyMount key={story.id || fIndex}>
+          <FeedCard
+            story={story}
+            isDark={darkMode}
+            onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+            onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+          />
+        </LazyMount>
+      );
+    })
+  ), [stories, user, darkMode, authError]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return <TodayPlusLoader />;
   }
@@ -5759,35 +5793,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
-          {stories.filter(s => s.type === 'news').map((story, fIndex) => {
-            // Anonymous paywall: gate after the threshold of news cards
-            if (!user && fIndex >= paywallThreshold) {
-              if (fIndex === paywallThreshold) {
-                return (
-                  <div key="paywall" className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
-                    <h2>Create your free account</h2>
-                    <p>Sign up to keep reading the news.</p>
-                    {authError && <div className="auth-error" style={{ marginBottom: 16 }}>{authError}</div>}
-                    <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
-                    <p style={{ marginTop: 12 }}>Already have an account?{' '}
-                      <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button>
-                    </p>
-                  </div>
-                );
-              }
-              return null;
-            }
-            return (
-              <LazyMount key={story.id || fIndex}>
-                <FeedCard
-                  story={story}
-                  isDark={darkMode}
-                  onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-                  onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
-                />
-              </LazyMount>
-            );
-          })}
+          {feedCards}
 
           {/* Footer: load-more / caught-up */}
           <div style={{ textAlign: 'center', padding: '40px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>
