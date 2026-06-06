@@ -13,6 +13,7 @@ import { sortArticlesByScore } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
+import LazyMount from '../components/feed/LazyMount';
 import {
   getUserInterests,
   updateInterests,
@@ -195,19 +196,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
   // Paywall threshold - after important articles
   const paywallThreshold = 6; // Sign-in gate after 5 news articles
-
-  // Continuous-feed infinite scroll: load more as the user nears the bottom
-  useEffect(() => {
-    const onScroll = () => {
-      if (loadingMore || !hasMoreArticles) return;
-      const el = document.scrollingElement || document.documentElement;
-      if (el.scrollHeight - el.scrollTop - el.clientHeight < 1200) {
-        loadMoreArticles(currentPage + 1);
-      }
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [loadingMore, hasMoreArticles, currentPage]);
 
   // Update safe area color when current article changes
   useEffect(() => {
@@ -5790,13 +5778,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
               return null;
             }
             return (
-              <FeedCard
-                key={story.id || fIndex}
-                story={story}
-                isDark={darkMode}
-                onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-                onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
-              />
+              <LazyMount key={story.id || fIndex}>
+                <FeedCard
+                  story={story}
+                  isDark={darkMode}
+                  onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+                  onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+                />
+              </LazyMount>
             );
           })}
 
