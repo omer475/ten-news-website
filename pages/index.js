@@ -3415,12 +3415,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
           background: ${darkMode ? '#000000' : '#ffffff'};
           padding: 0;
           margin: 0;
-          width: 100vw;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-          overflow: hidden;
-          touch-action: none;
+          width: 100%;
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
         /* Apple HIG - Body Typography & Colors - TikTok-style no scroll */
@@ -3431,10 +3428,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: auto;
           width: 100%;
-          height: 100%;
-          touch-action: none;
+          min-height: 100%;
           /* Apply safe area padding like test page */
           padding-top: env(safe-area-inset-top, 0px);
           padding-bottom: env(safe-area-inset-bottom, 0px);
