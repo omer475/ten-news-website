@@ -295,8 +295,13 @@ Tech enthusiasts follow this space closely. **Approve real tech news from known 
 
 ### ELIMINATE:
 - Product reviews and buying guides
-- How-to tutorials
-- Truly minor app updates (bug fixes, small UI changes)
+- How-to tutorials, tips, settings/feature walkthroughs
+- **CONSUMER SERVICE-JOURNALISM** — "your phone/device/app can now do X", "how to use
+  the new feature", "the setting you should turn on", "what this feature means for you".
+  These are user tips dressed as news. A genuine product LAUNCH ("Google launches Pixel
+  10", "Apple ships iOS 27") is news; a feature-usage explainer aimed at the reader's own
+  device is NOT. If the headline talks to the reader about THEIR device, eliminate it.
+- Truly minor app updates (bug fixes, small UI changes), routine feature rollouts
 - Generic "AI will change everything" opinion pieces with no news hook
 
 ---
@@ -376,6 +381,7 @@ You will be told today's date in the user message. Use it to:
 |------|----------|
 | **Pure opinion with no news hook** | Pure editorials, hot takes not tied to any event |
 | **Listicles/Guides** | "15 Best...", "How to...", "Top 10..." — eliminate (these are lifestyle/SEO filler, not news) |
+| **Service journalism / "you" tips** | "Your phone can now...", "The setting you should turn on", "How to protect yourself from...", "What X means for you" — reader-tips dressed as news. Eliminate. (A real product LAUNCH or a real security BREACH is news; a usage tip is not.) |
 | **Promotional** | Betting odds, promo codes, deals, "where to buy", "how to watch" |
 | **Trivial individual stories** | "Mom of 3 shares...", "Man drives 5000 miles...", personal journeys |
 | **Investment advice** | "Buy this stock", Seeking Alpha, earnings transcripts |
