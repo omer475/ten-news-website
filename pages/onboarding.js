@@ -242,7 +242,7 @@ export default function OnboardingPage() {
       <style>{`
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-.ob{position:fixed;inset:0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f7;color:#1d1d1f;-webkit-font-smoothing:antialiased;overflow:hidden}
+.ob{position:fixed;inset:0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:#000000;color:#f5f5f7;-webkit-font-smoothing:antialiased;overflow:hidden}
 
 .sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:0.4s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .sc.fwd{animation-name:sf}.sc.back{animation-name:sb}
@@ -250,18 +250,18 @@ export default function OnboardingPage() {
 @keyframes sb{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:none}}
 
 /* Header */
-.hd{display:flex;align-items:center;padding:14px 20px 0;position:sticky;top:0;z-index:10;background:rgba(245,245,247,0.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
-.hd-back{width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,0.04);backdrop-filter:blur(4px) saturate(150%);-webkit-backdrop-filter:blur(4px) saturate(150%);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#1d1d1f;transition:all 0.15s;flex-shrink:0}
-.hd-back:active{transform:scale(0.92);background:rgba(0,0,0,0.08)}
+.hd{display:flex;align-items:center;padding:14px 20px 0;position:sticky;top:0;z-index:10;background:rgba(8,8,8,0.8);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
+.hd-back{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);backdrop-filter:blur(4px) saturate(150%);-webkit-backdrop-filter:blur(4px) saturate(150%);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#f5f5f7;transition:all 0.15s;flex-shrink:0}
+.hd-back:active{transform:scale(0.92);background:rgba(255,255,255,0.14)}
 .hd-step{flex:1;text-align:center;font-size:12px;font-weight:600;color:#9ca3af;letter-spacing:0.5px}
 .hd-sp{width:36px;flex-shrink:0}
-.pbar{height:3px;background:rgba(0,0,0,0.06);margin:14px 20px 0;border-radius:2px;overflow:hidden}
-.pbar-f{height:100%;background:#1d1d1f;border-radius:2px;transition:width 0.4s cubic-bezier(0.22,1,0.36,1)}
+.pbar{height:3px;background:rgba(255,255,255,0.1);margin:14px 20px 0;border-radius:2px;overflow:hidden}
+.pbar-f{height:100%;background:#f5f5f7;border-radius:2px;transition:width 0.4s cubic-bezier(0.22,1,0.36,1)}
 
 /* Body */
 .bd{flex:1;padding:24px 20px 0;padding-bottom:110px}
-.tt{font-size:clamp(26px,6vw,34px);font-weight:800;color:#1d1d1f;letter-spacing:-0.8px;line-height:1.1;margin-bottom:6px;min-height:1.15em}
-.cur{display:inline-block;width:2.5px;height:0.78em;background:#1d1d1f;margin-left:1px;vertical-align:text-bottom;animation:bl 0.55s step-end infinite}
+.tt{font-size:clamp(26px,6vw,34px);font-weight:800;color:#f5f5f7;letter-spacing:-0.8px;line-height:1.1;margin-bottom:6px;min-height:1.15em}
+.cur{display:inline-block;width:2.5px;height:0.78em;background:#f5f5f7;margin-left:1px;vertical-align:text-bottom;animation:bl 0.55s step-end infinite}
 .cur.hide{opacity:0;animation:none}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
 .ds{font-size:15px;color:#9ca3af;line-height:1.5;margin-bottom:24px;max-width:320px;min-height:1.5em}
@@ -284,13 +284,13 @@ export default function OnboardingPage() {
 .ft::before{display:none}
 .ft-in{max-width:440px;margin:0 auto;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
 .sl{display:block;text-align:center;font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;letter-spacing:-0.1px;transition:color 0.2s ease}
-.sl.met{color:#1d1d1f}
+.sl.met{color:#f5f5f7}
 .sl.max{color:#ff3b30}
 .br{display:flex;gap:10px}
 .bt{flex:1;padding:16px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s cubic-bezier(0.22,1,0.36,1);letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .bt:active{transform:scale(0.97)}
 .bt.p{
-  background:rgba(255,255,255,0.72);color:#000000;
+  background:#f0f0f3;color:#000000;
   backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
   box-shadow:
     inset 0 0 0 0.5px rgba(255,255,255,0.5),
@@ -304,7 +304,7 @@ export default function OnboardingPage() {
     0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
     0px 3px 8px 0px rgba(0,0,0,0.06)}
 .bt.p:disabled{
-  background:rgba(255,255,255,0.5);color:rgba(0,0,0,0.35);cursor:default;transform:none;
+  background:rgba(255,255,255,0.14);color:rgba(255,255,255,0.3);cursor:default;transform:none;
   backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
   box-shadow:
     inset 0 0 0 0.5px rgba(255,255,255,0.3),
@@ -312,7 +312,7 @@ export default function OnboardingPage() {
     inset -1px -1px 0px -1px rgba(255,255,255,0.3),
     0px 0.5px 2.5px 0px rgba(0,0,0,0.04)}
 .bt.s{
-  background:rgba(255,255,255,0.55);color:#48484a;
+  background:rgba(255,255,255,0.08);color:#f5f5f7;
   backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
   box-shadow:
     inset 0 0 0 0.5px rgba(255,255,255,0.4),
@@ -328,21 +328,21 @@ export default function OnboardingPage() {
 
 /* Welcome */
 .wl{display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;padding:0 28px;
-  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,87,183,0.025) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(0,87,183,0.015) 0%,transparent 50%),#fff}
+  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,87,183,0.2) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(0,87,183,0.12) 0%,transparent 50%),#000}
 .wl-top{flex:1;display:flex;align-items:center;justify-content:center}
 .wl-center{text-align:left;width:100%;max-width:360px;margin-top:-6vh}
-.wl-pre{font-size:clamp(32px,8vw,44px);font-weight:800;color:#1d1d1f;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em}
-.wl-line{font-size:clamp(32px,8vw,44px);font-weight:800;color:#1d1d1f;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em;white-space:nowrap}
-.wl-plus{color:#0057B7}
+.wl-pre{font-size:clamp(32px,8vw,44px);font-weight:800;color:#f5f5f7;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em}
+.wl-line{font-size:clamp(32px,8vw,44px);font-weight:800;color:#f5f5f7;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em;white-space:nowrap}
+.wl-plus{color:#4d94ff}
 .wl-line2{font-size:clamp(32px,8vw,44px);font-weight:800;color:#c4c4c6;letter-spacing:-1.2px;line-height:1.08;margin-bottom:0;min-height:1.08em}
-.wl-cur{display:inline-block;width:2.5px;height:0.78em;background:#48484a;margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:bl 0.55s step-end infinite}
+.wl-cur{display:inline-block;width:2.5px;height:0.78em;background:#c4c4c6;margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:bl 0.55s step-end infinite}
 .wl-cur.hide{opacity:0;animation:none;transition:opacity 0.25s ease}
 .wl-bottom{flex:0 0 auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));width:100%;max-width:360px;align-self:center}
 .wl-tagline{font-size:14px;color:#9ca3af;line-height:1.6;text-align:center;margin-bottom:16px;letter-spacing:-0.1px;opacity:0;transform:translateY(10px);transition:opacity 0.65s ease,transform 0.65s cubic-bezier(0.22,1,0.36,1)}
 .wl-tagline.on{opacity:1;transform:none}
 .wl-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:-0.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
   opacity:0;transform:translateY(12px) scale(0.97);transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1),transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  background:rgba(255,255,255,0.78);color:#1d1d1f;
+  background:#f0f0f3;color:#000000;
   backdrop-filter:blur(16px) saturate(200%);-webkit-backdrop-filter:blur(16px) saturate(200%);
   box-shadow:
     inset 0 0 0 0.5px rgba(255,255,255,0.6),
@@ -365,18 +365,18 @@ export default function OnboardingPage() {
 @media(min-width:768px){.wl{padding:0 48px}.wl-center,.wl-bottom{max-width:420px}}
 
 /* Complete */
-.cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#fff}
+.cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#000}
 .sw{margin-bottom:24px;opacity:0;transform:scale(0.7);transition:opacity 0.3s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
 .sw.on{opacity:1;transform:scale(1)}
 .sw-p{stroke-dasharray:72;stroke-dashoffset:72;transition:stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s}
 .sw-p.draw{stroke-dashoffset:0}
-.cp-t{font-size:clamp(28px,7vw,38px);font-weight:800;color:#1d1d1f;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;min-height:1.1em}
-.cp-c{display:inline-block;width:2.5px;height:0.82em;background:#1d1d1f;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
+.cp-t{font-size:clamp(28px,7vw,38px);font-weight:800;color:#f5f5f7;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;min-height:1.1em}
+.cp-c{display:inline-block;width:2.5px;height:0.82em;background:#f5f5f7;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
 .cp-c.hide{opacity:0;animation:none}
 .cp-s{font-size:15px;color:#9ca3af;line-height:1.6;max-width:250px;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
 .cp-s.on{opacity:1;transform:none}
 .cp-b{margin-top:28px;padding:16px 40px;border-radius:50px;border:none;color:#000000;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease 0.1s,transform 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s;
-  background:rgba(255,255,255,0.72);
+  background:#f0f0f3;
   backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
   box-shadow:
     inset 0 0 0 0.5px rgba(255,255,255,0.1),
@@ -406,7 +406,7 @@ export default function OnboardingPage() {
           <GlassTile key={detectedCountry.code} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)}
             glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
             <span style={{fontSize:28,lineHeight:1}}>{detectedCountry.flag}</span>
-            <span style={{fontSize:11,fontWeight:600,color:homeCountry===detectedCountry.code?'#0057B7':'#48484a',textAlign:'center',lineHeight:1.2}}>{detectedCountry.name}</span>
+            <span style={{fontSize:11,fontWeight:600,color:homeCountry===detectedCountry.code?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{detectedCountry.name}</span>
           </GlassTile>
         </div></div> : null}
         footer={<div className="ft"><div className="ft-in">
@@ -418,7 +418,7 @@ export default function OnboardingPage() {
             <GlassTile key={c.code} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)}
               glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
               <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:homeCountry===c.code?'#0057B7':'#48484a',textAlign:'center',lineHeight:1.2}}>{c.name}</span>
+              <span style={{fontSize:11,fontWeight:600,color:homeCountry===c.code?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{c.name}</span>
             </GlassTile>
           )}
         </div></div>)}
@@ -434,7 +434,7 @@ export default function OnboardingPage() {
             <GlassTile key={c.code} selected={followCountries.includes(c.code)} disabled={isHome}
               onClick={()=>!isHome&&toggleFollow(c.code)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
               <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#0057B7':isHome?'#c4c4c6':'#48484a',textAlign:'center',lineHeight:1.2}}>
+              <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#4d94ff':isHome?'#c4c4c6':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>
                 {c.name}{isHome ? ' (home)' : ''}
               </span>
             </GlassTile>);})}
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
             <GlassTile key={t.id} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)}
               glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
               <span style={{fontSize:24,lineHeight:1}}>{t.icon}</span>
-              <span style={{fontSize:11,fontWeight:600,color:selectedTopics.includes(t.id)?'#0057B7':'#48484a',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
+              <span style={{fontSize:11,fontWeight:600,color:selectedTopics.includes(t.id)?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
             </GlassTile>
           )}
         </div></div>)}
@@ -483,7 +483,7 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
         gap: 6,
         padding: '14px 6px',
         borderRadius: 16,
-        border: selected ? '1.5px solid rgba(0, 87, 183, 0.3)' : '1px solid rgba(255, 255, 255, 0.5)',
+        border: selected ? '1.5px solid rgba(77, 148, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.12)',
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'all 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
         position: 'relative',
@@ -493,8 +493,8 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
         pointerEvents: disabled ? 'none' : 'auto',
         // Liquid glass styling
         backgroundColor: selected
-          ? 'rgba(0, 87, 183, 0.04)'
-          : 'rgba(255, 255, 255, 0.6)',
+          ? 'rgba(77, 148, 255, 0.15)'
+          : 'rgba(255, 255, 255, 0.06)',
         backdropFilter: 'blur(12px) saturate(180%)',
         WebkitBackdropFilter: 'blur(12px) saturate(180%)',
         boxShadow: selected ? selectedShadow : glassShadow,
@@ -509,7 +509,7 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: '#0057B7',
+          background: '#4d94ff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -703,7 +703,7 @@ function CompScreen({ dir, homeCountry, followCountries, topics, onStartReading,
     {/* Swoosh checkmark */}
     <div className={`sw ${phase>=1?"on":""}`}>
       <svg viewBox="0 0 52 40" fill="none" width="44" height="34">
-        <path className={`sw-p ${phase>=1?"draw":""}`} d="M4 22L18 34L48 6" stroke="#1d1d1f" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path className={`sw-p ${phase>=1?"draw":""}`} d="M4 22L18 34L48 6" stroke="#f5f5f7" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
     <h1 className="cp-t">{typed}<span className={`cp-c ${!showCursor?"hide":""}`}/></h1>
@@ -714,14 +714,14 @@ function CompScreen({ dir, homeCountry, followCountries, topics, onStartReading,
       marginTop: 22,
       padding: '16px 18px',
       borderRadius: 16,
-      border: '1px solid rgba(255,255,255,0.5)',
+      border: '1px solid rgba(255,255,255,0.12)',
       textAlign: 'left',
       width: '100%',
       maxWidth: 300,
       opacity: phase>=3 ? 1 : 0,
       transform: phase>=3 ? 'none' : 'translateY(10px)',
       transition: 'opacity 0.5s, transform 0.5s cubic-bezier(0.22,1,0.36,1)',
-      backgroundColor: 'rgba(255,255,255,0.6)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       boxShadow: `
@@ -756,10 +756,10 @@ function SummaryRow({ label, value, last }) {
       gap: 8,
       marginBottom: last ? 0 : 10,
       paddingBottom: last ? 0 : 10,
-      borderBottom: last ? 'none' : '1px solid rgba(0,0,0,0.04)',
+      borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.08)',
     }}>
       <span style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:0.5,minWidth:52,paddingTop:4}}>{label}</span>
-      <span style={{display:'flex',flexWrap:'wrap',gap:4,fontSize:13,fontWeight:600,color:'#1d1d1f'}}>{value}</span>
+      <span style={{display:'flex',flexWrap:'wrap',gap:4,fontSize:13,fontWeight:600,color:'#f5f5f7'}}>{value}</span>
     </div>
   );
 }
@@ -770,8 +770,8 @@ const chipStyle = {
   gap: 3,
   padding: '3px 8px',
   borderRadius: 6,
-  background: 'rgba(0, 87, 183, 0.06)',
+  background: 'rgba(77, 148, 255, 0.15)',
   fontSize: 11,
   fontWeight: 600,
-  color: '#0057B7',
+  color: '#4d94ff',
 };

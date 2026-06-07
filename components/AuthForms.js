@@ -81,7 +81,7 @@ export function LoginForm({ onSubmit, onForgotPassword, onOAuthLogin, formData, 
   if (forgotPasswordMode) {
     return (
       <form onSubmit={handleForgotPassword} className="auth-form" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-        <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>
           Enter your email address and we'll send you a link to reset your password.
         </p>
         <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
@@ -339,14 +339,14 @@ export function EmailConfirmation({ email, type, onBack }) {
           }}>{isReset ? '🔐' : '📧'}</div>
 
           <h3 style={{
-            color: '#1f2937',
+            color: '#f5f5f7',
             fontSize: '20px',
             fontWeight: '600',
             margin: '0 0 12px 0'
           }}>{isReset ? 'Password Reset Email Sent!' : 'Verification Email Sent!'}</h3>
 
           <p style={{
-            color: '#6b7280',
+            color: 'rgba(255,255,255,0.6)',
             fontSize: '16px',
             lineHeight: '1.5',
             margin: '0 0 20px 0'
@@ -358,20 +358,20 @@ export function EmailConfirmation({ email, type, onBack }) {
           </p>
 
           <div style={{
-            background: '#f3f4f6',
+            background: 'rgba(255,255,255,0.06)',
             padding: '16px',
             borderRadius: '8px',
             margin: '20px 0',
             textAlign: 'left'
           }}>
             <h4 style={{
-              color: '#1f2937',
+              color: '#f5f5f7',
               fontSize: '16px',
               fontWeight: '600',
               margin: '0 0 8px 0'
             }}>Next steps:</h4>
             <ol style={{
-              color: '#4b5563',
+              color: 'rgba(255,255,255,0.7)',
               margin: '0',
               paddingLeft: '20px',
               lineHeight: '1.6'
@@ -383,7 +383,7 @@ export function EmailConfirmation({ email, type, onBack }) {
           </div>
 
           <p style={{
-            color: '#6b7280',
+            color: 'rgba(255,255,255,0.6)',
             fontSize: '14px',
             margin: '16px 0 0 0'
           }}>
@@ -520,7 +520,7 @@ export function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
         </div>
         <div className="auth-modal-body" style={{ textAlign: 'center', padding: '40px 20px' }}>
           <div style={{ fontSize: '32px', marginBottom: '16px' }}>⏳</div>
-          <p style={{ color: '#666', fontSize: '16px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '16px' }}>
             Verifying reset link...
           </p>
         </div>
@@ -539,7 +539,7 @@ export function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
           <p style={{ color: '#22c55e', fontSize: '16px', fontWeight: '500' }}>
             Your password has been successfully updated.
           </p>
-          <p style={{ color: '#666', fontSize: '14px', marginTop: '8px' }}>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginTop: '8px' }}>
             Redirecting...
           </p>
         </div>
@@ -555,7 +555,7 @@ export function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
       </div>
 
       <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-        <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
           Enter your new password below
         </p>
 
@@ -608,7 +608,7 @@ export function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
             style={{
               background: 'none',
               border: 'none',
-              color: '#666',
+              color: 'rgba(255,255,255,0.6)',
               fontSize: '14px',
               cursor: 'pointer',
               textDecoration: 'underline'

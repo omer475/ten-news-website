@@ -28,16 +28,16 @@ class ErrorBoundary extends React.Component {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          background: '#f5f5f7',
+          background: '#000000',
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
           padding: '24px',
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '64px', marginBottom: '24px' }}>📰</div>
-          <h1 style={{ 
-            fontSize: '28px', 
-            fontWeight: '700', 
-            color: '#1d1d1f',
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            color: '#f5f5f7',
             marginBottom: '12px'
           }}>
             TEN NEWS

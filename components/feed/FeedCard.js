@@ -242,50 +242,34 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
                       background: gradientFor(story.category), cursor: 'pointer' }} />
       )}
 
+      {/* Source · time — minimal news kicker, sits above the headline (no box) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        marginTop: pages ? 12 : 0, marginBottom: 7,
+      }}>
+        {logoFor(story.source) && (
+          <img src={logoFor(story.source)} alt="" width={16} height={16}
+               style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+               referrerPolicy="no-referrer"
+               onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        )}
+        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.01em', color: colors.secondary }}>
+          {story.source || 'Today+'}
+        </span>
+        <span style={{ fontSize: 12, lineHeight: 1, color: colors.secondary, opacity: 0.5 }}>·</span>
+        <span style={{ fontSize: 12, fontWeight: 400, color: colors.secondary }}>
+          {timeAgo(story.publishedAt || story.published_at)}
+        </span>
+      </div>
+
       {/* Title */}
       <h2 onClick={handleOpen} style={{
-        margin: pages ? '12px 0 0' : 0,
+        margin: 0,
         fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1.18,
         color: colors.text, cursor: 'pointer',
       }}>
         {renderPlain(pages ? (pages[page].title || title) : title)}
       </h2>
-
-      {/* Source liquid-glass pill (logo + name + time) — under the title */}
-      <div style={{ marginTop: 12 }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px 6px 7px', borderRadius: 999,
-          background: isDark
-            ? 'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))'
-            : 'linear-gradient(180deg, rgba(255,255,255,0.65), rgba(245,245,247,0.55))',
-          border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.07)'}`,
-          boxShadow: isDark
-            ? '0 1px 3px rgba(0,0,0,0.4), inset 0 0.5px 0.5px rgba(255,255,255,0.18)'
-            : '0 1px 3px rgba(0,0,0,0.07), inset 0 0.5px 0.5px rgba(255,255,255,0.9)',
-          backdropFilter: 'blur(12px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-        }}>
-          <div style={{
-            width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: 'hidden',
-            background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.04)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {logoFor(story.source) && (
-              <img src={logoFor(story.source)} alt="" width={20} height={20}
-                   style={{ borderRadius: 5, objectFit: 'cover' }} referrerPolicy="no-referrer"
-                   onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            )}
-          </div>
-          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-0.1px', color: colors.text }}>
-            {story.source || 'Today+'}
-          </span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: colors.secondary, opacity: 0.5 }} />
-          <span style={{ fontSize: 13, fontWeight: 400, color: colors.secondary }}>
-            {timeAgo(story.publishedAt || story.published_at)}
-          </span>
-        </div>
-      </div>
 
       {/* Bullets (up to 3) */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
@@ -384,16 +368,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
   );
 }
 
-// Frosted "liquid glass" action button (Save / Share). Smooth hover + press feedback.
-function ActionButton({ children, label, onClick, active, activeColor, restColor, isDark }) {
+// Bare icon action (Save / Share) — no box, just the glyph with subtle hover + press.
+function ActionButton({ children, label, onClick, active, activeColor, restColor }) {
   const [hover, setHover] = useState(false);
   const [press, setPress] = useState(false);
-  const baseBg = isDark
-    ? 'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))'
-    : 'linear-gradient(180deg, rgba(255,255,255,0.7), rgba(245,245,247,0.6))';
-  const hoverBg = isDark
-    ? 'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.1))'
-    : 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(240,240,243,0.85))';
   return (
     <button
       aria-label={label}
@@ -403,22 +381,16 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
       onMouseDown={() => setPress(true)}
       onMouseUp={() => setPress(false)}
       style={{
-        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: 13, cursor: 'pointer',
-        background: hover ? hoverBg : baseBg,
-        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.07)'}`,
-        boxShadow: isDark
-          ? '0 1px 3px rgba(0,0,0,0.4), inset 0 0.5px 0.5px rgba(255,255,255,0.18)'
-          : '0 1px 3px rgba(0,0,0,0.08), inset 0 0.5px 0.5px rgba(255,255,255,0.9)',
-        backdropFilter: 'blur(12px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
         color: active ? activeColor : restColor,
-        transform: press ? 'scale(0.9)' : 'scale(1)',
-        transition: 'background 0.18s ease, transform 0.1s ease, color 0.18s ease, box-shadow 0.18s ease',
+        opacity: active ? 1 : (hover ? 1 : 0.6),
+        transform: press ? 'scale(0.86)' : 'scale(1)',
+        transition: 'transform 0.1s ease, color 0.18s ease, opacity 0.18s ease',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <svg width={20} height={20} viewBox="0 0 24 24">{children}</svg>
+      <svg width={22} height={22} viewBox="0 0 24 24">{children}</svg>
     </button>
   );
 }

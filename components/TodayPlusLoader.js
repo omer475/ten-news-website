@@ -61,7 +61,7 @@ export default function TodayPlusLoader() {
         .loader-container {
           position: fixed;
           inset: 0;
-          background: #ffffff;
+          background: #000000;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -74,7 +74,7 @@ export default function TodayPlusLoader() {
           inset: 0;
           background: radial-gradient(
             ellipse 80% 50% at 50% -20%,
-            rgba(120, 119, 198, 0.03),
+            rgba(120, 119, 198, 0.12),
             transparent
           );
           pointer-events: none;
@@ -104,15 +104,15 @@ export default function TodayPlusLoader() {
           font-size: 36px;
           font-weight: 600;
           letter-spacing: -1.5px;
-          color: #000000;
+          color: #ffffff;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
           user-select: none;
         }
-        
+
         .logo-plus {
           font-size: 36px;
           font-weight: 600;
-          color: #000000;
+          color: #ffffff;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
           user-select: none;
           margin-left: 1px;
@@ -126,17 +126,17 @@ export default function TodayPlusLoader() {
         
         @keyframes pulse-color {
           0%, 100% {
-            color: #000000;
+            color: #ffffff;
           }
           50% {
-            color: #0066FF;
+            color: #4d94ff;
           }
         }
         
         .progress-container {
           width: 120px;
           height: 2px;
-          background: rgba(0, 0, 0, 0.06);
+          background: rgba(255, 255, 255, 0.10);
           border-radius: 2px;
           overflow: hidden;
           opacity: 0;
@@ -152,7 +152,7 @@ export default function TodayPlusLoader() {
         .progress-bar {
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, #000000 0%, #0066FF 100%);
+          background: linear-gradient(90deg, #ffffff 0%, #4d94ff 100%);
           border-radius: 2px;
           transform-origin: left center;
           transition: transform 0.1s ease-out;
@@ -184,7 +184,7 @@ export default function TodayPlusLoader() {
           
           .logo-plus.animate {
             animation: none;
-            color: #0066FF;
+            color: #4d94ff;
           }
         }
       `}</style>

@@ -3444,7 +3444,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
 
         .paywall-modal {
-          background: #ffffff;
+          background: ${darkMode ? '#1c1c1e' : '#ffffff'};
           border-radius: 20px;
           padding: 36px 28px;
           max-width: 360px;
@@ -3462,7 +3462,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
 
         .paywall-modal h2 {
-          color: #1d1d1f;
+          color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           font-size: 24px;
           font-weight: 600;
           margin: 0 0 8px 0;
