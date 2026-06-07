@@ -2148,15 +2148,14 @@ def run_complete_pipeline():
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Typed signals failed (non-blocking): {e}")
 
-            # TOTAL-CHARACTER CAP on combined bullet text (restored 2026-06-05 to
-            # the ~few-weeks-ago behavior the user wants). Cap = 450 chars when the
-            # article carries info-box components, else 550 chars. Applies to EVERY
-            # article (components are currently frozen, so 550 is the effective cap),
-            # which is what gives bullets their natural short/long mix instead of
-            # uniform medium length. Env-overridable: BULLET_CHARS_MAX / _WITH_COMPONENTS.
+            # TOTAL-CHARACTER CAP on combined bullet text. Max raised 2026-06-07
+            # (550 -> 700) so bullets can run longer; a soft MINIMUM of ~250 chars
+            # is requested in the writer prompt (code can trim a max but can't pad,
+            # so the min lives in the prompt, not here). Cap = 600 with info-box
+            # components, else 700. Env-overridable: BULLET_CHARS_MAX / _WITH_COMPONENTS.
             has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
-            char_cap = int(os.getenv('BULLET_CHARS_MAX_WITH_COMPONENTS', '450')) if has_components \
-                else int(os.getenv('BULLET_CHARS_MAX', '550'))
+            char_cap = int(os.getenv('BULLET_CHARS_MAX_WITH_COMPONENTS', '600')) if has_components \
+                else int(os.getenv('BULLET_CHARS_MAX', '700'))
             if isinstance(bullets, list):
                 total_bullet_chars = sum(len(b) for b in bullets)
                 if total_bullet_chars > char_cap:
@@ -2634,9 +2633,12 @@ EVERY BULLET MUST:
      • REACTION — culture/community response ("**Stan Twitter** broke at 3am KST.")
 
 LENGTH:
-  • 5-22 words per bullet. Mix lengths — one short, one medium creates rhythm.
-  • Uniform 25-word bullets are the AI tell. Vary them.
-  • Avoid wrap-to-3-lines. Mobile users skip those.
+  • 5-25 words per bullet. Mix lengths — one short, one medium creates rhythm.
+  • TOTAL across all bullets: aim for AT LEAST ~250 characters of real substance
+    (don't ship one thin 60-char bullet when the sources give you more), and keep
+    the total under ~700 characters. Hit the floor with specifics, not padding.
+  • Uniform-length bullets are the AI tell. Vary them.
+  • Avoid wrap-to-4-lines. Mobile users skip those.
 
 VOICE CONSISTENCY:
   • Match the title's persona. If the title is hot-take, bullets are hot-take.
@@ -2744,7 +2746,7 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title — MUST bold its primary named entity with **double asterisks**",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 5-22 words. Mix lengths."
+    "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 5-25 words. Total >=~250 chars, <=~700. Mix lengths."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
