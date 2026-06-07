@@ -33,6 +33,10 @@ function gradientFor(category) {
   return `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
 }
 
+// Hero image fades to fully transparent at the bottom so the card's rounded
+// bottom corners + page background show through (photo dissolves into the page).
+const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 58%, transparent 100%)';
+
 // Titles: strip the "**" emphasis markers entirely — no highlighted words.
 function renderPlain(text) {
   if (!text) return null;
@@ -244,7 +248,8 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
                   <img src={p.image || imageUrl} alt=""
                        ref={i === 0 ? imgRef : undefined}
                        onLoad={i === 0 ? extractColor : undefined}
-                       style={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block' }}
+                       style={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block',
+                                WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
                        referrerPolicy="no-referrer" />
                 ) : (
                   <div style={{ width: '100%', aspectRatio: '3 / 2', background: gradientFor(story.category) }} />
@@ -260,7 +265,8 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
             loading="lazy"
             referrerPolicy="no-referrer"
             onLoad={extractColor}
-            style={{ width: '100%', maxHeight: '62vh', objectFit: 'cover', display: 'block' }}
+            style={{ width: '100%', maxHeight: '62vh', objectFit: 'cover', display: 'block',
+                     WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
           />
         ) : (
           <div style={{ width: '100%', aspectRatio: '3 / 2', background: gradientFor(story.category) }} />
@@ -287,8 +293,9 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
             ${rgba(blurColor, 0.15)} 18%,
             ${rgba(blurColor, 0.45)} 38%,
             ${rgba(blurColor, 0.7)} 55%,
-            ${rgba(blurColor, 0.9)} 75%,
-            ${rgba(blurColor, 1)} 100%)`,
+            ${rgba(blurColor, 0.88)} 72%,
+            ${rgba(blurColor, 0.55)} 90%,
+            ${rgba(blurColor, 0)} 100%)`,
         }} />
 
         {/* source · time + title — overlaid on the gradient */}
