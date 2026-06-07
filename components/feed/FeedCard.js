@@ -193,28 +193,6 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         boxSizing: 'border-box',
       }}
     >
-      {/* Header row: avatar + source + flag … time-ago */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <div style={{
-          width: 26, height: 26, borderRadius: 7, flexShrink: 0,
-          background: isDark ? 'rgba(255,255,255,0.06)' : '#F2F2F4',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflow: 'hidden',
-        }}>
-          {logoFor(story.source) && (
-            <img src={logoFor(story.source)} alt="" width={26} height={26}
-                 style={{ borderRadius: 7, objectFit: 'cover' }} referrerPolicy="no-referrer"
-                 onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          )}
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.1px', color: colors.text }}>
-          {story.source || 'Today+'}
-        </div>
-        <div style={{ marginLeft: 'auto', fontSize: 13, color: colors.secondary }}>
-          {timeAgo(story.publishedAt || story.published_at)}
-        </div>
-      </div>
-
       {/* Hero image (or carousel) */}
       {pages ? (
         <div>
@@ -272,6 +250,42 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
       }}>
         {renderPlain(pages ? (pages[page].title || title) : title)}
       </h2>
+
+      {/* Source liquid-glass pill (logo + name + time) — under the title */}
+      <div style={{ marginTop: 12 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '6px 12px 6px 7px', borderRadius: 999,
+          background: isDark
+            ? 'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.65), rgba(245,245,247,0.55))',
+          border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.07)'}`,
+          boxShadow: isDark
+            ? '0 1px 3px rgba(0,0,0,0.4), inset 0 0.5px 0.5px rgba(255,255,255,0.18)'
+            : '0 1px 3px rgba(0,0,0,0.07), inset 0 0.5px 0.5px rgba(255,255,255,0.9)',
+          backdropFilter: 'blur(12px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        }}>
+          <div style={{
+            width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: 'hidden',
+            background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.04)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {logoFor(story.source) && (
+              <img src={logoFor(story.source)} alt="" width={20} height={20}
+                   style={{ borderRadius: 5, objectFit: 'cover' }} referrerPolicy="no-referrer"
+                   onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            )}
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-0.1px', color: colors.text }}>
+            {story.source || 'Today+'}
+          </span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: colors.secondary, opacity: 0.5 }} />
+          <span style={{ fontSize: 13, fontWeight: 400, color: colors.secondary }}>
+            {timeAgo(story.publishedAt || story.published_at)}
+          </span>
+        </div>
+      </div>
 
       {/* Bullets (up to 3) */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
@@ -344,35 +358,42 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         </div>
 
         {/* Save + Share */}
-        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <ActionButton
             label={saved ? 'Saved' : 'Save'}
+            isDark={isDark}
             active={saved}
-            hoverBg={colors.actionHover}
-            color={colors.secondary}
-            activeColor={colors.text}
+            activeColor={accent}
+            restColor={colors.text}
             onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}
-            path="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
-            filled={saved}
-          />
-          <ActionButton
-            label="Share"
-            hoverBg={colors.actionHover}
-            color={colors.secondary}
-            activeColor={colors.text}
-            onClick={handleShare}
-            path="M14 9V5l7 7-7 7v-4.1C9 11.8 5.5 13 3 16c1-5 4-8 11-9z"
-          />
+          >
+            <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-3.6L6 20z"
+                  fill={saved ? 'currentColor' : 'none'} stroke="currentColor"
+                  strokeWidth={1.7} strokeLinejoin="round" />
+          </ActionButton>
+          <ActionButton label="Share" isDark={isDark} restColor={colors.text} onClick={handleShare}>
+            <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3v12" />
+              <path d="M8 7l4-4 4 4" />
+              <path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+            </g>
+          </ActionButton>
         </div>
       </div>
     </article>
   );
 }
 
-// Smooth, simple round action button (Save / Share). Subtle hover/press feedback.
-function ActionButton({ path, label, onClick, active, filled, color, activeColor, hoverBg }) {
+// Frosted "liquid glass" action button (Save / Share). Smooth hover + press feedback.
+function ActionButton({ children, label, onClick, active, activeColor, restColor, isDark }) {
   const [hover, setHover] = useState(false);
   const [press, setPress] = useState(false);
+  const baseBg = isDark
+    ? 'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))'
+    : 'linear-gradient(180deg, rgba(255,255,255,0.7), rgba(245,245,247,0.6))';
+  const hoverBg = isDark
+    ? 'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.1))'
+    : 'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(240,240,243,0.85))';
   return (
     <button
       aria-label={label}
@@ -382,18 +403,22 @@ function ActionButton({ path, label, onClick, active, filled, color, activeColor
       onMouseDown={() => setPress(true)}
       onMouseUp={() => setPress(false)}
       style={{
-        width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: 'none', borderRadius: '50%', cursor: 'pointer',
-        background: hover ? hoverBg : 'transparent',
-        color: active ? activeColor : color,
-        transform: press ? 'scale(0.88)' : 'scale(1)',
-        transition: 'background 0.18s ease, transform 0.12s ease, color 0.18s ease',
+        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderRadius: 13, cursor: 'pointer',
+        background: hover ? hoverBg : baseBg,
+        border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.07)'}`,
+        boxShadow: isDark
+          ? '0 1px 3px rgba(0,0,0,0.4), inset 0 0.5px 0.5px rgba(255,255,255,0.18)'
+          : '0 1px 3px rgba(0,0,0,0.08), inset 0 0.5px 0.5px rgba(255,255,255,0.9)',
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        color: active ? activeColor : restColor,
+        transform: press ? 'scale(0.9)' : 'scale(1)',
+        transition: 'background 0.18s ease, transform 0.1s ease, color 0.18s ease, box-shadow 0.18s ease',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <svg width={20} height={20} viewBox="0 0 24 24"
-           fill={filled ? 'currentColor' : 'none'} stroke="currentColor"
-           strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d={path} /></svg>
+      <svg width={20} height={20} viewBox="0 0 24 24">{children}</svg>
     </button>
   );
 }
