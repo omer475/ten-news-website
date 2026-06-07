@@ -35,7 +35,8 @@ function gradientFor(category) {
 
 // Hero image fades to fully transparent at the bottom so the card's rounded
 // bottom corners + page background show through (photo dissolves into the page).
-const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 58%, transparent 100%)';
+// Gentle now that the headline sits below the photo, so most of the image stays.
+const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%)';
 
 // Titles: strip the "**" emphasis markers entirely — no highlighted words.
 function renderPlain(text) {
@@ -65,15 +66,6 @@ function renderHighlight(text, color) {
     }
     return <React.Fragment key={i}>{part}</React.Fragment>;
   });
-}
-
-// "rgb(r, g, b)" or "#rrggbb" → "rgba(r, g, b, a)" (for the title blur gradient)
-function rgba(color, a) {
-  if (!color) return `rgba(0,0,0,${a})`;
-  if (color.startsWith('rgb(')) return `rgba(${color.slice(4, -1)}, ${a})`;
-  const h = color.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
 function timeAgo(dateStr) {
@@ -160,8 +152,6 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
   // --- dynamic accent color from the hero image (canvas), category fallback ---
   const fallbackAccent = (CATEGORY_GRADIENTS[story.category] || CATEGORY_GRADIENTS.News)[0];
   const [accent, setAccent] = useState(fallbackAccent);
-  // base color for the title blur gradient (the image's bottom region, darkened for white-text contrast)
-  const [blurColor, setBlurColor] = useState('rgb(14,14,14)');
   const imgRef = useRef(null);
 
   const extractColor = useCallback(() => {
@@ -183,20 +173,6 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         r += cr; g += cg; b += cb; n++;
       }
       if (n > 0) setAccent(`rgb(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)})`);
-
-      // Bottom-region average → the gradient base, so the blur blends into the real
-      // image edge. Darkened (×0.55) so white title text stays readable over it.
-      let br = 0, bg = 0, bb = 0, bn = 0;
-      for (let y = Math.floor(h * 0.6); y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const i = (y * w + x) * 4;
-          br += data[i]; bg += data[i + 1]; bb += data[i + 2]; bn++;
-        }
-      }
-      if (bn > 0) {
-        const f = 0.55;
-        setBlurColor(`rgb(${Math.round((br / bn) * f)}, ${Math.round((bg / bn) * f)}, ${Math.round((bb / bn) * f)})`);
-      }
     } catch (_) {
       /* CORS-tainted canvas — keep category fallback */
     }
@@ -285,44 +261,48 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
           </div>
         )}
 
-        {/* liquid-glass blur gradient — opacity ramps up toward the title */}
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, height: '75%', pointerEvents: 'none',
-          background: `linear-gradient(to bottom,
-            ${rgba(blurColor, 0)} 0%,
-            ${rgba(blurColor, 0.15)} 18%,
-            ${rgba(blurColor, 0.45)} 38%,
-            ${rgba(blurColor, 0.7)} 55%,
-            ${rgba(blurColor, 0.88)} 72%,
-            ${rgba(blurColor, 0.55)} 90%,
-            ${rgba(blurColor, 0)} 100%)`,
-        }} />
-
-        {/* source · time + title — overlaid on the gradient */}
-        <div onClick={handleOpen} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 16px 14px', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            {logoFor(story.source) && (
-              <img src={logoFor(story.source)} alt="" width={16} height={16}
-                   style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
-                   referrerPolicy="no-referrer"
-                   onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            )}
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.01em', color: 'rgba(255,255,255,0.92)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-              {story.source || 'Today+'}
-            </span>
-            <span style={{ fontSize: 12, lineHeight: 1, color: 'rgba(255,255,255,0.6)' }}>·</span>
-            <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-              {timeAgo(story.publishedAt || story.published_at)}
+        {/* category chip — floating top-left, picks up the photo's accent for a pop of colour */}
+        {story.category && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '5px 10px 5px 8px', borderRadius: 999,
+            background: 'rgba(0,0,0,0.40)',
+            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+            border: '0.5px solid rgba(255,255,255,0.16)',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent, boxShadow: `0 0 8px ${accent}` }} />
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff' }}>
+              {story.category}
             </span>
           </div>
-          <h2 style={{
-            margin: 0,
-            fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1.16,
-            color: '#fff', textShadow: '0 2px 10px rgba(0,0,0,0.45)',
-          }}>
-            {renderHighlight(pages ? (pages[page].title || title) : title, accent)}
-          </h2>
+        )}
+      </div>
+
+      {/* Headline block — below the photo so the image stays fully visible */}
+      <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
+          {logoFor(story.source) && (
+            <img src={logoFor(story.source)} alt="" width={15} height={15}
+                 style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
+                 referrerPolicy="no-referrer"
+                 onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          )}
+          <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '0.01em', color: colors.text }}>
+            {story.source || 'Today+'}
+          </span>
+          <span style={{ fontSize: 12, lineHeight: 1, color: colors.secondary }}>·</span>
+          <span style={{ fontSize: 12.5, fontWeight: 400, color: colors.secondary }}>
+            {timeAgo(story.publishedAt || story.published_at)}
+          </span>
         </div>
+        <h2 style={{
+          margin: 0,
+          fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px', lineHeight: 1.28,
+          color: colors.text,
+        }}>
+          {renderHighlight(pages ? (pages[page].title || title) : title, accent)}
+        </h2>
       </div>
 
       {/* Bullets (up to 3) */}
