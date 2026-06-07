@@ -1833,8 +1833,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 return null;
               };
 
-              // Try to generate map from article content if not provided
-              const generatedMap = article.map || generateMapFromContent(article.title, article.category);
+              // Real map data only. Keyword-guessing a map from the title attached a live
+              // Mapbox (WebGL) map to nearly every story (Iran/Israel/Ukraine/Russia…),
+              // blowing past the browser's WebGL context limit so maps rendered broken.
+              const generatedMap = article.map || null;
 
               const storyData = {
                 type: 'news',
