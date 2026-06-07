@@ -14,6 +14,7 @@ import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
 import LazyMount from '../components/feed/LazyMount';
+import CardBoundary from '../components/feed/CardBoundary';
 import {
   getUserInterests,
   updateInterests,
@@ -3341,14 +3342,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
     };
   }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
-  // Show loader while checking onboarding status (prevents flash of content)
-  if (!onboardingChecked) {
-    return <TodayPlusLoader />;
-  }
-
-  // Memoized feed list — rebuilt only when the underlying data changes, NOT on
-  // every scroll tick. (A scroll listener updates maxScrollPercent → Home
-  // re-renders; rebuilding ~2000 cards each time was freezing the page.)
+  // Memoized feed list — MUST run unconditionally before any early return
+  // (Rules of Hooks). Rebuilt only when the underlying data changes, NOT on
+  // every scroll tick (a scroll listener updates maxScrollPercent → Home
+  // re-renders; rebuilding ~2000 cards each time froze the page).
   const feedCards = useMemo(() => (
     stories.filter(s => s.type === 'news').map((story, fIndex) => {
       if (!user && fIndex >= paywallThreshold) {
@@ -3369,16 +3366,23 @@ export default function Home({ initialNews, initialWorldEvents }) {
       }
       return (
         <LazyMount key={story.id || fIndex}>
-          <FeedCard
-            story={story}
-            isDark={darkMode}
-            onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-            onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
-          />
+          <CardBoundary>
+            <FeedCard
+              story={story}
+              isDark={darkMode}
+              onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+              onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+            />
+          </CardBoundary>
         </LazyMount>
       );
     })
   ), [stories, user, darkMode, authError]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show loader while checking onboarding status (prevents flash of content)
+  if (!onboardingChecked) {
+    return <TodayPlusLoader />;
+  }
 
   if (loading) {
     return <TodayPlusLoader />;

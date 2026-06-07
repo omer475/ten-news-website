@@ -332,7 +332,15 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     return (
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
         <div style={{ height: expanded ? 240 : 92, borderRadius: 16, overflow: 'hidden' }}>
-          <MapboxMap map={story.map} accentColor={accent} />
+          <MapboxMap
+            center={story.map.center || { lat: 0, lon: 0 }}
+            markers={story.map.markers || []}
+            expanded={expanded}
+            highlightColor={accent}
+            locationType={story.map.location_type || 'auto'}
+            regionName={story.map.region_name || null}
+            location={story.map.location || story.map.name || null}
+          />
         </div>
       </Expandable>
     );
