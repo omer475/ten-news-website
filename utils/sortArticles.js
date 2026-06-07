@@ -122,9 +122,72 @@ export function sortArticlesByScore(articles) {
 }
 
 /**
+ * Recency-weighted "fresh + important" ranking with light per-load variety.
+ *
+ * WHY THIS EXISTS:
+ * Pure score ordering (sortArticlesByScore / rankArticles' must-know pin) makes the
+ * feed DETERMINISTIC and FROZEN: the single highest-scored article of the day stays
+ * at #1 for the whole 24h window, so the feed looks identical on every refresh and
+ * brand-new articles get buried below older high-scored ones. For a news platform
+ * that is wrong — recency matters and the feed should visibly refresh through the day.
+ *
+ * This applies, as the FINAL ranking step, an effective score:
+ *
+ *     effective = importance * timeDecay(ageHours) * (1 ± jitter)
+ *
+ *   - importance: the article's already-computed score. We prefer _personalizedScore
+ *     (set by rankArticles when the user has reading interests) and fall back to
+ *     final_score (which already includes country/topic preference boosts). So
+ *     freshness composes WITH personalization rather than throwing it away.
+ *   - timeDecay: exponential half-life. A story's weight halves every HALF_LIFE_HOURS,
+ *     so an important-but-aging story gradually yields to fresher news but never drops
+ *     to zero inside the window. With halfLifeHours=8: a 4h-old score-935 story
+ *     (935*0.71=661) ranks BELOW a brand-new score-700 story (700*1.0=700) — exactly
+ *     the "fresh + important blend" behaviour.
+ *   - jitter: a small symmetric multiplier so articles with near-equal effective scores
+ *     swap order between loads. This is what makes the feed "change as you refresh"
+ *     without scrambling the quality ordering (±6% only reshuffles close neighbours).
+ *
+ * Determinism note: jitter uses Math.random at call time, so every call produces a
+ * (slightly) different order. Compare article MEMBERSHIP, not order, when deciding
+ * whether to re-render the feed — see the background-refresh guard in pages/index.js.
+ *
+ * @param {Array} articles - news articles (final_score / _personalizedScore + a date)
+ * @param {Object} [opts]
+ * @param {number} [opts.halfLifeHours=8] - hours for importance weight to halve
+ * @param {number} [opts.jitter=0.06] - max ± fraction of random reordering noise
+ * @returns {Array} New array ordered by effective (fresh + important) score, desc
+ */
+export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.06 } = {}) {
+  if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
+
+  const now = Date.now();
+  const STALE_AGE_HOURS = 48; // articles with no usable date are treated as old
+
+  const scored = articles.map((article) => {
+    const importance =
+      typeof article._personalizedScore === 'number'
+        ? article._personalizedScore
+        : (typeof article.final_score === 'number'
+            ? article.final_score
+            : (typeof article.ai_final_score === 'number' ? article.ai_final_score : 0));
+
+    const ts = getArticleTimestamp(article);
+    const ageHours = ts > 0 ? Math.max(0, (now - ts) / 3600000) : STALE_AGE_HOURS;
+    const timeDecay = Math.pow(0.5, ageHours / halfLifeHours);
+    const noise = 1 + (Math.random() * 2 - 1) * jitter; // scale by [1-jitter, 1+jitter]
+
+    return { article, effective: importance * timeDecay * noise };
+  });
+
+  scored.sort((a, b) => b.effective - a.effective);
+  return scored.map((s) => s.article);
+}
+
+/**
  * Check if articles need sorting (for optimization)
  * Returns true if articles are not already sorted by score
- * 
+ *
  * @param {Array} articles - Array of article objects
  * @returns {boolean} True if sorting is needed
  */

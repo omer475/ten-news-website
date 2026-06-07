@@ -9,7 +9,7 @@ import MustKnowCompletePage from '../components/MustKnowCompletePage';
 import { LoginForm, SignupForm, EmailConfirmation, ResetPasswordModal, OAuthButtons } from '../components/AuthForms';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
-import { sortArticlesByScore } from '../utils/sortArticles';
+import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
@@ -128,7 +128,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true); // Dark by default
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
   
@@ -2014,7 +2014,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
               } else {
                 console.log('📰 [Personalization] No reading interests yet - using preference + base score ranking');
               }
-              
+
+              // ====== STEP 4: FRESHNESS BLEND (recency decay + per-load variety) ======
+              // Final ranking pass. Without this the feed is frozen on pure score:
+              // the day's top-scored article stays at #1 for 24h and new articles get
+              // buried, so the feed looks identical on every refresh. applyFreshness
+              // composes recency with the (personalized) score and adds light jitter so
+              // fresh news surfaces and the order varies between loads. See utils/sortArticles.
+              sortedNews = applyFreshness(sortedNews);
+
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
               let foundSharedArticle = false;
@@ -2146,18 +2154,27 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             console.log('📰 Setting stories:', finalStories.length, '(v2)');
             
-            // For background refresh, ALWAYS update stories if count differs
-            // This ensures "all-read" page gets added
+            // For a background refresh, update when the set of articles CHANGED — new
+            // stories arrived or read items were filtered out. We compare membership
+            // (sorted id signature), NOT length or order: a pure count check misses
+            // same-count swaps (the old bug that froze the feed), and an order check
+            // would re-render on every applyFreshness jitter and reshuffle under the
+            // user mid-read. Order-only changes are intentionally ignored here.
             if (isBackgroundRefresh) {
               const currentStories = storiesRef.current || [];
-              const shouldUpdate = finalStories.length !== currentStories.length;
-              
+              const idSignature = (arr) => (arr || [])
+                .filter(s => s && s.type === 'news')
+                .map(s => String(s.id))
+                .sort()
+                .join(',');
+              const shouldUpdate = idSignature(finalStories) !== idSignature(currentStories);
+
               console.log('🔄 v2 Background refresh:', {
                 current: currentStories.length,
                 final: finalStories.length,
                 willUpdate: shouldUpdate
               });
-              
+
               if (shouldUpdate) {
                 console.log('🆕 v2 Updating stories!');
                 setStories(finalStories);
@@ -2489,9 +2506,21 @@ export default function Home({ initialNews, initialWorldEvents }) {
     console.log(`🔄 Toggling summary display mode for story ${storyIndex}`);
   };
 
-  // Dark mode toggle function
+  // Restore saved dark-mode preference (defaults to dark when unset)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tn_dark_mode');
+      if (saved !== null) setDarkMode(saved === '1');
+    } catch (_) {}
+  }, []);
+
+  // Dark mode toggle function (persists choice)
   const toggleDarkMode = () => {
-    setDarkMode(prev => !prev);
+    setDarkMode(prev => {
+      const next = !prev;
+      try { localStorage.setItem('tn_dark_mode', next ? '1' : '0'); } catch (_) {}
+      return next;
+    });
   };
 
   // Mark article as read
@@ -2562,11 +2591,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
         // Re-sort by boosted score
         const sortedNews = sortArticlesByScore(newsArticles);
 
-        // Re-apply interest-based ranking if available
+        // Re-apply interest-based ranking if available, then the freshness blend
+        // (same final ranking step as the main feed path — keep them in sync).
         const userInterests = getUserInterests();
-        const finalNews = Object.keys(userInterests).length > 0
+        const rankedNews = Object.keys(userInterests).length > 0
           ? rankArticles(sortedNews, 0.7)
           : sortedNews;
+        const finalNews = applyFreshness(rankedNews);
 
         console.log(`🔄 [Personalization] Feed re-sorted with new preferences`);
         return [openingStory, ...finalNews];

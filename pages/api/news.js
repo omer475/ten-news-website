@@ -127,9 +127,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
-  // Enable caching to reduce database load (2 min cache, 5 min stale-while-revalidate)
-  // This significantly reduces Disk IO usage while keeping content relatively fresh
-  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+  // Short edge cache: keep DB load low but let fresh pipeline articles (produced
+  // ~every 20 min) enter the candidate pool quickly so the feed stays current.
+  // The client cache-busts with ?t=, so this mainly bounds the SSR first paint.
+  // (Was s-maxage=120 — long enough to make the feed feel stale on refresh.)
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
