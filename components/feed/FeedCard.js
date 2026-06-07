@@ -266,8 +266,11 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         </div>
       )}
 
-      {/* Info boxes (the part the user wanted added back) */}
-      {infoTypes.length > 0 && activeInfo && (
+      {/* Info boxes — TEMPORARILY DISABLED (the crude reimplementation rendered
+          the Mapbox map full-screen and lacked the liquid-glass styling). A fresh
+          terminal is rebuilding these properly; until then the feed renders clean
+          (header → image → title → bullets → actions) with NO broken boxes. */}
+      {false && infoTypes.length > 0 && activeInfo && (
         <div style={{ marginTop: 14 }}>
           {/* switcher pills */}
           {infoTypes.length > 1 && (
