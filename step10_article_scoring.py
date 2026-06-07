@@ -1148,13 +1148,13 @@ def score_article(
     # V19 reframes around "would you text this to a friend?" and adds
     # explicit penalties for generic "X said Y", procedural, hyper-local PR,
     # and press-release-tone content.
-    # V20 (2026-05-24): interestingness-first. V19 shipped but was a no-op —
-    # it still baked impact into the high end (war 940-1000, pandemic 900-960)
-    # and had no Food/Fashion/Lifestyle guidance, so importance kept winning and
-    # the user's highest-engagement categories scored lowest. V20 removes every
-    # automatic-impact anchor/boost and adds lifestyle ranges.
-    # Rollback: set this to SCORING_SYSTEM_PROMPT_V19 (or _V18) — both kept above.
-    system_prompt = SCORING_SYSTEM_PROMPT_V20
+    # NEWS-PLATFORM PIVOT (2026-06-07): reverted from V20 (social "interestingness"
+    # scorer that stripped impact anchors + added Food/Fashion/Lifestyle ranges) back
+    # to V18, the most-recent NEWS-importance scorer (surprise / impact-breadth /
+    # consequence / timeliness; war/pandemic/markets anchored high). V20 was built for
+    # the abandoned social platform; with lifestyle RSS pruned, news-importance is the
+    # correct objective again. V19/V20 kept above for rollback.
+    system_prompt = SCORING_SYSTEM_PROMPT_V18
 
     # Legacy prompt kept for reference (not used)
     _SCORING_SYSTEM_PROMPT_V3 = """# TEN NEWS - ARTICLE SCORING SYSTEM V3
