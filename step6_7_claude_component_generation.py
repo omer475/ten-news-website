@@ -406,42 +406,6 @@ BAD GRAPH DATA:
 ✗ Made-up projections
 
 ═══════════════════════════════════════════════════════════════
-🏆 SCORE CARD
-═══════════════════════════════════════════════════════════════
-
-Generate match result data for a completed sports match.
-
-REQUIREMENTS:
-✓ Both team names
-✓ Both final scores (integers)
-✓ Scorers with team, player name, and minute
-✓ Competition name
-✓ Key match stats (possession, shots, etc.)
-✓ Standing impact if available
-
-OUTPUT FORMAT:
-{
-  "home_team": "Arsenal",
-  "away_team": "Chelsea",
-  "home_score": 3,
-  "away_score": 1,
-  "scorers": [
-    {"team": "home", "player": "Saka", "minute": "23'"},
-    {"team": "home", "player": "Havertz", "minute": "55'"},
-    {"team": "home", "player": "Trossard", "minute": "78'"},
-    {"team": "away", "player": "Palmer", "minute": "41'"}
-  ],
-  "stats": {"possession": ["58%", "42%"], "shots": ["14(7)", "9(3)"]},
-  "competition": "Premier League",
-  "standing_impact": "1st (+3 pts)"
-}
-
-BAD SCORE CARD:
-✗ Missing team names or scores
-✗ Made-up scorer names not in the article
-✗ No competition name
-
-═══════════════════════════════════════════════════════════════
 🍳 RECIPE CARD
 ═══════════════════════════════════════════════════════════════
 
@@ -479,7 +443,6 @@ Return ONLY valid JSON with selected components:
   "timeline": [...],
   "details": [...],
   "graph": {...},
-  "scorecard": {...},
   "recipe": {...}
 }
 
@@ -813,22 +776,6 @@ class GeminiComponentWriter:
                 else:
                     errors.append("No valid map locations survived validation")
                     del result['map']
-
-        # --- SCORECARD validation ---
-        if 'scorecard' in selected_components:
-            if 'scorecard' not in result:
-                errors.append("Scorecard selected but not in output")
-            elif not isinstance(result['scorecard'], dict):
-                errors.append("Scorecard is not a dict")
-                del result['scorecard']
-            else:
-                sc = result['scorecard']
-                if not sc.get('home_team') or not sc.get('away_team'):
-                    errors.append("Scorecard missing team names")
-                    del result['scorecard']
-                elif sc.get('home_score') is None or sc.get('away_score') is None:
-                    errors.append("Scorecard missing scores")
-                    del result['scorecard']
 
         # --- RECIPE validation ---
         if 'recipe' in selected_components:

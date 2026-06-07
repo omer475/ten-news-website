@@ -47,31 +47,32 @@ BULLET SUMMARY: {bullets}
 COMPONENTS OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-📋 DETAILS - Key facts not in bullets (only if genuinely useful)
-📅 TIMELINE - Historical context (rare, ~5% of stories)
-🗺️ MAP - Where it happened (~15% of stories)
-📊 GRAPH - Data trends (~10% of stories)
+📋 DETAILS - Key facts/stats not already in the bullets → DEFAULT ON (~80% of articles)
+📅 TIMELINE - Background context for an ongoing story (~15% of stories)
+🗺️ MAP - A SPECIFIC place the story happened (~25% of stories)
+📊 GRAPH - Real data trend over time (~15% of stories)
 
-IMPORTANT: All components are OPTIONAL. If no component adds genuine value beyond
-the title and bullets, return an empty components array []. Do NOT force components.
+IMPORTANT: Info boxes make articles richer — be GENEROUS. DEFAULT to including
+DETAILS on every article that has any concrete facts, and ADD map/timeline/graph
+whenever relevant (you may combine up to 3, e.g. ["map","details"]). Only return an
+empty array [] for pure opinion/analysis pieces with literally no concrete facts.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Shows additional facts and statistics NOT already in the bullet summary.
+Shows 3 key facts/stats about the story (label + value), drawn from the article.
+THIS IS THE DEFAULT BOX — include it on almost every article.
 
-SELECT IF:
-- The story likely has additional facts with real numbers beyond what's in bullets
-- Extra context (specs, stats, comparisons) would genuinely help the reader
-- The topic is data-rich (business, science, sports, economics)
+SELECT IF (this is almost always true):
+- The story has ANY concrete facts: numbers, names, dates, places, amounts,
+  outcomes, quantities, scores, casualties, prices, sizes, durations, counts
+- The reader would benefit from the key facts pulled out at a glance
 
-DO NOT SELECT IF:
-- The bullets already cover everything important
-- Only irrelevant trivia or filler would be available (ages, jersey numbers, episode counts)
-- It's a simple announcement or opinion piece with no extra data
+DO NOT SELECT ONLY IF:
+- It is a pure opinion/editorial/analysis piece with no concrete facts at all
 
-FREQUENCY: Only when genuinely useful — do NOT default to including details
+FREQUENCY: ~80% of articles. DEFAULT to including details.
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE
@@ -79,7 +80,8 @@ FREQUENCY: Only when genuinely useful — do NOT default to including details
 
 Shows "What is this news about? How did we get here?"
 
-CRITICAL: Timeline is SEVERELY OVERUSED. Be EXTREMELY selective.
+Use timeline when background context genuinely helps the reader understand the
+story — be selective, but not rare.
 
 THE CORE QUESTION:
 > "Does the reader need background context to understand what this news is about?"
@@ -110,9 +112,10 @@ ASK YOURSELF:
 2. "Is this a SINGLE EVENT or part of an ONGOING SAGA?" → Single event = NO timeline
 3. "Does understanding HOW we got here matter?" → If NO, don't select
 
-FREQUENCY: ~5% of stories (very rare!)
+FREQUENCY: ~15% of stories
 
-DEFAULT: Do NOT select timeline. Only add if truly essential.
+DEFAULT: Add timeline when the story is part of an ongoing situation, conflict,
+investigation, or saga where "how we got here" helps. Skip for routine one-offs.
 
 ═══════════════════════════════════════════════════════════════
 🗺️ MAP
@@ -186,7 +189,7 @@ ASK YOURSELF:
 3. "Would users think 'Oh, that's exactly where it happened!'?" → If no, NO map
 4. "Does everyone already know where this is?" (Kremlin, White House) → If yes, NO map
 
-FREQUENCY: ~15% of stories (less than before - be more selective)
+FREQUENCY: ~25% of stories
 
 ═══════════════════════════════════════════════════════════════
 📊 GRAPH
@@ -206,30 +209,15 @@ DO NOT SELECT IF:
 - Fewer than 4 points
 - Data is estimated/projected
 
-FREQUENCY: ~10% of stories
+FREQUENCY: ~15% of stories
 
 ═══════════════════════════════════════════════════════════════
-🏆 SCORE CARD
+🏀 SPORTS GAME RECAPS (no dedicated scorecard box)
 ═══════════════════════════════════════════════════════════════
 
-Shows match/game results with scores.
-
-SELECT IF ANY OF THESE ARE TRUE:
-- Article is about a COMPLETED match/game with final scores
-- Article is a game RECAP or POST-MATCH analysis that mentions the score
-- Article discusses match HIGHLIGHTS with the result mentioned
-- Article headline or bullets contain a score (e.g., "3-1", "beat", "defeated", "won")
-- Any score or final result is clearly stated, even if the article also has analysis
-
-DO NOT SELECT IF:
-- Article is about transfers, signings, contracts, injuries with NO game score
-- Article is purely a match PREVIEW or prediction (no result yet)
-- Article is about sports politics, doping, coaching changes with no game result
-- No score or match result is mentioned anywhere
-
-WHEN SELECTED: Scorecard REPLACES all other components. Do NOT add details/timeline/graph/map alongside scorecard.
-
-FREQUENCY: ~50% of Sports articles (any article that mentions a game result)
+There is NO scorecard component. For a completed-game recap, select ["details"]
+and put the scoreline + key match facts into the details box
+(e.g. {"label":"Final","value":"Arsenal 3-1 Chelsea"}).
 
 ═══════════════════════════════════════════════════════════════
 🍳 RECIPE CARD
@@ -254,23 +242,22 @@ FREQUENCY: ~50% of Food articles
 TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
-Simple stories (announcements, opinions): [] - No components needed
-Stories with useful extra facts: ["details"]
-Incidents with SPECIFIC location: ["map", "details"]
-Economic news with data: ["graph", "details"]
-Complex ongoing sagas (very rare, ~5%): ["timeline", "details"]
-Sports articles mentioning a game result/score: ["scorecard"] - EXCLUSIVE, no other components
+Most articles (any concrete facts): ["details"]  ← the common case
+Incidents with a SPECIFIC location: ["map", "details"]
+Economic / data news: ["graph", "details"]
+Ongoing sagas / conflicts / investigations: ["timeline", "details"]
+Sports game recaps: ["details"]  ← put the scoreline + key stats in details
 Actual recipes: ["recipe"] - EXCLUSIVE, no other components
+Pure opinion with no concrete facts: []
 
 MISTAKES TO AVOID:
-✗ Adding timeline to every story (timeline is for ~5% of stories only!)
+✗ Forgetting DETAILS — almost every factual article should have it
 ✗ Adding map with just a country name ("Ukraine", "Russia", "Israel")
 ✗ Adding map for space locations (Moon, Mars)
 ✗ Adding map for famous buildings everyone knows (Kremlin, White House)
-✗ Adding timeline for single events (plane crash, earthquake, announcement)
+✗ Adding timeline for routine single events with no ongoing background
 ✗ Adding graph with made-up data
-✗ Adding details that duplicate bullets
-✗ Adding scorecard for sports articles with NO score/result (transfers, previews, opinions)
+✗ Adding details that merely duplicate the bullets verbatim
 ✗ Adding recipe for food industry/restaurant news
 
 ═══════════════════════════════════════════════════════════════
@@ -351,25 +338,16 @@ DECISION EXAMPLES
 → components: ["details"] or ["timeline", "details"], article_type: "standard"
 
 "Arsenal Beats Chelsea 3-1 in Premier League"
-→ SCORECARD: YES - Completed match with final scores
-→ components: ["scorecard"], article_type: "match_result"
-
-"Phoenix Rising Draws with Orange County in Opener"
-→ SCORECARD: YES - Game recap with result (1-1 draw) mentioned in bullets
-→ components: ["scorecard"], article_type: "match_result"
-
-"Sunderland Misses Opportunity, Charlton Secures Win"
-→ SCORECARD: YES - Post-match recap with result, scorers mentioned
-→ components: ["scorecard"], article_type: "match_result"
+→ DETAILS: YES - put the scoreline + key match facts in details
+→ components: ["details"], article_type: "standard"
 
 "Mbappe Signs 5-Year Deal with Real Madrid"
-→ SCORECARD: NO - Transfer news, no game result
-→ DETAILS: YES
+→ DETAILS: YES - contract length, fee, club
 → components: ["details"], article_type: "standard"
 
 "Schumacher Slams F1 2026 Rules as Too Artificial"
-→ SCORECARD: NO - Opinion piece about rules, no match result
-→ components: [], article_type: "standard"
+→ DETAILS: YES - the specific claims/quotes as facts
+→ components: ["details"], article_type: "standard"
 
 "Easy 30-Minute Pasta Carbonara Recipe"
 → RECIPE: YES - Actual recipe with cooking details
@@ -415,7 +393,7 @@ RULES:
 - emoji: Single emoji for the story
 - graph_type: "line", "bar", or "area" if graph selected, null otherwise
 - map_locations: Array of specific locations if map selected, null otherwise
-- article_type: "standard", "match_result" (if scorecard), or "recipe" (if recipe)
+- article_type: "standard", or "recipe" (if recipe)
 """
 
 
@@ -608,15 +586,15 @@ class GeminiComponentSelector:
             return self._get_fallback_selection()
         
         # Filter out any non-string components
-        # NOTE: 'map' is now re-enabled, 'scorecard' and 'recipe' are exclusive components
-        valid_component_names = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
+        # NOTE: 'scorecard' was removed 2026-06-08 (no game-score box). 'recipe' is exclusive.
+        valid_component_names = {'timeline', 'details', 'graph', 'map', 'recipe'}
         filtered_components = []
         for comp in components:
             if isinstance(comp, str):
                 if comp in valid_component_names:
                     filtered_components.append(comp)
                 else:
-                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map, scorecard, recipe)")
+                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map, recipe)")
             elif isinstance(comp, dict):
                 # Sometimes Gemini returns dicts - try to extract the component name
                 if 'name' in comp:
@@ -632,10 +610,8 @@ class GeminiComponentSelector:
 
         components = filtered_components
 
-        # Scorecard and recipe are exclusive — strip all other components if present
-        if 'scorecard' in components:
-            components = ['scorecard']
-        elif 'recipe' in components:
+        # Recipe is exclusive — strip all other components if present
+        if 'recipe' in components:
             components = ['recipe']
         
         # Ensure minimum components (now 0 is allowed — no components is a valid decision)
@@ -744,7 +720,6 @@ class GeminiComponentSelector:
             'details': 0,
             'graph': 0,
             'map': 0,
-            'scorecard': 0,
             'recipe': 0
         }
         
@@ -841,7 +816,7 @@ def validate_component_selections(articles: List[Dict]) -> tuple[bool, List[str]
             errors.append(f"Article {i} has {len(components)} components (max 4)")
         
         # Check valid component names
-        valid_components = {'timeline', 'details', 'graph', 'map', 'scorecard', 'recipe'}
+        valid_components = {'timeline', 'details', 'graph', 'map', 'recipe'}
         for comp in components:
             if comp not in valid_components:
                 errors.append(f"Article {i} has invalid component: {comp}")

@@ -1778,27 +1778,22 @@ def run_complete_pipeline():
                 with gemini_semaphore:
                     component_result = component_selector.select_components(article_for_selection)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
-                # Remove "details" — the 3-column stat grid was retired
-                # 2026-05-10. Spec said it shipped with rigid label-≤12-chars +
-                # value-must-have-digit + exactly-3-columns shape that produced
-                # truncated output ("LOTTERY PICK | Projected #6-10..."). High
-                # creator friction (you have to hunt for 3 quantitative facts)
-                # and low engagement payoff vs the alternatives. Filtered here
-                # rather than rewriting step5's 55-reference prompt — single-
-                # point fix and doesn't risk breaking anything else.
-                selected = [c for c in selected if c != 'details']
+                # 'details' re-enabled 2026-06-08 as the DEFAULT info box — the
+                # user wants info boxes on far more articles, and details is the
+                # universal vehicle (key facts pulled out of any factual story).
                 print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
                 print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
-                # Fallback used to default to ['details'] — now empty list
-                # (no info box) since details is retired.
-                selected = []
+                # Fallback: default to details (most stories have facts worth boxing).
+                selected = ['details']
                 component_result = {'components': selected, 'emoji': '📰'}
 
             # --- STEP 5: Context search ONLY if components need it ---
-            # Components that need Google Search grounding: timeline, details, graph, map
-            # Components that DON'T need search: scorecard, recipe, or empty []
-            components_needing_search = [c for c in selected if c in ('timeline', 'details', 'graph', 'map')]
+            # Components that need Google Search grounding: timeline, graph, map.
+            # 'details' is generated from the article's own bullets/text (no web
+            # search) so it stays OUT of this list — keeps cost flat now that
+            # details is near-universal. recipe/empty also need no search.
+            components_needing_search = [c for c in selected if c in ('timeline', 'graph', 'map')]
 
             gemini_result = None
             context_data = {}
@@ -1861,7 +1856,6 @@ def run_complete_pipeline():
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
                                 'map': generation_result.get('map'),
-                                'scorecard': generation_result.get('scorecard'),
                                 'recipe': generation_result.get('recipe')
                             }
                             components = {k: v for k, v in components.items() if v is not None}
@@ -2180,7 +2174,7 @@ def run_complete_pipeline():
             # is requested in the writer prompt (code can trim a max but can't pad,
             # so the min lives in the prompt, not here). Cap = 600 with info-box
             # components, else 700. Env-overridable: BULLET_CHARS_MAX / _WITH_COMPONENTS.
-            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'scorecard', 'recipe'])
+            has_components = any(components.get(c) for c in ['details', 'timeline', 'graph', 'map', 'recipe'])
             char_cap = int(os.getenv('BULLET_CHARS_MAX_WITH_COMPONENTS', '600')) if has_components \
                 else int(os.getenv('BULLET_CHARS_MAX', '700'))
             if isinstance(bullets, list):
@@ -2277,7 +2271,6 @@ def run_complete_pipeline():
                 'details': components.get('details'),
                 'graph': components.get('graph'),
                 'map': components.get('map'),
-                'scorecard': components.get('scorecard'),
                 'recipe': components.get('recipe'),
                 # Card-format hint from step4's social-voice synthesis takes
                 # priority over the legacy component_result.article_type
