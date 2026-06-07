@@ -68,6 +68,15 @@ function renderHighlight(text, color) {
   });
 }
 
+// "rgb(r,g,b)" or "#rrggbb" → translucent rgba(...) — for accent-tinted chips/boxes.
+function withAlpha(color, a) {
+  if (!color) return `rgba(0,0,0,${a})`;
+  if (color.startsWith('rgb(')) return `rgba(${color.slice(4, -1)}, ${a})`;
+  const h = color.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const then = new Date(dateStr).getTime();
@@ -112,6 +121,20 @@ const INFO_LABEL = {
   details: 'Details', timeline: 'Timeline', map: 'Map',
   graph: 'Chart', scorecard: 'Score', recipe: 'Recipe',
 };
+
+// Small line glyph per info-box type — gives the switcher pills + box a newsy, structured feel.
+function InfoIcon({ type, color = 'currentColor', size = 14 }) {
+  const s = { fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const glyph = {
+    details: <><circle cx="12" cy="12" r="9" {...s} /><path d="M12 11v5M12 7.6h.01" {...s} /></>,
+    timeline: <><circle cx="12" cy="12" r="9" {...s} /><path d="M12 7v5l3 2" {...s} /></>,
+    map: <><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" {...s} /><circle cx="12" cy="10" r="2.4" {...s} /></>,
+    graph: <><path d="M4 5v14h16M8 15l3-4 3 2 4-6" {...s} /></>,
+    scorecard: <><path d="M7 4h10v3a5 5 0 0 1-10 0V4zM9 20h6M12 12v4" {...s} /></>,
+    recipe: <><path d="M7 3v6a2 2 0 0 0 4 0V3M9 9v12M16.5 3C15 3 14 5 14 8s1 3.5 2.5 3.5V21" {...s} /></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>{glyph[type] || glyph.details}</svg>;
+}
 
 export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
   const colors = {
@@ -322,33 +345,46 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         </div>
       )}
 
-      {/* Info boxes — TEMPORARILY DISABLED (the crude reimplementation rendered
-          the Mapbox map full-screen and lacked the liquid-glass styling). A fresh
-          terminal is rebuilding these properly; until then the feed renders clean
-          (header → image → title → bullets → actions) with NO broken boxes. */}
-      {false && infoTypes.length > 0 && activeInfo && (
-        <div style={{ marginTop: 14 }}>
-          {/* switcher pills */}
+      {/* Info boxes — interactive context under the bullets (timeline · map · chart · details · score · recipe) */}
+      {infoTypes.length > 0 && activeInfo && (
+        <div style={{ marginTop: 16 }}>
+          {/* switcher pills — only when there's more than one type to choose from */}
           {infoTypes.length > 1 && (
             <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-              {infoTypes.map((t) => (
-                <button key={t} onClick={() => { setActiveInfo(t); setInfoExpanded(false); }}
-                        style={{
-                          border: 'none', cursor: 'pointer', borderRadius: 999,
-                          padding: '5px 12px', fontSize: 12, fontWeight: 600,
-                          background: t === activeInfo ? accent : colors.chipBg,
-                          color: t === activeInfo ? '#fff' : colors.secondary,
-                        }}>
-                  {INFO_LABEL[t]}
-                </button>
-              ))}
+              {infoTypes.map((t) => {
+                const on = t === activeInfo;
+                return (
+                  <button key={t} onClick={() => { setActiveInfo(t); setInfoExpanded(false); }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            border: `0.5px solid ${on ? 'transparent' : colors.divider}`,
+                            cursor: 'pointer', borderRadius: 999, padding: '6px 12px',
+                            fontSize: 12, fontWeight: 600,
+                            background: on ? withAlpha(accent, 0.16) : colors.chipBg,
+                            color: on ? accent : colors.chipText,
+                            transition: 'background 0.15s ease, color 0.15s ease',
+                          }}>
+                    <InfoIcon type={t} color={on ? accent : colors.chipText} />
+                    {INFO_LABEL[t]}
+                  </button>
+                );
+              })}
             </div>
           )}
 
           <div style={{
-            borderRadius: 22, background: colors.glassBg, padding: 14,
+            borderRadius: 18, background: colors.glassBg, padding: 14,
             border: `0.5px solid ${colors.divider}`,
           }}>
+            {/* single-type label (the pills already label when there are several) */}
+            {infoTypes.length === 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <InfoIcon type={activeInfo} color={accent} />
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
+                  {INFO_LABEL[activeInfo]}
+                </span>
+              </div>
+            )}
             <InfoBox type={activeInfo} story={story} accent={accent} colors={colors}
                      expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />
           </div>
@@ -441,7 +477,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'map' && story.map) {
     return (
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <div style={{ height: expanded ? 240 : 92, borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ height: expanded ? 260 : 140, borderRadius: 16, overflow: 'hidden' }}>
           <MapboxMap
             center={story.map.center || { lat: 0, lon: 0 }}
             markers={story.map.markers || []}
@@ -477,10 +513,10 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     const items = expanded ? story.details : story.details.slice(0, 3);
     return (
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {items.map((d, i) => (
             <div key={i} style={{ minWidth: 80 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>
                 {d.label}
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, color: accent }}>{d.value}</div>
@@ -502,6 +538,60 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{s.away_team || s.awayTeam}</span>
       </div>
     );
+  }
+  if (type === 'recipe' && story.recipe) {
+    const r = story.recipe;
+    const ingredients = Array.isArray(r.ingredients) ? r.ingredients : [];
+    const steps = Array.isArray(r.steps) ? r.steps : (Array.isArray(r.instructions) ? r.instructions : []);
+    const meta = [
+      r.prep_time && ['Prep', r.prep_time],
+      r.cook_time && ['Cook', r.cook_time],
+      (r.servings || r.serves) && ['Serves', r.servings || r.serves],
+    ].filter(Boolean);
+    const shownSteps = expanded ? steps : steps.slice(0, 3);
+    const shownIng = expanded ? ingredients : ingredients.slice(0, 6);
+    const txt = (x) => (typeof x === 'string' ? x : (x && (x.text || x.step || x.name || x.item)) || '');
+    const body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {meta.length > 0 && (
+          <div style={{ display: 'flex', gap: 18 }}>
+            {meta.map(([label, value], i) => (
+              <div key={i}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {shownIng.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {shownIng.map((ing, i) => (
+              <span key={i} style={{ fontSize: 12.5, color: colors.chipText, background: colors.chipBg, padding: '5px 10px', borderRadius: 999 }}>
+                {txt(ing)}
+              </span>
+            ))}
+          </div>
+        )}
+        {shownSteps.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {shownSteps.map((st, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  background: withAlpha(accent, 0.18), color: accent,
+                  fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{i + 1}</div>
+                <div style={{ fontSize: 13, lineHeight: 1.45, color: colors.text }}>{txt(st)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+    const hasMore = steps.length > 3 || ingredients.length > 6;
+    return hasMore
+      ? <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>{body}</Expandable>
+      : body;
   }
   return null;
 }

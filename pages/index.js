@@ -1563,14 +1563,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           const newStories = newsData.articles.map((article, index) => {
             const sampleDetails = article.details && article.details.length > 0 ? article.details : [];
 
+            // Real timeline only — never fabricate (fake timelines would show on every story).
             const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0)
-              ? article.timeline 
-              : [
-                  {"date": "3 days ago", "event": "Initial reports emerge"},
-                  {"date": "Yesterday", "event": "Key developments unfold"},
-                  {"date": "Today", "event": "Major announcement breaks"},
-                  {"date": "Tomorrow", "event": "Expected follow-up responses"}
-                ];
+              ? article.timeline
+              : [];
 
             return {
               type: 'news',
@@ -1775,33 +1771,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
                // Sample preview data
                const sampleDetails = article.details && article.details.length > 0 ? article.details : [];
 
+               // Real timeline only — parse a JSON string if needed, but never fabricate.
                const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0)
-                 ? article.timeline 
+                 ? article.timeline
                  : (article.timeline && typeof article.timeline === 'string' && article.timeline.trim() !== '')
                    ? (() => {
                        try {
                          const parsed = JSON.parse(article.timeline);
-                         return Array.isArray(parsed) && parsed.length > 0 ? parsed : [
-                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
-                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
-                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
-                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
-                         ];
+                         return Array.isArray(parsed) ? parsed : [];
                        } catch {
-                         return [
-                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
-                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
-                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
-                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
-                         ];
+                         return [];
                        }
                      })()
-                   : [
-                     {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
-                     {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
-                     {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
-                     {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
-                   ];
+                   : [];
 
                // Generate map data based on article content
               const generateMapFromContent = (title, category) => {
@@ -5773,14 +5755,9 @@ export async function getServerSideProps({ req, res }) {
           headline: newsData.dailyGreeting || "Today's Essential Global News"
         };
         
-        // Format articles as stories with defaults for information boxes
+        // Format articles as stories. Info boxes use REAL data only — never fabricate.
         const defaultDetails = [];
-        const defaultTimeline = [
-          { date: 'Recently', event: 'Initial reports emerge' },
-          { date: 'Yesterday', event: 'Key developments unfold' },
-          { date: 'Today', event: 'Latest updates breaking' }
-        ];
-        
+
         const newsStories = newsData.articles
           .filter(article => article && article.id)
           .map((article, index) => {
@@ -5808,7 +5785,7 @@ export async function getServerSideProps({ req, res }) {
               category: article.category,
               emoji: article.emoji || '📰',
               details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
-              timeline: article.timeline || defaultTimeline,
+              timeline: (Array.isArray(article.timeline) && article.timeline.length > 0) ? article.timeline : [],
               graph: article.graph || null,
               map: article.map || null,
               components,
