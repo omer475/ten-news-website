@@ -1,9 +1,14 @@
+# NOTE: Vercel's ignore matcher does NOT honor trailing-slash directory
+# patterns (e.g. `node_modules/`). Directories must be listed WITHOUT a
+# trailing slash (`node_modules`) or they get uploaded anyway — which blew
+# the deploy archive up to 1.1GB and tripped Vercel's /v2/files 500s.
+
 # Python files (not needed for website)
 *.py
-__pycache__/
+__pycache__
 
 # Git files
-.git/
+.git
 .gitignore
 
 # Documentation
@@ -27,6 +32,24 @@ processing_log_*.json
 *.log
 
 # Build artifacts + deps (Vercel installs/builds these itself)
-node_modules/
-.next/
+node_modules
+.next
+.vercel
 index.js.bak-pivot
+*.bak-pivot
+
+# Non-website assets that must never ship to the web deploy.
+# The Next.js build only needs: pages, components, lib, utils, styles,
+# public, scripts, services, and root config (next.config.js, package.json…).
+# Everything below is iOS-app source, binaries, DB migrations, or data dumps.
+TenNewsApp
+ngrok
+migrations
+01
+lasthourrun
+publishedarticles500
+all_runs_combined
+chatgpt-app
+docs
+logs
+*.txt
