@@ -1728,7 +1728,34 @@ def run_complete_pipeline():
             synthesized['image_score'] = selected_image['quality_score']
             
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
-            
+
+            # THIN-BULLET FLOOR (2026-06-07): a near-empty card (total bullet text
+            # ~50-150 chars) reads as a dead title+photo. If the combined bullets are
+            # under BULLET_CHARS_MIN (default 150), regenerate ONCE asking for more
+            # substance from the sources. Soft target is ~250 in the prompt; this hard
+            # floor only catches the genuinely thin ones (genuinely thin single-source
+            # stories may still fall short after the retry — that's acceptable).
+            bullet_floor = int(os.getenv('BULLET_CHARS_MIN', '150'))
+            _bul = synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])) or []
+            _bul_chars = sum(len(b) for b in _bul)
+            if _bul_chars < bullet_floor and len(cluster_sources) >= 1:
+                print(f"   ↻ [Cluster {cluster_id}] Bullets thin ({_bul_chars} < {bullet_floor} chars) — regenerating once for more substance")
+                _retry = synthesize_multisource_article(
+                    cluster_sources, cluster_id,
+                    verification_feedback={'errors': [
+                        f"The bullets were too thin ({_bul_chars} chars total). Pull MORE concrete "
+                        f"specifics from the sources — aim for ~250+ characters total across 2-3 "
+                        f"bullets, each carrying a real name/number/date/quote. Do not pad with fluff."
+                    ]}
+                )
+                if _retry and sum(len(b) for b in (_retry.get('summary_bullets_news', _retry.get('summary_bullets', [])) or [])) > _bul_chars:
+                    # keep the image fields already set on the original
+                    _retry['image_url'] = synthesized.get('image_url')
+                    _retry['image_source'] = synthesized.get('image_source')
+                    _retry['image_score'] = synthesized.get('image_score')
+                    synthesized = _retry
+                    print(f"   ✅ [Cluster {cluster_id}] Regenerated bullets ({sum(len(b) for b in (synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])) or []))} chars)")
+
             # ==========================================
             # STEP 6 FIRST: COMPONENT SELECTION (cheap, no grounding)
             # Then STEP 5: CONTEXT SEARCH (expensive grounding, only if needed)
