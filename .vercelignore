@@ -25,4 +25,8 @@ processing_log_*.json
 # Large files
 *.db
 *.log
-.next/cache/
+
+# Build artifacts + deps (Vercel installs/builds these itself)
+node_modules/
+.next/
+index.js.bak-pivot

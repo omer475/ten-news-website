@@ -2430,8 +2430,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
     };
     
     if (hasSSRData) {
-      // Already have SSR data - do background refresh after 2 seconds
-      // This ensures fresh content while showing cached data immediately
+      // INSTANT freshness pass on the SSR feed: the server already orders by the
+      // fresh+important blend, but the SSR HTML can be edge-cached (so two quick
+      // refreshes get the same order) — re-shuffling near-ties here, right after
+      // hydration, makes EVERY refresh visibly vary without waiting for the slow
+      // ~full background fetch. Post-hydration state update, so no SSR mismatch.
+      setStories(prev => {
+        if (!prev || prev.length <= 1) return prev;
+        const [opening, ...news] = prev;
+        return [opening, ...applyFreshness(news)];
+      });
+      // Then refresh the full feed in the background (more articles for scrolling).
       const timer = setTimeout(() => {
         loadNewsData(true);
       }, 2000);

@@ -121,6 +121,30 @@ const formatArticle = (article) => {
   };
 };
 
+// Server-side "fresh + important" ranking. The DB returns articles in pure
+// ai_final_score order, which is DETERMINISTIC and FROZEN: the day's top-scored
+// article stays at #1 for the whole 24h window, so the feed (incl. the SSR first
+// paint) looks identical on every load and brand-new articles get buried.
+// This re-ranks the candidate pool by importance * 0.5^(ageHours/halfLife) so
+// recent high-importance articles surface and aging ones drift down. It is
+// DETERMINISTIC (no random jitter) on purpose so the edge cache stays valid;
+// per-load variety is added client-side. Mirrors utils/sortArticles.applyFreshness.
+function rankByFreshnessServer(articles, halfLifeHours = 8) {
+  if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
+  const now = Date.now();
+  const STALE_AGE_HOURS = 48;
+  return articles
+    .map((a) => {
+      const importance = typeof a.final_score === 'number' ? a.final_score : 0;
+      const dateStr = a.publishedAt || a.created_at;
+      const t = dateStr ? new Date(dateStr).getTime() : 0;
+      const ageHours = (t && !Number.isNaN(t)) ? Math.max(0, (now - t) / 3600000) : STALE_AGE_HOURS;
+      return { a, eff: importance * Math.pow(0.5, ageHours / halfLifeHours) };
+    })
+    .sort((x, y) => y.eff - x.eff)
+    .map((s) => s.a);
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -230,7 +254,11 @@ export default async function handler(req, res) {
       let error = null;
       let count = 0;
       const BATCH_SIZE = 1000;
-      const totalNeeded = pageSize + 10;
+      // Fetch a candidate POOL (>= 300) even for small pageSize, so the freshness
+      // re-rank below can pull a brand-new lower-score article into the returned
+      // slice (e.g. the 30-item SSR first paint) instead of only reshuffling the
+      // top-30-by-score. For the client's full fetch (pageSize ~2000) this is a no-op.
+      const totalNeeded = Math.max(pageSize, 300) + 10;
 
       for (let batchOffset = offset; batchOffset < offset + totalNeeded; batchOffset += BATCH_SIZE) {
         const batchEnd = Math.min(batchOffset + BATCH_SIZE - 1, offset + totalNeeded - 1);
@@ -312,15 +340,19 @@ export default async function handler(req, res) {
           console.log('⚠️ Event fetch failed (non-critical):', eventError.message);
         }
 
-        const formattedArticles = filteredArticles.slice(0, pageSize).map(article => {
+        // Format the whole candidate pool, re-rank by the fresh+important blend,
+        // THEN slice to pageSize — so the returned articles (incl. the SSR first
+        // paint) prioritise recent high-importance stories, not a frozen pure-score
+        // order. Ranking is deterministic (cacheable); the client adds per-load jitter.
+        const formattedPool = filteredArticles.map(article => {
           const formatted = formatArticle(article);
-          // Add event info if available
           if (eventMap[article.id]) {
             formatted.world_event = eventMap[article.id];
           }
           return formatted;
         });
-        
+        const formattedArticles = rankByFreshnessServer(formattedPool).slice(0, pageSize);
+
         const totalCount = count || formattedArticles.length;
         const hasMore = (offset + pageSize) < totalCount;
 
