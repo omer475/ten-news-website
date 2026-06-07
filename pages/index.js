@@ -5229,7 +5229,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </>
       )}
 
-      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0E0E0E' : '#F6F4F0', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0E0E0E' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}

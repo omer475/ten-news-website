@@ -33,13 +33,19 @@ function gradientFor(category) {
   return `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
 }
 
-// "**bold**" → <strong> spans tinted with the accent color (titles + bullets)
-function renderEmphasis(text, accent) {
+// Titles: strip the "**" emphasis markers entirely — no highlighted words.
+function renderPlain(text) {
+  if (!text) return null;
+  return String(text).replace(/\*\*/g, '');
+}
+
+// Bullets: "**word**" → bold (same text color, no accent tint).
+function renderBold(text) {
   if (!text) return null;
   const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} style={{ color: accent, fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
+      return <strong key={i} style={{ fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
     }
     return <React.Fragment key={i}>{part}</React.Fragment>;
   });
@@ -94,13 +100,30 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
   const colors = {
     text: isDark ? '#FFFFFF' : '#1d1d1f',
     secondary: isDark ? 'rgba(255,255,255,0.55)' : '#6e6e73',
-    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#EDEBE2',
-    divider: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)',
+    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F4',
+    chipText: isDark ? 'rgba(255,255,255,0.70)' : '#5a5a5f',
+    divider: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
     glassBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    cardBg: isDark ? '#0E0E0E' : '#FFFFFF',
+    actionHover: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.05)',
   };
 
   const title = story.title_news || story.title || '';
   const bullets = (story.summary_bullets_news || story.summary_bullets || []).slice(0, 3);
+  const entities = (story.interest_tags || []).slice(0, 3);
+  const [saved, setSaved] = useState(false);
+
+  const handleShare = useCallback(async (e) => {
+    e && e.stopPropagation();
+    const url = story.url || (typeof window !== 'undefined' ? window.location.href : '');
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title, url });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch (_) { /* user cancelled share — ignore */ }
+  }, [story, title]);
   const imageUrl = useMemo(() => {
     const raw = story.urlToImage || story.image_url;
     if (!raw) return null;
@@ -164,7 +187,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
       style={{
         padding: '14px 16px',
         borderBottom: `0.5px solid ${colors.divider}`,
-        background: 'transparent',
+        background: colors.cardBg,
         maxWidth: 640,
         margin: '0 auto',
         boxSizing: 'border-box',
@@ -173,13 +196,14 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
       {/* Header row: avatar + source + flag … time-ago */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+          background: isDark ? 'rgba(255,255,255,0.06)' : '#F2F2F4',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden',
         }}>
           {logoFor(story.source) && (
-            <img src={logoFor(story.source)} alt="" width={18} height={18}
-                 style={{ borderRadius: 4 }} referrerPolicy="no-referrer"
+            <img src={logoFor(story.source)} alt="" width={26} height={26}
+                 style={{ borderRadius: 7, objectFit: 'cover' }} referrerPolicy="no-referrer"
                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
         </div>
@@ -246,7 +270,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1.18,
         color: colors.text, cursor: 'pointer',
       }}>
-        {renderEmphasis(pages ? (pages[page].title || title) : title, accent)}
+        {renderPlain(pages ? (pages[page].title || title) : title)}
       </h2>
 
       {/* Bullets (up to 3) */}
@@ -259,7 +283,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
                 background: BULLET_COLORS[i % BULLET_COLORS.length],
               }} />
               <div style={{ fontSize: 16, lineHeight: 1.45, color: colors.text }}>
-                {renderEmphasis(b, accent)}
+                {renderBold(b)}
               </div>
             </div>
           ))}
@@ -299,24 +323,76 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
         </div>
       )}
 
-      {/* Action row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, color: colors.secondary }}>
-        <ActionIcon label="Like" path="M12 21s-7.5-4.6-10-9.2C.6 8.9 2 5.5 5.2 5.5c1.9 0 3 1 3.8 2.2C9.8 6.5 10.9 5.5 12.8 5.5 16 5.5 17.4 8.9 16 11.8 13.5 16.4 12 21 12 21z" />
-        <ActionIcon label="Save" path="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
-        <ActionIcon label="Repost" path="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
-        <ActionIcon label="Share" path="M14 9V5l7 7-7 7v-4.1C9 11.8 5.5 13 3 16c1-5 4-8 11-9z" />
+      {/* Action row: entities on the left, Save + Share on the right (app layout) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+        {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
+        <div style={{
+          display: 'flex', gap: 6, flex: 1, minWidth: 0,
+          overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
+        }}>
+          {entities.map((tag, i) => (
+            <span key={i} style={{
+              flexShrink: 0,
+              fontSize: 12.5, fontWeight: 500, lineHeight: 1,
+              color: colors.chipText, background: colors.chipBg,
+              padding: '6px 11px', borderRadius: 999, whiteSpace: 'nowrap',
+              textTransform: 'capitalize',
+            }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Save + Share */}
+        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+          <ActionButton
+            label={saved ? 'Saved' : 'Save'}
+            active={saved}
+            hoverBg={colors.actionHover}
+            color={colors.secondary}
+            activeColor={colors.text}
+            onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}
+            path="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"
+            filled={saved}
+          />
+          <ActionButton
+            label="Share"
+            hoverBg={colors.actionHover}
+            color={colors.secondary}
+            activeColor={colors.text}
+            onClick={handleShare}
+            path="M14 9V5l7 7-7 7v-4.1C9 11.8 5.5 13 3 16c1-5 4-8 11-9z"
+          />
+        </div>
       </div>
     </article>
   );
 }
 
-function ActionIcon({ path, label }) {
+// Smooth, simple round action button (Save / Share). Subtle hover/press feedback.
+function ActionButton({ path, label, onClick, active, filled, color, activeColor, hoverBg }) {
+  const [hover, setHover] = useState(false);
+  const [press, setPress] = useState(false);
   return (
-    <button aria-label={label} style={{
-      width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'none', border: 'none', cursor: 'pointer', color: 'inherit',
-    }}>
-      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <button
+      aria-label={label}
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setPress(false); }}
+      onMouseDown={() => setPress(true)}
+      onMouseUp={() => setPress(false)}
+      style={{
+        width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: 'none', borderRadius: '50%', cursor: 'pointer',
+        background: hover ? hoverBg : 'transparent',
+        color: active ? activeColor : color,
+        transform: press ? 'scale(0.88)' : 'scale(1)',
+        transition: 'background 0.18s ease, transform 0.12s ease, color 0.18s ease',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      <svg width={20} height={20} viewBox="0 0 24 24"
+           fill={filled ? 'currentColor' : 'none'} stroke="currentColor"
            strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d={path} /></svg>
     </button>
   );
