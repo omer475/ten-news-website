@@ -2594,9 +2594,12 @@ NAME RECOGNITION:
   • Lesser-known figures: include role/title — "**SD Governor Noem**", "**Rivian CEO RJ Scaringe**".
   • Rule: if a global reader might ask "who is this?", add the title.
 
-BOLD HIGHLIGHTS:
-  • 1-2 entities bolded. NEVER more.
-  • Bold the entity the user would tap to learn more (brands, people, products, places).
+BOLD HIGHLIGHTS (MANDATORY):
+  • EVERY title MUST bold its primary named entity with **double asterisks**. If the
+    title contains a person, brand, product, place, team, org, or country, ONE of them
+    MUST be wrapped in **...**. A title with a bold-able entity and no ** is WRONG.
+  • Bold 1-2 entities (never more) — the entity the user would tap to learn more.
+  • Only if the title genuinely contains NO named entity at all (rare) may it have none.
   • NEVER bold verbs, adjectives, or articles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2640,8 +2643,10 @@ VOICE CONSISTENCY:
   • Same person (1st/2nd/3rd), same tense, same energy.
   • Read the title and the first bullet aloud. If they sound like two different people, regenerate.
 
-BOLD HIGHLIGHTS PER BULLET:
-  • 1 entity bolded. NEVER more than 2. Bold makes it tappable in the app.
+BOLD HIGHLIGHTS PER BULLET (MANDATORY):
+  • EVERY bullet that contains a named entity (person/brand/product/place/team/org/
+    country) MUST bold ONE of them with **double asterisks**. Bold makes it tappable.
+  • 1 entity per bullet, never more than 2. A bullet with a named entity and no ** is WRONG.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎴 STEP 4 — CARD FORMAT (you choose one)
@@ -2702,6 +2707,8 @@ Bold ONLY:
 Never bold:
   ✗ Verbs, adjectives, articles, common words, whole phrases.
 
+MANDATORY: the title and every bullet that has a named entity MUST bold one with
+**...**. Do not skip the markup — un-bolded entities are the #1 formatting miss.
 COUNTS: title 1-2, each bullet 1 (max 2).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2735,9 +2742,9 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {{
-  "title": "6-12 word social title with 1-2 **bold** entities",
+  "title": "6-12 word social title — MUST bold its primary named entity with **double asterisks**",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title and contains ≥1 bold entity OR specific number OR direct quote. 5-22 words. Mix lengths."
+    "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 5-22 words. Mix lengths."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
