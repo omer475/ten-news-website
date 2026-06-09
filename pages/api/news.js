@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { createClient } from '../../lib/supabase-server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { specificTagSet } from '../../lib/threads';
 
 // Helper to parse JSON safely without excessive logging
 const safeJsonParse = (value, fallback = null) => {
@@ -340,6 +341,50 @@ export default async function handler(req, res) {
           console.log('⚠️ Event fetch failed (non-critical):', eventError.message);
         }
 
+        // Flag cards belonging to today's "Quiet Deep Dive" story so the client
+        // can show "Go deep on this". A card qualifies if it's the exact anchor,
+        // or a true thread-sibling (same cluster AND shares the anchor's specific
+        // tags) — NOT merely the same cluster, which over-flags loosely-related
+        // cards. Best-effort + cheap.
+        let deepDives = [];
+        try {
+          const { data: dives } = await supabase
+            .from('deep_dives')
+            .select('id, slug, anchor_article_id, vq_secondary, headline, reading_time_min')
+            .eq('status', 'published')
+            .order('dive_date', { ascending: false })
+            .limit(2);
+          if (dives && dives.length) {
+            const anchorIds = dives.map(d => d.anchor_article_id).filter(x => x != null);
+            const anchorTags = {};
+            if (anchorIds.length) {
+              const { data: anchorRows } = await supabase
+                .from('published_articles').select('id, interest_tags').in('id', anchorIds);
+              (anchorRows || []).forEach(r => { anchorTags[String(r.id)] = specificTagSet(r.interest_tags); });
+            }
+            deepDives = dives.map(d => ({
+              flag: { available: true, slug: d.slug, id: d.id, headline: d.headline, readingTimeMin: d.reading_time_min },
+              anchorId: d.anchor_article_id != null ? String(d.anchor_article_id) : null,
+              vq: d.vq_secondary,
+              tags: anchorTags[String(d.anchor_article_id)] || new Set(),
+            }));
+          }
+        } catch (ddError) {
+          console.log('⚠️ Deep-dive fetch failed (non-critical):', ddError.message);
+        }
+        const deepDiveFor = (article) => {
+          for (const dd of deepDives) {
+            if (dd.anchorId && String(article.id) === dd.anchorId) return dd.flag;
+            if (dd.vq != null && article.vq_secondary === dd.vq && dd.tags.size) {
+              const cardTags = specificTagSet(article.interest_tags);
+              let shared = 0;
+              for (const t of cardTags) if (dd.tags.has(t)) shared++;
+              if (shared >= 2) return dd.flag;
+            }
+          }
+          return null;
+        };
+
         // Format the whole candidate pool, re-rank by the fresh+important blend,
         // THEN slice to pageSize — so the returned articles (incl. the SSR first
         // paint) prioritise recent high-importance stories, not a frozen pure-score
@@ -349,6 +394,9 @@ export default async function handler(req, res) {
           if (eventMap[article.id]) {
             formatted.world_event = eventMap[article.id];
           }
+          // "Go deep on this": anchor or a true thread-sibling of the deep dive.
+          const dd = deepDiveFor(article);
+          if (dd) formatted.deepDive = dd;
           return formatted;
         });
         const formattedArticles = rankByFreshnessServer(formattedPool).slice(0, pageSize);
