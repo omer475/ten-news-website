@@ -320,11 +320,11 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
 
   return (
     <article className="feed-card-immersive" style={{
-      maxWidth: 600, borderRadius: 24, overflow: 'hidden',
+      maxWidth: 600, borderRadius: '18px 18px 0 0', overflow: 'hidden',
       // Solid black background for every article (highlights stay per-photo).
       background: '#000000', color: colors.text, boxSizing: 'border-box',
+      borderBottom: '1px solid rgba(255,255,255,0.10)', // thin line between articles
       fontFamily: APPLE_FONT, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.5)',
     }}>
       {/* Hero photo dissolving into the blur background */}
       {!textOnly && (

@@ -482,15 +482,10 @@ body {
   }
 }
 
-/* Immersive feed card — rounded colour block, gaps on black. */
+/* Immersive feed card — full-width on black, separated by a thin bottom line. */
 .feed-card-immersive {
   display: block;
-  margin: 0 auto 12px;
-}
-@media (max-width: 624px) {
-  .feed-card-immersive {
-    margin: 0 8px 12px;
-  }
+  margin: 0 auto;
 }
 
 

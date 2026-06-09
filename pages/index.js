@@ -5642,12 +5642,16 @@ export default function Home({ initialNews, initialWorldEvents }) {
           {/* MUST KNOW — red line underlines the label, then turns down the side rail */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ padding: '28px 16px 16px 8px' }}>
+              <div style={{ padding: '28px 16px 16px 10px' }}>
                 <span ref={mkLabelRef} style={{ display: 'inline-block', fontSize: 24, fontWeight: 800, letterSpacing: '0.01em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Must Know
                 </span>
               </div>
-              <div>
+              {/* Red rail down the left of the Must Know group */}
+              {mkBox && (
+                <div aria-hidden style={{ position: 'absolute', left: mkBox.left, top: mkBox.top, bottom: 18, width: 2.5, borderRadius: 3, background: mustKnowAccent, pointerEvents: 'none' }} />
+              )}
+              <div style={{ paddingLeft: 18 }}>
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
                     <FeedCard
