@@ -2614,12 +2614,14 @@ NAME RECOGNITION:
   • Rule: if a global reader might ask "who is this?", add the title.
 
 BOLD HIGHLIGHTS (MANDATORY):
-  • EVERY title MUST bold its primary named entity with **double asterisks**. If the
-    title contains a person, brand, product, place, team, org, or country, ONE of them
-    MUST be wrapped in **...**. A title with a bold-able entity and no ** is WRONG.
-  • Bold 1-2 entities (never more) — the entity the user would tap to learn more.
-  • Only if the title genuinely contains NO named entity at all (rare) may it have none.
-  • NEVER bold verbs, adjectives, or articles.
+  • Bold 2-5 of the title's key terms with **double asterisks** — the named entities
+    (person, brand, product, place, team, org, country) PLUS the standout number and
+    the single most important keyword. Aim for at least 2 highlighted terms; up to 5.
+  • Bold each entity/number as its OWN **...** span — e.g. "**Apple** unveils the **M5**",
+    not one big "**Apple unveils the M5**". A title with bold-able terms and no ** is WRONG.
+  • Only a title with genuinely fewer than 2 bold-able terms (rare) may have fewer than 2.
+  • NEVER bold verbs, adjectives, articles, or filler — only entities, numbers, and
+    the one key noun a reader would tap.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔹 STEP 3 — BULLETS (0-3, you decide)
@@ -2729,9 +2731,10 @@ Bold ONLY:
 Never bold:
   ✗ Verbs, adjectives, articles, common words, whole phrases.
 
-MANDATORY: the title and every bullet that has a named entity MUST bold one with
-**...**. Do not skip the markup — un-bolded entities are the #1 formatting miss.
-COUNTS: title 1-2, each bullet 1 (max 2).
+MANDATORY: the title MUST bold 2-5 key terms, and every bullet that has a named
+entity MUST bold one with **...**. Do not skip the markup — un-bolded entities are
+the #1 formatting miss.
+COUNTS: title 2-5, each bullet 1 (max 2).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚨 FACTUAL ACCURACY (NON-NEGOTIABLE)
@@ -2764,7 +2767,7 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {{
-  "title": "6-12 word social title — MUST bold its primary named entity with **double asterisks**",
+  "title": "6-12 word social title — bold 2-5 key terms (entities + standout number) each in its own **double asterisks**",
   "summary_bullets": [
     "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 5-25 words. Total >=~250 chars, <=~700. Mix lengths."
   ],
@@ -2791,7 +2794,7 @@ TECH/AI (standard):
 
 SPORTS (hot_take):
 {{
-  "title": "The **Lakers** blew a 20-point lead.",
+  "title": "The **Lakers** blew a **20-point** lead to the **Nuggets**.",
   "summary_bullets": [
     "**Doncic** went 4-of-17 in the 4th.",
     "**Reaves** played 41 minutes — career high."
@@ -2802,7 +2805,7 @@ SPORTS (hot_take):
 
 K-POP (story_arc):
 {{
-  "title": "**BLACKPINK** is back. The teaser site crashed in 6 minutes.",
+  "title": "**BLACKPINK** is back. The teaser site crashed in **6 minutes**.",
   "summary_bullets": [
     "Comeback drops 14 May at midnight KST.",
     "**Jennie**'s solo teaser pulled 8M views in an hour."
