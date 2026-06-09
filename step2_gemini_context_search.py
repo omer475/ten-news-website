@@ -320,6 +320,68 @@ Gather information for ONLY these components: {component_names}
         return _get_fallback_context(title, summary)
 
 
+def search_web_enrichment(title: str, summary: str, full_text: str = "") -> Dict[str, str]:
+    """
+    Grounded web search to ENRICH a thin story with additional verifiable facts
+    from reliable sources. Used ONLY for thin/single-source articles to add real
+    context (never padding). Returns {'results': facts_text, 'citations': [...]}.
+    Returns empty results on any failure so the caller can fall back gracefully.
+    """
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        return {'results': '', 'citations': []}
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+    article_text = full_text if full_text else summary
+
+    prompt = f"""You are a news researcher adding verified context to a thin story.
+
+ARTICLE TITLE: {title}
+WHAT WE ALREADY HAVE: {summary}
+SOURCE TEXT: {article_text[:3000]}
+
+Search reliable, reputable news and official sources. Return 3-6 ADDITIONAL,
+well-established facts that add real context to THIS story — concrete numbers,
+dates, named entities, background, or consequences NOT already stated above.
+
+STRICT RULES:
+- Only facts you are confident are accurate and reported by REPUTABLE sources.
+- Prefer concrete specifics (figures, dates, named people/places/orgs).
+- Do NOT speculate, predict, or editorialize. No "could / might / may / expected to".
+- Do NOT repeat facts already in WHAT WE ALREADY HAVE.
+- If you cannot find solid additional facts, reply with exactly: NO ADDITIONAL FACTS
+
+Return only a short bulleted list of facts."""
+
+    request_data = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.2, "topK": 40, "topP": 0.95, "maxOutputTokens": 1024},
+        "tools": [{"google_search": {}}]
+    }
+
+    try:
+        response = requests.post(url, json=request_data, timeout=60)
+        response.raise_for_status()
+        result = response.json()
+        if 'candidates' in result and result['candidates']:
+            candidate = result['candidates'][0]
+            if 'content' in candidate and 'parts' in candidate['content']:
+                text = candidate['content']['parts'][0].get('text', '')
+                citations = []
+                grounding = candidate.get('groundingMetadata', {})
+                for chunk in grounding.get('groundingChunks', []):
+                    if 'web' in chunk and chunk['web'].get('uri'):
+                        citations.append(chunk['web']['uri'])
+                if not citations:
+                    citations = ['Google Search via Gemini']
+                print(f"   🔎 Web enrichment completed ({len(text)} chars)")
+                return {'results': text, 'citations': citations}
+        return {'results': '', 'citations': []}
+    except Exception as e:
+        print(f"   ⚠️ Web enrichment error: {e}")
+        return {'results': '', 'citations': []}
+
+
 def _get_fallback_context(title: str, summary: str) -> Dict[str, str]:
     """Provide minimal fallback context when search fails"""
     fallback_results = f"""CONTEXTUAL DATA POINTS:

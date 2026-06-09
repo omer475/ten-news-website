@@ -42,7 +42,7 @@ from step3_image_selection import select_best_image_for_cluster, ImageSelector
 from image_quality_checker import ImageQualityChecker, check_and_select_best_image
 # step4_multi_source_synthesis no longer used (was Claude-based, now using inline Gemini synthesis)
 from step5_gemini_component_selection import GeminiComponentSelector
-from step2_gemini_context_search import search_gemini_context
+from step2_gemini_context_search import search_gemini_context, search_web_enrichment
 from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
@@ -1740,6 +1740,32 @@ def run_complete_pipeline():
             _bul = synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])) or []
             _bul_chars = sum(len(b) for b in _bul)
             if _bul_chars < bullet_floor and len(cluster_sources) >= 1:
+                # WEB ENRICHMENT (2026-06-09): a thin card means the sources didn't give
+                # enough. Before regenerating, pull additional VERIFIED facts from reliable
+                # sources via grounded search and add them as an extra "source" — so both
+                # synthesis AND fact-verification (which reads cluster_sources) use them.
+                # Cost-capped: only fires on thin articles. Kill switch ENRICH_THIN=0.
+                if os.getenv('ENRICH_THIN', '1') == '1':
+                    try:
+                        with gemini_semaphore:
+                            _enr = search_web_enrichment(
+                                synthesized.get('title_news', ''),
+                                ' '.join(_bul),
+                                (cluster_sources[0].get('full_text', '') if cluster_sources else '')
+                            )
+                        _enr_text = (_enr or {}).get('results', '').strip()
+                        if _enr_text and 'NO ADDITIONAL FACTS' not in _enr_text.upper() and len(_enr_text) > 60:
+                            cluster_sources = cluster_sources + [{
+                                'source_name': 'Web research',
+                                'source': 'Web research',
+                                'url': (_enr.get('citations') or ['web'])[0],
+                                'full_text': _enr_text,
+                                'title': synthesized.get('title_news', ''),
+                                'is_enrichment': True,  # excluded from num_sources + article attribution
+                            }]
+                            print(f"   🔎 [Cluster {cluster_id}] Enriched thin story with web facts ({len(_enr_text)} chars)")
+                    except Exception as _ee:
+                        print(f"   ⚠️ [Cluster {cluster_id}] Enrichment skipped: {_ee}")
                 print(f"   ↻ [Cluster {cluster_id}] Bullets thin ({_bul_chars} < {bullet_floor} chars) — regenerating once for more substance")
                 _retry = synthesize_multisource_article(
                     cluster_sources, cluster_id,
@@ -2226,7 +2252,7 @@ def run_complete_pipeline():
             mp_min_bullets = int(os.getenv('MULTIPAGE_MIN_BULLETS', '3'))
             mp_min_sources = int(os.getenv('MULTIPAGE_MIN_SOURCES', '2'))
             mp_p3_min_sources = int(os.getenv('MULTIPAGE_P3_MIN_SOURCES', '4'))
-            n_sources = len(cluster_sources)
+            n_sources = len([s for s in cluster_sources if not s.get('is_enrichment')])
             if (not mp_disabled) and len(bullets) >= mp_min_bullets and n_sources >= mp_min_sources:
                 try:
                     article_category = synthesized.get('category', 'Other')
@@ -2292,7 +2318,7 @@ def run_complete_pipeline():
                 ),
                 'emoji': component_result.get('emoji') if isinstance(component_result, dict) else None,
                 'components_order': successful_components,
-                'num_sources': len(cluster_sources),
+                'num_sources': len([s for s in cluster_sources if not s.get('is_enrichment')]),
                 'published_at': datetime.now().isoformat(),
                 'ai_final_score': article_score,
                 'interest_tags': interest_tags,
