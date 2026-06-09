@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
@@ -157,6 +157,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Removed globalShowBullets - only showing summary text now
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
+  // Tag feed overlay — tapping an entity chip opens a score+recency feed of that tag.
+  const [tagFeed, setTagFeed] = useState(null); // { tag, sourceId } | null
+  const [tagArticles, setTagArticles] = useState([]);
+  const [tagLoading, setTagLoading] = useState(false);
+  const [tagOffset, setTagOffset] = useState(0);
+  const [tagHasMore, setTagHasMore] = useState(false);
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
@@ -2530,6 +2536,53 @@ export default function Home({ initialNews, initialWorldEvents }) {
     });
   };
 
+  // --- Tag feed: tapping an entity chip opens /api/feed/topic (score + recency) ---
+  const fetchTagPage = useCallback(async (tag, sourceId, offset) => {
+    const PAGE = 20;
+    const qs = new URLSearchParams({ entity: tag, offset: String(offset), limit: String(PAGE) });
+    if (sourceId) qs.set('source_id', String(sourceId));
+    const res = await fetch(`/api/feed/topic?${qs.toString()}`);
+    if (!res.ok) throw new Error(`topic feed ${res.status}`);
+    const data = await res.json();
+    const list = Array.isArray(data.articles) ? data.articles : [];
+    return { list, hasMore: list.length >= PAGE };
+  }, []);
+
+  const openTagFeed = useCallback(async (tag, sourceId) => {
+    if (!tag) return;
+    setTagFeed({ tag, sourceId });
+    setTagArticles([]);
+    setTagOffset(0);
+    setTagHasMore(false);
+    setTagLoading(true);
+    try {
+      const { list, hasMore } = await fetchTagPage(tag, sourceId, 0);
+      setTagArticles(list);
+      setTagOffset(list.length);
+      setTagHasMore(hasMore);
+    } catch (_) { setTagArticles([]); }
+    finally { setTagLoading(false); }
+  }, [fetchTagPage]);
+
+  const loadMoreTagFeed = useCallback(async () => {
+    if (!tagFeed || tagLoading) return;
+    setTagLoading(true);
+    try {
+      const { list, hasMore } = await fetchTagPage(tagFeed.tag, tagFeed.sourceId, tagOffset);
+      setTagArticles(prev => [...prev, ...list]);
+      setTagOffset(prev => prev + list.length);
+      setTagHasMore(hasMore);
+    } catch (_) { /* keep what we have */ }
+    finally { setTagLoading(false); }
+  }, [tagFeed, tagLoading, tagOffset, fetchTagPage]);
+
+  const closeTagFeed = useCallback(() => {
+    setTagFeed(null);
+    setTagArticles([]);
+    setTagOffset(0);
+    setTagHasMore(false);
+  }, []);
+
   // Mark article as read
   const markArticleAsRead = async (articleId) => {
     if (!user || !articleId) return;
@@ -3016,6 +3069,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               textOnly={textOnly}
               onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
               onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+              onTagTap={openTagFeed}
             />
           </CardBoundary>
         </LazyMount>
@@ -5515,9 +5569,75 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </div>
 
 
+        {/* Tag feed overlay — same look as the main feed, ordered by score + recency */}
+        {tagFeed && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 11000,
+            background: darkMode ? '#0A0A0C' : '#FFFFFF',
+            display: 'flex', flexDirection: 'column',
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+          }}>
+            {/* header */}
+            <div style={{
+              flexShrink: 0, height: 52, display: 'flex', alignItems: 'center', gap: 10,
+              padding: '0 14px',
+              background: darkMode ? 'rgba(10,10,12,0.72)' : 'rgba(255,255,255,0.72)',
+              backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+              borderBottom: `0.5px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            }}>
+              <button onClick={closeTagFeed} aria-label="Back" style={{
+                width: 34, height: 34, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                color: darkMode ? '#f5f5f7' : '#1d1d1f', flexShrink: 0, WebkitTapHighlightColor: 'transparent',
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: '#007AFF', flexShrink: 0 }}>#</span>
+                <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: darkMode ? '#f5f5f7' : '#1d1d1f', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {tagFeed.tag}
+                </span>
+              </div>
+            </div>
+
+            {/* scrollable feed */}
+            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {tagLoading && tagArticles.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>Loading…</div>
+              ) : tagArticles.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>No articles found for this tag yet.</div>
+              ) : (
+                <>
+                  {tagArticles.map((story, i) => (
+                    <CardBoundary key={story.id || i}>
+                      <FeedCard
+                        story={story}
+                        isDark={darkMode}
+                        textOnly={textOnly}
+                        onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+                        onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+                        onTagTap={openTagFeed}
+                      />
+                    </CardBoundary>
+                  ))}
+                  <div style={{ textAlign: 'center', padding: '32px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>
+                    {tagHasMore ? (
+                      <button onClick={loadMoreTagFeed} disabled={tagLoading} style={{
+                        padding: '12px 24px', borderRadius: 980, border: 'none', cursor: 'pointer', fontWeight: 600,
+                        background: darkMode ? '#fff' : '#1d1d1f', color: darkMode ? '#000' : '#fff',
+                      }}>{tagLoading ? 'Loading…' : 'Load more'}</button>
+                    ) : "You're all caught up."}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Detailed Article Overlay */}
         {showDetailedArticle && selectedArticle && (
-          <div 
+          <div
             className="detailed-article-overlay"
             style={{
               position: 'fixed',

@@ -241,7 +241,7 @@ function InfoIcon({ type, color = 'currentColor', size = 13 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>{glyph[type] || glyph.details}</svg>;
 }
 
-export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false, textOnly = false }) {
+export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTagTap, minimal = false, textOnly = false }) {
   // Per-article accent = the Apple system colour closest to the hero photo
   // (falls back to a per-category Apple colour before the photo is read).
   const fallbackAccent = useMemo(() => categoryAppleColor(story.category, isDark), [story.category, isDark]);
@@ -268,6 +268,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
   const bullets = (story.summary_bullets_news || story.summary_bullets || []).slice(0, 3);
   const entities = (story.interest_tags || []).slice(0, 3);
   const [saved, setSaved] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false); // source popover ("i" button)
 
   const handleShare = useCallback(async (e) => {
     e && e.stopPropagation();
@@ -428,23 +429,17 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
 
       {/* Headline block — single ink colour, weight-based emphasis only, compact */}
       <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 9 }}>
+        {/* Meta row — source moved into the "i" popover; just category (text-only) + time. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
           {textOnly && story.category && (
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
-              {story.category}
-            </span>
+            <>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
+                {story.category}
+              </span>
+              <span style={{ fontSize: 11, lineHeight: 1, color: colors.secondary }}>·</span>
+            </>
           )}
-          {logoFor(story.source) && (
-            <img src={logoFor(story.source)} alt="" width={14} height={14}
-                 style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
-                 referrerPolicy="no-referrer"
-                 onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          )}
-          <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '-0.01em', color: colors.text }}>
-            {story.source || 'Today+'}
-          </span>
-          <span style={{ fontSize: 11, lineHeight: 1, color: colors.secondary }}>·</span>
-          <span style={{ fontSize: 12, fontWeight: 400, color: colors.secondary }}>
+          <span style={{ fontSize: 12.5, fontWeight: 400, color: colors.secondary }}>
             {timeAgo(story.publishedAt || story.published_at)}
           </span>
         </div>
@@ -513,29 +508,36 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
       )}
 
-      {/* Action row: entities on the left, Save + Share on the right */}
+      {/* Action row: tappable entity tags on the left, info + Save + Share on the right */}
       {!minimal && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
-        {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
+        {/* Entities (interest_tags) — tap to open that tag's feed */}
         <div style={{
           display: 'flex', gap: 5, flex: 1, minWidth: 0,
           overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
         }}>
           {entities.map((tag, i) => (
-            <span key={i} style={{
-              flexShrink: 0,
-              fontSize: 11.5, fontWeight: 500, lineHeight: 1,
-              color: colors.chipText, background: colors.chipBg,
-              padding: '5px 9px', borderRadius: 999, whiteSpace: 'nowrap',
-              textTransform: 'capitalize',
-            }}>
+            <button key={i}
+              onClick={(e) => { e.stopPropagation(); onTagTap && onTagTap(tag, story.id); }}
+              style={{
+                flexShrink: 0, border: 'none', cursor: onTagTap ? 'pointer' : 'default',
+                fontSize: 11.5, fontWeight: 500, lineHeight: 1,
+                color: colors.chipText, background: colors.chipBg,
+                padding: '6px 10px', borderRadius: 999, whiteSpace: 'nowrap',
+                textTransform: 'capitalize', WebkitTapHighlightColor: 'transparent',
+              }}>
               {tag}
-            </span>
+            </button>
           ))}
         </div>
 
-        {/* Save + Share */}
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        {/* Info ("i") + Save + Share */}
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, position: 'relative' }}>
+          <ActionButton label="About this story" isDark={isDark} active={infoOpen} activeColor={accent}
+                        restColor={colors.text} onClick={(e) => { e.stopPropagation(); setInfoOpen((v) => !v); }}>
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth={1.7} />
+            <path d="M12 11v5M12 7.6h.01" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+          </ActionButton>
           <ActionButton
             label={saved ? 'Saved' : 'Save'}
             isDark={isDark}
@@ -555,6 +557,50 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
               <path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
             </g>
           </ActionButton>
+
+          {/* Source popover — opened by the "i" button */}
+          {infoOpen && (
+            <>
+              <div onClick={(e) => { e.stopPropagation(); setInfoOpen(false); }}
+                   style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+              <div style={{
+                position: 'absolute', bottom: 40, right: 0, zIndex: 41,
+                minWidth: 180, maxWidth: 260, padding: '12px 14px',
+                borderRadius: 14, background: isDark ? '#1C1C1E' : '#FFFFFF',
+                border: `1px solid ${colors.boxBorder}`,
+                boxShadow: isDark ? '0 8px 30px rgba(0,0,0,0.6)' : '0 8px 30px rgba(0,0,0,0.14)',
+              }}>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 7 }}>
+                  Source
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (story.url && typeof window !== 'undefined') window.open(story.url, '_blank', 'noopener');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent',
+                    padding: 0, cursor: story.url ? 'pointer' : 'default', textAlign: 'left',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}>
+                  {logoFor(story.source) && (
+                    <img src={logoFor(story.source)} alt="" width={18} height={18}
+                         style={{ borderRadius: 5, objectFit: 'cover', flexShrink: 0 }}
+                         referrerPolicy="no-referrer"
+                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  )}
+                  <span style={{ fontSize: 15, fontWeight: 600, color: story.url ? accent : colors.text, letterSpacing: '-0.01em' }}>
+                    {story.source || 'Today+'}
+                  </span>
+                  {story.url && (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M7 17 17 7M9 7h8v8" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
       )}
