@@ -157,6 +157,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Removed globalShowBullets - only showing summary text now
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
+  // Auto-hide header: slides up when scrolling down, returns when scrolling up.
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
   // Tag feed overlay — tapping an entity chip opens a score+recency feed of that tag.
   const [tagFeed, setTagFeed] = useState(null); // { tag, sourceId } | null
   const [tagArticles, setTagArticles] = useState([]);
@@ -2581,6 +2584,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
     setTagArticles([]);
     setTagOffset(0);
     setTagHasMore(false);
+  }, []);
+
+  // Auto-hide the main header: slide it up when scrolling down, reveal on scroll up.
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const last = lastScrollYRef.current;
+      if (y > last && y > 64) setHeaderHidden(true);
+      else if (y < last - 4) setHeaderHidden(false);
+      lastScrollYRef.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // Mark article as read
@@ -5339,7 +5355,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
         {/* Full Header for First Page */}
         {currentIndex === 0 && (
-          <div className="header">
+          <div className="header" style={{ transform: headerHidden ? 'translateY(-100%)' : 'translateY(0)', transition: 'transform 0.3s cubic-bezier(0.28,0,0.4,1)' }}>
             <div className="logo">
               Today<span className="logo-ten" style={{ color: plusColor }}>+</span>
             </div>
@@ -5532,10 +5548,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
           {/* MUST KNOW — top stories (importance > 900), led by a calm accent thread down the side */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '22px 16px 12px 6px' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: mustKnowAccent, boxShadow: `0 0 0 4px ${darkMode ? 'rgba(255,69,58,0.16)' : 'rgba(255,59,48,0.14)'}`, flexShrink: 0 }} />
-                <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Must Know</span>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: '#fff', background: mustKnowAccent, borderRadius: 999, minWidth: 19, height: 19, padding: '0 6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif' }}>{mustKnowStories.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '24px 16px 14px 6px' }}>
+                <span style={{ width: 11, height: 11, borderRadius: '50%', background: mustKnowAccent, boxShadow: `0 0 0 5px ${darkMode ? 'rgba(255,69,58,0.16)' : 'rgba(255,59,48,0.14)'}`, flexShrink: 0 }} />
+                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '0.01em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Must Know</span>
               </div>
               <div style={{ position: 'relative' }}>
                 {/* calm accent thread down the left side, soft rounded ends top + bottom */}
@@ -5569,69 +5584,62 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </div>
 
 
-        {/* Tag feed overlay — same look as the main feed, ordered by score + recency */}
+        {/* Tag feed overlay — no header; big title scrolls up with the page */}
         {tagFeed && (
           <div style={{
             position: 'fixed', inset: 0, zIndex: 11000,
             background: darkMode ? '#0A0A0C' : '#FFFFFF',
-            display: 'flex', flexDirection: 'column',
+            overflowY: 'auto', WebkitOverflowScrolling: 'touch',
             paddingTop: 'env(safe-area-inset-top, 0px)',
           }}>
-            {/* header */}
-            <div style={{
-              flexShrink: 0, height: 52, display: 'flex', alignItems: 'center', gap: 10,
-              padding: '0 14px',
-              background: darkMode ? 'rgba(10,10,12,0.72)' : 'rgba(255,255,255,0.72)',
-              backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-              borderBottom: `0.5px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-            }}>
+            {/* back + big title — part of the scroll, so it moves up with the page */}
+            <div style={{ maxWidth: 640, margin: '0 auto', padding: '14px 16px 6px' }}>
               <button onClick={closeTagFeed} aria-label="Back" style={{
-                width: 34, height: 34, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
-                color: darkMode ? '#f5f5f7' : '#1d1d1f', flexShrink: 0, WebkitTapHighlightColor: 'transparent',
+                display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', cursor: 'pointer',
+                background: 'transparent', padding: 0, marginBottom: 12,
+                color: darkMode ? 'rgba(235,235,245,0.6)' : '#86868b',
+                fontSize: 15, fontWeight: 500, WebkitTapHighlightColor: 'transparent',
               }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                Back
               </button>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
-                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: '#007AFF', flexShrink: 0 }}>#</span>
-                <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: darkMode ? '#f5f5f7' : '#1d1d1f', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {tagFeed.tag}
-                </span>
-              </div>
+              <h1 style={{
+                margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1,
+                textTransform: 'capitalize', color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif',
+              }}>
+                {tagFeed.tag}
+              </h1>
             </div>
 
-            {/* scrollable feed */}
-            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              {tagLoading && tagArticles.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>Loading…</div>
-              ) : tagArticles.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>No articles found for this tag yet.</div>
-              ) : (
-                <>
-                  {tagArticles.map((story, i) => (
-                    <CardBoundary key={story.id || i}>
-                      <FeedCard
-                        story={story}
-                        isDark={darkMode}
-                        textOnly={textOnly}
-                        onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-                        onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
-                        onTagTap={openTagFeed}
-                      />
-                    </CardBoundary>
-                  ))}
-                  <div style={{ textAlign: 'center', padding: '32px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>
-                    {tagHasMore ? (
-                      <button onClick={loadMoreTagFeed} disabled={tagLoading} style={{
-                        padding: '12px 24px', borderRadius: 980, border: 'none', cursor: 'pointer', fontWeight: 600,
-                        background: darkMode ? '#fff' : '#1d1d1f', color: darkMode ? '#000' : '#fff',
-                      }}>{tagLoading ? 'Loading…' : 'Load more'}</button>
-                    ) : "You're all caught up."}
-                  </div>
-                </>
-              )}
-            </div>
+            {tagLoading && tagArticles.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>Loading…</div>
+            ) : tagArticles.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>No articles found for this tag yet.</div>
+            ) : (
+              <>
+                {tagArticles.map((story, i) => (
+                  <CardBoundary key={story.id || i}>
+                    <FeedCard
+                      story={story}
+                      isDark={darkMode}
+                      textOnly={textOnly}
+                      onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+                      onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+                      onTagTap={openTagFeed}
+                    />
+                  </CardBoundary>
+                ))}
+                <div style={{ textAlign: 'center', padding: '32px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>
+                  {tagHasMore ? (
+                    <button onClick={loadMoreTagFeed} disabled={tagLoading} style={{
+                      padding: '12px 24px', borderRadius: 980, border: 'none', cursor: 'pointer', fontWeight: 600,
+                      background: darkMode ? '#fff' : '#1d1d1f', color: darkMode ? '#000' : '#fff',
+                    }}>{tagLoading ? 'Loading…' : 'Load more'}</button>
+                  ) : "You're all caught up."}
+                </div>
+              </>
+            )}
           </div>
         )}
 
