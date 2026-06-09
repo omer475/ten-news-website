@@ -47,16 +47,16 @@ BULLET SUMMARY: {bullets}
 COMPONENTS OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-📋 DETAILS - Key facts/stats not already in the bullets → ~60% of articles (the substantive ones)
+📋 DETAILS - Key NUMERIC facts not already in the bullets (every value contains a number)
 📅 TIMELINE - Background context for an ongoing story (~15% of stories)
 🗺️ MAP - A SPECIFIC place the story happened (~25% of stories)
 📊 GRAPH - Real data trend over time (~15% of stories)
 
-IMPORTANT: Aim for an info box on roughly 60% of articles. Include DETAILS whenever
-the story has at least TWO concrete facts worth pulling out (numbers, names, places,
-dates, outcomes), and ADD map/timeline/graph whenever relevant (you may combine up to
-3, e.g. ["map","details"]). Return an empty array [] for thin one-line updates, pure
-opinion/analysis, or when the bullets already say everything — that is the other ~40%.
+IMPORTANT: Include DETAILS whenever the story has at least TWO NUMERIC facts worth
+pulling out (every detail value must contain a number — counts, %, money, scores,
+dates, sizes), and ADD map/timeline/graph whenever relevant (you may combine up to 3,
+e.g. ["map","details"]). Return an empty array [] for thin one-line updates, pure
+opinion/analysis, or when the bullets already contain every number.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
@@ -65,18 +65,21 @@ opinion/analysis, or when the bullets already say everything — that is the oth
 Shows 2-3 key facts/stats about the story (label + value), drawn from the article.
 This is the primary info box — the main driver of coverage.
 
+Every detail value MUST be a number (count, %, money, score, age, distance,
+duration, date). NO text-only details.
+
 SELECT IF:
-- The story has at least TWO concrete facts worth surfacing: numbers, names,
-  dates, places, amounts, outcomes, quantities, scores, casualties, prices,
-  sizes, durations, counts
-- The reader would benefit from the key facts pulled out at a glance
+- The story has at least TWO NUMERIC facts worth surfacing that are NOT already
+  in the bullets: counts, %, money, scores, casualties, prices, sizes,
+  distances, durations, dates, ages
+- The reader would benefit from the key numbers pulled out at a glance
 
 DO NOT SELECT IF:
 - It is a thin one-line update with nothing beyond the headline/bullets
-- It is a pure opinion/editorial/analysis piece with no concrete facts
-- The bullets already state every concrete fact (nothing new to add)
+- The story has fewer than TWO numeric facts not already in the bullets
+- It is a pure opinion/editorial/analysis piece
 
-FREQUENCY: ~60% of articles.
+FREQUENCY: details appear whenever the story has >=2 numeric facts.
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE

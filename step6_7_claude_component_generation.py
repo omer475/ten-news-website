@@ -61,12 +61,13 @@ Before writing each detail:
 3. If NO → Include it
 
 REQUIREMENTS:
-✓ Prefer facts with a number, but a sharp non-numeric fact (a name, place,
-  date, or concrete outcome) is fine when it adds real information
+✓ EVERY detail value MUST contain a number — count, %, money, score, age,
+  distance, duration, date, etc. NO text-only details (no "Ongoing",
+  "Minor damage", "Multiple units", "Non-life-threatening").
 ✓ Must NOT be in bullet summary
 ✓ Must DIRECTLY support or explain the headline
 ✓ Label: 1-3 words
-✓ Value: short and concrete (a number with unit, or a brief fact)
+✓ Value: a number with its unit
 ✓ Maximum 7 words total per detail
 
 HEADLINE-RELEVANCE RULE — read this twice:
@@ -86,13 +87,14 @@ the current event.
 OUTPUT FORMAT:
 [
   {"label": "Crew members", "value": "5 aboard"},
-  {"label": "Flight origin", "value": "Leipzig, Germany"},
+  {"label": "Cargo weight", "value": "12 tons"},
   {"label": "Runway length", "value": "2,515 meters"}
 ]
 
 BAD DETAILS (never do):
 ✗ Duplicates from bullets
-✗ Vague filler: {"label": "Status", "value": "Ongoing"} — say something concrete
+✗ No number: {"label": "Status", "value": "Ongoing"} — every value needs a number
+✗ Text-only: {"label": "Severity", "value": "Non-life-threatening"} — needs a number
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
 ✗ Stale historical: {"label": "Falcon Heavy debut", "value": "February 2018"}
    for an article about a 2026 launch — debut isn't why today's news exists.
@@ -456,6 +458,7 @@ CHECKLIST BEFORE SUBMITTING
 
 □ DETAILS:
   - 2 or 3 cards (prefer 3)?
+  - EVERY value contains a number?
   - None duplicate bullet summary?
   - All relevant to story?
 
@@ -710,12 +713,12 @@ class GeminiComponentWriter:
                         if any(char.isdigit() for char in detail):
                             details_with_numbers.append(detail)
 
-                # Keep up to 3, leading with number-bearing facts. Require at least 2.
-                ordered = details_with_numbers + [d for d in valid_details if d not in details_with_numbers]
-                if len(ordered) >= 2:
-                    result['details'] = ordered[:3]
+                # Numbers-only: keep ONLY details whose value contains a digit.
+                # Drop the box unless at least 2 number-bearing details survive.
+                if len(details_with_numbers) >= 2:
+                    result['details'] = details_with_numbers[:3]
                 else:
-                    errors.append(f"Only {len(ordered)} valid details (need at least 2)")
+                    errors.append(f"Only {len(details_with_numbers)} numeric details (need at least 2)")
                     del result['details']
 
         # --- GRAPH validation ---
