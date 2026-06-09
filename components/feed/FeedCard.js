@@ -14,33 +14,39 @@ const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 // highlighted words are tinted with whichever of these is CLOSEST to the
 // dominant colour of its hero photo — so the accent always harmonises with
 // the image, but only ever Apple's own palette is used.
-const APPLE_SYSTEM_COLORS = [
-  // Apple's standard iOS System Colors…
-  [255, 59, 48],   // red      #FF3B30
-  [255, 149, 0],   // orange   #FF9500
-  [255, 204, 0],   // yellow   #FFCC00
-  [52, 199, 89],   // green    #34C759
-  [0, 199, 190],   // mint     #00C7BE
-  [48, 176, 199],  // teal     #30B0C7
-  [50, 173, 230],  // cyan     #32ADE6
-  [0, 122, 255],   // blue     #007AFF
-  [88, 86, 214],   // indigo   #5856D6
-  [175, 82, 222],  // purple   #AF52DE
-  [255, 45, 85],   // pink     #FF2D55
-  [162, 132, 94],  // brown    #A2845E
-  [142, 142, 147], // gray     #8E8E93
-  // …plus finer Apple-flavoured hue steps so photos map to a wider range.
-  [255, 99, 40],   // coral / deep-orange
-  [214, 170, 0],   // gold
-  [124, 200, 40],  // lime
-  [0, 184, 130],   // emerald
-  [0, 140, 220],   // azure
-  [60, 90, 225],   // royal blue
-  [132, 74, 222],  // violet
-  [208, 70, 200],  // magenta
-  [255, 80, 140],  // rose
-  [0, 168, 168],   // deep teal
-];
+// Highlight palette: Apple's curated system colours PLUS a dense wheel of vivid,
+// white-readable hues sharing Apple's characteristics (high saturation, moderate
+// lightness). The dense wheel means a photo's dominant colour almost always finds
+// a close, sensible match instead of snapping to a far-off swatch.
+const APPLE_SYSTEM_COLORS = (() => {
+  const base = [
+    // Apple's standard iOS System Colors…
+    [255, 59, 48],   // red      #FF3B30
+    [255, 149, 0],   // orange   #FF9500
+    [255, 204, 0],   // yellow   #FFCC00
+    [52, 199, 89],   // green    #34C759
+    [0, 199, 190],   // mint     #00C7BE
+    [48, 176, 199],  // teal     #30B0C7
+    [50, 173, 230],  // cyan     #32ADE6
+    [0, 122, 255],   // blue     #007AFF
+    [88, 86, 214],   // indigo   #5856D6
+    [175, 82, 222],  // purple   #AF52DE
+    [255, 45, 85],   // pink     #FF2D55
+    [162, 132, 94],  // brown    #A2845E
+    [142, 142, 147], // gray     #8E8E93
+  ];
+  // ~44 evenly-spaced hues, two saturation/lightness rings, all readable on white.
+  const wheel = [];
+  const STEPS = 22;
+  for (let i = 0; i < STEPS; i++) {
+    const h = i / STEPS;
+    // Yellow/green band is intrinsically light → darken it so it still reads on white.
+    const lift = (h > 0.10 && h < 0.46) ? 0.07 : 0;
+    wheel.push(hslToRgb(h, 0.88, 0.50 - lift)); // vivid ring
+    wheel.push(hslToRgb(h, 0.72, 0.42 - lift)); // deeper ring (more "ink"-like)
+  }
+  return base.concat(wheel);
+})();
 
 // Sensible per-category Apple colour when there's no photo to sample.
 const CATEGORY_APPLE = {
