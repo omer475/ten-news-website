@@ -167,6 +167,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [mkBox, setMkBox] = useState(null); // { left, top, width }
   // Reading of the Day (Quiet Deep Dive) — single daily piece above Must Know.
   const [deepDive, setDeepDive] = useState(null);
+  const [deepDiveSeen, setDeepDiveSeen] = useState(false); // already read today → minimal bar
   // Tag feed overlay — tapping an entity chip opens a score+recency feed of that tag.
   const [tagFeed, setTagFeed] = useState(null); // { tag, sourceId } | null
   const [tagArticles, setTagArticles] = useState([]);
@@ -2617,7 +2618,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
         if (!dd) { setDeepDive(null); return; }
         try {
           const seen = localStorage.getItem('tn_deepdive_seen');
-          if (seen && seen === (dd.slug || dd.id)) { setDeepDive(null); return; } // seen today → hide
+          // Seen today → still show it, but as the minimal kicker bar (not hidden).
+          setDeepDiveSeen(!!seen && seen === (dd.slug || dd.id));
         } catch (_) {}
         setDeepDive(dd);
       })
@@ -2625,9 +2627,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return () => { cancelled = true; };
   }, []);
 
-  // Mark today's deep dive as seen once the user opens it (slug encodes the date).
+  // Mark today's deep dive as seen once the user opens it (slug encodes the date);
+  // when collapsed again it falls back to the minimal bar.
   const markDeepDiveSeen = useCallback((key) => {
     try { localStorage.setItem('tn_deepdive_seen', String(key)); } catch (_) {}
+    setDeepDiveSeen(true);
   }, []);
 
   // Mark article as read
@@ -5592,7 +5596,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
           {/* READING OF THE DAY — single daily deep dive, expands inline above Must Know */}
-          {deepDive && <DeepDiveCard deepDive={deepDive} isDark={darkMode} onSeen={markDeepDiveSeen} />}
+          {deepDive && <DeepDiveCard deepDive={deepDive} isDark={darkMode} seen={deepDiveSeen} onSeen={markDeepDiveSeen} />}
 
           {/* MUST KNOW — red line underlines the label, then turns down the side rail */}
           {mustKnowStories.length > 0 && (

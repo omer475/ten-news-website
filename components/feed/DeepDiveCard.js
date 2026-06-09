@@ -11,9 +11,12 @@ const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
  * image at the top, then sections + sources) and the feed below flows down;
  * tapping again collapses. Once opened it's marked seen and won't reappear today.
  */
-export default function DeepDiveCard({ deepDive, isDark = false, onSeen }) {
+export default function DeepDiveCard({ deepDive, isDark = false, onSeen, seen = false }) {
   const [open, setOpen] = useState(false);
   if (!deepDive) return null;
+
+  // Once seen today, the card shows only the minimal kicker bar until reopened.
+  const showHeadline = open || !seen;
 
   const accent = isDark ? '#5E5CE6' : '#5856D6'; // indigo — quietly "special", distinct from news red/blue
   const colors = {
@@ -52,32 +55,44 @@ export default function DeepDiveCard({ deepDive, isDark = false, onSeen }) {
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        {/* Header (no image when collapsed) */}
-        <div style={{ padding: '16px 18px 18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        {/* Header — full preview when unseen/open; just the kicker bar when seen */}
+        <div style={{ padding: showHeadline ? '16px 18px 18px' : '13px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: showHeadline ? 10 : 0 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H11v15H4.5A1.5 1.5 0 0 1 3 17.5zM21 5.5A1.5 1.5 0 0 0 19.5 4H13v15h6.5a1.5 1.5 0 0 0 1.5-1.5z" />
             </svg>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent }}>
               Reading of the Day
             </span>
+            {!showHeadline && (
+              <>
+                <span style={{ flex: 1 }} />
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </>
+            )}
           </div>
-          <h2 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.18, color: colors.text }}>
-            {deepDive.headline}
-          </h2>
-          {deepDive.dek && (
-            <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5, color: colors.secondary, letterSpacing: '-0.01em' }}>
-              {deepDive.dek}
-            </p>
+          {showHeadline && (
+            <>
+              <h2 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.18, color: colors.text }}>
+                {deepDive.headline}
+              </h2>
+              {deepDive.dek && (
+                <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5, color: colors.secondary, letterSpacing: '-0.01em' }}>
+                  {deepDive.dek}
+                </p>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, color: accent }}>
+                <span style={{ flex: 1 }} />
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{open ? 'Close' : 'Read'}</span>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                     style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)' }}>
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
+            </>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, color: accent }}>
-            <span style={{ flex: 1 }} />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{open ? 'Close' : 'Read'}</span>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-                 style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)' }}>
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
         </div>
 
         {/* Expanding body — grid 0fr→1fr animates the auto height smoothly */}
