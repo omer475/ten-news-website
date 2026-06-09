@@ -15,6 +15,7 @@ const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 // dominant colour of its hero photo — so the accent always harmonises with
 // the image, but only ever Apple's own palette is used.
 const APPLE_SYSTEM_COLORS = [
+  // Apple's standard iOS System Colors…
   [255, 59, 48],   // red      #FF3B30
   [255, 149, 0],   // orange   #FF9500
   [255, 204, 0],   // yellow   #FFCC00
@@ -28,6 +29,17 @@ const APPLE_SYSTEM_COLORS = [
   [255, 45, 85],   // pink     #FF2D55
   [162, 132, 94],  // brown    #A2845E
   [142, 142, 147], // gray     #8E8E93
+  // …plus finer Apple-flavoured hue steps so photos map to a wider range.
+  [255, 99, 40],   // coral / deep-orange
+  [214, 170, 0],   // gold
+  [124, 200, 40],  // lime
+  [0, 184, 130],   // emerald
+  [0, 140, 220],   // azure
+  [60, 90, 225],   // royal blue
+  [132, 74, 222],  // violet
+  [208, 70, 200],  // magenta
+  [255, 80, 140],  // rose
+  [0, 168, 168],   // deep teal
 ];
 
 // Sensible per-category Apple colour when there's no photo to sample.
@@ -155,7 +167,7 @@ function renderHighlight(text, color, restWeight = 400) {
   const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <span key={i} style={{ color, fontWeight: 600 }}>{part.slice(2, -2)}</span>;
+      return <span key={i} style={{ color, fontWeight: Math.max(600, restWeight) }}>{part.slice(2, -2)}</span>;
     }
     return <span key={i} style={{ fontWeight: restWeight }}>{part}</span>;
   });
@@ -438,10 +450,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
         <h2 style={{
           margin: 0,
-          fontSize: 24, fontWeight: 600, letterSpacing: '-0.018em', lineHeight: 1.26,
+          fontSize: 24, fontWeight: 800, letterSpacing: '-0.022em', lineHeight: 1.24,
           color: colors.text,
         }}>
-          {renderHighlight(pages ? (pages[page].title || title) : title, accent, 600)}
+          {renderHighlight(pages ? (pages[page].title || title) : title, accent, 800)}
         </h2>
       </div>
 
@@ -528,15 +540,15 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             label={saved ? 'Saved' : 'Save'}
             isDark={isDark}
             active={saved}
-            activeColor="#FFCC00"
-            restColor="#FFCC00"
+            activeColor="#FF9500"
+            restColor="#FF9500"
             onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}
           >
             <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-3.6L6 20z"
                   fill={saved ? 'currentColor' : 'none'} stroke="currentColor"
                   strokeWidth={1.7} strokeLinejoin="round" />
           </ActionButton>
-          <ActionButton label="Share" isDark={isDark} restColor="#FF2D55" onClick={handleShare}>
+          <ActionButton label="Share" isDark={isDark} restColor="#007AFF" onClick={handleShare}>
             <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v12" />
               <path d="M8 7l4-4 4 4" />
