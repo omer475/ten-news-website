@@ -422,7 +422,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
         <h2 style={{
           margin: 0,
-          fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3,
+          fontSize: 24, fontWeight: 600, letterSpacing: '-0.018em', lineHeight: 1.26,
           color: colors.text,
         }}>
           {renderHighlight(pages ? (pages[page].title || title) : title, accent, 600)}
@@ -435,10 +435,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
           {(pages ? (pages[page].bullets || []) : bullets).slice(0, 3).map((b, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{
-                width: 4, height: 4, borderRadius: '50%', marginTop: 8, flexShrink: 0,
+                width: 5, height: 5, borderRadius: '50%', marginTop: 10, flexShrink: 0,
                 background: colors.dot,
               }} />
-              <div style={{ fontSize: 14, lineHeight: 1.47, color: colors.text, letterSpacing: '-0.005em' }}>
+              <div style={{ fontSize: 17, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.01em' }}>
                 {renderHighlight(b, accent, 400)}
               </div>
             </div>
@@ -473,9 +473,9 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             </div>
           )}
 
-          {/* Pure white box, defined only by a thin light-grey outline. */}
+          {/* Pure white box, defined only by a thin light-grey outline. Kept slim. */}
           <div style={{
-            borderRadius: 14, padding: 14,
+            borderRadius: 12, padding: '10px 14px',
             background: colors.boxBg,
             border: `1px solid ${colors.boxBorder}`,
           }}>
@@ -582,7 +582,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
               : <path d="M7 17 17 7M9 7h8v8" />}
           </svg>
         </button>
-        <div style={{ height: expanded ? 230 : 140, width: '100%' }}>
+        <div style={{ height: expanded ? 210 : 118, width: '100%' }}>
           <GraphChart graph={story.graph} expanded={expanded} accentColor={accent} />
         </div>
       </div>
@@ -638,20 +638,20 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
           const value = m ? m[1].trim() : raw;
           const unit = m ? m[2].trim() : '';
           const len = value.length;
-          const valueSize = len <= 5 ? 24 : len <= 9 ? 18 : len <= 16 ? 14 : 12.5;
+          const valueSize = len <= 5 ? 18 : len <= 9 ? 15 : len <= 16 ? 13 : 12;
           return (
             <div key={i} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
               padding: '0 8px',
               borderLeft: i > 0 ? `1px solid ${colors.divider}` : 'none',
             }}>
-              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 7 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 4 }}>
                 {label}
               </span>
-              <span style={{ fontSize: valueSize, fontWeight: 700, lineHeight: 1.15, letterSpacing: valueSize >= 18 ? '-0.02em' : '-0.005em', color: colors.text }}>
+              <span style={{ fontSize: valueSize, fontWeight: 700, lineHeight: 1.1, letterSpacing: valueSize >= 15 ? '-0.02em' : '-0.005em', color: colors.text }}>
                 {value}
               </span>
-              {unit && <span style={{ fontSize: 11, color: colors.secondary, marginTop: 6 }}>{unit}</span>}
+              {unit && <span style={{ fontSize: 10.5, color: colors.secondary, marginTop: 3 }}>{unit}</span>}
             </div>
           );
         })}
