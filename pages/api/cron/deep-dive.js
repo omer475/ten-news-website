@@ -47,23 +47,29 @@ export default async function handler(req, res) {
       .from('deep_dives').select('headline').order('dive_date', { ascending: false }).limit(40);
     const avoidTopics = (recent || []).map((d) => d.headline).filter(Boolean);
 
-    // Candidate seeds: recent news that HAS an image (we reuse the article's
-    // photo as the read's hero). Bias toward prominent stories, then let the
-    // model pick the most curiosity-worthy one.
-    const candidateCutoff = new Date(Date.now() - 48 * 3600000).toISOString();
-    const { data: candRows, error: candErr } = await supabase
-      .from('published_articles')
-      .select('id, title_news, category, summary_bullets_news, image_url, ai_final_score, created_at')
-      .gte('created_at', candidateCutoff)
-      .not('image_url', 'is', null)
-      .order('ai_final_score', { ascending: false, nullsFirst: false })
-      .limit(120);
-    if (candErr) console.error('deep-dive candidate query error:', candErr.message);
-    const candidates = (candRows || []).map((a) => {
-      let b = a.summary_bullets_news;
-      if (typeof b === 'string') { try { b = JSON.parse(b); } catch { b = []; } }
-      return { id: a.id, title: a.title_news, category: a.category, image_url: a.image_url, bullet: Array.isArray(b) && b.length ? b[0] : '' };
-    }).filter((c) => c.title);
+    // Candidate seeds: EVERY article from the last 24h that has an image (we
+    // reuse the article's photo as the read's hero). Paginated because Supabase
+    // caps a single query at 1000 rows; the model then sees the whole day and
+    // picks the most curiosity-worthy one.
+    const candidateCutoff = new Date(Date.now() - 24 * 3600000).toISOString();
+    let candRows = [];
+    for (let off = 0; off < 4000; off += 1000) {
+      const { data, error } = await supabase
+        .from('published_articles')
+        .select('id, title_news, category, image_url')
+        .gte('created_at', candidateCutoff)
+        .not('image_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .range(off, off + 999);
+      if (error) { console.error('deep-dive candidate query error:', error.message); break; }
+      if (!data || !data.length) break;
+      candRows = candRows.concat(data);
+      if (data.length < 1000) break;
+    }
+    const candidates = candRows
+      .map((a) => ({ id: a.id, title: a.title_news, category: a.category, image_url: a.image_url }))
+      .filter((c) => c.title);
+    console.log(`deep-dive: ${candidates.length} candidate articles in last 24h`);
 
     const results = [];
     let made = 0;
