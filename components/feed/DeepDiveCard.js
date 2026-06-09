@@ -18,7 +18,7 @@ export default function DeepDiveCard({ deepDive, isDark = false }) {
   const colors = {
     text: isDark ? '#F5F5F7' : '#1d1d1f',
     secondary: isDark ? 'rgba(235,235,245,0.6)' : '#6e6e73',
-    card: isDark ? '#161618' : '#F6F6F8',
+    card: isDark ? '#161618' : '#FFFFFF',
     border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
     bodyText: isDark ? 'rgba(235,235,245,0.85)' : '#3a3a3c',
     sourceBg: isDark ? 'rgba(255,255,255,0.06)' : '#FFFFFF',
@@ -26,7 +26,6 @@ export default function DeepDiveCard({ deepDive, isDark = false }) {
 
   const sections = Array.isArray(deepDive.sections) ? deepDive.sections : [];
   const sources = Array.isArray(deepDive.sources) ? deepDive.sources : [];
-  const hero = deepDive.heroImage;
 
   return (
     <article className="reading-card" style={{ fontFamily: APPLE_FONT, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
@@ -44,10 +43,6 @@ export default function DeepDiveCard({ deepDive, isDark = false }) {
             padding: 0, cursor: 'pointer', color: colors.text, WebkitTapHighlightColor: 'transparent',
           }}
         >
-          {hero && (
-            <img src={hero} alt="" referrerPolicy="no-referrer"
-                 style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', display: 'block' }} />
-          )}
           <div style={{ padding: '16px 18px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -66,9 +61,6 @@ export default function DeepDiveCard({ deepDive, isDark = false }) {
               </p>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, color: accent }}>
-              {deepDive.readingTimeMin ? (
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{deepDive.readingTimeMin} min read</span>
-              ) : null}
               <span style={{ flex: 1 }} />
               <span style={{ fontSize: 13, fontWeight: 600 }}>{open ? 'Close' : 'Read'}</span>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
