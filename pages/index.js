@@ -128,7 +128,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(true); // Dark by default
+  const [darkMode, setDarkMode] = useState(false); // Light by default (Apple-editorial); dark behind the toggle
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -146,7 +146,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     '#ec4899', // Pink
     '#f43f5e', // Rose
   ];
-  const [plusColor] = useState(() => plusIconColors[Math.floor(Math.random() * plusIconColors.length)]);
+  // Brand "+" uses the one system accent (Apple blue) — consistent every load,
+  // not a random colour. (plusIconColors kept for reference but intentionally unused.)
+  const [plusColor] = useState('#007AFF');
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [expandedGraph, setExpandedGraph] = useState({});
@@ -2500,7 +2502,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
     console.log(`🔄 Toggling summary display mode for story ${storyIndex}`);
   };
 
-  // Restore saved dark-mode preference (defaults to dark when unset)
+  // Restore saved dark-mode preference (defaults to light when unset)
   useEffect(() => {
     try {
       const saved = localStorage.getItem('tn_dark_mode');
@@ -3021,11 +3023,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
     })
   ), [stories, user, darkMode, textOnly, authError]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The day's must-know stories (importance score > 900) — shown as a red rail on top.
+  // The day's must-know stories (importance score > 900) — shown with a calm accent rail on top.
   const mustKnowStories = useMemo(
     () => (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)).slice(0, 6),
     [stories]
   );
+  // One restrained accent (Apple blue) — calm, not alarm-red. Tracks the theme.
+  const mustKnowAccent = darkMode ? '#0A84FF' : '#007AFF';
 
   // Show loader while checking onboarding status (prevents flash of content)
   if (!onboardingChecked) {
@@ -3086,7 +3090,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
         /* Apple HIG - Base Styles - TikTok-style fixed viewport */
         html {
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#0A0A0C' : '#F5F5F7'};
           padding: 0;
           margin: 0;
           width: 100%;
@@ -3097,7 +3101,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         /* Apple HIG - Body Typography & Colors - TikTok-style no scroll */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#0A0A0C' : '#F5F5F7'};
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
@@ -3330,7 +3334,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
           left: 0;
           right: 0;
           height: 52px;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? 'rgba(10,10,12,0.72)' : 'rgba(245,245,247,0.72)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
           z-index: 10000;
           display: flex;
           align-items: center;
@@ -3339,10 +3345,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
           padding-bottom: 0;
           padding-left: var(--content-padding, 20px);
           padding-right: var(--content-padding, 20px);
-          transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
+          transition: background 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           touch-action: auto;
           pointer-events: auto;
           border: none;
+          border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'};
           box-shadow: none;
           outline: none;
         }
@@ -3799,10 +3806,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
           touch-action: auto;
-          padding: 8px 16px;
+          padding: 8px 17px;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
           letter-spacing: -0.01em;
-          font-weight: 400;
+          font-weight: 600;
           font-size: 14px;
           color: #ffffff;
           background: #007AFF;
@@ -5273,7 +5280,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </>
       )}
 
-      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0E0E0E' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0A0A0C' : '#F5F5F7', WebkitOverflowScrolling: 'touch' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -5468,17 +5475,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
-          {/* MUST KNOW — top stories (importance > 900) as full cards with a red thread down the side */}
+          {/* MUST KNOW — top stories (importance > 900), led by a calm accent thread down the side */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '24px 16px 16px 6px' }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 0 5px rgba(255,59,48,0.16)', flexShrink: 0 }} />
-                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FF3B30', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>Must Know</span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#FF3B30', borderRadius: 999, minWidth: 22, height: 22, padding: '0 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '24px 16px 14px 6px' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: mustKnowAccent, flexShrink: 0 }} />
+                <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>Must Know</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: mustKnowAccent, borderRadius: 999, minWidth: 20, height: 20, padding: '0 7px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
               </div>
               <div style={{ position: 'relative' }}>
-                {/* solid red thread down the left side, soft rounded ends top + bottom */}
-                <div style={{ position: 'absolute', left: 9, top: -8, bottom: 16, width: 3, borderRadius: 3, background: '#FF3B30' }} />
+                {/* calm accent thread down the left side, soft rounded ends top + bottom */}
+                <div style={{ position: 'absolute', left: 9, top: -6, bottom: 16, width: 2.5, borderRadius: 3, background: mustKnowAccent }} />
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
                     <FeedCard

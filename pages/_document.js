@@ -4,9 +4,11 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        {/* No webfont: the UI uses the system font (SF Pro on Apple devices) via
+            -apple-system. The old Inter load was never referenced and only cost
+            a render-blocking round-trip. */}
+        <meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0A0A0C" media="(prefers-color-scheme: dark)" />
       </Head>
       <body>
         <Main />

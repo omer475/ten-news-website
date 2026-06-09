@@ -61,20 +61,20 @@ export default function TodayPlusLoader() {
         .loader-container {
           position: fixed;
           inset: 0;
-          background: #000000;
+          background: #F5F5F7;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 9999;
           overflow: hidden;
         }
-        
+
         .bg-gradient {
           position: absolute;
           inset: 0;
           background: radial-gradient(
             ellipse 80% 50% at 50% -20%,
-            rgba(120, 119, 198, 0.12),
+            rgba(0, 122, 255, 0.06),
             transparent
           );
           pointer-events: none;
@@ -104,7 +104,7 @@ export default function TodayPlusLoader() {
           font-size: 36px;
           font-weight: 600;
           letter-spacing: -1.5px;
-          color: #ffffff;
+          color: #1d1d1f;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
           user-select: none;
         }
@@ -112,47 +112,47 @@ export default function TodayPlusLoader() {
         .logo-plus {
           font-size: 36px;
           font-weight: 600;
-          color: #ffffff;
+          color: #007AFF;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
           user-select: none;
           margin-left: 1px;
           display: inline-block;
           transition: color 0.3s ease;
         }
-        
+
         .logo-plus.animate {
           animation: pulse-color 2s ease-in-out infinite;
         }
-        
+
         @keyframes pulse-color {
           0%, 100% {
-            color: #ffffff;
+            color: #007AFF;
           }
           50% {
-            color: #4d94ff;
+            color: #4DA3FF;
           }
         }
-        
+
         .progress-container {
           width: 120px;
           height: 2px;
-          background: rgba(255, 255, 255, 0.10);
+          background: rgba(0, 0, 0, 0.08);
           border-radius: 2px;
           overflow: hidden;
           opacity: 0;
           transform: scaleX(0.8);
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
         .progress-container.visible {
           opacity: 1;
           transform: scaleX(1);
         }
-        
+
         .progress-bar {
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, #ffffff 0%, #4d94ff 100%);
+          background: linear-gradient(90deg, #007AFF 0%, #4DA3FF 100%);
           border-radius: 2px;
           transform-origin: left center;
           transition: transform 0.1s ease-out;

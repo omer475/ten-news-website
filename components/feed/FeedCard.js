@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import GraphChart from '../GraphChart';
 
@@ -10,21 +10,19 @@ const MapboxMap = dynamic(() => import('../MapboxMap'), { ssr: false });
 // Apple system font (SF Pro) — used across the card for a clean, smooth feel.
 const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", sans-serif';
 
-// Real liquid glass (same multi-layer specular highlights as the onboarding GlassTile).
-const GLASS_SHADOW = 'inset 0 0 0 0.5px rgba(255,255,255,0.35), inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.7), inset -1px -1px 0px -1px rgba(255,255,255,0.5), inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.4), inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.06), inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.08), inset 0px 1.5px 2px -1px rgba(0,0,0,0.06), 0px 0.5px 2.5px 0px rgba(0,0,0,0.04), 0px 2px 6px 0px rgba(0,0,0,0.03)';
+// One restrained system accent — Apple blue. Light vs dark variants only.
+const ACCENT_LIGHT = '#007AFF';
+const ACCENT_DARK = '#0A84FF';
 
 /*
- * FeedCard — one article in the continuous (Threads/X-style) feed.
- * Faithful port of the iOS app's ArticleCardView: header row → inline image
- * (18px radius, side margins) → title → up to 3 bullets → action row → info boxes.
- * Self-contained: owns its own expand/collapse + carousel state so it can drop
- * into a plain scroll list without touching the page's global state soup.
+ * FeedCard — one article in the continuous feed.
+ * Apple-editorial styling: a clean floating card (light by default), a single
+ * ink colour for headlines (emphasis from weight, never hue), one quiet bullet
+ * dot, and a single restrained blue accent used sparingly for interactive bits.
+ * Self-contained: owns its own info-switcher + carousel state.
  */
 
-// 8-color rotating bullet-dot palette (matches the app exactly)
-const BULLET_COLORS = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF3B30', '#5AC8FA', '#FF2D55', '#FFD60A'];
-
-// Category gradient fallback when no image / before color extraction (mirrors index.js)
+// Category gradient fallback when there's no usable hero photo (mirrors index.js).
 const CATEGORY_GRADIENTS = {
   Tech: ['#667eea', '#764ba2'], Technology: ['#667eea', '#764ba2'],
   Business: ['#11998e', '#38ef7d'], Finance: ['#f093fb', '#f5576c'],
@@ -39,18 +37,11 @@ function gradientFor(category) {
   return `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
 }
 
-// Hero image fades to fully transparent at the bottom so the card's rounded
-// bottom corners + page background show through (photo dissolves into the page).
-// Gentle now that the headline sits below the photo, so most of the image stays.
-const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%)';
+// Hero image fades to fully transparent at the bottom so the card's background
+// shows through (photo dissolves into the card).
+const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%)';
 
-// Titles: strip the "**" emphasis markers entirely — no highlighted words.
-function renderPlain(text) {
-  if (!text) return null;
-  return String(text).replace(/\*\*/g, '');
-}
-
-// Bullets: "**word**" → bold (same text color, no accent tint).
+// Bullets/titles: "**word**" → bold (same ink colour, no accent tint).
 function renderBold(text) {
   if (!text) return null;
   const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
@@ -62,50 +53,13 @@ function renderBold(text) {
   });
 }
 
-// Title: "**word**" → colored with the image's dominant accent, rest stays white.
-function renderHighlight(text, color) {
-  if (!text) return null;
-  const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <span key={i} style={{ color }}>{part.slice(2, -2)}</span>;
-    }
-    return <React.Fragment key={i}>{part}</React.Fragment>;
-  });
-}
-
-// "rgb(r,g,b)" or "#rrggbb" → translucent rgba(...) — for accent-tinted chips/boxes.
+// "rgb(r,g,b)" or "#rrggbb" → translucent rgba(...) — for the accent-tinted active pill.
 function withAlpha(color, a) {
   if (!color) return `rgba(0,0,0,${a})`;
   if (color.startsWith('rgb(')) return `rgba(${color.slice(4, -1)}, ${a})`;
   const h = color.replace('#', '');
   const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
-
-// Compact HSL→RGB (h 0-360, s/l 0-100) for the category-fallback accent.
-function hslToRgb(h, s, l) {
-  s /= 100; l /= 100;
-  const k = (n) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
-  return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
-}
-
-// Per-story fallback accent when the photo's colour can't be read (no image / blocked).
-// Hue from the category, nudged by the story id so neighbouring cards still differ.
-const CATEGORY_HUE = {
-  WORLD: 212, POLITICS: 354, BUSINESS: 150, FINANCE: 145, ECONOMY: 150,
-  TECHNOLOGY: 265, TECH: 265, SCIENCE: 188, HEALTH: 330, SPORTS: 22,
-  ENTERTAINMENT: 286, CULTURE: 286, CRYPTO: 38, CLIMATE: 162, ENVIRONMENT: 162,
-};
-function accentForCategory(category, id) {
-  const key = String(category || '').toUpperCase().replace(/\s+/g, '').replace(/NEWS$/, '');
-  const baseHue = CATEGORY_HUE[key] != null ? CATEGORY_HUE[key] : 212;
-  const hash = String(id || category || 'x').split('').reduce((a, c) => c.charCodeAt(0) + ((a << 5) - a), 0);
-  const hue = ((baseHue + (Math.abs(hash) % 31) - 15) + 360) % 360;
-  const [r, g, b] = hslToRgb(hue, 68, 62);
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 function timeAgo(dateStr) {
@@ -153,7 +107,7 @@ const INFO_LABEL = {
   graph: 'Chart', scorecard: 'Score', recipe: 'Recipe',
 };
 
-// Small line glyph per info-box type — gives the switcher pills + box a newsy, structured feel.
+// Small line glyph per info-box type — gives the switcher pills a structured feel.
 function InfoIcon({ type, color = 'currentColor', size = 14 }) {
   const s = { fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
   const glyph = {
@@ -168,15 +122,17 @@ function InfoIcon({ type, color = 'currentColor', size = 14 }) {
 }
 
 export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false, textOnly = false }) {
+  const accent = isDark ? ACCENT_DARK : ACCENT_LIGHT;
   const colors = {
-    text: isDark ? '#FFFFFF' : '#1d1d1f',
-    secondary: isDark ? 'rgba(255,255,255,0.55)' : '#6e6e73',
-    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F4',
-    chipText: isDark ? 'rgba(255,255,255,0.70)' : '#5a5a5f',
-    divider: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-    glassBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-    cardBg: isDark ? '#0E0E0E' : '#FFFFFF',
-    actionHover: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.05)',
+    text: isDark ? '#F5F5F7' : '#1d1d1f',
+    secondary: isDark ? 'rgba(235,235,245,0.6)' : '#6e6e73',
+    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F0F0F2',
+    chipText: isDark ? 'rgba(255,255,255,0.72)' : '#56565b',
+    divider: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)',
+    cardBg: isDark ? '#161618' : '#FFFFFF',
+    boxBg: isDark ? 'rgba(255,255,255,0.05)' : '#F5F5F7',
+    boxBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+    dot: isDark ? 'rgba(235,235,245,0.32)' : '#C7C7CC',
   };
 
   const title = story.title_news || story.title || '';
@@ -195,6 +151,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
       }
     } catch (_) { /* user cancelled share — ignore */ }
   }, [story, title]);
+
   const imageUrl = useMemo(() => {
     const raw = story.urlToImage || story.image_url;
     if (!raw) return null;
@@ -203,60 +160,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
     return s;
   }, [story]);
 
-  // --- accent colour pulled from the hero photo; the title's highlighted words use it ---
-  // The visible <img> is cross-origin and would taint a canvas, so we read pixels from a
-  // small CORS-enabled proxy copy of the same photo. Falls back to a per-story colour.
-  const fallbackAccent = useMemo(() => accentForCategory(story.category, story.id), [story.category, story.id]);
-  const [accent, setAccent] = useState(fallbackAccent);
-  useEffect(() => { setAccent(fallbackAccent); }, [fallbackAccent]);
-
-  useEffect(() => {
-    if (!imageUrl || typeof window === 'undefined') return;
-    let cancelled = false;
-    const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl.replace(/^https?:\/\//, ''))}&w=56&h=56&fit=cover&output=jpg`;
-    const img = new window.Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      if (cancelled) return;
-      try {
-        const c = document.createElement('canvas');
-        const w = (c.width = img.naturalWidth || 56);
-        const h = (c.height = img.naturalHeight || 56);
-        const ctx = c.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        const data = ctx.getImageData(0, 0, w, h).data;
-        let r = 0, g = 0, b = 0, n = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i + 3] < 200) continue;
-          const cr = data[i], cg = data[i + 1], cb = data[i + 2];
-          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb);
-          // bias toward saturated, mid-bright pixels — skip greys / too dark / blown-out
-          if (max - min < 28 || max < 55 || max > 245) continue;
-          r += cr; g += cg; b += cb; n++;
-        }
-        if (n > 0) {
-          r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
-          // keep the hue but lift dark colours so they read on the dark card
-          const mx = Math.max(r, g, b);
-          if (mx < 165) {
-            const k = 165 / Math.max(mx, 1);
-            r = Math.min(255, Math.round(r * k));
-            g = Math.min(255, Math.round(g * k));
-            b = Math.min(255, Math.round(b * k));
-          }
-          setAccent(`rgb(${r}, ${g}, ${b})`);
-        }
-      } catch (_) { /* keep fallback */ }
-    };
-    img.src = proxied;
-    return () => { cancelled = true; img.onload = null; };
-  }, [imageUrl]);
-
   // --- info boxes ---
   const infoTypes = useMemo(() => availableInfoTypes(story), [story]);
   const [activeInfo, setActiveInfo] = useState(infoTypes[0] || null);
   const [infoExpanded, setInfoExpanded] = useState(false);
-  useEffect(() => { setActiveInfo(infoTypes[0] || null); }, [story]); // eslint-disable-line
 
   // --- multi-page carousel ---
   const pages = Array.isArray(story.pages) && story.pages.length > 1 ? story.pages : null;
@@ -273,24 +180,37 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
     onOpen && onOpen(story);
   }, [story, onOpen, onEngage]);
 
+  // Floating card chrome for the main feed; Must Know cards (minimal) stay
+  // full-bleed inside their rail so the rail/divider rhythm is preserved.
+  // Must Know cards (minimal) stay full-bleed inside their rail; main-feed cards
+  // float. Layout (max-width / margin / radius) lives in the `.feed-card` class so
+  // it can shift responsively; only theme-dependent shadow/border go inline here.
+  const cardChrome = minimal
+    ? { borderBottom: `0.5px solid ${colors.divider}`, maxWidth: 640, margin: '0 auto' }
+    : {
+        boxShadow: isDark
+          ? '0 1px 2px rgba(0,0,0,0.5)'
+          : '0 1px 3px rgba(0,0,0,0.06), 0 12px 30px rgba(0,0,0,0.05)',
+        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.04)',
+      };
+
   return (
     <article
+      className={minimal ? undefined : 'feed-card'}
       style={{
-        padding: '18px 16px',
-        borderBottom: `0.5px solid ${colors.divider}`,
+        padding: minimal ? '18px 16px' : '16px 16px 14px',
         background: colors.cardBg,
-        maxWidth: 640,
-        margin: '0 auto',
         boxSizing: 'border-box',
         fontFamily: APPLE_FONT,
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         textRendering: 'optimizeLegibility',
+        ...cardChrome,
       }}
     >
       {/* Hero image — hidden in text-only mode */}
       {!textOnly && (
-      <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 14 }}>
+      <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 14 }}>
         {pages ? (
           <div ref={scrollerRef} onScroll={onScroll}
                style={{
@@ -316,7 +236,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             alt={title}
             loading="lazy"
             referrerPolicy="no-referrer"
-            style={{ width: '100%', maxHeight: '74vh', objectFit: 'cover', display: 'block',
+            style={{ width: '100%', maxHeight: '70vh', objectFit: 'cover', display: 'block',
                      WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
           />
         ) : (
@@ -336,18 +256,17 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
           </div>
         )}
 
-        {/* category chip — floating top-left, picks up the photo's accent for a pop of colour */}
+        {/* category chip — floating top-left, clean frosted pill, white uppercase text */}
         {story.category && (
           <div style={{
             position: 'absolute', top: 12, left: 12,
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '5px 10px 5px 8px', borderRadius: 999,
-            background: 'rgba(0,0,0,0.40)',
-            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-            border: '0.5px solid rgba(255,255,255,0.16)',
+            display: 'inline-flex', alignItems: 'center',
+            padding: '5px 11px', borderRadius: 999,
+            background: 'rgba(0,0,0,0.42)',
+            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+            border: '0.5px solid rgba(255,255,255,0.14)',
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent, boxShadow: `0 0 8px ${accent}` }} />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#fff' }}>
               {story.category}
             </span>
           </div>
@@ -355,11 +274,11 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
       </div>
       )}
 
-      {/* Headline block — below the photo so the image stays fully visible */}
+      {/* Headline block — single ink colour, weight-based emphasis only */}
       <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9, flexWrap: 'wrap' }}>
           {textOnly && story.category && (
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: accent }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary }}>
               {story.category}
             </span>
           )}
@@ -369,7 +288,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
                  referrerPolicy="no-referrer"
                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
-          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.01em', color: colors.text }}>
+          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em', color: colors.text }}>
             {story.source || 'Today+'}
           </span>
           <span style={{ fontSize: 12, lineHeight: 1, color: colors.secondary }}>·</span>
@@ -379,23 +298,23 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
         <h2 style={{
           margin: 0,
-          fontSize: 25, fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1.26,
+          fontSize: 25, fontWeight: 700, letterSpacing: '-0.022em', lineHeight: 1.24,
           color: colors.text,
         }}>
-          {renderHighlight(pages ? (pages[page].title || title) : title, accent)}
+          {renderBold(pages ? (pages[page].title || title) : title)}
         </h2>
       </div>
 
-      {/* Bullets (up to 3) */}
+      {/* Bullets (up to 3) — one quiet dot, no rainbow */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 11 }}>
           {(pages ? (pages[page].bullets || []) : bullets).slice(0, 3).map((b, i) => (
-            <div key={i} style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
+            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{
-                width: 6, height: 6, borderRadius: '50%', marginTop: 10, flexShrink: 0,
-                background: BULLET_COLORS[i % BULLET_COLORS.length],
+                width: 5, height: 5, borderRadius: '50%', marginTop: 9, flexShrink: 0,
+                background: colors.dot,
               }} />
-              <div style={{ fontSize: 18, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 17, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.01em' }}>
                 {renderBold(b)}
               </div>
             </div>
@@ -403,7 +322,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
       )}
 
-      {/* Info boxes — interactive context under the bullets (timeline · map · chart · details · score · recipe) */}
+      {/* Info boxes — interactive context under the bullets */}
       {!minimal && infoTypes.length > 0 && activeInfo && (
         <div style={{ marginTop: 16 }}>
           {/* switcher pills — only when there's more than one type to choose from */}
@@ -418,7 +337,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
                             border: `0.5px solid ${on ? 'transparent' : colors.divider}`,
                             cursor: 'pointer', borderRadius: 999, padding: '6px 12px',
                             fontSize: 12, fontWeight: 600,
-                            background: on ? withAlpha(accent, 0.16) : colors.chipBg,
+                            background: on ? withAlpha(accent, 0.12) : colors.chipBg,
                             color: on ? accent : colors.chipText,
                             transition: 'background 0.15s ease, color 0.15s ease',
                           }}>
@@ -431,13 +350,9 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
           )}
 
           <div style={{
-            borderRadius: 18, padding: 16,
-            // Real liquid glass — same recipe as the onboarding country/interest tiles.
-            background: 'rgba(255,255,255,0.06)',
-            backdropFilter: 'blur(12px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: GLASS_SHADOW,
+            borderRadius: 16, padding: 16,
+            background: colors.boxBg,
+            border: `1px solid ${colors.boxBorder}`,
           }}>
             <InfoBox type={activeInfo} story={story} accent={accent} colors={colors}
                      expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />
@@ -445,7 +360,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
       )}
 
-      {/* Action row: entities on the left, Save + Share on the right (app layout) */}
+      {/* Action row: entities on the left, Save + Share on the right */}
       {!minimal && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
         {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
@@ -510,7 +425,7 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
         width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
         color: active ? activeColor : restColor,
-        opacity: active ? 1 : (hover ? 1 : 0.6),
+        opacity: active ? 1 : (hover ? 1 : 0.55),
         transform: press ? 'scale(0.86)' : 'scale(1)',
         transition: 'transform 0.1s ease, color 0.18s ease, opacity 0.18s ease',
         WebkitTapHighlightColor: 'transparent',
@@ -524,17 +439,17 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
 // --- individual info boxes ---
 function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'graph' && story.graph) {
-    // Light data card (charts read best on white): accent title + expand arrow + line chart.
+    // Charts read best on white — keep a light inner card, soft shadow.
     return (
-      <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: 16, padding: '14px 14px 6px', boxShadow: '0 6px 20px rgba(0,0,0,0.18)' }}>
+      <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: 14, padding: '14px 14px 6px', boxShadow: '0 1px 4px rgba(0,0,0,0.10)' }}>
         {story.graph.title && (
-          <div style={{ fontSize: 14, fontWeight: 800, color: accent, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.2px' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: accent, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.01em' }}>
             {story.graph.title}
           </div>
         )}
         <button onClick={onToggle} aria-label={expanded ? 'Collapse chart' : 'Expand chart'} style={{
           position: 'absolute', top: 12, right: 12, border: 'none', background: 'transparent',
-          cursor: 'pointer', color: '#1d1d1f', padding: 0, lineHeight: 0,
+          cursor: 'pointer', color: '#86868b', padding: 0, lineHeight: 0,
         }}>
           <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
             {expanded
@@ -553,7 +468,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
         {/* position:relative is REQUIRED — MapboxMap renders position:absolute inset:0,
             so without a positioned wrapper it escapes and fills the whole viewport. */}
-        <div style={{ position: 'relative', height: expanded ? 240 : 92, borderRadius: 16, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: expanded ? 240 : 92, borderRadius: 14, overflow: 'hidden' }}>
           <MapboxMap
             center={story.map.center || { lat: 0, lon: 0 }}
             markers={story.map.markers || []}
@@ -586,8 +501,8 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     );
   }
   if (type === 'details' && story.details) {
-    // Stat row (image): up to 3 columns separated by thin dividers — uppercase label,
-    // big accent number, small unit. The number/unit are split off the value string.
+    // Stat row: up to 3 columns separated by thin dividers — uppercase label,
+    // big INK number (editorial, not coloured), small unit.
     const items = story.details.slice(0, 3);
     return (
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, alignItems: 'start' }}>
@@ -609,7 +524,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
               <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 9 }}>
                 {label}
               </span>
-              <span style={{ fontSize: valueSize, fontWeight: 800, lineHeight: 1.15, letterSpacing: valueSize >= 22 ? '-0.5px' : '-0.1px', color: accent }}>
+              <span style={{ fontSize: valueSize, fontWeight: 800, lineHeight: 1.15, letterSpacing: valueSize >= 22 ? '-0.02em' : '-0.005em', color: colors.text }}>
                 {value}
               </span>
               {unit && <span style={{ fontSize: 12, color: colors.secondary, marginTop: 7 }}>{unit}</span>}
@@ -625,7 +540,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{s.home_team || s.homeTeam}</span>
-        <span style={{ fontSize: 26, fontWeight: 800, color: accent }}>{s.home_score ?? s.homeScore}</span>
+        <span style={{ fontSize: 26, fontWeight: 800, color: colors.text }}>{s.home_score ?? s.homeScore}</span>
         <span style={{ color: colors.secondary }}>:</span>
         <span style={{ fontSize: 26, fontWeight: 800, color: colors.text }}>{s.away_score ?? s.awayScore}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{s.away_team || s.awayTeam}</span>
@@ -651,7 +566,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
             {meta.map(([label, value], i) => (
               <div key={i}>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>{label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{value}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: colors.text }}>{value}</div>
               </div>
             ))}
           </div>
@@ -671,7 +586,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                 <div style={{
                   width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                  background: withAlpha(accent, 0.18), color: accent,
+                  background: withAlpha(accent, 0.16), color: accent,
                   fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{i + 1}</div>
                 <div style={{ fontSize: 13, lineHeight: 1.45, color: colors.text }}>{txt(st)}</div>

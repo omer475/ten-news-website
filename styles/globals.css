@@ -6,7 +6,7 @@
 }
 
 html {
-  background: #000000;
+  background: #F5F5F7;
   padding: 0;
   margin: 0;
   height: 100%;
@@ -15,8 +15,9 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  background: #000000;
-  color: #f5f5f7;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  background: #F5F5F7;
+  color: #1d1d1f;
   overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
@@ -466,6 +467,23 @@ body {
   .progress-dot.active {
     width: 5px;
     height: 18px;
+  }
+}
+
+/* Main-feed article as a floating Apple-News-style card.
+   Layout only — theme shadow/border are set inline in FeedCard so they can
+   follow light/dark. Responsive radius + side gaps live here (inline styles
+   can't carry media queries). */
+.feed-card {
+  max-width: 640px;
+  margin: 0 auto 12px;
+  border-radius: 18px;
+}
+
+@media (max-width: 680px) {
+  .feed-card {
+    margin: 0 10px 12px;
+    border-radius: 16px;
   }
 }
 
