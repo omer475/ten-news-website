@@ -5435,15 +5435,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
           {/* MUST KNOW — top stories (importance > 900) as full cards with a red thread down the side */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <style dangerouslySetInnerHTML={{ __html: '@keyframes mkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '20px 16px 10px 22px' }}>
-                <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 12px rgba(255,59,48,0.85)', animation: 'mkPulse 2.2s ease-in-out infinite', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FF3B30' }}>Must Know</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: darkMode ? 'rgba(255,255,255,0.5)' : '#6e6e73' }}>{mustKnowStories.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '22px 16px 14px 6px' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 0 4px rgba(255,59,48,0.16)', flexShrink: 0 }} />
+                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#FF3B30' }}>Must Know</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: '#FF3B30', borderRadius: 999, minWidth: 20, height: 20, padding: '0 7px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
               </div>
               <div style={{ position: 'relative' }}>
-                {/* the red thread: down the left side, fading out at the bottom of the last card's bullets */}
-                <div style={{ position: 'absolute', left: 9, top: -10, bottom: 16, width: 3, borderRadius: 3, background: 'linear-gradient(180deg, #FF3B30 0%, rgba(255,59,48,0.85) 82%, rgba(255,59,48,0) 100%)' }} />
+                {/* solid red thread down the left side, soft rounded ends top + bottom */}
+                <div style={{ position: 'absolute', left: 9, top: -8, bottom: 16, width: 3, borderRadius: 3, background: '#FF3B30' }} />
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
                     <FeedCard

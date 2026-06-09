@@ -426,15 +426,6 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
               ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.22), 0 10px 30px rgba(0,0,0,0.32)'
               : 'inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 28px rgba(0,0,0,0.10)',
           }}>
-            {/* single-type label (the pills already label when there are several) */}
-            {infoTypes.length === 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                <InfoIcon type={activeInfo} color={accent} />
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
-                  {INFO_LABEL[activeInfo]}
-                </span>
-              </div>
-            )}
             <InfoBox type={activeInfo} story={story} accent={accent} colors={colors}
                      expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />
           </div>
@@ -520,10 +511,28 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
 // --- individual info boxes ---
 function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'graph' && story.graph) {
+    // Light data card (charts read best on white): accent title + expand arrow + line chart.
     return (
-      <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <GraphChart graph={story.graph} expanded={expanded} accentColor={accent} />
-      </Expandable>
+      <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: 16, padding: '14px 14px 6px', boxShadow: '0 6px 20px rgba(0,0,0,0.18)' }}>
+        {story.graph.title && (
+          <div style={{ fontSize: 14, fontWeight: 800, color: accent, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.2px' }}>
+            {story.graph.title}
+          </div>
+        )}
+        <button onClick={onToggle} aria-label={expanded ? 'Collapse chart' : 'Expand chart'} style={{
+          position: 'absolute', top: 12, right: 12, border: 'none', background: 'transparent',
+          cursor: 'pointer', color: '#1d1d1f', padding: 0, lineHeight: 0,
+        }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            {expanded
+              ? <path d="M10 14 4 20M4 15v5h5M14 10l6-6M20 9V4h-5" />
+              : <path d="M7 17 17 7M9 7h8v8" />}
+          </svg>
+        </button>
+        <div style={{ height: expanded ? 240 : 150, width: '100%' }}>
+          <GraphChart graph={story.graph} expanded={expanded} accentColor={accent} />
+        </div>
+      </div>
     );
   }
   if (type === 'map' && story.map) {
@@ -564,17 +573,36 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     );
   }
   if (type === 'details' && story.details) {
-    // No show more/less — details are short; render them all.
+    // Stat row (image): up to 3 columns separated by thin dividers — uppercase label,
+    // big accent number, small unit. The number/unit are split off the value string.
+    const items = story.details.slice(0, 3);
     return (
-      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-        {story.details.map((d, i) => (
-          <div key={i} style={{ minWidth: 80 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>
-              {d.label}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, alignItems: 'start' }}>
+        {items.map((d, i) => {
+          const label = d.label || d.name || '';
+          const raw = String(d.value ?? d.description ?? '');
+          const m = raw.match(/^([^a-zA-Z]*[0-9][^a-zA-Z]*)\s*(.*)$/);
+          const value = m ? m[1].trim() : raw;
+          const unit = m ? m[2].trim() : '';
+          // Big & bold for short number-like values (100, 2024); smaller for text facts.
+          const len = value.length;
+          const valueSize = len <= 5 ? 30 : len <= 9 ? 22 : len <= 16 ? 16 : 14;
+          return (
+            <div key={i} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+              padding: '2px 8px',
+              borderLeft: i > 0 ? `1px solid ${colors.divider}` : 'none',
+            }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 9 }}>
+                {label}
+              </span>
+              <span style={{ fontSize: valueSize, fontWeight: 800, lineHeight: 1.15, letterSpacing: valueSize >= 22 ? '-0.5px' : '-0.1px', color: accent }}>
+                {value}
+              </span>
+              {unit && <span style={{ fontSize: 12, color: colors.secondary, marginTop: 7 }}>{unit}</span>}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: accent }}>{d.value}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
