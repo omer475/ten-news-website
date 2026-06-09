@@ -9,6 +9,17 @@ const MapboxMap = dynamic(() => import('../MapboxMap'), { ssr: false });
 
 const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", sans-serif';
 
+// Liquid-glass specular highlights — bright top edge, soft side sheen, inner
+// bottom shadow, and an outer drop shadow so the card reads as floating glass.
+const LIQUID_GLASS_SHADOW = [
+  'inset 0 0 0 0.5px rgba(255,255,255,0.16)',
+  'inset 0 1.6px 1px -1px rgba(255,255,255,0.7)',
+  'inset 1.5px 0 1px -1.5px rgba(255,255,255,0.4)',
+  'inset -1.5px 0 1px -1.5px rgba(255,255,255,0.22)',
+  'inset 0 -2px 2px -2px rgba(0,0,0,0.6)',
+  '0 12px 36px rgba(0,0,0,0.5)',
+].join(', ');
+
 /*
  * FeedCard — IMMERSIVE continuous-scroll card (port of the iOS full-screen feed).
  * Each card's background is the photo's dark "blur" colour; the photo dissolves
@@ -321,9 +332,12 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
   return (
     <article className="feed-card-immersive" style={{
       maxWidth: 600, borderRadius: 24, overflow: 'hidden',
-      background: blur, color: colors.text, boxSizing: 'border-box',
+      // Liquid glass: translucent blur-colour tint + backdrop blur + specular edges.
+      background: withAlpha(blur, 0.82), color: colors.text, boxSizing: 'border-box',
+      backdropFilter: 'blur(28px) saturate(175%)', WebkitBackdropFilter: 'blur(28px) saturate(175%)',
+      border: '1px solid rgba(255,255,255,0.14)',
       fontFamily: APPLE_FONT, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.5)',
+      boxShadow: LIQUID_GLASS_SHADOW,
       transition: 'background 0.5s ease',
     }}>
       {/* Hero photo dissolving into the blur background */}
@@ -351,7 +365,7 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
           )}
           {/* dissolve overlay → blur colour at the bottom */}
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', pointerEvents: 'none',
-                        background: `linear-gradient(to bottom, ${withAlpha(blur, 0)} 0%, ${withAlpha(blur, 0.55)} 55%, ${blur} 100%)` }} />
+                        background: `linear-gradient(to bottom, ${withAlpha(blur, 0)} 0%, ${withAlpha(blur, 0.5)} 55%, ${withAlpha(blur, 0.82)} 100%)` }} />
           {pages && (
             <div style={{ position: 'absolute', top: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6 }}>
               {pages.map((_, i) => (
