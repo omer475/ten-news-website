@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import GraphChart from '../GraphChart';
 
@@ -10,16 +10,113 @@ const MapboxMap = dynamic(() => import('../MapboxMap'), { ssr: false });
 // Apple system font (SF Pro) — used across the card for a clean, smooth feel.
 const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", sans-serif';
 
-// One restrained system accent — Apple blue. Light vs dark variants only.
-const ACCENT_LIGHT = '#007AFF';
-const ACCENT_DARK = '#0A84FF';
+// Apple's standard iOS System Colors (light/default sRGB). Each article's
+// highlighted words are tinted with whichever of these is CLOSEST to the
+// dominant colour of its hero photo — so the accent always harmonises with
+// the image, but only ever Apple's own palette is used.
+const APPLE_SYSTEM_COLORS = [
+  [255, 59, 48],   // red      #FF3B30
+  [255, 149, 0],   // orange   #FF9500
+  [255, 204, 0],   // yellow   #FFCC00
+  [52, 199, 89],   // green    #34C759
+  [0, 199, 190],   // mint     #00C7BE
+  [48, 176, 199],  // teal     #30B0C7
+  [50, 173, 230],  // cyan     #32ADE6
+  [0, 122, 255],   // blue     #007AFF
+  [88, 86, 214],   // indigo   #5856D6
+  [175, 82, 222],  // purple   #AF52DE
+  [255, 45, 85],   // pink     #FF2D55
+  [162, 132, 94],  // brown    #A2845E
+  [142, 142, 147], // gray     #8E8E93
+];
+
+// Sensible per-category Apple colour when there's no photo to sample.
+const CATEGORY_APPLE = {
+  TECHNOLOGY: [0, 122, 255], TECH: [0, 122, 255],
+  BUSINESS: [52, 199, 89], FINANCE: [52, 199, 89], ECONOMY: [52, 199, 89],
+  POLITICS: [255, 59, 48], WORLD: [88, 86, 214],
+  SCIENCE: [48, 176, 199], HEALTH: [255, 45, 85],
+  SPORTS: [255, 149, 0], CRYPTO: [255, 149, 0],
+  ENTERTAINMENT: [175, 82, 222], CULTURE: [175, 82, 222],
+  CLIMATE: [52, 199, 89], ENVIRONMENT: [52, 199, 89],
+};
+
+const rgbStr = ([r, g, b]) => `rgb(${r}, ${g}, ${b})`;
+
+// Perceptual-ish nearest Apple colour (weighted RGB / "redmean"-style distance).
+function nearestAppleColor([r, g, b]) {
+  let best = APPLE_SYSTEM_COLORS[7], bestD = Infinity; // default blue
+  for (const c of APPLE_SYSTEM_COLORS) {
+    const rm = (r + c[0]) / 2;
+    const dr = r - c[0], dg = g - c[1], db = b - c[2];
+    const d = (2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db;
+    if (d < bestD) { bestD = d; best = c; }
+  }
+  return best;
+}
+
+// --- HSL <-> RGB + WCAG contrast, used to keep the tint readable on the card bg ---
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h /= 6;
+  }
+  return [h, s, l];
+}
+function hslToRgb(h, s, l) {
+  let r, g, b;
+  if (s === 0) { r = g = b = l; }
+  else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1 / 3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+function relLum([r, g, b]) {
+  const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function contrast(a, b) {
+  const la = relLum(a), lb = relLum(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+// Nudge lightness until the tint clears ~3:1 against the card background, keeping its hue.
+function makeReadable(rgb, isDark) {
+  const bg = isDark ? [10, 10, 12] : [255, 255, 255];
+  let [h, s, l] = rgbToHsl(...rgb);
+  let out = rgb, guard = 0;
+  while (contrast(out, bg) < 3.0 && guard++ < 24) {
+    l = isDark ? Math.min(0.92, l + 0.035) : Math.max(0.16, l - 0.035);
+    out = hslToRgb(h, s, l);
+  }
+  return out;
+}
+function categoryAppleColor(category, isDark) {
+  const key = String(category || '').toUpperCase().replace(/\s+/g, '').replace(/NEWS$/, '');
+  const base = CATEGORY_APPLE[key] || APPLE_SYSTEM_COLORS[7];
+  return rgbStr(makeReadable(base, isDark));
+}
 
 /*
  * FeedCard — one article in the continuous feed.
- * Apple-editorial styling: a clean floating card (light by default), a single
- * ink colour for headlines (emphasis from weight, never hue), one quiet bullet
- * dot, and a single restrained blue accent used sparingly for interactive bits.
- * Self-contained: owns its own info-switcher + carousel state.
+ * Apple-editorial styling: every article shares ONE flat background (no per-card
+ * box/shadow), a single ink colour for headlines (emphasis from weight, never
+ * hue), one quiet bullet dot, a single restrained blue accent, and compact type.
  */
 
 // Category gradient fallback when there's no usable hero photo (mirrors index.js).
@@ -37,19 +134,16 @@ function gradientFor(category) {
   return `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
 }
 
-// Hero image fades to fully transparent at the bottom so the card's background
-// shows through (photo dissolves into the card).
-const BOTTOM_FADE = 'linear-gradient(to bottom, #000 0%, #000 80%, transparent 100%)';
-
-// Bullets/titles: "**word**" → bold (same ink colour, no accent tint).
-function renderBold(text) {
+// Titles + bullets: "**word**" → tinted with the article's Apple accent colour
+// and semibold. Everything else stays ink. (rest = base weight for that block.)
+function renderHighlight(text, color, restWeight = 400) {
   if (!text) return null;
   const parts = String(text).split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} style={{ fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
+      return <span key={i} style={{ color, fontWeight: 600 }}>{part.slice(2, -2)}</span>;
     }
-    return <React.Fragment key={i}>{part}</React.Fragment>;
+    return <span key={i} style={{ fontWeight: restWeight }}>{part}</span>;
   });
 }
 
@@ -108,7 +202,7 @@ const INFO_LABEL = {
 };
 
 // Small line glyph per info-box type — gives the switcher pills a structured feel.
-function InfoIcon({ type, color = 'currentColor', size = 14 }) {
+function InfoIcon({ type, color = 'currentColor', size = 13 }) {
   const s = { fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
   const glyph = {
     details: <><circle cx="12" cy="12" r="9" {...s} /><path d="M12 11v5M12 7.6h.01" {...s} /></>,
@@ -122,16 +216,23 @@ function InfoIcon({ type, color = 'currentColor', size = 14 }) {
 }
 
 export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false, textOnly = false }) {
-  const accent = isDark ? ACCENT_DARK : ACCENT_LIGHT;
+  // Per-article accent = the Apple system colour closest to the hero photo
+  // (falls back to a per-category Apple colour before the photo is read).
+  const fallbackAccent = useMemo(() => categoryAppleColor(story.category, isDark), [story.category, isDark]);
+  const [accent, setAccent] = useState(fallbackAccent);
+  useEffect(() => { setAccent(fallbackAccent); }, [fallbackAccent]);
+
   const colors = {
     text: isDark ? '#F5F5F7' : '#1d1d1f',
-    secondary: isDark ? 'rgba(235,235,245,0.6)' : '#6e6e73',
-    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F0F0F2',
-    chipText: isDark ? 'rgba(255,255,255,0.72)' : '#56565b',
-    divider: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)',
-    cardBg: isDark ? '#161618' : '#FFFFFF',
-    boxBg: isDark ? 'rgba(255,255,255,0.05)' : '#F5F5F7',
-    boxBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+    secondary: isDark ? 'rgba(235,235,245,0.6)' : '#86868b',
+    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F4',
+    chipText: isDark ? 'rgba(255,255,255,0.72)' : '#6e6e73',
+    divider: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)',
+    // Every article sits on this one flat background — no boxes.
+    cardBg: isDark ? '#0A0A0C' : '#FFFFFF',
+    // Info boxes: pure white, defined only by a thin light-grey outline.
+    boxBg: isDark ? '#1C1C1E' : '#FFFFFF',
+    boxBorder: isDark ? 'rgba(255,255,255,0.12)' : '#E5E5E7',
     dot: isDark ? 'rgba(235,235,245,0.32)' : '#C7C7CC',
   };
 
@@ -160,6 +261,43 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
     return s;
   }, [story]);
 
+  // Read the hero photo's dominant colour (via a CORS-friendly proxy so the canvas
+  // isn't tainted), snap it to the nearest Apple system colour, then nudge it to
+  // stay readable on the card. That colour tints the highlighted words.
+  useEffect(() => {
+    if (!imageUrl || typeof window === 'undefined') return;
+    let cancelled = false;
+    const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl.replace(/^https?:\/\//, ''))}&w=56&h=56&fit=cover&output=jpg`;
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (cancelled) return;
+      try {
+        const c = document.createElement('canvas');
+        const w = (c.width = img.naturalWidth || 56);
+        const h = (c.height = img.naturalHeight || 56);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 200) continue;
+          const cr = data[i], cg = data[i + 1], cb = data[i + 2];
+          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb);
+          // bias toward saturated, mid-bright pixels — skip greys / too dark / blown-out
+          if (max - min < 28 || max < 55 || max > 245) continue;
+          r += cr; g += cg; b += cb; n++;
+        }
+        if (n > 0) {
+          const dom = [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+          setAccent(rgbStr(makeReadable(nearestAppleColor(dom), isDark)));
+        }
+      } catch (_) { /* keep fallback */ }
+    };
+    img.src = proxied;
+    return () => { cancelled = true; img.onload = null; };
+  }, [imageUrl, isDark]);
+
   // --- info boxes ---
   const infoTypes = useMemo(() => availableInfoTypes(story), [story]);
   const [activeInfo, setActiveInfo] = useState(infoTypes[0] || null);
@@ -180,37 +318,25 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
     onOpen && onOpen(story);
   }, [story, onOpen, onEngage]);
 
-  // Floating card chrome for the main feed; Must Know cards (minimal) stay
-  // full-bleed inside their rail so the rail/divider rhythm is preserved.
-  // Must Know cards (minimal) stay full-bleed inside their rail; main-feed cards
-  // float. Layout (max-width / margin / radius) lives in the `.feed-card` class so
-  // it can shift responsively; only theme-dependent shadow/border go inline here.
-  const cardChrome = minimal
-    ? { borderBottom: `0.5px solid ${colors.divider}`, maxWidth: 640, margin: '0 auto' }
-    : {
-        boxShadow: isDark
-          ? '0 1px 2px rgba(0,0,0,0.5)'
-          : '0 1px 3px rgba(0,0,0,0.06), 0 12px 30px rgba(0,0,0,0.05)',
-        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.04)',
-      };
-
   return (
     <article
-      className={minimal ? undefined : 'feed-card'}
       style={{
-        padding: minimal ? '18px 16px' : '16px 16px 14px',
+        padding: '14px 16px',
+        // One continuous background for all articles, hairline divider between.
+        borderBottom: `0.5px solid ${colors.divider}`,
         background: colors.cardBg,
+        maxWidth: 640,
+        margin: '0 auto',
         boxSizing: 'border-box',
         fontFamily: APPLE_FONT,
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         textRendering: 'optimizeLegibility',
-        ...cardChrome,
       }}
     >
-      {/* Hero image — hidden in text-only mode */}
+      {/* Hero image — hidden in text-only mode. Clean edges (no bottom fade). */}
       {!textOnly && (
-      <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 14 }}>
+      <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 11 }}>
         {pages ? (
           <div ref={scrollerRef} onScroll={onScroll}
                style={{
@@ -221,8 +347,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
               <div key={i} style={{ flex: '0 0 100%', scrollSnapAlign: 'start' }}>
                 {(p.image || imageUrl) ? (
                   <img src={p.image || imageUrl} alt=""
-                       style={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block',
-                                WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
+                       style={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block' }}
                        referrerPolicy="no-referrer" />
                 ) : (
                   <div style={{ width: '100%', aspectRatio: '3 / 2', background: gradientFor(story.category) }} />
@@ -236,8 +361,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             alt={title}
             loading="lazy"
             referrerPolicy="no-referrer"
-            style={{ width: '100%', maxHeight: '70vh', objectFit: 'cover', display: 'block',
-                     WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
+            style={{ width: '100%', maxHeight: '58vh', objectFit: 'cover', display: 'block' }}
           />
         ) : (
           <div style={{ width: '100%', aspectRatio: '3 / 2', background: gradientFor(story.category) }} />
@@ -245,10 +369,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
 
         {/* page dots (carousel) — top centre over the image */}
         {pages && (
-          <div style={{ position: 'absolute', top: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6 }}>
+          <div style={{ position: 'absolute', top: 10, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 5 }}>
             {pages.map((_, i) => (
               <div key={i} style={{
-                width: 6, height: 6, borderRadius: '50%',
+                width: 5, height: 5, borderRadius: '50%',
                 background: i === page ? '#fff' : 'rgba(255,255,255,0.45)',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.4)',
               }} />
@@ -259,14 +383,14 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         {/* category chip — floating top-left, clean frosted pill, white uppercase text */}
         {story.category && (
           <div style={{
-            position: 'absolute', top: 12, left: 12,
+            position: 'absolute', top: 10, left: 10,
             display: 'inline-flex', alignItems: 'center',
-            padding: '5px 11px', borderRadius: 999,
+            padding: '4px 9px', borderRadius: 999,
             background: 'rgba(0,0,0,0.42)',
             backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
             border: '0.5px solid rgba(255,255,255,0.14)',
           }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#fff' }}>
+            <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff' }}>
               {story.category}
             </span>
           </div>
@@ -274,48 +398,48 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
       </div>
       )}
 
-      {/* Headline block — single ink colour, weight-based emphasis only */}
-      <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9, flexWrap: 'wrap' }}>
+      {/* Headline block — single ink colour, weight-based emphasis only, compact */}
+      <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 9 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
           {textOnly && story.category && (
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
               {story.category}
             </span>
           )}
           {logoFor(story.source) && (
-            <img src={logoFor(story.source)} alt="" width={16} height={16}
+            <img src={logoFor(story.source)} alt="" width={14} height={14}
                  style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
                  referrerPolicy="no-referrer"
                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
-          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em', color: colors.text }}>
+          <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '-0.01em', color: colors.text }}>
             {story.source || 'Today+'}
           </span>
-          <span style={{ fontSize: 12, lineHeight: 1, color: colors.secondary }}>·</span>
-          <span style={{ fontSize: 13, fontWeight: 400, color: colors.secondary }}>
+          <span style={{ fontSize: 11, lineHeight: 1, color: colors.secondary }}>·</span>
+          <span style={{ fontSize: 12, fontWeight: 400, color: colors.secondary }}>
             {timeAgo(story.publishedAt || story.published_at)}
           </span>
         </div>
         <h2 style={{
           margin: 0,
-          fontSize: 25, fontWeight: 700, letterSpacing: '-0.022em', lineHeight: 1.24,
+          fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3,
           color: colors.text,
         }}>
-          {renderBold(pages ? (pages[page].title || title) : title)}
+          {renderHighlight(pages ? (pages[page].title || title) : title, accent, 600)}
         </h2>
       </div>
 
-      {/* Bullets (up to 3) — one quiet dot, no rainbow */}
+      {/* Bullets (up to 3) — one quiet dot, compact text */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 11 }}>
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {(pages ? (pages[page].bullets || []) : bullets).slice(0, 3).map((b, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{
-                width: 5, height: 5, borderRadius: '50%', marginTop: 9, flexShrink: 0,
+                width: 4, height: 4, borderRadius: '50%', marginTop: 8, flexShrink: 0,
                 background: colors.dot,
               }} />
-              <div style={{ fontSize: 17, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.01em' }}>
-                {renderBold(b)}
+              <div style={{ fontSize: 14, lineHeight: 1.47, color: colors.text, letterSpacing: '-0.005em' }}>
+                {renderHighlight(b, accent, 400)}
               </div>
             </div>
           ))}
@@ -324,19 +448,19 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
 
       {/* Info boxes — interactive context under the bullets */}
       {!minimal && infoTypes.length > 0 && activeInfo && (
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 13 }}>
           {/* switcher pills — only when there's more than one type to choose from */}
           {infoTypes.length > 1 && (
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 5, marginBottom: 9, flexWrap: 'wrap' }}>
               {infoTypes.map((t) => {
                 const on = t === activeInfo;
                 return (
                   <button key={t} onClick={() => { setActiveInfo(t); setInfoExpanded(false); }}
                           style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
                             border: `0.5px solid ${on ? 'transparent' : colors.divider}`,
-                            cursor: 'pointer', borderRadius: 999, padding: '6px 12px',
-                            fontSize: 12, fontWeight: 600,
+                            cursor: 'pointer', borderRadius: 999, padding: '5px 10px',
+                            fontSize: 11, fontWeight: 600,
                             background: on ? withAlpha(accent, 0.12) : colors.chipBg,
                             color: on ? accent : colors.chipText,
                             transition: 'background 0.15s ease, color 0.15s ease',
@@ -349,8 +473,9 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             </div>
           )}
 
+          {/* Pure white box, defined only by a thin light-grey outline. */}
           <div style={{
-            borderRadius: 16, padding: 16,
+            borderRadius: 14, padding: 14,
             background: colors.boxBg,
             border: `1px solid ${colors.boxBorder}`,
           }}>
@@ -362,18 +487,18 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
 
       {/* Action row: entities on the left, Save + Share on the right */}
       {!minimal && (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
         {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
         <div style={{
-          display: 'flex', gap: 6, flex: 1, minWidth: 0,
+          display: 'flex', gap: 5, flex: 1, minWidth: 0,
           overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
         }}>
           {entities.map((tag, i) => (
             <span key={i} style={{
               flexShrink: 0,
-              fontSize: 12.5, fontWeight: 500, lineHeight: 1,
+              fontSize: 11.5, fontWeight: 500, lineHeight: 1,
               color: colors.chipText, background: colors.chipBg,
-              padding: '6px 11px', borderRadius: 999, whiteSpace: 'nowrap',
+              padding: '5px 9px', borderRadius: 999, whiteSpace: 'nowrap',
               textTransform: 'capitalize',
             }}>
               {tag}
@@ -382,7 +507,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
 
         {/* Save + Share */}
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <ActionButton
             label={saved ? 'Saved' : 'Save'}
             isDark={isDark}
@@ -422,7 +547,7 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
       onMouseDown={() => setPress(true)}
       onMouseUp={() => setPress(false)}
       style={{
-        width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
         color: active ? activeColor : restColor,
         opacity: active ? 1 : (hover ? 1 : 0.55),
@@ -431,7 +556,7 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <svg width={22} height={22} viewBox="0 0 24 24">{children}</svg>
+      <svg width={19} height={19} viewBox="0 0 24 24">{children}</svg>
     </button>
   );
 }
@@ -439,25 +564,25 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
 // --- individual info boxes ---
 function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'graph' && story.graph) {
-    // Charts read best on white — keep a light inner card, soft shadow.
+    // The box is already pure white — render the chart straight on it, no nested card.
     return (
-      <div style={{ position: 'relative', background: '#FFFFFF', borderRadius: 14, padding: '14px 14px 6px', boxShadow: '0 1px 4px rgba(0,0,0,0.10)' }}>
+      <div style={{ position: 'relative' }}>
         {story.graph.title && (
-          <div style={{ fontSize: 14, fontWeight: 700, color: accent, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.01em' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.01em' }}>
             {story.graph.title}
           </div>
         )}
         <button onClick={onToggle} aria-label={expanded ? 'Collapse chart' : 'Expand chart'} style={{
-          position: 'absolute', top: 12, right: 12, border: 'none', background: 'transparent',
-          cursor: 'pointer', color: '#86868b', padding: 0, lineHeight: 0,
+          position: 'absolute', top: 0, right: 0, border: 'none', background: 'transparent',
+          cursor: 'pointer', color: colors.secondary, padding: 0, lineHeight: 0,
         }}>
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+          <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
             {expanded
               ? <path d="M10 14 4 20M4 15v5h5M14 10l6-6M20 9V4h-5" />
               : <path d="M7 17 17 7M9 7h8v8" />}
           </svg>
         </button>
-        <div style={{ height: expanded ? 240 : 150, width: '100%' }}>
+        <div style={{ height: expanded ? 230 : 140, width: '100%' }}>
           <GraphChart graph={story.graph} expanded={expanded} accentColor={accent} />
         </div>
       </div>
@@ -468,7 +593,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
         {/* position:relative is REQUIRED — MapboxMap renders position:absolute inset:0,
             so without a positioned wrapper it escapes and fills the whole viewport. */}
-        <div style={{ position: 'relative', height: expanded ? 240 : 92, borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: expanded ? 230 : 88, borderRadius: 12, overflow: 'hidden' }}>
           <MapboxMap
             center={story.map.center || { lat: 0, lon: 0 }}
             markers={story.map.markers || []}
@@ -486,13 +611,13 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     const items = expanded ? story.timeline : story.timeline.slice(0, 3);
     return (
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
           {items.map((t, i) => (
-            <div key={i} style={{ display: 'flex', gap: 10 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: accent, marginTop: 4, flexShrink: 0 }} />
+            <div key={i} style={{ display: 'flex', gap: 9 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent, marginTop: 4, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: accent }}>{t.date || t.time}</div>
-                <div style={{ fontSize: 13, color: colors.text, lineHeight: 1.4 }}>{t.text || t.event}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: accent }}>{t.date || t.time}</div>
+                <div style={{ fontSize: 12.5, color: colors.text, lineHeight: 1.4 }}>{t.text || t.event}</div>
               </div>
             </div>
           ))}
@@ -502,7 +627,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   }
   if (type === 'details' && story.details) {
     // Stat row: up to 3 columns separated by thin dividers — uppercase label,
-    // big INK number (editorial, not coloured), small unit.
+    // INK number (editorial, not coloured), small unit. Compact sizes.
     const items = story.details.slice(0, 3);
     return (
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, alignItems: 'start' }}>
@@ -512,22 +637,21 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
           const m = raw.match(/^([^a-zA-Z]*[0-9][^a-zA-Z]*)\s*(.*)$/);
           const value = m ? m[1].trim() : raw;
           const unit = m ? m[2].trim() : '';
-          // Big & bold for short number-like values (100, 2024); smaller for text facts.
           const len = value.length;
-          const valueSize = len <= 5 ? 30 : len <= 9 ? 22 : len <= 16 ? 16 : 14;
+          const valueSize = len <= 5 ? 24 : len <= 9 ? 18 : len <= 16 ? 14 : 12.5;
           return (
             <div key={i} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-              padding: '2px 8px',
+              padding: '0 8px',
               borderLeft: i > 0 ? `1px solid ${colors.divider}` : 'none',
             }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 9 }}>
+              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 7 }}>
                 {label}
               </span>
-              <span style={{ fontSize: valueSize, fontWeight: 800, lineHeight: 1.15, letterSpacing: valueSize >= 22 ? '-0.02em' : '-0.005em', color: colors.text }}>
+              <span style={{ fontSize: valueSize, fontWeight: 700, lineHeight: 1.15, letterSpacing: valueSize >= 18 ? '-0.02em' : '-0.005em', color: colors.text }}>
                 {value}
               </span>
-              {unit && <span style={{ fontSize: 12, color: colors.secondary, marginTop: 7 }}>{unit}</span>}
+              {unit && <span style={{ fontSize: 11, color: colors.secondary, marginTop: 6 }}>{unit}</span>}
             </div>
           );
         })}
@@ -538,12 +662,12 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'scorecard' && story.scorecard) {
     const s = story.scorecard;
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{s.home_team || s.homeTeam}</span>
-        <span style={{ fontSize: 26, fontWeight: 800, color: colors.text }}>{s.home_score ?? s.homeScore}</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{s.home_team || s.homeTeam}</span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>{s.home_score ?? s.homeScore}</span>
         <span style={{ color: colors.secondary }}>:</span>
-        <span style={{ fontSize: 26, fontWeight: 800, color: colors.text }}>{s.away_score ?? s.awayScore}</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: colors.text }}>{s.away_team || s.awayTeam}</span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>{s.away_score ?? s.awayScore}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{s.away_team || s.awayTeam}</span>
       </div>
     );
   }
@@ -560,36 +684,36 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     const shownIng = expanded ? ingredients : ingredients.slice(0, 6);
     const txt = (x) => (typeof x === 'string' ? x : (x && (x.text || x.step || x.name || x.item)) || '');
     const body = (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {meta.length > 0 && (
-          <div style={{ display: 'flex', gap: 18 }}>
+          <div style={{ display: 'flex', gap: 16 }}>
             {meta.map(([label, value], i) => (
               <div key={i}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>{label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: colors.text }}>{value}</div>
+                <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>{label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>{value}</div>
               </div>
             ))}
           </div>
         )}
         {shownIng.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {shownIng.map((ing, i) => (
-              <span key={i} style={{ fontSize: 12.5, color: colors.chipText, background: colors.chipBg, padding: '5px 10px', borderRadius: 999 }}>
+              <span key={i} style={{ fontSize: 11.5, color: colors.chipText, background: colors.chipBg, padding: '4px 9px', borderRadius: 999 }}>
                 {txt(ing)}
               </span>
             ))}
           </div>
         )}
         {shownSteps.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {shownSteps.map((st, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
                 <div style={{
-                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  width: 17, height: 17, borderRadius: '50%', flexShrink: 0,
                   background: withAlpha(accent, 0.16), color: accent,
-                  fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{i + 1}</div>
-                <div style={{ fontSize: 13, lineHeight: 1.45, color: colors.text }}>{txt(st)}</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.45, color: colors.text }}>{txt(st)}</div>
               </div>
             ))}
           </div>
@@ -609,8 +733,8 @@ function Expandable({ expanded, onToggle, colors, children }) {
     <div>
       {children}
       <button onClick={onToggle} style={{
-        marginTop: 10, background: 'none', border: 'none', cursor: 'pointer',
-        fontSize: 12, fontWeight: 600, color: colors.secondary, padding: 0,
+        marginTop: 9, background: 'none', border: 'none', cursor: 'pointer',
+        fontSize: 11.5, fontWeight: 600, color: colors.secondary, padding: 0,
       }}>
         {expanded ? 'Show less ▲' : 'Show more ▼'}
       </button>

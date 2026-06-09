@@ -3028,8 +3028,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
     () => (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)).slice(0, 6),
     [stories]
   );
-  // One restrained accent (Apple blue) — calm, not alarm-red. Tracks the theme.
-  const mustKnowAccent = darkMode ? '#0A84FF' : '#007AFF';
+  // Must Know stays Apple red. Tracks the theme (system red light / dark variants).
+  const mustKnowAccent = darkMode ? '#FF453A' : '#FF3B30';
 
   // Show loader while checking onboarding status (prevents flash of content)
   if (!onboardingChecked) {
@@ -3090,7 +3090,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
         /* Apple HIG - Base Styles - TikTok-style fixed viewport */
         html {
-          background: ${darkMode ? '#0A0A0C' : '#F5F5F7'};
+          background: ${darkMode ? '#0A0A0C' : '#FFFFFF'};
           padding: 0;
           margin: 0;
           width: 100%;
@@ -3101,7 +3101,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         /* Apple HIG - Body Typography & Colors - TikTok-style no scroll */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: ${darkMode ? '#0A0A0C' : '#F5F5F7'};
+          background: ${darkMode ? '#0A0A0C' : '#FFFFFF'};
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
@@ -3334,7 +3334,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           left: 0;
           right: 0;
           height: 52px;
-          background: ${darkMode ? 'rgba(10,10,12,0.72)' : 'rgba(245,245,247,0.72)'};
+          background: ${darkMode ? 'rgba(10,10,12,0.72)' : 'rgba(255,255,255,0.72)'};
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
           z-index: 10000;
@@ -5280,7 +5280,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </>
       )}
 
-      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0A0A0C' : '#F5F5F7', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0A0A0C' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -5478,10 +5478,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           {/* MUST KNOW — top stories (importance > 900), led by a calm accent thread down the side */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '24px 16px 14px 6px' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: mustKnowAccent, flexShrink: 0 }} />
-                <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>Must Know</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: mustKnowAccent, borderRadius: 999, minWidth: 20, height: 20, padding: '0 7px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '22px 16px 12px 6px' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: mustKnowAccent, boxShadow: `0 0 0 4px ${darkMode ? 'rgba(255,69,58,0.16)' : 'rgba(255,59,48,0.14)'}`, flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Must Know</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: '#fff', background: mustKnowAccent, borderRadius: 999, minWidth: 19, height: 19, padding: '0 6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif' }}>{mustKnowStories.length}</span>
               </div>
               <div style={{ position: 'relative' }}>
                 {/* calm accent thread down the left side, soft rounded ends top + bottom */}

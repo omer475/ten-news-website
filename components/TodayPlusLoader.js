@@ -61,7 +61,7 @@ export default function TodayPlusLoader() {
         .loader-container {
           position: fixed;
           inset: 0;
-          background: #F5F5F7;
+          background: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
