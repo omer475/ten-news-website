@@ -5606,13 +5606,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   Must Know
                 </span>
               </div>
-              {/* Smooth red line: underline under the text (width) → rounded corner → rail down */}
+              {/* Red rail down the side — no underline under the label */}
               {mkBox && (
                 <div aria-hidden style={{
-                  position: 'absolute', left: mkBox.left, top: mkBox.top, width: mkBox.width, bottom: 18,
-                  borderLeft: `2.5px solid ${mustKnowAccent}`,
-                  borderTop: `2.5px solid ${mustKnowAccent}`,
-                  borderTopLeftRadius: 12,
+                  position: 'absolute', left: mkBox.left, top: mkBox.top, bottom: 18,
+                  width: 2.5, borderRadius: 3, background: mustKnowAccent,
                   pointerEvents: 'none',
                 }} />
               )}
