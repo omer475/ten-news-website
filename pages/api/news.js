@@ -123,14 +123,18 @@ const formatArticle = (article) => {
 };
 
 // Server-side "fresh + important" ranking. The DB returns articles in pure
-// ai_final_score order, which is DETERMINISTIC and FROZEN: the day's top-scored
-// article stays at #1 for the whole 24h window, so the feed (incl. the SSR first
-// paint) looks identical on every load and brand-new articles get buried.
-// This re-ranks the candidate pool by importance * 0.5^(ageHours/halfLife) so
-// recent high-importance articles surface and aging ones drift down. It is
-// DETERMINISTIC (no random jitter) on purpose so the edge cache stays valid;
-// per-load variety is added client-side. Mirrors utils/sortArticles.applyFreshness.
-function rankByFreshnessServer(articles, halfLifeHours = 8) {
+// ai_final_score order, which is FROZEN: the day's top-scored article stays at
+// #1 for the whole 24h window, so the feed looks identical on every load and
+// brand-new articles get buried.
+//
+// This re-ranks by importance * 0.5^(ageHours/halfLife) * (1 ± jitter) so recent
+// high-importance articles surface, aging ones drift down, AND the order varies
+// on every call — the feed visibly changes on refresh instead of looking static.
+// Jitter is per-call random: /api/news is NOT edge-cached (vercel.json forces
+// no-cache + the client adds a cache-buster), so there's no cache to keep valid.
+// The ±18% band is wide enough to reshuffle the top tier each load but bounded,
+// so a low-score article can't leap to the top. Mirrors applyFreshness.
+function rankByFreshnessServer(articles, halfLifeHours = 8, jitter = 0.18) {
   if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
   const now = Date.now();
   const STALE_AGE_HOURS = 48;
@@ -140,7 +144,8 @@ function rankByFreshnessServer(articles, halfLifeHours = 8) {
       const dateStr = a.publishedAt || a.created_at;
       const t = dateStr ? new Date(dateStr).getTime() : 0;
       const ageHours = (t && !Number.isNaN(t)) ? Math.max(0, (now - t) / 3600000) : STALE_AGE_HOURS;
-      return { a, eff: importance * Math.pow(0.5, ageHours / halfLifeHours) };
+      const noise = 1 + (Math.random() * 2 - 1) * jitter; // [1-jitter, 1+jitter]
+      return { a, eff: importance * Math.pow(0.5, ageHours / halfLifeHours) * noise };
     })
     .sort((x, y) => y.eff - x.eff)
     .map((s) => s.a);

@@ -5792,8 +5792,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
 // Server-Side Rendering with CDN caching for fast page loads
 export async function getServerSideProps({ req, res }) {
-  // Enable CDN caching for faster subsequent loads
-  res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+  // Do NOT CDN-cache the feed. With s-maxage the CDN served ONE frozen render to
+  // every visitor for the cache window, so the feed looked identical on refresh
+  // (the #1 cause of "I always see the same articles"). The feed must be fresh
+  // per load — server ranking now jitters per call and the client re-fetches all
+  // articles + filters read ones, so each load is genuinely different.
+  res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
   
   try {
     // Determine base URL for API calls

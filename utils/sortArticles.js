@@ -155,10 +155,13 @@ export function sortArticlesByScore(articles) {
  * @param {Array} articles - news articles (final_score / _personalizedScore + a date)
  * @param {Object} [opts]
  * @param {number} [opts.halfLifeHours=8] - hours for importance weight to halve
- * @param {number} [opts.jitter=0.06] - max ± fraction of random reordering noise
+ * @param {number} [opts.jitter=0.18] - max ± fraction of random reordering noise.
+ *   At 0.18 the top tier visibly reshuffles between loads so the feed doesn't
+ *   look frozen, while staying bounded (a low-score article can't leap to #1).
+ *   Was 0.06 — too weak to notice, so the feed felt identical on every refresh.
  * @returns {Array} New array ordered by effective (fresh + important) score, desc
  */
-export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.06 } = {}) {
+export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = {}) {
   if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
 
   const now = Date.now();
