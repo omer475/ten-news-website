@@ -11,7 +11,7 @@
 //   GET /api/cron/deep-dive?count=1  with the CRON_SECRET bearer (if configured).
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { generateInterestingDeepDive } from '../../../lib/deepDiveGenerator';
+import { generateInterestingDeepDive, pickInterestingTopic } from '../../../lib/deepDiveGenerator';
 
 export const config = { maxDuration: 300 };
 
@@ -42,21 +42,48 @@ export default async function handler(req, res) {
       .from('deep_dives').select('id, status').eq('dive_date', today);
     const alreadyCount = (existing || []).filter((d) => d.status !== 'failed').length;
 
-    // Recent topics/headlines to avoid repeating (last ~40 days).
+    // Recent topics/headlines to avoid repeating.
     const { data: recent } = await supabase
-      .from('deep_dives').select('headline, slug')
-      .order('dive_date', { ascending: false }).limit(40);
+      .from('deep_dives').select('headline').order('dive_date', { ascending: false }).limit(40);
     const avoidTopics = (recent || []).map((d) => d.headline).filter(Boolean);
+
+    // Candidate seeds: recent news that HAS an image (we reuse the article's
+    // photo as the read's hero). Bias toward prominent stories, then let the
+    // model pick the most curiosity-worthy one.
+    const candidateCutoff = new Date(Date.now() - 48 * 3600000).toISOString();
+    const { data: candRows, error: candErr } = await supabase
+      .from('published_articles')
+      .select('id, title_news, category, summary_bullets_news, image_url, ai_final_score, created_at')
+      .gte('created_at', candidateCutoff)
+      .not('image_url', 'is', null)
+      .order('ai_final_score', { ascending: false, nullsFirst: false })
+      .limit(120);
+    if (candErr) console.error('deep-dive candidate query error:', candErr.message);
+    const candidates = (candRows || []).map((a) => {
+      let b = a.summary_bullets_news;
+      if (typeof b === 'string') { try { b = JSON.parse(b); } catch { b = []; } }
+      return { id: a.id, title: a.title_news, category: a.category, image_url: a.image_url, bullet: Array.isArray(b) && b.length ? b[0] : '' };
+    }).filter((c) => c.title);
 
     const results = [];
     let made = 0;
     let attempts = 0;
-    while (alreadyCount + made < count && attempts < count + 2) {
+    const usedIdx = new Set();
+    while (alreadyCount + made < count && attempts < count + 3 && candidates.length) {
       attempts += 1;
       try {
-        const dive = await generateInterestingDeepDive({ avoidTopics });
+        // Step 1: choose the most fascinating seed + the broader topic to tell.
+        const pick = await pickInterestingTopic(candidates, avoidTopics);
+        let seed = candidates[pick.index];
+        if (!seed || usedIdx.has(pick.index)) seed = candidates.find((_, i) => !usedIdx.has(i));
+        if (!seed) break;
+        usedIdx.add(candidates.indexOf(seed));
 
-        // Unique slug (date + topic; suffix if it collides with an earlier pick).
+        // Step 2: research the topic across the web and write the story.
+        const dive = await generateInterestingDeepDive({
+          avoidTopics, topic: pick.topic || seed.title, seedTitle: seed.title,
+        });
+
         let slug = `${today}-${slugify(dive.topic || dive.headline)}` || `${today}-read`;
         const { data: clash } = await supabase.from('deep_dives').select('id').eq('slug', slug).limit(1);
         if (clash && clash.length) slug = `${slug}-${made + 1}`;
@@ -65,7 +92,8 @@ export default async function handler(req, res) {
           .from('deep_dives')
           .insert({
             dive_date: today, slug, status: 'published',
-            anchor_article_id: null, vq_secondary: null, hero_image: null,
+            anchor_article_id: seed.id, vq_secondary: null,
+            hero_image: seed.image_url || null,
             headline: dive.headline, dek: dive.dek,
             sections: dive.sections, sources: dive.sources,
             reading_time_min: dive.reading_time_min, model: dive.model,
@@ -74,9 +102,9 @@ export default async function handler(req, res) {
           .select('id').single();
         if (insErr) { results.push({ status: 'failed', error: insErr.message }); continue; }
 
-        avoidTopics.unshift(dive.headline); // don't pick the same thing on the next loop
+        avoidTopics.unshift(dive.headline);
         made += 1;
-        results.push({ id: row.id, slug, headline: dive.headline, topic: dive.topic, sources: dive.sources.length, status: 'published' });
+        results.push({ id: row.id, slug, headline: dive.headline, topic: dive.topic, seedTitle: seed.title, sources: dive.sources.length, status: 'published' });
       } catch (genErr) {
         results.push({ status: 'failed', error: String(genErr?.message || genErr) });
       }
