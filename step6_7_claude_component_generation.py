@@ -50,7 +50,8 @@ Generate ONLY the selected components.
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Generate EXACTLY 3 fact cards with NEW information. Always 3 — no more, no less.
+Generate 2 or 3 fact cards with NEW information (prefer 3; never more than 3,
+never fewer than 2).
 
 CRITICAL RULE: No duplicates from bullet summary.
 
@@ -60,11 +61,12 @@ Before writing each detail:
 3. If NO → Include it
 
 REQUIREMENTS:
-✓ Every detail must contain a number
+✓ Prefer facts with a number, but a sharp non-numeric fact (a name, place,
+  date, or concrete outcome) is fine when it adds real information
 ✓ Must NOT be in bullet summary
 ✓ Must DIRECTLY support or explain the headline
 ✓ Label: 1-3 words
-✓ Value: Number with unit
+✓ Value: short and concrete (a number with unit, or a brief fact)
 ✓ Maximum 7 words total per detail
 
 HEADLINE-RELEVANCE RULE — read this twice:
@@ -90,14 +92,14 @@ OUTPUT FORMAT:
 
 BAD DETAILS (never do):
 ✗ Duplicates from bullets
-✗ No number: {"label": "Status", "value": "Ongoing"}
+✗ Vague filler: {"label": "Status", "value": "Ongoing"} — say something concrete
 ✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
 ✗ Stale historical: {"label": "Falcon Heavy debut", "value": "February 2018"}
    for an article about a 2026 launch — debut isn't why today's news exists.
    Better: {"label": "Last flight", "value": "October 2024"} which IS the
    reason for "After 18 months" in the headline.
 ✗ Filler: {"label": "Age", "value": "43 years"} when age adds nothing
-✗ Fewer than 3 or more than 3 details
+✗ More than 3 details, or fewer than 2
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE
@@ -453,8 +455,8 @@ CHECKLIST BEFORE SUBMITTING
 ═══════════════════════════════════════════════════════════════
 
 □ DETAILS:
+  - 2 or 3 cards (prefer 3)?
   - None duplicate bullet summary?
-  - All contain numbers?
   - All relevant to story?
 
 □ TIMELINE:
@@ -688,10 +690,10 @@ class GeminiComponentWriter:
                 # Too many events - just trim to 4 instead of failing
                 result['timeline'] = result['timeline'][:4]
 
-        # --- DETAILS validation (exactly 3 required) ---
+        # --- DETAILS validation (2-3 required; numbers preferred, not mandatory) ---
         if 'details' in selected_components:
             if 'details' not in result or not isinstance(result['details'], list) or len(result['details']) == 0:
-                errors.append("Details selected but missing or empty — need exactly 3")
+                errors.append("Details selected but missing or empty — need at least 2")
                 if 'details' in result:
                     del result['details']
             else:
@@ -708,12 +710,12 @@ class GeminiComponentWriter:
                         if any(char.isdigit() for char in detail):
                             details_with_numbers.append(detail)
 
-                # Prefer details with numbers, require exactly 3
-                best_details = details_with_numbers if len(details_with_numbers) >= 3 else valid_details
-                if len(best_details) >= 3:
-                    result['details'] = best_details[:3]
+                # Keep up to 3, leading with number-bearing facts. Require at least 2.
+                ordered = details_with_numbers + [d for d in valid_details if d not in details_with_numbers]
+                if len(ordered) >= 2:
+                    result['details'] = ordered[:3]
                 else:
-                    errors.append(f"Only {len(best_details)} valid details (need exactly 3)")
+                    errors.append(f"Only {len(ordered)} valid details (need at least 2)")
                     del result['details']
 
         # --- GRAPH validation ---

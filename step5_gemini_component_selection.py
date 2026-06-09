@@ -47,32 +47,36 @@ BULLET SUMMARY: {bullets}
 COMPONENTS OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-📋 DETAILS - Key facts/stats not already in the bullets → DEFAULT ON (~80% of articles)
+📋 DETAILS - Key facts/stats not already in the bullets → ~60% of articles (the substantive ones)
 📅 TIMELINE - Background context for an ongoing story (~15% of stories)
 🗺️ MAP - A SPECIFIC place the story happened (~25% of stories)
 📊 GRAPH - Real data trend over time (~15% of stories)
 
-IMPORTANT: Info boxes make articles richer — be GENEROUS. DEFAULT to including
-DETAILS on every article that has any concrete facts, and ADD map/timeline/graph
-whenever relevant (you may combine up to 3, e.g. ["map","details"]). Only return an
-empty array [] for pure opinion/analysis pieces with literally no concrete facts.
+IMPORTANT: Aim for an info box on roughly 60% of articles. Include DETAILS whenever
+the story has at least TWO concrete facts worth pulling out (numbers, names, places,
+dates, outcomes), and ADD map/timeline/graph whenever relevant (you may combine up to
+3, e.g. ["map","details"]). Return an empty array [] for thin one-line updates, pure
+opinion/analysis, or when the bullets already say everything — that is the other ~40%.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Shows 3 key facts/stats about the story (label + value), drawn from the article.
-THIS IS THE DEFAULT BOX — include it on almost every article.
+Shows 2-3 key facts/stats about the story (label + value), drawn from the article.
+This is the primary info box — the main driver of coverage.
 
-SELECT IF (this is almost always true):
-- The story has ANY concrete facts: numbers, names, dates, places, amounts,
-  outcomes, quantities, scores, casualties, prices, sizes, durations, counts
+SELECT IF:
+- The story has at least TWO concrete facts worth surfacing: numbers, names,
+  dates, places, amounts, outcomes, quantities, scores, casualties, prices,
+  sizes, durations, counts
 - The reader would benefit from the key facts pulled out at a glance
 
-DO NOT SELECT ONLY IF:
-- It is a pure opinion/editorial/analysis piece with no concrete facts at all
+DO NOT SELECT IF:
+- It is a thin one-line update with nothing beyond the headline/bullets
+- It is a pure opinion/editorial/analysis piece with no concrete facts
+- The bullets already state every concrete fact (nothing new to add)
 
-FREQUENCY: ~80% of articles. DEFAULT to including details.
+FREQUENCY: ~60% of articles.
 
 ═══════════════════════════════════════════════════════════════
 📅 TIMELINE
