@@ -414,8 +414,17 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
           )}
 
           <div style={{
-            borderRadius: 18, background: colors.glassBg, padding: 14,
-            border: `0.5px solid ${colors.divider}`,
+            borderRadius: 20, padding: 15,
+            // Apple-style liquid glass: frosted translucency + specular top edge + depth.
+            background: isDark
+              ? 'linear-gradient(180deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.045) 100%)'
+              : 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.42) 100%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.65)'}`,
+            boxShadow: isDark
+              ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.22), 0 10px 30px rgba(0,0,0,0.32)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 28px rgba(0,0,0,0.10)',
           }}>
             {/* single-type label (the pills already label when there are several) */}
             {infoTypes.length === 1 && (
@@ -553,20 +562,18 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     );
   }
   if (type === 'details' && story.details) {
-    const items = expanded ? story.details : story.details.slice(0, 3);
+    // No show more/less — details are short; render them all.
     return (
-      <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          {items.map((d, i) => (
-            <div key={i} style={{ minWidth: 80 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>
-                {d.label}
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: accent }}>{d.value}</div>
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+        {story.details.map((d, i) => (
+          <div key={i} style={{ minWidth: 80 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>
+              {d.label}
             </div>
-          ))}
-        </div>
-      </Expandable>
+            <div style={{ fontSize: 20, fontWeight: 800, color: accent }}>{d.value}</div>
+          </div>
+        ))}
+      </div>
     );
   }
   // scorecard / recipe / fallback: simple structured render
