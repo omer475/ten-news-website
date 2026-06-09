@@ -13,6 +13,7 @@ import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
+import MustKnowRail from '../components/feed/MustKnowRail';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
 import {
@@ -3007,6 +3008,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
     })
   ), [stories, user, darkMode, authError]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The day's must-know stories (importance score > 900) — shown as a red rail on top.
+  const mustKnowStories = useMemo(
+    () => (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)).slice(0, 6),
+    [stories]
+  );
+
   // Show loader while checking onboarding status (prevents flash of content)
   if (!onboardingChecked) {
     return <TodayPlusLoader />;
@@ -5425,6 +5432,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
+          <MustKnowRail
+            stories={mustKnowStories}
+            isDark={darkMode}
+            onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+          />
           {feedCards}
 
           {/* Footer: load-more / caught-up */}
