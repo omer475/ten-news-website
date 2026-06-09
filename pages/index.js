@@ -9,7 +9,7 @@ import MustKnowCompletePage from '../components/MustKnowCompletePage';
 import { LoginForm, SignupForm, EmailConfirmation, ResetPasswordModal, OAuthButtons } from '../components/AuthForms';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
-import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
+import { sortArticlesByScore, applyFreshness, diversifyByCluster } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
@@ -1907,7 +1907,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 topics: article.topics || [],  // For country/topic personalization
                 topic_relevance: article.topic_relevance || {},  // AI relevance scores
                 country_relevance: article.country_relevance || {},  // AI relevance scores
-                world_event: article.world_event || null  // Event link if part of a world event
+                world_event: article.world_event || null,  // Event link if part of a world event
+                vq_secondary: article.vq_secondary ?? null  // real story cluster — for de-duplicating same-story articles in the feed
               };
 
                processedStories.push(storyData);
@@ -2025,7 +2026,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // buried, so the feed looks identical on every refresh. applyFreshness
               // composes recency with the (personalized) score and adds light jitter so
               // fresh news surfaces and the order varies between loads. See utils/sortArticles.
-              sortedNews = applyFreshness(sortedNews);
+              sortedNews = diversifyByCluster(applyFreshness(sortedNews));
 
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
@@ -2442,7 +2443,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
       setStories(prev => {
         if (!prev || prev.length <= 1) return prev;
         const [opening, ...news] = prev;
-        return [opening, ...applyFreshness(news)];
+        return [opening, ...diversifyByCluster(applyFreshness(news))];
       });
       // Then refresh the full feed in the background (more articles for scrolling).
       const timer = setTimeout(() => {
@@ -2708,7 +2709,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         const rankedNews = Object.keys(userInterests).length > 0
           ? rankArticles(sortedNews, 0.7)
           : sortedNews;
-        const finalNews = applyFreshness(rankedNews);
+        const finalNews = diversifyByCluster(applyFreshness(rankedNews));
 
         console.log(`🔄 [Personalization] Feed re-sorted with new preferences`);
         return [openingStory, ...finalNews];
@@ -3129,8 +3130,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
   ), [stories, user, darkMode, textOnly, authError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The day's must-know stories (importance score > 900) — shown with a calm accent rail on top.
+  // Cap to ONE article per story (cluster) so the rail shows distinct top stories
+  // instead of 4 near-duplicate articles about the same event.
   const mustKnowStories = useMemo(
-    () => (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)).slice(0, 6),
+    () => diversifyByCluster(
+      (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)),
+      { maxPerCluster: 1 }
+    ).slice(0, 6),
     [stories]
   );
   // Must Know stays Apple red. Tracks the theme (system red light / dark variants).

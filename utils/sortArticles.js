@@ -187,6 +187,38 @@ export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = 
 }
 
 /**
+ * Story-level diversity: cap how many articles from the SAME story (cluster)
+ * can appear high in the feed. Without this the feed fills up with near-duplicate
+ * coverage of one big story (e.g. 4 "Tyre evacuation" articles, 3 "EU sanctions"),
+ * so the user scrolls and sees "the same article" over and over.
+ *
+ * Input must already be in the desired rank order. Keeps the first `maxPerCluster`
+ * articles of each cluster in place and pushes the rest to the END (they still
+ * exist for deep scrollers, but the top of the feed is diverse).
+ *
+ * @param {Array} articles - ranked articles, each with a cluster key
+ * @param {Object} [opts]
+ * @param {number} [opts.maxPerCluster=2] - max articles per story near the top
+ * @param {string} [opts.key='vq_secondary'] - the cluster field (NOT cluster_id,
+ *   which is unique per article and useless for dedup)
+ * @returns {Array} reordered array, duplicate-story articles demoted
+ */
+export function diversifyByCluster(articles, { maxPerCluster = 2, key = 'vq_secondary' } = {}) {
+  if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
+  const seen = new Map();
+  const kept = [];
+  const overflow = [];
+  for (const a of articles) {
+    const c = a == null ? null : a[key];
+    if (c === null || c === undefined || c === '') { kept.push(a); continue; }
+    const n = (seen.get(c) || 0) + 1;
+    seen.set(c, n);
+    if (n <= maxPerCluster) kept.push(a); else overflow.push(a);
+  }
+  return kept.concat(overflow);
+}
+
+/**
  * Check if articles need sorting (for optimization)
  * Returns true if articles are not already sorted by score
  *

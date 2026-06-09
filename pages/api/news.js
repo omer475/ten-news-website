@@ -3,6 +3,7 @@ import path from 'path';
 import { createClient } from '../../lib/supabase-server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { specificTagSet } from '../../lib/threads';
+import { diversifyByCluster } from '../../utils/sortArticles';
 
 // Helper to parse JSON safely without excessive logging
 const safeJsonParse = (value, fallback = null) => {
@@ -89,6 +90,7 @@ const formatArticle = (article) => {
     created_at: article.created_at,
     num_sources: article.num_sources,
     cluster_id: article.cluster_id,
+    vq_secondary: article.vq_secondary,  // real story cluster (cluster_id is unique-per-article) — used to cap duplicate-story articles in the feed
     version_number: article.version_number,
     urlToImage: cleanImageUrl,
     author: article.author,
@@ -403,7 +405,9 @@ export default async function handler(req, res) {
           if (dd) formatted.deepDive = dd;
           return formatted;
         });
-        const formattedArticles = rankByFreshnessServer(formattedPool).slice(0, pageSize);
+        // Rank by fresh+important, then cap duplicate-story articles so the feed
+        // shows diverse stories instead of 4 versions of the same one.
+        const formattedArticles = diversifyByCluster(rankByFreshnessServer(formattedPool)).slice(0, pageSize);
 
         const totalCount = count || formattedArticles.length;
         const hasMore = (offset + pageSize) < totalCount;
