@@ -77,6 +77,31 @@ function withAlpha(color, a) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+// Compact HSL→RGB (h 0-360, s/l 0-100) for the category-fallback accent.
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
+}
+
+// Per-story fallback accent when the photo's colour can't be read (no image / blocked).
+// Hue from the category, nudged by the story id so neighbouring cards still differ.
+const CATEGORY_HUE = {
+  WORLD: 212, POLITICS: 354, BUSINESS: 150, FINANCE: 145, ECONOMY: 150,
+  TECHNOLOGY: 265, TECH: 265, SCIENCE: 188, HEALTH: 330, SPORTS: 22,
+  ENTERTAINMENT: 286, CULTURE: 286, CRYPTO: 38, CLIMATE: 162, ENVIRONMENT: 162,
+};
+function accentForCategory(category, id) {
+  const key = String(category || '').toUpperCase().replace(/\s+/g, '').replace(/NEWS$/, '');
+  const baseHue = CATEGORY_HUE[key] != null ? CATEGORY_HUE[key] : 212;
+  const hash = String(id || category || 'x').split('').reduce((a, c) => c.charCodeAt(0) + ((a << 5) - a), 0);
+  const hue = ((baseHue + (Math.abs(hash) % 31) - 15) + 360) % 360;
+  const [r, g, b] = hslToRgb(hue, 68, 62);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const then = new Date(dateStr).getTime();
@@ -172,34 +197,54 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
     return s;
   }, [story]);
 
-  // --- dynamic accent color from the hero image (canvas), category fallback ---
-  const fallbackAccent = (CATEGORY_GRADIENTS[story.category] || CATEGORY_GRADIENTS.News)[0];
+  // --- accent colour pulled from the hero photo; the title's highlighted words use it ---
+  // The visible <img> is cross-origin and would taint a canvas, so we read pixels from a
+  // small CORS-enabled proxy copy of the same photo. Falls back to a per-story colour.
+  const fallbackAccent = useMemo(() => accentForCategory(story.category, story.id), [story.category, story.id]);
   const [accent, setAccent] = useState(fallbackAccent);
-  const imgRef = useRef(null);
+  useEffect(() => { setAccent(fallbackAccent); }, [fallbackAccent]);
 
-  const extractColor = useCallback(() => {
-    const img = imgRef.current;
-    if (!img || !img.complete || !img.naturalWidth) return;
-    try {
-      const canvas = document.createElement('canvas');
-      const w = (canvas.width = 24);
-      const h = (canvas.height = 24);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h).data;
-      let r = 0, g = 0, b = 0, n = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const cr = data[i], cg = data[i + 1], cb = data[i + 2];
-        const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb);
-        // bias toward saturated, mid-bright pixels for a vivid accent
-        if (max - min < 25 || max < 50 || max > 240) continue;
-        r += cr; g += cg; b += cb; n++;
-      }
-      if (n > 0) setAccent(`rgb(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)})`);
-    } catch (_) {
-      /* CORS-tainted canvas — keep category fallback */
-    }
-  }, []);
+  useEffect(() => {
+    if (!imageUrl || typeof window === 'undefined') return;
+    let cancelled = false;
+    const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl.replace(/^https?:\/\//, ''))}&w=56&h=56&fit=cover&output=jpg`;
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (cancelled) return;
+      try {
+        const c = document.createElement('canvas');
+        const w = (c.width = img.naturalWidth || 56);
+        const h = (c.height = img.naturalHeight || 56);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] < 200) continue;
+          const cr = data[i], cg = data[i + 1], cb = data[i + 2];
+          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb);
+          // bias toward saturated, mid-bright pixels — skip greys / too dark / blown-out
+          if (max - min < 28 || max < 55 || max > 245) continue;
+          r += cr; g += cg; b += cb; n++;
+        }
+        if (n > 0) {
+          r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
+          // keep the hue but lift dark colours so they read on the dark card
+          const mx = Math.max(r, g, b);
+          if (mx < 165) {
+            const k = 165 / Math.max(mx, 1);
+            r = Math.min(255, Math.round(r * k));
+            g = Math.min(255, Math.round(g * k));
+            b = Math.min(255, Math.round(b * k));
+          }
+          setAccent(`rgb(${r}, ${g}, ${b})`);
+        }
+      } catch (_) { /* keep fallback */ }
+    };
+    img.src = proxied;
+    return () => { cancelled = true; img.onload = null; };
+  }, [imageUrl]);
 
   // --- info boxes ---
   const infoTypes = useMemo(() => availableInfoTypes(story), [story]);
@@ -245,8 +290,6 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
               <div key={i} style={{ flex: '0 0 100%', scrollSnapAlign: 'start' }}>
                 {(p.image || imageUrl) ? (
                   <img src={p.image || imageUrl} alt=""
-                       ref={i === 0 ? imgRef : undefined}
-                       onLoad={i === 0 ? extractColor : undefined}
                        style={{ width: '100%', aspectRatio: '3 / 2', objectFit: 'cover', display: 'block',
                                 WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
                        referrerPolicy="no-referrer" />
@@ -258,12 +301,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
           </div>
         ) : imageUrl ? (
           <img
-            ref={imgRef}
             src={imageUrl}
             alt={title}
             loading="lazy"
             referrerPolicy="no-referrer"
-            onLoad={extractColor}
             style={{ width: '100%', maxHeight: '62vh', objectFit: 'cover', display: 'block',
                      WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
           />
