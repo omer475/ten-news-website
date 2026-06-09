@@ -7,6 +7,12 @@ import GraphChart from '../GraphChart';
 // Mapbox is heavy + needs the browser — load it only when a map box is shown.
 const MapboxMap = dynamic(() => import('../MapboxMap'), { ssr: false });
 
+// Apple system font (SF Pro) — used across the card for a clean, smooth feel.
+const APPLE_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Helvetica Neue", sans-serif';
+
+// Real liquid glass (same multi-layer specular highlights as the onboarding GlassTile).
+const GLASS_SHADOW = 'inset 0 0 0 0.5px rgba(255,255,255,0.35), inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.7), inset -1px -1px 0px -1px rgba(255,255,255,0.5), inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.4), inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.06), inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.08), inset 0px 1.5px 2px -1px rgba(0,0,0,0.06), 0px 0.5px 2.5px 0px rgba(0,0,0,0.04), 0px 2px 6px 0px rgba(0,0,0,0.03)';
+
 /*
  * FeedCard — one article in the continuous (Threads/X-style) feed.
  * Faithful port of the iOS app's ArticleCardView: header row → inline image
@@ -161,7 +167,7 @@ function InfoIcon({ type, color = 'currentColor', size = 14 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>{glyph[type] || glyph.details}</svg>;
 }
 
-export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false }) {
+export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false, textOnly = false }) {
   const colors = {
     text: isDark ? '#FFFFFF' : '#1d1d1f',
     secondary: isDark ? 'rgba(255,255,255,0.55)' : '#6e6e73',
@@ -270,16 +276,21 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
   return (
     <article
       style={{
-        padding: '14px 16px',
+        padding: '18px 16px',
         borderBottom: `0.5px solid ${colors.divider}`,
         background: colors.cardBg,
         maxWidth: 640,
         margin: '0 auto',
         boxSizing: 'border-box',
+        fontFamily: APPLE_FONT,
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        textRendering: 'optimizeLegibility',
       }}
     >
-      {/* Hero image with liquid-glass gradient + title overlaid on top (app design) */}
-      <div style={{ position: 'relative', borderRadius: 18, overflow: 'hidden', marginBottom: 14 }}>
+      {/* Hero image — hidden in text-only mode */}
+      {!textOnly && (
+      <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 14 }}>
         {pages ? (
           <div ref={scrollerRef} onScroll={onScroll}
                style={{
@@ -305,7 +316,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             alt={title}
             loading="lazy"
             referrerPolicy="no-referrer"
-            style={{ width: '100%', maxHeight: '62vh', objectFit: 'cover', display: 'block',
+            style={{ width: '100%', maxHeight: '74vh', objectFit: 'cover', display: 'block',
                      WebkitMaskImage: BOTTOM_FADE, maskImage: BOTTOM_FADE }}
           />
         ) : (
@@ -342,27 +353,33 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
           </div>
         )}
       </div>
+      )}
 
       {/* Headline block — below the photo so the image stays fully visible */}
       <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8, flexWrap: 'wrap' }}>
+          {textOnly && story.category && (
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: accent }}>
+              {story.category}
+            </span>
+          )}
           {logoFor(story.source) && (
-            <img src={logoFor(story.source)} alt="" width={15} height={15}
+            <img src={logoFor(story.source)} alt="" width={16} height={16}
                  style={{ borderRadius: 4, objectFit: 'cover', flexShrink: 0 }}
                  referrerPolicy="no-referrer"
                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
-          <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '0.01em', color: colors.text }}>
+          <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.01em', color: colors.text }}>
             {story.source || 'Today+'}
           </span>
           <span style={{ fontSize: 12, lineHeight: 1, color: colors.secondary }}>·</span>
-          <span style={{ fontSize: 12.5, fontWeight: 400, color: colors.secondary }}>
+          <span style={{ fontSize: 13, fontWeight: 400, color: colors.secondary }}>
             {timeAgo(story.publishedAt || story.published_at)}
           </span>
         </div>
         <h2 style={{
           margin: 0,
-          fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px', lineHeight: 1.28,
+          fontSize: 25, fontWeight: 700, letterSpacing: '-0.5px', lineHeight: 1.26,
           color: colors.text,
         }}>
           {renderHighlight(pages ? (pages[page].title || title) : title, accent)}
@@ -371,14 +388,14 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
 
       {/* Bullets (up to 3) */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
-        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(pages ? (pages[page].bullets || []) : bullets).slice(0, 3).map((b, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div key={i} style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
               <div style={{
-                width: 5, height: 5, borderRadius: '50%', marginTop: 9, flexShrink: 0,
+                width: 6, height: 6, borderRadius: '50%', marginTop: 10, flexShrink: 0,
                 background: BULLET_COLORS[i % BULLET_COLORS.length],
               }} />
-              <div style={{ fontSize: 16, lineHeight: 1.45, color: colors.text }}>
+              <div style={{ fontSize: 18, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.2px' }}>
                 {renderBold(b)}
               </div>
             </div>
@@ -414,17 +431,13 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
           )}
 
           <div style={{
-            borderRadius: 20, padding: 15,
-            // Apple-style liquid glass: frosted translucency + specular top edge + depth.
-            background: isDark
-              ? 'linear-gradient(180deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.045) 100%)'
-              : 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.42) 100%)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            border: `0.5px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.65)'}`,
-            boxShadow: isDark
-              ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.22), 0 10px 30px rgba(0,0,0,0.32)'
-              : 'inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 28px rgba(0,0,0,0.10)',
+            borderRadius: 18, padding: 16,
+            // Real liquid glass — same recipe as the onboarding country/interest tiles.
+            background: 'rgba(255,255,255,0.06)',
+            backdropFilter: 'blur(12px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: GLASS_SHADOW,
           }}>
             <InfoBox type={activeInfo} story={story} accent={accent} colors={colors}
                      expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />

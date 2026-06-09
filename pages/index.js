@@ -129,6 +129,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
   const [darkMode, setDarkMode] = useState(true); // Dark by default
+  const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
   
@@ -2504,8 +2505,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
     try {
       const saved = localStorage.getItem('tn_dark_mode');
       if (saved !== null) setDarkMode(saved === '1');
+      const savedTextOnly = localStorage.getItem('tn_text_only');
+      if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}
   }, []);
+
+  // Text-only toggle (persists choice) — hides all article images.
+  const toggleTextOnly = () => {
+    setTextOnly(prev => {
+      const next = !prev;
+      try { localStorage.setItem('tn_text_only', next ? '1' : '0'); } catch (_) {}
+      return next;
+    });
+  };
 
   // Dark mode toggle function (persists choice)
   const toggleDarkMode = () => {
@@ -2999,6 +3011,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
             <FeedCard
               story={story}
               isDark={darkMode}
+              textOnly={textOnly}
               onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
               onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
             />
@@ -3006,7 +3019,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </LazyMount>
       );
     })
-  ), [stories, user, darkMode, authError]); // eslint-disable-line react-hooks/exhaustive-deps
+  ), [stories, user, darkMode, textOnly, authError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The day's must-know stories (importance score > 900) — shown as a red rail on top.
   const mustKnowStories = useMemo(
@@ -5273,6 +5286,29 @@ export default function Home({ initialNews, initialWorldEvents }) {
             <div style={{ flex: 1 }}></div>
             
             <div className="header-right">
+              <button
+                onClick={toggleTextOnly}
+                onTouchEnd={(e) => { e.preventDefault(); toggleTextOnly(); }}
+                aria-label={textOnly ? 'Show images' : 'Text only'}
+                title={textOnly ? 'Show images' : 'Text only'}
+                style={{
+                  width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: textOnly
+                    ? (darkMode ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.10)')
+                    : (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
+                  color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                  backdropFilter: 'blur(8px) saturate(150%)', WebkitBackdropFilter: 'blur(8px) saturate(150%)',
+                  marginRight: 10, flexShrink: 0, WebkitTapHighlightColor: 'transparent',
+                  transition: 'background 0.15s ease',
+                }}
+              >
+                {textOnly ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L6 20"/></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h11"/></svg>
+                )}
+              </button>
               <span className="time">{currentTime}</span>
               {user ? (
                 <div style={{ position: 'relative' }}>
@@ -5435,10 +5471,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           {/* MUST KNOW — top stories (importance > 900) as full cards with a red thread down the side */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '22px 16px 14px 6px' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 0 4px rgba(255,59,48,0.16)', flexShrink: 0 }} />
-                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#FF3B30' }}>Must Know</span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: '#FF3B30', borderRadius: 999, minWidth: 20, height: 20, padding: '0 7px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '24px 16px 16px 6px' }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 0 5px rgba(255,59,48,0.16)', flexShrink: 0 }} />
+                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FF3B30', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>Must Know</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#FF3B30', borderRadius: 999, minWidth: 22, height: 22, padding: '0 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
               </div>
               <div style={{ position: 'relative' }}>
                 {/* solid red thread down the left side, soft rounded ends top + bottom */}
@@ -5449,6 +5485,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                       story={story}
                       isDark={darkMode}
                       minimal
+                      textOnly={textOnly}
                       onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
                       onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
                     />
