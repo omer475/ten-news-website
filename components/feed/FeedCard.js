@@ -111,6 +111,20 @@ function categoryAppleColor(category, isDark) {
   const base = CATEGORY_APPLE[key] || APPLE_SYSTEM_COLORS[7];
   return rgbStr(makeReadable(base, isDark));
 }
+// Parse an "rgb(r, g, b)" / "#rrggbb" string back to [r,g,b].
+function parseRgb(color) {
+  if (!color) return [0, 0, 0];
+  if (color.startsWith('rgb')) return color.slice(color.indexOf('(') + 1, -1).split(',').map((n) => parseInt(n, 10));
+  const h = color.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+// Opposite hue (+180°) of the article accent, kept saturated + readable on the bg.
+function complementOf(color, isDark) {
+  let [h, s, l] = rgbToHsl(...parseRgb(color));
+  h = (h + 0.5) % 1;
+  s = Math.min(1, Math.max(s, 0.6));
+  return rgbStr(makeReadable(hslToRgb(h, s, l), isDark));
+}
 
 /*
  * FeedCard — one article in the continuous feed.
@@ -221,6 +235,8 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
   const fallbackAccent = useMemo(() => categoryAppleColor(story.category, isDark), [story.category, isDark]);
   const [accent, setAccent] = useState(fallbackAccent);
   useEffect(() => { setAccent(fallbackAccent); }, [fallbackAccent]);
+  // Bullet dots use the OPPOSITE (complementary) colour of the article accent.
+  const bulletDot = useMemo(() => complementOf(accent, isDark), [accent, isDark]);
 
   const colors = {
     text: isDark ? '#F5F5F7' : '#1d1d1f',
@@ -436,7 +452,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{
                 width: 5, height: 5, borderRadius: '50%', marginTop: 10, flexShrink: 0,
-                background: colors.dot,
+                background: bulletDot,
               }} />
               <div style={{ fontSize: 17, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.01em' }}>
                 {renderHighlight(b, accent, 400)}
@@ -512,15 +528,15 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             label={saved ? 'Saved' : 'Save'}
             isDark={isDark}
             active={saved}
-            activeColor={accent}
-            restColor={colors.text}
+            activeColor="#FFCC00"
+            restColor="#FFCC00"
             onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}
           >
             <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-3.6L6 20z"
                   fill={saved ? 'currentColor' : 'none'} stroke="currentColor"
                   strokeWidth={1.7} strokeLinejoin="round" />
           </ActionButton>
-          <ActionButton label="Share" isDark={isDark} restColor={colors.text} onClick={handleShare}>
+          <ActionButton label="Share" isDark={isDark} restColor="#FF2D55" onClick={handleShare}>
             <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3v12" />
               <path d="M8 7l4-4 4 4" />
@@ -550,7 +566,7 @@ function ActionButton({ children, label, onClick, active, activeColor, restColor
         width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
         color: active ? activeColor : restColor,
-        opacity: active ? 1 : (hover ? 1 : 0.55),
+        opacity: active ? 1 : (hover ? 1 : 0.9),
         transform: press ? 'scale(0.86)' : 'scale(1)',
         transition: 'transform 0.1s ease, color 0.18s ease, opacity 0.18s ease',
         WebkitTapHighlightColor: 'transparent',
@@ -568,7 +584,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     return (
       <div style={{ position: 'relative' }}>
         {story.graph.title && (
-          <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.01em' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: accent, lineHeight: 1.2, marginBottom: 8, paddingRight: 26, letterSpacing: '-0.01em' }}>
             {story.graph.title}
           </div>
         )}
@@ -648,7 +664,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 4 }}>
                 {label}
               </span>
-              <span style={{ fontSize: valueSize, fontWeight: 700, lineHeight: 1.1, letterSpacing: valueSize >= 15 ? '-0.02em' : '-0.005em', color: colors.text }}>
+              <span style={{ fontSize: valueSize, fontWeight: 700, lineHeight: 1.1, letterSpacing: valueSize >= 15 ? '-0.02em' : '-0.005em', color: accent }}>
                 {value}
               </span>
               {unit && <span style={{ fontSize: 10.5, color: colors.secondary, marginTop: 3 }}>{unit}</span>}
@@ -664,9 +680,9 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{s.home_team || s.homeTeam}</span>
-        <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>{s.home_score ?? s.homeScore}</span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: accent }}>{s.home_score ?? s.homeScore}</span>
         <span style={{ color: colors.secondary }}>:</span>
-        <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>{s.away_score ?? s.awayScore}</span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: accent }}>{s.away_score ?? s.awayScore}</span>
         <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>{s.away_team || s.awayTeam}</span>
       </div>
     );
@@ -690,7 +706,7 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
             {meta.map(([label, value], i) => (
               <div key={i}>
                 <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: colors.secondary }}>{label}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: colors.text }}>{value}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: accent }}>{value}</div>
               </div>
             ))}
           </div>
