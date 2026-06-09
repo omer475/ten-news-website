@@ -1310,13 +1310,15 @@ def _generate_deeper_page(title, bullets, category, kind, prev_bullets=None, sou
         )
 
     voice_line = (
-        "Match the story's vertical voice: sports = group-chat hot-take; tech = analyst-with-a-wink; "
-        "world/politics = plainspoken consequence; entertainment = fandom insider; business = numbers + stakes. "
+        "Voice: a smart, thoughtful person explaining the news directly to the reader — "
+        "personal but professional, natural, clear, slightly conversational, never childish. "
+        "Complete connected sentences, not clipped fragments. Use ONLY facts in the sources; "
+        "never invent a number or detail. No filler intros. "
         "Bold ONLY named people/places/orgs/products/numbers with **double asterisks**, max 1 per bullet."
     )
 
     prompt = (
-        f"You write for Today+, a fast-read social platform (peer to TikTok, Instagram, Threads).\n"
+        f"You write for Today+, a fast-read news platform. Explain the story to one reader in a personal but professional voice.\n"
         f"STORY TITLE: {title}\n"
         f"CATEGORY: {category}\n"
         f"{sources_block}\n"
@@ -2529,7 +2531,7 @@ ISSUES FOUND IN PREVIOUS VERSION:
     
     today_str = datetime.now().strftime('%B %d, %Y')
 
-    prompt = f"""You write posts for **Today+**, a text-first social platform (peer to TikTok, Threads, X, Instagram). NOT a news app. You synthesize {len(limited_sources)} source articles about the same story into ONE social post — title + bullets — that reads like a smart friend wrote it, not like wire-service journalism.
+    prompt = f"""You are a smart, thoughtful writer explaining the news directly to one reader. You synthesize {len(limited_sources)} source articles about the same story into ONE post — title + bullets — in a personal but professional voice: natural, clear, lightly conversational, never childish or oversimplified. Picture a sharp friend who actually understands this telling you what happened and why it matters — not a wire-service report, and not a hot-take influencer.
 
 ⚠️ TODAY'S DATE: {today_str}
 All these sources are RECENT news. Do NOT guess or invent dates — if sources don't mention a specific date, do NOT include one. Never write a date that contradicts when the sources were published.
@@ -2540,44 +2542,42 @@ SOURCES:
 {"⚠️ IMPORTANT: This is a REGENERATION after verification failure. Address the specific errors above and stick strictly to source facts." if verification_feedback else ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎭 STEP 1 — PICK A VOICE PERSONA (do this BEFORE writing anything)
+🎯 STEP 1 — THE VOICE (personal but professional)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Read the sources. Classify the dominant vertical. Then ADOPT THAT VOICE for both title and bullets. Do not write neutral. There is no neutral voice on a social feed.
+Write like a smart, thoughtful person explaining this story to one reader.
+Personal but professional: natural, clear, slightly conversational, never childish
+or oversimplified. Calm and measured — explain, don't perform.
 
-  Tech / AI:                analyst-with-a-wink. Confident, specific, contrarian-friendly.
-                            OK: "X just killed Y," benchmarks, comparisons.
-                            Not OK: launch-language ("revolutionizing," "ecosystem").
+THE CORE MOVES:
+  • Turn clipped fragments into complete, connected sentences that explain.
+      Fragment:  "AI models getting cheaper. OpenAI may feel it."
+      Explainer: "AI models are becoming much cheaper, and this could put real
+                  pressure on OpenAI and Anthropic."
+  • Lead with the consequence or the point, then explain it plainly.
+  • Keep EVERY fact, number, name, and date exactly as the sources state them.
+  • Use ONLY facts that appear in the sources. NEVER invent a number, cause, or
+    detail to sound more complete. If the sources don't say it, don't write it.
+  • No filler intros ("Honestly,", "It's worth noting that", "In a world where").
+    Every sentence carries real information.
 
-  Sports (NFL/NBA/Soccer):  fan in a group chat. Hot-take energy.
-                            OK: "clutch," "cooked," nicknames, the moment over the score.
-                            Not OK: scoreboard recap voice ("with 47 seconds remaining").
+MORE BEFORE / AFTER (this is the exact target style):
+  "Salesforce hit $1.2B in AI revenue, then cut staff."
+   → "Salesforce reached $1.2 billion in AI revenue, then cut staff connected to
+      that same business."
+  "Instagram accounts vulnerable after AI blunder"
+   → "An AI error at Instagram left over 34,000 accounts exposed and created login
+      problems for users."  (only because 34,000 IS in the sources — never invent it)
 
-  Entertainment / K-pop:    fandom insider. Knows in-group vocab. Reactions ARE the story.
-                            OK: "comeback," "bias," "ate," KST/JST date drops.
-                            Not OK: distant third-person reporter framing.
+LIGHT VERTICAL ADAPTATION (subject knowledge, not gimmicks — keep the same calm voice):
+  • Tech / Business / Finance: precise and confident; name the stakes and the numbers.
+  • Sports: explain what happened and why it mattered, in plain language.
+  • Science / Health: clear and grounded; explain the finding, not the hype.
+  • World / Politics: plainspoken and consequence-led; never AP-wire passive.
 
-  Cooking / Food:           friend texting you a recipe at 11pm. Sensory, conspiratorial.
-                            OK: "trust me," sensory verbs (sizzles, melts, browns).
-                            Not OK: "delicious," "yummy," "amazing" — auto-banned.
-
-  Fashion / Beauty:         editor's eye. Vibey, named-detail oriented.
-                            OK: brand names, prices, the one styling detail that works.
-                            Not OK: "stunning," "chic," CTAs.
-
-  Gaming:                   patch-notes-meets-memer. Specific stat changes + community.
-                            OK: champion/character names, "nerf," "buff," build vocab.
-                            Not OK: marketing-speak about "epic experiences."
-
-  News / World / Politics:  plainspoken, consequence-led, NOT wire-service.
-                            OK: "Mortgages just got cheaper." "The vote came in at 1am."
-                            Not OK: AP-wire opening ("In a development that..."), passive.
-
-  Business / Finance:       analyst-flat. Numbers + stakes. Confident takes welcome.
-                            OK: "X is overpriced," named investors, specific ratios.
-                            Not OK: SEC-filing register, "company officials confirmed."
-
-If the article spans verticals, pick the dominant one and commit. Hybrid voice = no voice.
+AVOID: hot-take influencer voice ("X just got cooked", "this is a scam"), in-group
+slang ("ate", "bias", "stan"), marketing words ("revolutionizing", "stunning",
+"game-changer"), and wire-service openings ("In a development that...").
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ STEP 2 — TITLE
@@ -2586,12 +2586,12 @@ If the article spans verticals, pick the dominant one and commit. Hybrid voice =
 LENGTH: 6-12 words / 40-90 characters. Never longer; the feed truncates.
 
 LEAD WITH ONE OF:
-  • The CONSEQUENCE: "Apple just killed the M4."
-  • The MOMENT: "Doncic went 4-of-17 in the 4th."
-  • The TAKE: "The new M5 is a scam."
-  • The TURN: "BLACKPINK is back. The teaser site crashed in 6 minutes."
+  • The CONSEQUENCE: "Apple's new M5 makes the M4 look overpriced."
+  • The POINT: "AI is getting cheaper, and OpenAI may feel the pressure."
+  • The MOMENT: "Instagram's AI error left 34,000 accounts exposed."
 
-Do NOT lead with the announcement. "Apple announces new M5 chip" is the failure mode.
+Do NOT lead with the bare announcement. "Apple announces new M5 chip" is the failure
+mode. State what happened and why it matters, in a natural, complete sentence.
 
 PERSON / TENSE:
   • First-person ("I tried...") — opinion / personal angle.
@@ -2647,17 +2647,17 @@ WHEN TO RETURN 1-3 BULLETS:
 
 EVERY BULLET MUST:
   1. EXTEND the title, not recap it. If the bullet says the same thing the title already said in different words, regenerate.
-     Title: "The Lakers blew a 20-point lead."
+     Title: "The **Lakers** blew a **20-point** lead to the **Nuggets**."
      ✗ Recap: "The Lakers lost after leading by 20." (says nothing new)
-     ✓ Extend: "**Doncic** went 4-of-17 in the 4th."
+     ✓ Extend: "**Doncic** missed 13 of his 17 shots in the fourth quarter."
 
   2. Contain AT LEAST ONE of: a bold-able named entity, a specific number, OR a direct quote. If none, the bullet is vapor — drop it.
 
   3. Use ONE of the four extension patterns:
      • MECHANISM — how/why ("The chip drops to 3nm and ships in October.")
      • STAKES — who wins/loses ("This is **TSMC**'s biggest exclusive in five years.")
-     • CONTEXT — what came before ("Last year's M4 launched at $1,599. The M5 starts at $1,299.")
-     • REACTION — culture/community response ("**Stan Twitter** broke at 3am KST.")
+     • CONTEXT — what came before ("Last year's M4 launched at $1,599; the M5 starts at $1,299.")
+     • IMPLICATION — what it means next ("That puts **Intel** another generation behind.")
 
 LENGTH:
   • 10-30 words per bullet. Mix lengths — one shorter, one longer creates rhythm.
@@ -2669,8 +2669,8 @@ LENGTH:
   • Avoid wrap-to-4-lines. Mobile users skip those.
 
 VOICE CONSISTENCY:
-  • Match the title's persona. If the title is hot-take, bullets are hot-take.
-  • Same person (1st/2nd/3rd), same tense, same energy.
+  • Same calm, personal-explainer voice in the title and every bullet.
+  • Same person (1st/2nd/3rd) and tense throughout.
   • Read the title and the first bullet aloud. If they sound like two different people, regenerate.
 
 BOLD HIGHLIGHTS PER BULLET (MANDATORY):
@@ -2789,32 +2789,35 @@ If card_format is "punchy_oneliner", summary_bullets MUST be an empty array [].
 
 TECH/AI (standard):
 {{
-  "title": "**Apple**'s **M5** is here. The M4 just got cheaper.",
+  "title": "**Apple**'s **M5** is here, and the **M4** just got cheaper.",
   "summary_bullets": [
-    "27% faster CPU on the same 3nm process.",
-    "**M4** quietly dropped to **$1,299** at midnight."
+    "The **M5** runs about **27%** faster than the M4 on the same **3nm** process, so the gain is real but not the leap the keynote implied.",
+    "Apple also quietly dropped the **M4** to **$1,299** overnight, which makes last year's chip the better value for anyone who doesn't need the extra speed.",
+    "For most people the upshot is simple: the cheaper M4 is now the smart buy, and only heavy video and code workloads will really feel the M5."
   ],
   "card_format": "standard",
   "category": "Tech"
 }}
 
-SPORTS (hot_take):
+SPORTS (standard):
 {{
   "title": "The **Lakers** blew a **20-point** lead to the **Nuggets**.",
   "summary_bullets": [
-    "**Doncic** went 4-of-17 in the 4th.",
-    "**Reaves** played 41 minutes — career high."
+    "**Doncic** missed **13** of his **17** shots in the fourth quarter, and the offense stalled every time Denver made a run.",
+    "**Reaves** logged a career-high **41 minutes**, a sign of how thin the Lakers' bench has become this stretch.",
+    "The collapse drops them toward the play-in picture, turning the final two weeks into a scramble for seeding."
   ],
-  "card_format": "hot_take",
+  "card_format": "standard",
   "category": "Sports"
 }}
 
 K-POP (story_arc):
 {{
-  "title": "**BLACKPINK** is back. The teaser site crashed in **6 minutes**.",
+  "title": "**BLACKPINK** is back, and the teaser site crashed in **6 minutes**.",
   "summary_bullets": [
-    "Comeback drops 14 May at midnight KST.",
-    "**Jennie**'s solo teaser pulled 8M views in an hour."
+    "The comeback is set for **14 May** at midnight KST, the group's first full release together in over a year.",
+    "**Jennie**'s solo teaser pulled **8 million** views in an hour, a sign the demand hasn't cooled during the hiatus.",
+    "The label is leaning on that momentum, with a world tour announcement expected to follow the single within weeks."
   ],
   "card_format": "story_arc",
   "category": "Entertainment"
