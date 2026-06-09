@@ -470,4 +470,16 @@ body {
   }
 }
 
+/* Reading of the Day card — centered column on desktop, small side gaps on phones. */
+.reading-card {
+  display: block;
+  max-width: 616px;
+  margin: 14px auto 8px;
+}
+@media (max-width: 680px) {
+  .reading-card {
+    margin: 12px 12px 8px;
+  }
+}
+
 

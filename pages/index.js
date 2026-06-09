@@ -13,6 +13,7 @@ import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
+import DeepDiveCard from '../components/feed/DeepDiveCard';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
 import {
@@ -164,6 +165,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // smoothly under the text (width) and drop down the side (rail).
   const mkLabelRef = useRef(null);
   const [mkBox, setMkBox] = useState(null); // { left, top, width }
+  // Reading of the Day (Quiet Deep Dive) — single daily piece above Must Know.
+  const [deepDive, setDeepDive] = useState(null);
   // Tag feed overlay — tapping an entity chip opens a score+recency feed of that tag.
   const [tagFeed, setTagFeed] = useState(null); // { tag, sourceId } | null
   const [tagArticles, setTagArticles] = useState([]);
@@ -2601,6 +2604,16 @@ export default function Home({ initialNews, initialWorldEvents }) {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Fetch the Reading of the Day once on mount.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/deep-dive/today')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d) setDeepDive((d.deepDives && d.deepDives[0]) || null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   // Mark article as read
@@ -5564,6 +5577,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
+          {/* READING OF THE DAY — single daily deep dive, expands inline above Must Know */}
+          {deepDive && <DeepDiveCard deepDive={deepDive} isDark={darkMode} />}
+
           {/* MUST KNOW — red line underlines the label, then turns down the side rail */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
