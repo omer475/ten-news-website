@@ -13,7 +13,6 @@ import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
-import MustKnowRail from '../components/feed/MustKnowRail';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
 import {
@@ -2976,7 +2975,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // every scroll tick (a scroll listener updates maxScrollPercent → Home
   // re-renders; rebuilding ~2000 cards each time froze the page).
   const feedCards = useMemo(() => (
-    stories.filter(s => s.type === 'news').map((story, fIndex) => {
+    // Must-know stories are promoted to the red Must Know section on top, so skip them here.
+    stories.filter(s => s.type === 'news' && !isArticleMustKnow(s)).map((story, fIndex) => {
       if (!user && fIndex >= paywallThreshold) {
         if (fIndex === paywallThreshold) {
           return (
@@ -5432,11 +5432,32 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
-          <MustKnowRail
-            stories={mustKnowStories}
-            isDark={darkMode}
-            onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-          />
+          {/* MUST KNOW — top stories (importance > 900) as full cards with a red thread down the side */}
+          {mustKnowStories.length > 0 && (
+            <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
+              <style dangerouslySetInnerHTML={{ __html: '@keyframes mkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '20px 16px 10px 22px' }}>
+                <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 12px rgba(255,59,48,0.85)', animation: 'mkPulse 2.2s ease-in-out infinite', flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FF3B30' }}>Must Know</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: darkMode ? 'rgba(255,255,255,0.5)' : '#6e6e73' }}>{mustKnowStories.length}</span>
+              </div>
+              <div style={{ position: 'relative' }}>
+                {/* the red thread: down the left side, fading out at the bottom of the last card's bullets */}
+                <div style={{ position: 'absolute', left: 9, top: -10, bottom: 16, width: 3, borderRadius: 3, background: 'linear-gradient(180deg, #FF3B30 0%, rgba(255,59,48,0.85) 82%, rgba(255,59,48,0) 100%)' }} />
+                {mustKnowStories.map((story) => (
+                  <CardBoundary key={story.id || story.title}>
+                    <FeedCard
+                      story={story}
+                      isDark={darkMode}
+                      minimal
+                      onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+                      onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+                    />
+                  </CardBoundary>
+                ))}
+              </div>
+            </div>
+          )}
           {feedCards}
 
           {/* Footer: load-more / caught-up */}

@@ -161,7 +161,7 @@ function InfoIcon({ type, color = 'currentColor', size = 14 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>{glyph[type] || glyph.details}</svg>;
 }
 
-export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
+export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false }) {
   const colors = {
     text: isDark ? '#FFFFFF' : '#1d1d1f',
     secondary: isDark ? 'rgba(255,255,255,0.55)' : '#6e6e73',
@@ -387,7 +387,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
       )}
 
       {/* Info boxes — interactive context under the bullets (timeline · map · chart · details · score · recipe) */}
-      {infoTypes.length > 0 && activeInfo && (
+      {!minimal && infoTypes.length > 0 && activeInfo && (
         <div style={{ marginTop: 16 }}>
           {/* switcher pills — only when there's more than one type to choose from */}
           {infoTypes.length > 1 && (
@@ -442,6 +442,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
       )}
 
       {/* Action row: entities on the left, Save + Share on the right (app layout) */}
+      {!minimal && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
         {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
         <div style={{
@@ -484,6 +485,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage }) {
           </ActionButton>
         </div>
       </div>
+      )}
     </article>
   );
 }
