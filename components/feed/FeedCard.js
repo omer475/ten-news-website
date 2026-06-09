@@ -409,47 +409,28 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
           </div>
         )}
 
-        {/* category chip — floating top-left, clean frosted pill, white uppercase text */}
-        {story.category && (
-          <div style={{
-            position: 'absolute', top: 10, left: 10,
-            display: 'inline-flex', alignItems: 'center',
-            padding: '4px 9px', borderRadius: 999,
-            background: 'rgba(0,0,0,0.42)',
-            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-            border: '0.5px solid rgba(255,255,255,0.14)',
-          }}>
-            <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#fff' }}>
-              {story.category}
-            </span>
-          </div>
-        )}
       </div>
       )}
 
-      {/* Headline block — single ink colour, weight-based emphasis only, compact */}
+      {/* Headline block — title on the left, publish time top-right on the same level */}
       <div onClick={handleOpen} style={{ cursor: 'pointer', marginBottom: 9 }}>
-        {/* Meta row — source moved into the "i" popover; just category (text-only) + time. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
-          {textOnly && story.category && (
-            <>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary }}>
-                {story.category}
-              </span>
-              <span style={{ fontSize: 11, lineHeight: 1, color: colors.secondary }}>·</span>
-            </>
-          )}
-          <span style={{ fontSize: 12.5, fontWeight: 400, color: colors.secondary }}>
+        {textOnly && story.category && (
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 6 }}>
+            {story.category}
+          </div>
+        )}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <h2 style={{
+            flex: 1, minWidth: 0, margin: 0,
+            fontSize: 24, fontWeight: 800, letterSpacing: '-0.022em', lineHeight: 1.24,
+            color: colors.text,
+          }}>
+            {renderHighlight(pages ? (pages[page].title || title) : title, accent, 800)}
+          </h2>
+          <span style={{ flexShrink: 0, fontSize: 12.5, fontWeight: 400, color: colors.secondary, marginTop: 5, whiteSpace: 'nowrap' }}>
             {timeAgo(story.publishedAt || story.published_at)}
           </span>
         </div>
-        <h2 style={{
-          margin: 0,
-          fontSize: 24, fontWeight: 800, letterSpacing: '-0.022em', lineHeight: 1.24,
-          color: colors.text,
-        }}>
-          {renderHighlight(pages ? (pages[page].title || title) : title, accent, 800)}
-        </h2>
       </div>
 
       {/* Bullets (up to 3) — one quiet dot, compact text */}
