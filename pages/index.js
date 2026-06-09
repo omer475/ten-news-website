@@ -160,6 +160,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Auto-hide header: slides up when scrolling down, returns when scrolling up.
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
+  // Must Know rail geometry — measured from the label so the red line can turn
+  // smoothly under the text (width) and drop down the side (rail).
+  const mkLabelRef = useRef(null);
+  const [mkBox, setMkBox] = useState(null); // { left, top, width }
   // Tag feed overlay — tapping an entity chip opens a score+recency feed of that tag.
   const [tagFeed, setTagFeed] = useState(null); // { tag, sourceId } | null
   const [tagArticles, setTagArticles] = useState([]);
@@ -3101,6 +3105,21 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Must Know stays Apple red. Tracks the theme (system red light / dark variants).
   const mustKnowAccent = darkMode ? '#FF453A' : '#FF3B30';
 
+  // Measure the "Must Know" label so the red line underlines exactly its width
+  // then turns down into the side rail.
+  useEffect(() => {
+    if (!mustKnowStories.length) { setMkBox(null); return; }
+    const measure = () => {
+      const el = mkLabelRef.current;
+      if (!el) return;
+      setMkBox({ left: el.offsetLeft, top: el.offsetTop + el.offsetHeight + 6, width: el.offsetWidth });
+    };
+    measure();
+    const t = setTimeout(measure, 250); // re-measure after fonts settle
+    window.addEventListener('resize', measure);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, [mustKnowStories.length, darkMode, textOnly]);
+
   // Show loader while checking onboarding status (prevents flash of content)
   if (!onboardingChecked) {
     return <TodayPlusLoader />;
@@ -5545,16 +5564,25 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Stories - Virtual rendering: only render stories near current index for performance */}
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
-          {/* MUST KNOW — top stories (importance > 900), led by a calm accent thread down the side */}
+          {/* MUST KNOW — red line underlines the label, then turns down the side rail */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '24px 16px 14px 6px' }}>
-                <span style={{ width: 11, height: 11, borderRadius: '50%', background: mustKnowAccent, boxShadow: `0 0 0 5px ${darkMode ? 'rgba(255,69,58,0.16)' : 'rgba(255,59,48,0.14)'}`, flexShrink: 0 }} />
-                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '0.01em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Must Know</span>
+              <div style={{ padding: '28px 16px 16px 16px' }}>
+                <span ref={mkLabelRef} style={{ display: 'inline-block', fontSize: 24, fontWeight: 800, letterSpacing: '0.01em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Must Know
+                </span>
               </div>
-              <div style={{ position: 'relative' }}>
-                {/* calm accent thread down the left side, soft rounded ends top + bottom */}
-                <div style={{ position: 'absolute', left: 9, top: -6, bottom: 16, width: 2.5, borderRadius: 3, background: mustKnowAccent }} />
+              {/* Smooth red line: underline under the text (width) → rounded corner → rail down */}
+              {mkBox && (
+                <div aria-hidden style={{
+                  position: 'absolute', left: mkBox.left, top: mkBox.top, width: mkBox.width, bottom: 18,
+                  borderLeft: `2.5px solid ${mustKnowAccent}`,
+                  borderTop: `2.5px solid ${mustKnowAccent}`,
+                  borderTopLeftRadius: 12,
+                  pointerEvents: 'none',
+                }} />
+              )}
+              <div>
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
                     <FeedCard
@@ -5564,6 +5592,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                       textOnly={textOnly}
                       onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
                       onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+                      onTagTap={openTagFeed}
                     />
                   </CardBoundary>
                 ))}
