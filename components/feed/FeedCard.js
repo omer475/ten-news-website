@@ -477,7 +477,9 @@ function InfoBox({ type, story, accent, colors, expanded, onToggle }) {
   if (type === 'map' && story.map) {
     return (
       <Expandable expanded={expanded} onToggle={onToggle} colors={colors}>
-        <div style={{ height: expanded ? 260 : 140, borderRadius: 16, overflow: 'hidden' }}>
+        {/* position:relative is REQUIRED — MapboxMap renders position:absolute inset:0,
+            so without a positioned wrapper it escapes and fills the whole viewport. */}
+        <div style={{ position: 'relative', height: expanded ? 240 : 92, borderRadius: 16, overflow: 'hidden' }}>
           <MapboxMap
             center={story.map.center || { lat: 0, lon: 0 }}
             markers={story.map.markers || []}
