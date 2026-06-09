@@ -1,16 +1,17 @@
-// Vercel cron — generates the day's "Quiet Deep Dive(s)".
+// Vercel cron — generates the day's "interesting read".
 //
-// Auto-picks the most important ongoing story by score (preferring stories with
-// several source articles, so the deep dive has real material to synthesise),
-// writes a deeply-researched narrative piece with Gemini, and stores it in
-// deep_dives. Runs once or twice a day. Idempotent per day per cluster: it
-// skips a story already given a deep dive today.
+// NOT the day's top news. A standalone, genuinely fascinating topic (science,
+// nature, geography, space, history, the human body…), researched live via
+// Google Search grounding and written in plain, delightful language people read
+// for the joy of learning something. Stored in deep_dives. Runs once a day.
+// Idempotent: caps at `count` published reads per day, and tells the model which
+// recent topics to avoid so picks stay fresh.
 //
 // Manual trigger (seeding / testing):
-//   GET /api/cron/deep-dive?count=1[&articleId=<id>]  with the CRON_SECRET bearer.
+//   GET /api/cron/deep-dive?count=1  with the CRON_SECRET bearer (if configured).
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { generateDeepDive } from '../../../lib/deepDiveGenerator';
+import { generateInterestingDeepDive } from '../../../lib/deepDiveGenerator';
 
 export const config = { maxDuration: 300 };
 
@@ -28,7 +29,6 @@ export default async function handler(req, res) {
   }
 
   const count = Math.min(2, Math.max(1, parseInt(req.query.count, 10) || 1));
-  const forcedArticleId = req.query.articleId ? String(req.query.articleId) : null;
   const today = new Date().toISOString().slice(0, 10);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -36,84 +36,49 @@ export default async function handler(req, res) {
   if (!supabaseUrl || !serviceKey) return res.status(500).json({ error: 'supabase_not_configured' });
   const supabase = createSupabaseClient(supabaseUrl, serviceKey);
 
-  const fields = 'id, vq_secondary, title_news, summary_bullets_news, details, category, image_url, published_at, created_at, ai_final_score';
-
   try {
-    // Already-covered clusters today (idempotency).
+    // How many are already done today (idempotency / daily cap).
     const { data: existing } = await supabase
-      .from('deep_dives').select('vq_secondary, anchor_article_id').eq('dive_date', today);
-    const usedVqs = new Set((existing || []).map((d) => d.vq_secondary).filter((v) => v != null));
+      .from('deep_dives').select('id, status').eq('dive_date', today);
     const alreadyCount = (existing || []).filter((d) => d.status !== 'failed').length;
 
-    // Candidate anchors: highest-score articles from the last 36h.
-    let candidates;
-    if (forcedArticleId) {
-      const { data } = await supabase.from('published_articles').select(fields).eq('id', forcedArticleId).limit(1);
-      candidates = data || [];
-    } else {
-      // Anchor MUST be within the feed's 24h window so a normal card can carry
-      // the "Go deep on this" entry point. (Source synthesis below still pulls
-      // up to 4 days of cluster history for depth.)
-      const cutoff = new Date(Date.now() - 24 * 3600000).toISOString();
-      const { data, error } = await supabase
-        .from('published_articles').select(fields)
-        .gte('created_at', cutoff)
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .limit(60);
-      if (error) console.error('deep-dive candidate query error:', error.message);
-      candidates = data || [];
-    }
+    // Recent topics/headlines to avoid repeating (last ~40 days).
+    const { data: recent } = await supabase
+      .from('deep_dives').select('headline, slug')
+      .order('dive_date', { ascending: false }).limit(40);
+    const avoidTopics = (recent || []).map((d) => d.headline).filter(Boolean);
 
     const results = [];
     let made = 0;
-    for (const anchor of candidates) {
-      if (alreadyCount + made >= count) break;
-      if (!forcedArticleId && anchor.vq_secondary != null && usedVqs.has(anchor.vq_secondary)) continue;
-
-      // Gather the cluster's source articles (the corpus to synthesise).
-      let cluster = [anchor];
-      if (anchor.vq_secondary != null) {
-        const clusterCutoff = new Date(Date.now() - 4 * 86400000).toISOString();
-        const { data: sib } = await supabase
-          .from('published_articles').select(fields)
-          .eq('vq_secondary', anchor.vq_secondary)
-          .gte('created_at', clusterCutoff)
-          .order('ai_final_score', { ascending: false, nullsFirst: false })
-          .limit(12);
-        if (sib && sib.length) cluster = sib;
-      }
-
-      // Reserve the slot (status=generating) so concurrent runs don't double up.
-      const baseSlug = `${today}-${slugify(anchor.title_news || anchor.title || `story-${anchor.id}`)}`;
-      const { data: reserved, error: resErr } = await supabase
-        .from('deep_dives')
-        .insert({
-          dive_date: today, slug: baseSlug, status: 'generating',
-          anchor_article_id: anchor.id, vq_secondary: anchor.vq_secondary ?? null,
-          hero_image: anchor.image_url || null,
-        })
-        .select('id').single();
-      if (resErr) { results.push({ anchor: anchor.id, skipped: resErr.message }); continue; }
-
+    let attempts = 0;
+    while (alreadyCount + made < count && attempts < count + 2) {
+      attempts += 1;
       try {
-        const dive = await generateDeepDive(anchor, cluster);
-        await supabase.from('deep_dives').update({
-          status: 'published',
-          headline: dive.headline, dek: dive.dek,
-          sections: dive.sections, reading_time_min: dive.reading_time_min,
-          model: dive.model,
-          sources: cluster.slice(0, 12).map((a) => ({
-            id: String(a.id), title: (a.title_news || a.title || '').replace(/\*\*/g, ''),
-          })),
-          published_at: new Date().toISOString(),
-        }).eq('id', reserved.id);
-        if (anchor.vq_secondary != null) usedVqs.add(anchor.vq_secondary);
+        const dive = await generateInterestingDeepDive({ avoidTopics });
+
+        // Unique slug (date + topic; suffix if it collides with an earlier pick).
+        let slug = `${today}-${slugify(dive.topic || dive.headline)}` || `${today}-read`;
+        const { data: clash } = await supabase.from('deep_dives').select('id').eq('slug', slug).limit(1);
+        if (clash && clash.length) slug = `${slug}-${made + 1}`;
+
+        const { data: row, error: insErr } = await supabase
+          .from('deep_dives')
+          .insert({
+            dive_date: today, slug, status: 'published',
+            anchor_article_id: null, vq_secondary: null, hero_image: null,
+            headline: dive.headline, dek: dive.dek,
+            sections: dive.sections, sources: dive.sources,
+            reading_time_min: dive.reading_time_min, model: dive.model,
+            published_at: new Date().toISOString(),
+          })
+          .select('id').single();
+        if (insErr) { results.push({ status: 'failed', error: insErr.message }); continue; }
+
+        avoidTopics.unshift(dive.headline); // don't pick the same thing on the next loop
         made += 1;
-        results.push({ id: reserved.id, slug: baseSlug, anchor: anchor.id, headline: dive.headline, status: 'published' });
+        results.push({ id: row.id, slug, headline: dive.headline, topic: dive.topic, sources: dive.sources.length, status: 'published' });
       } catch (genErr) {
-        await supabase.from('deep_dives').update({ status: 'failed', error: String(genErr?.message || genErr).slice(0, 500) }).eq('id', reserved.id);
-        results.push({ anchor: anchor.id, status: 'failed', error: String(genErr?.message || genErr) });
-        // try the next candidate
+        results.push({ status: 'failed', error: String(genErr?.message || genErr) });
       }
     }
 

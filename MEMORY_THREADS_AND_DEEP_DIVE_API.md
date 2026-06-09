@@ -79,25 +79,27 @@ Response:
 
 ---
 
-## Feature 2 — The Quiet Deep Dive ("One Story, Deep")
+## Feature 2 — The Interesting Read ("One Story, Deep")
 
-> Once or twice a day, one story gets an AI-written, deeply-researched narrative
-> feature. Normal cards for that story show "Go deep on this".
+> Once a day, a standalone, genuinely fascinating topic — science, nature,
+> geography, space, history, the human body — **researched live on the web from
+> reliable sources** and written in plain, delightful language people read for
+> the joy of learning something. It is NOT the day's top news, and is unrelated
+> to the feed.
 
-### 2A. Flag on normal feed cards (already in `/api/news`)
+**Render it as its own section / entry point** (e.g. "Today's Interesting Read"
+or "One Story, Deep"), fed by `GET /api/deep-dive/today`. It is a full reading
+experience: headline, dek, sections, and a list of cited sources.
 
-Each article in `GET /api/news` may now include a `deepDive` field:
-```json
-{
-  "id": "1399",
-  "title": "…",
-  "deepDive": { "available": true, "slug": "2026-06-09-iran-israel-strikes", "id": "<uuid>", "headline": "…", "readingTimeMin": 7 }
-}
-```
-- Present on the deep-dive's anchor card **and** its cluster siblings (any card about that story).
-- Absent (`undefined`) on everything else. When present → render the "Go deep on this" affordance; navigate using `slug`.
+### 2A. Feed card flag (now inert — ignore)
 
-### 2B. Today's deep dive(s) — `GET /api/deep-dive/today`
+`/api/news` cards *can* carry a `deepDive` field, but since the read is no longer
+tied to a news story, **no cards will be flagged in practice** (`anchor_article_id`
+is null). Do **not** build the "Go deep on this" affordance onto feed cards;
+surface the read as a standalone section instead. The field is kept only for
+backward-compat and will normally be absent.
+
+### 2B. Today's read — `GET /api/deep-dive/today`
 
 For the "One Story, Deep" section/entry point.
 ```json
@@ -111,16 +113,18 @@ For the "One Story, Deep" section/entry point.
       "dek": "One-sentence standfirst that frames the piece.",
       "heroImage": "https://…",
       "readingTimeMin": 7,
-      "anchorArticleId": "1399",
-      "sections": [ { "heading": "The opening", "body": "Prose paragraph(s)…" }, … ],
-      "sources": [ { "id": "1399", "title": "…" }, … ],
+      "anchorArticleId": null,
+      "sections": [ { "heading": "A City Overwhelmed by the Dead", "body": "Prose paragraph(s)…" }, … ],
+      "sources": [ { "title": "nationalgeographic.com", "url": "https://…" }, { "title": "parliament.uk", "url": "https://…" }, … ],
       "publishedAt": "2026-06-09T11:02:00Z"
     }
   ]
 }
 ```
-- Returns today's, or the latest published day if today's hasn't generated yet (never empty once seeded).
-- 0–2 items.
+- `sources` are the **real web sources** the piece was researched from (reliable outlets, encyclopaedias, institutions) — show them as a "Sources" list. `url` is a Google grounding redirect that resolves to the source; `title` is the publisher/host.
+- `heroImage` is currently `null` (no image for arbitrary topics yet) — use a tasteful placeholder/gradient.
+- `anchorArticleId` is `null` (standalone, not tied to a feed article).
+- Returns today's, or the latest published day if today's hasn't generated yet (never empty once seeded). 0–2 items.
 
 ### 2C. Single deep dive — `GET /api/deep-dive/[slug]`
 
