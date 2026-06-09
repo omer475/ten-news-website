@@ -1858,7 +1858,13 @@ def run_complete_pipeline():
                                 'map': generation_result.get('map'),
                                 'recipe': generation_result.get('recipe')
                             }
-                            components = {k: v for k, v in components.items() if v is not None}
+                            # Write ONLY the components step5 actually selected. The
+                            # generator often emits extra boxes (e.g. a timeline when
+                            # only details was requested); without this filter those
+                            # leak onto every article and the info-box rate runs ~100%
+                            # instead of the intended ~60%. Selection is the control knob.
+                            components = {k: v for k, v in components.items()
+                                          if v is not None and k in selected}
 
                             missing_components = [c for c in selected if c not in components]
                             if missing_components and comp_attempt < max_component_retries - 1:
