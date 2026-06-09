@@ -2606,14 +2606,28 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Fetch the Reading of the Day once on mount.
+  // Fetch the Reading of the Day once on mount — skip it if already seen today.
   useEffect(() => {
     let cancelled = false;
     fetch('/api/deep-dive/today')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (!cancelled && d) setDeepDive((d.deepDives && d.deepDives[0]) || null); })
+      .then((d) => {
+        if (cancelled || !d) return;
+        const dd = (d.deepDives && d.deepDives[0]) || null;
+        if (!dd) { setDeepDive(null); return; }
+        try {
+          const seen = localStorage.getItem('tn_deepdive_seen');
+          if (seen && seen === (dd.slug || dd.id)) { setDeepDive(null); return; } // seen today → hide
+        } catch (_) {}
+        setDeepDive(dd);
+      })
       .catch(() => {});
     return () => { cancelled = true; };
+  }, []);
+
+  // Mark today's deep dive as seen once the user opens it (slug encodes the date).
+  const markDeepDiveSeen = useCallback((key) => {
+    try { localStorage.setItem('tn_deepdive_seen', String(key)); } catch (_) {}
   }, []);
 
   // Mark article as read
@@ -5578,12 +5592,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
         <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
           {/* READING OF THE DAY — single daily deep dive, expands inline above Must Know */}
-          {deepDive && <DeepDiveCard deepDive={deepDive} isDark={darkMode} />}
+          {deepDive && <DeepDiveCard deepDive={deepDive} isDark={darkMode} onSeen={markDeepDiveSeen} />}
 
           {/* MUST KNOW — red line underlines the label, then turns down the side rail */}
           {mustKnowStories.length > 0 && (
             <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ padding: '28px 16px 16px 16px' }}>
+              <div style={{ padding: '28px 16px 16px 8px' }}>
                 <span ref={mkLabelRef} style={{ display: 'inline-block', fontSize: 24, fontWeight: 800, letterSpacing: '0.01em', textTransform: 'uppercase', color: mustKnowAccent, fontFamily: 'ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Must Know
                 </span>
