@@ -1729,13 +1729,12 @@ def run_complete_pipeline():
             
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
 
-            # THIN-BULLET FLOOR (2026-06-07): a near-empty card (total bullet text
-            # ~50-150 chars) reads as a dead title+photo. If the combined bullets are
-            # under BULLET_CHARS_MIN (default 150), regenerate ONCE asking for more
-            # substance from the sources. Soft target is ~250 in the prompt; this hard
-            # floor only catches the genuinely thin ones (genuinely thin single-source
-            # stories may still fall short after the retry — that's acceptable).
-            bullet_floor = int(os.getenv('BULLET_CHARS_MIN', '150'))
+            # THIN-BULLET FLOOR (min raised to 350 on 2026-06-09): bullets should run
+            # at least ~350 chars total. The prompt asks for ~375 so even shorter
+            # outputs clear 350; this floor catches the stragglers and regenerates
+            # ONCE asking for more substance. Genuinely thin single-source stories may
+            # still fall short after the retry — that's acceptable (publishes anyway).
+            bullet_floor = int(os.getenv('BULLET_CHARS_MIN', '350'))
             _bul = synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])) or []
             _bul_chars = sum(len(b) for b in _bul)
             if _bul_chars < bullet_floor and len(cluster_sources) >= 1:
@@ -1744,7 +1743,7 @@ def run_complete_pipeline():
                     cluster_sources, cluster_id,
                     verification_feedback={'errors': [
                         f"The bullets were too thin ({_bul_chars} chars total). Pull MORE concrete "
-                        f"specifics from the sources — aim for ~250+ characters total across 2-3 "
+                        f"specifics from the sources — aim for ~375+ characters total across 2-3 "
                         f"bullets, each carrying a real name/number/date/quote. Do not pad with fluff."
                     ]}
                 )
@@ -2661,10 +2660,11 @@ EVERY BULLET MUST:
      • REACTION — culture/community response ("**Stan Twitter** broke at 3am KST.")
 
 LENGTH:
-  • 5-25 words per bullet. Mix lengths — one short, one medium creates rhythm.
-  • TOTAL across all bullets: aim for AT LEAST ~250 characters of real substance
-    (don't ship one thin 60-char bullet when the sources give you more), and keep
-    the total under ~700 characters. Hit the floor with specifics, not padding.
+  • 10-30 words per bullet. Mix lengths — one shorter, one longer creates rhythm.
+  • TOTAL across all bullets: aim for ~375 characters minimum of real substance
+    (so even the shorter cards still clear 350), and up to ~600 characters. Pack
+    it with concrete specifics — names, numbers, dates, quotes — never padding.
+    A 2-3 bullet card should read substantial, not thin.
   • Uniform-length bullets are the AI tell. Vary them.
   • Avoid wrap-to-4-lines. Mobile users skip those.
 
@@ -2775,7 +2775,7 @@ Source: "Tech Workers React to Mass Layoffs at Google"
 {{
   "title": "6-12 word social title — bold 2-5 key terms (entities + standout number) each in its own **double asterisks**",
   "summary_bullets": [
-    "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 5-25 words. Total >=~250 chars, <=~700. Mix lengths."
+    "0-3 bullets. Each extends the title; MUST bold a named entity with **...** if it has one (or carry a specific number/quote). 10-30 words. Total >=~375 chars (never below 350), <=~600. Mix lengths."
   ],
   "card_format": "punchy_oneliner | listicle | hot_take | conversational | comparison | story_arc | standard",
   "category": "Tech | Business | Science | Politics | Finance | Crypto | Health | Entertainment | Sports | World | Food | Fashion | Travel | Lifestyle | Gaming"
