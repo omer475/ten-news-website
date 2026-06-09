@@ -27,8 +27,8 @@ class ComponentConfig:
     top_p: float = 0.95
     top_k: int = 40
     max_output_tokens: int = 256
-    min_components: int = 0  # No minimum — AI decides if components add value
-    max_components: int = 3  # Maximum components per article
+    min_components: int = 0  # No minimum — AI decides if a box adds value
+    max_components: int = 1  # EXACTLY ONE box per article (2026-06-09): pick the single best
     max_article_preview: int = 2000  # Max chars to send (save tokens)
     retry_attempts: int = 3
     retry_delay: float = 2.0
@@ -44,19 +44,29 @@ ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 
 ═══════════════════════════════════════════════════════════════
-COMPONENTS OVERVIEW
+COMPONENTS OVERVIEW — PICK EXACTLY ONE
 ═══════════════════════════════════════════════════════════════
 
 📋 DETAILS - Key NUMERIC facts not already in the bullets (every value contains a number)
-📅 TIMELINE - Background context for an ongoing story (~15% of stories)
-🗺️ MAP - A SPECIFIC place the story happened (~25% of stories)
-📊 GRAPH - Real data trend over time (~15% of stories)
+📅 TIMELINE - Background context for an ongoing story
+🗺️ MAP - A SPECIFIC place the story happened
+📊 GRAPH - Real data trend over time
+🍳 RECIPE - An actual cooking recipe
 
-IMPORTANT: Include DETAILS whenever the story has at least TWO NUMERIC facts worth
-pulling out (every detail value must contain a number — counts, %, money, scores,
-dates, sizes), and ADD map/timeline/graph whenever relevant (you may combine up to 3,
-e.g. ["map","details"]). Return an empty array [] for thin one-line updates, pure
-opinion/analysis, or when the bullets already contain every number.
+CRITICAL: Choose EXACTLY ONE box — the single MOST interesting / most valuable one
+for THIS story. Never return more than one. The components array must contain one
+item (e.g. ["map"] or ["details"]), or [] only when no box genuinely fits.
+
+HOW TO PICK THE ONE:
+- Pick the box that adds the MOST that the title + bullets don't already give.
+- RECIPE if the article is an actual recipe → ["recipe"]
+- GRAPH if there's a real multi-point data trend with a source → ["graph"]
+- MAP if a SPECIFIC, interesting place is central to the story → ["map"]
+- TIMELINE if the reader truly needs "how we got here" for an ongoing saga → ["timeline"]
+- Otherwise DETAILS if the story has >=2 NUMERIC facts not in the bullets → ["details"]
+- [] only for thin one-liners / pure opinion with no box worth showing.
+DETAILS is the common default; the others win only when they're clearly the
+stronger, more interesting box for that specific story.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
@@ -246,16 +256,16 @@ WHEN SELECTED: Recipe REPLACES all other components. Do NOT add details/timeline
 FREQUENCY: ~50% of Food articles
 
 ═══════════════════════════════════════════════════════════════
-TYPICAL SELECTIONS
+TYPICAL SELECTIONS (always EXACTLY ONE box)
 ═══════════════════════════════════════════════════════════════
 
-Most articles (any concrete facts): ["details"]  ← the common case
-Incidents with a SPECIFIC location: ["map", "details"]
-Economic / data news: ["graph", "details"]
-Ongoing sagas / conflicts / investigations: ["timeline", "details"]
-Sports game recaps: ["details"]  ← put the scoreline + key stats in details
-Actual recipes: ["recipe"] - EXCLUSIVE, no other components
-Pure opinion with no concrete facts: []
+Most articles (>=2 numeric facts): ["details"]  ← the common default
+Incident at a SPECIFIC, interesting place: ["map"]
+Economic / data news with a real trend: ["graph"]
+Ongoing saga needing "how we got here": ["timeline"]
+Sports game recaps: ["details"]  ← scoreline + key stats as numbers
+Actual recipes: ["recipe"]
+Thin one-liner / pure opinion: []
 
 MISTAKES TO AVOID:
 ✗ Forgetting DETAILS — almost every factual article should have it
@@ -275,7 +285,7 @@ DECISION EXAMPLES
 → MAP: YES - "Vilnius International Airport" is SPECIFIC location
 → TIMELINE: NO - Single incident, readers don't need background
 → DETAILS: YES - If additional facts available
-→ components: ["map", "details"], article_type: "standard"
+→ components: ["map"], article_type: "standard"
 
 "Putin Announces New Nuclear Policy"
 → MAP: NO - Kremlin is famous, everyone knows where it is
@@ -287,20 +297,20 @@ DECISION EXAMPLES
 → MAP: NO - No specific incident location
 → TIMELINE: YES - Reader needs to understand "what is this case about?"
 → DETAILS: YES
-→ components: ["timeline", "details"], article_type: "standard"
+→ components: ["timeline"], article_type: "standard"
 
 "Fed Raises Interest Rates to 5.5%"
 → MAP: NO - No specific location
 → TIMELINE: NO - Single announcement, not complex history
 → GRAPH: YES - Real rate history from Fed
 → DETAILS: YES
-→ components: ["graph", "details"], article_type: "standard"
+→ components: ["graph"], article_type: "standard"
 
 "Earthquake Kills 50 in Turkey"
 → MAP: YES - Show SPECIFIC epicenter location (e.g., "Gaziantep Province epicenter")
 → TIMELINE: NO - Single disaster, no complex background needed
 → DETAILS: YES
-→ components: ["map", "details"], article_type: "standard"
+→ components: ["map"], article_type: "standard"
 
 "SNL Mocks Trump in Christmas Sketch"
 → MAP: NO - Nobody cares where TV studio is
@@ -312,13 +322,13 @@ DECISION EXAMPLES
 → MAP: YES - Show the SPECIFIC power plant location
 → TIMELINE: NO - Single attack (unless user needs war background)
 → DETAILS: YES
-→ components: ["map", "details"], article_type: "standard"
+→ components: ["map"], article_type: "standard"
 
 "Ukraine War Enters Third Year as Peace Talks Collapse"
 → MAP: NO - Just "Ukraine" is too vague, no specific location
 → TIMELINE: YES - Reader needs "how did we get here" context
 → DETAILS: YES
-→ components: ["timeline", "details"], article_type: "standard"
+→ components: ["timeline"], article_type: "standard"
 
 "NASA Artemis Mission Lands on Moon"
 → MAP: NO - Moon is NOT on Earth, no map for space
@@ -342,7 +352,7 @@ DECISION EXAMPLES
 → MAP: NO - Just "US" and "China" are too vague
 → TIMELINE: MAYBE - Only if reader needs trade war background
 → DETAILS: YES
-→ components: ["details"] or ["timeline", "details"], article_type: "standard"
+→ components: ["timeline"] (saga) or ["details"], article_type: "standard"
 
 "Arsenal Beats Chelsea 3-1 in Premier League"
 → DETAILS: YES - put the scoreline + key match facts in details
@@ -388,7 +398,7 @@ OUTPUT FORMAT
 ═══════════════════════════════════════════════════════════════
 
 {
-  "components": ["map", "details"],
+  "components": ["map"],
   "emoji": "✈️",
   "graph_type": null,
   "map_locations": ["Vilnius International Airport, Vilnius, Lithuania"],
