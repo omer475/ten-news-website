@@ -14,6 +14,7 @@ import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
 import DeepDiveCard from '../components/feed/DeepDiveCard';
+import InterestGate from '../components/feed/InterestGate';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
 import {
@@ -101,8 +102,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
           }
         }
         
-        // 3. No preferences anywhere - redirect to onboarding
-        router.replace('/onboarding');
+        // 3. No preferences — DON'T force onboarding. Let first-time users read the
+        // feed straight away; the interest + account gate appears after the 8th story.
+        setOnboardingChecked(true);
       } catch (e) {
         // If everything fails, let them through
         setOnboardingChecked(true);
@@ -129,7 +131,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(false); // Light by default (Apple-editorial); dark behind the toggle
+  const [darkMode, setDarkMode] = useState(true); // Immersive feed is dark by nature (color-tinted cards on black)
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -216,7 +218,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
 
   // Paywall threshold - after important articles
-  const paywallThreshold = 6; // Sign-in gate after 5 news articles
+  const paywallThreshold = 8; // Interest + account gate appears after the 8th news story
 
   // Update safe area color when current article changes
   useEffect(() => {
@@ -2523,8 +2525,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Restore saved dark-mode preference (defaults to light when unset)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('tn_dark_mode');
-      if (saved !== null) setDarkMode(saved === '1');
+      // Immersive feed is dark-only for now — ignore any stored light preference.
+      setDarkMode(true);
       const savedTextOnly = localStorage.getItem('tn_text_only');
       if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}
@@ -2634,6 +2636,40 @@ export default function Home({ initialNews, initialWorldEvents }) {
     try { localStorage.setItem('tn_deepdive_seen', String(key)); } catch (_) {}
     setDeepDiveSeen(true);
   }, []);
+
+  // Persist the interests picked at the gate (local + server) so the feed personalizes.
+  const persistGateInterests = useCallback((topics) => {
+    try {
+      const prev = JSON.parse(localStorage.getItem('todayplus_preferences') || '{}');
+      const prefs = {
+        ...prev,
+        followed_topics: Array.isArray(topics) ? topics : [],
+        followed_countries: prev.followed_countries || [],
+        onboarding_completed: true,
+        created_at: prev.created_at || new Date().toISOString(),
+      };
+      localStorage.setItem('todayplus_preferences', JSON.stringify(prefs));
+      let authUserId = null;
+      try { authUserId = (JSON.parse(localStorage.getItem('tennews_user') || 'null') || {}).id || null; } catch (_) {}
+      fetch('/api/user/onboarding', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          followed_topics: prefs.followed_topics, followed_countries: prefs.followed_countries,
+          onboarding_completed: true, ...(authUserId ? { auth_user_id: authUserId } : {}),
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+  }, []);
+
+  // Gate signup/oauth wrappers — save the chosen interests, then run the normal flow.
+  const handleGateSignup = useCallback((email, password, fullName, topics) => {
+    persistGateInterests(topics);
+    return handleSignup(email, password, fullName);
+  }, [persistGateInterests]); // eslint-disable-line react-hooks/exhaustive-deps
+  const handleGateOAuth = useCallback((provider, topics) => {
+    persistGateInterests(topics);
+    return handleOAuthLogin(provider);
+  }, [persistGateInterests]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mark article as read
   const markArticleAsRead = async (articleId) => {
@@ -3099,15 +3135,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (!user && fIndex >= paywallThreshold) {
         if (fIndex === paywallThreshold) {
           return (
-            <div key="paywall" className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
-              <h2>Create your free account</h2>
-              <p>Sign up to keep reading the news.</p>
-              {authError && <div className="auth-error" style={{ marginBottom: 16 }}>{authError}</div>}
-              <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
-              <p style={{ marginTop: 12 }}>Already have an account?{' '}
-                <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button>
-              </p>
-            </div>
+            <InterestGate
+              key="interest-gate"
+              isDark={darkMode}
+              authError={authError}
+              onSignup={handleGateSignup}
+              onOAuthLogin={handleGateOAuth}
+              onLogin={() => setAuthModal('login')}
+            />
           );
         }
         return null;
@@ -3216,7 +3251,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
         /* Apple HIG - Base Styles - TikTok-style fixed viewport */
         html {
-          background: ${darkMode ? '#0A0A0C' : '#FFFFFF'};
+          background: ${darkMode ? '#000000' : '#FFFFFF'};
           padding: 0;
           margin: 0;
           width: 100%;
@@ -3227,7 +3262,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         /* Apple HIG - Body Typography & Colors - TikTok-style no scroll */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: ${darkMode ? '#0A0A0C' : '#FFFFFF'};
+          background: ${darkMode ? '#000000' : '#FFFFFF'};
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
@@ -5406,7 +5441,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </>
       )}
 
-      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0A0A0C' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#000000' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -5612,14 +5647,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   Must Know
                 </span>
               </div>
-              {/* Red rail down the side — no underline under the label */}
-              {mkBox && (
-                <div aria-hidden style={{
-                  position: 'absolute', left: mkBox.left, top: mkBox.top, bottom: 18,
-                  width: 2.5, borderRadius: 3, background: mustKnowAccent,
-                  pointerEvents: 'none',
-                }} />
-              )}
               <div>
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
