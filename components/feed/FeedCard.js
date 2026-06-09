@@ -386,33 +386,7 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
           </div>
         )}
 
-        {/* Details / info box */}
-        {!minimal && infoTypes.length > 0 && activeInfo && (
-          <div style={{ marginTop: 18 }}>
-            {infoTypes.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                {infoTypes.map((t) => {
-                  const on = t === activeInfo;
-                  return (
-                    <button key={t} onClick={() => { setActiveInfo(t); setInfoExpanded(false); }}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                              border: `1px solid ${on ? withAlpha(accent, 0.5) : colors.divider}`, borderRadius: 999, padding: '6px 12px',
-                              fontSize: 12, fontWeight: 600,
-                              background: on ? withAlpha(accent, 0.18) : 'rgba(255,255,255,0.06)',
-                              color: on ? accent : colors.chipText,
-                            }}>
-                      <InfoIcon type={t} color={on ? accent : colors.chipText} />{INFO_LABEL[t]}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            <div style={{ borderRadius: 16, padding: '14px 16px', background: colors.boxBg, border: `1px solid ${colors.boxBorder}` }}>
-              <InfoBox type={activeInfo} story={story} accent={accent} colors={colors} expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />
-            </div>
-          </div>
-        )}
+        {/* Info / detail boxes intentionally hidden per request. */}
 
         {/* Action row: tags + i / Save / Share */}
         {!minimal && (
