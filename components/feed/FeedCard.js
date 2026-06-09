@@ -32,8 +32,7 @@ const APPLE_SYSTEM_COLORS = (() => {
     [88, 86, 214],   // indigo   #5856D6
     [175, 82, 222],  // purple   #AF52DE
     [255, 45, 85],   // pink     #FF2D55
-    [162, 132, 94],  // brown    #A2845E
-    [142, 142, 147], // gray     #8E8E93
+    // (brown + gray intentionally excluded — highlights should read as a vivid hue)
   ];
   // ~44 evenly-spaced hues, two saturation/lightness rings, all readable on white.
   const wheel = [];
@@ -314,18 +313,36 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         const data = ctx.getImageData(0, 0, w, h).data;
-        let r = 0, g = 0, b = 0, n = 0;
+        // Hue histogram: average colour by hue bin (weighted by saturation), then
+        // take the DOMINANT hue. Averaging all pixels muddies mixed-hue photos into
+        // brown/grey; binning keeps the real accent (the blue flag, the red tie…).
+        const BINS = 12;
+        const acc = Array.from({ length: BINS }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
         for (let i = 0; i < data.length; i += 4) {
           if (data[i + 3] < 200) continue;
           const cr = data[i], cg = data[i + 1], cb = data[i + 2];
-          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb);
-          // bias toward saturated, mid-bright pixels — skip greys / too dark / blown-out
-          if (max - min < 28 || max < 55 || max > 245) continue;
-          r += cr; g += cg; b += cb; n++;
+          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb), d = max - min;
+          if (max < 45 || max > 248) continue;          // too dark / blown-out
+          const sat = max === 0 ? 0 : d / max;
+          if (sat < 0.20) continue;                      // skip greys
+          let hue;
+          if (max === cr) hue = ((cg - cb) / d) % 6;
+          else if (max === cg) hue = (cb - cr) / d + 2;
+          else hue = (cr - cg) / d + 4;
+          hue = (hue * 60 + 360) % 360;
+          const bin = Math.floor(hue / (360 / BINS)) % BINS;
+          acc[bin].r += cr * sat; acc[bin].g += cg * sat; acc[bin].b += cb * sat; acc[bin].w += sat;
         }
-        if (n > 0) {
-          const dom = [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
-          setAccent(rgbStr(makeReadable(nearestAppleColor(dom), isDark)));
+        let best = null, bestW = 0;
+        for (const a of acc) if (a.w > bestW) { bestW = a.w; best = a; }
+        if (best && bestW > 0) {
+          const dom = [Math.round(best.r / best.w), Math.round(best.g / best.w), Math.round(best.b / best.w)];
+          const [hh, ss, ll] = rgbToHsl(...dom);
+          // Boost into a confident, vivid hue before snapping to the Apple palette.
+          const vivid = hslToRgb(hh, Math.min(1, Math.max(ss, 0.72)), Math.min(0.6, Math.max(0.45, ll)));
+          setAccent(rgbStr(makeReadable(nearestAppleColor(vivid), isDark)));
+        } else {
+          setAccent(fallbackAccent); // greyscale photo → vivid per-category colour
         }
       } catch (_) { /* keep fallback */ }
     };
@@ -356,7 +373,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
   return (
     <article
       style={{
-        padding: '14px 16px',
+        padding: '22px 16px 18px',
         // One continuous background for all articles, hairline divider between.
         borderBottom: `0.5px solid ${colors.divider}`,
         background: colors.cardBg,
@@ -371,7 +388,8 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
     >
       {/* Hero image — hidden in text-only mode. Clean edges (no bottom fade). */}
       {!textOnly && (
-      <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 11 }}>
+      <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 16,
+                    boxShadow: isDark ? 'inset 0 0 0 1px rgba(255,255,255,0.06)' : 'inset 0 0 0 1px rgba(0,0,0,0.06)' }}>
         {pages ? (
           <div ref={scrollerRef} onScroll={onScroll}
                style={{
@@ -428,7 +446,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
           <h2 style={{
             flex: 1, minWidth: 0, margin: 0,
-            fontSize: 24, fontWeight: 800, letterSpacing: '-0.022em', lineHeight: 1.24,
+            fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.14,
             color: colors.text,
           }}>
             {renderHighlight(pages ? (pages[page].title || title) : title, accent, 800)}
@@ -441,7 +459,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
 
       {/* Bullets (up to 3) — one quiet dot, compact text */}
       {(pages ? pages[page].bullets : bullets) && (pages ? pages[page].bullets : bullets).length > 0 && (
-        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 11 }}>
           {(pages ? (pages[page].bullets || []) : bullets).slice(0, 3).map((b, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{
@@ -483,11 +501,11 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
             </div>
           )}
 
-          {/* Pure white box, defined only by a thin light-grey outline. Kept slim. */}
+          {/* Stat box — subtly tinted with the article accent so it reads as designed-in. */}
           <div style={{
-            borderRadius: 12, padding: '10px 14px',
-            background: colors.boxBg,
-            border: `1px solid ${colors.boxBorder}`,
+            borderRadius: 14, padding: '12px 14px',
+            background: isDark ? withAlpha(accent, 0.12) : withAlpha(accent, 0.06),
+            border: `1px solid ${withAlpha(accent, isDark ? 0.24 : 0.16)}`,
           }}>
             <InfoBox type={activeInfo} story={story} accent={accent} colors={colors}
                      expanded={infoExpanded} onToggle={() => setInfoExpanded((v) => !v)} />
