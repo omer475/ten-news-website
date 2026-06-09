@@ -363,12 +363,12 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
       )}
 
       {/* Content on the blur background */}
-      <div style={{ padding: textOnly ? '20px 20px 18px' : '0 20px 18px', marginTop: textOnly ? 0 : -2 }}>
+      <div style={{ padding: textOnly ? '20px 20px 18px' : '0 20px 18px', marginTop: textOnly ? 0 : -34, position: 'relative' }}>
         <div onClick={handleOpen} style={{ cursor: 'pointer' }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: colors.secondary, marginTop: textOnly ? 0 : 14, marginBottom: 9 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: colors.secondary, marginTop: textOnly ? 0 : 2, marginBottom: 8 }}>
             {timeAgo(story.publishedAt || story.published_at)}
           </div>
-          <h2 style={{ margin: 0, fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.16, color: colors.text }}>
+          <h2 style={{ margin: 0, fontSize: 25, fontWeight: 800, letterSpacing: '-0.028em', lineHeight: 1.17, color: colors.text }}>
             {renderHighlight(showTitle, accent, 800)}
           </h2>
         </div>
