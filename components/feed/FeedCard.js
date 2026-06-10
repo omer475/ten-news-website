@@ -201,9 +201,15 @@ function pickBlurHueLight(data, W, H) {
   // Same hue nudges the blur used so pure yellow/lime don't wash out on white.
   if (finalH >= 50 && finalH <= 65) { finalH = 35; finalS = Math.max(finalS, 65); }
   else if (finalH >= 65 && finalH <= 85) { finalH = 45; finalS = Math.max(finalS, 55); }
-  finalS = Math.max(58, Math.min(85, finalS * 1.1));
-  // Light-theme lightness, then guarantee ≥3:1 contrast on white.
-  return makeReadable(hslToRgb(finalH / 360, finalS / 100, 0.44), false);
+  finalS = Math.max(55, Math.min(82, finalS * 1.1));
+  // Take the chosen (dark) blur colour and raise it to a MUCH LIGHTER tone — same
+  // hue + saturation, just a lighter lightness (not lower opacity). Only nudged
+  // darker if it would be genuinely unreadable on white.
+  let l = 0.52;
+  let out = hslToRgb(finalH / 360, finalS / 100, l);
+  let guard = 0;
+  while (contrast(out, [255, 255, 255]) < 2.6 && guard++ < 14) { l = Math.max(0.32, l - 0.03); out = hslToRgb(finalH / 360, finalS / 100, l); }
+  return out;
 }
 
 /*
