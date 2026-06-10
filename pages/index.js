@@ -5648,7 +5648,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               {mkBox && (
                 <div aria-hidden style={{ position: 'absolute', left: mkBox.left, top: mkBox.top, bottom: 18, width: 2.5, borderRadius: 3, background: mustKnowAccent, pointerEvents: 'none' }} />
               )}
-              <div style={{ paddingLeft: 18 }}>
+              <div>
                 {mustKnowStories.map((story) => (
                   <CardBoundary key={story.id || story.title}>
                     <FeedCard
