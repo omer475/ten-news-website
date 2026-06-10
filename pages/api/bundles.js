@@ -11,7 +11,7 @@
 //   { bundles: [ { id, header, slug, importance, isMajor, matchedInterests, articles:[{id,title,recap,image,url,category,date}] } ] }
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { groupByEvent, cleanBundle, dedupeBundles, rankBundles, shapeBundle } from '../../lib/bundles';
+import { groupByEvent, cleanBundle, dedupeBundles, rankBundles, shapeBundle, personalizeHeaders } from '../../lib/bundles';
 
 const WINDOW_HOURS = 48;
 
@@ -91,6 +91,8 @@ export default async function handler(req, res) {
     const cleaned = grouped.map(cleanBundle).filter(Boolean);
     const deduped = dedupeBundles(cleaned);
     const ranked = rankBundles(deduped, { interests, topics, country }, { limit });
+    // Rewrite the clinical event names into warm, personal headers (cached).
+    await personalizeHeaders(ranked, Date.now());
     const bundles = ranked
       .map((b) => shapeBundle(b, readIds))
       .filter((b) => b.articles.length >= 2);
