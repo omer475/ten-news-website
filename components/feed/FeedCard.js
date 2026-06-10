@@ -143,6 +143,69 @@ function complementOf(color, isDark) {
   return rgbStr(makeReadable(hslToRgb(h, s, l), isDark));
 }
 
+// RGB(0-255) → HSL in degrees / percent.
+function hsl255(r, g, b) {
+  const [h, s, l] = rgbToHsl(r, g, b);
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+// Pick the highlight colour the SAME WAY the iOS "blur" colour was chosen — the
+// dominant saturated hue of the photo's BOTTOM HALF, with the same hue-weighted
+// scoring — but render it as a LIGHT-THEME colour (readable on white) instead of
+// the dark ~10%-lightness blur. Returns an [r,g,b] or null (→ category fallback).
+function pickBlurHueLight(data, W, H) {
+  const bottomStart = (H / 2) | 0;
+  const buckets = {};
+  const total = W * H;
+  for (let i = 0; i < total * 4; i += 10 * 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 125) continue;
+    if (r > 250 && g > 250 && b > 250) continue;
+    if (r < 10 && g < 10 && b < 10) continue;
+    const rK = ((r / 15) | 0) * 15, gK = ((g / 15) | 0) * 15, bK = ((b / 15) | 0) * 15;
+    const key = rK + ',' + gK + ',' + bK;
+    const pixelIdx = (i / 4) | 0;
+    const px = ((pixelIdx % W) / 10) | 0;
+    const py = (((pixelIdx / W) | 0) / 10) | 0;
+    const isBottom = ((pixelIdx / W) | 0) >= bottomStart;
+    let bk = buckets[key];
+    if (!bk) bk = buckets[key] = { count: 0, bottomCount: 0, positions: new Set(), rK, gK, bK };
+    bk.count++; if (isBottom) bk.bottomCount++; bk.positions.add(px + ',' + py);
+  }
+  const vals = Object.values(buckets);
+  if (!vals.length) return null;
+  const maxCoverage = Math.max(1, ...vals.map((b) => b.positions.size));
+  const bottom = vals.filter((b) => b.bottomCount > 0).sort((a, b) => b.bottomCount - a.bottomCount);
+  if (!bottom.length) return null;
+  let best = bottom[0], bestScore = -1;
+  const maxBottom = bottom[0].bottomCount || 1;
+  for (const bk of bottom) {
+    const hsl = hsl255(bk.rK, bk.gK, bk.bK);
+    const freq = bk.bottomCount / maxBottom;
+    let score = freq * 0.4 + (hsl.s / 100) * 0.45 + (bk.positions.size / maxCoverage) * 0.15;
+    const muddy = hsl.h >= 20 && hsl.h <= 55 && hsl.s < 35;
+    if (muddy && freq < 0.7) score *= 0.3;
+    if (hsl.s < 15 && hsl.l < 30) score *= 0.4;
+    if (hsl.s >= 40) {
+      if (hsl.h >= 180 && hsl.h <= 300) score *= 1.3;
+      if (hsl.h >= 330 || hsl.h <= 15) score *= 1.25;
+      if (hsl.h >= 100 && hsl.h <= 170) score *= 1.2;
+      if (hsl.h >= 40 && hsl.h <= 70) score *= 1.2;
+      if (hsl.h >= 15 && hsl.h <= 40) score *= 1.15;
+    }
+    if (score > bestScore) { bestScore = score; best = bk; }
+  }
+  const blurHSL = hsl255(best.rK, best.gK, best.bK);
+  if (blurHSL.s < 12) return null; // greyscale bottom → category fallback
+  let finalH = blurHSL.h, finalS = blurHSL.s;
+  // Same hue nudges the blur used so pure yellow/lime don't wash out on white.
+  if (finalH >= 50 && finalH <= 65) { finalH = 35; finalS = Math.max(finalS, 65); }
+  else if (finalH >= 65 && finalH <= 85) { finalH = 45; finalS = Math.max(finalS, 55); }
+  finalS = Math.max(58, Math.min(85, finalS * 1.1));
+  // Light-theme lightness, then guarantee ≥3:1 contrast on white.
+  return makeReadable(hslToRgb(finalH / 360, finalS / 100, 0.44), false);
+}
+
 /*
  * FeedCard — one article in the continuous feed.
  * Apple-editorial styling: every article shares ONE flat background (no per-card
@@ -301,49 +364,23 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, onTa
   useEffect(() => {
     if (!imageUrl || typeof window === 'undefined') return;
     let cancelled = false;
-    const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl.replace(/^https?:\/\//, ''))}&w=56&h=56&fit=cover&output=jpg`;
+    const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl.replace(/^https?:\/\//, ''))}&w=80&h=80&fit=cover&output=jpg`;
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       if (cancelled) return;
       try {
         const c = document.createElement('canvas');
-        const w = (c.width = img.naturalWidth || 56);
-        const h = (c.height = img.naturalHeight || 56);
+        const w = (c.width = img.naturalWidth || 80);
+        const h = (c.height = img.naturalHeight || 80);
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         const data = ctx.getImageData(0, 0, w, h).data;
-        // Hue histogram: average colour by hue bin (weighted by saturation), then
-        // take the DOMINANT hue. Averaging all pixels muddies mixed-hue photos into
-        // brown/grey; binning keeps the real accent (the blue flag, the red tie…).
-        const BINS = 12;
-        const acc = Array.from({ length: BINS }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i + 3] < 200) continue;
-          const cr = data[i], cg = data[i + 1], cb = data[i + 2];
-          const max = Math.max(cr, cg, cb), min = Math.min(cr, cg, cb), d = max - min;
-          if (max < 45 || max > 248) continue;          // too dark / blown-out
-          const sat = max === 0 ? 0 : d / max;
-          if (sat < 0.20) continue;                      // skip greys
-          let hue;
-          if (max === cr) hue = ((cg - cb) / d) % 6;
-          else if (max === cg) hue = (cb - cr) / d + 2;
-          else hue = (cr - cg) / d + 4;
-          hue = (hue * 60 + 360) % 360;
-          const bin = Math.floor(hue / (360 / BINS)) % BINS;
-          acc[bin].r += cr * sat; acc[bin].g += cg * sat; acc[bin].b += cb * sat; acc[bin].w += sat;
-        }
-        let best = null, bestW = 0;
-        for (const a of acc) if (a.w > bestW) { bestW = a.w; best = a; }
-        if (best && bestW > 0) {
-          const dom = [Math.round(best.r / best.w), Math.round(best.g / best.w), Math.round(best.b / best.w)];
-          const [hh, ss, ll] = rgbToHsl(...dom);
-          // Boost into a confident, vivid hue before snapping to the Apple palette.
-          const vivid = hslToRgb(hh, Math.min(1, Math.max(ss, 0.72)), Math.min(0.6, Math.max(0.45, ll)));
-          setAccent(rgbStr(makeReadable(nearestAppleColor(vivid), isDark)));
-        } else {
-          setAccent(fallbackAccent); // greyscale photo → vivid per-category colour
-        }
+        // Highlight colour chosen the SAME way the iOS blur colour was — dominant
+        // saturated hue of the bottom half — but as a light-theme (white-bg) colour.
+        const out = pickBlurHueLight(data, w, h);
+        if (out) setAccent(rgbStr(out));
+        else setAccent(fallbackAccent); // greyscale photo → category colour
       } catch (_) { /* keep fallback */ }
     };
     img.src = proxied;
