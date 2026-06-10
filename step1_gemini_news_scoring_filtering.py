@@ -178,7 +178,7 @@ For each APPROVED article, also output an **interest score from 1-10**. Score fr
 | Score | Level | Description |
 |-------|-------|-------------|
 | 9-10 | Must-Know for EVERYONE | Wars, mass casualties 20+, world-changing events |
-| 7-8 | Major for topic followers or a covered country | Elections, policy shifts, $1B+ deals, championship results, blockbuster releases |
+| 7-8 | Major for topic followers or a covered country | Elections, policy shifts, $1B+ deals, championship results, blockbuster releases — but score 8 ONLY if it is ALSO novel/standout; routine "major" items (another match result, another earnings beat, another official statement) land at 7 |
 | 5-6 | Notable and interesting | Regular major-league results, notable tech/science news, economic updates, celebrity events |
 | 4 | Niche but real news | Less mainstream sports, minor but real developments, smaller tech/science stories |
 | 3 | Borderline | Very niche, routine, or from non-covered country with limited appeal |
@@ -186,7 +186,7 @@ For each APPROVED article, also output an **interest score from 1-10**. Score fr
 
 **Key instruction:** A Premier League match result is a 6-7 for sports followers. A notable tech product launch is a 6. A celebrity health diagnosis is a 5-6. Turkish domestic news is a 7 if Türkiye followers would care. Only score 1-3 for truly routine filler or non-covered country local news with zero topic appeal.
 
-**PUBLISH BAR (2026 tightening):** We now publish ONLY articles scoring **interest 8-10**. Reserve 8-10 for stories a reader would genuinely stop and read TODAY — novel, consequential, or surprising; the standout of the cycle, not the routine. Be strict: commodity coverage, repetitive follow-ups, mid-table results, and low-novelty rewrites should score 5-7 and will NOT publish. When torn between 7 and 8, choose 7. It is correct for most approved articles to land at 5-7.
+**PUBLISH BAR (tightened 2026-06-10):** We publish ONLY articles scoring **interest 8-10**, and an 8 must be EARNED. An 8 requires genuine novelty AND consequence — the standout of the cycle, not merely a real "major" event. If a story is routine for its own beat (another match result, another earnings beat, another official statement, another product refresh, another incremental policy step), it scores 6-7 and does NOT publish, even if technically "major". Commodity coverage, repetitive follow-ups, mid-table results, and low-novelty rewrites score 5-7 and will NOT publish. When torn between 7 and 8, ALWAYS choose 7. It is correct — and expected — for MOST approved articles to land at 5-7 and not publish.
 
 ---
 
