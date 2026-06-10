@@ -126,6 +126,11 @@ function makeReadable(rgb, isDark) {
 function categoryAppleColor(category, isDark) {
   const key = String(category || '').toUpperCase().replace(/\s+/g, '').replace(/NEWS$/, '');
   const base = CATEGORY_APPLE[key] || APPLE_SYSTEM_COLORS[7];
+  if (!isDark) {
+    // Light-theme fallback = a lighter tone (matches the photo-derived highlights).
+    const [h, s] = rgbToHsl(...base);
+    return rgbStr(hslToRgb(h, Math.max(0.6, s), 0.56));
+  }
   return rgbStr(makeReadable(base, isDark));
 }
 // Parse an "rgb(r, g, b)" / "#rrggbb" string back to [r,g,b].
@@ -203,12 +208,12 @@ function pickBlurHueLight(data, W, H) {
   else if (finalH >= 65 && finalH <= 85) { finalH = 45; finalS = Math.max(finalS, 55); }
   finalS = Math.max(55, Math.min(82, finalS * 1.1));
   // Take the chosen (dark) blur colour and raise it to a MUCH LIGHTER tone — same
-  // hue + saturation, just a lighter lightness (not lower opacity). Only nudged
-  // darker if it would be genuinely unreadable on white.
-  let l = 0.52;
+  // hue + saturation, just a lighter lightness (not lower opacity). Stays light;
+  // only the very lightest hues ease down a touch so they don't fully vanish.
+  let l = 0.58;
   let out = hslToRgb(finalH / 360, finalS / 100, l);
   let guard = 0;
-  while (contrast(out, [255, 255, 255]) < 2.6 && guard++ < 14) { l = Math.max(0.32, l - 0.03); out = hslToRgb(finalH / 360, finalS / 100, l); }
+  while (contrast(out, [255, 255, 255]) < 1.9 && guard++ < 8) { l = Math.max(0.46, l - 0.03); out = hslToRgb(finalH / 360, finalS / 100, l); }
   return out;
 }
 
