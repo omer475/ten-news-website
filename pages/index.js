@@ -131,7 +131,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(true); // Immersive feed is dark by nature (color-tinted cards on black)
+  const [darkMode, setDarkMode] = useState(false); // Trying the white (light) immersive feed
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -2525,8 +2525,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Restore saved dark-mode preference (defaults to light when unset)
   useEffect(() => {
     try {
-      // Immersive feed is dark-only for now — ignore any stored light preference.
-      setDarkMode(true);
+      // Trying the white immersive feed — force light for now.
+      setDarkMode(false);
       const savedTextOnly = localStorage.getItem('tn_text_only');
       if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}

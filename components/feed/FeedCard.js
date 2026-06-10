@@ -241,16 +241,17 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
   const accent = colorsImg.accent;
   const blur = colorsImg.blur;
 
-  // White-on-dark palette for the immersive card.
-  const colors = {
-    text: '#FFFFFF',
-    body: 'rgba(255,255,255,0.92)',
-    secondary: 'rgba(255,255,255,0.55)',
-    chipBg: 'rgba(255,255,255,0.12)',
-    chipText: 'rgba(255,255,255,0.82)',
-    divider: 'rgba(255,255,255,0.14)',
-    boxBg: 'rgba(255,255,255,0.08)',
-    boxBorder: 'rgba(255,255,255,0.14)',
+  // Surface + text palette (dark = black card / white text, light = white card / dark text).
+  const surface = isDark ? '#000000' : '#FFFFFF';
+  const surfaceRGB = isDark ? '0,0,0' : '255,255,255';
+  const colors = isDark ? {
+    text: '#FFFFFF', body: 'rgba(255,255,255,0.92)', secondary: 'rgba(255,255,255,0.55)',
+    chipBg: 'rgba(255,255,255,0.12)', chipText: 'rgba(255,255,255,0.82)', divider: 'rgba(255,255,255,0.14)',
+    boxBg: 'rgba(255,255,255,0.08)', boxBorder: 'rgba(255,255,255,0.14)', dividerLine: 'rgba(255,255,255,0.10)',
+  } : {
+    text: '#1d1d1f', body: '#3a3a3c', secondary: '#6e6e73',
+    chipBg: '#F0F0F2', chipText: '#56565b', divider: 'rgba(0,0,0,0.10)',
+    boxBg: '#F5F5F7', boxBorder: 'rgba(0,0,0,0.08)', dividerLine: 'rgba(0,0,0,0.10)',
   };
 
   const title = story.title_news || story.title || '';
@@ -321,9 +322,9 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
   return (
     <article className="feed-card-immersive" style={{
       maxWidth: 600, borderRadius: '18px 18px 0 0', overflow: 'hidden',
-      // Solid black background for every article (highlights stay per-photo).
-      background: '#000000', color: colors.text, boxSizing: 'border-box',
-      borderBottom: '1px solid rgba(255,255,255,0.10)', // thin line between articles
+      // Solid background for every article (highlights stay per-photo).
+      background: surface, color: colors.text, boxSizing: 'border-box',
+      borderBottom: `1px solid ${colors.dividerLine}`, // thin line between articles
       fontFamily: APPLE_FONT, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale',
     }}>
       {/* Hero photo dissolving into the blur background */}
@@ -351,7 +352,7 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
           )}
           {/* dissolve overlay → blur colour at the bottom */}
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', pointerEvents: 'none',
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 55%, #000000 100%)' }} />
+                        background: `linear-gradient(to bottom, rgba(${surfaceRGB},0) 0%, rgba(${surfaceRGB},0.5) 55%, rgba(${surfaceRGB},1) 100%)` }} />
           {pages && (
             <div style={{ position: 'absolute', top: 12, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 6 }}>
               {pages.map((_, i) => (
@@ -402,14 +403,14 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
               ))}
             </div>
             <div style={{ display: 'flex', gap: 4, flexShrink: 0, position: 'relative' }}>
-              <ActionButton label="About this story" active={infoOpen} activeColor={accent} restColor="#FFFFFF" onClick={(e) => { e.stopPropagation(); setInfoOpen((v) => !v); }}>
+              <ActionButton label="About this story" active={infoOpen} activeColor={accent} restColor={colors.text} onClick={(e) => { e.stopPropagation(); setInfoOpen((v) => !v); }}>
                 <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth={1.7} />
                 <path d="M12 11v5M12 7.6h.01" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
               </ActionButton>
-              <ActionButton label={saved ? 'Saved' : 'Save'} active={saved} activeColor={accent} restColor="#FFFFFF" onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}>
+              <ActionButton label={saved ? 'Saved' : 'Save'} active={saved} activeColor={accent} restColor={colors.text} onClick={(e) => { e.stopPropagation(); setSaved((v) => !v); }}>
                 <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16l-6-3.6L6 20z" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.7} strokeLinejoin="round" />
               </ActionButton>
-              <ActionButton label="Share" restColor="#FFFFFF" onClick={handleShare}>
+              <ActionButton label="Share" restColor={colors.text} onClick={handleShare}>
                 <g fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 3v12" /><path d="M8 7l4-4 4 4" /><path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
                 </g>
@@ -419,7 +420,7 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
                 <>
                   <div onClick={(e) => { e.stopPropagation(); setInfoOpen(false); }} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
                   <div style={{ position: 'absolute', bottom: 40, right: 0, zIndex: 41, minWidth: 180, maxWidth: 260, padding: '12px 14px',
-                                borderRadius: 14, background: 'rgba(28,28,30,0.96)', border: `1px solid ${colors.divider}`,
+                                borderRadius: 14, background: isDark ? 'rgba(28,28,30,0.96)' : '#FFFFFF', border: `1px solid ${colors.divider}`,
                                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
                     <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: colors.secondary, marginBottom: 7 }}>Source</div>
                     <button onClick={(e) => { e.stopPropagation(); if (story.url && typeof window !== 'undefined') window.open(story.url, '_blank', 'noopener'); }}
@@ -427,7 +428,7 @@ export default function FeedCard({ story, isDark = true, onOpen, onEngage, onTag
                       {logoFor(story.source) && (
                         <img src={logoFor(story.source)} alt="" width={18} height={18} style={{ borderRadius: 5, objectFit: 'cover', flexShrink: 0 }} referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       )}
-                      <span style={{ fontSize: 15, fontWeight: 600, color: story.url ? accent : '#fff' }}>{story.source || 'Today+'}</span>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: story.url ? accent : colors.text }}>{story.source || 'Today+'}</span>
                       {story.url && (
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M7 17 17 7M9 7h8v8" /></svg>
                       )}
