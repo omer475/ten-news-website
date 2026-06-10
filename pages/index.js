@@ -14,6 +14,7 @@ import { calculateFinalScore } from '../lib/personalization';
 import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
 import DeepDiveCard from '../components/feed/DeepDiveCard';
+import BundlesSection from '../components/feed/BundlesSection';
 import InterestGate from '../components/feed/InterestGate';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
@@ -49,6 +50,47 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
     ssr: false,
   loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(245,245,245,0.95)', borderRadius: '8px' }} />
   });
+
+// Shape a raw /api/article/[id] row into the story object FeedCard and the
+// detail view expect (same mapping the shared-article path uses).
+function shapeFetchedArticle(articleData) {
+  let fiveWs = articleData.five_ws || null;
+  if (typeof fiveWs === 'string') {
+    try { fiveWs = JSON.parse(fiveWs); } catch (e) { fiveWs = null; }
+  }
+  return {
+    id: articleData.id,
+    type: 'news',
+    number: articleData.rank || 1,
+    category: (articleData.category || 'WORLD NEWS').toUpperCase(),
+    emoji: articleData.emoji || '📰',
+    title: articleData.title || 'News Story',
+    title_news: articleData.title_news || null,
+    content_news: articleData.content_news || null,
+    summary_bullets_news: articleData.summary_bullets_news || articleData.summary_bullets || null,
+    five_ws: fiveWs,
+    detailed_text: articleData.detailed_text || articleData.content_news || null,
+    summary_bullets: articleData.summary_bullets || articleData.summary_bullets_news || [],
+    summary_bullets_b2: articleData.summary_bullets_b2 || articleData.summary_bullets || [],
+    details: articleData.details || [],
+    details_b2: articleData.details_b2 || articleData.details || [],
+    detailed_bullets: articleData.detailed_bullets || [],
+    detailed_bullets_b2: articleData.detailed_bullets_b2 || articleData.detailed_bullets || [],
+    source: articleData.source || 'Today+',
+    url: articleData.url || '#',
+    urlToImage: (articleData.urlToImage || articleData.image_url || '').trim() || null,
+    blurColor: articleData.blurColor || null,
+    map: articleData.map || articleData.map_data || null,
+    graph: articleData.graph || articleData.graph_data || null,
+    timeline: articleData.timeline || [],
+    components: articleData.components || ['details'],
+    publishedAt: articleData.publishedAt || articleData.published_at || articleData.created_at,
+    final_score: articleData.final_score || articleData.ai_final_score || 500,
+    interest_tags: articleData.interest_tags || [],
+    countries: articleData.countries || [],
+    topics: articleData.topics || [],
+  };
+}
 
 export default function Home({ initialNews, initialWorldEvents }) {
   const router = useRouter();
@@ -2636,6 +2678,32 @@ export default function Home({ initialNews, initialWorldEvents }) {
     try { localStorage.setItem('tn_deepdive_seen', String(key)); } catch (_) {}
     setDeepDiveSeen(true);
   }, []);
+
+  // Open an article tapped inside a Catch Up bundle. Bundle articles are slim
+  // ({id,title,...}), so prefer the full story already in the feed; otherwise
+  // fetch it by id. Opening counts as engagement so the algorithm learns.
+  const openBundleArticle = useCallback(async (slim) => {
+    const id = String(slim.id);
+    let story = stories.find((s) => s.type === 'news' && String(s.id) === id) || null;
+    if (!story) {
+      try {
+        const r = await fetch(`/api/article/${id}`);
+        if (r.ok) {
+          const data = await r.json();
+          if (data && data.id) story = shapeFetchedArticle(data);
+        }
+      } catch (_) {}
+    }
+    if (!story) {
+      // Last resort: the original source link.
+      if (slim.url) { try { window.open(slim.url, '_blank', 'noopener'); } catch (_) {} }
+      return;
+    }
+    try { readTrackerRef.current?.markAsRead(story.id); } catch (_) {}
+    try { trackEvent('article_engaged', { source: 'bundle' }, story); } catch (_) {}
+    setSelectedArticle(story);
+    setShowDetailedArticle(true);
+  }, [stories]);
 
   // Persist the interests picked at the gate (local + server) so the feed personalizes.
   const persistGateInterests = useCallback((topics) => {
@@ -5665,6 +5733,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
               </div>
             </div>
           )}
+
+          {/* CATCH UP — personalized story bundles (warm headers + 2-4 articles),
+              ranked by the same reading-time-weighted interests as the feed */}
+          <BundlesSection isDark={darkMode} textOnly={textOnly} onOpenArticle={openBundleArticle} />
+
           {feedCards}
 
           {/* Footer: load-more / caught-up */}
