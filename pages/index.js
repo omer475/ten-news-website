@@ -26,7 +26,7 @@ import {
   syncInterestsToSupabase,
   incrementArticlesRead
 } from '../utils/userInterests';
-import { isArticleMustKnow, markLocalMustKnow } from '../utils/mustKnowHelpers';
+import { isArticleMustKnow, markLocalMustKnow, selectMustKnowRail } from '../utils/mustKnowHelpers';
 import { getTimeAgo } from '../utils/timeHelpers';
 import { getLogoUrl } from '../utils/sourceDomains';
 import { getCategoryColors } from '../utils/categoryColors';
@@ -3164,14 +3164,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
     })
   ), [stories, user, darkMode, textOnly, authError]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The day's must-know stories (importance score > 900) — shown with a calm accent rail on top.
-  // Cap to ONE article per story (cluster) so the rail shows distinct top stories
-  // instead of 4 near-duplicate articles about the same event.
+  // The day's must-know stories — one per story, ROTATED per load so refreshing
+  // surfaces a different important subset instead of the same fixed ~5 stories
+  // (only ~5 clear the >=900 bar, so a strict rail never changes all day).
   const mustKnowStories = useMemo(
-    () => diversifyByCluster(
-      (stories || []).filter((s) => s && s.type === 'news' && isArticleMustKnow(s)),
-      { maxPerCluster: 1 }
-    ).slice(0, 6),
+    () => selectMustKnowRail(stories, 6),
     [stories]
   );
   // Must Know stays Apple red. Tracks the theme (system red light / dark variants).
