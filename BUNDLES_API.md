@@ -14,13 +14,20 @@ home country, and the localStorage read-article ids).
 Request body (all optional):
 ```json
 {
-  "interests": ["semiconductors", "nvidia", "stocks"],   // user's strong interest_tags (from reading history)
+  "interests": { "semiconductors": 42, "nvidia": 18, "stocks": 9 },  // PREFERRED: pass getUserInterests() directly (tag -> reading-time weight)
   "topics": ["technology", "markets"],                    // followed topics
   "country": "US",                                        // home country
   "readArticleIds": ["1201", "1188"],                     // localStorage read ids — excluded from bundles
   "limit": 6                                              // max bundles (default 6, cap 10)
 }
 ```
+
+> **Personalization input:** `interests` accepts EITHER a flat array `["semiconductors","nvidia"]`
+> (each weighted 1) OR — preferred — the weighted map straight from the site's
+> reading-behavior engine: `getUserInterests()` returns `{tag: weight}` where the
+> weight grows with reading seconds (a 60s read counts far more than a 10s glance).
+> Passing the weighted map makes bundles rank by *how much* the user reads a topic.
+> Also pass `readArticleIds` from the same `ReadArticleTracker` the feed uses.
 
 Response:
 ```json

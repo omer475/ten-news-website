@@ -25,7 +25,17 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const interests = new Set((body.interests || []).map((s) => String(s).toLowerCase()));
+    // `interests` accepts either a flat array (weight 1 each) OR the weighted map
+    // from the site's reading-behavior engine: getUserInterests() -> {tag: weight}
+    // where weight reflects reading seconds (60s read >> a 10s glance).
+    const interests = new Map();
+    if (Array.isArray(body.interests)) {
+      body.interests.forEach((s) => interests.set(String(s).toLowerCase(), 1));
+    } else if (body.interests && typeof body.interests === 'object') {
+      for (const [k, w] of Object.entries(body.interests)) {
+        interests.set(String(k).toLowerCase(), Number(w) || 1);
+      }
+    }
     const topics = new Set((body.topics || []).map((s) => String(s).toLowerCase()));
     const country = body.country ? String(body.country) : '';
     const readIds = new Set((body.readArticleIds || []).map((x) => String(x)));
