@@ -1872,7 +1872,14 @@ def run_complete_pipeline():
                             'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
                             'selected_components': selected,
                             'context_data': context_data,
-                            'map_locations': map_locations
+                            'map_locations': map_locations,
+                            # Give the writer the SOURCE bodies so DETAILS can mine
+                            # secondary numbers NOT already surfaced in the bullets
+                            # (otherwise it only sees the bullets and just repeats them).
+                            'source_text': ' '.join(
+                                s.get('full_text', '')[:2000]
+                                for s in cluster_sources if s.get('full_text')
+                            )[:5000],
                         }
                         with gemini_semaphore:
                             generation_result = component_writer.write_components(article_for_components)

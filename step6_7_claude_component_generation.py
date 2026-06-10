@@ -53,18 +53,28 @@ Generate ONLY the selected components.
 Generate 2 or 3 fact cards with NEW information (prefer 3; never more than 3,
 never fewer than 2).
 
-CRITICAL RULE: No duplicates from bullet summary.
+#1 CRITICAL RULE — NO NUMBER THAT IS ALREADY IN THE BULLETS:
+The details box exists to add numbers the reader has NOT seen yet. A number that
+appears in the BULLET SUMMARY — as a digit OR spelled out — is BANNED here.
+  ✗ Bullets say "21, to a seven-year contract... $31 million"
+    → BANNED details: "Age: 21", "Contract: 7 years", "Money: $31 million"
+       (all three just repeat the bullets — useless)
+  ✓ Instead mine the SOURCE ARTICLE TEXT for DIFFERENT numbers the bullets skipped:
+       "Club options: 3", "Signing bonus: $2.5M", "Prospect rank: No. 4"
 
-Before writing each detail:
-1. Check if fact is in BULLET SUMMARY
-2. If YES → Do NOT include it
-3. If NO → Include it
+HOW TO FIND NEW NUMBERS:
+1. List every number already in the BULLET SUMMARY (digits and words).
+2. Go to the SOURCE ARTICLE TEXT and pull DIFFERENT numbers it mentions —
+   secondary stats, context figures, comparisons, dates, counts, rankings.
+3. If a candidate number is in the bullets, DROP it and find another.
+If you genuinely cannot find 2 new numbers beyond the bullets, return fewer (the
+validator will drop the box) — never pad by repeating a bullet number.
 
 REQUIREMENTS:
 ✓ EVERY detail value MUST contain a number — count, %, money, score, age,
   distance, duration, date, etc. NO text-only details (no "Ongoing",
   "Minor damage", "Multiple units", "Non-life-threatening").
-✓ Must NOT be in bullet summary
+✓ The number must NOT appear in the bullet summary (digit OR spelled out)
 ✓ Must DIRECTLY support or explain the headline
 ✓ Label: 1-3 words
 ✓ Value: a number with its unit
@@ -606,7 +616,7 @@ class GeminiComponentWriter:
                 result = json.loads(response_text)
                 
                 # Validate
-                is_valid, errors = self._validate_output(result, components)
+                is_valid, errors = self._validate_output(result, components, article.get('summary_bullets_news', article.get('summary_bullets', [])))
                 
                 if is_valid:
                     return result
@@ -648,7 +658,13 @@ class GeminiComponentWriter:
                 context_parts.append(context_text[:2500])  # Limit per component
 
         context_str = '\n\n'.join(context_parts) if context_parts else 'No additional context available.'
-        
+
+        # Source article body — lets DETAILS pull secondary numbers that are NOT
+        # in the bullets (without it the writer only sees the bullets and repeats them).
+        source_text = article.get('source_text', '')
+        if source_text:
+            context_str += f"\n\nSOURCE ARTICLE TEXT (mine this for NEW numbers the bullets do NOT mention):\n{source_text[:5000]}"
+
         # Add map_locations to context if available (from Step 6 selection)
         map_locations = article.get('map_locations', [])
         if map_locations and 'map' in components:
@@ -669,15 +685,22 @@ class GeminiComponentWriter:
 
         return formatted_prompt
     
-    def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
+    def _validate_output(self, result: Dict, selected_components: List[str], bullets=None) -> tuple[bool, List[str]]:
         """
         Validate component output PER-COMPONENT.
         Invalid components are removed from result but valid ones are kept.
+        `bullets` (the article's bullet summary) is used to drop DETAILS whose
+        number is already stated in the bullets (no duplication).
 
         Returns:
             (is_valid, errors) - is_valid is True if at least one component survived
         """
+        import re as _re
         errors = []
+
+        # Numbers already present in the bullets (digit tokens) — details may not reuse them.
+        _bullet_text = ' '.join(bullets) if isinstance(bullets, list) else (bullets or '')
+        _bullet_nums = set(_re.findall(r'\d+', _bullet_text.replace(',', '')))
 
         # --- TIMELINE validation ---
         if 'timeline' in selected_components:
@@ -713,12 +736,20 @@ class GeminiComponentWriter:
                         if any(char.isdigit() for char in detail):
                             details_with_numbers.append(detail)
 
-                # Numbers-only: keep ONLY details whose value contains a digit.
-                # Drop the box unless at least 2 number-bearing details survive.
-                if len(details_with_numbers) >= 2:
-                    result['details'] = details_with_numbers[:3]
+                # Numbers-only AND no-duplication: drop any detail whose numbers ALL
+                # appear in the bullets (it just repeats them). Keep details that carry
+                # at least one number the bullets do not mention.
+                non_dup = []
+                for d in details_with_numbers:
+                    val = d.get('value', '') if isinstance(d, dict) else str(d)
+                    dnums = set(_re.findall(r'\d+', str(val).replace(',', '')))
+                    if dnums and not dnums.issubset(_bullet_nums):
+                        non_dup.append(d)
+                # Drop the box unless at least 2 non-duplicate numeric details survive.
+                if len(non_dup) >= 2:
+                    result['details'] = non_dup[:3]
                 else:
-                    errors.append(f"Only {len(details_with_numbers)} numeric details (need at least 2)")
+                    errors.append(f"Only {len(non_dup)} non-duplicate numeric details (need at least 2)")
                     del result['details']
 
         # --- GRAPH validation ---
