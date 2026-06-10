@@ -47,6 +47,7 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
+from step13_feed_display import FeedDisplayWriter, generate_daily_modules
 # Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
 # it `article_world_events` was empty (~0% of articles), so Trinity v5's
 # story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
@@ -1094,6 +1095,7 @@ brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 component_selector = GeminiComponentSelector(api_key=gemini_key)
 component_writer = GeminiComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
 fact_verifier = FactVerifier(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
+display_writer = FeedDisplayWriter(api_key=gemini_key)  # TodayPlus redesign v1.0 display objects
 
 # Load publisher accounts for article assignment
 publishers_cache = []
@@ -1368,6 +1370,13 @@ def run_complete_pipeline():
     if not gemini_key:
         print("⚠️  Aborting pipeline - GEMINI_API_KEY not set")
         return
+
+    # Daily interstitial modules (TodayPlus redesign §8): today-in-history,
+    # number of the day, briefs, countdowns. No-ops once today's rows exist.
+    try:
+        generate_daily_modules(supabase, gemini_key)
+    except Exception as _mod_err:
+        print(f"   ⚠️ feed_modules generation failed (non-fatal): {_mod_err}")
 
     # STEP 0: RSS Feed Collection
     articles = fetch_rss_articles()
@@ -2299,6 +2308,33 @@ def run_complete_pipeline():
                 print(f"   ❌ [Cluster {cluster_id}] Trinity stamping FAILED — SKIPPING article. embedding_minilm_present={article_embedding_minilm is not None} embedding_dim={len(article_embedding_minilm) if article_embedding_minilm else 0}")
                 return False
 
+            # STEP 13: Feed display object (TodayPlus redesign v1.0).
+            # Drives the 9 card templates on iOS. Failure is non-fatal —
+            # a NULL display falls back to the legacy card layout.
+            display_obj = None
+            try:
+                with gemini_semaphore:
+                    display_obj = display_writer.write_display({
+                        'title': title,
+                        'bullets': bullets,
+                        'category': article_category,
+                        'tags': interest_tags,
+                        'source_text': ' '.join(
+                            s.get('full_text', '')[:2000]
+                            for s in cluster_sources if s.get('full_text')
+                        )[:6000],
+                    })
+                if display_obj:
+                    display_obj['imageURL'] = synthesized.get('image_url')
+                    # 0-1000 importance scale; >=900 = breaking (cover card)
+                    display_obj['breaking'] = bool(article_score >= 900)
+                    _sigs = [k for k in ('big', 'quote', 'versus', 'timeline', 'trend', 'geo') if k in display_obj]
+                    print(f"   🎨 [Cluster {cluster_id}] Display: {display_obj['category']}, stats={len(display_obj.get('stats', []))}, signals={_sigs or 'none'}")
+                else:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Display generation failed — legacy card fallback")
+            except Exception as _disp_err:
+                print(f"   ⚠️ [Cluster {cluster_id}] Display generation error (non-fatal): {_disp_err}")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -2354,6 +2390,8 @@ def run_complete_pipeline():
                 # don't have to recompute per event. ~30s for a typical
                 # 3-bullet card; ~50s for detail-page articles.
                 'expected_read_seconds': compute_expected_read_seconds(title, bullets),
+                # TodayPlus redesign v1.0: structured card data (spec §3).
+                'display': display_obj,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
