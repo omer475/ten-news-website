@@ -77,6 +77,12 @@ struct FeedService {
         return result
     }
 
+    /// Daily interstitial modules (TodayPlus redesign §8). A missing module
+    /// key decodes to nil and is skipped in the rotation.
+    func fetchFeedModules() async throws -> FeedModulesResponse {
+        try await client.get(APIEndpoints.feedModules)
+    }
+
     /// Fetch articles tagged with a given entity. Server matches via 4
     /// parallel lanes: interest_tags exact, title ILIKE, bullet ILIKE
     /// with cosine post-filter, and embedding kNN. Lanes 3 and 4 require

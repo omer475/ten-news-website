@@ -687,7 +687,8 @@ extension Article {
             authorId: nil,
             authorName: s.authorName,
             pages: nil,
-            expectedReadSeconds: nil
+            expectedReadSeconds: nil,
+            display: nil
         )
     }
 }

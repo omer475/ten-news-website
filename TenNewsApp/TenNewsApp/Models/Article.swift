@@ -142,6 +142,11 @@ struct Article: Codable, Identifiable, Hashable {
     /// scoring (Kuaishou WTG / TikTok pCompletion analog). Length-aware so a 30s
     /// dwell on a 60-word card and a 30s dwell on a 200-word card aren't conflated.
     let expectedReadSeconds: Double?
+    /// TodayPlus redesign payload (spec §3) — nullable: articles published
+    /// before 2026-06-11 (or rare generation failures) have none and render
+    /// the legacy card. Decoded defensively so a malformed display object
+    /// degrades to nil instead of failing the whole article.
+    let display: ArticleDisplay?
 
     enum CodingKeys: String, CodingKey {
         case id, title, summary, url, source, category, emoji, timeline, graph, map
@@ -184,6 +189,7 @@ struct Article: Codable, Identifiable, Hashable {
         case authorName = "author_name"
         case pages
         case expectedReadSeconds = "expected_read_seconds"
+        case display
     }
 
     // MARK: - Computed Display Properties

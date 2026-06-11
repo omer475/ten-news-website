@@ -13,6 +13,10 @@ enum APIEndpoints {
     /// + trending + fresh-broad + a Thompson-sampling bandit over unexplored
     /// clusters). Server: lib/exploreServe.js. PR #212, shipped 2026-05-27.
     static let exploreFeed = "/api/explore/feed"
+    /// Daily interstitial modules for the TodayPlus feed redesign (history /
+    /// number-of-the-day / briefs / countdowns). Generated once per day by the
+    /// Cloud Run pipeline; CDN-cached (s-maxage 900).
+    static let feedModules = "/api/feed/modules"
     /// Pure-chronological feed of articles from publishers the user follows.
     /// Server work: owned by the algorithm terminal (PR pending as of
     /// 2026-05-12). Backed by `user_follows` (publisher graph) joined to

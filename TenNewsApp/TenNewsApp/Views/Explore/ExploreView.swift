@@ -66,7 +66,8 @@ extension Article {
             authorId: nil,
             authorName: nil,
             pages: e.pages,
-            expectedReadSeconds: nil
+            expectedReadSeconds: nil,
+            display: nil
         )
     }
 
@@ -133,7 +134,8 @@ extension Article {
             authorId: s.authorId,
             authorName: s.authorName,
             pages: nil,
-            expectedReadSeconds: nil
+            expectedReadSeconds: nil,
+            display: nil
         )
     }
 }

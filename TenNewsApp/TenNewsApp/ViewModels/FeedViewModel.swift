@@ -22,6 +22,80 @@ final class FeedViewModel {
     /// This prevents the re-ranker from reordering articles mid-swipe.
     private(set) var articles: [Article] = []
 
+    // MARK: - TodayPlus redesign: assembled feed blocks (spec §4)
+    //
+    // Template selection + image-rhythm balancing run HERE, when items are
+    // appended to the feed array — never in a view body (spec §9). Blocks are
+    // stable across loadMore appends; only rebuilt on refresh.
+    private(set) var feedBlocks: [TPBlock] = []
+    let tpFeedState = TPFeedState()
+    private let templateSelector = TemplateSelector()
+    private var moduleRotation: TPModuleRotation?
+    private var feedModules: FeedModules?
+    private var modulesFetchStarted = false
+    private var blockCounter = 0
+    private var storyCounter = 0
+
+    /// Fetch the daily interstitial modules once per session. When they land,
+    /// blocks are reassembled so modules start appearing in the rotation —
+    /// this resolves within ~1s of launch, before the user scrolls far.
+    func loadFeedModulesIfNeeded() async {
+        guard !modulesFetchStarted else { return }
+        modulesFetchStarted = true
+        do {
+            let response = try await feedService.fetchFeedModules()
+            feedModules = response.modules
+            rebuildFeedBlocks()
+        } catch {
+            feedLog.warning("feed modules fetch failed: \(error.localizedDescription, privacy: .public)")
+            modulesFetchStarted = false  // allow a retry on next refresh
+        }
+    }
+
+    /// Full reassembly from `articles` — refresh / initial load / modules arrival.
+    private func rebuildFeedBlocks() {
+        templateSelector.reset()
+        moduleRotation = feedModules.map { TPModuleRotation(modules: $0) }
+        feedBlocks = []
+        blockCounter = 0
+        storyCounter = 0
+        appendFeedBlocks(for: articles, startingAt: 0)
+    }
+
+    /// Incremental append — loadMore. Selector/rotation state carries over so
+    /// the rhythm rules hold across page boundaries.
+    private func appendFeedBlocks(for newArticles: [Article], startingAt startIndex: Int) {
+        for (offset, article) in newArticles.enumerated() {
+            let template: CardTemplate
+            if let display = article.display {
+                template = templateSelector.choose(display: display, blockIdx: blockCounter)
+            } else {
+                // display == nil → only the legacy fallback card (contract).
+                templateSelector.recordLegacy(blockIdx: blockCounter)
+                template = .legacy
+            }
+            feedBlocks.append(.story(index: startIndex + offset, article: article, template: template))
+            blockCounter += 1
+            storyCounter += 1
+
+            // Insert one module after every 3 story cards (§4); modules do
+            // not affect the image-rhythm state.
+            if storyCounter % 3 == 0, let item = moduleRotation?.next() {
+                feedBlocks.append(.module(key: "module-\(blockCounter)-\(storyCounter)", item: item))
+                blockCounter += 1
+            }
+        }
+    }
+
+    /// Plain titles of breaking stories currently in the feed — drives the
+    /// header ticker (§7.1). Empty → the ticker row is hidden.
+    var breakingTickerItems: [String] {
+        articles.compactMap { article in
+            guard let display = article.display, display.breaking else { return nil }
+            return display.plainTitle
+        }
+    }
+
     private var nextCursor: String? = nil
     private(set) var currentPreferences: UserPreferences?
     private(set) var currentUserId: String?
@@ -96,6 +170,7 @@ final class FeedViewModel {
         let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
         let filtered = allArticles.filter { passesFeedFilters($0, followedSlugs: followedSlugs) }
         articles = reRanker.rerank(articles: filtered, currentIndex: currentIndex)
+        rebuildFeedBlocks()
     }
 
     private let fetchLimit = 25
@@ -237,7 +312,9 @@ final class FeedViewModel {
             let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
             let filtered = newArticles.filter { passesFeedFilters($0, followedSlugs: followedSlugs) }
             let ranked = reRanker.rerank(articles: filtered, currentIndex: -1)
+            let appendStart = articles.count
             articles.append(contentsOf: ranked)
+            appendFeedBlocks(for: ranked, startingAt: appendStart)
             isLoading = false
             return filtered.count
         } catch {

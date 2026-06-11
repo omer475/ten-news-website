@@ -62,24 +62,23 @@ struct MainFeedView: View {
                     .allowsHitTesting(selectedTab == .following)
             }
 
-            segmentedControl
-                .padding(.vertical, 2)
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity)
-                // No background — just the two labels floating over the feed,
-                // per design. Top offset is hardcoded to 52pt, the smallest
-                // value that reliably clears the Dynamic Island on the iPhone
-                // 17 Pro (island bottom ≈ y=44pt). Earlier dynamic UIWindow
-                // read sometimes returned 0 during launch because the window
-                // existed before its safeAreaInsets were populated, and 0
-                // didn't trip the nil-coalescing fallback — causing the
-                // labels to overlap the island.
-                .padding(.top, 60)
-                // Scroll-driven hide/reveal: fade + slide up when the user
-                // scrolls into the feed, slide back when they swipe up.
-                .opacity(tabsVisible ? 1 : 0)
-                .offset(y: tabsVisible ? 0 : -28)
-                .animation(.easeInOut(duration: 0.22), value: tabsVisible)
+            // The floating labels now appear only over the Following tab —
+            // the For You tab hosts the tab switcher inside the TodayPlus
+            // sticky header instead (redesign §7.1).
+            if selectedTab == .following {
+                segmentedControl
+                    .padding(.vertical, 2)
+                    .padding(.horizontal, 16)
+                    .frame(maxWidth: .infinity)
+                    // Top offset hardcoded to 52pt+8, the smallest value that
+                    // reliably clears the Dynamic Island on the iPhone 17 Pro.
+                    .padding(.top, 60)
+                    // Scroll-driven hide/reveal: fade + slide up when the user
+                    // scrolls into the feed, slide back when they swipe up.
+                    .opacity(tabsVisible ? 1 : 0)
+                    .offset(y: tabsVisible ? 0 : -28)
+                    .animation(.easeInOut(duration: 0.22), value: tabsVisible)
+            }
         }
         .animation(AppAnimations.pageTransition, value: viewModel.isLoading)
         // Topic feed shown as an in-tree overlay (NOT fullScreenCover)
@@ -234,7 +233,19 @@ struct MainFeedView: View {
         } else if let error = viewModel.errorMessage, sortedArticles.isEmpty {
             errorView(error)
         } else if !sortedArticles.isEmpty {
-            feedContent
+            // TodayPlus feed redesign: assembled blocks (9 card templates +
+            // interstitial modules), sticky header with the tab switcher in
+            // the center. Articles without `display` render the legacy card.
+            TPFeedView(
+                currentPageIndex: $currentPageIndex,
+                viewModel: viewModel,
+                onTopicTap: { entity, sourceId in
+                    topicTarget = TopicTarget(entity: entity, sourceId: sourceId)
+                }
+            ) {
+                segmentedControl
+                    .fixedSize()
+            }
         } else {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
