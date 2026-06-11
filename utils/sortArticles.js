@@ -1,6 +1,8 @@
+import { getExposureCounts, exposureFactor } from './exposure';
+
 /**
  * Article Sorting Utilities
- * 
+ *
  * Sorts articles by score (descending) with date-based tie-breaking.
  * Used to ensure users always see the highest-quality content first.
  * 
@@ -167,6 +169,16 @@ export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = 
   const now = Date.now();
   const STALE_AGE_HOURS = 48; // articles with no usable date are treated as old
 
+  // Exposure decay: articles the user already SAW this 24h window (card ≥55%
+  // visible for ~1.5s, recorded by TodayPlusFeed) halve per sighting. Without
+  // this, seen-but-not-opened stories topped every refresh — the feed kept
+  // re-serving the same articles. Decay (not a hard hide) so a truly big
+  // story can still resurface. Client-only; on the server the map is empty.
+  let exposure = {};
+  if (typeof window !== 'undefined') {
+    try { exposure = getExposureCounts(); } catch (_) {}
+  }
+
   const scored = articles.map((article) => {
     const importance =
       typeof article._personalizedScore === 'number'
@@ -179,8 +191,9 @@ export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = 
     const ageHours = ts > 0 ? Math.max(0, (now - ts) / 3600000) : STALE_AGE_HOURS;
     const timeDecay = Math.pow(0.5, ageHours / halfLifeHours);
     const noise = 1 + (Math.random() * 2 - 1) * jitter; // scale by [1-jitter, 1+jitter]
+    const seen = exposureFactor(exposure[String(article.id)] || 0);
 
-    return { article, effective: importance * timeDecay * noise };
+    return { article, effective: importance * timeDecay * noise * seen };
   });
 
   scored.sort((a, b) => b.effective - a.effective);

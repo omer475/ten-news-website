@@ -5,6 +5,44 @@
 const IMG_DESIGNS = new Set(['cover', 'classic', 'split', 'legacy']);
 const ORDER = ['cover', 'classic', 'stat', 'quote', 'versus', 'line', 'split', 'chart', 'map'];
 
+// --- Per-article template memory ---------------------------------------------
+// The selector picks by feed POSITION, and the order jitters between loads —
+// so the same article used to come back wearing a different card style every
+// refresh, disguising repeats as new content. Remember the first template an
+// article gets (24h, matching the serving window) and reuse it on every load.
+
+const TPL_KEY = 'tn_card_templates';
+const TPL_TTL_MS = 24 * 60 * 60 * 1000;
+let _tplCache = null; // { id: { t, ts } }
+
+function tplStore() {
+  if (_tplCache) return _tplCache;
+  if (typeof window === 'undefined') return (_tplCache = {});
+  try {
+    const raw = localStorage.getItem(TPL_KEY);
+    const store = raw ? JSON.parse(raw) : {};
+    const now = Date.now();
+    for (const id of Object.keys(store)) {
+      if (!store[id] || now - (store[id].ts || 0) > TPL_TTL_MS) delete store[id];
+    }
+    _tplCache = store;
+  } catch (_) { _tplCache = {}; }
+  return _tplCache;
+}
+
+export function rememberedTemplate(articleId) {
+  if (articleId == null) return null;
+  const e = tplStore()[String(articleId)];
+  return e ? e.t : null;
+}
+
+export function rememberTemplate(articleId, template) {
+  if (typeof window === 'undefined' || articleId == null || !template) return;
+  const store = tplStore();
+  store[String(articleId)] = { t: template, ts: Date.now() };
+  try { localStorage.setItem(TPL_KEY, JSON.stringify(store)); } catch (_) {}
+}
+
 export function createSelector() {
   const lastUsed = {};          // design -> last block index (default -∞)
   let lastDesign = null;
@@ -25,7 +63,7 @@ export function createSelector() {
         case 'quote': return !!d.quote;
         case 'versus': return !!d.versus;
         case 'line': return Array.isArray(d.timeline) && d.timeline.length > 0;
-        case 'chart': return !!d.trend;
+        case 'chart': return !!(d.trend || d.breakdown || d.ranking);
         case 'map': return !!(d.geo && d.geo.pins && d.geo.pins.length);
         default: return false;
       }
@@ -69,6 +107,13 @@ export function createSelector() {
 
       record(pick, blockIdx);
       return pick;
+    },
+
+    // A template remembered from a previous load — record it so the rhythm
+    // rules (image spacing, LRU) account for it, without re-choosing.
+    use(design, blockIdx) {
+      record(design, blockIdx);
+      return design;
     },
 
     // display == null → only the legacy fallback card; it shows the photo,

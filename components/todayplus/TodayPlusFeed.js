@@ -11,7 +11,8 @@ import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
 import { TP, FONT_MONO, accentFor } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
-import { createSelector } from './selector';
+import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
+import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
@@ -65,8 +66,19 @@ function useFeedBlocks(stories, modules) {
       const story = news[i];
       const display = story.display || null;
       let template = 'legacy';
-      if (display) template = cache.selector.choose(display, cache.blockIdx);
-      else cache.selector.recordLegacy(cache.blockIdx);
+      if (display) {
+        // Same article = same card style across loads (24h memory), so a
+        // repeat can't masquerade as a new story in a different template.
+        const kept = rememberedTemplate(story.id);
+        if (kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]) {
+          template = cache.selector.use(kept, cache.blockIdx);
+        } else {
+          template = cache.selector.choose(display, cache.blockIdx);
+          rememberTemplate(story.id, template);
+        }
+      } else {
+        cache.selector.recordLegacy(cache.blockIdx);
+      }
 
       cache.blocks.push({ type: 'story', story, template, key: `s-${story.id ?? i}` });
       cache.blockIdx += 1;
@@ -91,11 +103,55 @@ function useFeedBlocks(stories, modules) {
 function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
   const Card = CARD_BY_TEMPLATE[template];
+  const rootRef = useRef(null);
+
+  // Cards are read IN PLACE (no tap), so visibility is the read signal:
+  //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
+  //   ≥55% visible for 7s    → read: 24h exclusion + engagement event, so the
+  //                            interest engine keeps learning without taps.
+  // Leaving the viewport before a threshold cancels it (fast scrolls count
+  // nothing). Both fire at most once per card per page load.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || story?.id == null || story.type !== 'news') return undefined;
+    let impressionTimer = null;
+    let readTimer = null;
+    let readDone = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries[0]?.isIntersecting;
+        if (visible) {
+          if (!impressionTimer) {
+            impressionTimer = setTimeout(() => recordImpression(story.id), 1500);
+          }
+          if (!readTimer && !readDone) {
+            readTimer = setTimeout(() => {
+              readDone = true;
+              markSeenRead(story.id);
+              try { onEngage?.(story); } catch (_) {}
+              io.disconnect();
+            }, 7000);
+          }
+        } else {
+          if (impressionTimer) { clearTimeout(impressionTimer); impressionTimer = null; }
+          if (readTimer) { clearTimeout(readTimer); readTimer = null; }
+        }
+      },
+      { threshold: 0.55 }
+    );
+    io.observe(el);
+    return () => {
+      if (impressionTimer) clearTimeout(impressionTimer);
+      if (readTimer) clearTimeout(readTimer);
+      io.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story?.id]);
 
   // Per user direction (2026-06-13): tapping an article does NOTHING — cards
   // are read in place. Only bookmark/share in the footer are interactive.
   return (
-    <div>
+    <div ref={rootRef}>
       {Card && story.display ? (
         <div style={{ padding: '0 16px' }}>
           <Card story={story} display={story.display} accent={accent} />
