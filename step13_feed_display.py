@@ -95,7 +95,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "quote": {{"text": "…", "who": "Name · Role"}} — ONLY if the source text contains a real, verbatim, striking quotation (8-30 words). Wrap the key phrase in <em>. NEVER paraphrase into quotation marks.
 - "versus": {{"a": {{"val": N, "unit": "", "who": "SIDE A LABEL"}}, "b": {{"val": N, "unit": "", "who": "SIDE B LABEL"}}, "ratio": 0.0-1.0, "note": "one-line context"}} — ONLY for a genuine two-sided numeric comparison stated in the source (two companies, two countries, before/after). ratio = a/(a+b). who: uppercase, max 22 chars.
 - "timeline": [["MAY 28","event text"], …] — 3-4 entries, ONLY for genuinely developing stories with distinct dated events from the source. Most recent FIRST. Last entry may be ["NEXT","what's expected"]. Labels: short uppercase date or "NEXT".
-- "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — ONLY if the source provides a real numeric series of 4-8 points (monthly figures, quarterly results). vals and labels same length, chronological, latest LAST. NEVER estimate missing points.
+- "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric series of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "geo": {{"pins": [{{"lat": 36.17, "lon": -115.14, "label": "Las Vegas"}}], "link": false, "distance": "", "region": "NEVADA · USA"}} — ONLY if a SPECIFIC place (city/site/facility) is central to the story. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then give "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
 RULES:
@@ -289,7 +289,7 @@ def validate_display(result: Dict, pipeline_category: str,
         vals = [_num(v) for v in (trend.get('vals') or [])]
         labels = [str(l).strip().upper()[:8] for l in (trend.get('labels') or [])]
         caption = _strip_tags(str(trend.get('caption', ''))).strip()
-        if (4 <= len(vals) <= 8 and all(v is not None for v in vals)
+        if (3 <= len(vals) <= 8 and all(v is not None for v in vals)
                 and len(labels) == len(vals) and all(labels) and caption):
             out['trend'] = {'vals': vals, 'labels': labels,
                             'unit': str(trend.get('unit', ''))[:6],
