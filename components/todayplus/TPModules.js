@@ -49,7 +49,7 @@ export function CountdownModule({ row }) {
       <ModuleHeader title="COUNTING DOWN" shown={shown} animate={animate} />
       <h3 style={{
         fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 18.4,
-        letterSpacing: '-0.02em', color: TP.ink, margin: '16px 0 0',
+        letterSpacing: '-0.01em', color: TP.ink, margin: '16px 0 0',
         ...revealStyle(shown, animate, 0.12, 10),
       }}>{row.name}</h3>
       <div style={{ display: 'flex', alignItems: 'stretch', marginTop: 14, ...revealStyle(shown, animate, 0.22, 12) }}>
@@ -59,7 +59,7 @@ export function CountdownModule({ row }) {
             <div style={{ flex: 1, textAlign: 'center' }}>
               <div style={{
                 fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 34, lineHeight: 1,
-                letterSpacing: '-0.04em', color: TP.ink, fontVariantNumeric: 'tabular-nums',
+                letterSpacing: '-0.02em', color: TP.ink, fontVariantNumeric: 'tabular-nums',
               }}>{String(value).padStart(2, '0')}</div>
               <div style={{
                 fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500,
@@ -96,7 +96,7 @@ export function HistoryModule({ module }) {
               <div style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
                 <span style={{
                   fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 20.8,
-                  letterSpacing: '-0.03em', color: TP.gold, width: 64, flexShrink: 0,
+                  letterSpacing: '-0.012em', color: TP.gold, width: 64, flexShrink: 0,
                   fontVariantNumeric: 'tabular-nums',
                 }}>{year}</span>
                 <span style={{ fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.5, color: TP.ink2 }}>
@@ -146,7 +146,7 @@ export function NotdModule({ module, moduleKey }) {
       <ModuleHeader title="NUMBER OF THE DAY" shown={shown} animate={animate} />
       <div style={{
         fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 66, lineHeight: 0.95,
-        letterSpacing: '-0.052em', color: TP.ink, marginTop: 16,
+        letterSpacing: '-0.025em', color: TP.ink, marginTop: 16,
         ...revealStyle(shown, animate, 0.12, 12),
       }}>
         <CountUp

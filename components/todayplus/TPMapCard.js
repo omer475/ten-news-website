@@ -187,7 +187,7 @@ function MapboxFigure({ geo, accent, storyId }) {
 
   return (
     <div ref={visRef} style={{
-      position: 'relative', aspectRatio: '16 / 11', borderRadius: 22,
+      position: 'relative', aspectRatio: '16 / 11', borderRadius: 26,
       overflow: 'hidden', background: 'rgb(4,6,13)',
       boxShadow: 'inset 0 0 0 1px rgba(232,234,242,0.07)',
     }}>
@@ -312,7 +312,7 @@ function MapboxFigure({ geo, accent, storyId }) {
 export function MapCard({ story, display, accent, onOpen }) {
   return (
     <article>
-      <div onClick={() => onOpen?.(story)} style={{ cursor: 'pointer' }}>
+      <div>
         <KickerRow category={display.category} accent={accent} story={story} prefix="ON THE MAP" />
         <div style={{ marginTop: 10 }}>
           <Headline raw={display.title} accent={accent} size={24} />

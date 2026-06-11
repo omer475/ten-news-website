@@ -92,24 +92,20 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
   const Card = CARD_BY_TEMPLATE[template];
 
-  const open = (s) => {
-    onEngage?.(s);
-    onOpen?.(s);
-  };
-
+  // Per user direction (2026-06-13): tapping an article does NOTHING — cards
+  // are read in place. Only bookmark/share in the footer are interactive.
   return (
     <div>
       {Card && story.display ? (
         <div style={{ padding: '0 16px' }}>
-          <Card story={story} display={story.display} accent={accent} onOpen={open} />
+          <Card story={story} display={story.display} accent={accent} />
         </div>
       ) : (
-        // display == null → the current/legacy card, untouched (light surface).
         <FeedCard
           story={story}
           isDark={false}
           textOnly={textOnly}
-          onOpen={open}
+          onOpen={() => {}}
           onEngage={onEngage}
         />
       )}

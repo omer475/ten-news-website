@@ -140,7 +140,7 @@ export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, sty
 
 // ── Image parallax (§7.3): ±26px translate, oversized layer, rAF ────────────
 
-export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, children, overlay }) {
+export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, children, overlay }) {
   const reduced = useReducedMotion();
   const wrapRef = useRef(null);
   const imgRef = useRef(null);
@@ -184,7 +184,7 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
     >
       <div style={{
         position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
-        borderRadius, boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.06)',
+        borderRadius, boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.05)',
       }} />
       {src ? (
         <img
@@ -220,7 +220,7 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
 export function KickerRow({ category, accent, story, prefix }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ width: 22, height: 2, borderRadius: 2, background: accent }} />
+      <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)` }} />
       <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
         {ageLabel(story?.publishedAt)}
       </span>
@@ -240,11 +240,13 @@ export function Bullets({ bullets, accent, max = 3, reveal }) {
           ...(reveal ? revealStyle(reveal.shown, reveal.animate, (reveal.baseDelay || 0) + i * 0.1, 10) : null),
         }}>
           <span style={{
-            position: 'absolute', left: 2, top: 8, width: 6, height: 6,
-            borderRadius: '50%', background: accent,
+            position: 'absolute', left: 2, top: 8.5, width: 6, height: 6,
+            borderRadius: '50%', background: `color-mix(in srgb, ${accent} 80%, white)`,
+            boxShadow: `0 0 0 2.5px color-mix(in srgb, ${accent} 12%, transparent)`,
           }} />
           <span style={{
-            fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.55, color: TP.ink2,
+            fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.58, color: TP.ink2,
+            letterSpacing: '0.001em',
           }}>
             <Markup raw={raw} emColor={accent} strongColor={TP.ink} />
           </span>
@@ -267,7 +269,9 @@ export function StatsRow({ stats, accent, cardKey }) {
         return (
           <div key={i} style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              width: 22, height: 2, borderRadius: 2, background: accent, marginBottom: 10,
+              width: 26, height: 3, borderRadius: 99,
+              background: `linear-gradient(90deg, ${accent}, color-mix(in srgb, ${accent} 50%, white))`,
+              marginBottom: 10,
               transform: shown ? 'scaleX(1)' : 'scaleX(0)',
               transformOrigin: 'left',
               transition: animate ? `transform 0.55s cubic-bezier(.2,.7,.2,1) ${delay}s` : 'none',
@@ -275,7 +279,7 @@ export function StatsRow({ stats, accent, cardKey }) {
             <div style={revealStyle(shown, animate, delay + 0.08, 8)}>
               <div style={{
                 fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27, lineHeight: 1,
-                letterSpacing: '-0.04em', color: TP.ink,
+                letterSpacing: '-0.02em', color: TP.ink,
               }}>
                 <CountUp
                   value={Number(value) || 0}
@@ -354,23 +358,21 @@ export function CardFooter({ story, tags, onOpen }) {
         {(tags || []).map((tag) => (
           <span key={tag} style={{
             fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 500, color: TP.ink2,
-            border: `1px solid ${TP.line}`, borderRadius: 99, padding: '7px 13px',
-            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255,255,255,0.5)',
-            transition: 'border-color 0.2s ease, color 0.2s ease',
+            letterSpacing: '0.005em',
+            border: '1px solid rgba(22,21,15,0.07)', borderRadius: 99, padding: '7.5px 14px',
+            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255,255,255,0.65)',
+            boxShadow: '0 1px 2px rgba(22,21,15,0.03)',
           }}>{tag}</span>
         ))}
       </div>
-      {iconBtn((e) => { e.stopPropagation(); onOpen?.(story); }, 'Details', (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.2M12 7.6v.2"/></svg>
-      ))}
       {iconBtn(toggleBookmark, 'Bookmark', (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? TP.gold : 'none'} stroke={bookmarked ? TP.gold : 'currentColor'} strokeWidth="1.8" strokeLinejoin="round"><path d="M6 3.8h12a.7.7 0 01.7.7v15.6a.4.4 0 01-.64.32L12 16l-6.06 4.42a.4.4 0 01-.64-.32V4.5a.7.7 0 01.7-.7z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? TP.gold : 'none'} stroke={bookmarked ? TP.gold : 'currentColor'} strokeWidth="1.6" strokeLinejoin="round"><path d="M6 3.8h12a.7.7 0 01.7.7v15.6a.4.4 0 01-.64.32L12 16l-6.06 4.42a.4.4 0 01-.64-.32V4.5a.7.7 0 01.7-.7z"/></svg>
       ), bookmarked ? TP.gold : TP.ink3, {
         transform: pop ? 'scale(1.3)' : 'scale(1)',
         transition: reduced ? 'none' : 'transform 0.4s cubic-bezier(.3,1.8,.4,1)',
       })}
       {iconBtn(share, 'Share', (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6.2a.8.8 0 00.8.8h12.4a.8.8 0 00.8-.8V13"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6.2a.8.8 0 00.8.8h12.4a.8.8 0 00.8-.8V13"/></svg>
       ))}
     </div>
   );
@@ -381,8 +383,8 @@ export function CardFooter({ story, tags, onOpen }) {
 export function Headline({ raw, accent, size = 24, color = TP.ink, as: Tag = 'h2', style }) {
   return (
     <Tag style={{
-      fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size, lineHeight: 1.12,
-      letterSpacing: '-0.032em', color, margin: 0,
+      fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size, lineHeight: 1.16,
+      letterSpacing: '-0.015em', color, margin: 0,
       textWrap: 'balance', fontOpticalSizing: 'auto',
       ...style,
     }}>

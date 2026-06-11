@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import {
-  TP, FONT_HEAD, FONT_BODY, FONT_MONO,
+  TP, FONT_HEAD, FONT_SERIF, FONT_BODY, FONT_MONO,
   ageLabel, Markup, shouldAnimateOnce, hasAnimated,
 } from './tokens';
 import {
@@ -16,11 +16,6 @@ import {
   useRevealOnce, revealStyle,
 } from './shared';
 
-const clickable = (onOpen, story) => ({
-  onClick: () => onOpen?.(story),
-  style: { cursor: 'pointer' },
-});
-
 // ── 5.1 COVER — headline inside the photo ───────────────────────────────────
 
 export function CoverCard({ story, display, accent, onOpen }) {
@@ -28,15 +23,15 @@ export function CoverCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
+      <div>
         <ParallaxImage
           src={display.imageURL || story.urlToImage}
           aspectRatio="4 / 4.8"
-          borderRadius={24}
+          borderRadius={28}
           overlay={
             <div style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to bottom, rgba(12,11,8,0.20) 0%, rgba(12,11,8,0) 30%, rgba(12,11,8,0.46) 58%, rgba(12,11,8,0.95) 96%)',
+              background: 'linear-gradient(to bottom, rgba(12,11,8,0.18) 0%, rgba(12,11,8,0) 28%, rgba(12,11,8,0.18) 48%, rgba(12,11,8,0.55) 64%, rgba(12,11,8,0.88) 82%, rgba(12,11,8,0.96) 100%)',
             }} />
           }
         >
@@ -50,8 +45,8 @@ export function CoverCard({ story, display, accent, onOpen }) {
 
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 3, padding: 22 }}>
             <h2 style={{
-              fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 28.5, lineHeight: 1.08,
-              letterSpacing: '-0.036em', color: '#fff', margin: 0, textWrap: 'balance',
+              fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27.5, lineHeight: 1.13,
+              letterSpacing: '-0.016em', color: '#fff', margin: 0, textWrap: 'balance',
               textShadow: '0 2px 26px rgba(0,0,0,0.45)',
               ...revealStyle(shown, animate, 0.05, 18),
             }}>
@@ -88,8 +83,8 @@ export function ClassicCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
-        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={22} />
+      <div>
+        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={26} />
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 17, ...revealStyle(shown, animate, 0.08, 12) }}>
           <div style={{ flex: 1 }}>
@@ -128,12 +123,12 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
     <article ref={ref}>
       {/* 3px accent rule draws itself across the card */}
       <div style={{
-        height: 3, background: `linear-gradient(90deg, ${accent}, color-mix(in srgb, ${accent} 45%, white))`,
-        borderRadius: 2,
+        height: 3.5, background: `linear-gradient(90deg, ${accent}, color-mix(in srgb, ${accent} 30%, white))`,
+        borderRadius: 99,
         transform: shown ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left',
         transition: animate ? 'transform 0.8s cubic-bezier(.2,.7,.2,1)' : 'none',
       }} />
-      <div {...clickable(onOpen, story)} style={{ cursor: 'pointer', paddingTop: 18 }}>
+      <div style={{ paddingTop: 18 }}>
         <div style={revealStyle(shown, animate, 0.05, 8)}>
           <KickerRow category={display.category} accent={accent} story={story} />
         </div>
@@ -143,8 +138,8 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginTop: 22, flexWrap: 'wrap', ...revealStyle(shown, animate, 0.3, 14) }}>
           <span style={{
-            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 62, lineHeight: 0.92,
-            letterSpacing: '-0.052em',
+            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 60, lineHeight: 0.95,
+            letterSpacing: '-0.025em',
             background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 78%, white) 0%, ${accent} 55%, color-mix(in srgb, ${accent} 78%, black) 100%)`,
             WebkitBackgroundClip: 'text', backgroundClip: 'text',
             WebkitTextFillColor: 'transparent', color: 'transparent',
@@ -153,7 +148,7 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
               value={Number(value) || 0}
               prefix={prefix || ''}
               unit={unit || ''}
-              unitStyle={{ fontSize: '0.42em', letterSpacing: '-0.03em' }}
+              unitStyle={{ fontSize: '0.42em', letterSpacing: '-0.01em' }}
               animKey={`big.${story.id}`}
             />
           </span>
@@ -188,13 +183,13 @@ export function QuoteCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
+      <div>
         <div style={revealStyle(shown, animate, 0, 6)}>
           <KickerRow category={display.category} accent={accent} story={story} />
         </div>
 
         <div aria-hidden style={{
-          fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 96, lineHeight: 1,
+          fontFamily: FONT_SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 104, lineHeight: 1,
           background: `linear-gradient(160deg, ${accent}, color-mix(in srgb, ${accent} 55%, white))`,
           WebkitBackgroundClip: 'text', backgroundClip: 'text',
           WebkitTextFillColor: 'transparent', color: 'transparent',
@@ -206,8 +201,9 @@ export function QuoteCard({ story, display, accent, onOpen }) {
         }}>“</div>
 
         <blockquote style={{
-          fontFamily: FONT_HEAD, fontWeight: 700, fontStyle: 'italic',
-          fontSize: 26.5, lineHeight: 1.22, letterSpacing: '-0.028em',
+          fontFamily: FONT_SERIF, fontWeight: 500, fontStyle: 'italic',
+          fontSize: 27, lineHeight: 1.32, letterSpacing: '-0.005em',
+          fontOpticalSizing: 'auto',
           color: TP.ink, margin: '6px 0 0', textWrap: 'balance',
           ...revealStyle(shown, animate, 0.18, 14),
         }}>
@@ -232,8 +228,8 @@ export function QuoteCard({ story, display, accent, onOpen }) {
 
         {/* headline as subhead — quote owns the color, emphasis inverts (§5.4) */}
         <h3 style={{
-          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 17, lineHeight: 1.3,
-          letterSpacing: '-0.02em', color: TP.ink2, margin: '20px 0 0', textWrap: 'balance',
+          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 16.5, lineHeight: 1.34,
+          letterSpacing: '-0.008em', color: TP.ink2, margin: '20px 0 0', textWrap: 'balance',
           ...revealStyle(shown, animate, 0.58, 10),
         }}>
           <Markup raw={display.title} emColor={TP.ink} strongColor={TP.ink} strongWeight={700} />
@@ -282,7 +278,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
   const value = (s, key, size, color, unitColor) => (
     <div style={{
       fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size, lineHeight: 1,
-      letterSpacing: '-0.042em', color,
+      letterSpacing: '-0.02em', color,
     }}>
       <CountUp
         value={Number(s?.val) || 0}
@@ -430,7 +426,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
+      <div>
         <div style={revealStyle(shown, animate, 0, 6)}>
           <KickerRow category={display.category} accent={accent} story={story} />
         </div>
@@ -463,7 +459,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
+      <div>
         <div style={revealStyle(shown, animate, 0, 6)}>
           <KickerRow category={display.category} accent={accent} story={story} />
         </div>
@@ -527,9 +523,9 @@ export function SplitCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)} style={{ display: 'flex', gap: 16, cursor: 'pointer' }}>
+      <div style={{ display: 'flex', gap: 16 }}>
         <div style={{
-          position: 'relative', width: 116, height: 116, borderRadius: 16,
+          position: 'relative', width: 116, height: 116, borderRadius: 20,
           overflow: 'hidden', background: TP.line, flexShrink: 0,
           ...revealStyle(shown, animate, 0.05, 8),
         }}>
@@ -544,8 +540,8 @@ export function SplitCard({ story, display, accent, onOpen }) {
             }}
           />
           <span style={{
-            position: 'absolute', inset: 0, borderRadius: 16, pointerEvents: 'none',
-            boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.06)',
+            position: 'absolute', inset: 0, borderRadius: 20, pointerEvents: 'none',
+            boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.05)',
           }} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -553,8 +549,8 @@ export function SplitCard({ story, display, accent, onOpen }) {
             <KickerRow category={display.category} accent={accent} story={story} />
           </div>
           <h2 style={{
-            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18.5, lineHeight: 1.18,
-            letterSpacing: '-0.03em', color: TP.ink, margin: '8px 0 0', textWrap: 'balance',
+            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18, lineHeight: 1.24,
+            letterSpacing: '-0.012em', color: TP.ink, margin: '8px 0 0', textWrap: 'balance',
             ...revealStyle(shown, animate, 0.18, 10),
           }}>
             <Markup raw={display.title} emColor={accent} strongColor={TP.ink} strongWeight={800} />
@@ -597,7 +593,7 @@ export function ChartCard({ story, display, accent, onOpen }) {
 
   return (
     <article ref={ref}>
-      <div {...clickable(onOpen, story)}>
+      <div>
         <div style={revealStyle(shown, animateReveal, 0, 6)}>
           <KickerRow category={display.category} accent={accent} story={story} />
         </div>
@@ -625,7 +621,7 @@ export function ChartCard({ story, display, accent, onOpen }) {
                 </div>
                 <div style={{
                   height: Math.max(6, (120 * v) / maxVal),
-                  borderRadius: '6px 6px 2px 2px',
+                  borderRadius: '8px 8px 3px 3px',
                   background: i === lastIdx
                     ? `linear-gradient(to top, ${accent}, color-mix(in srgb, ${accent} 72%, white))`
                     : `color-mix(in srgb, ${accent} 22%, white)`,

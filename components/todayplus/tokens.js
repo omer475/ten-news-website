@@ -41,8 +41,12 @@ export function accentFor(category) {
   return CATEGORY_ACCENTS[(category || '').toUpperCase()] || TP.gold;
 }
 
-// §2.3 typography stacks
-export const FONT_HEAD = "'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif";
+// Type system v3 — warm editorial, soft geometry.
+// Bricolage Grotesque: characterful display face (soft terminals, confident
+// weight) for headlines + hero numbers. Newsreader italic: editorial voice
+// for pull-quotes. Figtree: clean warm body. IBM Plex Mono: technical labels.
+export const FONT_HEAD = "'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, sans-serif";
+export const FONT_SERIF = "'Newsreader', 'Georgia', serif";
 export const FONT_BODY = "'Figtree', -apple-system, BlinkMacSystemFont, sans-serif";
 export const FONT_MONO = "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace";
 
@@ -50,10 +54,12 @@ export const FONT_MONO = "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace";
 // target has decimals. Prefix/unit are passed around the formatted number.
 export function formatNumber(value) {
   const hasDecimals = Math.abs(value % 1) > 1e-9;
+  // Years must not get thousands separators ("CLOSES 2,027" reads wrong).
+  const looksLikeYear = !hasDecimals && value >= 1900 && value <= 2100;
   return value.toLocaleString('en-US', {
     minimumFractionDigits: hasDecimals ? 1 : 0,
     maximumFractionDigits: hasDecimals ? 1 : 0,
-    useGrouping: Math.abs(value) >= 1000,
+    useGrouping: Math.abs(value) >= 1000 && !looksLikeYear,
   });
 }
 
