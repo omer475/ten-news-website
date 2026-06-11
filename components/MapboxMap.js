@@ -3,7 +3,12 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Mapbox access token
-mapboxgl.accessToken = 'pk.eyJ1Ijoib21lcnMzOTQ4IiwiYSI6ImNtajY0bjFycTBqNjkzZnF5bzduenA0NmIifQ.8I1Q5aYeoGB3GihpfaC_WQ';
+// Mapbox publishable token — env-injected at build (NEXT_PUBLIC_MAPBOX_TOKEN
+// on Vercel + .env.local) so no token literal lives in the repo.
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+// Shared so other map surfaces (TodayPlus map card) reuse the same token.
+export const MAPBOX_TOKEN = mapboxgl.accessToken;
 
 // Cache for location boundaries to avoid repeated API calls
 const boundaryCache = new Map();

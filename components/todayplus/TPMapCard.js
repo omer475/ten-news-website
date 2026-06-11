@@ -1,71 +1,16 @@
-// TodayPlus Feed — 5.9 MAP card. Stylized inline vector world map in a
-// 720×360 equirectangular space (x=(lon+180)/360·720, y=(90−lat)/180·360).
-// Pure SVG: no map service, no API keys, works offline (§10.5).
+// TodayPlus Feed — 5.9 MAP card, rendered with Mapbox GL (same token/stack as
+// the site's existing MapboxMap.js). Dark style keeps the card the deliberate
+// dark-surface contrast moment from the spec; pins/arc/labels carry the
+// category accent. Non-interactive — it's a figure, not a widget.
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { TP, FONT_MONO } from './tokens';
-import { KickerRow, Bullets, CardFooter, Headline } from './shared';
+import { KickerRow, Bullets, CardFooter, Headline, useReducedMotion } from './shared';
+import { MAPBOX_TOKEN } from '../MapboxMap';
 
-// Low-poly continent outlines (lon, lat)
-const LANDS = [
-  // North + Central America
-  [[-168, 66], [-156, 71], [-140, 70], [-125, 72], [-110, 73], [-95, 72], [-82, 70],
-   [-75, 62], [-80, 55], [-65, 60], [-55, 52], [-60, 46], [-70, 44], [-75, 38],
-   [-80, 32], [-81, 25], [-90, 29], [-95, 22], [-90, 15], [-83, 9], [-79, 8.5],
-   [-84, 13], [-92, 16], [-97, 20], [-105, 20], [-110, 23], [-115, 30], [-122, 34],
-   [-124, 40], [-124, 48], [-132, 55], [-140, 60], [-152, 60], [-165, 55]],
-  // South America
-  [[-79, 9], [-71, 12], [-60, 8], [-52, 5], [-44, -2], [-35, -7], [-39, -13],
-   [-41, -22], [-48, -28], [-53, -34], [-58, -39], [-65, -41], [-66, -48], [-69, -52],
-   [-74, -50], [-72, -44], [-71, -32], [-70, -18], [-77, -12], [-81, -5], [-79, 2]],
-  // Greenland
-  [[-46, 60], [-38, 66], [-22, 70], [-18, 75], [-25, 78], [-38, 80], [-55, 82],
-   [-68, 80], [-73, 78], [-60, 75], [-55, 69], [-52, 64]],
-  // Eurasia
-  [[-10, 36], [-9, 43], [-1, 46], [0, 51], [8, 54], [8, 57], [5, 62], [12, 65],
-   [18, 69], [26, 71], [40, 68], [50, 69], [60, 69], [70, 73], [80, 73], [90, 75],
-   [100, 77], [110, 74], [120, 73], [140, 72], [160, 70], [170, 66], [179, 65],
-   [178, 62], [163, 60], [155, 53], [142, 47], [135, 43], [129, 35], [122, 30],
-   [121, 23], [108, 12], [104, 2], [98, 8], [91, 22], [80, 8], [77, 8], [72, 20],
-   [66, 25], [57, 25], [52, 16], [44, 12], [43, 16], [35, 28], [33, 31], [36, 36],
-   [27, 37], [26, 40], [22, 37], [15, 38], [18, 40], [13, 44], [9, 44], [3, 43],
-   [3, 40], [-1, 37], [-6, 36]],
-  // Africa
-  [[-6, 35], [11, 37], [20, 32], [32, 31], [34, 28], [38, 18], [43, 12], [51, 12],
-   [46, 2], [41, -2], [40, -10], [35, -20], [33, -29], [27, -34], [20, -35],
-   [17, -29], [12, -18], [9, -7], [9, 4], [-5, 5], [-13, 9], [-17, 15], [-16, 20],
-   [-13, 28]],
-  // Australia
-  [[114, -22], [122, -18], [130, -12], [136, -12], [142, -11], [146, -19],
-   [150, -23], [153, -28], [151, -34], [146, -39], [139, -37], [135, -35],
-   [129, -32], [122, -34], [115, -34], [113, -26]],
-  // British Isles
-  [[-5, 50], [-3, 53], [-5, 56], [-3, 58], [-6, 58], [-8, 54], [-10, 52]],
-  // Japan
-  [[130, 31], [135, 34.5], [140, 36], [141, 40], [144, 44], [141, 42], [137, 36], [132, 33]],
-];
-
-const project = (lon, lat) => [((lon + 180) / 360) * 720, ((90 - lat) / 180) * 360];
-
-// Auto-zoom (§5.9): bbox of pins padded ×2.4, min width 200, clamped, 16:11.
-function viewBoxFor(pins) {
-  const pts = pins.map((p) => project(p.lon, p.lat));
-  if (!pts.length) return [0, 0, 720, 495];
-  const xs = pts.map((p) => p[0]);
-  const ys = pts.map((p) => p[1]);
-  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-  let w = Math.max((Math.max(...xs) - Math.min(...xs)) * 2.4, 200);
-  let h = (w * 11) / 16;
-  const neededH = Math.max((Math.max(...ys) - Math.min(...ys)) * 2.4, h);
-  if (neededH > h) { h = neededH; w = (h * 16) / 11; }
-  w = Math.min(w, 720); h = Math.min(h, 495);
-  let x = cx - w / 2;
-  let y = cy - h / 2;
-  x = Math.max(0, Math.min(x, 720 - w));
-  y = Math.max(0, Math.min(y, Math.max(0, 360 - h)));
-  return [x, y, w, h];
-}
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 function coordString(pin) {
   const latDir = pin.lat >= 0 ? 'N' : 'S';
@@ -73,92 +18,144 @@ function coordString(pin) {
   return `${Math.abs(pin.lat).toFixed(2)}°${latDir} · ${Math.abs(pin.lon).toFixed(2)}°${lonDir}`;
 }
 
-function MapFigure({ geo, accent }) {
-  const pins = geo.pins || [];
-  const [vx, vy, vw, vh] = viewBoxFor(pins);
-  const scaleUnit = vw / 360; // font/pin sizing relative to zoom
-  const linked = geo.link === true && pins.length === 2;
-
-  // Graticule every 20 units
-  const grid = [];
-  for (let gx = Math.floor(vx / 20) * 20; gx <= vx + vw; gx += 20) {
-    grid.push(<line key={`gx${gx}`} x1={gx} y1={vy} x2={gx} y2={vy + vh} stroke={TP.mapGrid} strokeWidth={0.6 * scaleUnit} />);
+// Quadratic-bezier arc between two pins, apex lifted 22% of the pin distance
+// (perpendicular offset in lon/lat space — fine at card scale).
+function arcCoordinates(a, b) {
+  const ax = a.lon, ay = a.lat, bx = b.lon, by = b.lat;
+  const dx = bx - ax, dy = by - ay;
+  const dist = Math.hypot(dx, dy) || 1;
+  // control point = midpoint pushed perpendicular by 0.44·dist → apex at 0.22
+  const cx = (ax + bx) / 2 - (dy / dist) * dist * 0.44;
+  const cy = (ay + by) / 2 + (dx / dist) * dist * 0.44;
+  const pts = [];
+  for (let i = 0; i <= 48; i += 1) {
+    const t = i / 48;
+    const x = (1 - t) * (1 - t) * ax + 2 * (1 - t) * t * cx + t * t * bx;
+    const y = (1 - t) * (1 - t) * ay + 2 * (1 - t) * t * cy + t * t * by;
+    pts.push([x, y]);
   }
-  for (let gy = Math.floor(vy / 20) * 20; gy <= vy + vh; gy += 20) {
-    grid.push(<line key={`gy${gy}`} x1={vx} y1={gy} x2={vx + vw} y2={gy} stroke={TP.mapGrid} strokeWidth={0.6 * scaleUnit} />);
-  }
+  return pts;
+}
 
-  let arc = null;
-  let distLabel = null;
-  if (linked) {
-    const [ax, ay] = project(pins[0].lon, pins[0].lat);
-    const [bx, by] = project(pins[1].lon, pins[1].lat);
-    const dist = Math.hypot(bx - ax, by - ay);
-    // Quadratic control lifted 2× the apex lift so the APEX rises 22% of dist.
-    const cxp = (ax + bx) / 2;
-    const cyp = (ay + by) / 2 - dist * 0.44;
-    arc = (
-      <path
-        d={`M ${ax} ${ay} Q ${cxp} ${cyp} ${bx} ${by}`}
-        fill="none" stroke={accent} strokeWidth={1.2 * scaleUnit}
-        strokeDasharray={`${4 * scaleUnit} ${4 * scaleUnit}`}
-      />
+function MapboxFigure({ geo, accent }) {
+  const containerRef = useRef(null);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    const pins = (geo.pins || []).filter(
+      (p) => Number.isFinite(p.lat) && Number.isFinite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180
     );
-    if (geo.distance) {
-      distLabel = (
-        <text
-          x={cxp} y={(ay + by) / 2 - dist * 0.22 - 8 * scaleUnit}
-          textAnchor="middle" fill={accent}
-          fontFamily={FONT_MONO} fontSize={9 * scaleUnit} fontWeight="500"
-        >{geo.distance}</text>
-      );
+    if (!pins.length) return undefined;
+    const linked = geo.link === true && pins.length === 2;
+
+    const map = new mapboxgl.Map({
+      container,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [pins[0].lon, pins[0].lat],
+      zoom: 4,
+      interactive: false,
+      attributionControl: false,
+    });
+
+    // Frame the pins: bbox padded wide (the spec's ×2.4 auto-zoom intent —
+    // regional context, not street level).
+    if (pins.length > 1) {
+      const bounds = new mapboxgl.LngLatBounds();
+      pins.forEach((p) => bounds.extend([p.lon, p.lat]));
+      if (linked) {
+        arcCoordinates(pins[0], pins[1]).forEach((c) => bounds.extend(c));
+      }
+      map.fitBounds(bounds, { padding: 56, maxZoom: 6, duration: 0 });
     }
-  }
+
+    const markers = pins.map((pin) => {
+      const el = document.createElement('div');
+      el.className = 'tp-mb-pin';
+      el.innerHTML = `
+        ${reduced ? '' : `<span class="tp-mb-ring" style="border-color:${accent}"></span>`}
+        <span class="tp-mb-dot" style="background:${accent}"></span>
+        ${pin.label ? `<span class="tp-mb-label">${pin.label}</span>` : ''}
+      `;
+      return new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([pin.lon, pin.lat])
+        .addTo(map);
+    });
+
+    let distMarker = null;
+    map.on('load', () => {
+      // Quiet the basemap labels a touch so the accent pins lead.
+      try {
+        map.getStyle().layers.forEach((layer) => {
+          if (layer.type === 'symbol' && map.getLayer(layer.id)) {
+            map.setPaintProperty(layer.id, 'text-opacity', 0.75);
+          }
+        });
+      } catch {}
+
+      if (linked) {
+        const coords = arcCoordinates(pins[0], pins[1]);
+        try {
+          map.addSource('tp-arc', {
+            type: 'geojson',
+            data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } },
+          });
+          map.addLayer({
+            id: 'tp-arc-line',
+            type: 'line',
+            source: 'tp-arc',
+            paint: {
+              'line-color': accent,
+              'line-width': 1.5,
+              'line-dasharray': [2.5, 2.5],
+            },
+          });
+        } catch {}
+
+        if (geo.distance) {
+          const apex = coords[Math.floor(coords.length / 2)];
+          const el = document.createElement('div');
+          el.className = 'tp-mb-dist';
+          el.style.color = accent;
+          el.textContent = geo.distance;
+          distMarker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+            .setLngLat(apex)
+            .addTo(map);
+        }
+      }
+    });
+
+    const resizeObserver = new ResizeObserver(() => map.resize());
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+      markers.forEach((m) => m.remove());
+      if (distMarker) distMarker.remove();
+      map.remove();
+    };
+  }, [geo, accent, reduced]);
+
+  const pins = geo.pins || [];
 
   return (
     <div style={{
       position: 'relative', aspectRatio: '16 / 11', borderRadius: 22,
       overflow: 'hidden', background: TP.mapBg,
     }}>
-      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} aria-hidden>
-        {grid}
-        {LANDS.map((land, i) => (
-          <polygon
-            key={i}
-            points={land.map(([lon, lat]) => project(lon, lat).join(',')).join(' ')}
-            fill={TP.mapLand} stroke={TP.mapLandStroke} strokeWidth={0.8 * scaleUnit}
-          />
-        ))}
-        {arc}
-        {distLabel}
-        {pins.map((pin, i) => {
-          const [px, py] = project(pin.lon, pin.lat);
-          return (
-            <g key={i}>
-              <circle className="tp-map-pulse" cx={px} cy={py} r={3.4 * scaleUnit} fill="none" stroke={accent} strokeWidth={1.2 * scaleUnit} />
-              <circle cx={px} cy={py} r={3.4 * scaleUnit} fill={accent} />
-              {pin.label ? (
-                <text
-                  x={px + 6 * scaleUnit} y={py + 3 * scaleUnit}
-                  fill={TP.mapText} fontFamily={FONT_MONO}
-                  fontSize={9 * scaleUnit} style={{ textTransform: 'uppercase' }}
-                >{pin.label}</text>
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
 
       {pins[0] ? (
         <span style={{
-          position: 'absolute', left: 12, bottom: 12,
+          position: 'absolute', left: 12, bottom: 12, pointerEvents: 'none',
           fontFamily: FONT_MONO, fontSize: 9, color: 'rgba(232,234,242,0.55)',
         }}>{coordString(pins[0])}</span>
       ) : null}
 
       {geo.region ? (
         <span style={{
-          position: 'absolute', top: 12, right: 12,
+          position: 'absolute', top: 12, right: 12, pointerEvents: 'none',
           fontFamily: FONT_MONO, fontSize: 9, letterSpacing: '0.12em',
           textTransform: 'uppercase', color: 'rgba(232,234,242,0.75)',
           background: 'rgba(14,19,32,0.6)', backdropFilter: 'blur(8px)',
@@ -166,6 +163,65 @@ function MapFigure({ geo, accent }) {
           padding: '6px 10px',
         }}>{geo.region}</span>
       ) : null}
+
+      <style jsx global>{`
+        .tp-mb-pin {
+          position: relative;
+          width: 14px;
+          height: 14px;
+        }
+        .tp-mb-dot {
+          position: absolute;
+          left: 50%; top: 50%;
+          width: 9px; height: 9px;
+          margin: -4.5px 0 0 -4.5px;
+          border-radius: 50%;
+          box-shadow: 0 0 0 2px rgba(14, 19, 32, 0.55);
+        }
+        .tp-mb-ring {
+          position: absolute;
+          left: 50%; top: 50%;
+          width: 9px; height: 9px;
+          margin: -4.5px 0 0 -4.5px;
+          border-radius: 50%;
+          border: 1.2px solid;
+          animation: tp-mb-pulse 2.2s ease-out infinite;
+        }
+        @keyframes tp-mb-pulse {
+          0% { transform: scale(0.4); opacity: 0.9; }
+          100% { transform: scale(2.6); opacity: 0; }
+        }
+        .tp-mb-label {
+          position: absolute;
+          left: 16px; top: 50%;
+          transform: translateY(-50%);
+          font-family: ${FONT_MONO};
+          font-size: 9px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #E8EAF2;
+          text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          white-space: nowrap;
+        }
+        .tp-mb-dist {
+          font-family: ${FONT_MONO};
+          font-size: 9px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          white-space: nowrap;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tp-mb-ring { animation: none !important; opacity: 0; }
+        }
+        /* same chrome-hiding the site's existing MapboxMap.js applies */
+        .mapboxgl-ctrl-logo,
+        .mapboxgl-ctrl-attrib,
+        .mapboxgl-ctrl-bottom-left,
+        .mapboxgl-ctrl-bottom-right {
+          display: none !important;
+        }
+      `}</style>
     </div>
   );
 }
@@ -178,9 +234,9 @@ export function MapCard({ story, display, accent, onOpen }) {
         <div style={{ marginTop: 10 }}>
           <Headline raw={display.title} accent={accent} size={24} />
         </div>
-        {display.geo ? (
+        {display.geo?.pins?.length ? (
           <div style={{ marginTop: 18 }}>
-            <MapFigure geo={display.geo} accent={accent} />
+            <MapboxFigure geo={display.geo} accent={accent} />
           </div>
         ) : null}
         <div style={{ marginTop: 16 }}>
