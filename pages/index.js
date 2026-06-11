@@ -3058,7 +3058,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
         {/* TodayPlus redesign type system (spec §2.3): Inter Tight headlines,
             Figtree body, IBM Plex Mono labels/kickers/timestamps */}
-        <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@1,6..72,500;1,6..72,600&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@600;700;800;900&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
       </Head>
       
       <style jsx global>{`

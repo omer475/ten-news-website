@@ -7,8 +7,8 @@
 
 import React, { useState } from 'react';
 import {
-  TP, FONT_HEAD, FONT_SERIF, FONT_BODY, FONT_MONO,
-  ageLabel, Markup, shouldAnimateOnce, hasAnimated,
+  TP, FONT_HEAD, FONT_BODY, FONT_MONO,
+  ageLabel, Markup, formatNumber, shouldAnimateOnce, hasAnimated,
 } from './tokens';
 import {
   KickerRow, Bullets, StatsRow, CardFooter, Headline,
@@ -189,7 +189,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
         </div>
 
         <div aria-hidden style={{
-          fontFamily: FONT_SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 104, lineHeight: 1,
+          fontFamily: FONT_HEAD, fontWeight: 900, fontSize: 96, lineHeight: 1,
           background: `linear-gradient(160deg, ${accent}, color-mix(in srgb, ${accent} 55%, white))`,
           WebkitBackgroundClip: 'text', backgroundClip: 'text',
           WebkitTextFillColor: 'transparent', color: 'transparent',
@@ -201,9 +201,8 @@ export function QuoteCard({ story, display, accent, onOpen }) {
         }}>“</div>
 
         <blockquote style={{
-          fontFamily: FONT_SERIF, fontWeight: 500, fontStyle: 'italic',
-          fontSize: 27, lineHeight: 1.32, letterSpacing: '-0.005em',
-          fontOpticalSizing: 'auto',
+          fontFamily: FONT_HEAD, fontWeight: 700,
+          fontSize: 25, lineHeight: 1.28, letterSpacing: '-0.012em',
           color: TP.ink, margin: '6px 0 0', textWrap: 'balance',
           ...revealStyle(shown, animate, 0.18, 14),
         }}>
@@ -573,23 +572,61 @@ export function SplitCard({ story, display, accent, onOpen }) {
   );
 }
 
-// ── 5.8 CHART — animated trend bars ─────────────────────────────────────────
+// ── 5.8 CHART — smooth area chart (Robinhood-style draw-on) ─────────────────
+// A monotone-smoothed line with a gradient area fill, soft gridlines, point
+// dots and a glowing endpoint with a floating value chip. The line draws
+// itself on first view; the area and dots follow.
+
+function smoothPath(pts) {
+  // monotone-ish Catmull-Rom → cubic bezier through every point
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
 
 export function ChartCard({ story, display, accent, onOpen }) {
   const trend = display.trend || { vals: [], labels: [] };
   const reduced = useReducedMotion();
   const already = hasAnimated(`chart.${story.id}`);
-  const [grown, setGrown] = useState(already || reduced);
+  const [drawn, setDrawn] = useState(already || reduced);
   const [ref, shown, animateReveal] = useRevealOnce(`chartcard.${story.id}`, 0.3);
   const chartRef = useVisibleOnce(0.5, () => {
     shouldAnimateOnce(`chart.${story.id}`);
-    setGrown(true);
+    setDrawn(true);
   });
 
   const vals = trend.vals || [];
-  const maxVal = Math.max(...vals, 0.0001);
-  const lastIdx = vals.length - 1;
+  const labels = trend.labels || [];
+  const n = vals.length;
+  const lastIdx = n - 1;
   const animate = !reduced && !already;
+
+  // geometry: 560×190 viewBox, padded so dots/chip never clip
+  const W = 560, H = 190, PAD_X = 14, PAD_T = 44, PAD_B = 14;
+  const min = Math.min(...vals, 0);
+  const max = Math.max(...vals, 0.0001);
+  const span = Math.max(max - min, 0.0001);
+  const x = (i) => PAD_X + (i * (W - PAD_X * 2)) / Math.max(1, n - 1);
+  const y = (v) => PAD_T + (1 - (v - min) / span) * (H - PAD_T - PAD_B);
+  const pts = vals.map((v, i) => [x(i), y(v)]);
+  const line = smoothPath(pts);
+  const area = n >= 2 ? `${line} L ${x(lastIdx)} ${H} L ${x(0)} ${H} Z` : '';
+  const gid = `tpg-${story.id}`;
+  const lastVal = vals[lastIdx] ?? 0;
+  const chipText = `${formatNumber(lastVal)}${trend.unit || ''}`;
+  // keep the floating chip inside the viewBox near the edges
+  const chipX = Math.min(Math.max(x(lastIdx), 56), W - 56);
 
   return (
     <article ref={ref}>
@@ -601,57 +638,98 @@ export function ChartCard({ story, display, accent, onOpen }) {
           <Headline raw={display.title} accent={accent} size={24.5} />
         </div>
 
-        <div ref={chartRef} style={{ marginTop: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 146 }}>
-            {vals.map((v, i) => (
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'stretch', height: '100%' }}>
-                <div style={{
-                  textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9,
-                  fontWeight: i === lastIdx ? 500 : 400,
-                  color: i === lastIdx ? accent : TP.ink3, marginBottom: 4,
-                  opacity: grown ? 1 : 0,
-                  transition: animate ? `opacity 0.5s ease-out ${0.25 + i * 0.09}s` : 'none',
-                }}>
-                  {/* values tick up in sync with the growing bars */}
-                  <CountUp
-                    value={v}
-                    unit={trend.unit && i === lastIdx ? trend.unit : ''}
-                    animKey={`chartval.${story.id}.${i}`}
-                  />
-                </div>
-                <div style={{
-                  height: Math.max(6, (120 * v) / maxVal),
-                  borderRadius: '8px 8px 3px 3px',
-                  background: i === lastIdx
-                    ? `linear-gradient(to top, ${accent}, color-mix(in srgb, ${accent} 72%, white))`
-                    : `color-mix(in srgb, ${accent} 22%, white)`,
-                  boxShadow: i === lastIdx ? `0 4px 14px color-mix(in srgb, ${accent} 36%, transparent)` : 'none',
-                  transform: grown ? 'scaleY(1)' : 'scaleY(0.001)',
-                  transformOrigin: 'bottom',
-                  // springy overshoot, staggered left → right
-                  transition: animate ? `transform 0.9s cubic-bezier(.22,1.32,.36,1) ${i * 0.09}s` : 'none',
+        <div ref={chartRef} style={{ marginTop: 18 }}>
+          {n >= 2 ? (
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} aria-hidden>
+              <defs>
+                <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={accent} stopOpacity="0.22" />
+                  <stop offset="70%" stopColor={accent} stopOpacity="0.05" />
+                  <stop offset="100%" stopColor={accent} stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* soft horizontal gridlines */}
+              {[0.25, 0.55, 0.85].map((f) => (
+                <line key={f} x1={PAD_X} x2={W - PAD_X}
+                  y1={PAD_T + f * (H - PAD_T - PAD_B)} y2={PAD_T + f * (H - PAD_T - PAD_B)}
+                  stroke={TP.line} strokeWidth="1" strokeDasharray="1 7" strokeLinecap="round" />
+              ))}
+
+              {/* gradient area — fades in after the line draws */}
+              <path d={area} fill={`url(#${gid})`}
+                style={{
+                  opacity: drawn ? 1 : 0,
+                  transition: animate ? 'opacity 0.8s ease-out 0.55s' : 'none',
                 }} />
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-            {(trend.labels || []).map((label, i) => (
-              <div key={i} style={{
-                flex: 1, textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9,
-                color: i === lastIdx ? TP.ink2 : TP.ink3,
-                opacity: grown ? 1 : 0,
-                transform: grown ? 'translateY(0)' : 'translateY(4px)',
-                transition: animate ? `opacity 0.45s ease-out ${0.15 + i * 0.09}s, transform 0.45s ease-out ${0.15 + i * 0.09}s` : 'none',
-              }}>{label}</div>
+
+              {/* the line draws itself */}
+              <path d={line} fill="none" stroke={accent} strokeWidth="3"
+                strokeLinecap="round" strokeLinejoin="round"
+                pathLength="1"
+                strokeDasharray="1"
+                strokeDashoffset={drawn ? 0 : 1}
+                style={{ transition: animate ? 'stroke-dashoffset 1.3s cubic-bezier(.45,.05,.25,1)' : 'none' }} />
+
+              {/* point dots pop in along the line */}
+              {pts.map(([px, py], i) => (
+                <circle key={i} cx={px} cy={py}
+                  r={i === lastIdx ? 5.5 : 3.5}
+                  fill={i === lastIdx ? accent : TP.bg}
+                  stroke={accent} strokeWidth={i === lastIdx ? 0 : 2}
+                  style={{
+                    opacity: drawn ? 1 : 0,
+                    transform: drawn ? 'scale(1)' : 'scale(0)',
+                    transformOrigin: `${px}px ${py}px`,
+                    transition: animate
+                      ? `opacity 0.3s ease-out ${0.15 + (i / Math.max(1, lastIdx)) * 1.0}s, transform 0.4s cubic-bezier(.22,1.6,.36,1) ${0.15 + (i / Math.max(1, lastIdx)) * 1.0}s`
+                      : 'none',
+                  }} />
+              ))}
+
+              {/* glow halo on the live endpoint */}
+              <circle cx={x(lastIdx)} cy={y(lastVal)} r="11"
+                fill="none" stroke={accent} strokeOpacity="0.25" strokeWidth="5"
+                style={{
+                  opacity: drawn ? 1 : 0,
+                  transition: animate ? 'opacity 0.5s ease-out 1.25s' : 'none',
+                }} />
+
+              {/* floating value chip above the endpoint */}
+              <g style={{
+                opacity: drawn ? 1 : 0,
+                transform: drawn ? 'translateY(0)' : 'translateY(8px)',
+                transition: animate ? 'opacity 0.45s ease-out 1.3s, transform 0.5s cubic-bezier(.22,1.4,.36,1) 1.3s' : 'none',
+              }}>
+                <rect x={chipX - 34} y={y(lastVal) - 40} rx="13" ry="13" width="68" height="26"
+                  fill={accent} />
+                <text x={chipX} y={y(lastVal) - 22.5} textAnchor="middle"
+                  fontFamily={FONT_HEAD} fontWeight="700" fontSize="13.5" fill="#fff">
+                  {chipText}
+                </text>
+              </g>
+            </svg>
+          ) : null}
+
+          {/* x-axis labels */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: `6px ${0}px 0`, marginTop: 2 }}>
+            {labels.map((label, i) => (
+              <span key={i} style={{
+                fontFamily: FONT_MONO, fontSize: 9.5,
+                color: i === lastIdx ? accent : TP.ink3,
+                fontWeight: i === lastIdx ? 500 : 400,
+                opacity: drawn ? 1 : 0,
+                transition: animate ? `opacity 0.4s ease-out ${0.2 + i * 0.08}s` : 'none',
+              }}>{label}</span>
             ))}
           </div>
         </div>
 
         {trend.caption ? (
           <p style={{
-            fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2, margin: '14px 0 0',
-            opacity: grown ? 1 : 0,
-            transition: animate ? 'opacity 0.6s ease-out 0.7s' : 'none',
+            fontFamily: FONT_BODY, fontSize: 14.2, lineHeight: 1.52, color: TP.ink2, margin: '14px 0 0',
+            opacity: drawn ? 1 : 0,
+            transition: animate ? 'opacity 0.6s ease-out 1.0s' : 'none',
           }}>
             {trend.caption}
           </p>

@@ -41,12 +41,12 @@ export function accentFor(category) {
   return CATEGORY_ACCENTS[(category || '').toUpperCase()] || TP.gold;
 }
 
-// Type system v3 — warm editorial, soft geometry.
-// Bricolage Grotesque: characterful display face (soft terminals, confident
-// weight) for headlines + hero numbers. Newsreader italic: editorial voice
-// for pull-quotes. Figtree: clean warm body. IBM Plex Mono: technical labels.
-export const FONT_HEAD = "'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, sans-serif";
-export const FONT_SERIF = "'Newsreader', 'Georgia', serif";
+// Type system v4 — young, app-like energy (not a newspaper).
+// Gabarito: bold rounded geometric display — friendly, confident, the
+// Duolingo/Spotify generation. Figtree: clean warm body. IBM Plex Mono:
+// small technical labels for a cool data edge.
+export const FONT_HEAD = "'Gabarito', -apple-system, BlinkMacSystemFont, sans-serif";
+export const FONT_SERIF = "'Gabarito', -apple-system, BlinkMacSystemFont, sans-serif"; // serif voice retired (too news)
 export const FONT_BODY = "'Figtree', -apple-system, BlinkMacSystemFont, sans-serif";
 export const FONT_MONO = "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace";
 
