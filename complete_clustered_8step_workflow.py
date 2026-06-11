@@ -47,7 +47,7 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-from step13_feed_display import FeedDisplayWriter, generate_daily_modules
+from step13_feed_display import FeedDisplayWriter, generate_daily_modules, enrich_display_with_chart
 # Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
 # it `article_world_events` was empty (~0% of articles), so Trinity v5's
 # story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
@@ -2330,6 +2330,9 @@ def run_complete_pipeline():
                         )[:6000],
                     })
                 if display_obj:
+                    # Verified chart enrichment: real market data (stooq) or
+                    # Google-grounded series — consumes the chart_* flags.
+                    enrich_display_with_chart(display_obj, gemini_key)
                     display_obj['imageURL'] = synthesized.get('image_url')
                     # 0-1000 importance scale; >=900 = breaking (cover card)
                     display_obj['breaking'] = bool(article_score >= 900)

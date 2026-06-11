@@ -98,6 +98,10 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric series of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "geo": {{"pins": [{{"lat": 36.17, "lon": -115.14, "label": "Las Vegas"}}], "link": false, "distance": "", "region": "NEVADA · USA"}} — ONLY if a SPECIFIC place (city/site/facility) is central to the story. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then give "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
+CHART-DATA FLAGS — when you could NOT build "trend" from the source but the story clearly centers on a chartable number, set ONE of these so the pipeline can fetch the REAL series itself (do not guess the series):
+- "chart_ticker": Yahoo Finance symbol, ONLY when a publicly traded stock / major index / major crypto price move IS the story: US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
+- "chart_metric": a search phrase (max 10 words) for a well-known published indicator central to the story: "eurozone monthly inflation rate 2026", "US unemployment rate by month", "ECB key interest rate history", "Brent crude oil price by month". Only indicators with official published history — not vague concepts.
+
 RULES:
 1. NEVER invent numbers, quotes, dates, or coordinates. Every fact must trace to the bullets or source text.
 2. Omit an optional signal entirely rather than padding it with weak data.
@@ -295,6 +299,17 @@ def validate_display(result: Dict, pipeline_category: str,
                             'unit': str(trend.get('unit', ''))[:6],
                             'caption': caption[:140]}
 
+    # Chart-data flags (internal — the workflow consumes + removes these
+    # after fetching the real series; they never reach the client).
+    ticker = result.get('chart_ticker')
+    if isinstance(ticker, str):
+        ticker = ticker.strip().upper()
+        if re.fullmatch(r'[A-Z0-9.^-]{2,12}', ticker):
+            out['chart_ticker'] = ticker
+    metric = result.get('chart_metric')
+    if isinstance(metric, str) and metric.strip():
+        out['chart_metric'] = _strip_tags(metric).strip()[:80]
+
     geo = result.get('geo')
     if isinstance(geo, dict) and isinstance(geo.get('pins'), list):
         pins = []
@@ -386,6 +401,147 @@ class FeedDisplayWriter:
             if attempt < self.config.retry_attempts - 1:
                 time.sleep(self.config.retry_delay)
         return best_statless
+
+
+# ================================================================
+# VERIFIED CHART ENRICHMENT
+# ================================================================
+# Two ways to attach a REAL trend series when the article text has none:
+#   1. fetch_trend_from_stooq — actual market data CSV (no AI involved,
+#      cannot be hallucinated). US stocks / indices / major crypto.
+#   2. fetch_trend_grounded — Gemini WITH Google Search grounding; every
+#      value must be backed by a verbatim evidence sentence from the
+#      search results or the chart is rejected.
+
+_MONTH_ABBR = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+               'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+
+def fetch_trend_from_market(ticker: str) -> Optional[Dict]:
+    """Last ~6 monthly closes from Yahoo Finance chart API (real market
+    data fetched by code — no AI in the loop, cannot be hallucinated)."""
+    try:
+        symbol = ticker.upper().replace('.US', '')
+        if symbol.endswith('USD') and '-' not in symbol and not symbol.startswith('^'):
+            symbol = symbol[:-3] + '-USD'  # BTCUSD -> BTC-USD
+        url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+               f"?range=6mo&interval=1mo")
+        resp = requests.get(url, timeout=20, headers={'User-Agent': 'Mozilla/5.0'})
+        resp.raise_for_status()
+        result = resp.json()['chart']['result'][0]
+        ts = result.get('timestamp') or []
+        closes = (result.get('indicators', {}).get('quote') or [{}])[0].get('close') or []
+        currency = result.get('meta', {}).get('currency', '')
+        rows = [(datetime.fromtimestamp(t, tz=timezone.utc), c)
+                for t, c in zip(ts, closes) if c is not None]
+        # Yahoo appends a partial current-month candle — collapse rows that
+        # share a (year, month), keeping the latest value.
+        dedup = {}
+        for d, c in rows:
+            dedup[(d.year, d.month)] = (d, c)
+        rows = sorted(dedup.values(), key=lambda r: r[0])
+        if len(rows) < 3:
+            return None
+        rows = rows[-6:]
+        vals = [round(c, 2) if c < 1000 else round(c) for _, c in rows]
+        labels = [_MONTH_ABBR[d.month - 1] for d, _ in rows]
+        if len(set(vals)) == 1:
+            return None
+        unit = '$' if currency == 'USD' else ''
+        name = result.get('meta', {}).get('symbol', symbol)
+        return {'vals': vals, 'labels': labels, 'unit': unit,
+                'caption': f"{name} monthly close ({currency})"}
+    except Exception as e:
+        print(f"   ⚠️ [chart] market fetch failed for {ticker}: {e}")
+        return None
+
+
+GROUNDED_TREND_PROMPT = """Today's date: {today}.
+Use Google Search to find the REAL published historical series for this metric:
+"{metric}"
+
+Return ONLY a JSON object (no markdown):
+{{"vals": [3-8 numbers, chronological, latest LAST],
+  "labels": [same length, short uppercase period labels like "MAR", "Q1", "2023"],
+  "unit": "%",
+  "caption": "one line naming the series and its source, max 90 chars",
+  "evidence": ["verbatim sentence from a search result that contains each number"]}}
+
+STRICT RULES:
+1. Every number in vals MUST literally appear in your search results. Copy the
+   proving sentence(s) into evidence — one sentence may prove several values.
+2. NEVER estimate, interpolate, or recall values from memory.
+3. If search does not surface a real series, return {{}} — that is a good answer."""
+
+
+def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
+    """Google-grounded series fetch; values must verify against evidence."""
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    try:
+        resp = requests.post(url, json={
+            "contents": [{"parts": [{"text": GROUNDED_TREND_PROMPT.format(
+                today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                metric=metric)}]}],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
+        }, timeout=90)
+        resp.raise_for_status()
+        cand = resp.json()['candidates'][0]
+        # No grounding metadata = the model never actually searched. Reject.
+        if 'groundingMetadata' not in cand:
+            return None
+        text = ''.join(p.get('text', '') for p in cand['content']['parts'])
+        m = re.search(r'\{[\s\S]*\}', text)
+        if not m:
+            return None
+        data = json.loads(m.group(0))
+    except Exception as e:
+        print(f"   ⚠️ [chart] grounded fetch failed for {metric!r}: {e}")
+        return None
+
+    vals = [_num(v) for v in (data.get('vals') or [])]
+    labels = [str(l).strip().upper()[:8] for l in (data.get('labels') or [])]
+    caption = _strip_tags(str(data.get('caption', ''))).strip()
+    evidence = data.get('evidence')
+    if not (3 <= len(vals) <= 8 and all(v is not None for v in vals)
+            and len(labels) == len(vals) and all(labels) and caption
+            and isinstance(evidence, list) and evidence):
+        return None
+    if len(set(vals)) == 1:
+        return None
+    # Anti-hallucination check: every value must appear in the evidence text.
+    ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
+    for v in vals:
+        forms = {f"{v}", f"{v:g}"}
+        if isinstance(v, float) and v == int(v):
+            forms.add(str(int(v)))
+        if not any(f in ev_text for f in forms):
+            print(f"   ⚠️ [chart] value {v} not backed by evidence — rejecting chart")
+            return None
+    return {'vals': vals, 'labels': labels,
+            'unit': str(data.get('unit', ''))[:6], 'caption': caption[:140]}
+
+
+def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
+    """Consume chart_ticker/chart_metric flags; attach a verified trend."""
+    if not isinstance(display_obj, dict):
+        return
+    ticker = display_obj.pop('chart_ticker', None)
+    metric = display_obj.pop('chart_metric', None)
+    if 'trend' in display_obj:
+        return
+    trend = None
+    if ticker:
+        trend = fetch_trend_from_market(ticker)
+        if trend:
+            print(f"   📈 [chart] real market series attached ({ticker})")
+    if trend is None and metric:
+        trend = fetch_trend_grounded(metric, api_key)
+        if trend:
+            print(f"   📈 [chart] grounded series attached ({metric!r})")
+    if trend:
+        display_obj['trend'] = trend
 
 
 # ================================================================
