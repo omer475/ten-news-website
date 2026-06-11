@@ -180,15 +180,13 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
 
 // ── Kicker row (§5 common) ───────────────────────────────────────────────────
 
+// Per user direction (2026-06-12): no written topic/category names on cards —
+// the category lives only in the accent color. The row keeps the accent dash
+// (a quiet category-color cue) + the right-aligned timestamp.
 export function KickerRow({ category, accent, story, prefix }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-      <span style={{
-        fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
-        letterSpacing: '0.22em', textTransform: 'uppercase', color: accent,
-      }}>
-        {prefix ? `${prefix} · ${category}` : category}
-      </span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span style={{ width: 22, height: 2, borderRadius: 2, background: accent }} />
       <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
         {ageLabel(story?.publishedAt)}
       </span>

@@ -156,9 +156,10 @@ export function NotdModule({ module, moduleKey }) {
   );
 }
 
-// ── Rotation (§4): rotate through available modules in order, reshuffle when
-// exhausted; modules never affect image-rhythm state. MARKET PULSE (§8.4) is
-// client-side prices and intentionally skipped in v1 — the other 4 rotate. ──
+// ── Rotation: each module appears AT MOST ONCE per feed (user direction
+// 2026-06-12 — no repeating Today in History / Number of the Day). Once the
+// list is exhausted, no more interstitials are inserted. MARKET PULSE (§8.4)
+// is client-side prices and intentionally skipped in v1. ──────────────────────
 
 export function buildModuleRotation(modules) {
   if (!modules) return () => null;
@@ -171,33 +172,20 @@ export function buildModuleRotation(modules) {
   if (modules.briefs?.rows?.length) kinds.push('briefs');
   if (modules.notd) kinds.push('notd');
 
-  let cycle = [...kinds];
   let cursor = 0;
-  let briefsFlip = false;
 
   return function next() {
-    if (!cycle.length) return null;
-    if (cursor >= cycle.length) {
-      cycle = [...cycle].sort(() => Math.random() - 0.5);
-      cursor = 0;
-    }
-    const kind = cycle[cursor];
+    if (cursor >= kinds.length) return null;   // exhausted — never repeat
+    const kind = kinds[cursor];
     cursor += 1;
     switch (kind) {
       case 'countdown': {
         const row = firstFutureCountdown();
-        if (!row) {
-          cycle = cycle.filter((k) => k !== 'countdown');
-          cursor = Math.min(cursor, cycle.length);
-          return next();
-        }
+        if (!row) return next();
         return { kind, row };
       }
       case 'history': return { kind, module: modules.history };
-      case 'briefs': {
-        briefsFlip = !briefsFlip;
-        return { kind, module: modules.briefs, title: briefsFlip ? 'IN 10 SECONDS' : 'WHILE YOU SCROLLED' };
-      }
+      case 'briefs': return { kind, module: modules.briefs, title: 'IN 10 SECONDS' };
       case 'notd': return { kind, module: modules.notd };
       default: return null;
     }

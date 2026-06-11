@@ -9,8 +9,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FeedCard from '../feed/FeedCard';
 import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
-import { TP, FONT_HEAD, FONT_MONO, accentFor, plainText } from './tokens';
-import { Entrance, useReducedMotion, useVisibleOnce } from './shared';
+import { TP, FONT_MONO, accentFor } from './tokens';
+import { Entrance, useReducedMotion } from './shared';
 import { createSelector } from './selector';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
 import {
@@ -86,80 +86,9 @@ function useFeedBlocks(stories, modules) {
   }, [stories, modules]);
 }
 
-// ── Sticky header pieces ─────────────────────────────────────────────────────
-
-function ReadCounter({ count }) {
-  const reduced = useReducedMotion();
-  const [pop, setPop] = useState(false);
-  const prevRef = useRef(count);
-  useEffect(() => {
-    if (count > prevRef.current && !reduced) {
-      setPop(true);
-      const t = setTimeout(() => setPop(false), 450);
-      return () => clearTimeout(t);
-    }
-    prevRef.current = count;
-    return undefined;
-  }, [count, reduced]);
-  useEffect(() => { prevRef.current = count; }, [count]);
-
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      transform: pop ? 'scale(1.14)' : 'scale(1)',
-      transition: reduced ? 'none' : 'transform 0.45s cubic-bezier(.3,1.8,.4,1)',
-    }}>
-      <svg width="11" height="13" viewBox="0 0 11 14" aria-hidden>
-        <path d="M6.5 0L0 8h4L3.5 14 11 5.5H6.6L8 0z" fill={TP.gold} />
-      </svg>
-      <span style={{
-        fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 14, color: TP.ink,
-        fontVariantNumeric: 'tabular-nums',
-      }}>{count}</span>
-      <span style={{
-        fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500,
-        letterSpacing: '0.12em', color: TP.ink3,
-      }}>READ</span>
-    </span>
-  );
-}
-
-function BreakingTicker({ items }) {
-  const reduced = useReducedMotion();
-  if (!items.length) return null;
-
-  const line = items.map((title, i) => (
-    <span key={i} style={{ whiteSpace: 'nowrap' }}>
-      <span style={{ color: TP.red, fontWeight: 500 }}>BREAKING </span>
-      <span style={{ color: TP.ink }}>{title}</span>
-      <span style={{ color: TP.ink3 }}>{'   ·   '}</span>
-    </span>
-  ));
-
-  return (
-    <div style={{
-      borderTop: `1px solid ${TP.line}`, borderBottom: `1px solid ${TP.line}`,
-      padding: '7px 0', overflow: 'hidden',
-      fontFamily: FONT_MONO, fontSize: 10.5,
-    }}>
-      {reduced ? (
-        <div style={{ padding: '0 16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {line}
-        </div>
-      ) : (
-        <div className="tp-ticker-track" style={{ display: 'flex', width: 'max-content' }}>
-          <span style={{ display: 'inline-flex' }}>{line}</span>
-          <span style={{ display: 'inline-flex' }} aria-hidden>{line}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Story block: counts toward the read counter at ≥55% visibility ──────────
 
-function StoryBlock({ story, template, onRead, onOpen, onEngage, isDark, textOnly }) {
-  const ref = useVisibleOnce(0.55, onRead);
+function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
   const Card = CARD_BY_TEMPLATE[template];
 
@@ -169,7 +98,7 @@ function StoryBlock({ story, template, onRead, onOpen, onEngage, isDark, textOnl
   };
 
   return (
-    <div ref={ref}>
+    <div>
       {Card && story.display ? (
         <div style={{ padding: '0 16px' }}>
           <Card story={story} display={story.display} accent={accent} onOpen={open} />
@@ -201,12 +130,8 @@ export default function TodayPlusFeed({
   hasMore,
   loadingMore,
   textOnly,
-  accountControl,
 }) {
   const [modules, setModules] = useState(null);
-  const [readCount, setReadCount] = useState(0);
-  const readIdsRef = useRef(new Set());
-  const [progress, setProgress] = useState(0);
   const sentinelRef = useRef(null);
   const reduced = useReducedMotion();
 
@@ -218,21 +143,6 @@ export default function TodayPlusFeed({
       .then((d) => { if (alive && d?.modules) setModules(d.modules); })
       .catch(() => {});
     return () => { alive = false; };
-  }, []);
-
-  // Reading progress bar (§7.1): scroll progress of the page.
-  useEffect(() => {
-    let raf = null;
-    const update = () => {
-      raf = null;
-      const doc = document.documentElement;
-      const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
-      setProgress(Math.min(1, Math.max(0, window.scrollY / scrollable)));
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
-    update();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
   }, []);
 
   // Infinite scroll (§7.4): sentinel ~1100px below the viewport bottom.
@@ -249,20 +159,6 @@ export default function TodayPlusFeed({
 
   const blocks = useFeedBlocks(stories, modules);
 
-  const breakingTitles = useMemo(
-    () => blocks
-      .filter((b) => b.type === 'story' && b.story.display?.breaking)
-      .map((b) => plainText(b.story.display.title))
-      .slice(0, 8),
-    [blocks]
-  );
-
-  const markRead = (id) => {
-    if (readIdsRef.current.has(id)) return;
-    readIdsRef.current.add(id);
-    setReadCount(readIdsRef.current.size);
-  };
-
   // Render with the existing sign-up gate: non-users see paywall at index N.
   let storyIdx = 0;
   const rendered = [];
@@ -272,7 +168,6 @@ export default function TodayPlusFeed({
         if (storyIdx === paywallThreshold && renderPaywall) rendered.push(<React.Fragment key="paywall">{renderPaywall()}</React.Fragment>);
         break;
       }
-      const id = String(block.story.id ?? block.key);
       rendered.push(
         <LazyMount key={block.key} estimate={520}>
           <CardBoundary>
@@ -280,7 +175,6 @@ export default function TodayPlusFeed({
               <StoryBlock
                 story={block.story}
                 template={block.template}
-                onRead={() => markRead(id)}
                 onOpen={onOpen}
                 onEngage={onEngage}
                 textOnly={textOnly}
@@ -307,38 +201,9 @@ export default function TodayPlusFeed({
 
   return (
     <div style={{ background: TP.bg, minHeight: '100vh' }}>
-      {/* Sticky header (§7.1) */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(252,251,248,0.8)',
-        backdropFilter: 'blur(18px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          maxWidth: 600, margin: '0 auto', padding: '12px 16px 10px',
-          paddingTop: 'max(12px, env(safe-area-inset-top))',
-        }}>
-          <span style={{
-            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 17.5,
-            letterSpacing: '-0.03em', color: TP.ink,
-          }}>
-            today<span style={{ color: TP.gold }}>plus</span>
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }}>
-            <ReadCounter count={readCount} />
-            {accountControl}
-          </span>
-        </div>
-        {/* 2px reading progress bar */}
-        <div style={{ height: 2, background: 'transparent' }}>
-          <div style={{
-            height: '100%', width: `${progress * 100}%`,
-            background: TP.gold,
-          }} />
-        </div>
-        <BreakingTicker items={breakingTitles} />
-      </header>
+      {/* Per user direction (2026-06-12): no extra todayplus header / read
+          counter / breaking ticker — the site's existing header is enough.
+          The feed starts directly with the cards. */}
 
       {/* Block list — 48px vertical rhythm (§2.4) */}
       <main style={{
@@ -371,22 +236,6 @@ export default function TodayPlusFeed({
 
       {/* Keyframes for marquee / pulses / loader (reduce-motion kills them) */}
       <style jsx global>{`
-        .tp-ticker-track {
-          animation: tp-marquee 38s linear infinite;
-        }
-        @keyframes tp-marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-        .tp-breaking-dot {
-          width: 7px; height: 7px; border-radius: 50%;
-          background: ${TP.breakingDot}; flex-shrink: 0;
-          animation: tp-pulse-ring 2s ease-out infinite;
-        }
-        @keyframes tp-pulse-ring {
-          0% { box-shadow: 0 0 0 0 rgba(255,90,82,0.7); }
-          100% { box-shadow: 0 0 0 9px rgba(255,90,82,0); }
-        }
         .tp-map-pulse {
           transform-box: fill-box;
           transform-origin: center;
@@ -404,7 +253,7 @@ export default function TodayPlusFeed({
           50% { transform: translateY(-7px); background: ${TP.gold}; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .tp-ticker-track, .tp-breaking-dot, .tp-map-pulse, .tp-dot-hop {
+          .tp-map-pulse, .tp-dot-hop {
             animation: none !important;
           }
         }

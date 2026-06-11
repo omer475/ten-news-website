@@ -42,16 +42,6 @@ export function CoverCard({ story, display, accent, onOpen }) {
           }}>{ageLabel(story.publishedAt)}</span>
 
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-              {display.breaking ? <span className="tp-breaking-dot" /> : null}
-              <span style={{
-                fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
-                letterSpacing: '0.22em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.85)',
-              }}>
-                {display.breaking ? `BREAKING · ${display.category}` : display.category}
-              </span>
-            </div>
             <h2 style={{
               fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27, lineHeight: 1.1,
               letterSpacing: '-0.035em', color: '#fff', margin: 0,
@@ -88,15 +78,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
   return (
     <article>
       <div {...clickable(onOpen, story)}>
-        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={22}>
-          <span style={{
-            position: 'absolute', top: 12, left: 12,
-            fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
-            letterSpacing: '0.18em', textTransform: 'uppercase', color: '#fff',
-            background: `color-mix(in srgb, ${accent} 85%, black)`,
-            borderRadius: 99, padding: '7px 11px',
-          }}>{display.category}</span>
-        </ParallaxImage>
+        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={22} />
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 16 }}>
           <div style={{ flex: 1 }}>
