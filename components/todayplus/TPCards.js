@@ -384,6 +384,7 @@ export function ChartCard({ story, display, accent, onOpen }) {
   const vals = trend.vals || [];
   const maxVal = Math.max(...vals, 0.0001);
   const lastIdx = vals.length - 1;
+  const animate = !reduced && !already;
 
   return (
     <article>
@@ -394,21 +395,34 @@ export function ChartCard({ story, display, accent, onOpen }) {
         </div>
 
         <div ref={chartRef} style={{ marginTop: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 142 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 146 }}>
             {vals.map((v, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'stretch', height: '100%' }}>
                 <div style={{
                   textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9,
                   fontWeight: i === lastIdx ? 500 : 400,
                   color: i === lastIdx ? accent : TP.ink3, marginBottom: 4,
-                }}>{formatNumber(v)}</div>
+                  opacity: grown ? 1 : 0,
+                  transition: animate ? `opacity 0.5s ease-out ${0.25 + i * 0.09}s` : 'none',
+                }}>
+                  {/* values tick up in sync with the growing bars */}
+                  <CountUp
+                    value={v}
+                    unit={trend.unit && i === lastIdx ? trend.unit : ''}
+                    animKey={`chartval.${story.id}.${i}`}
+                  />
+                </div>
                 <div style={{
                   height: Math.max(6, (120 * v) / maxVal),
                   borderRadius: '6px 6px 2px 2px',
-                  background: i === lastIdx ? accent : `color-mix(in srgb, ${accent} 22%, white)`,
+                  background: i === lastIdx
+                    ? `linear-gradient(to top, ${accent}, color-mix(in srgb, ${accent} 72%, white))`
+                    : `color-mix(in srgb, ${accent} 22%, white)`,
+                  boxShadow: i === lastIdx ? `0 4px 14px color-mix(in srgb, ${accent} 36%, transparent)` : 'none',
                   transform: grown ? 'scaleY(1)' : 'scaleY(0.001)',
                   transformOrigin: 'bottom',
-                  transition: reduced || already ? 'none' : `transform 0.8s ease-out ${i * 0.08}s`,
+                  // springy overshoot, staggered left → right
+                  transition: animate ? `transform 0.9s cubic-bezier(.22,1.32,.36,1) ${i * 0.09}s` : 'none',
                 }} />
               </div>
             ))}
@@ -416,14 +430,22 @@ export function ChartCard({ story, display, accent, onOpen }) {
           <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
             {(trend.labels || []).map((label, i) => (
               <div key={i} style={{
-                flex: 1, textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9, color: TP.ink3,
+                flex: 1, textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9,
+                color: i === lastIdx ? TP.ink2 : TP.ink3,
+                opacity: grown ? 1 : 0,
+                transform: grown ? 'translateY(0)' : 'translateY(4px)',
+                transition: animate ? `opacity 0.45s ease-out ${0.15 + i * 0.09}s, transform 0.45s ease-out ${0.15 + i * 0.09}s` : 'none',
               }}>{label}</div>
             ))}
           </div>
         </div>
 
         {trend.caption ? (
-          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2, margin: '14px 0 0' }}>
+          <p style={{
+            fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2, margin: '14px 0 0',
+            opacity: grown ? 1 : 0,
+            transition: animate ? 'opacity 0.6s ease-out 0.7s' : 'none',
+          }}>
             {trend.caption}
           </p>
         ) : null}

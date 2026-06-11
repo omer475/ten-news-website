@@ -6,8 +6,8 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { TP, FONT_MONO } from './tokens';
-import { KickerRow, Bullets, CardFooter, Headline, useReducedMotion } from './shared';
+import { TP, FONT_MONO, shouldAnimateOnce, hasAnimated } from './tokens';
+import { KickerRow, Bullets, CardFooter, Headline, useReducedMotion, useVisibleOnce } from './shared';
 import { MAPBOX_TOKEN } from '../MapboxMap';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -37,8 +37,11 @@ function arcCoordinates(a, b) {
   return pts;
 }
 
-function MapboxFigure({ geo, accent }) {
+function MapboxFigure({ geo, accent, storyId }) {
   const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const targetRef = useRef(null);
+  const flownRef = useRef(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
@@ -50,47 +53,50 @@ function MapboxFigure({ geo, accent }) {
     if (!pins.length) return undefined;
     const linked = geo.link === true && pins.length === 2;
 
+    // The cinematic shot: open on the globe floating in space, then dive to
+    // the story's location once the card is actually being looked at.
     const map = new mapboxgl.Map({
       container,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      projection: 'globe',
       center: [pins[0].lon, pins[0].lat],
-      zoom: 4,
+      zoom: 1.05,
+      pitch: 0,
+      bearing: 0,
       interactive: false,
       attributionControl: false,
+      fadeDuration: 0,
     });
+    mapRef.current = map;
 
-    // Frame the pins: bbox padded wide (the spec's ×2.4 auto-zoom intent —
-    // regional context, not street level).
+    // Final camera: single pin → regional close-up with cinematic pitch;
+    // two pins → framed bounds (flatter so both stay readable).
+    let target;
     if (pins.length > 1) {
       const bounds = new mapboxgl.LngLatBounds();
       pins.forEach((p) => bounds.extend([p.lon, p.lat]));
-      if (linked) {
-        arcCoordinates(pins[0], pins[1]).forEach((c) => bounds.extend(c));
-      }
-      map.fitBounds(bounds, { padding: 56, maxZoom: 6, duration: 0 });
+      if (linked) arcCoordinates(pins[0], pins[1]).forEach((c) => bounds.extend(c));
+      const cam = map.cameraForBounds(bounds, { padding: 70, maxZoom: 5.8 });
+      target = { center: cam.center, zoom: cam.zoom, pitch: 28, bearing: -6 };
+    } else {
+      target = { center: [pins[0].lon, pins[0].lat], zoom: 5.4, pitch: 45, bearing: -10 };
+    }
+    targetRef.current = target;
+
+    if (reduced || hasAnimated(`mapfly.${storyId}`)) {
+      map.jumpTo(target);
+      flownRef.current = true;
     }
 
-    const markers = pins.map((pin) => {
-      const el = document.createElement('div');
-      el.className = 'tp-mb-pin';
-      el.innerHTML = `
-        ${reduced ? '' : `<span class="tp-mb-ring" style="border-color:${accent}"></span>`}
-        <span class="tp-mb-dot" style="background:${accent}"></span>
-        ${pin.label ? `<span class="tp-mb-label">${pin.label}</span>` : ''}
-      `;
-      return new mapboxgl.Marker({ element: el, anchor: 'center' })
-        .setLngLat([pin.lon, pin.lat])
-        .addTo(map);
-    });
-
-    let distMarker = null;
-    map.on('load', () => {
-      // Quiet the basemap labels a touch so the accent pins lead.
+    map.on('style.load', () => {
+      // Space-black atmosphere with stars — the "wow" frame around the globe.
       try {
-        map.getStyle().layers.forEach((layer) => {
-          if (layer.type === 'symbol' && map.getLayer(layer.id)) {
-            map.setPaintProperty(layer.id, 'text-opacity', 0.75);
-          }
+        map.setFog({
+          color: 'rgb(13, 18, 32)',
+          'high-color': 'rgb(28, 40, 68)',
+          'horizon-blend': 0.028,
+          'space-color': 'rgb(4, 6, 13)',
+          'star-intensity': 0.5,
         });
       } catch {}
 
@@ -101,30 +107,50 @@ function MapboxFigure({ geo, accent }) {
             type: 'geojson',
             data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } },
           });
+          // soft glow under the dashed line
+          map.addLayer({
+            id: 'tp-arc-glow',
+            type: 'line',
+            source: 'tp-arc',
+            paint: { 'line-color': accent, 'line-width': 6, 'line-opacity': 0.25, 'line-blur': 6 },
+          });
           map.addLayer({
             id: 'tp-arc-line',
             type: 'line',
             source: 'tp-arc',
-            paint: {
-              'line-color': accent,
-              'line-width': 1.5,
-              'line-dasharray': [2.5, 2.5],
-            },
+            paint: { 'line-color': accent, 'line-width': 1.6, 'line-dasharray': [2.5, 2.5] },
           });
         } catch {}
-
-        if (geo.distance) {
-          const apex = coords[Math.floor(coords.length / 2)];
-          const el = document.createElement('div');
-          el.className = 'tp-mb-dist';
-          el.style.color = accent;
-          el.textContent = geo.distance;
-          distMarker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-            .setLngLat(apex)
-            .addTo(map);
-        }
       }
     });
+
+    const markers = pins.map((pin) => {
+      const el = document.createElement('div');
+      el.className = 'tp-mb-pin';
+      el.innerHTML = `
+        <span class="tp-mb-glow" style="background:${accent}"></span>
+        ${reduced ? '' : `<span class="tp-mb-ring" style="border-color:${accent}"></span>
+        <span class="tp-mb-ring tp-mb-ring2" style="border-color:${accent}"></span>`}
+        <span class="tp-mb-dot" style="background:${accent}"></span>
+        ${pin.label ? `<span class="tp-mb-label">${pin.label}</span>` : ''}
+      `;
+      return new mapboxgl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([pin.lon, pin.lat])
+        .addTo(map);
+    });
+
+    let distMarker = null;
+    if (linked && geo.distance) {
+      const apex = arcCoordinates(pins[0], pins[1])[24];
+      const el = document.createElement('div');
+      el.className = 'tp-mb-dist';
+      el.style.color = '#fff';
+      el.style.borderColor = `${accent}`;
+      el.textContent = geo.distance;
+      distMarker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat(apex)
+        .addTo(map);
+    }
 
     const resizeObserver = new ResizeObserver(() => map.resize());
     resizeObserver.observe(container);
@@ -134,17 +160,49 @@ function MapboxFigure({ geo, accent }) {
       markers.forEach((m) => m.remove());
       if (distMarker) distMarker.remove();
       map.remove();
+      mapRef.current = null;
     };
   }, [geo, accent, reduced]);
+
+  // Fly in once, the first time the figure is half on screen. After landing,
+  // a barely-perceptible bearing drift keeps the scene alive.
+  const visRef = useVisibleOnce(0.45, () => {
+    const map = mapRef.current;
+    const target = targetRef.current;
+    if (!map || !target || flownRef.current || reduced) return;
+    flownRef.current = true;
+    if (!shouldAnimateOnce(`mapfly.${storyId}`)) {
+      map.jumpTo(target);
+      return;
+    }
+    map.flyTo({ ...target, duration: 3200, curve: 1.42, essential: true });
+    map.once('moveend', () => {
+      try {
+        map.easeTo({ bearing: target.bearing + 16, duration: 50000, easing: (t) => t });
+      } catch {}
+    });
+  });
 
   const pins = geo.pins || [];
 
   return (
-    <div style={{
+    <div ref={visRef} style={{
       position: 'relative', aspectRatio: '16 / 11', borderRadius: 22,
-      overflow: 'hidden', background: TP.mapBg,
+      overflow: 'hidden', background: 'rgb(4,6,13)',
+      boxShadow: 'inset 0 0 0 1px rgba(232,234,242,0.07)',
     }}>
       <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
+
+      {/* cinematic vignette + bottom fade for the coordinate readout */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        boxShadow: 'inset 0 0 90px 18px rgba(2,4,10,0.55)',
+      }} />
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0, height: 64,
+        pointerEvents: 'none',
+        background: 'linear-gradient(to top, rgba(3,5,11,0.62), rgba(3,5,11,0))',
+      }} />
 
       {pins[0] ? (
         <span style={{
@@ -167,48 +225,73 @@ function MapboxFigure({ geo, accent }) {
       <style jsx global>{`
         .tp-mb-pin {
           position: relative;
-          width: 14px;
-          height: 14px;
+          width: 16px;
+          height: 16px;
+        }
+        .tp-mb-glow {
+          position: absolute;
+          left: 50%; top: 50%;
+          width: 30px; height: 30px;
+          margin: -15px 0 0 -15px;
+          border-radius: 50%;
+          opacity: 0.32;
+          filter: blur(9px);
         }
         .tp-mb-dot {
           position: absolute;
           left: 50%; top: 50%;
-          width: 9px; height: 9px;
-          margin: -4.5px 0 0 -4.5px;
+          width: 10px; height: 10px;
+          margin: -5px 0 0 -5px;
           border-radius: 50%;
-          box-shadow: 0 0 0 2px rgba(14, 19, 32, 0.55);
+          border: 2px solid rgba(255,255,255,0.92);
+          box-shadow: 0 1px 8px rgba(0,0,0,0.55);
+          box-sizing: border-box;
         }
         .tp-mb-ring {
           position: absolute;
           left: 50%; top: 50%;
-          width: 9px; height: 9px;
-          margin: -4.5px 0 0 -4.5px;
+          width: 10px; height: 10px;
+          margin: -5px 0 0 -5px;
           border-radius: 50%;
-          border: 1.2px solid;
-          animation: tp-mb-pulse 2.2s ease-out infinite;
+          border: 1.4px solid;
+          animation: tp-mb-pulse 2.4s cubic-bezier(.2,.6,.36,1) infinite;
+        }
+        .tp-mb-ring2 {
+          animation-delay: 1.2s;
         }
         @keyframes tp-mb-pulse {
-          0% { transform: scale(0.4); opacity: 0.9; }
-          100% { transform: scale(2.6); opacity: 0; }
+          0% { transform: scale(0.5); opacity: 0.95; }
+          100% { transform: scale(3.4); opacity: 0; }
         }
         .tp-mb-label {
           position: absolute;
-          left: 16px; top: 50%;
+          left: 19px; top: 50%;
           transform: translateY(-50%);
           font-family: ${FONT_MONO};
-          font-size: 9px;
-          letter-spacing: 0.06em;
+          font-size: 9.5px;
+          font-weight: 500;
+          letter-spacing: 0.09em;
           text-transform: uppercase;
-          color: #E8EAF2;
-          text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          color: #F2F4FA;
+          background: rgba(7, 11, 20, 0.66);
+          border: 1px solid rgba(232,234,242,0.16);
+          border-radius: 99px;
+          padding: 4px 9px;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
           white-space: nowrap;
         }
         .tp-mb-dist {
           font-family: ${FONT_MONO};
-          font-size: 9px;
+          font-size: 9.5px;
           font-weight: 500;
-          letter-spacing: 0.06em;
-          text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+          letter-spacing: 0.09em;
+          background: rgba(7, 11, 20, 0.66);
+          border: 1px solid;
+          border-radius: 99px;
+          padding: 4px 9px;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
           white-space: nowrap;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -236,7 +319,7 @@ export function MapCard({ story, display, accent, onOpen }) {
         </div>
         {display.geo?.pins?.length ? (
           <div style={{ marginTop: 18 }}>
-            <MapboxFigure geo={display.geo} accent={accent} />
+            <MapboxFigure geo={display.geo} accent={accent} storyId={String(story.id)} />
           </div>
         ) : null}
         <div style={{ marginTop: 16 }}>
