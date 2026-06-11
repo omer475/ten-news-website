@@ -2002,7 +2002,23 @@ def run_complete_pipeline():
                 return False
             
             title = synthesized.get('title', synthesized.get('title_news', ''))
-            
+
+            # MiniLM embedding — computed BEFORE the duplicate check because
+            # the embedding-based dedup below reads it. It used to be computed
+            # ~100 lines later, so the check always threw UnboundLocalError
+            # (caught + logged) and semantic dedup never actually ran.
+            article_embedding = None  # kept as None for backward-compat with the insert dict shape
+            article_embedding_minilm = None
+            try:
+                from step1_5_event_clustering import get_embedding_minilm
+                _embed_bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', [])) or []
+                embed_text = f"{title} {' '.join(_embed_bullets) if isinstance(_embed_bullets, list) else ''}"
+                article_embedding_minilm = get_embedding_minilm(embed_text)
+                if article_embedding_minilm:
+                    print(f"   🧠 [Cluster {cluster_id}] MiniLM embedding ({len(article_embedding_minilm)} dims)")
+            except Exception as e:
+                print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
+
             # CHECK FOR DUPLICATES: title similarity + embedding similarity (thread-safe)
             is_duplicate = False
             skip_reason = None
@@ -2139,19 +2155,8 @@ def run_complete_pipeline():
                 failed_components = [c for c in selected if c not in successful_components]
                 print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
-            # Generate MiniLM embedding for feed personalization (pgvector similarity search).
-            # The 768-d Gemini embedding is no longer emitted — main.js only reads
-            # `embedding_minilm`, and the extra Gemini API call was pure overhead.
-            article_embedding = None  # kept as None for backward-compat with the insert dict shape
-            article_embedding_minilm = None
-            try:
-                from step1_5_event_clustering import get_embedding_minilm
-                embed_text = f"{title} {' '.join(bullets) if isinstance(bullets, list) else ''}"
-                article_embedding_minilm = get_embedding_minilm(embed_text)
-                if article_embedding_minilm:
-                    print(f"   🧠 [Cluster {cluster_id}] MiniLM embedding ({len(article_embedding_minilm)} dims)")
-            except Exception as e:
-                print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
+            # MiniLM embedding for feed personalization is computed earlier
+            # (just before the duplicate check in step 9) and reused here.
 
             # Cleanup (2026-05-11): removed v11-era global super/leaf cluster
             # assignment + cluster_assign_helper import. The bandit system that

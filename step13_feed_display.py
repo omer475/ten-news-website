@@ -45,7 +45,9 @@ PIPELINE_TO_DESIGN = {
 @dataclass
 class FeedDisplayConfig:
     model: str = "gemini-2.5-flash"
-    max_tokens: int = 3072
+    # gemini-2.5-flash spends "thinking" tokens from maxOutputTokens too;
+    # too-small budgets truncate the JSON mid-string.
+    max_tokens: int = 8192
     temperature: float = 0.4
     timeout: int = 90
     retry_attempts: int = 3
@@ -102,8 +104,10 @@ def _sanitize_marked_text(s: str) -> str:
     """Allow only balanced <em>/<b> tags; strip everything else."""
     if not isinstance(s, str):
         return ''
-    # Remove any tag that isn't em/b
-    s = re.sub(r'</?(?!em\b|b\b)[^>]+>', '', s)
+    # Remove any tag that isn't em/b. Lookahead must cover the optional
+    # closing slash, otherwise `/?` backtracks to empty and [^>]+ eats
+    # "/em" — stripping every closing tag.
+    s = re.sub(r'<(?!/?(?:em|b)\b)[^>]*>', '', s)
     for tag in ('em', 'b'):
         if s.count(f'<{tag}>') != s.count(f'</{tag}>'):
             s = s.replace(f'<{tag}>', '').replace(f'</{tag}>', '')
@@ -158,19 +162,28 @@ def validate_display(result: Dict, pipeline_category: str,
         cat = PIPELINE_TO_DESIGN.get(pipeline_category, 'WORLD')
     out['category'] = cat
 
-    # title — must keep the original wording (only <em> added)
+    # title — must keep the original wording (only <em> added). The
+    # synthesis step bolds terms with markdown (**x**), so normalize those
+    # markers out of both sides before comparing wording.
+    def _plain(s):
+        return re.sub(r'\s+', ' ', _strip_tags(s or '').replace('**', '')).strip()
+
+    def _md_to_em(s):
+        return re.sub(r'\*\*(.+?)\*\*', r'<em>\1</em>', s or '')
+
     title = _sanitize_marked_text(result.get('title', ''))
-    if _strip_tags(title).strip() != (orig_title or '').strip():
-        # Model rewrote it — fall back to the original, unmarked
-        title = orig_title or _strip_tags(title)
-    if not title:
+    if _plain(title) != _plain(orig_title):
+        # Model rewrote the wording — deterministic fallback: convert the
+        # synthesis **bold** marks on the original title into <em>.
+        title = _md_to_em(orig_title)
+    if not _plain(title):
         return None
     out['title'] = title
 
     # lede
-    lede = _strip_tags(str(result.get('lede', ''))).strip()
+    lede = _strip_tags(str(result.get('lede', ''))).replace('**', '').strip()
     if not lede:
-        lede = _strip_tags(orig_bullets[0]) if orig_bullets else ''
+        lede = _plain(orig_bullets[0]) if orig_bullets else ''
     out['lede'] = lede[:200]
 
     # bullets — same count/wording as original, only marks added
@@ -179,13 +192,13 @@ def validate_display(result: Dict, pipeline_category: str,
     if isinstance(bullets, list):
         for i, b in enumerate(bullets[:3]):
             sb = _sanitize_marked_text(str(b))
-            # wording must match the original bullet (marks stripped)
-            if i < len(orig_bullets) and _strip_tags(sb).strip() == orig_bullets[i].strip():
+            # wording must match the original bullet (marks normalized away)
+            if i < len(orig_bullets) and _plain(sb) == _plain(orig_bullets[i]):
                 clean_bullets.append(sb)
             elif i < len(orig_bullets):
-                clean_bullets.append(orig_bullets[i])
+                clean_bullets.append(_md_to_em(orig_bullets[i]))
     if len(clean_bullets) < min(2, len(orig_bullets)):
-        clean_bullets = list(orig_bullets[:3])
+        clean_bullets = [_md_to_em(b) for b in orig_bullets[:3]]
     out['bullets'] = clean_bullets
 
     # stats — 2-3 valid entries; if fewer survive, ship [] (client hides row)
@@ -404,20 +417,27 @@ def generate_daily_modules(supabase, api_key: str):
         month_day=now.strftime('%B %d'),
         headlines=headlines,
     )
-    try:
-        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
-               f"gemini-2.5-flash:generateContent?key={api_key}")
-        resp = requests.post(url, json={
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.5, "maxOutputTokens": 2048,
-                                 "responseMimeType": "application/json"},
-        }, timeout=90)
-        resp.raise_for_status()
-        text = resp.json()['candidates'][0]['content']['parts'][0]['text']
-        m = re.search(r'\{[\s\S]*\}', text)
-        data = json.loads(m.group(0) if m else text)
-    except Exception as e:
-        print(f"   ⚠️ [modules] generation failed: {e}")
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    data = None
+    for attempt in range(3):
+        try:
+            resp = requests.post(url, json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                # 8192: gemini-2.5-flash spends "thinking" tokens from this
+                # budget too — 2048 truncated the JSON mid-string.
+                "generationConfig": {"temperature": 0.5, "maxOutputTokens": 8192,
+                                     "responseMimeType": "application/json"},
+            }, timeout=90)
+            resp.raise_for_status()
+            text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+            m = re.search(r'\{[\s\S]*\}', text)
+            data = json.loads(m.group(0) if m else text)
+            break
+        except Exception as e:
+            print(f"   ⚠️ [modules] generation attempt {attempt + 1} failed: {e}")
+            time.sleep(2)
+    if data is None:
         return
 
     payloads = {}

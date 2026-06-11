@@ -701,6 +701,20 @@ class GeminiComponentWriter:
         # Numbers already present in the bullets (digit tokens) — details may not reuse them.
         _bullet_text = ' '.join(bullets) if isinstance(bullets, list) else (bullets or '')
         _bullet_nums = set(_re.findall(r'\d+', _bullet_text.replace(',', '')))
+        # Spelled-out numbers count too ("three home runs" bans detail "3").
+        _WORD_NUMS = {
+            'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+            'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+            'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13',
+            'fourteen': '14', 'fifteen': '15', 'sixteen': '16', 'seventeen': '17',
+            'eighteen': '18', 'nineteen': '19', 'twenty': '20', 'thirty': '30',
+            'forty': '40', 'fifty': '50', 'sixty': '60', 'seventy': '70',
+            'eighty': '80', 'ninety': '90', 'hundred': '100', 'dozen': '12',
+        }
+        _bullet_lower = _bullet_text.lower()
+        for _w, _d in _WORD_NUMS.items():
+            if _re.search(rf'\b{_w}\b', _bullet_lower):
+                _bullet_nums.add(_d)
 
         # --- TIMELINE validation ---
         if 'timeline' in selected_components:
