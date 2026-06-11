@@ -183,7 +183,11 @@ REQUIRED FIELDS (always present):
 OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most stories support 0-2). NEVER fabricate data for a signal. Quality bar is high:
 - "big": [value, prefix, unit, caption] — include ONLY if ONE number IS the story (a record, an unprecedented scale). caption: max ~50 chars explaining the number. The value must appear in the source.
 - "quote": {{"text": "…", "who": "Name · Role"}} — ONLY if the source text contains a real, verbatim, striking quotation (8-30 words). Wrap the key phrase in <em>. NEVER paraphrase into quotation marks.
-- "versus": {{"a": {{"val": N, "unit": "", "who": "SIDE A LABEL"}}, "b": {{"val": N, "unit": "", "who": "SIDE B LABEL"}}, "ratio": 0.0-1.0, "note": "one-line context"}} — ONLY for a genuine two-sided numeric comparison stated in the source (two companies, two countries, before/after). ratio = a/(a+b). who: uppercase, max 22 chars.
+- "versus": {{"kind": "duel|change|gap", "a": {{"val": N, "unit": "", "who": "SIDE A"}}, "b": {{"val": N, "unit": "", "who": "SIDE B"}}, "note": "one-line context"}} — a two-sided numeric comparison from the source. Pick the kind that matches the RELATIONSHIP:
+    "duel"   = genuine opposition: vote for/against, match score, two rivals competing. (a and b face off)
+    "change" = the SAME metric before vs after: a = BEFORE/older value, b = AFTER/current value (dev time cut from 55 to 26 months; obesity rate pre-COVID vs now). NOT a fight — never use duel for this.
+    "gap"    = two related quantities contrasted for scale (company X's fleet vs company Y's, spend vs budget).
+  who: SHORT uppercase label, max 14 chars ("FOR", "PRE-COVID", "2022-24", "TESLA") — long labels get cut off on screen. Include unit ("%", "MONTHS") in unit, not in who.
 - "timeline": [["NEXT","what's expected"], ["JUN 11","..."], ["JUN 8","..."]] — THE STORY'S OWN ARC: how THIS news unfolded and what happens next. 3-4 entries. STRICT RULES:
   a) Every entry must be a beat of THIS developing story. Career history, biography, "the award was established in 2018", a performer's past shows, a player's old surgeries = BANNED filler. If the story did not actually develop over multiple dated beats, OMIT timeline — most stories should.
   b) ORDER: ["NEXT", …] first ONLY if a concrete dated future step exists, then newest → oldest. The top entry is "now".
@@ -262,6 +266,16 @@ def _num(v):
         except (ValueError, OverflowError):
             return None
     return None
+
+
+def _vs_label(who) -> str:
+    """Versus side label: short, uppercase, cut at a word boundary —
+    'CANADIAN ADULTS (2022-20' mid-cuts are exactly what we're avoiding."""
+    s = _strip_tags(str(who or '')).strip().upper()
+    if len(s) > 16:
+        cut = s[:17].rsplit(' ', 1)[0]
+        s = cut if len(cut) >= 4 else s[:16]
+    return s.strip(' (,-')
 
 
 def _valid_stat(item) -> Optional[list]:
@@ -389,19 +403,34 @@ def validate_display(result: Dict, pipeline_category: str,
         a, b = versus.get('a'), versus.get('b')
         if isinstance(a, dict) and isinstance(b, dict):
             av, bv = _num(a.get('val')), _num(b.get('val'))
-            awho = _strip_tags(str(a.get('who', ''))).strip().upper()[:24]
-            bwho = _strip_tags(str(b.get('who', ''))).strip().upper()[:24]
+            awho = _vs_label(a.get('who'))
+            bwho = _vs_label(b.get('who'))
             if av is not None and bv is not None and awho and bwho and (av + bv) > 0:
-                ratio = _num(versus.get('ratio'))
-                if ratio is None or not (0 < ratio < 1):
-                    ratio = av / (av + bv)
-                ratio = max(0.05, min(0.95, round(float(ratio), 3)))
+                kind = str(versus.get('kind', '')).strip().lower()
+                if kind not in ('duel', 'change', 'gap'):
+                    kind = 'duel'
+                aunit = str(a.get('unit', ''))[:8]
+                bunit = str(b.get('unit', ''))[:8]
                 out['versus'] = {
-                    'a': {'val': av, 'unit': str(a.get('unit', ''))[:8], 'who': awho},
-                    'b': {'val': bv, 'unit': str(b.get('unit', ''))[:8], 'who': bwho},
-                    'ratio': ratio,
+                    'kind': kind,
+                    'a': {'val': av, 'unit': aunit, 'who': awho},
+                    'b': {'val': bv, 'unit': bunit, 'who': bwho},
                     'note': _strip_tags(str(versus.get('note', ''))).strip()[:140],
                 }
+                if kind == 'change' and av != 0:
+                    # Server-computed delta so the client never does math:
+                    # percentage-point diff for % metrics, % change otherwise.
+                    if aunit == '%' or bunit == '%':
+                        diff = round(bv - av, 1)
+                        out['versus']['delta'] = f"{'+' if diff >= 0 else ''}{diff:g} PTS"
+                    else:
+                        pct = round((bv - av) / abs(av) * 100)
+                        out['versus']['delta'] = f"{'+' if pct >= 0 else ''}{pct}%"
+                else:
+                    ratio = _num(versus.get('ratio'))
+                    if ratio is None or not (0 < ratio < 1):
+                        ratio = av / (av + bv)
+                    out['versus']['ratio'] = max(0.05, min(0.95, round(float(ratio), 3)))
 
     timeline = result.get('timeline')
     if isinstance(timeline, list):
