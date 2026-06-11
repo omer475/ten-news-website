@@ -194,7 +194,9 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
   c) Labels: compact ABSOLUTE dates — "JUN 11", "MAY 2025", "Q1 2026", "2023" (max 11 chars). NEVER weekdays, "TODAY", "EARLIER", "LAST SEASON", or any relative wording.
   d) The newest entry must add a concrete detail beyond the headline (where, what exactly, what number) — never restate it.
   e) Never two entries for the same date unless they are clearly distinct beats.
-- "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric series of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
+- "trend": {{"style": "bar|line", "vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric TIME SERIES of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. style: "line" for continuous metrics with 5+ points (prices, rates), "bar" for few discrete periods. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
+- "breakdown": {{"slices": [["LABEL", n], …], "unit": "%", "caption": "one-line reading"}} — COMPOSITION of a whole stated in the source, for a donut chart: vote share by party, market share, budget split, "X of the Y total". 3-6 slices, biggest FIRST, labels max 12 chars uppercase. Values must come from the source; you may add ONE final ["OTHER", n] slice to complete a % total. ONLY when the parts-of-a-whole framing is real.
+- "ranking": {{"rows": [["LABEL", n], …], "unit": "", "caption": "one-line reading"}} — comparison of 3-6 ENTITIES on one metric from the source, for horizontal bars: top scorers, biggest creditors, countries by medal count. Largest first, labels max 12 chars uppercase. Values from the source only.
 - "geo": {{"pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
   NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
@@ -471,9 +473,50 @@ def validate_display(result: Dict, pipeline_category: str,
         caption = _strip_tags(str(trend.get('caption', ''))).strip()
         if (3 <= len(vals) <= 8 and all(v is not None for v in vals)
                 and len(labels) == len(vals) and all(labels) and caption):
-            out['trend'] = {'vals': vals, 'labels': labels,
+            style = str(trend.get('style', '')).strip().lower()
+            if style not in ('bar', 'line'):
+                style = 'line' if len(vals) >= 5 else 'bar'
+            out['trend'] = {'style': style, 'vals': vals, 'labels': labels,
                             'unit': str(trend.get('unit', ''))[:6],
                             'caption': caption[:140]}
+
+    # breakdown (donut) — composition of a whole
+    breakdown = result.get('breakdown')
+    if isinstance(breakdown, dict) and isinstance(breakdown.get('slices'), list):
+        slices = []
+        for s in breakdown['slices'][:6]:
+            if isinstance(s, (list, tuple)) and len(s) >= 2:
+                lab = _strip_tags(str(s[0])).strip().upper()[:14]
+                v = _num(s[1])
+                if lab and v is not None and v > 0:
+                    slices.append([lab, v])
+        caption = _strip_tags(str(breakdown.get('caption', ''))).strip()
+        unit = str(breakdown.get('unit', ''))[:6]
+        total = sum(v for _, v in slices)
+        # % compositions must roughly complete the whole; absolute ones just
+        # need 3+ real parts.
+        pct_ok = unit != '%' or 90 <= total <= 110
+        if len(slices) >= 3 and caption and pct_ok:
+            slices.sort(key=lambda s: s[1], reverse=True)
+            out['breakdown'] = {'slices': slices, 'unit': unit,
+                                'caption': caption[:140]}
+
+    # ranking (horizontal bars) — entities compared on one metric
+    ranking = result.get('ranking')
+    if isinstance(ranking, dict) and isinstance(ranking.get('rows'), list):
+        rows = []
+        for s in ranking['rows'][:6]:
+            if isinstance(s, (list, tuple)) and len(s) >= 2:
+                lab = _strip_tags(str(s[0])).strip().upper()[:14]
+                v = _num(s[1])
+                if lab and v is not None:
+                    rows.append([lab, v])
+        caption = _strip_tags(str(ranking.get('caption', ''))).strip()
+        if len(rows) >= 3 and caption:
+            rows.sort(key=lambda r: r[1], reverse=True)
+            out['ranking'] = {'rows': rows,
+                              'unit': str(ranking.get('unit', ''))[:6],
+                              'caption': caption[:140]}
 
     # Chart-data flags (internal — the workflow consumes + removes these
     # after fetching the real series; they never reach the client).
@@ -635,7 +678,7 @@ def fetch_trend_from_market(ticker: str) -> Optional[Dict]:
             return None
         unit = '$' if currency == 'USD' else ''
         name = result.get('meta', {}).get('symbol', symbol)
-        return {'vals': vals, 'labels': labels, 'unit': unit,
+        return {'style': 'line', 'vals': vals, 'labels': labels, 'unit': unit,
                 'caption': f"{name} monthly close ({currency})"}
     except Exception as e:
         print(f"   ⚠️ [chart] market fetch failed for {ticker}: {e}")
@@ -705,7 +748,8 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
         if not any(f in ev_text for f in forms):
             print(f"   ⚠️ [chart] value {v} not backed by evidence — rejecting chart")
             return None
-    return {'vals': vals, 'labels': labels,
+    return {'style': 'line' if len(vals) >= 5 else 'bar',
+            'vals': vals, 'labels': labels,
             'unit': str(data.get('unit', ''))[:6], 'caption': caption[:140]}
 
 
