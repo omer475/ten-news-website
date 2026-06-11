@@ -313,7 +313,7 @@ export function MapCard({ story, display, accent, onOpen }) {
   return (
     <article>
       <div>
-        <KickerRow category={display.category} accent={accent} story={story} prefix="ON THE MAP" />
+        <KickerRow category={display.category} accent={accent} story={story} prefix="ON THE MAP" countdown={display.countdown} />
         <div style={{ marginTop: 10 }}>
           <Headline raw={display.title} accent={accent} size={24} />
         </div>

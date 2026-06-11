@@ -16,7 +16,7 @@ import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
-  VersusCard, TimelineCard, SplitCard, ChartCard,
+  VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard,
 } from './TPCards';
 import { MapCard } from './TPMapCard';
 
@@ -29,6 +29,7 @@ const CARD_BY_TEMPLATE = {
   line: TimelineCard,
   split: SplitCard,
   chart: ChartCard,
+  receipts: ReceiptsCard,
   map: MapCard,
 };
 

@@ -212,17 +212,97 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, c
   );
 }
 
+
+// ── Live countdown chip (add-on, any card) ──────────────────────────────────
+// 6px accent dot + mono uppercase "IPO · IN 2D 14H". Ticks per minute (per
+// second under 1h); pulses under 24h; date-only datetimes (T00:00:00) show
+// IN 3 DAYS / TOMORROW; disappears once the moment passes.
+
+export function TPCountdownChip({ countdown, accent, light = false }) {
+  const reduced = useReducedMotion();
+  const [now, setNow] = useState(() => Date.now());
+  const target = countdown ? new Date(countdown.datetime).getTime() : NaN;
+  const remaining = target - now;
+  const underHour = remaining > 0 && remaining < 3600000;
+  const expired = !countdown || Number.isNaN(target) || remaining <= 0;
+
+  useEffect(() => {
+    if (expired) return undefined;
+    const id = setInterval(() => setNow(Date.now()), underHour ? 1000 : 60000);
+    return () => clearInterval(id);
+  }, [underHour, expired]);
+
+  if (expired) return null;
+
+  const dateOnly = /T00:00(:00)?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/.test(countdown.datetime || '');
+  let when;
+  if (dateOnly) {
+    const days = Math.ceil(remaining / 86400000);
+    when = days <= 1 ? 'TOMORROW' : `IN ${days} DAYS`;
+  } else if (remaining >= 86400000) {
+    const d = Math.floor(remaining / 86400000);
+    const h = Math.floor((remaining % 86400000) / 3600000);
+    when = `IN ${d}D ${h}H`;
+  } else if (remaining >= 3600000) {
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    when = `IN ${h}H ${m}M`;
+  } else {
+    const m = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    when = `IN ${m}M ${String(sec).padStart(2, '0')}S`;
+  }
+  const text = countdown.label ? `${countdown.label} · ${when}` : when;
+  const pulse = !reduced && remaining < 86400000 && !dateOnly;
+
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
+      letterSpacing: '0.08em', textTransform: 'uppercase',
+      color: light ? 'rgba(255,255,255,0.92)' : TP.ink2,
+      whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
+    }}>
+      <span className={pulse ? 'tp-cd-pulse' : ''} style={{
+        width: 6, height: 6, borderRadius: '50%', background: accent,
+        '--tp-cd-color': `color-mix(in srgb, ${accent} 55%, transparent)`,
+      }} />
+      {text}
+      <style jsx global>{`
+        .tp-cd-pulse { animation: tp-cd-pulse 2s ease-out infinite; }
+        @keyframes tp-cd-pulse {
+          0% { box-shadow: 0 0 0 0 var(--tp-cd-color); }
+          100% { box-shadow: 0 0 0 8px transparent; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tp-cd-pulse { animation: none !important; }
+        }
+      `}</style>
+    </span>
+  );
+}
+
 // ── Kicker row (§5 common) ───────────────────────────────────────────────────
 
 // Per user direction (2026-06-12): no written topic/category names on cards —
 // the category lives only in the accent color. The row keeps the accent dash
 // (a quiet category-color cue) + the right-aligned timestamp.
-export function KickerRow({ category, accent, story, prefix }) {
+export function KickerRow({ category, accent, story, prefix, countdown, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)` }} />
-      <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
-        {ageLabel(story?.publishedAt)}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+      {label ? (
+        <span style={{
+          fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
+          letterSpacing: '0.2em', textTransform: 'uppercase', color: accent,
+        }}>{label}</span>
+      ) : (
+        <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)`, flexShrink: 0 }} />
+      )}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        {countdown ? <TPCountdownChip countdown={countdown} accent={accent} /> : null}
+        <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
+          {ageLabel(story?.publishedAt)}
+        </span>
       </span>
     </div>
   );

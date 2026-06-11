@@ -3,7 +3,7 @@
 // (selection depends on neighboring cards, so it cannot be precomputed).
 
 const IMG_DESIGNS = new Set(['cover', 'classic', 'split', 'legacy']);
-const ORDER = ['cover', 'classic', 'stat', 'quote', 'versus', 'line', 'split', 'chart', 'map'];
+const ORDER = ['cover', 'classic', 'stat', 'quote', 'receipts', 'versus', 'line', 'split', 'chart', 'map'];
 
 // --- Per-article template memory ---------------------------------------------
 // The selector picks by feed POSITION, and the order jitters between loads —
@@ -61,6 +61,7 @@ export function createSelector() {
         case 'classic': return (d.bullets || []).length >= 2;
         case 'stat': return !!d.big;
         case 'quote': return !!d.quote;
+        case 'receipts': return !!d.receipts;
         case 'versus': return !!d.versus;
         case 'line': return Array.isArray(d.timeline) && d.timeline.length > 0;
         case 'chart': return !!(d.trend || d.breakdown || d.ranking);
