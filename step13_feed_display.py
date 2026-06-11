@@ -79,6 +79,12 @@ REQUIRED FIELDS (always present):
     unit: short suffix shown small after ("B", "M", "%", "KM", "" if none)
     sub: tiny caption, max 40 chars (e.g. "all-stock, closes Q3") or ""
   Numbers MUST come from the bullets or source text. NEVER invent a number.
+  value must be the BARE number — put "M"/"B"/"%" in unit, never inside value.
+  A stat must be a meaningful standalone quantity (money, %, count, duration,
+  distance). NOT a stat: bare years ("DEATH YEAR 2025"), pieces of a phrase
+  ("24/7" is not two stats), classifications ("type 1", "No. 2 seed").
+  If the story has 2+ real numbers, you MUST surface them as stats — scan the
+  source text carefully before giving up; an empty stats list is a last resort.
 - "tags": 2-3 proper-noun entity tags (e.g. ["Nvidia", "Jensen Huang"]).
 
 OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most stories support 0-2). NEVER fabricate data for a signal. Quality bar is high:
@@ -136,10 +142,19 @@ def _valid_stat(item) -> Optional[list]:
         return None
     label = _strip_tags(str(item[0]))[:16].strip()
     value = _num(item[1])
+    unit = str(item[3])[:6] if len(item) > 3 and item[3] else ''
+    # The model sometimes merges the magnitude suffix into the value
+    # ("3.5M", "1.2B") — split it into value + unit instead of dropping
+    # the whole stat.
+    if value is None and isinstance(item[1], str):
+        m = re.fullmatch(r'\s*([\d.,]+)\s*([KMBT]|[kmbt]n?)\s*', item[1].strip())
+        if m:
+            value = _num(m.group(1))
+            if not unit:
+                unit = m.group(2).upper().rstrip('N')
     if not label or value is None:
         return None
     prefix = str(item[2])[:3] if len(item) > 2 and item[2] else ''
-    unit = str(item[3])[:6] if len(item) > 3 and item[3] else ''
     sub = _strip_tags(str(item[4]))[:48].strip() if len(item) > 4 and item[4] else ''
     return [label.upper(), value, prefix, unit, sub]
 
@@ -319,6 +334,10 @@ class FeedDisplayWriter:
         """
         title = article.get('title', '')
         bullets = article.get('bullets', []) or []
+        # Number-rich story? Then an empty stats list is a model miss worth
+        # one retry, not a property of the story.
+        _digit_groups = len(re.findall(
+            r'\d+', f"{title} {' '.join(bullets)} {article.get('source_text') or ''}"))
         prompt = DISPLAY_PROMPT.format(
             today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             category=article.get('category', 'Other'),
@@ -335,6 +354,7 @@ class FeedDisplayWriter:
                 "responseMimeType": "application/json",
             },
         }
+        best_statless = None
         for attempt in range(self.config.retry_attempts):
             try:
                 response = requests.post(self.api_url, json=request_data,
@@ -352,12 +372,17 @@ class FeedDisplayWriter:
                 cleaned = validate_display(result, article.get('category', 'Other'),
                                            title, bullets)
                 if cleaned:
-                    return cleaned
+                    if cleaned.get('stats') or _digit_groups < 6 \
+                            or attempt >= self.config.retry_attempts - 1:
+                        return cleaned
+                    # Number-rich story came back statless — retry once,
+                    # keeping this result as the fallback.
+                    best_statless = cleaned
             except Exception as e:
                 print(f"   ⚠️ [display] attempt {attempt + 1} failed: {e}")
             if attempt < self.config.retry_attempts - 1:
                 time.sleep(self.config.retry_delay)
-        return None
+        return best_statless
 
 
 # ================================================================
