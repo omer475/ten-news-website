@@ -5,17 +5,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { TP, FONT_HEAD, FONT_BODY, FONT_MONO, Markup } from './tokens';
-import { CountUp } from './shared';
+import { CountUp, useRevealOnce, revealStyle } from './shared';
 
-function ModuleHeader({ title }) {
+function ModuleHeader({ title, shown = true, animate = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <span style={{
         fontFamily: FONT_MONO, fontSize: 10, fontWeight: 500,
         letterSpacing: '0.26em', textTransform: 'uppercase', color: TP.gold,
-        whiteSpace: 'nowrap',
+        whiteSpace: 'nowrap', ...revealStyle(shown, animate, 0, 6),
       }}>{title}</span>
-      <span style={{ flex: 1, height: 1, background: TP.line }} />
+      <span style={{
+        flex: 1, height: 1, background: TP.line,
+        transform: shown ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left',
+        transition: animate ? 'transform 0.7s cubic-bezier(.2,.7,.2,1) 0.1s' : 'none',
+      }} />
     </div>
   );
 }
@@ -39,14 +43,16 @@ export function CountdownModule({ row }) {
     [total % 60, 'SEC'],
   ];
 
+  const [ref, shown, animate] = useRevealOnce('mod.countdown', 0.3);
   return (
-    <section>
-      <ModuleHeader title="COUNTING DOWN" />
+    <section ref={ref}>
+      <ModuleHeader title="COUNTING DOWN" shown={shown} animate={animate} />
       <h3 style={{
         fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 18.4,
         letterSpacing: '-0.02em', color: TP.ink, margin: '16px 0 0',
+        ...revealStyle(shown, animate, 0.12, 10),
       }}>{row.name}</h3>
-      <div style={{ display: 'flex', alignItems: 'stretch', marginTop: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', marginTop: 14, ...revealStyle(shown, animate, 0.22, 12) }}>
         {parts.map(([value, label], i) => (
           <React.Fragment key={label}>
             {i > 0 ? <span style={{ width: 1, background: TP.line }} /> : null}
@@ -77,16 +83,17 @@ export function CountdownModule({ row }) {
 
 export function HistoryModule({ module }) {
   const rows = (module.rows || []).slice(0, 3);
+  const [ref, shown, animate] = useRevealOnce('mod.history', 0.3);
   return (
-    <section>
-      <ModuleHeader title="TODAY IN HISTORY" />
+    <section ref={ref}>
+      <ModuleHeader title="TODAY IN HISTORY" shown={shown} animate={animate} />
       <div style={{ marginTop: 16 }}>
         {rows.map((row, i) => {
           const [year, text] = Array.isArray(row) ? row : [row?.year, row?.text];
           return (
             <React.Fragment key={i}>
               {i > 0 ? <div style={{ height: 1, background: TP.line, margin: '13px 0' }} /> : null}
-              <div style={{ display: 'flex', alignItems: 'baseline' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
                 <span style={{
                   fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 20.8,
                   letterSpacing: '-0.03em', color: TP.gold, width: 64, flexShrink: 0,
@@ -108,12 +115,13 @@ export function HistoryModule({ module }) {
 
 export function BriefsModule({ module, title }) {
   const rows = (module.rows || []).slice(0, 3);
+  const [ref, shown, animate] = useRevealOnce('mod.briefs', 0.3);
   return (
-    <section>
-      <ModuleHeader title={title} />
+    <section ref={ref}>
+      <ModuleHeader title={title} shown={shown} animate={animate} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 16 }}>
         {rows.map((row, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'baseline' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.12, 10) }}>
             <span style={{
               fontFamily: FONT_MONO, fontSize: 10, fontWeight: 500,
               letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -132,12 +140,14 @@ export function BriefsModule({ module, title }) {
 // ── 8.5 NUMBER OF THE DAY ────────────────────────────────────────────────────
 
 export function NotdModule({ module, moduleKey }) {
+  const [ref, shown, animate] = useRevealOnce('mod.notd', 0.3);
   return (
-    <section>
-      <ModuleHeader title="NUMBER OF THE DAY" />
+    <section ref={ref}>
+      <ModuleHeader title="NUMBER OF THE DAY" shown={shown} animate={animate} />
       <div style={{
-        fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 64, lineHeight: 0.95,
-        letterSpacing: '-0.05em', color: TP.ink, marginTop: 16,
+        fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 66, lineHeight: 0.95,
+        letterSpacing: '-0.052em', color: TP.ink, marginTop: 16,
+        ...revealStyle(shown, animate, 0.12, 12),
       }}>
         <CountUp
           value={Number(module.value) || 0}
@@ -148,7 +158,10 @@ export function NotdModule({ module, moduleKey }) {
         />
       </div>
       {module.context ? (
-        <p style={{ fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.55, color: TP.ink2, margin: '14px 0 0' }}>
+        <p style={{
+          fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.55, color: TP.ink2, margin: '14px 0 0',
+          ...revealStyle(shown, animate, 0.3, 10),
+        }}>
           {module.context}
         </p>
       ) : null}

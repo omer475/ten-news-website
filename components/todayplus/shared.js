@@ -74,6 +74,32 @@ export function Entrance({ entryKey, children }) {
   );
 }
 
+// ── Choreographed in-card reveals ───────────────────────────────────────────
+// Cards stagger their internal elements (kicker → headline → figure → bullets)
+// the first time they're really looked at. One-shot per session; Reduce Motion
+// and scroll-backs render the final state instantly.
+
+export function useRevealOnce(key, threshold = 0.3) {
+  const reduced = useReducedMotion();
+  const done = hasAnimated(`reveal.${key}`);
+  const [revealed, setRevealed] = useState(done);
+  const ref = useVisibleOnce(threshold, () => {
+    shouldAnimateOnce(`reveal.${key}`);
+    setRevealed(true);
+  });
+  const shown = revealed || done || reduced;
+  const animate = !reduced && !done;
+  return [ref, shown, animate];
+}
+
+export const revealStyle = (shown, animate, delay = 0, dy = 12) => ({
+  opacity: shown ? 1 : 0,
+  transform: shown ? 'none' : `translateY(${dy}px)`,
+  transition: animate
+    ? `opacity 0.65s cubic-bezier(.2,.7,.2,1) ${delay}s, transform 0.65s cubic-bezier(.2,.7,.2,1) ${delay}s`
+    : 'none',
+});
+
 // ── Count-up (§7.2): 0 → target, 0.9s ease-out-cubic, once per key ──────────
 
 export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, style }) {
@@ -118,6 +144,7 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
   const reduced = useReducedMotion();
   const wrapRef = useRef(null);
   const imgRef = useRef(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (reduced) return undefined;
@@ -155,12 +182,17 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
         transform: 'translateZ(0)',
       }}
     >
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+        borderRadius, boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.06)',
+      }} />
       {src ? (
         <img
           ref={imgRef}
           src={src}
           alt={alt}
           loading="lazy"
+          onLoad={() => setLoaded(true)}
           style={{
             position: 'absolute',
             inset: '-12% 0',
@@ -169,6 +201,8 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 22, c
             objectFit: 'cover',
             transform: reduced ? 'none' : 'scale(1.12)',
             willChange: 'transform',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.6s ease-out',
           }}
         />
       ) : null}
@@ -196,12 +230,15 @@ export function KickerRow({ category, accent, story, prefix }) {
 
 // ── Bullets (§2.4): 6px accent dot, 20px indent ─────────────────────────────
 
-export function Bullets({ bullets, accent, max = 3 }) {
+export function Bullets({ bullets, accent, max = 3, reveal }) {
   if (!bullets || bullets.length === 0) return null;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
       {bullets.slice(0, max).map((raw, i) => (
-        <div key={i} style={{ position: 'relative', paddingLeft: 20 }}>
+        <div key={i} style={{
+          position: 'relative', paddingLeft: 20,
+          ...(reveal ? revealStyle(reveal.shown, reveal.animate, (reveal.baseDelay || 0) + i * 0.1, 10) : null),
+        }}>
           <span style={{
             position: 'absolute', left: 2, top: 8, width: 6, height: 6,
             borderRadius: '50%', background: accent,
@@ -220,33 +257,42 @@ export function Bullets({ bullets, accent, max = 3 }) {
 // ── Open stats row (§6) — never inside a box ─────────────────────────────────
 
 export function StatsRow({ stats, accent, cardKey }) {
+  const [ref, shown, animate] = useRevealOnce(`stats.${cardKey}`, 0.5);
   if (!stats || stats.length === 0) return null;
   return (
-    <div style={{ display: 'flex', gap: 14 }}>
+    <div ref={ref} style={{ display: 'flex', gap: 14 }}>
       {stats.slice(0, 3).map((stat, i) => {
         const [label, value, prefix, unit, sub] = stat;
+        const delay = i * 0.12;
         return (
           <div key={i} style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ width: 22, height: 2, borderRadius: 2, background: accent, marginBottom: 10 }} />
             <div style={{
-              fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 26, lineHeight: 1,
-              letterSpacing: '-0.04em', color: TP.ink,
-            }}>
-              <CountUp
-                value={Number(value) || 0}
-                prefix={prefix || ''}
-                unit={unit || ''}
-                unitStyle={{ fontSize: '0.6em', color: accent }}
-                animKey={`${cardKey}.stat${i}`}
-              />
+              width: 22, height: 2, borderRadius: 2, background: accent, marginBottom: 10,
+              transform: shown ? 'scaleX(1)' : 'scaleX(0)',
+              transformOrigin: 'left',
+              transition: animate ? `transform 0.55s cubic-bezier(.2,.7,.2,1) ${delay}s` : 'none',
+            }} />
+            <div style={revealStyle(shown, animate, delay + 0.08, 8)}>
+              <div style={{
+                fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27, lineHeight: 1,
+                letterSpacing: '-0.04em', color: TP.ink,
+              }}>
+                <CountUp
+                  value={Number(value) || 0}
+                  prefix={prefix || ''}
+                  unit={unit || ''}
+                  unitStyle={{ fontSize: '0.6em', color: accent, fontWeight: 800 }}
+                  animKey={`${cardKey}.stat${i}`}
+                />
+              </div>
+              <div style={{
+                fontFamily: FONT_MONO, fontSize: 9, letterSpacing: '0.12em',
+                textTransform: 'uppercase', color: TP.ink3, marginTop: 7,
+              }}>{label}</div>
+              {sub ? (
+                <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, lineHeight: 1.4, color: TP.ink2, marginTop: 3 }}>{sub}</div>
+              ) : null}
             </div>
-            <div style={{
-              fontFamily: FONT_MONO, fontSize: 9, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: TP.ink3, marginTop: 7,
-            }}>{label}</div>
-            {sub ? (
-              <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: TP.ink2, marginTop: 2 }}>{sub}</div>
-            ) : null}
           </div>
         );
       })}
@@ -309,7 +355,8 @@ export function CardFooter({ story, tags, onOpen }) {
           <span key={tag} style={{
             fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 500, color: TP.ink2,
             border: `1px solid ${TP.line}`, borderRadius: 99, padding: '7px 13px',
-            whiteSpace: 'nowrap', flexShrink: 0,
+            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255,255,255,0.5)',
+            transition: 'border-color 0.2s ease, color 0.2s ease',
           }}>{tag}</span>
         ))}
       </div>
@@ -331,11 +378,13 @@ export function CardFooter({ story, tags, onOpen }) {
 
 // ── Headline ─────────────────────────────────────────────────────────────────
 
-export function Headline({ raw, accent, size = 24, color = TP.ink, as: Tag = 'h2' }) {
+export function Headline({ raw, accent, size = 24, color = TP.ink, as: Tag = 'h2', style }) {
   return (
     <Tag style={{
-      fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size, lineHeight: 1.13,
-      letterSpacing: '-0.03em', color, margin: 0,
+      fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size, lineHeight: 1.12,
+      letterSpacing: '-0.032em', color, margin: 0,
+      textWrap: 'balance', fontOpticalSizing: 'auto',
+      ...style,
     }}>
       <Markup raw={raw} emColor={accent} strongColor={color} strongWeight={800} />
     </Tag>
