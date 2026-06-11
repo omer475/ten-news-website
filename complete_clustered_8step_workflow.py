@@ -1694,7 +1694,11 @@ def run_complete_pipeline():
                     selected_image = {
                         'url': ai_approved['url'],
                         'source_name': ai_approved['source_name'],
-                        'quality_score': ai_approved['quality_score']
+                        'quality_score': ai_approved['quality_score'],
+                        # Full-bleed cover grade from the vision check —
+                        # tight face crops / pixelated images must not be
+                        # used as the Cover template background.
+                        'cover_ok': bool(ai_approved.get('quality_check', {}).get('cover_ok')),
                     }
                     print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
                 else:
@@ -2334,6 +2338,9 @@ def run_complete_pipeline():
                     # Google-grounded series — consumes the chart_* flags.
                     enrich_display_with_chart(display_obj, gemini_key)
                     display_obj['imageURL'] = synthesized.get('image_url')
+                    # Cover template gate: only images the vision check graded
+                    # as full-bleed-worthy (sharp, not a tight face crop).
+                    display_obj['cover_ok'] = bool(selected_image and selected_image.get('cover_ok'))
                     # 0-1000 importance scale; >=900 = breaking (cover card)
                     display_obj['breaking'] = bool(article_score >= 900)
                     _sigs = [k for k in ('big', 'quote', 'versus', 'timeline', 'trend', 'geo') if k in display_obj]

@@ -63,12 +63,22 @@ ACCEPT only if ALL of these are true:
 
 KEY RULE: The image must look like a clean editorial photograph. If there is ANY readable text overlay burned into the photo (headlines, titles, captions in any language), REJECT it. A small agency credit in a corner is okay, but text covering the image is not.
 
+ALSO grade COVER suitability ("cover_ok") — would this image work as a FULL-BLEED
+magazine-style cover with a headline overlaid on it? cover_ok is FALSE if:
+- It is a tight close-up of a face filling most of the frame (mugshots, ID-style
+  headshots, zoomed portraits) — these look bad blown up full-screen
+- It is noticeably pixelated, upscaled, soft, or heavily compressed
+- It is a flat graphic/logo/diagram with no photographic depth
+cover_ok is TRUE only for sharp editorial photos with scene context (places,
+events, action, objects, wider shots of people) that can carry text on top.
+
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {
     "suitable": true or false,
     "confidence": 0-100,
     "issues": ["list", "of", "specific", "problems"],
-    "reason": "One sentence explanation"
+    "reason": "One sentence explanation",
+    "cover_ok": true or false
 }"""
 
     def check_image(self, image_url: str, retry_count: int = 3) -> Dict:
@@ -92,6 +102,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
             }
         
         for attempt in range(retry_count):
+            orig_width = 0  # set from PIL below; 0 fails the cover gate safely
             try:
                 # Download image
                 response = requests.get(image_url, timeout=10, headers={
@@ -108,6 +119,7 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                         img = img.convert('RGB')
 
                     print(f"      Image loaded: {img.size[0]}x{img.size[1]} pixels")
+                    orig_width = img.size[0]
 
                     # Downscale very large images to save memory (e.g. 11314x6366 = 216MB)
                     max_dim = 2000
@@ -228,6 +240,9 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                     "confidence": int(parsed["confidence"]),
                     "issues": parsed.get("issues", []),
                     "reason": parsed["reason"],
+                    # Full-bleed cover grade: vision verdict AND a hard
+                    # resolution floor (small images pixelate at cover size).
+                    "cover_ok": bool(parsed.get("cover_ok")) and orig_width >= 900,
                     "error": False
                 }
                 

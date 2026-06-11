@@ -32,6 +32,72 @@ DESIGN_CATEGORIES = {
     'ENERGY', 'SPORTS', 'CULTURE', 'HEALTH',
 }
 
+# Timeline label hygiene (2026-06-12): labels must be compact ABSOLUTE
+# dates — relative wording is meaningless in a feed read hours later.
+_TL_BANNED_LABELS = {
+    'TODAY', 'YESTERDAY', 'TOMORROW', 'NOW', 'EARLIER', 'RECENT',
+    'RECENTLY', 'THIS WEEK', 'LAST WEEK', 'THIS MONTH', 'LAST MONTH',
+    'LAST SEASON', 'THIS SEASON', 'LAST YEAR', 'THIS YEAR', 'ONGOING',
+    'SOON', 'UPCOMING', 'PREVIOUSLY', 'BEFORE', 'PAST',
+}
+_TL_BANNED_WORDS = ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY',
+                    'FRIDAY', 'SATURDAY', 'SUNDAY')
+_TL_MONTHS = {'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6,
+              'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12}
+_TL_MONTH_FULL = {'JANUARY': 'JAN', 'FEBRUARY': 'FEB', 'MARCH': 'MAR',
+                  'APRIL': 'APR', 'JUNE': 'JUN', 'JULY': 'JUL',
+                  'AUGUST': 'AUG', 'SEPTEMBER': 'SEP', 'SEPT': 'SEP',
+                  'OCTOBER': 'OCT', 'NOVEMBER': 'NOV', 'DECEMBER': 'DEC'}
+
+
+def _tl_normalize_label(lab: str) -> str:
+    """Compact a timeline label: full month names -> 3-letter, strip
+    fluff prefixes. (Display shortening happens separately, after the
+    sort key is computed — cutting first would lose the year.)"""
+    lab = re.sub(r'\s+', ' ', (lab or '').strip().upper().replace('.', ''))
+    for full, abbr in _TL_MONTH_FULL.items():
+        lab = re.sub(rf'\b{full}\b', abbr, lab)
+    lab = re.sub(r'^(EARLY|LATE|MID)[\s-]+', '', lab)
+    return lab.strip(' ,')
+
+
+def _tl_display_label(lab: str) -> str:
+    """Shorten for display, never mid-token. 'MMM DD, YYYY' keeps the year
+    (drop the day) when the year is not the current one — 'JUN 30, 2027'
+    -> 'JUN 2027', but 'JUN 11, 2026' -> 'JUN 11'."""
+    if len(lab) > 11:
+        m = re.fullmatch(r'(\w{3}) \d{1,2},? (\d{4})', lab)
+        if m:
+            year = int(m.group(2))
+            now_year = datetime.now(timezone.utc).year
+            return f"{m.group(1)} {m.group(2)}" if year != now_year \
+                else f"{m.group(1)} {lab.split()[1].rstrip(',')}"
+        cut = lab[:12].rsplit(' ', 1)[0]
+        lab = cut if cut else lab[:11]
+    return lab.strip(' ,')
+
+
+def _tl_sort_key(lab: str):
+    """Parse a label to a sortable (year, month, day); NEXT/future first.
+    Returns None if unparseable."""
+    if lab == 'NEXT':
+        return (9999, 12, 31)
+    m = re.fullmatch(r'(?:(\w{3}) )?(\d{4})', lab)        # "2023" / "MAY 2025"
+    if m and (m.group(1) is None or m.group(1) in _TL_MONTHS):
+        return (int(m.group(2)), _TL_MONTHS.get(m.group(1), 6), 15)
+    m = re.fullmatch(r'Q([1-4]) (\d{4})', lab)            # "Q1 2026"
+    if m:
+        return (int(m.group(2)), int(m.group(1)) * 3, 15)
+    m = re.fullmatch(r'(\w{3}) (\d{1,2})(?:,? (\d{4}))?', lab)  # "JUN 11[, 2026]"
+    if m and m.group(1) in _TL_MONTHS:
+        year = int(m.group(3)) if m.group(3) else datetime.now(timezone.utc).year
+        return (year, _TL_MONTHS[m.group(1)], int(m.group(2)))
+    m = re.fullmatch(r'(\w{3}) (\d{1,2})-\d{1,2}', lab)   # "JUN 8-9"
+    if m and m.group(1) in _TL_MONTHS:
+        return (datetime.now(timezone.utc).year, _TL_MONTHS[m.group(1)], int(m.group(2)))
+    return None
+
+
 # Map-pin quality nets (2026-06-12): a pin must be a place worth LOOKING at.
 # Bare country/continent pins are always dropped; bare metro names are
 # dropped for business-ish categories (HQ-city syndrome — "New York" pin
@@ -94,7 +160,7 @@ Return ONE JSON object with these fields:
 REQUIRED FIELDS (always present):
 - "category": one of WORLD, AI, ECONOMY, TECH, POLICY, MARKETS, SCIENCE, ENERGY, SPORTS, CULTURE, HEALTH. Pick the best fit (an AI-company story is AI, not TECH; an oil/power/climate-infrastructure story is ENERGY; central-bank/stocks/crypto is MARKETS; macro/trade/jobs is ECONOMY; legislation/regulation/elections is POLICY).
 - "title": the story title with 1-2 key entities wrapped in <em>…</em> (company, person, country, product). Keep the wording of the title EXACTLY as given — only add <em> marks.
-- "lede": ONE plain sentence (max ~140 chars) summarizing the story. No tags.
+- "lede": ONE plain COMPLETE sentence summarizing the story, max ~120 chars (it renders in a small card — it must fit whole, never get cut off). No tags.
 - "bullets": the 2-3 bullets EXACTLY as given, but with key entities wrapped in <em>…</em> and the single most important phrase per bullet (optionally) in <b>…</b>. Do not rewrite the text.
 - "stats": 2-3 key numbers of the story, each as [LABEL, value, prefix, unit, sub]:
     LABEL: 1-3 words, uppercase, max 14 chars (e.g. "DEAL SIZE")
@@ -118,7 +184,12 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "big": [value, prefix, unit, caption] — include ONLY if ONE number IS the story (a record, an unprecedented scale). caption: max ~50 chars explaining the number. The value must appear in the source.
 - "quote": {{"text": "…", "who": "Name · Role"}} — ONLY if the source text contains a real, verbatim, striking quotation (8-30 words). Wrap the key phrase in <em>. NEVER paraphrase into quotation marks.
 - "versus": {{"a": {{"val": N, "unit": "", "who": "SIDE A LABEL"}}, "b": {{"val": N, "unit": "", "who": "SIDE B LABEL"}}, "ratio": 0.0-1.0, "note": "one-line context"}} — ONLY for a genuine two-sided numeric comparison stated in the source (two companies, two countries, before/after). ratio = a/(a+b). who: uppercase, max 22 chars.
-- "timeline": [["MAY 28","event text"], …] — 3-4 entries, ONLY for genuinely developing stories with distinct dated events from the source. Most recent FIRST. Last entry may be ["NEXT","what's expected"]. Labels: short uppercase date or "NEXT".
+- "timeline": [["NEXT","what's expected"], ["JUN 11","..."], ["JUN 8","..."]] — THE STORY'S OWN ARC: how THIS news unfolded and what happens next. 3-4 entries. STRICT RULES:
+  a) Every entry must be a beat of THIS developing story. Career history, biography, "the award was established in 2018", a performer's past shows, a player's old surgeries = BANNED filler. If the story did not actually develop over multiple dated beats, OMIT timeline — most stories should.
+  b) ORDER: ["NEXT", …] first ONLY if a concrete dated future step exists, then newest → oldest. The top entry is "now".
+  c) Labels: compact ABSOLUTE dates — "JUN 11", "MAY 2025", "Q1 2026", "2023" (max 11 chars). NEVER weekdays, "TODAY", "EARLIER", "LAST SEASON", or any relative wording.
+  d) The newest entry must add a concrete detail beyond the headline (where, what exactly, what number) — never restate it.
+  e) Never two entries for the same date unless they are clearly distinct beats.
 - "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric series of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "geo": {{"pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
   NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
@@ -146,6 +217,31 @@ def _sanitize_marked_text(s: str) -> str:
     # closing slash, otherwise `/?` backtracks to empty and [^>]+ eats
     # "/em" — stripping every closing tag.
     s = re.sub(r'<(?!/?(?:em|b)\b)[^>]*>', '', s)
+    for tag in ('em', 'b'):
+        if s.count(f'<{tag}>') != s.count(f'</{tag}>'):
+            s = s.replace(f'<{tag}>', '').replace(f'</{tag}>', '')
+    return s.strip()
+
+
+def _canonicalize_marks(s: str) -> str:
+    """Display text must carry ONLY flat <em>/<b> tags. The synthesis step
+    bolds with markdown (**x**) and the model adds <em> inside those bold
+    spans — clients can't render '**Nazi methods in <em>Syria</em>**'.
+    Convert residual **markdown** to <b>, then un-nest: tags inside a
+    tagged span are dropped (the outer emphasis wins)."""
+    if not isinstance(s, str):
+        return ''
+    s = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', s)
+    s = s.replace('**', '')
+    for outer in ('b', 'em'):
+        pattern = re.compile(rf'<{outer}>.*?</{outer}>', re.S)
+        s = pattern.sub(lambda m: f'<{outer}>' +
+                        re.sub(r'</?(?:em|b)>', '',
+                               m.group(0)[len(outer) + 2:-(len(outer) + 3)]) +
+                        f'</{outer}>', s)
+    # Drop empty tags left behind, then re-check balance (same-tag nesting
+    # can orphan a closer) — unbalanced means strip that tag entirely.
+    s = re.sub(r'<(em|b)>\s*</\1>', '', s)
     for tag in ('em', 'b'):
         if s.count(f'<{tag}>') != s.count(f'</{tag}>'):
             s = s.replace(f'<{tag}>', '').replace(f'</{tag}>', '')
@@ -225,13 +321,19 @@ def validate_display(result: Dict, pipeline_category: str,
         title = _md_to_em(orig_title)
     if not _plain(title):
         return None
-    out['title'] = title
+    out['title'] = _canonicalize_marks(title)
 
     # lede
     lede = _strip_tags(str(result.get('lede', ''))).replace('**', '').strip()
     if not lede:
         lede = _plain(orig_bullets[0]) if orig_bullets else ''
-    out['lede'] = lede[:200]
+    # Cut at a sentence/word boundary — a "…" mid-sentence on the card is
+    # exactly what we're avoiding.
+    if len(lede) > 160:
+        first_sentence = re.split(r'(?<=[.!?]) ', lede)[0]
+        lede = first_sentence if len(first_sentence) <= 160 \
+            else lede[:158].rsplit(' ', 1)[0] + '.'
+    out['lede'] = lede
 
     # bullets — same count/wording as original, only marks added
     bullets = result.get('bullets')
@@ -246,7 +348,7 @@ def validate_display(result: Dict, pipeline_category: str,
                 clean_bullets.append(_md_to_em(orig_bullets[i]))
     if len(clean_bullets) < min(2, len(orig_bullets)):
         clean_bullets = [_md_to_em(b) for b in orig_bullets[:3]]
-    out['bullets'] = clean_bullets
+    out['bullets'] = [_canonicalize_marks(b) for b in clean_bullets]
 
     # stats — 2-3 valid entries; if fewer survive, ship [] (client hides row)
     stats = []
@@ -280,7 +382,7 @@ def validate_display(result: Dict, pipeline_category: str,
         qwho = _strip_tags(str(quote.get('who', ''))).strip()
         words = len(_strip_tags(qtext).split())
         if qtext and qwho and 5 <= words <= 40:
-            out['quote'] = {'text': qtext, 'who': qwho[:60]}
+            out['quote'] = {'text': _canonicalize_marks(qtext), 'who': qwho[:60]}
 
     versus = result.get('versus')
     if isinstance(versus, dict):
@@ -304,14 +406,34 @@ def validate_display(result: Dict, pipeline_category: str,
     timeline = result.get('timeline')
     if isinstance(timeline, list):
         entries = []
+        seen_labels = set()
         for e in timeline[:4]:
-            if isinstance(e, (list, tuple)) and len(e) >= 2:
-                lab = _strip_tags(str(e[0])).strip().upper()[:12]
-                txt = _strip_tags(str(e[1])).strip()
-                if lab and txt:
-                    entries.append([lab, txt[:160]])
-        if len(entries) >= 3:
-            out['timeline'] = entries
+            if not (isinstance(e, (list, tuple)) and len(e) >= 2):
+                continue
+            lab = _tl_normalize_label(_strip_tags(str(e[0])))
+            txt = _strip_tags(str(e[1])).strip()
+            if not lab or not txt:
+                continue
+            # Relative labels are useless in a feed read hours later.
+            if lab in _TL_BANNED_LABELS or any(w in lab for w in _TL_BANNED_WORDS):
+                continue
+            # Same label twice = padding, keep the first beat only.
+            if lab in seen_labels:
+                continue
+            seen_labels.add(lab)
+            entries.append((_tl_sort_key(lab), [_tl_display_label(lab), txt[:160]]))
+        # Canonical order: NEXT/future first, then newest -> oldest. Only
+        # reorder when every label parses — otherwise trust the model order
+        # (minus the banned entries already dropped).
+        if entries and all(k is not None for k, _ in entries):
+            entries.sort(key=lambda p: p[0], reverse=True)
+            ordered = [e for _, e in entries]
+        else:
+            ordered = [e for _, e in entries]
+            ordered = [e for e in ordered if e[0] == 'NEXT'] + \
+                      [e for e in ordered if e[0] != 'NEXT']
+        if len(ordered) >= 3:
+            out['timeline'] = ordered
 
     trend = result.get('trend')
     if isinstance(trend, dict):
