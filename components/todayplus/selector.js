@@ -14,9 +14,11 @@ export function createSelector() {
   const eligible = (d) =>
     ORDER.filter((design) => {
       switch (design) {
-        // cover goes full-bleed — gated on the pipeline's image-quality flag
-        // (pixelated/mugshot images must not be blown up).
-        case 'cover': return d.cover_ok === true;
+        // cover goes full-bleed — the pipeline's image-quality flag blocks
+        // pixelated/mugshot images. Older rows predate the flag (missing =
+        // pre-flag era, not rejected); a strict ===true gate erased the cover
+        // template from 97% of the feed, so only an explicit false blocks.
+        case 'cover': return d.cover_ok !== false;
         case 'split': return true;
         case 'classic': return (d.bullets || []).length >= 2;
         case 'stat': return !!d.big;
@@ -51,7 +53,7 @@ export function createSelector() {
         if (img.length) candidates = img;
       }
 
-      if (display.breaking && display.cover_ok === true && !lastWasImage
+      if (display.breaking && display.cover_ok !== false && !lastWasImage
           && (lastUsed.cover ?? -Infinity) < blockIdx - 3) {
         // breaking prefers cover, never breaks rhythm (and never with a weak image)
         candidates = ['cover'];
