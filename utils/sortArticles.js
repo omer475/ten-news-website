@@ -1,4 +1,75 @@
-import { getExposureCounts, exposureFactor } from './exposure';
+import { getExposureCounts, getEventExposureCounts, exposureFactor } from './exposure';
+
+// Tags too broad to mean "same topic" — a shared 'politics' tag must not
+// penalize two unrelated political stories the way two 'spacex' tags should.
+const BROAD_TAGS = new Set([
+  'politics', 'world news', 'world', 'sports', 'technology', 'tech',
+  'business', 'finance', 'science', 'health', 'entertainment', 'culture',
+  'economy', 'government', 'news', 'breaking news', 'us', 'usa', 'europe',
+]);
+
+function specificTags(article, max = 6) {
+  const t = article.interest_tags;
+  const list = Array.isArray(t) ? t : [];
+  const out = [];
+  for (const raw of list) {
+    const tag = String(raw || '').toLowerCase().trim();
+    if (tag && !BROAD_TAGS.has(tag)) out.push(tag);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/**
+ * Diversity pass over an effective-score-ordered list (spec: one card per
+ * STORY, no topic walls). Greedy walk of the top of the feed:
+ *   - EVENT CAP: only the best article of each world event is kept up top —
+ *     the pipeline publishes many tellings of the same story (new ids), which
+ *     used to re-serve "the same article in a different style".
+ *   - TAG-OVERLAP PENALTY: each specific tag already placed multiplies later
+ *     candidates sharing it by `tagPenalty` — caps any topic family at ~2-3
+ *     cards per screen without hard rules.
+ * Only the top `depth` items get the careful treatment (the tail is below
+ * the fold); event-capped siblings drop behind the diversified head.
+ */
+function diversifyHead(scored, { depth = 150, tagPenalty = 0.65 } = {}) {
+  if (scored.length <= 2) return scored;
+  const head = scored.slice(0, depth);
+  const tail = scored.slice(depth);
+
+  const placed = [];
+  const displaced = [];
+  const usedEvents = new Set();
+  const tagSeen = new Map(); // tag -> times placed
+  const pool = [...head];
+
+  while (pool.length) {
+    // Pick the candidate with the best ADJUSTED score under current state.
+    let bestIdx = -1;
+    let bestAdj = -Infinity;
+    for (let i = 0; i < pool.length; i += 1) {
+      const c = pool[i];
+      const evId = c.article.world_event?.id;
+      if (evId != null && usedEvents.has(String(evId))) continue; // capped
+      let overlap = 0;
+      for (const tag of c.tags) overlap += Math.min(tagSeen.get(tag) || 0, 1);
+      const adj = c.effective * Math.pow(tagPenalty, Math.min(overlap, 3));
+      if (adj > bestAdj) { bestAdj = adj; bestIdx = i; }
+    }
+    if (bestIdx === -1) {
+      // everything left is an event-capped sibling — they go after the head
+      displaced.push(...pool);
+      break;
+    }
+    const picked = pool.splice(bestIdx, 1)[0];
+    placed.push(picked);
+    const evId = picked.article.world_event?.id;
+    if (evId != null) usedEvents.add(String(evId));
+    for (const tag of picked.tags) tagSeen.set(tag, (tagSeen.get(tag) || 0) + 1);
+  }
+
+  return [...placed, ...displaced, ...tail];
+}
 
 /**
  * Article Sorting Utilities
@@ -170,13 +241,17 @@ export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = 
   const STALE_AGE_HOURS = 48; // articles with no usable date are treated as old
 
   // Exposure decay: articles the user already SAW this 24h window (card ≥55%
-  // visible for ~1.5s, recorded by TodayPlusFeed) halve per sighting. Without
-  // this, seen-but-not-opened stories topped every refresh — the feed kept
-  // re-serving the same articles. Decay (not a hard hide) so a truly big
-  // story can still resurface. Client-only; on the server the map is empty.
+  // visible for ~1.5s, recorded by TodayPlusFeed) halve per sighting — and so
+  // does every other article of the SAME world event, because the pipeline
+  // keeps publishing fresh tellings of one story (new id, zero impressions)
+  // that used to re-serve "the same article in a different card style".
+  // Decay (not a hard hide) so a truly big story can still resurface.
+  // Client-only; on the server both maps are empty.
   let exposure = {};
+  let eventExposure = {};
   if (typeof window !== 'undefined') {
     try { exposure = getExposureCounts(); } catch (_) {}
+    try { eventExposure = getEventExposureCounts(); } catch (_) {}
   }
 
   const scored = articles.map((article) => {
@@ -192,12 +267,18 @@ export function applyFreshness(articles, { halfLifeHours = 8, jitter = 0.18 } = 
     const timeDecay = Math.pow(0.5, ageHours / halfLifeHours);
     const noise = 1 + (Math.random() * 2 - 1) * jitter; // scale by [1-jitter, 1+jitter]
     const seen = exposureFactor(exposure[String(article.id)] || 0);
+    const evId = article.world_event?.id;
+    const seenStory = evId != null ? exposureFactor(eventExposure[String(evId)] || 0) : 1;
 
-    return { article, effective: importance * timeDecay * noise * seen };
+    return {
+      article,
+      tags: specificTags(article),
+      effective: importance * timeDecay * noise * seen * seenStory,
+    };
   });
 
   scored.sort((a, b) => b.effective - a.effective);
-  return scored.map((s) => s.article);
+  return diversifyHead(scored).map((s) => s.article);
 }
 
 /**

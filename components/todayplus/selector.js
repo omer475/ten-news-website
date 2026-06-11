@@ -36,10 +36,17 @@ export function rememberedTemplate(articleId) {
   return e ? e.t : null;
 }
 
+const TPL_MAX = 400; // feed assembly walks the whole pool (~1000) — cap the store
+
 export function rememberTemplate(articleId, template) {
   if (typeof window === 'undefined' || articleId == null || !template) return;
   const store = tplStore();
   store[String(articleId)] = { t: template, ts: Date.now() };
+  const ids = Object.keys(store);
+  if (ids.length > TPL_MAX) {
+    ids.sort((a, b) => (store[a].ts || 0) - (store[b].ts || 0));
+    for (const id of ids.slice(0, ids.length - TPL_MAX)) delete store[id];
+  }
   try { localStorage.setItem(TPL_KEY, JSON.stringify(store)); } catch (_) {}
 }
 

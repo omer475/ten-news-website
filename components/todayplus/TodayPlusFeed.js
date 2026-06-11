@@ -123,12 +123,12 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
         const visible = entries[0]?.isIntersecting;
         if (visible) {
           if (!impressionTimer) {
-            impressionTimer = setTimeout(() => recordImpression(story.id), 1500);
+            impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
           }
           if (!readTimer && !readDone) {
             readTimer = setTimeout(() => {
               readDone = true;
-              markSeenRead(story.id);
+              markSeenRead(story.id, story.world_event?.id);
               try { onEngage?.(story); } catch (_) {}
               io.disconnect();
             }, 7000);
