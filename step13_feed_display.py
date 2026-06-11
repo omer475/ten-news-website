@@ -20,7 +20,7 @@ import json
 import re
 import time
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 
@@ -199,6 +199,9 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "ranking": {{"rows": [["LABEL", n], …], "unit": "", "caption": "one-line reading"}} — comparison of 3-6 ENTITIES on one metric from the source, for horizontal bars: top scorers, biggest creditors, countries by medal count. Largest first, labels max 12 chars uppercase. Values from the source only.
 - "geo": {{"pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
   NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
+
+- "receipts": {{"claim": "the disputed claim, max ~120 chars", "who": "Name · Role", "receipts": [{{"text": "the establishing fact, max 140 chars", "source": "Reuters"}}], "verdict": "short verdict that FOLLOWS from the receipts, max 90 chars"}} — RARE, high bar: ONLY when the story centers on a disputed or checkable CLAIM (political statement, company spin, viral rumor) AND the source articles THEMSELVES establish the facts. 1-2 receipts; each must name the establishing source (outlet, institution, document) AS STATED in the source text. The verdict must be what the receipts show — NEVER your own ruling, NEVER your own knowledge. If the sources don't settle the claim, OMIT this signal. Most stories do not qualify.
+- "countdown": {{"name": "SpaceX IPO pricing", "datetime": "2026-06-12T13:30:00Z", "label": "IPO"}} — RARE: ONLY when the story is about a concretely SCHEDULED future event whose exact date (and time if known; use T00:00:00Z for date-only) is stated in the source, within the next 30 days: a launch, a verdict date, a vote, a match, a release. name max 40 chars, label: 2-12 char uppercase tag. NEVER guess a date. When unsure, OMIT.
 
 CHART-DATA FLAGS — charts are a signature card of this feed. When you could NOT build "trend" from the source, set a flag on EVERY story whose subject has a published numeric history. The pipeline fetches and VERIFIES the real series itself — a flag costs nothing if no series exists, so when in doubt, SET it:
 - "chart_ticker": Yahoo Finance symbol whenever a publicly traded company, index, or major crypto is CENTRAL to the story — even if the story is not about the price itself (earnings, CEO change, lawsuit, product launch, acquisition: the stock's recent path IS useful context). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
@@ -517,6 +520,38 @@ def validate_display(result: Dict, pipeline_category: str,
             out['ranking'] = {'rows': rows,
                               'unit': str(ranking.get('unit', ''))[:6],
                               'caption': caption[:140]}
+
+    # receipts (fact-check card) — every part must be present and sourced
+    rec = result.get('receipts')
+    if isinstance(rec, dict):
+        claim = _strip_tags(str(rec.get('claim', ''))).strip()
+        who = _strip_tags(str(rec.get('who', ''))).strip()
+        verdict = _strip_tags(str(rec.get('verdict', ''))).strip()
+        items = []
+        for it in (rec.get('receipts') or [])[:2]:
+            if isinstance(it, dict):
+                txt = _strip_tags(str(it.get('text', ''))).strip()
+                src = _strip_tags(str(it.get('source', ''))).strip()
+                if txt and src:
+                    items.append({'text': txt[:150], 'source': src[:40]})
+        if 10 <= len(claim) <= 160 and verdict and items:
+            out['receipts'] = {'claim': claim[:140], 'who': who[:60],
+                               'receipts': items, 'verdict': verdict[:100]}
+
+    # countdown (scheduled-event chip) — must parse to a near future moment
+    cd = result.get('countdown')
+    if isinstance(cd, dict) and cd.get('name') and cd.get('datetime'):
+        try:
+            dt = datetime.fromisoformat(str(cd['datetime']).replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            if now < dt < now + timedelta(days=45):
+                out['countdown'] = {
+                    'name': _strip_tags(str(cd['name'])).strip()[:44],
+                    'datetime': dt.isoformat(),
+                    'label': _strip_tags(str(cd.get('label', ''))).strip().upper()[:12],
+                }
+        except ValueError:
+            pass
 
     # Chart-data flags (internal — the workflow consumes + removes these
     # after fetching the real series; they never reach the client).
