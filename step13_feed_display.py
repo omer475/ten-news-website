@@ -81,10 +81,13 @@ REQUIRED FIELDS (always present):
   Numbers MUST come from the bullets or source text. NEVER invent a number.
   value must be the BARE number — put "M"/"B"/"%" in unit, never inside value.
   A stat must be a meaningful standalone quantity (money, %, count, duration,
-  distance). NOT a stat: bare years ("DEATH YEAR 2025"), pieces of a phrase
-  ("24/7" is not two stats), classifications ("type 1", "No. 2 seed").
-  If the story has 2+ real numbers, you MUST surface them as stats — scan the
-  source text carefully before giving up; an empty stats list is a last resort.
+  distance). NOT a stat: bare years ("DEATH YEAR 2025", "WORLD CUP YEAR 2026"),
+  pieces of a phrase ("24/7" is not two stats), classifications ("type 1",
+  "No. 2 seed"), or trivial filler ("OPENING MATCH 1", "TEAMS PLAYING 2",
+  "WEEK 1"). Scan the source text carefully — most stories have real numbers
+  (figures, counts, sums, ages, durations) the bullets skipped. But if a story
+  genuinely lacks 2 meaningful numbers, return [] — an empty list is ALWAYS
+  better than filler a reader would roll their eyes at.
 - "tags": 2-3 proper-noun entity tags (e.g. ["Nvidia", "Jensen Huang"]).
 
 OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most stories support 0-2). NEVER fabricate data for a signal. Quality bar is high:
