@@ -32,6 +32,30 @@ DESIGN_CATEGORIES = {
     'ENERGY', 'SPORTS', 'CULTURE', 'HEALTH',
 }
 
+# Map-pin quality nets (2026-06-12): a pin must be a place worth LOOKING at.
+# Bare country/continent pins are always dropped; bare metro names are
+# dropped for business-ish categories (HQ-city syndrome — "New York" pin
+# on a startup-funding story).
+_GEO_COUNTRY_PINS = {
+    'china', 'russia', 'usa', 'united states', 'us', 'india', 'iran',
+    'israel', 'palestine', 'ukraine', 'france', 'germany', 'uk',
+    'united kingdom', 'england', 'spain', 'italy', 'japan', 'brazil',
+    'canada', 'mexico', 'australia', 'turkey', 'türkiye', 'europe', 'asia',
+    'africa', 'middle east', 'north america', 'south america',
+}
+_GEO_METRO_PINS = {
+    'new york', 'new york city', 'nyc', 'manhattan', 'san francisco',
+    'los angeles', 'london', 'paris', 'seattle', 'austin', 'boston',
+    'chicago', 'miami', 'dallas', 'houston', 'atlanta', 'denver',
+    'washington', 'washington dc', 'washington, dc', 'tokyo', 'beijing',
+    'shanghai', 'shenzhen', 'hangzhou', 'seoul', 'berlin', 'munich',
+    'dublin', 'amsterdam', 'stockholm', 'zurich', 'toronto', 'vancouver',
+    'sydney', 'melbourne', 'singapore', 'hong kong', 'bangalore',
+    'bengaluru', 'tel aviv', 'dubai', 'cupertino', 'mountain view',
+    'menlo park', 'redmond', 'palo alto', 'santa clara', 'san jose',
+    'silicon valley',
+}
+
 # Deterministic fallback: pipeline canonical category -> design category.
 PIPELINE_TO_DESIGN = {
     'Tech': 'TECH', 'Business': 'ECONOMY', 'Science': 'SCIENCE',
@@ -96,7 +120,8 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "versus": {{"a": {{"val": N, "unit": "", "who": "SIDE A LABEL"}}, "b": {{"val": N, "unit": "", "who": "SIDE B LABEL"}}, "ratio": 0.0-1.0, "note": "one-line context"}} — ONLY for a genuine two-sided numeric comparison stated in the source (two companies, two countries, before/after). ratio = a/(a+b). who: uppercase, max 22 chars.
 - "timeline": [["MAY 28","event text"], …] — 3-4 entries, ONLY for genuinely developing stories with distinct dated events from the source. Most recent FIRST. Last entry may be ["NEXT","what's expected"]. Labels: short uppercase date or "NEXT".
 - "trend": {{"vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric series of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
-- "geo": {{"pins": [{{"lat": 36.17, "lon": -115.14, "label": "Las Vegas"}}], "link": false, "distance": "", "region": "NEVADA · USA"}} — ONLY if a SPECIFIC place (city/site/facility) is central to the story. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then give "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
+- "geo": {{"pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
+  NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
 CHART-DATA FLAGS — charts are a signature card of this feed. When you could NOT build "trend" from the source, set a flag on EVERY story whose subject has a published numeric history. The pipeline fetches and VERIFIES the real series itself — a flag costs nothing if no series exists, so when in doubt, SET it:
 - "chart_ticker": Yahoo Finance symbol whenever a publicly traded company, index, or major crypto is CENTRAL to the story — even if the story is not about the price itself (earnings, CEO change, lawsuit, product launch, acquisition: the stock's recent path IS useful context). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
@@ -318,6 +343,16 @@ def validate_display(result: Dict, pipeline_category: str,
                 continue
             lat, lon = _num(p.get('lat')), _num(p.get('lon'))
             label = _strip_tags(str(p.get('label', ''))).strip()
+            # Country/continent pins are useless at map scale — always drop.
+            if label.lower() in _GEO_COUNTRY_PINS:
+                continue
+            # HQ-city syndrome: business/product stories pinned to a bare
+            # metro name (company news "in New York"). The event categories
+            # (WORLD/POLICY/SPORTS/SCIENCE/ENERGY/HEALTH) keep city pins —
+            # riots in Belfast ARE the city.
+            if cat in ('AI', 'TECH', 'MARKETS', 'ECONOMY', 'CULTURE') \
+                    and label.lower().rstrip('.').replace(', usa', '') in _GEO_METRO_PINS:
+                continue
             if lat is not None and lon is not None and label \
                     and -90 <= lat <= 90 and -180 <= lon <= 180:
                 pins.append({'lat': round(float(lat), 4),
