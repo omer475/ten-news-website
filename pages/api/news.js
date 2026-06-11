@@ -118,7 +118,10 @@ const formatArticle = (article) => {
     // app collapses every article to a single title+photo page.
     pages: safeJsonParse(article.pages, null),
     format: article.format || null,
-    source_type: article.source_type || null
+    source_type: article.source_type || null,
+    // TodayPlus feed redesign payload (step13_feed_display.py). Nullable:
+    // articles published before 2026-06-11 have none → legacy card fallback.
+    display: safeJsonParse(article.display, null)
   };
 };
 

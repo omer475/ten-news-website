@@ -15,6 +15,7 @@ import PreferencesSettings from '../components/PreferencesSettings';
 import FeedCard from '../components/feed/FeedCard';
 import LazyMount from '../components/feed/LazyMount';
 import CardBoundary from '../components/feed/CardBoundary';
+import TodayPlusFeed from '../components/todayplus/TodayPlusFeed';
 import {
   getUserInterests,
   updateInterests,
@@ -1605,7 +1606,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
               topics: article.topics || [],  // For country/topic personalization
               topic_relevance: article.topic_relevance || {},  // AI relevance scores
               country_relevance: article.country_relevance || {},  // AI relevance scores
-              world_event: article.world_event || null  // Event link if part of a world event
+              world_event: article.world_event || null,  // Event link if part of a world event
+              display: article.display || null,  // TodayPlus redesign payload (nullable)
+              pages: article.pages || null
             };
           });
           
@@ -1888,7 +1891,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 topics: article.topics || [],  // For country/topic personalization
                 topic_relevance: article.topic_relevance || {},  // AI relevance scores
                 country_relevance: article.country_relevance || {},  // AI relevance scores
-                world_event: article.world_event || null  // Event link if part of a world event
+                world_event: article.world_event || null,  // Event link if part of a world event
+              display: article.display || null,  // TodayPlus redesign payload (nullable)
+              pages: article.pages || null
               };
 
                processedStories.push(storyData);
@@ -3051,6 +3056,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+        {/* TodayPlus redesign type system (spec §2.3): Inter Tight headlines,
+            Figtree body, IBM Plex Mono labels/kickers/timestamps */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,700;0,800;1,700&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
       </Head>
       
       <style jsx global>{`
@@ -5465,47 +5473,32 @@ export default function Home({ initialNews, initialWorldEvents }) {
         )}
 
 
-        {/* Stories - Virtual rendering: only render stories near current index for performance */}
-        {/* Continuous feed (Threads/X-style) — renders the app's FeedCard */}
-        <div className="continuous-feed" style={{ maxWidth: 672, margin: '0 auto', width: '100%' }}>
-          {/* MUST KNOW — top stories (importance > 900) as full cards with a red thread down the side */}
-          {mustKnowStories.length > 0 && (
-            <div style={{ position: 'relative', maxWidth: 672, margin: '0 auto', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '24px 16px 16px 6px' }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF3B30', boxShadow: '0 0 0 5px rgba(255,59,48,0.16)', flexShrink: 0 }} />
-                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#FF3B30', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}>Must Know</span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: '#FF3B30', borderRadius: 999, minWidth: 22, height: 22, padding: '0 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mustKnowStories.length}</span>
-              </div>
-              <div style={{ position: 'relative' }}>
-                {/* solid red thread down the left side, soft rounded ends top + bottom */}
-                <div style={{ position: 'absolute', left: 9, top: -8, bottom: 16, width: 3, borderRadius: 3, background: '#FF3B30' }} />
-                {mustKnowStories.map((story) => (
-                  <CardBoundary key={story.id || story.title}>
-                    <FeedCard
-                      story={story}
-                      isDark={darkMode}
-                      minimal
-                      textOnly={textOnly}
-                      onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-                      onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
-                    />
-                  </CardBoundary>
-                ))}
-              </div>
+        {/* TodayPlus Feed redesign v1.0 — 9 card templates + interstitial
+            modules + template selector + image-rhythm balancer (spec §4/§5/§8).
+            Must-know stories flow through the same feed (breaking → Cover);
+            articles without `display` render the legacy FeedCard. */}
+        <TodayPlusFeed
+          stories={stories}
+          user={user}
+          paywallThreshold={paywallThreshold}
+          renderPaywall={() => (
+            <div className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
+              <h2>Create your free account</h2>
+              <p>Sign up to keep reading the news.</p>
+              {authError && <div className="auth-error" style={{ marginBottom: 16 }}>{authError}</div>}
+              <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
+              <p style={{ marginTop: 12 }}>Already have an account?{' '}
+                <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button>
+              </p>
             </div>
           )}
-          {feedCards}
-
-          {/* Footer: load-more / caught-up */}
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: darkMode ? 'rgba(255,255,255,0.5)' : '#86868b' }}>
-            {loadingMore ? 'Loading more…' : hasMoreArticles ? (
-              <button
-                onClick={() => loadMoreArticles(currentPage + 1)}
-                style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: darkMode ? '#fff' : '#1d1d1f', color: darkMode ? '#000' : '#fff', fontWeight: 600, cursor: 'pointer' }}
-              >Load more</button>
-            ) : "You're all caught up."}
-          </div>
-        </div>
+          onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
+          onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+          onLoadMore={() => { if (!loadingMore && hasMoreArticles) loadMoreArticles(currentPage + 1); }}
+          hasMore={hasMoreArticles}
+          loadingMore={loadingMore}
+          textOnly={textOnly}
+        />
 
 
         {/* Detailed Article Overlay */}
@@ -5871,7 +5864,9 @@ export async function getServerSideProps({ req, res }) {
               topic_relevance: article.topic_relevance || {},
               country_relevance: article.country_relevance || {},
               publishedAt: article.publishedAt || article.published_at || article.created_at,
-              world_event: article.world_event || null
+              world_event: article.world_event || null,
+              display: article.display || null,
+              pages: article.pages || null
             };
           });
         
