@@ -52,8 +52,8 @@ export default function AuthCallback() {
       // Still need to set the session from the tokens
       handleSession(supabase, true)
     } else {
-      // Regular email verification
-      setStatus('Verifying your email...')
+      // Regular verification / OAuth return
+      setStatus('Signing you in...')
       handleSession(supabase, false)
     }
     
@@ -124,34 +124,54 @@ export default function AuthCallback() {
         }
 
         if (session && !isRecovery) {
-          localStorage.setItem('tennews_session', JSON.stringify(session))
-          localStorage.setItem('tennews_user', JSON.stringify(session.user))
-
-          const provider = session.user.app_metadata?.provider
-          if (provider && provider !== 'email') {
-            // OAuth user — ensure a profiles row exists
-            try {
-              const meta = session.user.user_metadata || {}
-              const fullName = meta.full_name || meta.name || ''
-              await supabase.from('profiles').upsert({
-                id: session.user.id,
-                email: session.user.email,
-                full_name: fullName,
-              }, { onConflict: 'id' })
-            } catch (e) {
-              console.warn('Profile upsert failed (non-fatal):', e)
-            }
-            setStatus('Signed in successfully!')
-          } else {
-            setStatus('Email verified successfully!')
-          }
-
-          setTimeout(() => router.push('/?verified=true'), 1500)
+          await finishSignIn(supabase, session)
         }
+        return
+      }
+
+      // No hash token and no code: the supabase client may have already
+      // exchanged the code itself (detectSessionInUrl) — poll briefly for
+      // the resulting session instead of hanging forever.
+      if (!isRecovery) {
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const { data: existing } = await supabase.auth.getSession()
+          if (existing?.session) {
+            await finishSignIn(supabase, existing.session)
+            return
+          }
+          await new Promise((resolve) => setTimeout(resolve, 600))
+        }
+        setError('Sign-in did not complete. Please try again.')
       }
     } catch (err) {
       setError(`An error occurred: ${err.message}`)
     }
+  }
+
+  const finishSignIn = async (supabase, session) => {
+    localStorage.setItem('tennews_session', JSON.stringify(session))
+    localStorage.setItem('tennews_user', JSON.stringify(session.user))
+
+    const provider = session.user.app_metadata?.provider
+    if (provider && provider !== 'email') {
+      // OAuth user — ensure a profiles row exists
+      try {
+        const meta = session.user.user_metadata || {}
+        const fullName = meta.full_name || meta.name || ''
+        await supabase.from('profiles').upsert({
+          id: session.user.id,
+          email: session.user.email,
+          full_name: fullName,
+        }, { onConflict: 'id' })
+      } catch (e) {
+        console.warn('Profile upsert failed (non-fatal):', e)
+      }
+      setStatus('Signed in successfully!')
+    } else {
+      setStatus('Email verified successfully!')
+    }
+
+    setTimeout(() => router.push('/?verified=true'), 1500)
   }
 
   const handlePasswordReset = async (e) => {
