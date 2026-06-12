@@ -2,7 +2,9 @@ import { getExposureCounts, getEventExposureCounts, exposureFactor } from './exp
 
 // Tags too broad to mean "same topic" — a shared 'politics' tag must not
 // penalize two unrelated political stories the way two 'spacex' tags should.
-const BROAD_TAGS = new Set([
+// (Exported: userInterests also excludes these from the interest boost, so a
+// heavy 'politics' weight can't lift an entire category.)
+export const BROAD_TAGS = new Set([
   'politics', 'world news', 'world', 'sports', 'technology', 'tech',
   'business', 'finance', 'science', 'health', 'entertainment', 'culture',
   'economy', 'government', 'news', 'breaking news', 'us', 'usa', 'europe',

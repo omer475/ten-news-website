@@ -182,6 +182,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
   
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
+  // Which engine produced the current feed: 'trinity' (the real server-side
+  // algorithm, logged-in users) or 'news' (score pool + client heuristics).
+  const feedSourceRef = useRef('news');
   
   // Track if we've already handled the shared article navigation (prevent race conditions)
   const sharedArticleHandledRef = useRef(false);
@@ -1549,17 +1552,52 @@ export default function Home({ initialNews, initialWorldEvents }) {
   }, [currentIndex, stories]);
 
   // Function to load more articles (pagination)
+  // The REAL algorithm: logged-in users are served by Trinity
+  // (/api/feed/main — server-side personalization, cluster learning,
+  // DB-backed seen history) instead of the score pool + client heuristics.
+  // Returns null for guests or on any failure so callers fall back to
+  // /api/news; the response carries formatArticle-shaped articles (incl.
+  // `display`), so the existing story mappers work unchanged.
+  const fetchTrinitySlate = async (limit = 40, extraSeenIds = []) => {
+    let authUserId = null;
+    try { authUserId = (JSON.parse(localStorage.getItem('tennews_user') || 'null') || {}).id || null; } catch (_) {}
+    if (!authUserId) return null;
+    try {
+      const seen = new Set(extraSeenIds.map(String));
+      try {
+        Object.keys(JSON.parse(localStorage.getItem('tennews_read_articles') || '{}')).forEach((id) => seen.add(id));
+      } catch (_) {}
+      const qs = new URLSearchParams({ user_id: authUserId, limit: String(limit) });
+      const seenList = [...seen].filter((x) => /^\d+$/.test(x)).slice(0, 1500);
+      if (seenList.length) qs.set('seen_ids', seenList.join(','));
+      const r = await fetch(`/api/feed/main?${qs.toString()}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (!Array.isArray(d.articles) || d.articles.length < 5) return null;
+      return d;
+    } catch (_) { return null; }
+  };
+
   const loadMoreArticles = async (pageNum) => {
     if (loadingMore || !hasMoreArticles) return;
-    
+
     setLoadingMore(true);
     try {
       console.log(`📡 Loading more articles (page ${pageNum})...`);
-      const response = await fetch(`/api/news?page=${pageNum}&pageSize=2000&t=${Date.now()}`);
-      
-      if (response.ok) {
-        const newsData = await response.json();
-        
+      const isTrinity = feedSourceRef.current === 'trinity';
+      let newsData = null;
+      if (isTrinity) {
+        // Fresh Trinity slate; current on-screen ids count as seen so the
+        // server can't re-serve them.
+        const onScreen = stories.filter((s) => s.type === 'news' && s.id).map((s) => s.id);
+        newsData = await fetchTrinitySlate(30, onScreen);
+      }
+      if (!newsData) {
+        const response = await fetch(`/api/news?page=${pageNum}&pageSize=2000&t=${Date.now()}`);
+        if (response.ok) newsData = await response.json();
+      }
+
+      if (newsData) {
         if (newsData.articles && newsData.articles.length > 0) {
           // Convert new articles to story format
           const newStories = newsData.articles.map((article, index) => {
@@ -1621,7 +1659,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
           }
           
           // Check if this is the last page OR we've hit memory cap
-          const isLastPage = !newsData.pagination?.hasMore;
+          // (Trinity slates have no pagination object and never run dry.)
+          const isLastPage = isTrinity ? false : !newsData.pagination?.hasMore;
           
           // Insert new stories with memory cap and deduplication
           setStories(prev => {
@@ -1695,11 +1734,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
         
         // Update pagination state
-        if (newsData.pagination) {
+        if (isTrinity) {
+          // Trinity always has more slates — only the memory cap stops us.
+          const currentNewsCount = stories.filter(s => s.type === 'news').length;
+          setHasMoreArticles(currentNewsCount + (newsData.articles?.length || 0) < MAX_ARTICLES_IN_MEMORY);
+        } else if (newsData.pagination) {
           // Check if we've hit memory cap
           const currentNewsCount = stories.filter(s => s.type === 'news').length;
           const hitMemoryCap = currentNewsCount + (newsData.articles?.length || 0) >= MAX_ARTICLES_IN_MEMORY;
-          
+
           // Stop loading if memory cap reached OR no more pages
           setHasMoreArticles(newsData.pagination.hasMore && !hitMemoryCap);
           setTotalArticles(newsData.pagination.total);
@@ -1738,10 +1781,23 @@ export default function Home({ initialNews, initialWorldEvents }) {
         console.log('🔄 Background refresh - checking for new articles...');
       }
       try {
-        const response = await fetch(`/api/news?page=1&pageSize=2000&t=${Date.now()}`);
-        
-        if (response.ok) {
-          const newsData = await response.json();
+        // REAL algorithm first: logged-in users get a Trinity slate
+        // (server-side personalization + DB seen-history). Guests and any
+        // Trinity failure fall back to the /api/news score pool below.
+        let newsData = null;
+        let feedSource = 'news';
+        const trinitySlate = await fetchTrinitySlate(40);
+        if (trinitySlate) {
+          newsData = trinitySlate;
+          feedSource = 'trinity';
+          console.log(`🧠 [Trinity] Serving the real algorithm: ${trinitySlate.articles.length} articles (path: ${trinitySlate._trinity_debug?.path || 'live'})`);
+        } else {
+          const response = await fetch(`/api/news?page=1&pageSize=2000&t=${Date.now()}`);
+          if (response.ok) newsData = await response.json();
+        }
+        feedSourceRef.current = feedSource;
+
+        if (newsData) {
           console.log('📰 API Response:', newsData);
           console.log('📰 Articles count:', newsData.articles?.length);
           // Debug: Log five_ws data from first few articles
@@ -1934,8 +1990,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
               let newsArticles = unreadStories.slice(1); // All news articles
               
               // ====== STEP 1: PREFERENCE-BASED PERSONALIZATION (country/topic boosts) ======
+              // Trinity slates are already personalized AND ordered server-side
+              // (with their own seen-history) — client re-ranking would scramble
+              // the slate and double-count exposure. Steps 1-4 are /api/news only.
               try {
-                const prefsRaw = typeof window !== 'undefined' ? localStorage.getItem('todayplus_preferences') : null;
+                const prefsRaw = (feedSource !== 'trinity' && typeof window !== 'undefined') ? localStorage.getItem('todayplus_preferences') : null;
                 if (prefsRaw) {
                   const prefs = JSON.parse(prefsRaw);
                   if (prefs.onboarding_completed && prefs.home_country) {
@@ -1993,16 +2052,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
               }
               
               // ====== STEP 2: SORT BY (boosted) SCORE ======
-              console.log('📊 Sorting news articles by score...');
-              let sortedNews = sortArticlesByScore(newsArticles);
-              
+              let sortedNews = feedSource === 'trinity' ? newsArticles : sortArticlesByScore(newsArticles);
+
               // ====== STEP 3: INTEREST-BASED PERSONALIZATION (reading behavior boosts) ======
               const userInterests = getUserInterests();
-              if (Object.keys(userInterests).length > 0) {
+              if (feedSource !== 'trinity' && Object.keys(userInterests).length > 0) {
                 console.log('🎯 [Personalization] Applying interest-based ranking with', Object.keys(userInterests).length, 'tracked interests');
                 sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
-              } else {
-                console.log('📰 [Personalization] No reading interests yet - using preference + base score ranking');
               }
 
               // ====== STEP 4: FRESHNESS BLEND (recency decay + per-load variety) ======
@@ -2011,7 +2067,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // buried, so the feed looks identical on every refresh. applyFreshness
               // composes recency with the (personalized) score and adds light jitter so
               // fresh news surfaces and the order varies between loads. See utils/sortArticles.
-              sortedNews = applyFreshness(sortedNews);
+              if (feedSource !== 'trinity') sortedNews = applyFreshness(sortedNews);
 
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
@@ -2391,7 +2447,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
             setStories(mockStories);
           }
         } else {
-          console.log('📡 Response not ok:', response.status);
+          console.log('📡 No feed data from any source');
           // Show opening page even on error
           const fallbackOpening = {
             type: 'opening',
@@ -2559,6 +2615,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Re-apply personalization after user changes preferences in the settings panel
   const onPreferencesSaved = () => {
     try {
+      // Trinity slates are server-ranked — client re-sorting would scramble
+      // them. New preferences flow into the next Trinity request instead.
+      if (feedSourceRef.current === 'trinity') return;
       const prefsRaw = localStorage.getItem('todayplus_preferences');
       if (!prefsRaw) return;
       const prefs = JSON.parse(prefsRaw);

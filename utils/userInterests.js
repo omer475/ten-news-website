@@ -1,9 +1,11 @@
 /**
  * User Interests Manager
  * Handles personalization by tracking user interests and ranking articles
- * 
+ *
  * Storage: localStorage for real-time + Supabase for persistence
  */
+
+import { BROAD_TAGS } from './sortArticles';
 
 const INTERESTS_KEY = 'tennews_interests';
 const INTERESTS_SYNCED_KEY = 'tennews_interests_synced_at';
@@ -110,15 +112,22 @@ export function getArticlePersonalizationScore(article, interests = null) {
   interests = interests || getUserInterests();
   if (Object.keys(interests).length === 0) return 0;
   
+  // Bounded boost (2026-06-12): the raw SUM of tag weights made the feed a
+  // rich-get-richer loop — broad tags like 'politics' (weight up to 100) lifted
+  // an entire category by +700 via rankArticles' ×10×0.7. Now: broad tags are
+  // excluded (specific tags carry the interest), each tag contributes its
+  // SQUARE ROOT (diminishing returns), and the total is capped so the boost
+  // tilts the feed (~+150 max after weighting) instead of locking it.
   let boost = 0;
   for (const tag of article.interest_tags) {
     const normalizedTag = (tag || '').toLowerCase().trim();
+    if (BROAD_TAGS.has(normalizedTag)) continue;
     if (interests[normalizedTag]) {
-      boost += interests[normalizedTag];
+      boost += Math.sqrt(interests[normalizedTag]);
     }
   }
-  
-  return boost;
+
+  return Math.min(boost, 21);
 }
 
 /**
