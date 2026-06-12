@@ -88,17 +88,19 @@ const unescapeHtml = (s) =>
         .replace(/&gt;/g, '>')
     : s;
 
-/** Parse into segments: [{ text, em, b }] */
+/** Parse into segments: [{ text, em, b }].
+ * Handles <em>/<b> (the display contract) plus **markdown bold**, which some
+ * pipeline fields (e.g. module briefs) still emit. */
 export function parseMarkup(raw) {
   if (!raw) return [];
   const out = [];
-  const re = /<em>([\s\S]*?)<\/em>|<b>([\s\S]*?)<\/b>/g;
+  const re = /<em>([\s\S]*?)<\/em>|<b>([\s\S]*?)<\/b>|\*\*([^*]+)\*\*/g;
   let last = 0;
   let m;
   while ((m = re.exec(raw)) !== null) {
     if (m.index > last) out.push({ text: unescapeHtml(raw.slice(last, m.index)), em: false, b: false });
     if (m[1] !== undefined) out.push({ text: unescapeHtml(m[1]), em: true, b: false });
-    else out.push({ text: unescapeHtml(m[2]), em: false, b: true });
+    else out.push({ text: unescapeHtml(m[2] !== undefined ? m[2] : m[3]), em: false, b: true });
     last = re.lastIndex;
   }
   if (last < raw.length) out.push({ text: unescapeHtml(raw.slice(last)), em: false, b: false });
