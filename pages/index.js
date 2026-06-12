@@ -147,7 +147,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     '#ec4899', // Pink
     '#f43f5e', // Rose
   ];
-  const [plusColor] = useState(() => plusIconColors[Math.floor(Math.random() * plusIconColors.length)]);
+  // Brand-fixed: the random per-load color caused SSR hydration mismatches
+  // and an incoherent brand mark. Gold = the product accent.
+  const plusColor = '#A8802F';
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [expandedGraph, setExpandedGraph] = useState({});
