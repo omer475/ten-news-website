@@ -127,7 +127,10 @@ export function getArticlePersonalizationScore(article, interests = null) {
     }
   }
 
-  return Math.min(boost, 21);
+  // Cap 30 ≈ +210 after ×10×0.7 weighting: enough to lift an on-taste
+  // article past one score tier (the anchors sit ~150-250 apart), still
+  // far from the old unbounded +700 category lock.
+  return Math.min(boost, 30);
 }
 
 /**
@@ -174,18 +177,27 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
   };
 
   const mustKnowArticles = articles.filter(isMustKnow);
-  const regularArticles = articles.filter(a => !isMustKnow(a));
 
   console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (base>=900 OR final>=950+base>=850)`);
-  console.log(`[interests] 📰 ${regularArticles.length} REGULAR`);
-  
+
   // Must-know articles: Keep original base score order (no personalization)
   mustKnowArticles.sort((a, b) => {
     const scoreA = a.base_score || a.final_score || a.ai_final_score || 0;
     const scoreB = b.base_score || b.final_score || b.ai_final_score || 0;
     return scoreB - scoreA;
   });
-  
+
+  // Pin only the few stories NOBODY should miss (2026-06-12): scores are
+  // quantized at anchors, so base>=900 matched 14 articles on a heavy news
+  // day — the whole first screen was unpersonalized wire news and the feed
+  // felt "not my type". Same rule the user approved for Catch Up bundles:
+  // the top ~2-3 majors stay; everything else competes on personal taste.
+  const MAX_MUST_KNOW_PINS = 3;
+  const pinned = mustKnowArticles.slice(0, MAX_MUST_KNOW_PINS);
+  const overflow = mustKnowArticles.slice(MAX_MUST_KNOW_PINS);
+  const regularArticles = [...overflow, ...articles.filter(a => !isMustKnow(a))];
+  console.log(`[interests] 📌 ${pinned.length} pinned, ${regularArticles.length} personalized (${overflow.length} must-know overflow demoted to regular)`);
+
   // Regular articles: Apply personalization if user has interests
   let sortedRegular = regularArticles;
   
@@ -218,7 +230,7 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
   }
   
   // Combine: Must-know first, then personalized regular articles
-  return [...mustKnowArticles, ...sortedRegular];
+  return [...pinned, ...sortedRegular];
 }
 
 /**
