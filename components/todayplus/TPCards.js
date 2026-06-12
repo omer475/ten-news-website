@@ -13,7 +13,7 @@ import {
 import {
   KickerRow, Bullets, StatsRow, CardFooter, Headline,
   CountUp, ParallaxImage, useVisibleOnce, useReducedMotion,
-  useRevealOnce, revealStyle, TPCountdownChip,
+  useRevealOnce, revealStyle, TPCountdownChip, focusObjectPosition,
 } from './shared';
 
 // ── 5.1 COVER — headline inside the photo ───────────────────────────────────
@@ -28,6 +28,8 @@ export function CoverCard({ story, display, accent, onOpen }) {
           src={display.imageURL || story.urlToImage}
           aspectRatio="4 / 4.8"
           borderRadius={28}
+          focus={display.image_focus}
+          focusTargetY={0.42}
           overlay={
             <div style={{
               position: 'absolute', inset: 0, zIndex: 1,
@@ -97,7 +99,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
   return (
     <article ref={ref}>
       <div>
-        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={26} />
+        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={26} focus={display.image_focus} />
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 17, ...revealStyle(shown, animate, 0.08, 12) }}>
           <div style={{ flex: 1 }}>
@@ -546,10 +548,16 @@ export function SplitCard({ story, display, accent, onOpen }) {
   // the lede is written to fit this card — render it whole, never truncated
   const summary = display.lede || '';
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [thumbPos, setThumbPos] = useState('50% 50%');
+  // the thumbnail shows only when the pipeline graded the image as readable
+  // at square-thumb size; otherwise the card runs text-only full width and
+  // stays the feed's breath.
+  const showImage = display.split_ok === true && (display.imageURL || story.urlToImage);
 
   return (
     <article ref={ref}>
       <div style={{ display: 'flex', gap: 16 }}>
+        {showImage ? (
         <div style={{
           position: 'relative', width: 116, height: 116, borderRadius: 20,
           overflow: 'hidden', background: TP.line, flexShrink: 0,
@@ -559,9 +567,13 @@ export function SplitCard({ story, display, accent, onOpen }) {
             src={display.imageURL || story.urlToImage}
             alt=""
             loading="lazy"
-            onLoad={() => setImgLoaded(true)}
+            onLoad={(e) => {
+              setImgLoaded(true);
+              setThumbPos(focusObjectPosition(e.currentTarget, display.image_focus));
+            }}
             style={{
               width: '100%', height: '100%', objectFit: 'cover',
+              objectPosition: thumbPos,
               opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.5s ease-out',
             }}
           />
@@ -570,6 +582,7 @@ export function SplitCard({ story, display, accent, onOpen }) {
             boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.05)',
           }} />
         </div>
+        ) : null}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={revealStyle(shown, animate, 0.12, 6)}>
             <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />

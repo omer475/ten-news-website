@@ -201,7 +201,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
 
   // Paywall threshold - after important articles
-  const paywallThreshold = 6; // Sign-in gate after 5 news articles
+  const paywallThreshold = 12; // Sign-in gate after 12 news articles (user, 2026-06-13)
 
   // Update safe area color when current article changes
   useEffect(() => {

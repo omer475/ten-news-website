@@ -97,14 +97,14 @@ function useFeedBlocks(stories, modules) {
       if (display) {
         if (i === 0 && hasHero) {
           // The promoted breaking story always opens as the flagship Cover.
-          template = cache.selector.use('cover', cache.blockIdx);
+          template = cache.selector.use('cover', cache.blockIdx, display);
           rememberTemplate(story.id, 'cover');
         } else {
           // Same article = same card style across loads (24h memory), so a
           // repeat can't masquerade as a new story in a different template.
           const kept = rememberedTemplate(story.id);
           const reused = kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]
-            ? cache.selector.use(kept, cache.blockIdx)
+            ? cache.selector.use(kept, cache.blockIdx, display)
             : null;
           if (reused) {
             template = reused;

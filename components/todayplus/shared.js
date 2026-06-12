@@ -140,11 +140,47 @@ export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, sty
 
 // ── Image parallax (§7.3): ±26px translate, oversized layer, rAF ────────────
 
-export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, children, overlay }) {
+// Focus-anchored cropping: when the image aspect doesn't match the container,
+// position the crop so display.image_focus sits as close to the visual target
+// as possible, clamped so an edge gap can never show. Older articles without
+// image_focus fall back to {0.5, 0.5} (the old center crop). Cover passes
+// targetY≈0.42 to bias the subject above the scrim/text zone.
+export function focusObjectPosition(img, focus, targetY = 0.5) {
+  const natW = img.naturalWidth || 0;
+  const natH = img.naturalHeight || 0;
+  const boxW = img.clientWidth || 0;
+  const boxH = img.clientHeight || 0;
+  if (!natW || !natH || !boxW || !boxH) return '50% 50%';
+  const fx = Number.isFinite(focus?.x) ? Math.min(1, Math.max(0, focus.x)) : 0.5;
+  const fy = Number.isFinite(focus?.y) ? Math.min(1, Math.max(0, focus.y)) : 0.5;
+  const scale = Math.max(boxW / natW, boxH / natH);
+  const sW = natW * scale;
+  const sH = natH * scale;
+  const overflowX = sW - boxW;
+  const overflowY = sH - boxH;
+  const posX = overflowX > 0.5
+    ? (Math.min(overflowX, Math.max(0, fx * sW - 0.5 * boxW)) / overflowX) * 100
+    : 50;
+  const posY = overflowY > 0.5
+    ? (Math.min(overflowY, Math.max(0, fy * sH - targetY * boxH)) / overflowY) * 100
+    : 50;
+  return `${posX.toFixed(1)}% ${posY.toFixed(1)}%`;
+}
+
+export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, children, overlay, focus, focusTargetY = 0.5 }) {
   const reduced = useReducedMotion();
   const wrapRef = useRef(null);
   const imgRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
+  const [objectPosition, setObjectPosition] = useState('50% 50%');
+
+  const fx = focus?.x;
+  const fy = focus?.y;
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img || !loaded) return;
+    setObjectPosition(focusObjectPosition(img, { x: fx, y: fy }, focusTargetY));
+  }, [loaded, fx, fy, focusTargetY]);
 
   useEffect(() => {
     if (reduced) return undefined;
@@ -199,6 +235,7 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, c
             width: '100%',
             height: '124%',
             objectFit: 'cover',
+            objectPosition,
             transform: reduced ? 'none' : 'scale(1.12)',
             willChange: 'transform',
             opacity: loaded ? 1 : 0,

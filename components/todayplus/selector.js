@@ -56,6 +56,11 @@ export function createSelector() {
   let lastWasImage = false;
   let noImgStreak = 0;
 
+  // split shows its image only when the pipeline graded it square-thumb
+  // readable — an image-variant split counts as an image card for rhythm.
+  const showsImage = (design, d) =>
+    design === 'split' ? d?.split_ok === true : IMG_DESIGNS.has(design);
+
   const eligible = (d) =>
     ORDER.filter((design) => {
       switch (design) {
@@ -78,10 +83,10 @@ export function createSelector() {
       }
     });
 
-  const record = (design, blockIdx) => {
+  const record = (design, blockIdx, wasImage) => {
     lastUsed[design] = blockIdx;
     lastDesign = design;
-    lastWasImage = IMG_DESIGNS.has(design);
+    lastWasImage = wasImage ?? IMG_DESIGNS.has(design);
     noImgStreak = lastWasImage ? 0 : noImgStreak + 1;
   };
 
@@ -92,11 +97,11 @@ export function createSelector() {
 
       if (lastWasImage) {
         // rule: never 2 image cards in a row
-        const nonImg = candidates.filter((c) => !IMG_DESIGNS.has(c));
+        const nonImg = candidates.filter((c) => !showsImage(c, display));
         if (nonImg.length) candidates = nonImg;
       } else if (noImgStreak >= 3) {
         // rule: force an image after 3 dry cards
-        const img = candidates.filter((c) => IMG_DESIGNS.has(c));
+        const img = candidates.filter((c) => showsImage(c, display));
         if (img.length) candidates = img;
       }
 
@@ -106,15 +111,17 @@ export function createSelector() {
         candidates = ['cover'];
       }
 
-      // least-recently-used → max variety (ties resolve in declared order)
+      // least-recently-used → max variety; on an LRU tie, an image-variant
+      // split beats other contenders (quality-gated thumbs earn presence)
       let pick = candidates[0];
       let best = Infinity;
       for (const c of candidates) {
         const used = lastUsed[c] ?? -Infinity;
         if (used < best) { best = used; pick = c; }
+        else if (used === best && c === 'split' && display.split_ok === true) pick = c;
       }
 
-      record(pick, blockIdx);
+      record(pick, blockIdx, showsImage(pick, display));
       return pick;
     },
 
@@ -122,16 +129,16 @@ export function createSelector() {
     // rules (image spacing, LRU) account for it, without re-choosing.
     // Returns null when honoring the memory would put the same design twice
     // in a row (the core rhythm rule outranks per-article stability).
-    use(design, blockIdx) {
+    use(design, blockIdx, display) {
       if (design === lastDesign) return null;
-      record(design, blockIdx);
+      record(design, blockIdx, showsImage(design, display));
       return design;
     },
 
     // display == null → only the legacy fallback card; it shows the photo,
     // so it still participates in the image rhythm.
     recordLegacy(blockIdx) {
-      record('legacy', blockIdx);
+      record('legacy', blockIdx, true);
     },
   };
 }
