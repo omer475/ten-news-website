@@ -234,9 +234,9 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "receipts": {{"claim": "the disputed claim, max ~120 chars", "who": "Name · Role", "receipts": [{{"text": "the establishing fact, max 140 chars", "source": "Reuters"}}], "verdict": "short verdict that FOLLOWS from the receipts, max 90 chars"}} — RARE, high bar: ONLY when the story centers on a disputed or checkable CLAIM (political statement, company spin, viral rumor) AND the source articles THEMSELVES establish the facts. 1-2 receipts; each must name the establishing source (outlet, institution, document) AS STATED in the source text. The verdict must be what the receipts show — NEVER your own ruling, NEVER your own knowledge. If the sources don't settle the claim, OMIT this signal. Most stories do not qualify.
 - "countdown": {{"name": "SpaceX IPO pricing", "datetime": "2026-06-12T13:30:00Z", "label": "IPO"}} — RARE: ONLY when the story is about a concretely SCHEDULED future event whose exact date (and time if known; use T00:00:00Z for date-only) is stated in the source, within the next 30 days: a launch, a verdict date, a vote, a match, a release. name max 40 chars, label: 2-12 char uppercase tag. NEVER guess a date. When unsure, OMIT.
 
-CHART-DATA FLAGS — charts are a signature card of this feed. When you could NOT build "trend" from the source, set a flag on EVERY story whose subject has a published numeric history. The pipeline fetches and VERIFIES the real series itself — a flag costs nothing if no series exists, so when in doubt, SET it:
-- "chart_ticker": Yahoo Finance symbol whenever a publicly traded company, index, or major crypto is CENTRAL to the story — even if the story is not about the price itself (earnings, CEO change, lawsuit, product launch, acquisition: the stock's recent path IS useful context). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
-- "chart_metric": a search phrase (max 10 words) whenever a well-known published indicator is central or gives obvious context: "eurozone monthly inflation rate 2026", "US unemployment rate by month", "ECB key interest rate history", "Brent crude oil price by month", "US box office weekly 2026", "Premier League title odds history". Use for: inflation, rates, jobs, energy/commodity prices, currencies, housing, box office, sales figures, polls/approval ratings, league standings/medal tables, epidemic counts, casualty tallies over time.
+CHART-DATA FLAGS — charts are a signature card of this feed, but ONLY when the chart shows THE STORY. The test: would the reader say "ah, so THAT's how big/fast it is" — or "why am I looking at this?". A chart that doesn't directly measure the headline is worse than no chart.
+- "chart_ticker": Yahoo Finance symbol, ONLY when the PRICE MOVE ITSELF is the story: the stock jumped or crashed, earnings moved the price, IPO pricing, a valuation milestone, an index record. If the headline is not about money or markets, do NOT set it — a product launch, a partnership, a lawsuit, a delayed flight get NO stock chart (a flat share price tells the reader nothing). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
+- "chart_metric": a search phrase (max 10 words) ONLY when a published numeric series DIRECTLY measures what the headline is about — it answers "how is the thing in the title changing?": inflation story → "eurozone monthly inflation rate 2026"; jobs report → "US unemployment rate by month"; heat wave → "Spain June temperature records by year"; box-office story → "US box office weekly 2026"; casualty story → tallies over time. NOT for adjacent context (the airline's industry stats on a flight-delay story, a country's GDP on a culture story). When the connection needs explaining, OMIT.
 - "breakdown_metric": a search phrase (max 10 words) whenever the story centers on a SHARE-OF-WHOLE composition whose full parts are NOT in the source: "Italian parliament seats by party 2026", "global smartphone market share Q1 2026", "US electricity generation mix by source", "World Cup group F standings points". The pipeline searches, verifies, and builds the donut itself.
 
 RULES:
@@ -750,10 +750,16 @@ def fetch_trend_from_market(ticker: str) -> Optional[Dict]:
         labels = [_MONTH_ABBR[d.month - 1] for d, _ in rows]
         if len(set(vals)) == 1:
             return None
+        # A near-flat line tells the reader nothing — if the price barely
+        # moved over the window, the chart is noise, not news. Skip it.
+        mean = sum(vals) / len(vals)
+        if mean and (max(vals) - min(vals)) / abs(mean) < 0.08:
+            print(f"   ⚠️ [chart] {ticker} moved <8% over the window — flat line, skipping")
+            return None
         unit = '$' if currency == 'USD' else ''
         name = result.get('meta', {}).get('symbol', symbol)
         return {'style': 'line', 'vals': vals, 'labels': labels, 'unit': unit,
-                'caption': f"{name} monthly close ({currency})"}
+                'caption': f"{name} share price — last 6 months ({currency})"}
     except Exception as e:
         print(f"   ⚠️ [chart] market fetch failed for {ticker}: {e}")
         return None
@@ -812,6 +818,12 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
             and isinstance(evidence, list) and evidence):
         return None
     if len(set(vals)) == 1:
+        return None
+    # Near-flat series make pointless charts (rates/polls move in small
+    # steps, so the threshold is gentler than the market fetcher's).
+    _mean = sum(vals) / len(vals)
+    if _mean and (max(vals) - min(vals)) / abs(_mean) < 0.02:
+        print(f"   ⚠️ [chart] grounded series for {metric!r} is flat — skipping")
         return None
     # Anti-hallucination check: every value must appear in the evidence text.
     ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
