@@ -17,6 +17,23 @@ export function OAuthButtons({ onOAuthLogin }) {
     <div style={{ marginBottom: '20px' }}>
       <button
         type="button"
+        className="oauth-btn oauth-apple"
+        onClick={() => handleClick('apple')}
+        disabled={!!loadingProvider}
+        style={{
+          background: '#000',
+          color: '#fff',
+          border: '1px solid #000',
+          marginBottom: 10,
+        }}
+      >
+        <svg width="17" height="20" viewBox="0 0 17 20" style={{ flexShrink: 0 }} aria-hidden>
+          <path d="M14.17 10.62c.02 2.84 2.5 3.79 2.53 3.8-.02.07-.4 1.35-1.3 2.68-.79 1.15-1.6 2.29-2.89 2.31-1.26.02-1.67-.74-3.12-.74-1.44 0-1.9.72-3.09.76-1.24.05-2.19-1.24-2.98-2.38C1.7 14.7.46 10.46 2.12 7.6a4.64 4.64 0 013.9-2.37c1.22-.02 2.37.82 3.12.82.74 0 2.14-1.01 3.61-.86.62.03 2.34.25 3.45 1.87-.09.06-2.06 1.21-2.03 3.56zM11.8 3.65c.66-.8 1.1-1.9.98-3-.95.04-2.09.63-2.77 1.42-.61.7-1.14 1.83-1 2.9 1.06.09 2.13-.53 2.79-1.32z" fill="#fff"/>
+        </svg>
+        {loadingProvider === 'apple' ? 'Redirecting...' : 'Continue with Apple'}
+      </button>
+      <button
+        type="button"
         className="oauth-btn oauth-google"
         onClick={() => handleClick('google')}
         disabled={!!loadingProvider}
