@@ -74,13 +74,31 @@ Judge it at full-screen scale: every flaw is magnified. cover_ok is FALSE if:
 cover_ok is TRUE only for crisp, high-detail editorial photos with scene context
 (places, events, action, objects, wider shots of people) that stay sharp zoomed in.
 
+ALSO return "focus" — the normalized center of the image's MAIN SUBJECT (the
+face, the rocket, the building, the action), {"x": 0.0-1.0, "y": 0.0-1.0} with
+x=0 at the left edge and y=0 at the top. Crops will be anchored to this point,
+so place it on what must stay visible. If there is no single subject, use the
+visual center of mass.
+
+ALSO grade SQUARE-THUMBNAIL suitability ("split_ok") — would this image read
+clearly as a SMALL SQUARE thumbnail (~116pt), cropped around the focus point?
+split_ok is FALSE if:
+- The subject is tiny inside a wide scene (it vanishes at thumbnail size)
+- A square crop around the subject would cut away what makes the image readable
+- The image is cluttered with no single clear subject
+split_ok is TRUE when one clear subject survives a tight square crop — bold
+objects, products, faces (faces are fine HERE, unlike cover), logos-in-context,
+strong close-ups.
+
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {
     "suitable": true or false,
     "confidence": 0-100,
     "issues": ["list", "of", "specific", "problems"],
     "reason": "One sentence explanation",
-    "cover_ok": true or false
+    "cover_ok": true or false,
+    "split_ok": true or false,
+    "focus": {"x": 0.5, "y": 0.4}
 }"""
 
     def check_image(self, image_url: str, retry_count: int = 3) -> Dict:
@@ -247,6 +265,12 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                 if not all(key in parsed for key in required_keys):
                     raise ValueError(f"Invalid response structure: missing keys from {list(parsed.keys())}")
                 
+                focus = parsed.get("focus") if isinstance(parsed.get("focus"), dict) else {}
+                try:
+                    focus_x = min(1.0, max(0.0, float(focus.get("x", 0.5))))
+                    focus_y = min(1.0, max(0.0, float(focus.get("y", 0.5))))
+                except (TypeError, ValueError):
+                    focus_x, focus_y = 0.5, 0.5
                 return {
                     "suitable": bool(parsed["suitable"]),
                     "confidence": int(parsed["confidence"]),
@@ -258,6 +282,10 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                     # upscale and pixelate at that size.
                     "cover_ok": bool(parsed.get("cover_ok"))
                                 and orig_width >= 1200 and orig_height >= 1000,
+                    # Square-thumbnail grade + crop anchor for ALL image crops.
+                    "split_ok": bool(parsed.get("split_ok")),
+                    "focus_x": round(focus_x, 3),
+                    "focus_y": round(focus_y, 3),
                     "error": False
                 }
                 

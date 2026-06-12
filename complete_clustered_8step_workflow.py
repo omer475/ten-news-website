@@ -1691,6 +1691,7 @@ def run_complete_pipeline():
                 with gemini_semaphore:
                     ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
                 if ai_approved:
+                    _qc = ai_approved.get('quality_check', {})
                     selected_image = {
                         'url': ai_approved['url'],
                         'source_name': ai_approved['source_name'],
@@ -1698,7 +1699,12 @@ def run_complete_pipeline():
                         # Full-bleed cover grade from the vision check —
                         # tight face crops / pixelated images must not be
                         # used as the Cover template background.
-                        'cover_ok': bool(ai_approved.get('quality_check', {}).get('cover_ok')),
+                        'cover_ok': bool(_qc.get('cover_ok')),
+                        # Square-thumbnail grade (split card) + the crop
+                        # anchor all image crops should center on.
+                        'split_ok': bool(_qc.get('split_ok')),
+                        'image_focus': {'x': _qc.get('focus_x', 0.5),
+                                        'y': _qc.get('focus_y', 0.5)},
                     }
                     print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
                 else:
@@ -2353,6 +2359,9 @@ def run_complete_pipeline():
                     # Cover template gate: only images the vision check graded
                     # as full-bleed-worthy (sharp, not a tight face crop).
                     display_obj['cover_ok'] = bool(selected_image and selected_image.get('cover_ok'))
+                    # Square-thumbnail gate (split card) + crop focus point.
+                    display_obj['split_ok'] = bool(selected_image and selected_image.get('split_ok'))
+                    display_obj['image_focus'] = (selected_image or {}).get('image_focus') or {'x': 0.5, 'y': 0.5}
                     # 0-1000 importance scale; >=900 = breaking (cover card)
                     display_obj['breaking'] = bool(article_score >= 900)
                     _sigs = [k for k in ('big', 'quote', 'versus', 'timeline', 'trend', 'geo') if k in display_obj]
