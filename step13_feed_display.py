@@ -516,7 +516,8 @@ def validate_display(result: Dict, pipeline_category: str,
                     rows.append([lab, v])
         caption = _strip_tags(str(ranking.get('caption', ''))).strip()
         if len(rows) >= 3 and caption:
-            rows.sort(key=lambda r: r[1], reverse=True)
+            # Keep the model's order — for lower-is-better metrics (race
+            # times) a forced sort-desc would put the winner LAST.
             out['ranking'] = {'rows': rows,
                               'unit': str(ranking.get('unit', ''))[:6],
                               'caption': caption[:140]}
