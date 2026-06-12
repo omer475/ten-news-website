@@ -1573,7 +1573,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
       const r = await fetch(`/api/feed/main?${qs.toString()}`);
       if (!r.ok) return null;
       const d = await r.json();
-      if (!Array.isArray(d.articles) || d.articles.length < 5) return null;
+      if (!Array.isArray(d.articles)) return null;
+      // WEB ONLY: keep the redesign intact. Trinity retrieves beyond the 24h
+      // pool, and articles published before the display pipeline (2026-06-11)
+      // have no `display` payload — they'd render as the OLD legacy card and
+      // make the feed look like the previous design (62% of a slate, measured
+      // 2026-06-12). Drop them here; coverage grows daily so this filter
+      // converges to a no-op. iOS renders its own fallback and is unaffected.
+      d.articles = d.articles.filter((a) => a && a.display);
+      if (d.articles.length < 5) return null;
       return d;
     } catch (_) { return null; }
   };
