@@ -119,7 +119,10 @@ export function createSelector() {
 
     // A template remembered from a previous load — record it so the rhythm
     // rules (image spacing, LRU) account for it, without re-choosing.
+    // Returns null when honoring the memory would put the same design twice
+    // in a row (the core rhythm rule outranks per-article stability).
     use(design, blockIdx) {
+      if (design === lastDesign) return null;
       record(design, blockIdx);
       return design;
     },

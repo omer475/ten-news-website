@@ -42,12 +42,16 @@ const CARD_BY_TEMPLATE = {
 function promoteHero(news) {
   let heroIdx = -1;
   let heroScore = -Infinity;
+  let heroBreaking = false;
   for (let i = 0; i < Math.min(news.length, 12); i += 1) {
     const d = news[i]?.display;
-    if (!d || !d.breaking || d.cover_ok === false) continue;
+    if (!d || d.cover_ok === false) continue;
     if (!(d.imageURL || news[i].urlToImage)) continue;
+    const breaking = !!d.breaking;
     const score = Number(news[i].final_score) || 0;
-    if (score > heroScore) { heroScore = score; heroIdx = i; }
+    // breaking always outranks non-breaking; within a tier, highest score
+    if (breaking && !heroBreaking) { heroBreaking = true; heroScore = score; heroIdx = i; continue; }
+    if (breaking === heroBreaking && score > heroScore) { heroScore = score; heroIdx = i; }
   }
   if (heroIdx > 0) {
     const [hero] = news.splice(heroIdx, 1);
@@ -98,9 +102,13 @@ function useFeedBlocks(stories, modules) {
           // Same article = same card style across loads (24h memory), so a
           // repeat can't masquerade as a new story in a different template.
           const kept = rememberedTemplate(story.id);
-          if (kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]) {
-            template = cache.selector.use(kept, cache.blockIdx);
+          const reused = kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]
+            ? cache.selector.use(kept, cache.blockIdx)
+            : null;
+          if (reused) {
+            template = reused;
           } else {
+            // no memory, or honoring it would repeat the previous card
             template = cache.selector.choose(display, cache.blockIdx);
             rememberTemplate(story.id, template);
           }
