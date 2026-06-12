@@ -117,17 +117,26 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                 if PIL_AVAILABLE:
                     img = Image.open(BytesIO(response.content))
 
-                    # Convert RGBA to RGB if needed
+                    # Size is available WITHOUT decoding pixels — read it
+                    # before any convert/thumbnail (those force a full
+                    # decode; an 8810x5675 photo decodes to ~150MB and got
+                    # the whole job OOM-killed on signal 9).
+                    orig_width, orig_height = img.size[0], img.size[1]
+                    print(f"      Image loaded: {orig_width}x{orig_height} pixels")
+
+                    # Downscale BEFORE full decode: draft() lets JPEG decode
+                    # at reduced scale, then thumbnail to the working size.
+                    max_dim = 2000
+                    if orig_width > max_dim or orig_height > max_dim:
+                        try:
+                            img.draft('RGB', (max_dim, max_dim))
+                        except Exception:
+                            pass
+                        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+
+                    # Convert RGBA to RGB if needed (after downscale)
                     if img.mode == 'RGBA':
                         img = img.convert('RGB')
-
-                    print(f"      Image loaded: {img.size[0]}x{img.size[1]} pixels")
-                    orig_width, orig_height = img.size[0], img.size[1]
-
-                    # Downscale very large images to save memory (e.g. 11314x6366 = 216MB)
-                    max_dim = 2000
-                    if img.size[0] > max_dim or img.size[1] > max_dim:
-                        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
                     
                     # Quick dimension check - very small images are likely icons/logos
                     if img.size[0] < 100 or img.size[1] < 100:

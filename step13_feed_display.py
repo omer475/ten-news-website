@@ -223,6 +223,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
     "change" = the SAME metric before vs after: a = BEFORE/older value, b = AFTER/current value (dev time cut from 55 to 26 months; obesity rate pre-COVID vs now). NOT a fight — never use duel for this.
     "gap"    = two related quantities contrasted for scale (company X's fleet vs company Y's, spend vs budget).
   who: SHORT uppercase label, max 14 chars ("FOR", "PRE-COVID", "2022-24", "TESLA") — long labels get cut off on screen. Include unit ("%", "MONTHS") in unit, not in who.
+- "score": {{"sport": "football|basketball|tennis|hockey|baseball|cricket|rugby|mma|boxing|amfootball|volleyball|other", "a": {{"team": "MEXICO", "score": "2", "detail": ""}}, "b": {{"team": "S. AFRICA", "score": "1", "detail": ""}}, "status": "FT", "note": "Lozano 23' and 67'; Estadio Azteca"}} — ONLY when a played or live head-to-head MATCH RESULT is the story. team: short uppercase name max 13 chars. score: the headline number as a string (goals/points; for tennis = SETS won). detail: secondary score line ("6-4 3-6 7-5" sets, "(4-2 pens)", "1st innings 245"). status: FT, HT, LIVE, Q3, SET 2, FINAL, R3 — max 8 chars. note: scorers/venue/round one-liner. Golf, F1, athletics, leagues tables are NOT score — use "ranking". Transfer news, injuries, previews = NOT score.
 - "timeline_story": true — a FLAG, not the timeline itself (a dedicated writer builds it). Set true ONLY if ALL three hold: (1) this story is the latest development in a saga running for days/weeks (war, trial, deal process, investigation, crisis, transfer saga, election process); (2) the SOURCE TEXT itself describes at least TWO earlier dated developments of THIS story; (3) a reader landing on it would ask "how did we get here?". Single events, match results, product launches, awards, announcements, profiles = false. Expect true on roughly 1 story in 10.
 - "trend": {{"style": "bar|line", "vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric TIME SERIES of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. style: "line" for continuous metrics with 5+ points (prices, rates), "bar" for few discrete periods. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "breakdown": {{"slices": [["LABEL", n], …], "unit": "%", "caption": "one-line reading"}} — COMPOSITION of a whole stated in the source, for a donut chart: vote share by party, market share, budget split, "X of the Y total". 3-6 slices, biggest FIRST, labels max 12 chars uppercase. Values must come from the source; you may add ONE final ["OTHER", n] slice to complete a % total. ONLY when the parts-of-a-whole framing is real.
@@ -529,6 +530,32 @@ def validate_display(result: Dict, pipeline_category: str,
             out['ranking'] = {'rows': rows,
                               'unit': str(ranking.get('unit', ''))[:6],
                               'caption': caption[:140]}
+
+    # score (sports scoreboard) — head-to-head match results
+    score = result.get('score')
+    if isinstance(score, dict):
+        sa, sb = score.get('a'), score.get('b')
+        if isinstance(sa, dict) and isinstance(sb, dict):
+            sport = str(score.get('sport', '')).strip().lower()
+            if sport not in ('football', 'basketball', 'tennis', 'hockey',
+                             'baseball', 'cricket', 'rugby', 'mma', 'boxing',
+                             'amfootball', 'volleyball'):
+                sport = 'other'
+            ateam = _strip_tags(str(sa.get('team', ''))).strip().upper()[:14]
+            bteam = _strip_tags(str(sb.get('team', ''))).strip().upper()[:14]
+            ascore = _strip_tags(str(sa.get('score', ''))).strip()[:8]
+            bscore = _strip_tags(str(sb.get('score', ''))).strip()[:8]
+            if ateam and bteam and ascore and bscore \
+                    and any(c.isdigit() for c in ascore + bscore):
+                out['score'] = {
+                    'sport': sport,
+                    'a': {'team': ateam, 'score': ascore,
+                          'detail': _strip_tags(str(sa.get('detail', ''))).strip()[:24]},
+                    'b': {'team': bteam, 'score': bscore,
+                          'detail': _strip_tags(str(sb.get('detail', ''))).strip()[:24]},
+                    'status': _strip_tags(str(score.get('status', ''))).strip().upper()[:8] or 'FT',
+                    'note': _strip_tags(str(score.get('note', ''))).strip()[:140],
+                }
 
     # receipts (fact-check card) — every part must be present and sourced
     rec = result.get('receipts')
