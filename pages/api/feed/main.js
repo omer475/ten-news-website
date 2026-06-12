@@ -139,6 +139,14 @@ export default async function handler(req, res) {
   // ────────────────────────────────────────────────────────────────────
   const isFirstPage = !req.query.cursor
   const isWarmer = req.query.warmer === '1'
+  // Web client-exposure mode (2026-06-12): the website renders a scrollable
+  // page, not a swipe deck — it requests 50, shows maybe 10, and filters
+  // some client-side. Logging every served article as an impression burned
+  // ~350 unseen articles/day for one user, so each refresh dug into
+  // leftovers. With client_exposure=1 the server skips impression/exposure
+  // writes and trusts the client's seen_ids (built from its ≥55%-visibility
+  // tracking). iOS keeps the default serve-side logging.
+  const clientExposure = req.query.client_exposure === '1'
   if (FEED_CACHE_ENABLED && userId && isFirstPage && !isWarmer) {
     const cacheT0 = Date.now()
     try {
@@ -148,21 +156,24 @@ export default async function handler(req, res) {
         // like a live serve would (the precompute ran with skipExposureWrites).
         // Both writes run in parallel — they're independent — so the cache-hit
         // critical path is one DB round-trip, not two.
-        const impressionRows = cached.articles.map((a, i) => ({
-          user_id: userId,
-          article_id: a.id,
-          bucket: a._bucket,
-          slot_index: i,
-          pool_size: cached.poolSize,
-          propensity_score: cached.poolSize > 0 ? 1.0 / cached.poolSize : null,
-          slots_pattern: 'trinity-cache',
-          request_id: requestId,
-        }))
-        const [, impInsert] = await Promise.all([
-          recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure)),
-          supabase.from('user_feed_impressions').insert(impressionRows),
-        ])
-        if (impInsert?.error) console.error('[trinity.cache] impression log failed:', impInsert.error.message)
+        // client_exposure=1 (web): skip both — the client reports what was seen.
+        if (!clientExposure) {
+          const impressionRows = cached.articles.map((a, i) => ({
+            user_id: userId,
+            article_id: a.id,
+            bucket: a._bucket,
+            slot_index: i,
+            pool_size: cached.poolSize,
+            propensity_score: cached.poolSize > 0 ? 1.0 / cached.poolSize : null,
+            slots_pattern: 'trinity-cache',
+            request_id: requestId,
+          }))
+          const [, impInsert] = await Promise.all([
+            recordSlateExposure(supabase, userId, expandExposureMeta(cached.exposure)),
+            supabase.from('user_feed_impressions').insert(impressionRows),
+          ])
+          if (impInsert?.error) console.error('[trinity.cache] impression log failed:', impInsert.error.message)
+        }
         console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} poolStored=${cached.poolSize} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
         return res.status(200).json({
           articles: cached.articles,
@@ -190,6 +201,7 @@ export default async function handler(req, res) {
     const coalesced = await coalescedSlate(cKey, () =>
       serveTrinityFeed(supabase, {
         userId, seenIds, feedSize: limit, recentEngagementZ,
+        skipExposureWrites: clientExposure,
       })
     )
     trinityResult = coalesced.result
@@ -261,7 +273,7 @@ export default async function handler(req, res) {
   // Phase A.1 — only the coalesce OWNER writes impressions. Non-owners
   // (concurrent loadMore that shared the slate) would create duplicate
   // impression rows for the same article_id × request_id pair.
-  if (userId && isOwner) {
+  if (userId && isOwner && !clientExposure) {
     const poolSize = dbg.poolSize || formatted.length
     const impressionRows = formatted.map((a, i) => ({
       user_id: userId,

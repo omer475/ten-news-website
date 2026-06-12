@@ -1569,7 +1569,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
       try {
         Object.keys(JSON.parse(localStorage.getItem('tennews_read_articles') || '{}')).forEach((id) => seen.add(id));
       } catch (_) {}
-      const qs = new URLSearchParams({ user_id: authUserId, limit: String(limit) });
+      try {
+        // Actually-SEEN cards (≥55% visible 1.5s) — with client_exposure=1
+        // the server doesn't log impressions on serve, so this is the only
+        // record of what the user's eyes passed over. Served-but-never-seen
+        // articles stay eligible instead of being burned (was ~350/day).
+        Object.keys(JSON.parse(localStorage.getItem('tn_seen_impressions') || '{}')).forEach((id) => seen.add(id));
+      } catch (_) {}
+      const qs = new URLSearchParams({ user_id: authUserId, limit: String(limit), client_exposure: '1' });
       const seenList = [...seen].filter((x) => /^\d+$/.test(x)).slice(0, 1500);
       if (seenList.length) qs.set('seen_ids', seenList.join(','));
       const r = await fetch(`/api/feed/main?${qs.toString()}`);
