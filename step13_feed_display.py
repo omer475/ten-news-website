@@ -1045,6 +1045,96 @@ Return ONE JSON object with EXACTLY these keys:
 Rules: no fabricated numbers or dates; return ONLY the JSON object."""
 
 
+def _fetch_launch_countdowns() -> list:
+    """Upcoming confirmed rocket launches from Launch Library (exact
+    scheduled times, structured API — no AI in the loop)."""
+    try:
+        resp = requests.get(
+            "https://ll.thespacedevs.com/2.2.0/launch/upcoming/"
+            "?limit=10&hide_recent_previous=true",
+            timeout=20, headers={'User-Agent': 'TodayPlus/1.0'})
+        resp.raise_for_status()
+        now = datetime.now(timezone.utc)
+        rows = []
+        for l in resp.json().get('results', []):
+            net = l.get('net')
+            status = (l.get('status') or {}).get('abbrev', '')
+            if not net or status != 'Go':
+                continue
+            try:
+                dt = datetime.fromisoformat(net.replace('Z', '+00:00'))
+            except ValueError:
+                continue
+            if not now < dt < now + timedelta(days=30):
+                continue
+            provider = (l.get('launch_service_provider') or {}).get('name', '')
+            pad_loc = ((l.get('pad') or {}).get('location') or {}).get('name', '')
+            rows.append({
+                'name': _strip_tags(str(l.get('name', ''))).split('|')[0].strip()[:44] or 'Rocket launch',
+                'datetime': dt.isoformat(),
+                'context': ' · '.join(x for x in (provider, pad_loc) if x)[:140],
+            })
+            if len(rows) >= 2:
+                break
+        return rows
+    except Exception as e:
+        print(f"   ⚠️ [modules] launch calendar fetch failed: {e}")
+        return []
+
+
+GROUNDED_CALENDAR_PROMPT = """Today's date: {today}.
+Use Google Search to find the OFFICIALLY SCHEDULED date (and time if published) of each upcoming event below, within the next 45 days:
+1. Next US Federal Reserve (FOMC) interest rate decision
+2. Next US CPI inflation report release
+3. Next ECB monetary policy (rate) decision
+
+Return ONLY a JSON object:
+{{"events": [{{"name": "Fed rate decision", "datetime": "YYYY-MM-DDTHH:MM:SSZ", "context": "one factual line"}}],
+  "evidence": ["verbatim sentence from a search result confirming each date"]}}
+
+Rules: include an event ONLY if search confirms its official scheduled date
+(copy the proving sentence into evidence). Use T00:00:00Z when only the date
+is published. NEVER guess. An empty events list is a good answer."""
+
+
+def _fetch_grounded_calendar(api_key: str) -> list:
+    """Officially scheduled economic-calendar events via grounded search."""
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    try:
+        resp = requests.post(url, json={
+            "contents": [{"parts": [{"text": GROUNDED_CALENDAR_PROMPT.format(
+                today=datetime.now(timezone.utc).strftime('%Y-%m-%d'))}]}],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
+        }, timeout=90)
+        resp.raise_for_status()
+        cand = resp.json()['candidates'][0]
+        if 'groundingMetadata' not in cand:
+            return []
+        text = ''.join(p.get('text', '') for p in cand['content']['parts'])
+        m = re.search(r'\{[\s\S]*\}', text)
+        data = json.loads(m.group(0)) if m else {}
+    except Exception as e:
+        print(f"   ⚠️ [modules] grounded calendar fetch failed: {e}")
+        return []
+    now = datetime.now(timezone.utc)
+    rows = []
+    if isinstance(data.get('events'), list) and data.get('evidence'):
+        for e in data['events'][:4]:
+            if not (isinstance(e, dict) and e.get('name') and e.get('datetime')):
+                continue
+            try:
+                dt = datetime.fromisoformat(str(e['datetime']).replace('Z', '+00:00'))
+            except ValueError:
+                continue
+            if now < dt < now + timedelta(days=45):
+                rows.append({'name': _strip_tags(str(e['name'])).strip()[:44],
+                             'datetime': dt.isoformat(),
+                             'context': _strip_tags(str(e.get('context', ''))).strip()[:140]})
+    return rows
+
+
 def generate_daily_modules(supabase, api_key: str):
     """Generate today's interstitial modules if not already present."""
     today = datetime.now(timezone.utc).date().isoformat()
@@ -1126,20 +1216,30 @@ def generate_daily_modules(supabase, api_key: str):
         if len(rows) == 3:
             payloads['briefs'] = {'rows': rows}
     cds = data.get('countdowns')
+    model_rows = []
     if isinstance(cds, list):
-        rows = []
         for c in cds[:2]:
             if not (isinstance(c, dict) and c.get('name') and c.get('datetime')):
                 continue
             try:
                 dt = datetime.fromisoformat(str(c['datetime']).replace('Z', '+00:00'))
                 if dt > now:
-                    rows.append({'name': _strip_tags(str(c['name'])).strip()[:60],
-                                 'datetime': dt.isoformat(),
-                                 'context': _strip_tags(str(c.get('context', ''))).strip()[:140]})
+                    model_rows.append({'name': _strip_tags(str(c['name'])).strip()[:44],
+                                       'datetime': dt.isoformat(),
+                                       'context': _strip_tags(str(c.get('context', ''))).strip()[:140]})
             except ValueError:
                 continue
-        payloads['countdowns'] = {'rows': rows}  # empty list is valid
+    # Calendar-backed supply: the model alone almost never has a verifiable
+    # date, leaving the COUNTING DOWN module empty. Launches come from a
+    # structured API; Fed/CPI/ECB dates from grounded search with evidence.
+    if 'countdowns' in needed:
+        merged = {}
+        for r in _fetch_launch_countdowns() + _fetch_grounded_calendar(api_key) + model_rows:
+            key = r['name'].lower()[:20]
+            if key not in merged:
+                merged[key] = r
+        rows = sorted(merged.values(), key=lambda r: r['datetime'])[:4]
+        payloads['countdowns'] = {'rows': rows}
 
     for mtype, payload in payloads.items():
         if mtype not in needed:
