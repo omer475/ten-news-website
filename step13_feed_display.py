@@ -1087,14 +1087,18 @@ Use Google Search to find the OFFICIALLY SCHEDULED date (and time if published) 
 1. Next US Federal Reserve (FOMC) interest rate decision
 2. Next US CPI inflation report release
 3. Next ECB monetary policy (rate) decision
+4. Next earnings report from a mega-cap company (Nvidia, Apple, Microsoft, Amazon, Google, Meta, Tesla — whichever reports SOONEST)
+5. Next major sports final or marquee match (World Cup final/semis, Champions League final, Super Bowl, NBA Finals game, Grand Slam final — whichever is soonest)
+6. Next major film or game release with a confirmed worldwide date
 
 Return ONLY a JSON object:
 {{"events": [{{"name": "Fed rate decision", "datetime": "YYYY-MM-DDTHH:MM:SSZ", "context": "one factual line"}}],
   "evidence": ["verbatim sentence from a search result confirming each date"]}}
 
 Rules: include an event ONLY if search confirms its official scheduled date
-(copy the proving sentence into evidence). Use T00:00:00Z when only the date
-is published. NEVER guess. An empty events list is a good answer."""
+(copy the proving sentence into evidence). Skip any category you cannot
+confirm. Use T00:00:00Z when only the date is published. Names short and
+specific ("Nvidia Q2 earnings", "World Cup final"). NEVER guess."""
 
 
 def _fetch_grounded_calendar(api_key: str) -> list:
@@ -1121,17 +1125,22 @@ def _fetch_grounded_calendar(api_key: str) -> list:
     now = datetime.now(timezone.utc)
     rows = []
     if isinstance(data.get('events'), list) and data.get('evidence'):
-        for e in data['events'][:4]:
+        for e in data['events'][:8]:
             if not (isinstance(e, dict) and e.get('name') and e.get('datetime')):
                 continue
             try:
                 dt = datetime.fromisoformat(str(e['datetime']).replace('Z', '+00:00'))
             except ValueError:
                 continue
+            ctx = _strip_tags(str(e.get('context', ''))).strip()
+            # "estimated"/"expected" = not officially scheduled — a countdown
+            # to a guessed date is exactly what we must never show.
+            if any(w in ctx.lower() for w in ('estimated', 'expected to', 'likely', 'tentative')):
+                continue
             if now < dt < now + timedelta(days=45):
                 rows.append({'name': _strip_tags(str(e['name'])).strip()[:44],
                              'datetime': dt.isoformat(),
-                             'context': _strip_tags(str(e.get('context', ''))).strip()[:140]})
+                             'context': ctx[:140]})
     return rows
 
 
@@ -1238,7 +1247,7 @@ def generate_daily_modules(supabase, api_key: str):
             key = r['name'].lower()[:20]
             if key not in merged:
                 merged[key] = r
-        rows = sorted(merged.values(), key=lambda r: r['datetime'])[:4]
+        rows = sorted(merged.values(), key=lambda r: r['datetime'])[:6]
         payloads['countdowns'] = {'rows': rows}
 
     for mtype, payload in payloads.items():
