@@ -1617,9 +1617,18 @@ export default function Home({ initialNews, initialWorldEvents }) {
       }
 
       if (newsData) {
-        if (newsData.articles && newsData.articles.length > 0) {
+        // Defensive: the API outage placeholder must never enter the feed as
+        // an article (it leaked as endless purple SYSTEM cards at feed end).
+        const realArticles = (newsData.articles || []).filter(
+          (a) => a && a.url !== '#' && a.title !== 'Ten News System Active' && String(a.category).toLowerCase() !== 'system'
+        );
+        if (realArticles.length === 0) {
+          console.log('📭 No more real articles — ending pagination');
+          setHasMoreArticles(false);
+        } else if (realArticles.length > 0) {
+          const newsArticles = realArticles;
           // Convert new articles to story format
-          const newStories = newsData.articles.map((article, index) => {
+          const newStories = newsArticles.map((article, index) => {
             const sampleDetails = article.details && article.details.length > 0 ? article.details : [];
 
             // Real timeline only — never fabricate (fake timelines would show on every story).

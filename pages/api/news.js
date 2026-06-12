@@ -440,6 +440,20 @@ export default async function handler(req, res) {
     console.log(`⚠️ Direct Supabase query failed: ${fetchError.message}`);
   }
 
+  // Pagination guard: pages beyond the available data must END the feed —
+  // never fall through to the outage fallbacks below, whose sample article
+  // ("Ten News System Active") was leaking into infinite scroll as endless
+  // placeholder cards. Fallbacks are a page-1 outage path only.
+  if (page > 1) {
+    return res.status(200).json({
+      status: 'ok',
+      totalResults: 0,
+      articles: [],
+      pagination: { page, pageSize, total: 0, hasMore: false },
+      generatedAt: new Date().toISOString(),
+    });
+  }
+
   // FALLBACK 0.5: Try without 24h filter (get most recent articles)
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
