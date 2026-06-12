@@ -1552,13 +1552,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
   }, [currentIndex, stories]);
 
   // Function to load more articles (pagination)
-  // The REAL algorithm: logged-in users are served by Trinity
-  // (/api/feed/main — server-side personalization, cluster learning,
-  // DB-backed seen history) instead of the score pool + client heuristics.
-  // Returns null for guests or on any failure so callers fall back to
-  // /api/news; the response carries formatArticle-shaped articles (incl.
-  // `display`), so the existing story mappers work unchanged.
-  const fetchTrinitySlate = async (limit = 40, extraSeenIds = []) => {
+  // MIXED feed for logged-in users (user direction 2026-06-12): Trinity
+  // (/api/feed/main) supplies the CANDIDATES — retrieval quality, server-side
+  // dedup/exploration, DB seen-history — and the client's CURRENT taste
+  // profile (reading-seconds interests in localStorage) does the final
+  // ordering via the normal steps 1-4. Trinity's own profile lags (it learns
+  // from article_engaged events and the user mostly reads on web now), so
+  // server order alone served stale taste. Returns null for guests or on any
+  // failure so callers fall back to /api/news.
+  const fetchTrinitySlate = async (limit = 50, extraSeenIds = []) => {
     let authUserId = null;
     try { authUserId = (JSON.parse(localStorage.getItem('tennews_user') || 'null') || {}).id || null; } catch (_) {}
     if (!authUserId) return null;
@@ -1794,7 +1796,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         // Trinity failure fall back to the /api/news score pool below.
         let newsData = null;
         let feedSource = 'news';
-        const trinitySlate = await fetchTrinitySlate(40);
+        const trinitySlate = await fetchTrinitySlate(50);
         if (trinitySlate) {
           newsData = trinitySlate;
           feedSource = 'trinity';
@@ -1998,11 +2000,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
               let newsArticles = unreadStories.slice(1); // All news articles
               
               // ====== STEP 1: PREFERENCE-BASED PERSONALIZATION (country/topic boosts) ======
-              // Trinity slates are already personalized AND ordered server-side
-              // (with their own seen-history) — client re-ranking would scramble
-              // the slate and double-count exposure. Steps 1-4 are /api/news only.
+              // Runs for BOTH sources. For Trinity slates this is the "mix":
+              // the server picked the candidates; the client's fresher taste
+              // (prefs + reading-seconds interests + exposure/diversity below)
+              // decides the order the user actually sees.
               try {
-                const prefsRaw = (feedSource !== 'trinity' && typeof window !== 'undefined') ? localStorage.getItem('todayplus_preferences') : null;
+                const prefsRaw = typeof window !== 'undefined' ? localStorage.getItem('todayplus_preferences') : null;
                 if (prefsRaw) {
                   const prefs = JSON.parse(prefsRaw);
                   if (prefs.onboarding_completed && prefs.home_country) {
@@ -2060,11 +2063,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
               }
               
               // ====== STEP 2: SORT BY (boosted) SCORE ======
-              let sortedNews = feedSource === 'trinity' ? newsArticles : sortArticlesByScore(newsArticles);
+              let sortedNews = sortArticlesByScore(newsArticles);
 
               // ====== STEP 3: INTEREST-BASED PERSONALIZATION (reading behavior boosts) ======
               const userInterests = getUserInterests();
-              if (feedSource !== 'trinity' && Object.keys(userInterests).length > 0) {
+              if (Object.keys(userInterests).length > 0) {
                 console.log('🎯 [Personalization] Applying interest-based ranking with', Object.keys(userInterests).length, 'tracked interests');
                 sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
               }
@@ -2075,7 +2078,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // buried, so the feed looks identical on every refresh. applyFreshness
               // composes recency with the (personalized) score and adds light jitter so
               // fresh news surfaces and the order varies between loads. See utils/sortArticles.
-              if (feedSource !== 'trinity') sortedNews = applyFreshness(sortedNews);
+              sortedNews = applyFreshness(sortedNews);
 
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
@@ -2623,9 +2626,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Re-apply personalization after user changes preferences in the settings panel
   const onPreferencesSaved = () => {
     try {
-      // Trinity slates are server-ranked — client re-sorting would scramble
-      // them. New preferences flow into the next Trinity request instead.
-      if (feedSourceRef.current === 'trinity') return;
       const prefsRaw = localStorage.getItem('todayplus_preferences');
       if (!prefsRaw) return;
       const prefs = JSON.parse(prefsRaw);
