@@ -74,6 +74,18 @@ export default function AuthCallback() {
 
   const handleSession = async (supabase, isRecovery) => {
     try {
+      // Surface provider/Supabase errors — they arrive as error params in the
+      // hash (implicit flow) or query string and were previously ignored,
+      // leaving users with a generic failure and us with no diagnosis.
+      const hashErr = new URLSearchParams(window.location.hash.substring(1))
+      const queryErr = new URLSearchParams(window.location.search)
+      const oauthError = hashErr.get('error_description') || queryErr.get('error_description')
+        || hashErr.get('error') || queryErr.get('error')
+      if (oauthError) {
+        setError(`Sign-in failed: ${decodeURIComponent(String(oauthError).replace(/\+/g, ' '))}`)
+        return
+      }
+
       // If there's a hash fragment with tokens, set session
       if (window.location.hash && window.location.hash.includes('access_token')) {
         const hashParams = new URLSearchParams(window.location.hash.substring(1))
