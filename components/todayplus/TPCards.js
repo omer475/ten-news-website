@@ -1024,3 +1024,172 @@ export function ReceiptsCard({ story, display, accent, onOpen }) {
     </article>
   );
 }
+
+
+// ── SCORE — head-to-head match results ──────────────────────────────────────
+// Two scores face each other across a hairline with the status chip pinned on
+// it. Winner takes ink + an accent dash under the team name; LIVE pulses.
+// Sport garnish stays subtle: tennis shares the set line, 3-digit sports
+// shrink, MMA/boxing hide a silly 1–0 and lead with the method chip.
+
+const SPORT_GLYPHS = {
+  football: <><circle cx="6" cy="6" r="5.2" /><path d="M6 3.6l2.2 1.6-.84 2.6H4.64L3.8 5.2z" /></>,
+  basketball: <><circle cx="6" cy="6" r="5.2" /><path d="M.8 6h10.4M6 .8v10.4M2.2 2.2c2.5 2.5 2.5 5.1 0 7.6M9.8 2.2c-2.5 2.5-2.5 5.1 0 7.6" /></>,
+  tennis: <><circle cx="6" cy="6" r="5.2" /><path d="M1 4c3 1 7 1 10-.6M1 8.6C4 7 8 7 11 8" /></>,
+  hockey: <><ellipse cx="6" cy="6" rx="5.2" ry="2.6" /><path d="M.8 6v2c0 1.4 2.3 2.6 5.2 2.6s5.2-1.2 5.2-2.6V6" /></>,
+  baseball: <><circle cx="6" cy="6" r="5.2" /><path d="M2 2.4c1.4 2 1.4 5.2 0 7.2M10 2.4c-1.4 2-1.4 5.2 0 7.2" /></>,
+  cricket: <><path d="M2 10L8.4 3.6M7.2 2.4l2.4 2.4" /><circle cx="9.6" cy="9.4" r="1.6" /></>,
+  rugby: <><ellipse cx="6" cy="6" rx="5.4" ry="3.4" transform="rotate(-32 6 6)" /><path d="M4.4 7.6l3.2-3.2M5.1 8.3L8.3 5.1" /></>,
+  amfootball: <><ellipse cx="6" cy="6" rx="5.4" ry="3.4" transform="rotate(-32 6 6)" /><path d="M4.4 7.6l3.2-3.2M5.2 6.4l1.2 1.2M6.4 5.2l1.2 1.2" /></>,
+  mma: <><path d="M3 5.4V4a3 3 0 016 0v1.4M2.4 5.4h7.2v2.4a3.6 3.6 0 01-7.2 0z" /></>,
+  boxing: <><path d="M3 5.4V4a3 3 0 016 0v1.4M2.4 5.4h7.2v2.4a3.6 3.6 0 01-7.2 0z" /></>,
+  volleyball: <><circle cx="6" cy="6" r="5.2" /><path d="M6 .8c.4 3.4-1 6.4-4.6 8M11 4C8 5 4.8 4.6 2.6 2.4M9.6 10.2C7 8 5.8 5 6.4.9" /></>,
+  other: <path d="M.8 6h2.4l1.6-3.6L7.2 9.6 8.8 6h2.4" />,
+};
+
+function SportGlyph({ sport, accent }) {
+  const glyph = SPORT_GLYPHS[sport] || SPORT_GLYPHS.other;
+  return (
+    <svg width="13" height="13" viewBox="0 0 12 12" aria-hidden
+      style={{ flexShrink: 0, display: 'block' }}
+      fill="none" stroke={accent} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+      {glyph}
+    </svg>
+  );
+}
+
+export function ScoreCard({ story, display, accent, onOpen }) {
+  const [ref, shown, animate] = useRevealOnce(`score.${story.id}`, 0.35);
+  const sc = display.score || { a: {}, b: {}, status: '', sport: 'other' };
+  const live = (sc.status || '').toUpperCase() === 'LIVE';
+  const fight = sc.sport === 'mma' || sc.sport === 'boxing';
+
+  const aNum = parseFloat(sc.a?.score);
+  const bNum = parseFloat(sc.b?.score);
+  const numeric = Number.isFinite(aNum) && Number.isFinite(bNum);
+  const aWins = numeric && aNum > bNum;
+  const bWins = numeric && bNum > aNum;
+  // a 1–0 scoreline looks silly for a knockout — names + method chip only
+  const hideNumbers = fight && numeric && aNum <= 1 && bNum <= 1;
+  const threeDigit = numeric && (aNum >= 100 || bNum >= 100);
+  const scoreSize = threeDigit ? 40 : 48;
+
+  // tennis: one shared set line under the scoreline when only side a has it
+  const sharedDetail = sc.sport === 'tennis' && sc.a?.detail && !sc.b?.detail ? sc.a.detail : null;
+
+  const side = (s, wins, loses, fromX, key) => (
+    <div style={{
+      flex: 1, textAlign: 'center', minWidth: 0,
+      opacity: shown ? 1 : 0,
+      transform: shown ? 'none' : `translateX(${fromX}px)`,
+      transition: animate ? 'opacity 0.6s cubic-bezier(.2,.7,.2,1) 0.2s, transform 0.6s cubic-bezier(.2,.7,.2,1) 0.2s' : 'none',
+    }}>
+      <div style={{
+        fontFamily: FONT_MONO, fontSize: 10, fontWeight: 500, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: TP.ink3, whiteSpace: 'nowrap',
+      }}>{s?.team || ''}</div>
+      <div style={{
+        width: 22, height: 2.5, borderRadius: 99, background: accent,
+        margin: '5px auto 0',
+        opacity: wins ? 1 : 0,
+        transform: wins && shown ? 'scaleX(1)' : 'scaleX(0)',
+        transition: animate ? 'transform 0.5s cubic-bezier(.2,.7,.2,1) 0.9s' : 'none',
+      }} />
+      {!hideNumbers ? (
+        <div style={{
+          fontFamily: FONT_HEAD, fontWeight: 800, fontSize: scoreSize, lineHeight: 1,
+          letterSpacing: '-0.02em', color: loses ? TP.ink3 : TP.ink, marginTop: 6,
+        }}>
+          {Number.isFinite(parseFloat(s?.score)) ? (
+            <CountUp value={parseFloat(s.score)} animKey={`score.${story.id}.${key}`} />
+          ) : (s?.score || '')}
+        </div>
+      ) : null}
+      {s?.detail && !sharedDetail ? (
+        <div style={{
+          fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink2, marginTop: 6,
+          whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
+        }}>{s.detail}</div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <article ref={ref}>
+      <div>
+        {/* kicker: sport glyph (+ pulsing dot when LIVE) · countdown · age */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, ...revealStyle(shown, animate, 0, 6) }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+            <SportGlyph sport={sc.sport} accent={accent} />
+            {live ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span className="tp-cd-pulse" style={{
+                  width: 6, height: 6, borderRadius: '50%', background: TP.breakingDot,
+                  '--tp-cd-color': 'rgba(255,90,82,0.55)',
+                }} />
+                <span style={{
+                  fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
+                  letterSpacing: '0.18em', color: TP.red,
+                }}>LIVE</span>
+              </span>
+            ) : null}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+            {display.countdown ? <TPCountdownChip countdown={display.countdown} accent={accent} /> : null}
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
+              {ageLabel(story.publishedAt)}
+            </span>
+          </span>
+        </div>
+
+        <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.08, 12) }}>
+          <Headline raw={display.title} accent={accent} size={22.5} />
+        </div>
+
+        {/* scoreline: two scores face off across a hairline w/ status chip */}
+        <div style={{ display: 'flex', alignItems: 'stretch', gap: 14, marginTop: 22 }}>
+          {side(sc.a, aWins, bWins, -14, 'a')}
+          <div style={{
+            position: 'relative', width: 1.5, alignSelf: 'stretch', minHeight: 76,
+            background: TP.line, flexShrink: 0,
+            opacity: shown ? 1 : 0,
+            transition: animate ? 'opacity 0.5s ease-out 0.35s' : 'none',
+          }}>
+            {sc.status ? (
+              <span style={{
+                position: 'absolute', top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500,
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                whiteSpace: 'nowrap', borderRadius: 99, padding: '4px 9px',
+                // MMA/boxing: the method chip is the verdict — accent fill
+                background: fight ? accent : TP.bg,
+                color: fight ? '#fff' : TP.ink2,
+                border: fight ? `1px solid ${accent}` : `1px solid color-mix(in srgb, ${accent} 45%, white)`,
+                boxShadow: fight ? `0 3px 10px color-mix(in srgb, ${accent} 30%, transparent)` : 'none',
+              }}>{sc.status}</span>
+            ) : null}
+          </div>
+          {side(sc.b, bWins, aWins, 14, 'b')}
+        </div>
+
+        {sharedDetail ? (
+          <div style={{
+            textAlign: 'center', fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink2,
+            marginTop: 10, fontVariantNumeric: 'tabular-nums',
+            ...revealStyle(shown, animate, 0.5, 6),
+          }}>{sharedDetail}</div>
+        ) : null}
+
+        {sc.note ? (
+          <div style={{ marginTop: 16 }}>
+            <Bullets bullets={[sc.note]} accent={accent} max={1} reveal={{ shown, animate, baseDelay: 0.55 }} />
+          </div>
+        ) : null}
+      </div>
+      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.7, 8) }}>
+        <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
+      </div>
+    </article>
+  );
+}
