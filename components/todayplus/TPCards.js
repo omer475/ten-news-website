@@ -84,6 +84,7 @@ export function CoverCard({ story, display, accent, onOpen }) {
           <StatsRow stats={display.stats} accent={accent} cardKey={`c${story.id}`} />
         </div>
       ) : null}
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.3, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -123,6 +124,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
           <StatsRow stats={display.stats} accent={accent} cardKey={`c${story.id}`} />
         </div>
       ) : null}
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.42, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -185,6 +187,7 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
         </div>
       </div>
       {/* NO stats row — the big number replaces it (§5.3) */}
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.6, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -267,6 +270,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
           <Bullets bullets={display.bullets} accent={accent} max={2} reveal={{ shown, animate, baseDelay: 0.68 }} />
         </div>
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.82, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -472,6 +476,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
           </div>
         ) : null}
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.7, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -534,6 +539,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
           </div>
         </div>
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.25 + entries.length * 0.14, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -605,6 +611,7 @@ export function SplitCard({ story, display, accent, onOpen }) {
           ) : null}
         </div>
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.4, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -647,8 +654,13 @@ function TrendLine({ trend, accent, drawn, animate, storyId }) {
   if (n < 2) return null;
 
   const W = 560, H = 190, PAD_X = 14, PAD_T = 44, PAD_B = 14;
-  const min = Math.min(...vals, 0);
-  const max = Math.max(...vals, 0.0001);
+  // y-domain hugs the DATA (±15% headroom), not zero — a 22% six-month move
+  // must visibly travel the chart, not render as a flat line.
+  const dMin = Math.min(...vals);
+  const dMax = Math.max(...vals);
+  const range = Math.max(dMax - dMin, Math.abs(dMax) * 0.02, 0.0001);
+  const min = dMin - 0.15 * range;
+  const max = dMax + 0.15 * range;
   const span = Math.max(max - min, 0.0001);
   const x = (i) => PAD_X + (i * (W - PAD_X * 2)) / Math.max(1, n - 1);
   const y = (v) => PAD_T + (1 - (v - min) / span) * (H - PAD_T - PAD_B);
@@ -684,6 +696,11 @@ function TrendLine({ trend, accent, drawn, animate, storyId }) {
         {/* dots on the FIRST and LAST points only */}
         <circle cx={x(0)} cy={y(vals[0])} r="3.5" fill={TP.bg} stroke={accent} strokeWidth="2"
           style={{ opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.3s ease-out 0.25s' : 'none' }} />
+        <text x={x(0)} y={y(vals[0]) - 10} textAnchor="start"
+          fontFamily={FONT_MONO} fontSize="10.5" fill={TP.ink3}
+          style={{ opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.4s ease-out 0.35s' : 'none' }}>
+          {formatNumber(vals[0])}{trend.unit || ''}
+        </text>
         <circle cx={x(lastIdx)} cy={y(lastVal)} r="4.5" fill={accent}
           style={{
             opacity: drawn ? 1 : 0,
@@ -724,6 +741,12 @@ function TrendBars({ trend, accent, drawn, animate, storyId }) {
   const vals = trend.vals || [];
   const labels = trend.labels || [];
   const maxVal = Math.max(...vals, 0.0001);
+  const minVal = Math.min(...vals);
+  // when every value sits within 25% of the max, a zero baseline renders
+  // near-identical bars — lift the baseline so the differences show.
+  const tight = vals.length > 1 && (maxVal - minVal) <= 0.25 * Math.abs(maxVal);
+  const baseline = tight ? Math.max(0, minVal - 0.3 * Math.max(maxVal - minVal, 0.0001)) : 0;
+  const denom = Math.max(maxVal - baseline, 0.0001);
   const lastIdx = vals.length - 1;
   return (
     <>
@@ -740,7 +763,7 @@ function TrendBars({ trend, accent, drawn, animate, storyId }) {
               <CountUp value={v} unit={trend.unit && i === lastIdx ? trend.unit : ''} animKey={`chartval.${storyId}.${i}`} />
             </div>
             <div style={{
-              height: Math.max(6, (120 * v) / maxVal),
+              height: Math.max(6, (120 * (v - baseline)) / denom),
               borderRadius: '8px 8px 3px 3px',
               background: i === lastIdx
                 ? `linear-gradient(to top, ${accent}, color-mix(in srgb, ${accent} 72%, white))`
@@ -1031,6 +1054,7 @@ export function ReceiptsCard({ story, display, accent, onOpen }) {
           </div>
         ) : null}
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.78, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -1200,9 +1224,126 @@ export function ScoreCard({ story, display, accent, onOpen }) {
           </div>
         ) : null}
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.7, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
+  );
+}
+
+
+// ── Mini-chart strip (add-on) ────────────────────────────────────────────────
+// When a story carries chart data but the rhythm picked a NON-chart template,
+// a compact strip renders between the bullets and the footer: 64px line for
+// trend, 64px mini-donut for breakdown, max-3-row bars for ranking, with the
+// caption as one mono line. Static — it inherits the card's own entrance.
+
+export function MiniChart({ display, accent, storyId }) {
+  const trend = display.trend;
+  const breakdown = display.breakdown;
+  const ranking = display.ranking;
+  if (!trend?.vals?.length && !breakdown?.slices?.length && !ranking?.rows?.length) return null;
+  const caption = breakdown?.caption || ranking?.caption || trend?.caption;
+
+  let body = null;
+
+  if (breakdown?.slices?.length) {
+    const slices = breakdown.slices.slice(0, 6);
+    const total = slices.reduce((sum, sl) => sum + (Number(sl[1]) || 0), 0) || 1;
+    const D = 64, ST = 9, R = (D - ST) / 2;
+    const GAP = (2 / 360) * 100;
+    let offset = 25;
+    const segs = slices.map((sl, i) => {
+      const pct = ((Number(sl[1]) || 0) / total) * 100;
+      const seg = { len: Math.max(0, pct - GAP), offset, color: i === 0 ? accent : `color-mix(in srgb, ${accent} ${DONUT_MIXES[i] || 14}%, white)` };
+      offset -= pct;
+      return seg;
+    });
+    const [topLabel, topVal] = slices[0] || ['', 0];
+    body = (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <svg viewBox={`0 0 ${D} ${D}`} width={D} height={D} aria-hidden style={{ flexShrink: 0 }}>
+          <circle cx={D / 2} cy={D / 2} r={R} fill="none" stroke={TP.line} strokeOpacity="0.5" strokeWidth={ST} />
+          {segs.map((seg, i) => (
+            <circle key={i} cx={D / 2} cy={D / 2} r={R} fill="none"
+              stroke={seg.color} strokeWidth={ST} pathLength="100"
+              strokeDasharray={`${seg.len} ${100 - seg.len}`} strokeDashoffset={seg.offset} />
+          ))}
+        </svg>
+        <div style={{ minWidth: 0 }}>
+          <span style={{ fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 21, letterSpacing: '-0.02em', color: TP.ink, fontVariantNumeric: 'tabular-nums' }}>
+            {formatNumber(Number(topVal) || 0)}<span style={{ fontSize: '0.6em', color: accent }}>{breakdown.unit || ''}</span>
+          </span>
+          <div style={{ fontFamily: FONT_MONO, fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: TP.ink3, marginTop: 2 }}>{topLabel}</div>
+        </div>
+      </div>
+    );
+  } else if (ranking?.rows?.length) {
+    const rows = ranking.rows.slice(0, 3);
+    const maxVal = Math.max(...rows.map((r) => Math.abs(Number(r[1]) || 0)), 0.0001);
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {rows.map((row, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 8.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: TP.ink3, width: 58, flexShrink: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>{row[0]}</span>
+            <div style={{ flex: 1, height: 7 }}>
+              <div style={{
+                width: `${Math.max(3, (Math.abs(Number(row[1]) || 0) / maxVal) * 100)}%`, height: '100%', borderRadius: 4,
+                background: i === 0 ? accent : `color-mix(in srgb, ${accent} 30%, white)`,
+              }} />
+            </div>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: i === 0 ? TP.ink : TP.ink2, minWidth: 32, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+              {formatNumber(Number(row[1]) || 0)}{ranking.unit || ''}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  } else if (trend?.vals?.length >= 2) {
+    const vals = trend.vals;
+    const labels = trend.labels || [];
+    const n = vals.length;
+    const W = 560, H = 64, PX = 6, PY = 8;
+    const dMin = Math.min(...vals);
+    const dMax = Math.max(...vals);
+    const range = Math.max(dMax - dMin, Math.abs(dMax) * 0.02, 0.0001);
+    const lo = dMin - 0.15 * range, hi = dMax + 0.15 * range;
+    const x = (i) => PX + (i * (W - PX * 2)) / (n - 1);
+    const y = (v) => PY + (1 - (v - lo) / (hi - lo)) * (H - PY * 2);
+    const pts = vals.map((v, i) => [x(i), y(v)]);
+    const line = smoothPath(pts);
+    const area = `${line} L ${x(n - 1)} ${H} L ${x(0)} ${H} Z`;
+    const gid = `tpmini-${storyId}`;
+    body = (
+      <div>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }} aria-hidden>
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={accent} stopOpacity="0.16" />
+              <stop offset="100%" stopColor={accent} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={area} fill={`url(#${gid})`} />
+          <path d={line} fill="none" stroke={accent} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={x(0)} cy={y(vals[0])} r="3" fill={TP.bg} stroke={accent} strokeWidth="1.8" />
+          <circle cx={x(n - 1)} cy={y(vals[n - 1])} r="3.6" fill={accent} />
+        </svg>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 9, color: TP.ink3 }}>{labels[0] || ''} · {formatNumber(vals[0])}{trend.unit || ''}</span>
+          <span style={{ fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500, color: accent }}>{labels[n - 1] || ''} · {formatNumber(vals[n - 1])}{trend.unit || ''}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!body) return null;
+  return (
+    <div style={{ marginTop: 16 }}>
+      {body}
+      {caption ? (
+        <div style={{ fontFamily: FONT_MONO, fontSize: 9, lineHeight: 1.5, color: TP.ink3, marginTop: 6 }}>{caption}</div>
+      ) : null}
+    </div>
   );
 }

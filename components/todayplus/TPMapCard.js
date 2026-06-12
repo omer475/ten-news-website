@@ -8,6 +8,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { TP, FONT_MONO, shouldAnimateOnce, hasAnimated } from './tokens';
 import { KickerRow, Bullets, CardFooter, Headline, useReducedMotion, useVisibleOnce } from './shared';
+import { MiniChart } from './TPCards';
 import { MAPBOX_TOKEN } from '../MapboxMap';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -326,6 +327,7 @@ export function MapCard({ story, display, accent, onOpen }) {
           <Bullets bullets={display.bullets} accent={accent} max={2} />
         </div>
       </div>
+      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 14 }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
