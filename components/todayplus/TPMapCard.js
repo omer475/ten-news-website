@@ -315,7 +315,7 @@ export function MapCard({ story, display, accent, onOpen }) {
       <div>
         <KickerRow category={display.category} accent={accent} story={story} prefix="ON THE MAP" countdown={display.countdown} />
         <div style={{ marginTop: 10 }}>
-          <Headline raw={display.title} accent={accent} size={24} />
+          <Headline raw={display.title} accent={accent} size={22.5} />
         </div>
         {display.geo?.pins?.length ? (
           <div style={{ marginTop: 18 }}>

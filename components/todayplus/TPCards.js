@@ -58,7 +58,7 @@ export function CoverCard({ story, display, accent, onOpen }) {
 
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 3, padding: 22 }}>
             <h2 style={{
-              fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27.5, lineHeight: 1.13,
+              fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 25, lineHeight: 1.14,
               letterSpacing: '-0.016em', color: '#fff', margin: 0, textWrap: 'balance',
               textShadow: '0 2px 26px rgba(0,0,0,0.45)',
               ...revealStyle(shown, animate, 0.05, 18),
@@ -68,7 +68,7 @@ export function CoverCard({ story, display, accent, onOpen }) {
             </h2>
             {display.lede ? (
               <p style={{
-                fontFamily: FONT_BODY, fontSize: 14.8, lineHeight: 1.48, fontWeight: 450,
+                fontFamily: FONT_BODY, fontSize: 14.4, lineHeight: 1.48, fontWeight: 450,
                 color: 'rgba(255,255,255,0.85)', maxWidth: '50ch', margin: '9px 0 0',
                 ...revealStyle(shown, animate, 0.22, 14),
               }}>{display.lede}</p>
@@ -101,7 +101,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 17, ...revealStyle(shown, animate, 0.08, 12) }}>
           <div style={{ flex: 1 }}>
-            <Headline raw={display.title} accent={accent} size={24.5} />
+            <Headline raw={display.title} accent={accent} size={22.5} />
           </div>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             {display.countdown ? <TPCountdownChip countdown={display.countdown} accent={accent} /> : null}
@@ -149,12 +149,12 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
         <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.12, 12) }}>
-          <Headline raw={display.title} accent={accent} size={29} />
+          <Headline raw={display.title} accent={accent} size={26} />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginTop: 22, flexWrap: 'wrap', ...revealStyle(shown, animate, 0.3, 14) }}>
           <span style={{
-            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 60, lineHeight: 0.95,
+            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 52, lineHeight: 0.95,
             letterSpacing: '-0.025em',
             background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 78%, white) 0%, ${accent} 55%, color-mix(in srgb, ${accent} 78%, black) 100%)`,
             WebkitBackgroundClip: 'text', backgroundClip: 'text',
@@ -209,7 +209,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
         <div style={{ position: 'relative', marginTop: 26 }}>
           <span aria-hidden style={{
             position: 'absolute', top: -17, left: 18, zIndex: 1,
-            width: 36, height: 36, borderRadius: '50%',
+            width: 32, height: 32, borderRadius: '50%',
             background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 80%, white), ${accent})`,
             boxShadow: `0 5px 14px color-mix(in srgb, ${accent} 35%, transparent), 0 0 0 3px ${TP.bg}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -224,7 +224,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
 
           <blockquote style={{
             fontFamily: FONT_HEAD, fontWeight: 700,
-            fontSize: 23, lineHeight: 1.3, letterSpacing: '-0.012em',
+            fontSize: 21, lineHeight: 1.32, letterSpacing: '-0.012em',
             color: TP.ink, margin: 0, textWrap: 'balance',
             background: `linear-gradient(165deg, color-mix(in srgb, ${accent} 7%, white), color-mix(in srgb, ${accent} 3%, ${TP.bg}))`,
             border: `1px solid color-mix(in srgb, ${accent} 13%, white)`,
@@ -254,7 +254,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
 
         {/* headline as subhead — quote owns the color, emphasis inverts (§5.4) */}
         <h3 style={{
-          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 16.5, lineHeight: 1.34,
+          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 15.5, lineHeight: 1.36,
           letterSpacing: '-0.008em', color: TP.ink2, margin: '20px 0 0', textWrap: 'balance',
           ...revealStyle(shown, animate, 0.58, 10),
         }}>
@@ -328,7 +328,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
       <>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 22 }}>
           <div style={{ flex: 1, textAlign: 'center', minWidth: 0, ...sideReveal(-14) }}>
-            {value(versus.a, 'a', 40, TP.ink, accent)}
+            {value(versus.a, 'a', 35, TP.ink, accent)}
             {whoLabel(versus.a?.who)}
           </div>
           <div style={{
@@ -344,7 +344,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
             transition: animate ? 'opacity 0.45s ease-out 0.4s, transform 0.6s cubic-bezier(.22,1.6,.36,1) 0.4s' : 'none',
           }}>VS</div>
           <div style={{ flex: 1, textAlign: 'center', minWidth: 0, ...sideReveal(14) }}>
-            {value(versus.b, 'b', 40, TP.ink, accent)}
+            {value(versus.b, 'b', 35, TP.ink, accent)}
             {whoLabel(versus.b?.who)}
           </div>
         </div>
@@ -385,7 +385,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
     return (
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginTop: 22 }}>
         <div style={{ flex: 1, textAlign: 'center', minWidth: 0, ...sideReveal(-14) }}>
-          {value(versus.a, 'a', 33, TP.ink3, TP.ink3)}
+          {value(versus.a, 'a', 28, TP.ink3, TP.ink3)}
           {whoLabel(versus.a?.who)}
         </div>
         <div style={{
@@ -412,7 +412,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
           ) : null}
         </div>
         <div style={{ flex: 1, textAlign: 'center', minWidth: 0, ...sideReveal(14, 0.32) }}>
-          {value(versus.b, 'b', 42, TP.ink, accent)}
+          {value(versus.b, 'b', 37, TP.ink, accent)}
           {whoLabel(versus.b?.who, TP.ink2)}
         </div>
       </div>
@@ -437,12 +437,12 @@ export function VersusCard({ story, display, accent, onOpen }) {
     return (
       <div ref={barRef} style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginTop: 22 }}>
         <div style={{ flex: 1, minWidth: 0, ...sideReveal(-14) }}>
-          {value(versus.a, 'a', 38, TP.ink, accent)}
+          {value(versus.a, 'a', 33, TP.ink, accent)}
           {whoLabel(versus.a?.who)}
           {bar(aVal, `linear-gradient(90deg, color-mix(in srgb, ${accent} 72%, white), ${accent})`, 0.15)}
         </div>
         <div style={{ flex: 1, minWidth: 0, ...sideReveal(14, 0.3) }}>
-          {value(versus.b, 'b', 38, TP.ink, accent)}
+          {value(versus.b, 'b', 33, TP.ink, accent)}
           {whoLabel(versus.b?.who)}
           {bar(bVal, `color-mix(in srgb, ${accent} 30%, white)`, 0.3)}
         </div>
@@ -457,7 +457,7 @@ export function VersusCard({ story, display, accent, onOpen }) {
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
         <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.08, 12) }}>
-          <Headline raw={display.title} accent={accent} size={24.5} />
+          <Headline raw={display.title} accent={accent} size={22.5} />
         </div>
 
         {kind === 'duel' ? duelFigure() : null}
@@ -490,7 +490,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
         <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.08, 12) }}>
-          <Headline raw={display.title} accent={accent} size={24.5} />
+          <Headline raw={display.title} accent={accent} size={22.5} />
         </div>
 
         <div style={{ position: 'relative', marginTop: 22 }}>
@@ -575,7 +575,7 @@ export function SplitCard({ story, display, accent, onOpen }) {
             <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
           </div>
           <h2 style={{
-            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18, lineHeight: 1.24,
+            fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 16.5, lineHeight: 1.26,
             letterSpacing: '-0.012em', color: TP.ink, margin: '8px 0 0', textWrap: 'balance',
             ...revealStyle(shown, animate, 0.18, 10),
           }}>
@@ -792,7 +792,7 @@ function BreakdownDonut({ breakdown, accent, drawn, animate, storyId }) {
           position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', textAlign: 'center',
         }}>
-          <span style={{ fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27, lineHeight: 1, letterSpacing: '-0.02em', color: TP.ink }}>
+          <span style={{ fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 24, lineHeight: 1, letterSpacing: '-0.02em', color: TP.ink }}>
             <CountUp value={Number(bigVal) || 0} unit={breakdown.unit || ''}
               unitStyle={{ fontSize: '0.55em', color: accent }} animKey={`donut.${storyId}`} />
           </span>
@@ -896,7 +896,7 @@ export function ChartCard({ story, display, accent, onOpen }) {
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
         <div style={{ marginTop: 12, ...revealStyle(shown, animateReveal, 0.08, 12) }}>
-          <Headline raw={display.title} accent={accent} size={24.5} />
+          <Headline raw={display.title} accent={accent} size={22.5} />
         </div>
 
         <div ref={chartRef} style={{ marginTop: 20 }}>
@@ -949,7 +949,7 @@ export function ReceiptsCard({ story, display, accent, onOpen }) {
 
         {/* article title demoted to a subhead — the claim owns the weight */}
         <h3 style={{
-          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 16.5, lineHeight: 1.34,
+          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 15.5, lineHeight: 1.36,
           letterSpacing: '-0.008em', color: TP.ink2, margin: '14px 0 0', textWrap: 'balance',
           ...revealStyle(shown, animate, 0.08, 8),
         }}>
@@ -958,7 +958,7 @@ export function ReceiptsCard({ story, display, accent, onOpen }) {
 
         <blockquote style={{
           fontFamily: FONT_HEAD, fontWeight: 700, fontStyle: 'italic',
-          fontSize: 23, lineHeight: 1.3, letterSpacing: '-0.012em',
+          fontSize: 21, lineHeight: 1.32, letterSpacing: '-0.012em',
           color: TP.ink, margin: '18px 0 0', textWrap: 'balance',
           borderLeft: `3px solid ${accent}`, paddingLeft: 14,
           ...revealStyle(shown, animate, 0.16, 12),

@@ -35,11 +35,33 @@ const CARD_BY_TEMPLATE = {
 
 // ── Block assembly: incremental, stable across loadMore appends ─────────────
 
+// Hero-first: opening the site should land on the day's biggest story as a
+// full Cover card. Promote the highest-scored BREAKING story (with a usable
+// full-bleed image) from the first dozen to position 0. Deterministic for a
+// given stories array, so incremental appends stay stable.
+function promoteHero(news) {
+  let heroIdx = -1;
+  let heroScore = -Infinity;
+  for (let i = 0; i < Math.min(news.length, 12); i += 1) {
+    const d = news[i]?.display;
+    if (!d || !d.breaking || d.cover_ok === false) continue;
+    if (!(d.imageURL || news[i].urlToImage)) continue;
+    const score = Number(news[i].final_score) || 0;
+    if (score > heroScore) { heroScore = score; heroIdx = i; }
+  }
+  if (heroIdx > 0) {
+    const [hero] = news.splice(heroIdx, 1);
+    news.unshift(hero);
+  }
+  return heroIdx >= 0;
+}
+
 function useFeedBlocks(stories, modules) {
   const cacheRef = useRef(null);
 
   return useMemo(() => {
     const news = stories.filter((s) => s && s.type === 'news');
+    const hasHero = promoteHero(news);
     const firstId = news[0]?.id ?? null;
     let cache = cacheRef.current;
 
@@ -68,14 +90,20 @@ function useFeedBlocks(stories, modules) {
       const display = story.display || null;
       let template = 'legacy';
       if (display) {
-        // Same article = same card style across loads (24h memory), so a
-        // repeat can't masquerade as a new story in a different template.
-        const kept = rememberedTemplate(story.id);
-        if (kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]) {
-          template = cache.selector.use(kept, cache.blockIdx);
+        if (i === 0 && hasHero) {
+          // The promoted breaking story always opens as the flagship Cover.
+          template = cache.selector.use('cover', cache.blockIdx);
+          rememberTemplate(story.id, 'cover');
         } else {
-          template = cache.selector.choose(display, cache.blockIdx);
-          rememberTemplate(story.id, template);
+          // Same article = same card style across loads (24h memory), so a
+          // repeat can't masquerade as a new story in a different template.
+          const kept = rememberedTemplate(story.id);
+          if (kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]) {
+            template = cache.selector.use(kept, cache.blockIdx);
+          } else {
+            template = cache.selector.choose(display, cache.blockIdx);
+            rememberTemplate(story.id, template);
+          }
         }
       } else {
         cache.selector.recordLegacy(cache.blockIdx);

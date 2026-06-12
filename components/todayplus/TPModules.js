@@ -48,7 +48,7 @@ export function CountdownModule({ row }) {
     <section ref={ref}>
       <ModuleHeader title="COUNTING DOWN" shown={shown} animate={animate} />
       <h3 style={{
-        fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 18.4,
+        fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 17,
         letterSpacing: '-0.01em', color: TP.ink, margin: '16px 0 0',
         ...revealStyle(shown, animate, 0.12, 10),
       }}>{row.name}</h3>
@@ -58,7 +58,7 @@ export function CountdownModule({ row }) {
             {i > 0 ? <span style={{ width: 1, background: TP.line }} /> : null}
             <div style={{ flex: 1, textAlign: 'center' }}>
               <div style={{
-                fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 34, lineHeight: 1,
+                fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 30, lineHeight: 1,
                 letterSpacing: '-0.02em', color: TP.ink, fontVariantNumeric: 'tabular-nums',
               }}>{String(value).padStart(2, '0')}</div>
               <div style={{
@@ -95,7 +95,7 @@ export function HistoryModule({ module }) {
               {i > 0 ? <div style={{ height: 1, background: TP.line, margin: '13px 0' }} /> : null}
               <div style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
                 <span style={{
-                  fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 20.8,
+                  fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18.5,
                   letterSpacing: '-0.012em', color: TP.gold, width: 64, flexShrink: 0,
                   fontVariantNumeric: 'tabular-nums',
                 }}>{year}</span>
@@ -145,7 +145,7 @@ export function NotdModule({ module, moduleKey }) {
     <section ref={ref}>
       <ModuleHeader title="NUMBER OF THE DAY" shown={shown} animate={animate} />
       <div style={{
-        fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 66, lineHeight: 0.95,
+        fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 54, lineHeight: 0.95,
         letterSpacing: '-0.025em', color: TP.ink, marginTop: 16,
         ...revealStyle(shown, animate, 0.12, 12),
       }}>

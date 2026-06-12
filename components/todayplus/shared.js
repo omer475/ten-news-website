@@ -358,7 +358,7 @@ export function StatsRow({ stats, accent, cardKey }) {
             }} />
             <div style={revealStyle(shown, animate, delay + 0.08, 8)}>
               <div style={{
-                fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 27, lineHeight: 1,
+                fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 23, lineHeight: 1,
                 letterSpacing: '-0.02em', color: TP.ink,
               }}>
                 <CountUp
