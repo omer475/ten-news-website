@@ -228,7 +228,12 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 - "trend": {{"style": "bar|line", "vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric TIME SERIES of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. style: "line" for continuous metrics with 5+ points (prices, rates), "bar" for few discrete periods. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "breakdown": {{"slices": [["LABEL", n], …], "unit": "%", "caption": "one-line reading"}} — COMPOSITION of a whole stated in the source, for a donut chart: vote share by party, market share, budget split, "X of the Y total". 3-6 slices, biggest FIRST, labels max 12 chars uppercase. Values must come from the source; you may add ONE final ["OTHER", n] slice to complete a % total. ONLY when the parts-of-a-whole framing is real.
 - "ranking": {{"rows": [["LABEL", n], …], "unit": "", "caption": "one-line reading"}} — comparison of 3-6 ENTITIES on one metric from the source, for horizontal bars: top scorers, biggest creditors, countries by medal count. Largest first, labels max 12 chars uppercase. Values from the source only.
-- "geo": {{"pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
+- "geo": {{"kind": "site|route|area|multi", "pins": [{{"lat": 25.997, "lon": -97.155, "label": "Starbase Launch Pad"}}], "link": false, "distance": "", "radius_km": 0, "region": "TEXAS · USA"}} — THE MAP TEST: did this story happen AT a specific place, and would SEEING that spot teach the reader something? The event must physically BE somewhere: a launch (pin the pad: "Starbase Launch Pad", "Vandenberg SLC-4E"), a match (the stadium), a crash/strike/riot/discovery (the site), a landmark sale (the building). Always pin the EXACT site, not the city around it.
+  kind picks the map style — match it to the story's SHAPE:
+    "site"  = it happened at a spot (default). 1-2 pins.
+    "route" = movement with DIRECTION: flight diverted, missile path, convoy/troop advance, migration route. EXACTLY 2 pins in travel order: FROM first, TO second. Give "distance" ("1,560 km").
+    "area"  = it covers a ZONE: earthquake felt across, storm path, wildfire, blackout, exclusion zone. 1 pin (the center) + "radius_km" from the source (felt 200 km away -> 200). NEVER guess the radius.
+    "multi" = same event in SEVERAL places: riots in 4 cities, nationwide strikes, tournament venues. 3-5 pins, most important first.
   NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
 - "receipts": {{"claim": "the disputed claim, max ~120 chars", "who": "Name · Role", "receipts": [{{"text": "the establishing fact, max 140 chars", "source": "Reuters"}}], "verdict": "short verdict that FOLLOWS from the receipts, max 90 chars"}} — RARE, high bar: ONLY when the story centers on a disputed or checkable CLAIM (political statement, company spin, viral rumor) AND the source articles THEMSELVES establish the facts. 1-2 receipts; each must name the establishing source (outlet, institution, document) AS STATED in the source text. The verdict must be what the receipts show — NEVER your own ruling, NEVER your own knowledge. If the sources don't settle the claim, OMIT this signal. Most stories do not qualify.
@@ -605,8 +610,12 @@ def validate_display(result: Dict, pipeline_category: str,
 
     geo = result.get('geo')
     if isinstance(geo, dict) and isinstance(geo.get('pins'), list):
+        kind = str(geo.get('kind', '')).strip().lower()
+        if kind not in ('site', 'route', 'area', 'multi'):
+            kind = 'site'
+        max_pins = 5 if kind == 'multi' else 2
         pins = []
-        for p in geo['pins'][:2]:
+        for p in geo['pins'][:max_pins]:
             if not isinstance(p, dict):
                 continue
             lat, lon = _num(p.get('lat')), _num(p.get('lon'))
@@ -625,14 +634,28 @@ def validate_display(result: Dict, pipeline_category: str,
                     and -90 <= lat <= 90 and -180 <= lon <= 180:
                 pins.append({'lat': round(float(lat), 4),
                              'lon': round(float(lon), 4), 'label': label[:28]})
+        # Per-kind shape requirements (fall back to site rather than drop).
+        if kind == 'route' and len(pins) != 2:
+            kind = 'site'
+        if kind == 'multi' and len(pins) < 3:
+            kind, pins = 'site', pins[:2]
+        radius_km = _num(geo.get('radius_km'))
+        if kind == 'area':
+            if radius_km is None or not 1 <= radius_km <= 3000 or len(pins) != 1:
+                kind, radius_km = 'site', None
+        else:
+            radius_km = None
         if pins:
-            link = bool(geo.get('link')) and len(pins) == 2
+            link = (kind == 'route') or (bool(geo.get('link')) and len(pins) == 2)
             out['geo'] = {
+                'kind': kind,
                 'pins': pins,
                 'link': link,
                 'distance': _strip_tags(str(geo.get('distance', ''))).strip()[:16] if link else '',
                 'region': _strip_tags(str(geo.get('region', ''))).strip().upper()[:36],
             }
+            if radius_km is not None:
+                out['geo']['radius_km'] = round(float(radius_km))
 
     return out
 
