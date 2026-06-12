@@ -98,6 +98,41 @@ def _tl_sort_key(lab: str):
     return None
 
 
+def validate_timeline_entries(timeline) -> Optional[list]:
+    """Shared timeline validation: absolute labels, no relative wording,
+    dedup, canonical NEXT/newest-first ordering. None if < 3 beats survive."""
+    if not isinstance(timeline, list):
+        return None
+    entries = []
+    seen_labels = set()
+    for e in timeline[:4]:
+        if not (isinstance(e, (list, tuple)) and len(e) >= 2):
+            continue
+        lab = _tl_normalize_label(_strip_tags(str(e[0])))
+        txt = _strip_tags(str(e[1])).strip()
+        if not lab or not txt:
+            continue
+        # Relative labels are useless in a feed read hours later.
+        if lab in _TL_BANNED_LABELS or any(w in lab for w in _TL_BANNED_WORDS):
+            continue
+        # Same label twice = padding, keep the first beat only.
+        if lab in seen_labels:
+            continue
+        seen_labels.add(lab)
+        entries.append((_tl_sort_key(lab), [_tl_display_label(lab), txt[:160]]))
+    # Canonical order: NEXT/future first, then newest -> oldest. Only
+    # reorder when every label parses — otherwise trust the model order
+    # (minus the banned entries already dropped).
+    if entries and all(k is not None for k, _ in entries):
+        entries.sort(key=lambda p: p[0], reverse=True)
+        ordered = [e for _, e in entries]
+    else:
+        ordered = [e for _, e in entries]
+        ordered = [e for e in ordered if e[0] == 'NEXT'] + \
+                  [e for e in ordered if e[0] != 'NEXT']
+    return ordered if len(ordered) >= 3 else None
+
+
 # Map-pin quality nets (2026-06-12): a pin must be a place worth LOOKING at.
 # Bare country/continent pins are always dropped; bare metro names are
 # dropped for business-ish categories (HQ-city syndrome — "New York" pin
@@ -188,12 +223,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
     "change" = the SAME metric before vs after: a = BEFORE/older value, b = AFTER/current value (dev time cut from 55 to 26 months; obesity rate pre-COVID vs now). NOT a fight — never use duel for this.
     "gap"    = two related quantities contrasted for scale (company X's fleet vs company Y's, spend vs budget).
   who: SHORT uppercase label, max 14 chars ("FOR", "PRE-COVID", "2022-24", "TESLA") — long labels get cut off on screen. Include unit ("%", "MONTHS") in unit, not in who.
-- "timeline": [["NEXT","what's expected"], ["JUN 11","..."], ["JUN 8","..."]] — THE STORY'S OWN ARC: how THIS news unfolded and what happens next. 3-4 entries. STRICT RULES:
-  a) Every entry must be a beat of THIS developing story. Career history, biography, "the award was established in 2018", a performer's past shows, a player's old surgeries = BANNED filler. If the story did not actually develop over multiple dated beats, OMIT timeline — most stories should.
-  b) ORDER: ["NEXT", …] first ONLY if a concrete dated future step exists, then newest → oldest. The top entry is "now".
-  c) Labels: compact ABSOLUTE dates — "JUN 11", "MAY 2025", "Q1 2026", "2023" (max 11 chars). NEVER weekdays, "TODAY", "EARLIER", "LAST SEASON", or any relative wording.
-  d) The newest entry must add a concrete detail beyond the headline (where, what exactly, what number) — never restate it.
-  e) Never two entries for the same date unless they are clearly distinct beats.
+- "timeline_story": true — a FLAG, not the timeline itself (a dedicated writer builds it). Set true ONLY if ALL three hold: (1) this story is the latest development in a saga running for days/weeks (war, trial, deal process, investigation, crisis, transfer saga, election process); (2) the SOURCE TEXT itself describes at least TWO earlier dated developments of THIS story; (3) a reader landing on it would ask "how did we get here?". Single events, match results, product launches, awards, announcements, profiles = false. Expect true on roughly 1 story in 10.
 - "trend": {{"style": "bar|line", "vals": [n,…], "labels": ["DEC",…], "unit": "%", "caption": "one-line reading"}} — a real numeric TIME SERIES of 3-8 points from the source: monthly/quarterly figures, values at distinct dates ("was 1.75% in March, 2% in April, 2.25% now"), yearly comparisons, successive poll numbers, season-by-season stats. Even THREE real points across time make a chart. style: "line" for continuous metrics with 5+ points (prices, rates), "bar" for few discrete periods. vals and labels same length, chronological, latest LAST. NEVER estimate or interpolate missing points — but DO look for series the source states in prose, not just tables.
 - "breakdown": {{"slices": [["LABEL", n], …], "unit": "%", "caption": "one-line reading"}} — COMPOSITION of a whole stated in the source, for a donut chart: vote share by party, market share, budget split, "X of the Y total". 3-6 slices, biggest FIRST, labels max 12 chars uppercase. Values must come from the source; you may add ONE final ["OTHER", n] slice to complete a % total. ONLY when the parts-of-a-whole framing is real.
 - "ranking": {{"rows": [["LABEL", n], …], "unit": "", "caption": "one-line reading"}} — comparison of 3-6 ENTITIES on one metric from the source, for horizontal bars: top scorers, biggest creditors, countries by medal count. Largest first, labels max 12 chars uppercase. Values from the source only.
@@ -206,6 +236,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 CHART-DATA FLAGS — charts are a signature card of this feed. When you could NOT build "trend" from the source, set a flag on EVERY story whose subject has a published numeric history. The pipeline fetches and VERIFIES the real series itself — a flag costs nothing if no series exists, so when in doubt, SET it:
 - "chart_ticker": Yahoo Finance symbol whenever a publicly traded company, index, or major crypto is CENTRAL to the story — even if the story is not about the price itself (earnings, CEO change, lawsuit, product launch, acquisition: the stock's recent path IS useful context). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
 - "chart_metric": a search phrase (max 10 words) whenever a well-known published indicator is central or gives obvious context: "eurozone monthly inflation rate 2026", "US unemployment rate by month", "ECB key interest rate history", "Brent crude oil price by month", "US box office weekly 2026", "Premier League title odds history". Use for: inflation, rates, jobs, energy/commodity prices, currencies, housing, box office, sales figures, polls/approval ratings, league standings/medal tables, epidemic counts, casualty tallies over time.
+- "breakdown_metric": a search phrase (max 10 words) whenever the story centers on a SHARE-OF-WHOLE composition whose full parts are NOT in the source: "Italian parliament seats by party 2026", "global smartphone market share Q1 2026", "US electricity generation mix by source", "World Cup group F standings points". The pipeline searches, verifies, and builds the donut itself.
 
 RULES:
 1. NEVER invent numbers, quotes, dates, or coordinates. Every fact must trace to the bullets or source text.
@@ -437,37 +468,14 @@ def validate_display(result: Dict, pipeline_category: str,
                         ratio = av / (av + bv)
                     out['versus']['ratio'] = max(0.05, min(0.95, round(float(ratio), 3)))
 
-    timeline = result.get('timeline')
-    if isinstance(timeline, list):
-        entries = []
-        seen_labels = set()
-        for e in timeline[:4]:
-            if not (isinstance(e, (list, tuple)) and len(e) >= 2):
-                continue
-            lab = _tl_normalize_label(_strip_tags(str(e[0])))
-            txt = _strip_tags(str(e[1])).strip()
-            if not lab or not txt:
-                continue
-            # Relative labels are useless in a feed read hours later.
-            if lab in _TL_BANNED_LABELS or any(w in lab for w in _TL_BANNED_WORDS):
-                continue
-            # Same label twice = padding, keep the first beat only.
-            if lab in seen_labels:
-                continue
-            seen_labels.add(lab)
-            entries.append((_tl_sort_key(lab), [_tl_display_label(lab), txt[:160]]))
-        # Canonical order: NEXT/future first, then newest -> oldest. Only
-        # reorder when every label parses — otherwise trust the model order
-        # (minus the banned entries already dropped).
-        if entries and all(k is not None for k, _ in entries):
-            entries.sort(key=lambda p: p[0], reverse=True)
-            ordered = [e for _, e in entries]
-        else:
-            ordered = [e for _, e in entries]
-            ordered = [e for e in ordered if e[0] == 'NEXT'] + \
-                      [e for e in ordered if e[0] != 'NEXT']
-        if len(ordered) >= 3:
-            out['timeline'] = ordered
+    tl = validate_timeline_entries(result.get('timeline'))
+    if tl:
+        out['timeline'] = tl
+
+    # timeline_story flag (internal — workflow runs the dedicated timeline
+    # writer for flagged stories, then removes the flag).
+    if result.get('timeline_story') is True:
+        out['timeline_story'] = True
 
     trend = result.get('trend')
     if isinstance(trend, dict):
@@ -564,6 +572,9 @@ def validate_display(result: Dict, pipeline_category: str,
     metric = result.get('chart_metric')
     if isinstance(metric, str) and metric.strip():
         out['chart_metric'] = _strip_tags(metric).strip()[:80]
+    bmetric = result.get('breakdown_metric')
+    if isinstance(bmetric, str) and bmetric.strip():
+        out['breakdown_metric'] = _strip_tags(bmetric).strip()[:80]
 
     geo = result.get('geo')
     if isinstance(geo, dict) and isinstance(geo.get('pins'), list):
@@ -789,25 +800,161 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
             'unit': str(data.get('unit', ''))[:6], 'caption': caption[:140]}
 
 
+TIMELINE_PROMPT = """You write the TIMELINE rail for a premium news feed — the story's arc in 3-4 beats. You only get stories that genuinely developed over time.
+
+TODAY'S DATE: {today}
+STORY TITLE: {title}
+BULLETS:
+{bullets}
+SOURCE TEXT:
+{source_text}
+
+Return ONLY a JSON object: {{"timeline": [["LABEL", "beat text"], …]}}
+
+HOW TO WRITE EACH BEAT — this is the craft that matters:
+- ONE tight factual sentence, 40-90 chars, active voice, present tense for the newest beat, past for earlier ones.
+- Every beat carries at least one CONCRETE specific: a number, a name, a place, an amount. "Russia strikes Kyiv grid; 2M lose power" — never "tensions escalated" or "the situation developed".
+- Each beat must say what CHANGED on that date — a reader should see the story build beat by beat.
+- The newest beat must NOT restate the headline — add the detail the headline didn't have (the where, the exact figure, the mechanism).
+
+STRUCTURE:
+- 3-4 entries, ordered: ["NEXT", "…"] FIRST (only if the source states a concrete dated future step), then newest → oldest.
+- LABEL: compact absolute date — "JUN 11", "MAY 2025", "Q1 2026", "2023". NEVER weekdays, "TODAY", or relative wording.
+- Every beat must belong to THIS story's arc. Career history, biography, institutional background = banned.
+
+GOOD: [["NEXT","Canada opens vs Bosnia on June 14 without him"],["JUN 11","Davies ruled out of the opener after failing fitness test"],["JUN 10","MRI shows the knee at 85%, short of match readiness"],["MAR 2025","Davies tears ACL in Champions League quarterfinal"]]
+BAD:  [["JUN 11","Davies ruled out"],["2019","Davies joined Bayern"],["2015","Davies began career in Vancouver"]]
+
+If the source doesn't actually contain 3 dated beats of this story, return {{"timeline": []}} — an honest empty answer beats filler."""
+
+
+def fetch_timeline_dedicated(article: Dict, api_key: str) -> Optional[list]:
+    """Focused timeline writer for flagged developing stories."""
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    prompt = TIMELINE_PROMPT.format(
+        today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        title=_strip_tags(article.get('title', '')).replace('**', ''),
+        bullets='\n'.join(f'- {b}' for b in (article.get('bullets') or [])),
+        source_text=(article.get('source_text') or 'not available')[:6000],
+    )
+    for attempt in range(2):
+        try:
+            resp = requests.post(url, json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096,
+                                     "responseMimeType": "application/json"},
+            }, timeout=60)
+            resp.raise_for_status()
+            text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+            m = re.search(r'\{[\s\S]*\}', text)
+            data = json.loads(m.group(0) if m else text)
+            return validate_timeline_entries(data.get('timeline'))
+        except Exception as e:
+            print(f"   ⚠️ [timeline] dedicated writer attempt {attempt + 1} failed: {e}")
+            time.sleep(2)
+    return None
+
+
+GROUNDED_BREAKDOWN_PROMPT = """Today's date: {today}.
+Use Google Search to find the REAL published composition for:
+"{metric}"
+
+Return ONLY a JSON object (no markdown):
+{{"slices": [["LABEL", n], …],
+  "unit": "%",
+  "caption": "one line naming the composition and its source, max 90 chars",
+  "evidence": ["verbatim sentence from a search result containing each number"]}}
+
+STRICT RULES:
+1. 3-6 slices, biggest first, labels max 12 chars uppercase. If unit is "%",
+   slices must cover (close to) the whole — add a final ["OTHER", n] if needed,
+   computed from the published total, never guessed.
+2. Every number MUST literally appear in your search results (OTHER may be the
+   arithmetic remainder to 100). Copy the proving sentences into evidence.
+3. NEVER estimate or recall from memory. If search does not surface the real
+   composition, return {{}} — that is a good answer."""
+
+
+def fetch_breakdown_grounded(metric: str, api_key: str) -> Optional[Dict]:
+    """Google-grounded composition fetch; values must verify vs evidence."""
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    try:
+        resp = requests.post(url, json={
+            "contents": [{"parts": [{"text": GROUNDED_BREAKDOWN_PROMPT.format(
+                today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                metric=metric)}]}],
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
+        }, timeout=90)
+        resp.raise_for_status()
+        cand = resp.json()['candidates'][0]
+        if 'groundingMetadata' not in cand:
+            return None
+        text = ''.join(p.get('text', '') for p in cand['content']['parts'])
+        m = re.search(r'\{[\s\S]*\}', text)
+        if not m:
+            return None
+        data = json.loads(m.group(0))
+    except Exception as e:
+        print(f"   ⚠️ [breakdown] grounded fetch failed for {metric!r}: {e}")
+        return None
+
+    slices = []
+    for s in (data.get('slices') or [])[:6]:
+        if isinstance(s, (list, tuple)) and len(s) >= 2:
+            lab = _strip_tags(str(s[0])).strip().upper()[:14]
+            v = _num(s[1])
+            if lab and v is not None and v > 0:
+                slices.append([lab, v])
+    caption = _strip_tags(str(data.get('caption', ''))).strip()
+    unit = str(data.get('unit', ''))[:6]
+    evidence = data.get('evidence')
+    if not (3 <= len(slices) <= 6 and caption
+            and isinstance(evidence, list) and evidence):
+        return None
+    if unit == '%' and not 90 <= sum(v for _, v in slices) <= 110:
+        return None
+    # Anti-hallucination: every value (except a computed OTHER) must appear
+    # in the evidence text.
+    ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
+    for lab, v in slices:
+        if lab == 'OTHER':
+            continue
+        forms = {f"{v}", f"{v:g}"}
+        if isinstance(v, float) and v == int(v):
+            forms.add(str(int(v)))
+        if not any(f in ev_text for f in forms):
+            print(f"   ⚠️ [breakdown] value {v} not backed by evidence — rejecting")
+            return None
+    return {'slices': slices, 'unit': unit, 'caption': caption[:140]}
+
+
 def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
     """Consume chart_ticker/chart_metric flags; attach a verified trend."""
     if not isinstance(display_obj, dict):
         return
     ticker = display_obj.pop('chart_ticker', None)
     metric = display_obj.pop('chart_metric', None)
-    if 'trend' in display_obj:
-        return
-    trend = None
-    if ticker:
-        trend = fetch_trend_from_market(ticker)
+    bmetric = display_obj.pop('breakdown_metric', None)
+    if 'trend' not in display_obj:
+        trend = None
+        if ticker:
+            trend = fetch_trend_from_market(ticker)
+            if trend:
+                print(f"   📈 [chart] real market series attached ({ticker})")
+        if trend is None and metric:
+            trend = fetch_trend_grounded(metric, api_key)
+            if trend:
+                print(f"   📈 [chart] grounded series attached ({metric!r})")
         if trend:
-            print(f"   📈 [chart] real market series attached ({ticker})")
-    if trend is None and metric:
-        trend = fetch_trend_grounded(metric, api_key)
-        if trend:
-            print(f"   📈 [chart] grounded series attached ({metric!r})")
-    if trend:
-        display_obj['trend'] = trend
+            display_obj['trend'] = trend
+    if bmetric and 'breakdown' not in display_obj:
+        breakdown = fetch_breakdown_grounded(bmetric, api_key)
+        if breakdown:
+            display_obj['breakdown'] = breakdown
+            print(f"   🍩 [chart] grounded breakdown attached ({bmetric!r})")
 
 
 # ================================================================

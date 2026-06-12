@@ -47,7 +47,7 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-from step13_feed_display import FeedDisplayWriter, generate_daily_modules, enrich_display_with_chart
+from step13_feed_display import FeedDisplayWriter, generate_daily_modules, enrich_display_with_chart, fetch_timeline_dedicated
 # Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
 # it `article_world_events` was empty (~0% of articles), so Trinity v5's
 # story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
@@ -2322,21 +2322,33 @@ def run_complete_pipeline():
             # a NULL display falls back to the legacy card layout.
             display_obj = None
             try:
+                _display_source_text = ' '.join(
+                    s.get('full_text', '')[:2000]
+                    for s in cluster_sources if s.get('full_text')
+                )[:6000]
                 with gemini_semaphore:
                     display_obj = display_writer.write_display({
                         'title': title,
                         'bullets': bullets,
                         'category': article_category,
                         'tags': interest_tags,
-                        'source_text': ' '.join(
-                            s.get('full_text', '')[:2000]
-                            for s in cluster_sources if s.get('full_text')
-                        )[:6000],
+                        'source_text': _display_source_text,
                     })
                 if display_obj:
                     # Verified chart enrichment: real market data (stooq) or
                     # Google-grounded series — consumes the chart_* flags.
                     enrich_display_with_chart(display_obj, gemini_key)
+                    # Dedicated timeline writer — only for stories the model
+                    # flagged as genuinely developing (timeline_story).
+                    if display_obj.pop('timeline_story', False) and 'timeline' not in display_obj:
+                        with gemini_semaphore:
+                            _tl = fetch_timeline_dedicated({
+                                'title': title, 'bullets': bullets,
+                                'source_text': _display_source_text,
+                            }, gemini_key)
+                        if _tl:
+                            display_obj['timeline'] = _tl
+                            print(f"   🕒 [Cluster {cluster_id}] Dedicated timeline ({len(_tl)} beats)")
                     display_obj['imageURL'] = synthesized.get('image_url')
                     # Cover template gate: only images the vision check graded
                     # as full-bleed-worthy (sharp, not a tight face crop).
