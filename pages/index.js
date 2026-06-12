@@ -129,7 +129,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(true); // Dark by default
+  const [darkMode, setDarkMode] = useState(false); // LIGHT chrome — the redesign is a light product (user, 2026-06-13)
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -2582,8 +2582,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Restore saved dark-mode preference (defaults to dark when unset)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('tn_dark_mode');
-      if (saved !== null) setDarkMode(saved === '1');
+      // tn_dark_mode is intentionally ignored — the site is light-only now;
+      // stored dark prefs from the old design must not resurrect a black header.
       const savedTextOnly = localStorage.getItem('tn_text_only');
       if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}
@@ -5368,30 +5368,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
             <div style={{ flex: 1 }}></div>
             
             <div className="header-right">
-              <button
-                onClick={toggleTextOnly}
-                onTouchEnd={(e) => { e.preventDefault(); toggleTextOnly(); }}
-                aria-label={textOnly ? 'Show images' : 'Text only'}
-                title={textOnly ? 'Show images' : 'Text only'}
-                style={{
-                  width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: textOnly
-                    ? (darkMode ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.10)')
-                    : (darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
-                  color: darkMode ? '#f5f5f7' : '#1d1d1f',
-                  backdropFilter: 'blur(8px) saturate(150%)', WebkitBackdropFilter: 'blur(8px) saturate(150%)',
-                  marginRight: 10, flexShrink: 0, WebkitTapHighlightColor: 'transparent',
-                  transition: 'background 0.15s ease',
-                }}
-              >
-                {textOnly ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L6 20"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h11"/></svg>
-                )}
-              </button>
-              <span className="time">{currentTime}</span>
+                            <span className="time">{currentTime}</span>
               {user ? (
                 <div style={{ position: 'relative' }}>
                   <button
