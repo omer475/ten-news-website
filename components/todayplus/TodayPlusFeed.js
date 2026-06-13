@@ -11,14 +11,34 @@ import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
 import { TP, FONT_MONO, accentFor } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
-import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
+import { createPlanner } from './cardPlan';
+import { CompositeCard } from './TPComposites';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
 } from './TPCards';
 import { MapCard } from './TPMapCard';
+
+// Card-render instrumentation (§E): record dwell + skip for stat-hero / quote /
+// versus shown PURE vs EMBEDDED, so we can later force types permanently pure
+// if embedding loses. Fire-and-forget; deduped per card per load.
+const _modeLogged = new Set();
+function logCardMode(story, heroType, mode, outcome, dwellMs) {
+  if (!story?.id || _modeLogged.has(`${story.id}:${outcome}`)) return;
+  _modeLogged.add(`${story.id}:${outcome}`);
+  try {
+    const body = JSON.stringify({
+      event_type: 'card_mode',
+      article_id: story.id,
+      metadata: { hero_type: heroType, mode, outcome, dwell_ms: Math.round(dwellMs) },
+    });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/analytics/track', new Blob([body], { type: 'application/json' }));
+    else fetch('/api/analytics/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  } catch (_) {}
+}
+const INSTRUMENTED_HEROES = new Set(['big', 'stat', 'quote', 'versus']);
 
 const CARD_BY_TEMPLATE = {
   cover: CoverCard,
@@ -66,7 +86,7 @@ function useFeedBlocks(stories, modules) {
 
   return useMemo(() => {
     const news = stories.filter((s) => s && s.type === 'news');
-    const hasHero = promoteHero(news);
+    promoteHero(news); // reorders so the day's breaking story is first (→ pure cover)
     const firstId = news[0]?.id ?? null;
     let cache = cacheRef.current;
 
@@ -81,7 +101,7 @@ function useFeedBlocks(stories, modules) {
         firstId,
         count: 0,
         blocks: [],
-        selector: createSelector(),
+        planner: createPlanner(),
         nextModule: buildModuleRotation(modules),
         storyCount: 0,
         blockIdx: 0,
@@ -93,32 +113,14 @@ function useFeedBlocks(stories, modules) {
     for (let i = cache.count; i < news.length; i += 1) {
       const story = news[i];
       const display = story.display || null;
-      let template = 'legacy';
-      if (display) {
-        if (i === 0 && hasHero) {
-          // The promoted breaking story always opens as the flagship Cover.
-          template = cache.selector.use('cover', cache.blockIdx, display);
-          rememberTemplate(story.id, 'cover');
-        } else {
-          // Same article = same card style across loads (24h memory), so a
-          // repeat can't masquerade as a new story in a different template.
-          const kept = rememberedTemplate(story.id);
-          const reused = kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]
-            ? cache.selector.use(kept, cache.blockIdx, display)
-            : null;
-          if (reused) {
-            template = reused;
-          } else {
-            // no memory, or honoring it would repeat the previous card
-            template = cache.selector.choose(display, cache.blockIdx);
-            rememberTemplate(story.id, template);
-          }
-        }
-      } else {
-        cache.selector.recordLegacy(cache.blockIdx);
-      }
+      // display == null → legacy card (no plan). Otherwise the v2 planner
+      // resolves a CardPlan (pure special, composite, or breath) with the
+      // rhythm engine carried across loadMore via the cached planner instance.
+      // The plan is deterministic for a given stories order, so reloads are
+      // stable without a separate template memory.
+      const plan = display ? cache.planner.plan(display, story) : null;
 
-      cache.blocks.push({ type: 'story', story, template, key: `s-${story.id ?? i}` });
+      cache.blocks.push({ type: 'story', story, plan, key: `s-${story.id ?? i}` });
       cache.blockIdx += 1;
       cache.storyCount += 1;
 
@@ -138,10 +140,16 @@ function useFeedBlocks(stories, modules) {
 
 // ── Story block: counts toward the read counter at ≥55% visibility ──────────
 
-function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
+function StoryBlock({ story, plan, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
-  const Card = CARD_BY_TEMPLATE[template];
   const rootRef = useRef(null);
+
+  // §E instrumentation: for stat-hero / quote / versus, note whether this
+  // article is shown PURE (own card) or EMBEDDED (inside a composite), and
+  // record dwell on read + skip on early exit.
+  const heroType = plan?.hero || (plan?.pure ? plan.template : null);
+  const instrument = !!heroType && INSTRUMENTED_HEROES.has(heroType);
+  const mode = plan?.pure ? 'pure' : 'embedded';
 
   // Cards are read IN PLACE (no tap), so visibility is the read signal:
   //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
@@ -155,10 +163,13 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
     let impressionTimer = null;
     let readTimer = null;
     let readDone = false;
+    let enterAt = 0;
+    let skipLogged = false;
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries[0]?.isIntersecting;
         if (visible) {
+          enterAt = Date.now();
           if (!impressionTimer) {
             impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
           }
@@ -167,12 +178,18 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
               readDone = true;
               markSeenRead(story.id, story.world_event?.id);
               try { onEngage?.(story); } catch (_) {}
+              if (instrument) logCardMode(story, heroType, mode, 'read', Date.now() - enterAt);
               io.disconnect();
             }, 7000);
           }
         } else {
           if (impressionTimer) { clearTimeout(impressionTimer); impressionTimer = null; }
           if (readTimer) { clearTimeout(readTimer); readTimer = null; }
+          // left before the 7s read → a skip; log dwell for pure-vs-embedded.
+          if (instrument && !readDone && !skipLogged && enterAt) {
+            skipLogged = true;
+            logCardMode(story, heroType, mode, 'skip', Date.now() - enterAt);
+          }
         }
       },
       { threshold: 0.55 }
@@ -184,24 +201,23 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
       io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story?.id]);
+  }, [story?.id, heroType, mode]);
 
   // Per user direction (2026-06-13): tapping an article does NOTHING — cards
   // are read in place. Only bookmark/share in the footer are interactive.
+  const PureCard = plan?.pure ? CARD_BY_TEMPLATE[plan.template] : null;
   return (
     <div ref={rootRef}>
-      {Card && story.display ? (
+      {!story.display || !plan ? (
+        <FeedCard story={story} isDark={false} textOnly={textOnly} onOpen={() => {}} onEngage={onEngage} />
+      ) : plan.pure && PureCard ? (
         <div style={{ padding: '0 16px' }}>
-          <Card story={story} display={story.display} accent={accent} />
+          <PureCard story={story} display={story.display} accent={accent} />
         </div>
       ) : (
-        <FeedCard
-          story={story}
-          isDark={false}
-          textOnly={textOnly}
-          onOpen={() => {}}
-          onEngage={onEngage}
-        />
+        <div style={{ padding: '0 16px' }}>
+          <CompositeCard story={story} display={story.display} accent={accent} plan={plan} />
+        </div>
       )}
     </div>
   );
@@ -264,7 +280,7 @@ export default function TodayPlusFeed({
             <Entrance entryKey={block.key}>
               <StoryBlock
                 story={block.story}
-                template={block.template}
+                plan={block.plan}
                 onOpen={onOpen}
                 onEngage={onEngage}
                 textOnly={textOnly}
