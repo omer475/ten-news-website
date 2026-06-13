@@ -203,16 +203,19 @@ REQUIRED FIELDS (always present):
     prefix: currency/sign shown before ("$", "€", "" if none)
     unit: short suffix shown small after ("B", "M", "%", "KM", "" if none)
     sub: tiny caption, max 40 chars (e.g. "all-stock, closes Q3") or ""
-  Numbers MUST come from the bullets or source text. NEVER invent a number.
+  Numbers are this feed's signature — ALWAYS surface 2-3 stats when the story
+  has them. Pull the KEY numbers stated in the TITLE and BULLETS first (these
+  are the story's own figures); most stories have 2-3. NEVER invent a number,
+  and prefer numbers that appear in the title/bullets over deep-body trivia.
   value must be the BARE number — put "M"/"B"/"%" in unit, never inside value.
   A stat must be a meaningful standalone quantity (money, %, count, duration,
-  distance). NOT a stat: bare years ("DEATH YEAR 2025", "WORLD CUP YEAR 2026"),
-  pieces of a phrase ("24/7" is not two stats), classifications ("type 1",
-  "No. 2 seed"), or trivial filler ("OPENING MATCH 1", "TEAMS PLAYING 2",
-  "WEEK 1"). Scan the source text carefully — most stories have real numbers
-  (figures, counts, sums, ages, durations) the bullets skipped. But if a story
-  genuinely lacks 2 meaningful numbers, return [] — an empty list is ALWAYS
-  better than filler a reader would roll their eyes at.
+  distance) that is ABOUT this story's subject. NOT a stat: bare years ("DEATH
+  YEAR 2025", "WORLD CUP YEAR 2026"), pieces of a phrase ("24/7" is not two
+  stats), classifications ("type 1", "No. 2 seed"), trivial filler ("OPENING
+  MATCH 1", "TEAMS PLAYING 2"), or numbers about a DIFFERENT team/event than
+  the headline. Two stats must never be the same number. If the story
+  genuinely lacks 2 meaningful numbers, return [] — but that should be rare;
+  most news has key figures worth showing.
 - "tags": 2-3 proper-noun entity tags (e.g. ["Nvidia", "Jensen Huang"]).
 
 OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most stories support 0-2). NEVER fabricate data for a signal. Quality bar is high:
@@ -357,9 +360,18 @@ _MAG = {'k': 1e3, 'thousand': 1e3, 'm': 1e6, 'mn': 1e6, 'million': 1e6,
 _STAT_LABEL_BLOCKLIST = re.compile(
     r'\b(AGE|SEASONS?|REIGN NO|JUMPER NO|SQUAD NO|SHIRT NO|REPORTERS?|'
     r'MEMBERS ON BOARD|MINUTES OF MEDIA|MEDIA TIME|PRESS)\b')
+# Venue / setting / building tokens — a pin built only on one of these is a
+# story SETTING, not an insight, so it's dropped unless the venue is named in
+# the title (then the venue itself is the story). Leading spaces guard against
+# substring collisions (" center" must not match "epicenter").
 _GEO_VENUE_TOKENS = ('stadium', 'arena', 'ballpark', 'pavilion', 'coliseum',
-                     ' field', 'ground', 'racecourse', 'velodrome', 'speedway',
-                     'headquarters', ' hq')
+                     ' field', 'racecourse', 'velodrome', 'speedway',
+                     'headquarters', ' hq', ' hall', ' center', ' centre',
+                     'theatre', 'theater', ' club', ' court', ' dome',
+                     ' garden', ' plaza', 'hotel', 'resort', 'casino',
+                     'museum', 'cathedral', 'church', 'mosque', 'temple',
+                     'university', 'college', 'hospital', 'airport',
+                     ' station', 'palace', 'racetrack', 'circuit')
 _SCORE_NONRESULT = re.compile(
     r'\b(injur|ruled out|rule out|preview|set to face|to face|to play|'
     r'transfer|signs?|signing|contract|record|milestone|retire|retires|'
@@ -568,9 +580,14 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
             # Place must be in the story itself (title+bullets), not merely
             # mentioned somewhere in the body — kills off-topic/incidental pins.
             grounded = any(w in head_text for w in words) or lab in head_text
-            is_venue = any(tok in lab for tok in _GEO_VENUE_TOKENS)
-            venue_ok = not (is_venue and cat == 'sports'
-                            and not any(w in head_text for w in words))
+            # Venue/HQ/setting pins teach nothing unless the venue ITSELF is
+            # the story — drop them unless the place is named in the TITLE
+            # (re-audit: geo's dominant weak mode). For Sports, treat EVERY
+            # single-site pin as a venue (a stadium in any language), since a
+            # match's location is never the insight.
+            is_venue = (any(tok in lab for tok in _GEO_VENUE_TOKENS)
+                        or (cat == 'sports' and g.get('kind', 'site') == 'site'))
+            venue_ok = not (is_venue and not any(w in title_text for w in words))
             if grounded and venue_ok:
                 kept_pins.append(p)
         kind = g.get('kind', 'site')
@@ -933,10 +950,13 @@ class FeedDisplayWriter:
         """
         title = article.get('title', '')
         bullets = article.get('bullets', []) or []
-        # Number-rich story? Then an empty stats list is a model miss worth
-        # one retry, not a property of the story.
-        _digit_groups = len(re.findall(
-            r'\d+', f"{title} {' '.join(bullets)} {article.get('source_text') or ''}"))
+        # Count numbers in the HEADLINE material only (title+bullets). If the
+        # story has >=3 there but stats came back empty, the model under-
+        # emitted — worth a retry. (Counting the source body instead caused
+        # the model to mine body trivia; grounding is head-only now, so a
+        # head-driven retry can only surface LEGIT headline numbers.)
+        _head_numbers = len(re.findall(
+            r'\d+', f"{title} {' '.join(b for b in bullets)}"))
         prompt = DISPLAY_PROMPT.format(
             today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             category=article.get('category', 'Other'),
@@ -972,10 +992,14 @@ class FeedDisplayWriter:
                                            title, bullets,
                                            source_text=article.get('source_text', ''))
                 if cleaned:
-                    # Accept the first valid result. The old "number-rich →
-                    # re-roll until stats appear" retry manufactured tangential
-                    # filler (re-audit); an honest empty stats row is better.
-                    return cleaned
+                    # Head-aware retry: a story with >=3 headline numbers but
+                    # <2 surviving stats means the model under-surfaced them.
+                    # Re-roll once; the grounding gate keeps any new stats
+                    # honest, so this raises coverage without filler.
+                    if cleaned.get('stats') or _head_numbers < 3 \
+                            or attempt >= self.config.retry_attempts - 1:
+                        return cleaned
+                    best_statless = cleaned
             except Exception as e:
                 print(f"   ⚠️ [display] attempt {attempt + 1} failed: {e}")
             if attempt < self.config.retry_attempts - 1:
