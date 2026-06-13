@@ -427,17 +427,24 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
     num_head = _number_set(head_text)
     cat = (category or '').lower()
 
-    # --- big: grounded; keep (it's the hero) ---
-    if 'big' in out and not _grounded(out['big'][0], num_full):
+    # User-facing signals ground against TITLE+BULLETS (num_head), not the
+    # full body. The body mentions many off-topic numbers (other teams,
+    # context figures); the story IS the title+bullets, so a stat/big/versus
+    # value only "belongs" if it surfaces there. This single change kills
+    # BOTH fabrication and off-subject leakage (Knicks stats on a Spurs
+    # story) that full-body grounding let through (2026-06-13 re-audit).
+
+    # --- big: the hero number — must be in title/bullets ---
+    if 'big' in out and not _grounded(out['big'][0], num_head):
         del out['big']
     big_val = _num(out['big'][0]) if 'big' in out else None
 
-    # --- versus: both sides grounded, comparable, not equal ---
+    # --- versus: both sides grounded in head, comparable, not equal ---
     v = out.get('versus')
     if v:
         av, bv = _num(v['a']['val']), _num(v['b']['val'])
         au, bu = v['a'].get('unit', ''), v['b'].get('unit', '')
-        drop = (not _grounded(av, num_full) or not _grounded(bv, num_full)
+        drop = (not _grounded(av, num_head) or not _grounded(bv, num_head)
                 or av == bv
                 or (v.get('kind') in ('change', 'gap') and au and bu and au != bu))
         if drop:
@@ -456,8 +463,11 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
         grounded = _grounded(an, num_head) and _grounded(bn, num_head)
         # Subject gate keys on the TITLE only — if the headline is an injury/
         # preview/transfer, the match is background even if a bullet cites it.
-        subject_ok = not (_SCORE_NONRESULT.search(title_text)
-                          and not _SCORE_RESULT.search(title_text))
+        # POSITIVE result requirement: the title must affirmatively signal a
+        # finished/live match (a result verb or an explicit scoreline). A
+        # match merely mentioned as backdrop (ceremony, milestone, ring night,
+        # attendance) has no result verb -> no score card.
+        subject_ok = bool(_SCORE_RESULT.search(title_text))
         if not grounded or not subject_ok:
             del out['score']
     score_nums = set()
@@ -481,13 +491,18 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
         kept = []
         for s in out['stats']:
             label, value, prefix, unit = s[0], s[1], s[2], s[3]
-            if not _grounded(value, num_full):
+            if not _grounded(value, num_head):           # in title/bullets
                 continue
             if _is_bare_year(value, prefix, unit):
                 continue
             if _STAT_LABEL_BLOCKLIST.search(str(label).upper()):
                 continue
             if _num(value) in dup_nums:
+                continue
+            # Triviality floor: a raw count of 1-2 (no money/%/unit) is never
+            # a meaningful standalone stat ("2 TEAMS", "TAG CHAMPIONS 2").
+            nv = _num(value)
+            if not prefix and not unit and isinstance(nv, (int, float)) and nv <= 2:
                 continue
             kept.append(s)
         out['stats'] = kept if len(kept) >= 2 else []
@@ -503,18 +518,27 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
         del out['breakdown']
     rk = out.get('ranking')
     if rk:
-        ungrounded = sum(1 for r in rk.get('rows', []) if not _grounded(r[1], num_full))
-        if ungrounded > 0:
+        rows = rk.get('rows', [])
+        ungrounded = sum(1 for r in rows if not _grounded(r[1], num_full))
+        vals = [_num(r[1]) for r in rows if _num(r[1]) is not None]
+        # Spread gate: near-equal bars are a non-story (3.0/2.5/2.47 → 1.2x).
+        flat = vals and max(vals) > 0 and (min(vals) / max(vals)) > 0.67
+        if ungrounded > 0 or flat:
             del out['ranking']
 
-    # --- quote: a 6-word run must appear verbatim in the source ---
+    # --- quote: a 6-word run must appear verbatim in the source, and the
+    #     quotation itself must not contain an attribution verb (those are
+    #     narrator paraphrase dressed as a quote, not real speech) ---
     q = out.get('quote')
     if q:
-        qw = re.sub(r'[^a-z0-9 ]', ' ', _strip_tags(q['text']).lower()).split()
+        qtext = _strip_tags(q['text']).lower()
+        qw = re.sub(r'[^a-z0-9 ]', ' ', qtext).split()
         gw = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', full_text).split())
-        ok = len(qw) >= 8 and any(
+        verbatim = len(qw) >= 8 and any(
             ' '.join(qw[i:i + 6]) in gw for i in range(0, max(1, len(qw) - 5)))
-        if not ok:
+        has_attribution = bool(re.search(
+            r'\b(said|says|according to|told|stated|added|noted)\b', qtext))
+        if not verbatim or has_attribution:
             del out['quote']
 
     # --- geo: every pin label must be grounded; venue/HQ pins dropped for
@@ -525,7 +549,9 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
         for p in g['pins']:
             lab = p['label'].lower()
             words = [w for w in re.sub(r'[^a-z0-9 ]', ' ', lab).split() if len(w) >= 4]
-            grounded = any(w in full_text for w in words) or lab in full_text
+            # Place must be in the story itself (title+bullets), not merely
+            # mentioned somewhere in the body — kills off-topic/incidental pins.
+            grounded = any(w in head_text for w in words) or lab in head_text
             is_venue = any(tok in lab for tok in _GEO_VENUE_TOKENS)
             venue_ok = not (is_venue and cat == 'sports'
                             and not any(w in head_text for w in words))
