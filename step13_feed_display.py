@@ -439,14 +439,26 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
         del out['big']
     big_val = _num(out['big'][0]) if 'big' in out else None
 
-    # --- versus: both sides grounded in head, comparable, not equal ---
+    # --- versus: both sides grounded in head + SEMANTICALLY comparable ---
+    # Grounding alone leaves a real defect (re-audit: 47% still incorrect):
+    # two grounded, unequal, real numbers can still measure nothing
+    # comparable. So: same unit for ALL kinds (not just change/gap), no
+    # bare-year sides, no rank/ordinal sides.
     v = out.get('versus')
     if v:
         av, bv = _num(v['a']['val']), _num(v['b']['val'])
         au, bu = v['a'].get('unit', ''), v['b'].get('unit', '')
+        a_ctx = (str(v['a'].get('who', '')) + ' ' + str(au)).lower()
+        b_ctx = (str(v['b'].get('who', '')) + ' ' + str(bu)).lower()
+        rank_like = any(t in a_ctx or t in b_ctx
+                        for t in ('rank', '#', 'no.', 'nth', 'place', 'seed'))
+        yearlike = (lambda n, u: n is not None and not u
+                    and isinstance(n, int) and 1900 <= n <= 2100)
         drop = (not _grounded(av, num_head) or not _grounded(bv, num_head)
                 or av == bv
-                or (v.get('kind') in ('change', 'gap') and au and bu and au != bu))
+                or (au and bu and au != bu)            # same metric, every kind
+                or yearlike(av, au) or yearlike(bv, bu)
+                or rank_like)
         if drop:
             del out['versus']
     versus_nums = set()
@@ -503,6 +515,10 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
             # a meaningful standalone stat ("2 TEAMS", "TAG CHAMPIONS 2").
             nv = _num(value)
             if not prefix and not unit and isinstance(nv, (int, float)) and nv <= 2:
+                continue
+            # Within-array dedup: don't show the same number twice (one fact
+            # split into two tiles — "both 12", a min/max of one range).
+            if any(_num(k[1]) == nv for k in kept):
                 continue
             kept.append(s)
         out['stats'] = kept if len(kept) >= 2 else []
@@ -956,12 +972,10 @@ class FeedDisplayWriter:
                                            title, bullets,
                                            source_text=article.get('source_text', ''))
                 if cleaned:
-                    if cleaned.get('stats') or _digit_groups < 6 \
-                            or attempt >= self.config.retry_attempts - 1:
-                        return cleaned
-                    # Number-rich story came back statless — retry once,
-                    # keeping this result as the fallback.
-                    best_statless = cleaned
+                    # Accept the first valid result. The old "number-rich →
+                    # re-roll until stats appear" retry manufactured tangential
+                    # filler (re-audit); an honest empty stats row is better.
+                    return cleaned
             except Exception as e:
                 print(f"   ⚠️ [display] attempt {attempt + 1} failed: {e}")
             if attempt < self.config.retry_attempts - 1:
