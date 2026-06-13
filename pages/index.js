@@ -3196,6 +3196,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const currentStoryData = stories[currentIndex];
   const isCurrentArticleImportant = isArticleMustKnow(currentStoryData);
 
+  // Robust auth for the sign-up paywall: a logged-in user whose `user` state
+  // hasn't hydrated yet (but who has a stored session) must NOT hit the 12-card
+  // gate — that was the "only ~10 articles" cutoff for signed-in users.
+  let feedAuthUser = user;
+  if (!feedAuthUser && typeof window !== 'undefined') {
+    try { feedAuthUser = JSON.parse(localStorage.getItem('tennews_user') || 'null'); } catch (_) { feedAuthUser = null; }
+  }
+
   return (
     <>
       <Head>
@@ -5607,7 +5615,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
             articles without `display` render the legacy FeedCard. */}
         <TodayPlusFeed
           stories={stories}
-          user={user}
+          user={feedAuthUser}
           paywallThreshold={paywallThreshold}
           renderPaywall={() => (
             <div className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
