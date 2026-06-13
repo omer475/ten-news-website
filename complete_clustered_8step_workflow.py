@@ -47,7 +47,7 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from step11_article_tagging import tag_article
-from step13_feed_display import FeedDisplayWriter, generate_daily_modules, enrich_display_with_chart, fetch_timeline_dedicated
+from step13_feed_display import FeedDisplayWriter, generate_daily_modules, enrich_display_with_chart, fetch_timeline_dedicated, compute_hero_rank
 # Audit fix A6 (2026-05-06): re-enabled. Was disabled pre-launch; without
 # it `article_world_events` was empty (~0% of articles), so Trinity v5's
 # story-cluster dedup (Phase 1 fix #2) had nothing to dedup against and
@@ -2364,6 +2364,9 @@ def run_complete_pipeline():
                     display_obj['image_focus'] = (selected_image or {}).get('image_focus') or {'x': 0.5, 'y': 0.5}
                     # 0-1000 importance scale; >=900 = breaking (cover card)
                     display_obj['breaking'] = bool(article_score >= 900)
+                    # hero_rank/strength/reserve_pure — lets the client resolve
+                    # the article to ONE primary card + composite the rest.
+                    compute_hero_rank(display_obj, article_category)
                     _sigs = [k for k in ('big', 'quote', 'versus', 'timeline', 'trend', 'geo') if k in display_obj]
                     print(f"   🎨 [Cluster {cluster_id}] Display: {display_obj['category']}, stats={len(display_obj.get('stats', []))}, signals={_sigs or 'none'}")
                 else:

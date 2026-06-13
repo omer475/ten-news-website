@@ -606,6 +606,66 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
                 g.pop('radius_km', None)
 
 
+# Module impact order (most scroll-stopping first). Drives hero_rank — the
+# hint that lets the client resolve each article to ONE primary card and
+# composite the rest, instead of scattering a story's modules as separate
+# cards. Server-authored so iOS + web feature the identical module.
+_IMPACT_ORDER = ['breaking_cover', 'big', 'score', 'versus', 'receipts',
+                 'trend', 'ranking', 'breakdown', 'timeline', 'geo', 'quote', 'stats']
+# Pure-drama modules: own the full frame, never shrink into an embed.
+_PURE_ONLY = {'breaking_cover', 'big', 'score', 'versus', 'receipts', 'quote'}
+
+
+def compute_hero_rank(display_obj: Dict, category: str = '') -> None:
+    """Stamp hero_rank / hero_strength / reserve_pure onto a FULLY-built
+    display object (after enrich + breaking/cover_ok stamping). Deterministic,
+    no model call. The client treats these as defaults it may demote for
+    rhythm, never as mandates."""
+    if not isinstance(display_obj, dict):
+        return
+    cat = (category or '').lower()
+    has_stats = bool(display_obj.get('stats'))
+    breaking_cover = bool(display_obj.get('breaking') and display_obj.get('cover_ok'))
+
+    present = []
+    for m in _IMPACT_ORDER:
+        if m == 'breaking_cover':
+            if breaking_cover:
+                present.append(m)
+        elif m == 'stats':
+            if has_stats:
+                present.append(m)
+        elif m in display_obj:
+            present.append(m)
+
+    # Data-strength + category lifts (stable: only promote, preserve order).
+    def lift(mod, before):
+        if mod in present:
+            present.remove(mod)
+            idx = present.index(before) if before in present else 0
+            present.insert(idx, mod)
+
+    if cat == 'sports' and 'score' in present:
+        lift('score', present[0])                       # score wins in sports
+    geo = display_obj.get('geo')
+    if geo and geo.get('kind') in ('route', 'area', 'multi'):
+        lift('geo', 'timeline')                         # rich maps beat timelines
+    tr = display_obj.get('trend')
+    if tr and len(tr.get('vals', [])) >= 5:
+        lift('trend', 'versus')                         # dense series is strong
+
+    display_obj['hero_rank'] = present
+    top = present[0] if present else None
+    display_obj['reserve_pure'] = top in ('breaking_cover', 'big')
+    display_obj['hero_strength'] = (
+        0.9 if top in ('breaking_cover', 'big', 'score')
+        else 0.7 if top in ('versus', 'trend', 'receipts', 'ranking')
+        else 0.5 if top in ('timeline', 'geo', 'quote', 'breakdown')
+        else 0.4 if top == 'stats'
+        else 0.0)
+    display_obj['pure_only'] = [m for m in present if m in _PURE_ONLY]
+
+
 def validate_display(result: Dict, pipeline_category: str,
                      orig_title: str, orig_bullets: List[str],
                      source_text: str = '') -> Optional[Dict]:
