@@ -171,6 +171,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreArticles, setHasMoreArticles] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  // Synchronous single-flight guard for loadMoreArticles. `loadingMore` is
+  // state (updates next render), so the sentinel AND the near-end effect can
+  // both pass `!loadingMore` in the same tick and run concurrent appends — a
+  // ref blocks re-entry immediately.
+  const loadingMoreRef = useRef(false);
   const [totalArticles, setTotalArticles] = useState(0);
   
   // Auto-rotation state for information boxes
@@ -194,6 +199,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const sharedArticleIdRef = useRef(null);
   // Store stories in a ref so we can access latest value in intervals/callbacks
   const storiesRef = useRef([]);
+  // True only while the logged-in Trinity feed is loading during hydration.
+  // The two "force loading off when stories exist" paths must NOT cancel this
+  // intentional loading state (the SSR guest stories are always present on a
+  // logged-in open), or the personalized swap happens after the reader settles
+  // in instead of behind the loader.
+  const hydratingRef = useRef(false);
 
   // Language mode for summaries (advanced vs B2) - GLOBAL setting for all articles
   const [languageMode, setLanguageMode] = useState('advanced');  // 'advanced' = bullets, 'b2' = 5W's
@@ -1598,8 +1609,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   };
 
   const loadMoreArticles = async (pageNum) => {
-    if (loadingMore || !hasMoreArticles) return;
-
+    if (loadingMoreRef.current || !hasMoreArticles) return;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
       console.log(`📡 Loading more articles (page ${pageNum})...`);
@@ -1610,6 +1621,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
         // server can't re-serve them.
         const onScreen = stories.filter((s) => s.type === 'news' && s.id).map((s) => s.id);
         newsData = await fetchTrinitySlate(30, onScreen);
+      }
+      if (isTrinity && !newsData) {
+        // Trinity is dry — no fresh personalized articles left. That's the end of
+        // this user's feed; do NOT fall through to the guest /api/news endpoint
+        // (it would inject non-personalized content and, past the data, spin the
+        // loader forever). End cleanly.
+        console.log('📭 Trinity dry — ending feed');
+        setHasMoreArticles(false);
+        setLoadingMore(false);
+        loadingMoreRef.current = false;
+        return;
       }
       if (!newsData) {
         const response = await fetch(`/api/news?page=${pageNum}&pageSize=2000&t=${Date.now()}`);
@@ -1623,8 +1645,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
           (a) => a && a.url !== '#' && a.title !== 'Ten News System Active' && String(a.category).toLowerCase() !== 'system'
         );
         if (realArticles.length === 0) {
+          // End cleanly and RETURN — otherwise the pagination block below
+          // re-arms hasMore=true (Trinity branch) and the loader spins forever.
           console.log('📭 No more real articles — ending pagination');
           setHasMoreArticles(false);
+          setLoadingMore(false);
+          loadingMoreRef.current = false;
+          return;
         } else if (realArticles.length > 0) {
           const newsArticles = realArticles;
           // Convert new articles to story format
@@ -1681,11 +1708,31 @@ export default function Home({ initialNews, initialWorldEvents }) {
           // Filter out read articles
           let unreadNewStories = newStories;
           if (readTrackerRef.current) {
-            unreadNewStories = newStories.filter(story => 
+            unreadNewStories = newStories.filter(story =>
               !readTrackerRef.current.hasBeenRead(story.id)
             );
           }
-          
+
+          // Net-new after de-duping against what's already on screen. If a round
+          // adds nothing — Trinity re-served already-seen cards, or the guest page
+          // is past the available data — we've reached the end. Without this the
+          // sentinel keeps firing, the loader spins, and nothing ever appears.
+          const onScreenIds = new Set(
+            stories.filter(s => s && s.type === 'news' && s.id).map(s => String(s.id))
+          );
+          const netNew = unreadNewStories.filter(s => !onScreenIds.has(String(s.id)));
+          if (netNew.length === 0) {
+            // Nothing new to add → end of feed. TodayPlusFeed renders its own
+            // "You're all caught up" line once hasMore is false (and filters the
+            // stories array to type==='news', so an all-read story would be dead
+            // UI) — so just stop the sentinel; don't append a placeholder.
+            console.log('📭 loadMore added 0 net-new articles — ending feed');
+            setHasMoreArticles(false);
+            setLoadingMore(false);
+            loadingMoreRef.current = false;
+            return;
+          }
+
           // Check if this is the last page OR we've hit memory cap
           // (Trinity slates have no pagination object and never run dry.)
           const isLastPage = isTrinity ? false : !newsData.pagination?.hasMore;
@@ -1784,6 +1831,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
       console.error('Error loading more articles:', error);
     } finally {
       setLoadingMore(false);
+      loadingMoreRef.current = false;
     }
   };
 
@@ -1801,8 +1849,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
   }, [currentIndex, stories.length, hasMoreArticles, loadingMore, currentPage]);
 
   useEffect(() => {
-    // If we have SSR data, still do a background refresh for freshness
-    const hasSSRData = stories.length > 0 && !loading;
+    // "Have SSR data" means the server actually delivered NEWS — not just the
+    // opening story. If the SSR self-fetch failed (e.g. returned opening-only),
+    // fall through to the else branch's client-side loadNewsData() so the feed
+    // still fills, instead of stranding an empty feed.
+    const hasSSRData = stories.some(s => s && s.type === 'news') && !loading;
     
     const loadNewsData = async (isBackgroundRefresh = false) => {
       if (isBackgroundRefresh) {
@@ -2229,32 +2280,29 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             console.log('📰 Setting stories:', finalStories.length, '(v2)');
             
-            // For a background refresh, update when the set of articles CHANGED — new
-            // stories arrived or read items were filtered out. We compare membership
-            // (sorted id signature), NOT length or order: a pure count check misses
-            // same-count swaps (the old bug that froze the feed), and an order check
-            // would re-render on every applyFreshness jitter and reshuffle under the
-            // user mid-read. Order-only changes are intentionally ignored here.
+            // A background refresh must NEVER replace or reorder the visible feed —
+            // the user may be mid-read. It is APPEND-ONLY: add only genuinely new
+            // articles (ids not already on screen) to the end for scroll depth, and
+            // leave the head — and any already-read items — exactly where they are.
+            // (The previous "replace whole feed if the id-set differs" logic is what
+            // made all the articles change ~2s after open.)
             if (isBackgroundRefresh) {
-              const currentStories = storiesRef.current || [];
-              const idSignature = (arr) => (arr || [])
-                .filter(s => s && s.type === 'news')
-                .map(s => String(s.id))
-                .sort()
-                .join(',');
-              const shouldUpdate = idSignature(finalStories) !== idSignature(currentStories);
-
-              console.log('🔄 v2 Background refresh:', {
-                current: currentStories.length,
-                final: finalStories.length,
-                willUpdate: shouldUpdate
+              // Append-only, computed against the LATEST state via a functional
+              // updater — so it can never clobber a concurrent loadMore append
+              // (a plain snapshot+setStories(merged) would lose those). storiesRef
+              // is kept in sync by its mirror effect.
+              setStories(prev => {
+                const base = prev || [];
+                const existingIds = new Set(
+                  base.filter(s => s && s.type === 'news' && s.id).map(s => String(s.id))
+                );
+                const additions = finalStories.filter(
+                  s => s && s.type === 'news' && s.id && !existingIds.has(String(s.id))
+                );
+                if (additions.length === 0) return prev;
+                const head = base.filter(s => s.type !== 'all-read');
+                return [...head, ...additions];
               });
-
-              if (shouldUpdate) {
-                console.log('🆕 v2 Updating stories!');
-                setStories(finalStories);
-                storiesRef.current = finalStories;
-              }
             } else {
               setStories(finalStories);
               storiesRef.current = finalStories;
@@ -2499,27 +2547,44 @@ export default function Home({ initialNews, initialWorldEvents }) {
         };
         setStories([fallbackOpening]);
       } finally {
+        hydratingRef.current = false;
         console.log('📰 Setting loading to false');
         setLoading(false);
       }
     };
     
     if (hasSSRData) {
-      // INSTANT freshness pass on the SSR feed: the server already orders by the
-      // fresh+important blend, but the SSR HTML can be edge-cached (so two quick
-      // refreshes get the same order) — re-shuffling near-ties here, right after
-      // hydration, makes EVERY refresh visibly vary without waiting for the slow
-      // ~full background fetch. Post-hydration state update, so no SSR mismatch.
-      setStories(prev => {
-        if (!prev || prev.length <= 1) return prev;
-        const [opening, ...news] = prev;
-        return [opening, ...applyFreshness(news)];
-      });
-      // Then refresh the full feed in the background (more articles for scrolling).
-      const timer = setTimeout(() => {
-        loadNewsData(true);
-      }, 2000);
-      return () => clearTimeout(timer);
+      // The SSR paint is the GUEST feed (/api/news). What happens next depends on
+      // who's looking — the old "paint SSR, then 2s later replace the whole feed"
+      // path is what yanked articles out from under a reader mid-scroll.
+      const isLoggedIn = (() => {
+        try { return !!(JSON.parse(localStorage.getItem('tennews_user') || 'null') || {}).id; }
+        catch (_) { return false; }
+      })();
+
+      if (isLoggedIn) {
+        // Logged-in users get a PERSONALIZED (Trinity) feed that is a different set
+        // of articles than the guest SSR paint — so a swap is unavoidable. Do it
+        // DURING a loading state, before the reader settles in, instead of swapping
+        // content after they've started reading. (loadNewsData(false) sets stories
+        // once and clears loading + hydratingRef in its finally.)
+        hydratingRef.current = true;
+        setLoading(true);
+        loadNewsData(false);
+      } else {
+        // Guest: the SSR feed IS their feed — render it as-is, with just an instant
+        // freshness shuffle on the head (pre-read, same tick, no visible change).
+        // NO background fetch: guests hit the 12-card sign-up gate, well under the
+        // ~30 SSR cards, so there is nothing more to reach. The old pageSize=2000
+        // background was a wasted request that also risked swapping the feed
+        // mid-read. hasMore=false keeps the sentinel from firing an empty page-2.
+        setStories(prev => {
+          if (!prev || prev.length <= 1) return prev;
+          const [opening, ...news] = prev;
+          return [opening, ...applyFreshness(news)];
+        });
+        setHasMoreArticles(false);
+      }
     } else {
       // No SSR data - load immediately
       loadNewsData(false);
@@ -3008,8 +3073,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     document.body.style.touchAction = '';
   }, []);
 
-  // Force loading to false if stories exist (prevents stuck loading state)
-  if (stories.length > 0 && loading) {
+  // Force loading to false if stories exist (prevents stuck loading state) —
+  // EXCEPT during the intentional logged-in Trinity hydration loader.
+  if (stories.length > 0 && loading && !hydratingRef.current) {
     setLoading(false);
   }
   
@@ -3024,9 +3090,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return () => clearTimeout(timer);
   }, [loading, stories.length]);
   
-  // Force loading to false if we have stories
+  // Force loading to false if we have stories (skip during Trinity hydration)
   useEffect(() => {
-    if (stories.length > 0 && loading) {
+    if (stories.length > 0 && loading && !hydratingRef.current) {
       setLoading(false);
     }
   }, [stories.length, loading]);
