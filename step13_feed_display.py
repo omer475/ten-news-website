@@ -343,12 +343,219 @@ def _valid_stat(item) -> Optional[list]:
     return [label.upper(), value, prefix, unit, sub]
 
 
+# ── SPAN-GROUNDING (2026-06-13 audit) ──────────────────────────────────
+# A 658-article audit found 8/11 card types too loose, with rampant
+# FABRICATION: the model emits numbers/places/quotes that read as
+# authoritative but appear nowhere in the source (stats 20% wrong, versus
+# 46% wrong). The prompts already forbid this and are ignored at
+# generation. The fix is a deterministic grounding gate: a value may only
+# survive if it literally appears in the material the model was given
+# (title + bullets + source body). An absent card beats a fabricated one.
+
+_MAG = {'k': 1e3, 'thousand': 1e3, 'm': 1e6, 'mn': 1e6, 'million': 1e6,
+        'bn': 1e9, 'b': 1e9, 'billion': 1e9, 't': 1e12, 'trillion': 1e12}
+_STAT_LABEL_BLOCKLIST = re.compile(
+    r'\b(AGE|SEASONS?|REIGN NO|JUMPER NO|SQUAD NO|SHIRT NO|REPORTERS?|'
+    r'MEMBERS ON BOARD|MINUTES OF MEDIA|MEDIA TIME|PRESS)\b')
+_GEO_VENUE_TOKENS = ('stadium', 'arena', 'ballpark', 'pavilion', 'coliseum',
+                     ' field', 'ground', 'racecourse', 'velodrome', 'speedway',
+                     'headquarters', ' hq')
+_SCORE_NONRESULT = re.compile(
+    r'\b(injur|ruled out|rule out|preview|set to face|to face|to play|'
+    r'transfer|signs?|signing|contract|record|milestone|retire|retires|'
+    r'suspend|appoint|sack|hire|previews?|eyes?|targets?|could|may face)\b', re.I)
+_SCORE_RESULT = re.compile(
+    r'\b(beat|beats|win|wins|won|defeat|defeats|draw|draws|drew|lost|loses|'
+    r'thrash|edge|edges|fall to|falls to|down|downs|hold|holds|rout|stun|'
+    r'\d+\s*[-–]\s*\d+)\b', re.I)
+
+
+def _build_ground_text(title, bullets, source_text):
+    parts = [_strip_tags(title or '')]
+    if isinstance(bullets, list):
+        parts += [_strip_tags(b or '') for b in bullets]
+    elif bullets:
+        parts.append(_strip_tags(str(bullets)))
+    head = ' '.join(parts).lower().replace(',', '')        # title + bullets
+    full = (head + ' ' + (source_text or '').lower().replace(',', ''))
+    return head, full
+
+
+def _number_set(text):
+    """All numeric forms present in text, magnitude words expanded."""
+    nums = set()
+    for m in re.finditer(r'\d+(?:\.\d+)?', text):
+        tok = m.group(0)
+        nums.add(tok)
+        try:
+            f = float(tok)
+            if f == int(f):
+                nums.add(str(int(f)))
+        except ValueError:
+            pass
+    for m in re.finditer(r'(\d+(?:\.\d+)?)\s*(k|thousand|mn|m|bn|b|billion|million|t|trillion)\b', text):
+        nums.add(m.group(1))
+        full = float(m.group(1)) * _MAG[m.group(2)]
+        if full == int(full):
+            nums.add(str(int(full)))
+    return nums
+
+
+def _grounded(value, numset):
+    """Is this numeric value present in the number set? Non-numeric → True
+    (grounding is a numeric gate; text values are handled elsewhere)."""
+    n = _num(value)
+    if n is None:
+        return True
+    forms = {str(n)}
+    if isinstance(n, float) and n == int(n):
+        forms.add(str(int(n)))
+    if isinstance(n, float):
+        forms.add(f"{n:g}")
+    return bool(forms & numset)
+
+
+def _is_bare_year(value, prefix, unit):
+    n = _num(value)
+    return (n is not None and not prefix and not unit
+            and isinstance(n, int) and 1900 <= n <= 2100)
+
+
+def _apply_grounding_gates(out, title_text, head_text, full_text, category):
+    """Drop fabricated / off-subject / duplicative signals. Mutates `out`."""
+    num_full = _number_set(full_text)
+    num_head = _number_set(head_text)
+    cat = (category or '').lower()
+
+    # --- big: grounded; keep (it's the hero) ---
+    if 'big' in out and not _grounded(out['big'][0], num_full):
+        del out['big']
+    big_val = _num(out['big'][0]) if 'big' in out else None
+
+    # --- versus: both sides grounded, comparable, not equal ---
+    v = out.get('versus')
+    if v:
+        av, bv = _num(v['a']['val']), _num(v['b']['val'])
+        au, bu = v['a'].get('unit', ''), v['b'].get('unit', '')
+        drop = (not _grounded(av, num_full) or not _grounded(bv, num_full)
+                or av == bv
+                or (v.get('kind') in ('change', 'gap') and au and bu and au != bu))
+        if drop:
+            del out['versus']
+    versus_nums = set()
+    if 'versus' in out:
+        for side in ('a', 'b'):
+            n = _num(out['versus'][side]['val'])
+            if n is not None:
+                versus_nums.add(n)
+
+    # --- score: scores grounded in title+bullets + subject is a result ---
+    sc = out.get('score')
+    if sc:
+        an, bn = _num(sc['a']['score']), _num(sc['b']['score'])
+        grounded = _grounded(an, num_head) and _grounded(bn, num_head)
+        # Subject gate keys on the TITLE only — if the headline is an injury/
+        # preview/transfer, the match is background even if a bullet cites it.
+        subject_ok = not (_SCORE_NONRESULT.search(title_text)
+                          and not _SCORE_RESULT.search(title_text))
+        if not grounded or not subject_ok:
+            del out['score']
+    score_nums = set()
+    if 'score' in out:
+        for side in ('a', 'b'):
+            n = _num(out['score'][side]['score'])
+            if n is not None:
+                score_nums.add(n)
+
+    # big duplicates a score number → score owns it
+    if big_val is not None and big_val in score_nums:
+        out.pop('big', None)
+        big_val = None
+
+    # --- stats: grounded, not a bare year, not blocklisted label, not a
+    #     duplicate of big/versus/score; suppress the row if <2 survive ---
+    if out.get('stats'):
+        dup_nums = set(versus_nums | score_nums)
+        if big_val is not None:
+            dup_nums.add(big_val)
+        kept = []
+        for s in out['stats']:
+            label, value, prefix, unit = s[0], s[1], s[2], s[3]
+            if not _grounded(value, num_full):
+                continue
+            if _is_bare_year(value, prefix, unit):
+                continue
+            if _STAT_LABEL_BLOCKLIST.search(str(label).upper()):
+                continue
+            if _num(value) in dup_nums:
+                continue
+            kept.append(s)
+        out['stats'] = kept if len(kept) >= 2 else []
+
+    # --- inline charts: ground the series (market/grounded charts are added
+    #     post-validate and never reach here) ---
+    tr = out.get('trend')
+    if tr and not all(_grounded(x, num_full) for x in tr.get('vals', [])):
+        del out['trend']
+    bd = out.get('breakdown')
+    if bd and sum(1 for sl in bd.get('slices', [])
+                  if sl[0] != 'OTHER' and not _grounded(sl[1], num_full)) > 0:
+        del out['breakdown']
+    rk = out.get('ranking')
+    if rk:
+        ungrounded = sum(1 for r in rk.get('rows', []) if not _grounded(r[1], num_full))
+        if ungrounded > 0:
+            del out['ranking']
+
+    # --- quote: a 6-word run must appear verbatim in the source ---
+    q = out.get('quote')
+    if q:
+        qw = re.sub(r'[^a-z0-9 ]', ' ', _strip_tags(q['text']).lower()).split()
+        gw = ' '.join(re.sub(r'[^a-z0-9 ]', ' ', full_text).split())
+        ok = len(qw) >= 8 and any(
+            ' '.join(qw[i:i + 6]) in gw for i in range(0, max(1, len(qw) - 5)))
+        if not ok:
+            del out['quote']
+
+    # --- geo: every pin label must be grounded; venue/HQ pins dropped for
+    #     sports results unless the venue is named in the headline ---
+    g = out.get('geo')
+    if g:
+        kept_pins = []
+        for p in g['pins']:
+            lab = p['label'].lower()
+            words = [w for w in re.sub(r'[^a-z0-9 ]', ' ', lab).split() if len(w) >= 4]
+            grounded = any(w in full_text for w in words) or lab in full_text
+            is_venue = any(tok in lab for tok in _GEO_VENUE_TOKENS)
+            venue_ok = not (is_venue and cat == 'sports'
+                            and not any(w in head_text for w in words))
+            if grounded and venue_ok:
+                kept_pins.append(p)
+        kind = g.get('kind', 'site')
+        if not kept_pins:
+            out.pop('geo', None)
+        else:
+            if kind == 'route' and len(kept_pins) != 2:
+                kind = 'site'
+            if kind == 'multi' and len(kept_pins) < 3:
+                kind = 'site'
+            if kind == 'area' and (len(kept_pins) != 1 or 'radius_km' not in g):
+                kind = 'site'
+            g['kind'] = kind
+            g['pins'] = kept_pins[:5 if kind == 'multi' else 2]
+            if kind != 'area':
+                g.pop('radius_km', None)
+
+
 def validate_display(result: Dict, pipeline_category: str,
-                     orig_title: str, orig_bullets: List[str]) -> Optional[Dict]:
+                     orig_title: str, orig_bullets: List[str],
+                     source_text: str = '') -> Optional[Dict]:
     """
     Validate + repair the model output. Required fields are repaired with
     deterministic fallbacks; invalid OPTIONAL signals are silently dropped
     (a story with zero signals is fine — cover/classic/split always apply).
+    A span-grounding pass then removes any signal whose data does not appear
+    in the source material (anti-fabrication, 2026-06-13 audit).
     Returns the cleaned display dict, or None if it is unusable.
     """
     if not isinstance(result, dict):
@@ -657,6 +864,12 @@ def validate_display(result: Dict, pipeline_category: str,
             if radius_km is not None:
                 out['geo']['radius_km'] = round(float(radius_km))
 
+    # Span-grounding gate — drop fabricated / off-subject / duplicative
+    # signals (2026-06-13 audit). Runs last, with full cross-signal context.
+    head_text, full_text = _build_ground_text(orig_title, orig_bullets, source_text)
+    title_text = _strip_tags(orig_title or '').lower()
+    _apply_grounding_gates(out, title_text, head_text, full_text, pipeline_category)
+
     return out
 
 
@@ -714,7 +927,8 @@ class FeedDisplayWriter:
                     text = m.group(0)
                 result = json.loads(text)
                 cleaned = validate_display(result, article.get('category', 'Other'),
-                                           title, bullets)
+                                           title, bullets,
+                                           source_text=article.get('source_text', ''))
                 if cleaned:
                     if cleaned.get('stats') or _digit_groups < 6 \
                             or attempt >= self.config.retry_attempts - 1:
