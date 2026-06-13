@@ -141,7 +141,7 @@ function rankByFreshnessServer(articles, halfLifeHours = 8, jitter = 0.18) {
   if (!Array.isArray(articles) || articles.length <= 1) return articles || [];
   const now = Date.now();
   const STALE_AGE_HOURS = 48;
-  return articles
+  const sorted = articles
     .map((a) => {
       const importance = typeof a.final_score === 'number' ? a.final_score : 0;
       const dateStr = a.publishedAt || a.created_at;
@@ -152,6 +152,25 @@ function rankByFreshnessServer(articles, halfLifeHours = 8, jitter = 0.18) {
     })
     .sort((x, y) => y.eff - x.eff)
     .map((s) => s.a);
+
+  // Category-diversity front-load so the top of the feed (and the guest
+  // pre-paywall preview) isn't ~60% World+Politics. Cap each category group at
+  // CAT_CAP in the front; defer overflow to the tail (never dropped). World +
+  // Politics share one group (both "hard global news").
+  const CAT_CAP = 5;
+  const catGroup = (c) => {
+    const k = String(c || 'Other').toLowerCase();
+    return (k === 'world' || k === 'politics' || k === 'policy') ? 'world+politics' : k;
+  };
+  const counts = {};
+  const kept = [];
+  const deferred = [];
+  for (const a of sorted) {
+    const g = catGroup(a.category);
+    if ((counts[g] || 0) < CAT_CAP) { counts[g] = (counts[g] || 0) + 1; kept.push(a); }
+    else deferred.push(a);
+  }
+  return [...kept, ...deferred];
 }
 
 export default async function handler(req, res) {
