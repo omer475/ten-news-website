@@ -14,7 +14,6 @@ import { Entrance, useReducedMotion } from './shared';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
 import { createPlanner } from './cardPlan';
-import { CompositeCard } from './TPComposites';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
@@ -113,11 +112,11 @@ function useFeedBlocks(stories, modules) {
     for (let i = cache.count; i < news.length; i += 1) {
       const story = news[i];
       const display = story.display || null;
-      // display == null → legacy card (no plan). Otherwise the v2 planner
-      // resolves a CardPlan (pure special, composite, or breath) with the
-      // rhythm engine carried across loadMore via the cached planner instance.
-      // The plan is deterministic for a given stories order, so reloads are
-      // stable without a separate template memory.
+      // display == null → legacy card (no plan). Otherwise the v3 planner
+      // resolves ONE pure card type (image OR data) with the rhythm engine
+      // carried across loadMore via the cached planner instance. The plan is
+      // deterministic for a given stories order, so reloads stay stable without
+      // a separate template memory.
       const plan = display ? cache.planner.plan(display, story) : null;
 
       cache.blocks.push({ type: 'story', story, plan, key: `s-${story.id ?? i}` });
@@ -144,12 +143,12 @@ function StoryBlock({ story, plan, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
   const rootRef = useRef(null);
 
-  // §E instrumentation: for stat-hero / quote / versus, note whether this
-  // article is shown PURE (own card) or EMBEDDED (inside a composite), and
-  // record dwell on read + skip on early exit.
-  const heroType = plan?.hero || (plan?.pure ? plan.template : null);
+  // §E instrumentation: record which pure card type each article rendered as,
+  // plus dwell on read / skip on early exit, so we can see how each data card
+  // type holds attention. (No more embedded mode — every card is pure now.)
+  const heroType = plan?.template || null;
   const instrument = !!heroType && INSTRUMENTED_HEROES.has(heroType);
-  const mode = plan?.pure ? 'pure' : 'embedded';
+  const mode = 'pure';
 
   // Cards are read IN PLACE (no tap), so visibility is the read signal:
   //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
@@ -205,18 +204,14 @@ function StoryBlock({ story, plan, onOpen, onEngage, isDark, textOnly }) {
 
   // Per user direction (2026-06-13): tapping an article does NOTHING — cards
   // are read in place. Only bookmark/share in the footer are interactive.
-  const PureCard = plan?.pure ? CARD_BY_TEMPLATE[plan.template] : null;
+  const PureCard = plan ? CARD_BY_TEMPLATE[plan.template] : null;
   return (
     <div ref={rootRef}>
-      {!story.display || !plan ? (
+      {!story.display || !plan || !PureCard ? (
         <FeedCard story={story} isDark={false} textOnly={textOnly} onOpen={() => {}} onEngage={onEngage} />
-      ) : plan.pure && PureCard ? (
-        <div style={{ padding: '0 16px' }}>
-          <PureCard story={story} display={story.display} accent={accent} />
-        </div>
       ) : (
         <div style={{ padding: '0 16px' }}>
-          <CompositeCard story={story} display={story.display} accent={accent} plan={plan} />
+          <PureCard story={story} display={story.display} accent={accent} />
         </div>
       )}
     </div>

@@ -8,9 +8,8 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { TP, FONT_MONO, shouldAnimateOnce, hasAnimated } from './tokens';
-import { KickerRow, Bullets, CardFooter, Headline, useReducedMotion, useVisibleOnce } from './shared';
-import { MiniChart } from './TPCards';
+import { TP, FONT_MONO, FONT_BODY, shouldAnimateOnce, hasAnimated } from './tokens';
+import { KickerRow, CardFooter, Headline, useReducedMotion, useVisibleOnce } from './shared';
 import { MAPBOX_TOKEN } from '../MapboxMap';
 
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -449,12 +448,16 @@ export function MapCard({ story, display, accent, onOpen }) {
             <MapboxFigure geo={display.geo} accent={accent} storyId={String(story.id)} />
           </div>
         ) : null}
-        <div style={{ marginTop: 16 }}>
-          <Bullets bullets={display.bullets} accent={accent} max={2} reveal={null} />
-        </div>
+        {/* one supporting sentence — NOT a bullet list (§redesign) */}
+        {display.lede ? (
+          <p style={{
+            fontFamily: FONT_BODY, fontSize: 14.4, lineHeight: 1.55, color: TP.ink2,
+            margin: '16px 0 0', maxWidth: '52ch',
+          }}>{display.lede}</p>
+        ) : null}
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14 }}>
+      {/* NO mini-chart — the map owns the frame (§redesign) */}
+      <div style={{ marginTop: 18 }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>

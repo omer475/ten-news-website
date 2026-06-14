@@ -11,7 +11,7 @@ import {
   ageLabel, Markup, formatNumber, shouldAnimateOnce, hasAnimated,
 } from './tokens';
 import {
-  KickerRow, Bullets, StatsRow, CardFooter, Headline,
+  KickerRow, Bullets, CardFooter, Headline,
   CountUp, ParallaxImage, useVisibleOnce, useReducedMotion,
   useRevealOnce, revealStyle, TPCountdownChip, focusObjectPosition,
 } from './shared';
@@ -79,12 +79,7 @@ export function CoverCard({ story, display, accent, onOpen }) {
         </ParallaxImage>
       </div>
 
-      {display.stats?.length ? (
-        <div style={{ marginTop: 20 }}>
-          <StatsRow stats={display.stats} accent={accent} cardKey={`c${story.id}`} />
-        </div>
-      ) : null}
-      <MiniChart display={display} accent={accent} storyId={story.id} />
+      {/* Image card: photo + headline + lede only — no embedded modules (§redesign). */}
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.3, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -92,7 +87,7 @@ export function CoverCard({ story, display, accent, onOpen }) {
   );
 }
 
-// ── 5.2 CLASSIC — photo top, text below ─────────────────────────────────────
+// ── 5.2 CLASSIC — photo top, text below (the only card with a bullet list) ───
 
 export function ClassicCard({ story, display, accent, onOpen }) {
   const [ref, shown, animate] = useRevealOnce(`classic.${story.id}`, 0.25);
@@ -119,12 +114,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
         </div>
       </div>
 
-      {display.stats?.length ? (
-        <div style={{ marginTop: 20 }}>
-          <StatsRow stats={display.stats} accent={accent} cardKey={`c${story.id}`} />
-        </div>
-      ) : null}
-      <MiniChart display={display} accent={accent} storyId={story.id} />
+      {/* Classic is the ONE card that carries a bullet list — no embedded modules. */}
       <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.42, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -132,7 +122,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
   );
 }
 
-// ── 5.3 STAT-HERO — no photo, one giant number ──────────────────────────────
+// ── 5.3 STAT-HERO — pure data card: one giant number, no photo, no bullets ───
 
 export function StatHeroCard({ story, display, accent, onOpen }) {
   const [ref, shown, animate] = useRevealOnce(`stat.${story.id}`, 0.35);
@@ -182,20 +172,24 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
           ) : null}
         </div>
 
-        <div style={{ marginTop: 18 }}>
-          <Bullets bullets={display.bullets} accent={accent} max={2} reveal={{ shown, animate, baseDelay: 0.45 }} />
-        </div>
+        {/* one supporting sentence — NOT a bullet list (§redesign) */}
+        {display.lede ? (
+          <p style={{
+            fontFamily: FONT_BODY, fontSize: 14.6, lineHeight: 1.55, fontWeight: 450,
+            color: TP.ink2, margin: '18px 0 0', maxWidth: '52ch',
+            ...revealStyle(shown, animate, 0.45, 10),
+          }}>{display.lede}</p>
+        ) : null}
       </div>
-      {/* NO stats row — the big number replaces it (§5.3) */}
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.6, 8) }}>
+      {/* NO stats row, NO mini-chart — the big number owns the frame (§5.3) */}
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.6, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
   );
 }
 
-// ── 5.4 QUOTE — pull-quote led ──────────────────────────────────────────────
+// ── 5.4 QUOTE — pure data card: pull-quote led, no photo, no bullets ─────────
 
 export function QuoteCard({ story, display, accent, onOpen }) {
   const [ref, shown, animate] = useRevealOnce(`quote.${story.id}`, 0.35);
@@ -265,20 +259,16 @@ export function QuoteCard({ story, display, accent, onOpen }) {
         }}>
           <Markup raw={display.title} emColor={TP.ink} strongColor={TP.ink} strongWeight={700} />
         </h3>
-
-        <div style={{ marginTop: 14 }}>
-          <Bullets bullets={display.bullets} accent={accent} max={2} reveal={{ shown, animate, baseDelay: 0.68 }} />
-        </div>
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.82, 8) }}>
+      {/* NO bullets, NO mini-chart — the quote owns the frame (§redesign) */}
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.82, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
   );
 }
 
-// ── 5.5 VERSUS — three typed variants ───────────────────────────────────────
+// ── 5.5 VERSUS — pure data card: three typed variants, no photo, no bullets ──
 // versus.kind: "duel" (opposed tallies — VS circle + ratio bar) · "change"
 // (before → after, accent arrow + delta chip, NO circle/bar) · "gap" (two
 // scales contrasted — proportional mini-bars, no fight framing). Old rows
@@ -471,20 +461,22 @@ export function VersusCard({ story, display, accent, onOpen }) {
         {kind === 'gap' ? gapFigure() : null}
 
         {versus.note ? (
-          <div style={{ marginTop: 16 }}>
-            <Bullets bullets={[versus.note]} accent={accent} max={1} reveal={{ shown, animate, baseDelay: 0.55 }} />
-          </div>
+          <p style={{
+            fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2,
+            textAlign: 'center', margin: '18px auto 0', maxWidth: '42ch',
+            ...revealStyle(shown, animate, 0.55, 8),
+          }}>{versus.note}</p>
         ) : null}
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.7, 8) }}>
+      {/* NO mini-chart — the contest figure owns the frame (§redesign) */}
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.7, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
   );
 }
 
-// ── 5.6 TIMELINE — developing story ─────────────────────────────────────────
+// ── 5.6 TIMELINE — pure data card: developing story, no photo, no bullets ────
 
 export function TimelineCard({ story, display, accent, onOpen }) {
   const [ref, shown, animate] = useRevealOnce(`line.${story.id}`, 0.3);
@@ -539,8 +531,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
           </div>
         </div>
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.25 + entries.length * 0.14, 8) }}>
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.25 + entries.length * 0.14, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
@@ -611,7 +602,6 @@ export function SplitCard({ story, display, accent, onOpen }) {
           ) : null}
         </div>
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
       <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.4, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
@@ -1054,8 +1044,7 @@ export function ReceiptsCard({ story, display, accent, onOpen }) {
           </div>
         ) : null}
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.78, 8) }}>
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.78, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
@@ -1219,13 +1208,15 @@ export function ScoreCard({ story, display, accent, onOpen }) {
         ) : null}
 
         {sc.note ? (
-          <div style={{ marginTop: 16 }}>
-            <Bullets bullets={[sc.note]} accent={accent} max={1} reveal={{ shown, animate, baseDelay: 0.55 }} />
-          </div>
+          <p style={{
+            fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2,
+            textAlign: 'center', margin: '18px auto 0', maxWidth: '42ch',
+            ...revealStyle(shown, animate, 0.55, 8),
+          }}>{sc.note}</p>
         ) : null}
       </div>
-      <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.7, 8) }}>
+      {/* NO mini-chart — the scoreline owns the frame (§redesign) */}
+      <div style={{ marginTop: 18, ...revealStyle(shown, animate, 0.7, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>
