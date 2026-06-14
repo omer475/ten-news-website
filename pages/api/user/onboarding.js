@@ -280,8 +280,8 @@ export default async function handler(req, res) {
         });
       }
 
-      // Country fields live on `users`, not `profiles` (best-effort).
-      await supabase.from('users').update(usersData).eq('id', user_id).catch(() => {});
+      // Country fields live on `users`, not `profiles` (best-effort, never fatal).
+      try { await supabase.from('users').update(usersData).eq('id', user_id); } catch (_) {}
 
       // V3: Ensure personalization_profiles row exists for this user
       const { data: persResult } = await supabase.rpc('resolve_personalization_id', { p_auth_id: user_id }).catch(() => ({ data: null }));
@@ -294,8 +294,9 @@ export default async function handler(req, res) {
           .catch(() => {});
       }
 
-      // V3: Initialize taste vector from subtopic embeddings on personalization_profiles
-      await initializeTasteVector(supabase, user_id, null, followed_topics);
+      // V3: best-effort taste-vector init — must not fail the request after
+      // topics are already saved (else the client retries and topics look unsaved).
+      try { await initializeTasteVector(supabase, user_id, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
 
       return res.status(200).json({ success: true, user: data });
     }
@@ -314,8 +315,8 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to update profile' });
       }
 
-      // Country fields live on `users`, not `profiles` (best-effort).
-      await supabase.from('users').update(usersData).eq('id', auth_user_id).catch(() => {});
+      // Country fields live on `users`, not `profiles` (best-effort, never fatal).
+      try { await supabase.from('users').update(usersData).eq('id', auth_user_id); } catch (_) {}
 
       // V3: Ensure personalization_profiles row exists
       const { data: persResult2 } = await supabase.rpc('resolve_personalization_id', { p_auth_id: auth_user_id }).catch(() => ({ data: null }));
@@ -328,8 +329,8 @@ export default async function handler(req, res) {
           .catch(() => {});
       }
 
-      // V3: Initialize taste vector from subtopic embeddings on personalization_profiles
-      await initializeTasteVector(supabase, auth_user_id, null, followed_topics);
+      // V3: best-effort taste-vector init (non-fatal — topics already saved).
+      try { await initializeTasteVector(supabase, auth_user_id, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
 
       return res.status(200).json({ success: true, user: data });
     }
