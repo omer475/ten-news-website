@@ -241,6 +241,19 @@ export default async function handler(req, res) {
       ...(initialTasteVector ? { taste_vector_minilm: initialTasteVector } : {}),
     };
 
+    // CRITICAL: `profiles` has followed_topics / onboarding_completed /
+    // taste_vector_minilm but NOT home_country / followed_countries. Writing the
+    // full object errored the whole .update() ("Failed to update profile"), so
+    // onboarding NEVER persisted topics → the warm-start synthesizer (which
+    // reads profiles.followed_topics) never fired → generic feed for everyone.
+    // Split: profiles gets only its columns; the country fields go to `users`.
+    const profilesData = {
+      followed_topics,
+      onboarding_completed: true,
+      ...(initialTasteVector ? { taste_vector_minilm: initialTasteVector } : {}),
+    };
+    const usersData = { home_country, followed_countries, followed_topics, onboarding_completed: true };
+
     // Anonymous user (no auth_user_id): don't write to DB, return success for localStorage
     if (!auth_user_id && !user_id) {
       return res.status(200).json({
@@ -253,7 +266,7 @@ export default async function handler(req, res) {
     if (user_id) {
       const { data, error } = await supabase
         .from('profiles')
-        .update(personalizationData)
+        .update(profilesData)
         .eq('id', user_id)
         .select()
         .single();
@@ -266,6 +279,9 @@ export default async function handler(req, res) {
           user: { ...personalizationData, id: user_id }
         });
       }
+
+      // Country fields live on `users`, not `profiles` (best-effort).
+      await supabase.from('users').update(usersData).eq('id', user_id).catch(() => {});
 
       // V3: Ensure personalization_profiles row exists for this user
       const { data: persResult } = await supabase.rpc('resolve_personalization_id', { p_auth_id: user_id }).catch(() => ({ data: null }));
@@ -288,7 +304,7 @@ export default async function handler(req, res) {
     if (auth_user_id) {
       const { data, error } = await supabase
         .from('profiles')
-        .update(personalizationData)
+        .update(profilesData)
         .eq('id', auth_user_id)
         .select()
         .single();
@@ -297,6 +313,9 @@ export default async function handler(req, res) {
         console.error('Error updating profile for auth user:', error);
         return res.status(500).json({ error: 'Failed to update profile' });
       }
+
+      // Country fields live on `users`, not `profiles` (best-effort).
+      await supabase.from('users').update(usersData).eq('id', auth_user_id).catch(() => {});
 
       // V3: Ensure personalization_profiles row exists
       const { data: persResult2 } = await supabase.rpc('resolve_personalization_id', { p_auth_id: auth_user_id }).catch(() => ({ data: null }));
