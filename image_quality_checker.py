@@ -90,6 +90,14 @@ split_ok is TRUE when one clear subject survives a tight square crop — bold
 objects, products, faces (faces are fine HERE, unlike cover), logos-in-context,
 strong close-ups.
 
+ALSO classify the image's SUBJECT ("subject") so the app can choose how to
+frame it:
+- "portrait" = one person is the clear subject (a face/head-and-shoulders),
+  good for a circular or inset crop
+- "scene" = a place, event, landscape, building, or crowd — good full-bleed
+- "object" = a single thing, product, document, or animal
+- "graphic" = a chart, map, infographic, or illustration (not a photo)
+
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {
     "suitable": true or false,
@@ -98,7 +106,8 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
     "reason": "One sentence explanation",
     "cover_ok": true or false,
     "split_ok": true or false,
-    "focus": {"x": 0.5, "y": 0.4}
+    "focus": {"x": 0.5, "y": 0.4},
+    "subject": "portrait" or "scene" or "object" or "graphic"
 }"""
 
     def check_image(self, image_url: str, retry_count: int = 3) -> Dict:
@@ -286,6 +295,10 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                     "split_ok": bool(parsed.get("split_ok")),
                     "focus_x": round(focus_x, 3),
                     "focus_y": round(focus_y, 3),
+                    # Subject class → lets the client vary photo treatment
+                    # (portrait→circular inset, scene→full-bleed, etc.).
+                    "subject": parsed.get("subject") if parsed.get("subject") in
+                               ("portrait", "scene", "object", "graphic") else "scene",
                     "error": False
                 }
                 
