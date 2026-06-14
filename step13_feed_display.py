@@ -1565,7 +1565,13 @@ def generate_daily_modules(supabase, api_key: str):
                 for e in hist[:3]
                 if isinstance(e, (list, tuple)) and len(e) >= 2 and _num(e[0])]
         if len(rows) == 3:
-            payloads['history'] = {'rows': rows}
+            # Illustrate each event in the day's rotating art style.
+            try:
+                from history_image_gen import generate_history_images
+                payloads['history'] = generate_history_images(supabase, rows, api_key)
+            except Exception as _hist_err:
+                print(f"   ⚠️ [history-img] illustration failed (text-only): {_hist_err}")
+                payloads['history'] = {'rows': rows}
     notd = data.get('notd')
     if isinstance(notd, dict) and _num(notd.get('value')) is not None \
             and notd.get('context'):

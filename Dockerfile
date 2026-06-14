@@ -49,6 +49,7 @@ COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
 COPY step11_article_tagging.py .
 COPY step13_feed_display.py .
+COPY history_image_gen.py .
 COPY article_deduplication.py .
 COPY sports_espn_poller.py .
 
