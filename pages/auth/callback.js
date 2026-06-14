@@ -183,6 +183,30 @@ export default function AuthCallback() {
       setStatus('Email verified successfully!')
     }
 
+    // Persist the user's onboarding picks (country + interests) to their profile
+    // so the feed warm-starts from them immediately. The onboarding gate runs
+    // BEFORE auth, so a new user picks topics as a guest and they live only in
+    // localStorage. Without this sync the algorithm never sees the chosen topics
+    // (profiles.followed_topics stays null → Trinity falls to the generic cold
+    // feed). Fire-and-forget; the profiles row was just upserted above.
+    try {
+      const prefs = JSON.parse(localStorage.getItem('todayplus_preferences') || 'null');
+      if (prefs && prefs.onboarding_completed && Array.isArray(prefs.followed_topics) && prefs.followed_topics.length) {
+        fetch('/api/user/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            auth_user_id: session.user.id,
+            home_country: prefs.home_country,
+            followed_countries: prefs.followed_countries || [],
+            followed_topics: prefs.followed_topics,
+            onboarding_completed: true,
+          }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    } catch (_) {}
+
     setTimeout(() => router.push('/?verified=true'), 1500)
   }
 

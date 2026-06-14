@@ -1067,7 +1067,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
           const userData = JSON.parse(storedUser);
           const sessionData = JSON.parse(storedSession);
           setUser(userData);
-          
+          syncOnboardingToProfile(userData?.id);
+
           // Fetch profile from API
           try {
             const profileResponse = await fetch('/api/auth/user');
@@ -2766,6 +2767,34 @@ export default function Home({ initialNews, initialWorldEvents }) {
       console.warn('⚠️ Error re-applying preferences:', e);
     }
   };
+
+  // Push the user's onboarding picks (country + interests) from localStorage to
+  // their server profile so the feed warm-starts from them. New users onboard as
+  // GUESTS (gate runs before auth), so the picks live only in localStorage until
+  // they log in — without this sync profiles.followed_topics stays null and the
+  // algorithm never personalizes. Idempotent + guarded so it fires at most once
+  // per session. Hoisted (function decl) so the auth-restore effect can call it.
+  function syncOnboardingToProfile(authUserId) {
+    if (!authUserId || typeof window === 'undefined') return;
+    try {
+      if (sessionStorage.getItem('tn_prefs_synced') === authUserId) return;
+      const prefs = JSON.parse(localStorage.getItem('todayplus_preferences') || 'null');
+      if (!prefs || !prefs.onboarding_completed) return;
+      if (!Array.isArray(prefs.followed_topics) || !prefs.followed_topics.length) return;
+      sessionStorage.setItem('tn_prefs_synced', authUserId);
+      fetch('/api/user/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auth_user_id: authUserId,
+          home_country: prefs.home_country,
+          followed_countries: prefs.followed_countries || [],
+          followed_topics: prefs.followed_topics,
+          onboarding_completed: true,
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+  }
 
   // Authentication functions
   // Helper: Link auth account to personalization profile (or fetch from server)
