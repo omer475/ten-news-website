@@ -1,12 +1,18 @@
 // TodayPlus Feed — shared card chrome + engagement primitives
 // Spec §5 (common), §6 (open stats row), §7 (count-ups, parallax, entrances).
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useContext } from 'react';
 import {
   TP, FONT_HEAD, FONT_BODY, FONT_MONO,
   formatNumber, ageLabel, Markup, plainText,
   shouldAnimateOnce, hasAnimated,
 } from './tokens';
+
+// Feed-level signal bus so any card footer can teach the algorithm (save /
+// share / like / not-interested) without threading callbacks through every
+// card. The feed provides it; CardFooter consumes it. `suppressFooter` lets a
+// photo-accent wrapper hide a data card's own footer and render its own.
+export const FeedSignalContext = React.createContext({});
 
 // ── hooks ────────────────────────────────────────────────────────────────────
 
@@ -429,28 +435,46 @@ function loadBookmarks() {
 
 export function CardFooter({ story, tags, onOpen }) {
   const reduced = useReducedMotion();
+  const { fireSignal, notInterested, suppressFooter } = useContext(FeedSignalContext) || {};
   const [bookmarked, setBookmarked] = useState(false);
-  const [pop, setPop] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [pop, setPop] = useState(null); // 'like' | 'save' | null
   const id = String(story.id || '');
 
   useEffect(() => { setBookmarked(loadBookmarks().has(id)); }, [id]);
 
+  // a photo-accent wrapper renders its own footer — hide the card's built-in one
+  if (suppressFooter) return null;
+
+  const popOnce = (key) => { if (reduced) return; setPop(key); setTimeout(() => setPop((p) => (p === key ? null : p)), 400); };
+
+  const toggleLike = (e) => {
+    e.stopPropagation();
+    const next = !liked;
+    setLiked(next);
+    if (next) { try { fireSignal?.('article_liked', story); } catch (_) {} popOnce('like'); }
+  };
+
+  const dislike = (e) => {
+    e.stopPropagation();
+    try { notInterested?.(story); } catch (_) {}
+  };
+
   const toggleBookmark = (e) => {
     e.stopPropagation();
     const set = loadBookmarks();
-    if (set.has(id)) set.delete(id); else set.add(id);
+    const adding = !set.has(id);
+    if (adding) set.add(id); else set.delete(id);
     try { localStorage.setItem('tp_bookmarks', JSON.stringify([...set])); } catch {}
-    setBookmarked(set.has(id));
-    if (!reduced) {
-      setPop(true);
-      setTimeout(() => setPop(false), 400);
-    }
+    setBookmarked(adding);
+    if (adding) { try { fireSignal?.('article_saved', story); } catch (_) {} popOnce('save'); }
   };
 
   const share = async (e) => {
     e.stopPropagation();
     const title = story.display ? plainText(story.display.title) : (story.title_news || story.title || '');
     const url = story.url && story.url !== '#' ? story.url : (typeof window !== 'undefined' ? window.location.href : '');
+    try { fireSignal?.('article_shared', story); } catch (_) {}
     try {
       if (navigator.share) await navigator.share({ title, url });
       else await navigator.clipboard.writeText(`${title} ${url}`);
@@ -462,7 +486,7 @@ export function CardFooter({ story, tags, onOpen }) {
       onClick={onClick}
       aria-label={label}
       style={{
-        all: 'unset', cursor: 'pointer', width: 36, height: 36, borderRadius: '50%',
+        all: 'unset', cursor: 'pointer', width: 34, height: 34, borderRadius: '50%',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: tint,
         flexShrink: 0, WebkitTapHighlightColor: 'transparent', ...extra,
       }}
@@ -470,7 +494,7 @@ export function CardFooter({ story, tags, onOpen }) {
   );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <div style={{ display: 'flex', gap: 7, overflowX: 'auto', flex: 1, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {(tags || []).map((tag) => (
           <span key={tag} style={{
@@ -482,12 +506,31 @@ export function CardFooter({ story, tags, onOpen }) {
           }}>{tag}</span>
         ))}
       </div>
+
+      {/* positive: like (low-effort +) */}
+      {iconBtn(toggleLike, 'Like — more like this', (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? TP.gold : 'none'} stroke={liked ? TP.gold : 'currentColor'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 10.5V20M3.5 11h3.5v9H4.2A.7.7 0 013.5 19.3zM7 10.5l3.7-7.4a1.7 1.7 0 013.1.9V9h5.2a1.7 1.7 0 011.66 2.07l-1.5 6.8A1.7 1.7 0 0117.5 19H7z"/>
+        </svg>
+      ), liked ? TP.gold : TP.ink3, {
+        transform: pop === 'like' ? 'scale(1.3)' : 'scale(1)',
+        transition: reduced ? 'none' : 'transform 0.4s cubic-bezier(.3,1.8,.4,1)',
+      })}
+
+      {/* negative: not interested (show me less) */}
+      {iconBtn(dislike, 'Not interested — show me less', (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(180deg)' }}>
+          <path d="M7 10.5V20M3.5 11h3.5v9H4.2A.7.7 0 013.5 19.3zM7 10.5l3.7-7.4a1.7 1.7 0 013.1.9V9h5.2a1.7 1.7 0 011.66 2.07l-1.5 6.8A1.7 1.7 0 0117.5 19H7z"/>
+        </svg>
+      ))}
+
       {iconBtn(toggleBookmark, 'Bookmark', (
         <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? TP.gold : 'none'} stroke={bookmarked ? TP.gold : 'currentColor'} strokeWidth="1.6" strokeLinejoin="round"><path d="M6 3.8h12a.7.7 0 01.7.7v15.6a.4.4 0 01-.64.32L12 16l-6.06 4.42a.4.4 0 01-.64-.32V4.5a.7.7 0 01.7-.7z"/></svg>
       ), bookmarked ? TP.gold : TP.ink3, {
-        transform: pop ? 'scale(1.3)' : 'scale(1)',
+        transform: pop === 'save' ? 'scale(1.3)' : 'scale(1)',
         transition: reduced ? 'none' : 'transform 0.4s cubic-bezier(.3,1.8,.4,1)',
       })}
+
       {iconBtn(share, 'Share', (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6.2a.8.8 0 00.8.8h12.4a.8.8 0 00.8-.8V13"/></svg>
       ))}

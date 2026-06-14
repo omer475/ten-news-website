@@ -124,7 +124,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
 
 // ── 5.3 STAT-HERO — pure data card: one giant number, no photo, no bullets ───
 
-export function StatHeroCard({ story, display, accent, onOpen }) {
+export function StatHeroCard({ story, display, accent, onOpen, insetPhoto }) {
   const [ref, shown, animate] = useRevealOnce(`stat.${story.id}`, 0.35);
   const big = display.big || [0, '', '', ''];
   const [value, prefix, unit, caption] = big;
@@ -139,6 +139,7 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
         transition: animate ? 'transform 0.8s cubic-bezier(.2,.7,.2,1)' : 'none',
       }} />
       <div style={{ paddingTop: 18 }}>
+        {insetPhoto || null}
         <div style={revealStyle(shown, animate, 0.05, 8)}>
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
@@ -191,7 +192,7 @@ export function StatHeroCard({ story, display, accent, onOpen }) {
 
 // ── 5.4 QUOTE — pure data card: pull-quote led, no photo, no bullets ─────────
 
-export function QuoteCard({ story, display, accent, onOpen }) {
+export function QuoteCard({ story, display, accent, onOpen, insetPhoto }) {
   const [ref, shown, animate] = useRevealOnce(`quote.${story.id}`, 0.35);
   const quote = display.quote || { text: '', who: '' };
   const [name, ...roleParts] = (quote.who || '').split(' · ');
@@ -199,6 +200,7 @@ export function QuoteCard({ story, display, accent, onOpen }) {
   return (
     <article ref={ref}>
       <div>
+        {insetPhoto || null}
         <div style={revealStyle(shown, animate, 0, 6)}>
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
@@ -1336,5 +1338,202 @@ export function MiniChart({ display, accent, storyId }) {
         <div style={{ fontFamily: FONT_MONO, fontSize: 9, lineHeight: 1.5, color: TP.ink3, marginTop: 6 }}>{caption}</div>
       ) : null}
     </div>
+  );
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// PHOTO PLACEMENT SYSTEM (v4) — placement is a core variety axis. Article cards
+// arrange the photo five ways; data cards take a subtle photo accent. Every
+// crop honors image_focus {x,y} so the subject is never cut off.
+// ════════════════════════════════════════════════════════════════════════════
+
+function posFromFocus(focus) {
+  if (!focus || typeof focus.x !== 'number') return '50% 50%';
+  return `${Math.round((focus.x ?? 0.5) * 100)}% ${Math.round((focus.y ?? 0.5) * 100)}%`;
+}
+
+// focus-cropped <img> with skeleton + fade-in (used by strips / side / inset)
+function FocusImg({ src, focus, radius = 18, ar, style }) {
+  const [loaded, setLoaded] = useState(false);
+  const [pos, setPos] = useState(posFromFocus(focus));
+  return (
+    <div style={{
+      position: 'relative', borderRadius: radius, overflow: 'hidden',
+      background: TP.line, ...(ar ? { aspectRatio: ar } : {}), ...style,
+    }}>
+      <img
+        src={src} alt="" loading="lazy" decoding="async"
+        onLoad={(e) => { setLoaded(true); setPos(focusObjectPosition(e.currentTarget, focus)); }}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover', objectPosition: pos,
+          display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 0.5s ease-out',
+        }}
+      />
+      <span style={{ position: 'absolute', inset: 0, borderRadius: radius, pointerEvents: 'none', boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.06)' }} />
+    </div>
+  );
+}
+
+// thin photo strip for a data card (position 'above' | 'below' the figure)
+export function PhotoStrip({ display, story, position = 'below' }) {
+  const img = display.imageURL || story?.urlToImage;
+  if (!img) return null;
+  return (
+    <div style={{ margin: position === 'above' ? '0 0 16px' : '16px 0 0' }}>
+      <FocusImg src={img} focus={display.image_focus} ar="16 / 4.6" radius={14} />
+    </div>
+  );
+}
+
+// faint accent-tinted photo wash behind a data card (texture, not competition)
+export function WashLayer({ display, story, accent }) {
+  const [pos, setPos] = useState(posFromFocus(display.image_focus));
+  const img = display.imageURL || story?.urlToImage;
+  if (!img) return null;
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: 24, overflow: 'hidden', zIndex: 0 }}>
+      <img src={img} alt="" loading="lazy" decoding="async"
+        onLoad={(e) => setPos(focusObjectPosition(e.currentTarget, display.image_focus))}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover', objectPosition: pos,
+          opacity: 0.12, filter: 'saturate(0.85)',
+        }} />
+      <span style={{ position: 'absolute', inset: 0, background: `linear-gradient(155deg, color-mix(in srgb, ${accent} 9%, ${TP.bg}) 0%, color-mix(in srgb, ${accent} 3%, ${TP.bg}) 45%, ${TP.bg} 100%)` }} />
+    </div>
+  );
+}
+
+// round cut-out portrait that the headline / quote wraps around (float)
+export function InsetPhoto({ display, story, size = 66 }) {
+  const [loaded, setLoaded] = useState(false);
+  const [pos, setPos] = useState(posFromFocus(display.image_focus));
+  const img = display.imageURL || story?.urlToImage;
+  if (!img) return null;
+  return (
+    <span style={{
+      float: 'right', width: size, height: size, borderRadius: '50%', overflow: 'hidden',
+      margin: '2px 0 10px 14px', background: TP.line, flexShrink: 0,
+      boxShadow: '0 3px 12px rgba(22,21,15,0.14), 0 0 0 3px ' + TP.bg,
+    }}>
+      <img src={img} alt="" loading="lazy" decoding="async"
+        onLoad={(e) => { setLoaded(true); setPos(focusObjectPosition(e.currentTarget, display.image_focus)); }}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover', objectPosition: pos,
+          opacity: loaded ? 1 : 0, transition: 'opacity 0.5s ease-out',
+        }} />
+    </span>
+  );
+}
+
+// shared article text block (kicker → headline → bullets|lede)
+function ArticleText({ story, display, accent, shown, animate, compact }) {
+  return (
+    <>
+      <div style={revealStyle(shown, animate, 0.08, 6)}>
+        <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
+      </div>
+      <div style={{ marginTop: 10, ...revealStyle(shown, animate, 0.14, 10) }}>
+        <Headline raw={display.title} accent={accent} size={compact ? 18 : 22.5} />
+      </div>
+      {compact
+        ? (display.lede ? (
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink2, margin: '8px 0 0', ...revealStyle(shown, animate, 0.22, 8) }}>{display.lede}</p>
+          ) : null)
+        : (
+            <div style={{ marginTop: 13 }}>
+              <Bullets bullets={display.bullets} accent={accent} reveal={{ shown, animate, baseDelay: 0.22 }} />
+            </div>
+          )}
+    </>
+  );
+}
+
+// ── ARTICLE CARD — five photo placements (full-bleed handled by CoverCard) ───
+export function ArticleCard({ story, display, accent, placement = 'top-banner' }) {
+  const [ref, shown, animate] = useRevealOnce(`art.${placement}.${story.id}`, 0.25);
+  const img = display.imageURL || story.urlToImage;
+  const focus = display.image_focus;
+  const footer = (
+    <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.42, 8) }}>
+      <CardFooter story={story} tags={display.tags} />
+    </div>
+  );
+
+  // none — text-only article card (no usable photo); headline + bullets
+  if (placement === 'none' || !img) {
+    return (
+      <article ref={ref}>
+        <ArticleText story={story} display={display} accent={accent} shown={shown} animate={animate} />
+        {footer}
+      </article>
+    );
+  }
+
+  // side-left / side-right — photo beside text
+  if (placement === 'side-left' || placement === 'side-right') {
+    const left = placement === 'side-left';
+    return (
+      <article ref={ref}>
+        <div style={{ display: 'flex', flexDirection: left ? 'row' : 'row-reverse', gap: 16, alignItems: 'stretch' }}>
+          <div style={{ width: '42%', flexShrink: 0, ...revealStyle(shown, animate, 0.05, 8) }}>
+            <FocusImg src={img} focus={focus} radius={20} style={{ height: '100%', minHeight: 158 }} />
+          </div>
+          <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <ArticleText story={story} display={display} accent={accent} shown={shown} animate={animate} compact />
+          </div>
+        </div>
+        {footer}
+      </article>
+    );
+  }
+
+  const photoEl = (
+    <div style={revealStyle(shown, animate, 0.05, 8)}>
+      <ParallaxImage src={img} aspectRatio="16 / 10" borderRadius={24} focus={focus} />
+    </div>
+  );
+
+  // inline-window — headline → photo → bullets
+  if (placement === 'inline-window') {
+    return (
+      <article ref={ref}>
+        <div style={revealStyle(shown, animate, 0.04, 6)}>
+          <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
+        </div>
+        <div style={{ margin: '10px 0 0', ...revealStyle(shown, animate, 0.1, 10) }}>
+          <Headline raw={display.title} accent={accent} size={22.5} />
+        </div>
+        <div style={{ margin: '16px 0', ...revealStyle(shown, animate, 0.18, 8) }}>
+          <ParallaxImage src={img} aspectRatio="16 / 9" borderRadius={22} focus={focus} />
+        </div>
+        <Bullets bullets={display.bullets} accent={accent} reveal={{ shown, animate, baseDelay: 0.28 }} />
+        {footer}
+      </article>
+    );
+  }
+
+  // bottom-anchor — text first, photo underneath
+  if (placement === 'bottom-anchor') {
+    return (
+      <article ref={ref}>
+        <ArticleText story={story} display={display} accent={accent} shown={shown} animate={animate} />
+        <div style={{ marginTop: 16, ...revealStyle(shown, animate, 0.3, 8) }}>
+          <ParallaxImage src={img} aspectRatio="16 / 9" borderRadius={22} focus={focus} />
+        </div>
+        {footer}
+      </article>
+    );
+  }
+
+  // top-banner (default) — photo on top, text below (the classic)
+  return (
+    <article ref={ref}>
+      {photoEl}
+      <div style={{ marginTop: 16 }}>
+        <ArticleText story={story} display={display} accent={accent} shown={shown} animate={animate} />
+      </div>
+      {footer}
+    </article>
   );
 }

@@ -10,13 +10,14 @@ import FeedCard from '../feed/FeedCard';
 import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
 import { TP, FONT_MONO, accentFor } from './tokens';
-import { Entrance, useReducedMotion } from './shared';
+import { Entrance, useReducedMotion, FeedSignalContext, CardFooter } from './shared';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
 import { createPlanner } from './cardPlan';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
+  ArticleCard, PhotoStrip, WashLayer, InsetPhoto,
 } from './TPCards';
 import { MapCard } from './TPMapCard';
 
@@ -52,6 +53,66 @@ const CARD_BY_TEMPLATE = {
   score: ScoreCard,
   map: MapCard,
 };
+
+// ── Card render: content (article|data) × photo placement (v4) ──────────────
+
+// A DATA card with its photo accent (placement) applied.
+function DataCardView({ plan, story, display, accent }) {
+  const Comp = CARD_BY_TEMPLATE[plan.template];
+  if (!Comp) return null;
+  const { placement } = plan;
+
+  if (placement === 'inset') {
+    return <Comp story={story} display={display} accent={accent} insetPhoto={<InsetPhoto display={display} story={story} />} />;
+  }
+  if (placement === 'wash') {
+    return (
+      <div style={{ position: 'relative', borderRadius: 24 }}>
+        <WashLayer display={display} story={story} accent={accent} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Comp story={story} display={display} accent={accent} />
+        </div>
+      </div>
+    );
+  }
+  if (placement === 'strip-above') {
+    return (
+      <div>
+        <PhotoStrip display={display} story={story} position="above" />
+        <Comp story={story} display={display} accent={accent} />
+      </div>
+    );
+  }
+  if (placement === 'strip-below') {
+    // wrapper owns the footer so the strip sits between figure and footer:
+    // suppress the card's built-in footer via context, render ours after the strip.
+    return (
+      <FeedSignalContext.Consumer>
+        {(ctx) => (
+          <div>
+            <FeedSignalContext.Provider value={{ ...ctx, suppressFooter: true }}>
+              <Comp story={story} display={display} accent={accent} />
+            </FeedSignalContext.Provider>
+            <PhotoStrip display={display} story={story} position="below" />
+            <div style={{ marginTop: 14 }}>
+              <CardFooter story={story} tags={display.tags} />
+            </div>
+          </div>
+        )}
+      </FeedSignalContext.Consumer>
+    );
+  }
+  return <Comp story={story} display={display} accent={accent} />; // 'none' — clean data beat
+}
+
+// Resolve a plan to the right card component.
+function CardView({ plan, story, display, accent }) {
+  if (plan.mode === 'article') {
+    if (plan.placement === 'full-bleed') return <CoverCard story={story} display={display} accent={accent} />;
+    return <ArticleCard story={story} display={display} accent={accent} placement={plan.placement} />;
+  }
+  return <DataCardView plan={plan} story={story} display={display} accent={accent} />;
+}
 
 // ── Block assembly: incremental, stable across loadMore appends ─────────────
 
@@ -119,7 +180,8 @@ function useFeedBlocks(stories, modules) {
       // a separate template memory.
       const plan = display ? cache.planner.plan(display, story) : null;
 
-      cache.blocks.push({ type: 'story', story, plan, key: `s-${story.id ?? i}` });
+      // index-qualified so duplicate ids across loadMore appends can't collide
+      cache.blocks.push({ type: 'story', story, plan, key: `s-${i}-${story.id ?? 'x'}` });
       cache.blockIdx += 1;
       cache.storyCount += 1;
 
@@ -139,16 +201,22 @@ function useFeedBlocks(stories, modules) {
 
 // ── Story block: counts toward the read counter at ≥55% visibility ──────────
 
-function StoryBlock({ story, plan, onOpen, onEngage, isDark, textOnly }) {
+function StoryBlock({ story, plan, onOpen, onEngage, onSignal, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
   const rootRef = useRef(null);
+  const [dismissed, setDismissed] = useState(false);
 
-  // §E instrumentation: record which pure card type each article rendered as,
-  // plus dwell on read / skip on early exit, so we can see how each data card
-  // type holds attention. (No more embedded mode — every card is pure now.)
-  const heroType = plan?.template || null;
+  // §E instrumentation: record which content type + placement each article
+  // rendered as, plus dwell on read / skip on early exit.
+  const heroType = plan?.template || (plan?.mode === 'article' ? 'article' : null);
   const instrument = !!heroType && INSTRUMENTED_HEROES.has(heroType);
-  const mode = 'pure';
+  const mode = plan?.placement || 'none';
+
+  // Signal bus for this card's footer (save / share / like / not-interested).
+  const signalCtx = useMemo(() => ({
+    fireSignal: (type) => { try { onSignal?.(type, story); } catch (_) {} },
+    notInterested: () => { try { onSignal?.('article_not_interested', story); } catch (_) {} setDismissed(true); },
+  }), [onSignal, story]);
 
   // Cards are read IN PLACE (no tap), so visibility is the read signal:
   //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
@@ -202,16 +270,33 @@ function StoryBlock({ story, plan, onOpen, onEngage, isDark, textOnly }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id, heroType, mode]);
 
-  // Per user direction (2026-06-13): tapping an article does NOTHING — cards
-  // are read in place. Only bookmark/share in the footer are interactive.
-  const PureCard = plan ? CARD_BY_TEMPLATE[plan.template] : null;
+  // Cards are read IN PLACE — only the footer controls are interactive.
+  const canRender = !!(story.display && plan && (plan.mode === 'article' || CARD_BY_TEMPLATE[plan.template]));
+
+  if (dismissed) {
+    return (
+      <div ref={rootRef} style={{ padding: '0 16px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center',
+          padding: '22px 0', color: TP.ink3, fontFamily: FONT_MONO, fontSize: 11,
+          letterSpacing: '0.06em', borderTop: `1px solid ${TP.line}`, borderBottom: `1px solid ${TP.line}`,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TP.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"/></svg>
+          Got it — you’ll see less like this.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={rootRef}>
-      {!story.display || !plan || !PureCard ? (
+      {!canRender ? (
         <FeedCard story={story} isDark={false} textOnly={textOnly} onOpen={() => {}} onEngage={onEngage} />
       ) : (
         <div style={{ padding: '0 16px' }}>
-          <PureCard story={story} display={story.display} accent={accent} />
+          <FeedSignalContext.Provider value={signalCtx}>
+            <CardView plan={plan} story={story} display={story.display} accent={accent} />
+          </FeedSignalContext.Provider>
         </div>
       )}
     </div>
@@ -227,6 +312,7 @@ export default function TodayPlusFeed({
   renderPaywall,
   onOpen,
   onEngage,
+  onSignal,
   onLoadMore,
   hasMore,
   loadingMore,
@@ -278,6 +364,7 @@ export default function TodayPlusFeed({
                 plan={block.plan}
                 onOpen={onOpen}
                 onEngage={onEngage}
+                onSignal={onSignal}
                 textOnly={textOnly}
               />
             </Entrance>

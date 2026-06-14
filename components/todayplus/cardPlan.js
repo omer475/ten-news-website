@@ -1,23 +1,29 @@
-// TodayPlus Feed — card selector v3 (the planning brain).
+// TodayPlus Feed — card selector v4 (the planning brain).
 //
-// Each article resolves to exactly ONE card type. There are two families:
-//   • IMAGE cards (photo)        — cover · classic · split  (target ~40%)
-//   • DATA cards (no photo, no bullet list, full-frame figure) —
-//       stat · quote · chart · map · versus · line(timeline) · score · receipts
+// TWO independent variety axes per article:
+//   1. CONTENT  — what the card is about: an ARTICLE card (headline + bullets/
+//      lede) or a DATA card (stat · quote · chart · map · versus · line · score
+//      · receipts). Never the same DATA type twice in a row.
+//   2. PLACEMENT — where/how the photo sits. This is the big new axis. Never the
+//      same placement twice in a row; never two full-bleeds in a row.
 //
-// There is no composite/switcher card anymore: a module never rides embedded
-// under a photo — it gets its own pure card, or it isn't shown on that article.
+// Photo placements:
+//   ARTICLE cards (photo-forward layouts):
+//     full-bleed   — photo is the whole card, headline overlaid (cover_ok only)
+//     top-banner   — photo on top, text below (the classic)
+//     bottom-anchor— text first, photo underneath
+//     inline-window— headline → photo → bullets (photo between text blocks)
+//     side-left / side-right — photo beside text (alternating side)
+//   DATA cards (photo accents — texture, not competition):
+//     wash         — photo ~12% behind the data, accent-tinted
+//     strip-above  — thin photo above the figure
+//     strip-below  — thin photo below the figure
+//     inset        — round cut-out portrait floated by the headline/quote
+//   none           — photo-free (deliberate "clean beat")
 //
-// Per article we derive a `heroRank` (≤2 candidate card types, most-distinctive
-// first) plus `heroStrength`. The stateful planner then picks ONE candidate per
-// the rhythm rules:
-//   1. never the same card type twice in a row (when an alternative exists),
-//   2. prefer the type shown LESS recently (spreads quote/chart/map/etc. evenly),
-//   3. steer the running image share toward ~40% (proportional nudge).
-// heroRank[1] is the variety fallback the rules fall through to.
-//
-// The backend MAY later emit hero_rank / hero_strength / reserve_pure on the
-// display object; we honor them when present and derive them otherwise.
+// Target ~60% of cards show a photo somewhere; the rest are clean data beats.
+// Treatment follows image_subject (portrait → inset/side; scene → full-bleed/
+// banner; object → framed/inline; graphic → never used as a photo).
 
 // ── Module detection ─────────────────────────────────────────────────────────
 
@@ -32,145 +38,191 @@ export function modulesOf(d) {
     map:      !!(d.geo && d.geo.pins && d.geo.pins.length),
     score:    !!d.score,
     receipts: !!d.receipts,
-    stats:    Array.isArray(d.stats) && d.stats.length >= 2,
   };
 }
 
-// Card-type families.
-export const IMAGE_TYPES = new Set(['cover', 'classic', 'split']);
-export const DATA_TYPES = new Set(['stat', 'quote', 'chart', 'map', 'versus', 'line', 'score', 'receipts']);
-
-// Module → the pure data card that renders it whole. (`stats` has no own card —
-// it never defines a card type; it can only ride a cover/classic chrome, which
-// the redesign removed, so a stats-only article falls back to image/split.)
 const DATA_TEMPLATE = {
   score: 'score', map: 'map', big: 'stat', versus: 'versus',
   receipts: 'receipts', quote: 'quote', chart: 'chart', timeline: 'line',
 };
-
-// Impact order: how distinctive / valuable each module's card is. The article's
-// strongest module leads its heroRank.
 const IMPACT_ORDER = ['score', 'map', 'big', 'versus', 'receipts', 'quote', 'chart', 'timeline'];
 
-function hasImage(d, story) {
-  return !!(d.imageURL || story?.urlToImage);
+export const ARTICLE_PLACEMENTS = ['full-bleed', 'top-banner', 'bottom-anchor', 'inline-window', 'side-left', 'side-right'];
+export const DATA_PLACEMENTS = ['wash', 'strip-above', 'strip-below', 'inset'];
+export const PHOTO_PLACEMENTS = new Set([...ARTICLE_PLACEMENTS, ...DATA_PLACEMENTS]);
+const DATA_TYPES = new Set(Object.values(DATA_TEMPLATE));
+
+function hasImage(d, story) { return !!(d.imageURL || story?.urlToImage); }
+function subjectOf(d) {
+  const s = d.image_subject;
+  return (s === 'portrait' || s === 'scene' || s === 'object' || s === 'graphic') ? s : 'scene';
 }
+// a graphic "photo" IS a chart screenshot — never use it as a real photo.
+function usablePhoto(d, story) { return hasImage(d, story) && subjectOf(d) !== 'graphic'; }
 
-function heroStrengthOf(d, m) {
-  if (typeof d.hero_strength === 'number') return d.hero_strength;
-  if (d.breaking) return 0.9;
-  if (m.score) return 0.92;
-  if (m.big) return 0.84;
-  if (m.map) return 0.78;
-  if (m.versus) return 0.7;
-  if (m.quote) return 0.62;
-  return 0.5;
-}
+// ── Content candidates (ARTICLE and/or a DATA type), most-distinctive first ───
 
-// ── Candidate card types for one article (≤2, most-distinctive first) ─────────
-
-export function candidatesFor(display, story) {
+export function contentCandidatesFor(display, story) {
   const d = display || {};
   const m = modulesOf(d);
+  const dataRanked = IMPACT_ORDER.filter((t) => m[t]).map((t) => DATA_TEMPLATE[t]);
+  const bestData = dataRanked[0] || null;
+  const secondData = dataRanked[1] || null;
   const img = hasImage(d, story);
-  const coverOk = img && d.cover_ok !== false;
-  const strength = heroStrengthOf(d, m);
   const bullets = (d.bullets || []).length;
+  const canArticle = img || bullets >= 2;
 
-  // honor a backend-supplied hero_rank when present (filter to renderable types)
-  if (Array.isArray(d.hero_rank) && d.hero_rank.length) {
-    const wanted = d.hero_rank
-      .map((t) => (DATA_TEMPLATE[t] || (IMAGE_TYPES.has(t) ? t : null)))
-      .filter(Boolean)
-      .filter((t) => (DATA_TYPES.has(t) ? !!m[Object.keys(DATA_TEMPLATE).find((k) => DATA_TEMPLATE[k] === t)] : img));
-    if (wanted.length) return wanted.slice(0, 2);
-  }
+  const cands = [];
+  if (bestData) cands.push(bestData);
+  if (canArticle) cands.push('article');
+  if (secondData) cands.push(secondData);   // variety fallback for module-rich, image-less items
+  if (!cands.length) cands.push('article');  // last resort (text breath)
+  return cands;
+}
 
-  const dataTemplates = IMPACT_ORDER.filter((t) => m[t]).map((t) => DATA_TEMPLATE[t]);
-  const bestData = dataTemplates[0] || null;
-  const secondData = dataTemplates[1] || null;
+// order article placements by what suits the photo subject
+function orderArticlePlacements(opts, subject) {
+  const pref = {
+    portrait: ['side-left', 'side-right', 'full-bleed', 'top-banner', 'inline-window', 'bottom-anchor'],
+    scene:    ['full-bleed', 'top-banner', 'bottom-anchor', 'inline-window', 'side-right', 'side-left'],
+    object:   ['inline-window', 'top-banner', 'bottom-anchor', 'side-left', 'side-right', 'full-bleed'],
+  }[subject] || ARTICLE_PLACEMENTS;
+  return [...opts].sort((a, b) => pref.indexOf(a) - pref.indexOf(b));
+}
 
-  // image + a data module → offer BOTH: the distinct data card (redesign intent)
-  // and the image card as the variety/balance fallback. A strong breaking story
-  // with a cover-grade image leads as the flagship Cover instead.
-  if (img && bestData) {
-    const imageType = coverOk ? 'cover' : 'classic';
-    if (d.breaking && coverOk && strength >= 0.8) return ['cover', bestData];
-    return [bestData, imageType];
+export function placementsFor(content, display, story) {
+  const d = display || {};
+  const photo = usablePhoto(d, story);
+  const subject = subjectOf(d);
+  const coverOk = photo && d.cover_ok !== false;
+
+  if (content === 'article') {
+    if (!photo) return ['none'];                       // text-only article card
+    let opts = coverOk ? [...ARTICLE_PLACEMENTS] : ARTICLE_PLACEMENTS.filter((p) => p !== 'full-bleed');
+    return orderArticlePlacements(opts, subject);
   }
-  // image, no data module → an image card. Cover-grade images can fall back to
-  // Classic for variety; a photo + bullets is a Classic; only a thin item with
-  // a photo but little text becomes a Split (its compact thumb layout).
-  if (img && !bestData) {
-    if (coverOk) return ['cover', 'classic'];
-    return bullets >= 2 ? ['classic'] : ['split'];
+  // data content: photo-free clean beat OR a subtle accent
+  const opts = ['none'];
+  if (photo) {
+    opts.push('strip-above', 'strip-below', 'wash');
+    // inset = a round portrait the quote wraps around (spec: "portrait-inset
+    // quote"). Quote only — a floated cut-out would crowd the stat-hero number.
+    if (subject === 'portrait' && content === 'quote') opts.unshift('inset');
   }
-  // no image, but a data module → two data cards (variety fallback), if available.
-  if (!img && bestData) {
-    return secondData ? [bestData, secondData] : [bestData];
-  }
-  // no image, no module → the text breath.
-  return ['split'];
+  return opts;
 }
 
 // ── Rhythm-aware planner ─────────────────────────────────────────────────────
 
-const IMAGE_TARGET = 0.40;     // ~40% of cards should be photo cards
-const BALANCE_GAIN = 30;       // proportional pull toward the image target
-const NEW_TYPE_RECENCY = 40;   // recency credit for a type never shown yet
-const FIRST_CHOICE_BUMP = 4;   // small default tiebreak toward heroRank[0]
-const BREATH = 'split';        // the only card that renders for ANY article
-                               // (thumb if usable, else text-only) — used to
-                               // break an otherwise-unavoidable repeat.
+const PHOTO_TARGET = 0.60;
+const ARTICLE_TARGET = 0.50;     // ~half article cards, ~half data cards
+const BALANCE_GAIN = 26;         // content (article/data) steer
+const PHOTO_GAIN = 44;           // photo-share steer — stronger so we reach ~60%
+const RECENCY_NEW = 30;
+const FIRST_BUMP = 4;
+const MAX_PHOTO_RUN = 3;         // force a clean beat after 3 photo cards
+const MAX_NONE_RUN = 1;          // after 1 clean beat, show a photo if one's available
 
 export function createPlanner() {
-  let lastType = null;
+  let lastContent = null;        // 'article' or a data template
+  let lastPlacement = null;
+  let lastDataType = null;
   let shown = 0;
-  let imageCount = 0;
-  const lastSeen = {};   // type → card index when last shown
+  let photoCount = 0;
+  let articleCount = 0;
+  let photoRun = 0;
+  let noneRun = 0;
+  let lastSide = null;           // alternate side-left / side-right
+  const seenContent = {};
+  const seenPlacement = {};
   let n = 0;
 
-  const scoreOf = (t, idx, err) => {
-    let s = 0;
-    const seen = lastSeen[t];
-    s += (seen == null) ? NEW_TYPE_RECENCY : (n - seen);   // prefer less recent
-    if (idx === 0) s += FIRST_CHOICE_BUMP;                  // default to natural pick
-    const isImg = IMAGE_TYPES.has(t);
-    s += (isImg ? err : -err) * BALANCE_GAIN;               // steer image share
-    return s;
+  const pickBest = (opts, scorer) => {
+    let best = opts[0];
+    let bestScore = -Infinity;
+    for (let i = 0; i < opts.length; i += 1) {
+      const s = scorer(opts[i], i);
+      if (s > bestScore) { bestScore = s; best = opts[i]; }
+    }
+    return best;
   };
 
   return {
     plan(display, story) {
       n += 1;
-      const cands = candidatesFor(display, story);
-      const share = shown ? imageCount / shown : IMAGE_TARGET;
-      const err = IMAGE_TARGET - share;   // >0 → need more image cards
 
-      // never the same card type twice in a row: drop the previous type first.
-      const eligible = cands.filter((t) => t !== lastType);
+      // ── 1. CONTENT ──────────────────────────────────────────────
+      const contentCands = contentCandidatesFor(display, story);
+      // never the same DATA type twice in a row (article may repeat — placement
+      // varies it). If the ONLY candidate is the just-used data type, fall back
+      // to a bare article beat rather than repeat (ArticleCard renders headline-
+      // only when there's no photo/bullets).
+      let contentElig = contentCands.filter((c) => !(DATA_TYPES.has(c) && c === lastDataType));
+      if (!contentElig.length) contentElig = ['article'];
+      const artShare = shown ? articleCount / shown : ARTICLE_TARGET;
+      const artErr = ARTICLE_TARGET - artShare;
+      const content = pickBest(contentElig, (c, i) => {
+        let s = 0;
+        const seen = seenContent[c];
+        s += (seen == null) ? RECENCY_NEW : (n - seen);
+        if (i === 0) s += FIRST_BUMP;
+        const isArticle = c === 'article';
+        s += (isArticle ? artErr : -artErr) * BALANCE_GAIN;
+        return s;
+      });
 
-      let best;
-      if (eligible.length) {
-        best = eligible[0];
-        let bestScore = -Infinity;
-        for (const t of eligible) {
-          const s = scoreOf(t, cands.indexOf(t), err);
-          if (s > bestScore) { bestScore = s; best = t; }
-        }
-      } else {
-        // this article can only be its repeated type — inject a breath (Split)
-        // to break the run; if the run already IS Split (two text-only items
-        // back to back), the repeat is unavoidable.
-        best = lastType !== BREATH ? BREATH : cands[0];
+      // ── 2. PLACEMENT ────────────────────────────────────────────
+      let placeOpts = placementsFor(content, display, story);
+      const photoOpts = placeOpts.filter((p) => p !== 'none');
+      const hasNone = placeOpts.includes('none');
+
+      // hard rules: never same placement (non-none) twice; never two full-bleeds;
+      // cap photo / clean-beat runs to keep the mix.
+      let elig = placeOpts.filter((p) => !(PHOTO_PLACEMENTS.has(p) && p === lastPlacement));
+      if (photoRun >= MAX_PHOTO_RUN && hasNone) elig = ['none'];                  // force a clean beat
+      else if (noneRun >= MAX_NONE_RUN && photoOpts.length) elig = elig.filter((p) => p !== 'none'); // force a photo
+      // fallback must still never re-admit the previous placement (incl. full-
+      // bleed) when any alternative exists — only a true single-option article
+      // (e.g. no-photo data → 'none') may repeat.
+      if (!elig.length) {
+        elig = placeOpts.filter((p) => p !== lastPlacement);
+        if (!elig.length) elig = placeOpts;
       }
 
-      shown += 1;
-      if (IMAGE_TYPES.has(best)) imageCount += 1;
-      lastSeen[best] = n;
-      lastType = best;
+      const photoShare = shown ? photoCount / shown : PHOTO_TARGET;
+      const photoErr = PHOTO_TARGET - photoShare;
+      const placement = pickBest(elig, (p, i) => {
+        let s = 0;
+        const seen = seenPlacement[p];
+        s += (seen == null) ? RECENCY_NEW : (n - seen);
+        if (i === 0) s += FIRST_BUMP;                       // honor subject-preferred order
+        const isPhoto = PHOTO_PLACEMENTS.has(p);
+        s += (isPhoto ? photoErr : -photoErr) * PHOTO_GAIN;
+        // alternate sides so two side-by-sides (if ever adjacent across a gap) differ
+        if ((p === 'side-left' && lastSide === 'left') || (p === 'side-right' && lastSide === 'right')) s -= 5;
+        return s;
+      });
 
-      return { template: best, isImage: IMAGE_TYPES.has(best) };
+      // ── record ──────────────────────────────────────────────────
+      const isPhoto = PHOTO_PLACEMENTS.has(placement);
+      shown += 1;
+      if (isPhoto) { photoCount += 1; photoRun += 1; noneRun = 0; } else { noneRun += 1; photoRun = 0; }
+      if (content === 'article') articleCount += 1;
+      if (DATA_TYPES.has(content)) lastDataType = content;
+      if (placement === 'side-left') lastSide = 'left';
+      else if (placement === 'side-right') lastSide = 'right';
+      seenContent[content] = n;
+      seenPlacement[placement] = n;
+      lastContent = content;
+      lastPlacement = placement;
+
+      return {
+        mode: content === 'article' ? 'article' : 'data',
+        template: content === 'article' ? null : content,
+        placement,
+        photo: isPhoto,
+        subject: subjectOf(display || {}),
+      };
     },
   };
 }

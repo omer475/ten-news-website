@@ -5659,6 +5659,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           )}
           onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
           onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+          onSignal={(type, s) => { try { trackEvent(type, {}, s); } catch (_) {} }}
           onLoadMore={() => { if (!loadingMore && hasMoreArticles) loadMoreArticles(currentPage + 1); }}
           hasMore={hasMoreArticles}
           loadingMore={loadingMore}
