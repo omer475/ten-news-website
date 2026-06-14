@@ -614,6 +614,17 @@ _IMPACT_ORDER = ['breaking_cover', 'big', 'score', 'versus', 'receipts',
                  'trend', 'ranking', 'breakdown', 'timeline', 'geo', 'quote', 'stats']
 # Pure-drama modules: own the full frame, never shrink into an embed.
 _PURE_ONLY = {'breaking_cover', 'big', 'score', 'versus', 'receipts', 'quote'}
+# Modules that can share a combined card (data-only, no photo, no full-frame
+# drama). Composing is RARE — only these genuinely-complementary pairs, and
+# only when BOTH are the article's top-2. A combined card is a DISTINCT
+# layout (e.g. map + quote, no photo) — never "photo+bullets+module".
+_COMPLEMENTARY_PAIRS = {
+    frozenset({'geo', 'quote'}),       # a place + a voice from it
+    frozenset({'geo', 'timeline'}),    # where + how it unfolded
+    frozenset({'trend', 'quote'}),     # the data + a human reaction
+    frozenset({'timeline', 'quote'}),  # the arc + a voice
+    frozenset({'trend', 'timeline'}),  # the curve + its milestones
+}
 
 
 def compute_hero_rank(display_obj: Dict, category: str = '') -> None:
@@ -654,8 +665,12 @@ def compute_hero_rank(display_obj: Dict, category: str = '') -> None:
     if tr and len(tr.get('vals', [])) >= 5:
         lift('trend', 'versus')                         # dense series is strong
 
-    display_obj['hero_rank'] = present
-    top = present[0] if present else None
+    # MAX 2 candidate card types per article (user ruling). The client
+    # renders #1 as a PURE distinct card by default and may fall back to #2
+    # to keep that user's feed varied.
+    hero_rank = present[:2]
+    display_obj['hero_rank'] = hero_rank
+    top = hero_rank[0] if hero_rank else None
     display_obj['reserve_pure'] = top in ('breaking_cover', 'big')
     display_obj['hero_strength'] = (
         0.9 if top in ('breaking_cover', 'big', 'score')
@@ -663,7 +678,14 @@ def compute_hero_rank(display_obj: Dict, category: str = '') -> None:
         else 0.5 if top in ('timeline', 'geo', 'quote', 'breakdown')
         else 0.4 if top == 'stats'
         else 0.0)
-    display_obj['pure_only'] = [m for m in present if m in _PURE_ONLY]
+    display_obj['pure_only'] = [m for m in hero_rank if m in _PURE_ONLY]
+    # compose: RARE. Render the two as ONE combined distinct layout ONLY when
+    # the top-2 are a genuinely-complementary data pair. Otherwise the article
+    # stays a single PURE card (the default — this is what keeps the feed from
+    # looking same-y). Drama/photo modules never compose.
+    display_obj['compose'] = (
+        len(hero_rank) == 2
+        and frozenset(hero_rank) in _COMPLEMENTARY_PAIRS)
 
 
 def validate_display(result: Dict, pipeline_category: str,
