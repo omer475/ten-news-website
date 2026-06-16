@@ -14,7 +14,8 @@ for line in open('.env.local'):
 from supabase import create_client
 from step13_feed_display import (_number_set, _grounded, _is_bare_year,
                                   _STAT_LABEL_BLOCKLIST, _SCORE_RESULT,
-                                  _strip_tags, _num, _GEO_VENUE_TOKENS)
+                                  _strip_tags, _num, _GEO_VENUE_TOKENS,
+                                  _GEO_WELLKNOWN)
 
 sb = create_client(os.environ['NEXT_PUBLIC_SUPABASE_URL'],
                    os.environ.get('SUPABASE_SERVICE_KEY') or os.environ['SUPABASE_SERVICE_ROLE_KEY'])
@@ -125,9 +126,13 @@ for r in rows:
             lab = p['label'].lower()
             words = [w for w in re.sub(r'[^a-z0-9 ]', ' ', lab).split() if len(w) >= 4]
             grounded = any(w in head for w in words) or lab in head
-            is_venue = any(tok in lab for tok in _GEO_VENUE_TOKENS)
-            venue_ok = not (is_venue and cat == 'sports' and not any(w in title_l for w in words))
-            if grounded and venue_ok:
+            kind0 = g.get('kind', 'site')
+            is_venue = (any(tok in lab for tok in _GEO_VENUE_TOKENS)
+                        or (cat == 'sports' and kind0 == 'site'))
+            venue_ok = not (is_venue and not any(w in title_l for w in words))
+            lab_clean = lab.rstrip('.').replace(', usa', '').strip()
+            wellknown_ok = not (kind0 == 'site' and lab_clean in _GEO_WELLKNOWN)
+            if grounded and venue_ok and wellknown_ok:
                 kept_pins.append(p)
             else:
                 drops['geo_pin'] += 1
