@@ -98,6 +98,20 @@ frame it:
 - "object" = a single thing, product, document, or animal
 - "graphic" = a chart, map, infographic, or illustration (not a photo)
 
+ALSO pick the single BEST display ASPECT RATIO ("aspect") to frame THIS photo
+so its subject is shown at the best angle with NO awkward cropping or wasted
+empty space. Look at where the subject sits and how it's composed, then choose
+the shape that flatters it — choose ONE of:
+- "9:16"  very tall — a strongly vertical subject (a tower, a standing person, a rocket plume)
+- "4:5"   tall — portraits, vertical compositions
+- "1:1"   square — a single centered subject, a face, an object
+- "4:3"   gently wide — general / balanced compositions
+- "3:2"   classic photo — most editorial photos
+- "16:9"  wide — landscapes, scenes, action across the frame
+- "21:9"  cinematic panorama — sweeping vistas, very wide scenes
+Pick the ratio that best matches the photo's real composition; do not default
+blindly to one — vary it to suit each image.
+
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {
     "suitable": true or false,
@@ -107,7 +121,8 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
     "cover_ok": true or false,
     "split_ok": true or false,
     "focus": {"x": 0.5, "y": 0.4},
-    "subject": "portrait" or "scene" or "object" or "graphic"
+    "subject": "portrait" or "scene" or "object" or "graphic",
+    "aspect": "3:2"
 }"""
 
     def check_image(self, image_url: str, retry_count: int = 3) -> Dict:
@@ -299,6 +314,9 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
                     # (portrait→circular inset, scene→full-bleed, etc.).
                     "subject": parsed.get("subject") if parsed.get("subject") in
                                ("portrait", "scene", "object", "graphic") else "scene",
+                    # AI-chosen best display aspect ratio for THIS photo.
+                    "aspect": parsed.get("aspect") if parsed.get("aspect") in
+                              ("9:16", "4:5", "1:1", "4:3", "3:2", "16:9", "21:9") else "3:2",
                     "error": False
                 }
                 

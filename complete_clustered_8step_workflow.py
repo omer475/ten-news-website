@@ -1707,6 +1707,8 @@ def run_complete_pipeline():
                                         'y': _qc.get('focus_y', 0.5)},
                         # Subject class for varied photo treatment.
                         'image_subject': _qc.get('subject', 'scene'),
+                        # AI-chosen best display aspect ratio for this photo.
+                        'image_aspect': _qc.get('aspect', '3:2'),
                     }
                     print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
                 else:
@@ -2365,6 +2367,7 @@ def run_complete_pipeline():
                     display_obj['split_ok'] = bool(selected_image and selected_image.get('split_ok'))
                     display_obj['image_focus'] = (selected_image or {}).get('image_focus') or {'x': 0.5, 'y': 0.5}
                     display_obj['image_subject'] = (selected_image or {}).get('image_subject') or 'scene'
+                    display_obj['image_aspect'] = (selected_image or {}).get('image_aspect') or '3:2'
                     # 0-1000 importance scale; >=900 = breaking (cover card)
                     display_obj['breaking'] = bool(article_score >= 900)
                     # hero_rank/strength/reserve_pure — lets the client resolve

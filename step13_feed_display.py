@@ -144,6 +144,24 @@ _GEO_COUNTRY_PINS = {
     'canada', 'mexico', 'australia', 'turkey', 'türkiye', 'europe', 'asia',
     'africa', 'middle east', 'north america', 'south america',
 }
+# Well-known places — a single 'site' pin that is JUST one of these teaches
+# the reader nothing (everyone knows roughly where it is), so the map is
+# dropped. A precise sub-site ("Vandenberg SLC-4E") or a rare/unknown place
+# is NOT in this list and survives. route/area/multi maps are kept regardless.
+_GEO_WELLKNOWN = {
+    'paris', 'london', 'new york', 'new york city', 'nyc', 'tokyo', 'rome',
+    'berlin', 'madrid', 'moscow', 'beijing', 'shanghai', 'dubai', 'singapore',
+    'hong kong', 'los angeles', 'san francisco', 'chicago', 'washington',
+    'washington dc', 'washington, dc', 'boston', 'miami', 'toronto', 'sydney',
+    'melbourne', 'amsterdam', 'barcelona', 'vienna', 'venice', 'milan',
+    'munich', 'istanbul', 'athens', 'cairo', 'mumbai', 'delhi', 'new delhi',
+    'seoul', 'bangkok', 'jakarta', 'rio de janeiro', 'sao paulo',
+    'mexico city', 'buenos aires', 'brussels', 'geneva', 'zurich', 'dublin',
+    'lisbon', 'prague', 'stockholm', 'copenhagen', 'oslo', 'helsinki',
+    'warsaw', 'budapest', 'jerusalem', 'tel aviv', 'doha', 'riyadh',
+    'las vegas', 'seattle', 'dallas', 'houston', 'atlanta', 'philadelphia',
+    'vancouver', 'montreal', 'manchester', 'liverpool', 'birmingham',
+}
 _GEO_METRO_PINS = {
     'new york', 'new york city', 'nyc', 'manhattan', 'san francisco',
     'los angeles', 'london', 'paris', 'seattle', 'austin', 'boston',
@@ -237,7 +255,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
     "route" = movement with DIRECTION: flight diverted, missile path, convoy/troop advance, migration route. EXACTLY 2 pins in travel order: FROM first, TO second. Give "distance" ("1,560 km").
     "area"  = it covers a ZONE: earthquake felt across, storm path, wildfire, blackout, exclusion zone. 1 pin (the center) + "radius_km" from the source (felt 200 km away -> 200). NEVER guess the radius.
     "multi" = same event in SEVERAL places: riots in 4 cities, nationwide strikes, tournament venues. 3-5 pins, most important first.
-  NOT eligible — OMIT geo entirely for: company/product/funding/app news (the company's HQ city is NOT a location story — a healthcare-AI startup raising money has NO geo even if it is in New York); where a person happened to be when they tweeted / got injured / made a statement; the city a court or organization sits in (unless the building itself is the story); whole countries. If the most specific honest pin would just be a big city or country name that isn't itself the event, OMIT geo. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
+  geo is RARE — emit it ONLY when seeing the place on a map genuinely teaches the reader something, which is just two cases: (1) the EXACT site matters (a specific facility, launch pad, crash site, epicenter, battlefield, the precise spot of the event), or (2) the location is one most readers could NOT place on a map (an obscure town, a remote region, a lesser-known country). DO NOT emit geo for well-known world cities or capitals (Paris, London, New York, Tokyo, Rome, Berlin, Moscow, Dubai, Los Angeles, etc.) where everyone already knows roughly where it is and a map adds nothing. Also OMIT for: company/product/funding/app news (an HQ city is not a location story); where a person happened to be when they spoke/tweeted/got injured; the city a court or org sits in; whole famous countries. When in doubt, OMIT — most stories should have NO map. 1-2 pins, real coordinates. link:true only with exactly 2 related pins (then "distance" like "1,560 km"). region: uppercase "AREA · COUNTRY".
 
 - "receipts": {{"claim": "the disputed claim, max ~120 chars", "who": "Name · Role", "receipts": [{{"text": "the establishing fact, max 140 chars", "source": "Reuters"}}], "verdict": "short verdict that FOLLOWS from the receipts, max 90 chars"}} — RARE, high bar: ONLY when the story centers on a disputed or checkable CLAIM (political statement, company spin, viral rumor) AND the source articles THEMSELVES establish the facts. 1-2 receipts; each must name the establishing source (outlet, institution, document) AS STATED in the source text. The verdict must be what the receipts show — NEVER your own ruling, NEVER your own knowledge. If the sources don't settle the claim, OMIT this signal. Most stories do not qualify.
 - "countdown": {{"name": "SpaceX IPO pricing", "datetime": "2026-06-12T13:30:00Z", "label": "IPO"}} — RARE: ONLY when the story is about a concretely SCHEDULED future event whose exact date (and time if known; use T00:00:00Z for date-only) is stated in the source, within the next 30 days: a launch, a verdict date, a vote, a match, a release. name max 40 chars, label: 2-12 char uppercase tag. NEVER guess a date. When unsure, OMIT.
@@ -588,7 +606,13 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
             is_venue = (any(tok in lab for tok in _GEO_VENUE_TOKENS)
                         or (cat == 'sports' and g.get('kind', 'site') == 'site'))
             venue_ok = not (is_venue and not any(w in title_text for w in words))
-            if grounded and venue_ok:
+            # Well-known-city gate: a single 'site' pin that's just a famous
+            # city teaches nothing — drop it (maps are for precise/rare places).
+            # route/area/multi are inherently informative, so exempt them.
+            lab_clean = lab.rstrip('.').replace(', usa', '').strip()
+            wellknown_ok = not (g.get('kind', 'site') == 'site'
+                                and lab_clean in _GEO_WELLKNOWN)
+            if grounded and venue_ok and wellknown_ok:
                 kept_pins.append(p)
         kind = g.get('kind', 'site')
         if not kept_pins:
