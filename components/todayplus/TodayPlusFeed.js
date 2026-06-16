@@ -218,54 +218,68 @@ function StoryBlock({ story, plan, onOpen, onEngage, onSignal, isDark, textOnly 
     notInterested: () => { try { onSignal?.('article_not_interested', story); } catch (_) {} setDismissed(true); },
   }), [onSignal, story]);
 
-  // Cards are read IN PLACE (no tap), so visibility is the read signal:
-  //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
-  //   ≥55% visible for 7s    → read: 24h exclusion + engagement event, so the
-  //                            interest engine keeps learning without taps.
-  // Leaving the viewport before a threshold cancels it (fast scrolls count
-  // nothing). Both fire at most once per card per page load.
+  // Cards are read IN PLACE (no tap), so visibility IS the read signal:
+  //   ≥55% visible for 1.5s  → impression (exposure decay sinks it next load)
+  //   ≥55% visible for 7s    → "read" marker (24h dedup + skip/read instrument)
+  //   ACTIVE DWELL accumulated while visible → sent on exit as the engagement
+  //     signal. The server turns it into read_fraction = dwell /
+  //     expected_read_seconds — i.e. the length-normalized "% of the story you
+  //     actually read", which is the dominant ongoing taste signal. (Previously
+  //     we sent a bare article_engaged with NO dwell, so reading time taught the
+  //     algorithm nothing — this wires it up.)
   useEffect(() => {
     const el = rootRef.current;
     if (!el || story?.id == null || story.type !== 'news') return undefined;
     let impressionTimer = null;
     let readTimer = null;
     let readDone = false;
-    let enterAt = 0;
+    let visibleSince = 0;     // ts when card became ≥55% visible (0 = hidden)
+    let dwellMs = 0;          // accumulated active visible time across re-views
+    let signalSent = false;
     let skipLogged = false;
+
+    const sendDwell = () => {
+      if (signalSent) return;
+      const total = dwellMs + (visibleSince ? Date.now() - visibleSince : 0);
+      if (total < 1500) return;            // ignore fly-bys (server reads <5s as negative anyway)
+      signalSent = true;
+      try { onEngage?.(story, { dwell: Math.round(total / 1000) }); } catch (_) {}
+    };
+
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries[0]?.isIntersecting;
         if (visible) {
-          enterAt = Date.now();
-          if (!impressionTimer) {
-            impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
-          }
+          visibleSince = Date.now();
+          if (!impressionTimer) impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
           if (!readTimer && !readDone) {
             readTimer = setTimeout(() => {
               readDone = true;
               markSeenRead(story.id, story.world_event?.id);
-              try { onEngage?.(story); } catch (_) {}
-              if (instrument) logCardMode(story, heroType, mode, 'read', Date.now() - enterAt);
-              io.disconnect();
+              if (instrument) logCardMode(story, heroType, mode, 'read', Date.now() - visibleSince);
             }, 7000);
           }
         } else {
+          if (visibleSince) { dwellMs += Date.now() - visibleSince; visibleSince = 0; }
           if (impressionTimer) { clearTimeout(impressionTimer); impressionTimer = null; }
           if (readTimer) { clearTimeout(readTimer); readTimer = null; }
-          // left before the 7s read → a skip; log dwell for pure-vs-embedded.
-          if (instrument && !readDone && !skipLogged && enterAt) {
-            skipLogged = true;
-            logCardMode(story, heroType, mode, 'skip', Date.now() - enterAt);
-          }
+          if (instrument && !readDone && !skipLogged && dwellMs) { skipLogged = true; logCardMode(story, heroType, mode, 'skip', dwellMs); }
+          sendDwell();   // card left the viewport → record the reading-time signal
         }
       },
       { threshold: 0.55 }
     );
     io.observe(el);
+    const onHide = () => { if (visibleSince) { dwellMs += Date.now() - visibleSince; visibleSince = 0; } sendDwell(); };
+    window.addEventListener('pagehide', onHide);
+    document.addEventListener('visibilitychange', onHide);
     return () => {
       if (impressionTimer) clearTimeout(impressionTimer);
       if (readTimer) clearTimeout(readTimer);
       io.disconnect();
+      window.removeEventListener('pagehide', onHide);
+      document.removeEventListener('visibilitychange', onHide);
+      onHide();   // unmount → flush accumulated dwell
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id, heroType, mode]);

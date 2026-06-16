@@ -3198,7 +3198,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               isDark={darkMode}
               textOnly={textOnly}
               onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-              onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+              onEngage={(s, meta) => { try { trackEvent('article_engaged', meta || {}, s); } catch (_) {} }}
             />
           </CardBoundary>
         </LazyMount>
@@ -5658,7 +5658,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
             </div>
           )}
           onOpen={(s) => { setSelectedArticle(s); setShowDetailedArticle(true); }}
-          onEngage={(s) => { try { trackEvent('article_engaged', {}, s); } catch (_) {} }}
+          onEngage={(s, meta) => { try { trackEvent('article_engaged', meta || {}, s); } catch (_) {} }}
           onSignal={(type, s) => { try { trackEvent(type, {}, s); } catch (_) {} }}
           onLoadMore={() => { if (!loadingMore && hasMoreArticles) loadMoreArticles(currentPage + 1); }}
           hasMore={hasMoreArticles}

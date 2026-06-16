@@ -154,10 +154,16 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'No valid fields to update' });
       }
 
+      // UPSERT (not update): the profiles row may not exist yet, and the INSERT
+      // half needs the NOT NULL email — resolve it so changing interests always
+      // persists.
+      let emailVal = null;
+      try { const { data: au } = await supabase.auth.admin.getUserById(profileId); emailVal = au?.user?.email || null; } catch (_) {}
+      const row = { id: profileId, ...updateData, ...(emailVal ? { email: emailVal } : {}) };
+
       const { data, error } = await supabase
         .from('profiles')
-        .update(updateData)
-        .eq('id', profileId)
+        .upsert(row, { onConflict: 'id' })
         .select()
         .single();
 
@@ -165,6 +171,11 @@ export default async function handler(req, res) {
         console.error('Error updating preferences:', error);
         return res.status(500).json({ error: 'Failed to update preferences' });
       }
+
+      // The algorithm must SEE the change on the next load: bust the cached
+      // feed + histogram so warm-start re-synthesizes from the new topics.
+      try { await supabase.from('user_feed_cache').delete().eq('user_id', profileId); } catch (_) {}
+      try { await supabase.from('user_histogram_cache').delete().eq('user_id', profileId); } catch (_) {}
 
       return res.status(200).json({ success: true, user: data });
 

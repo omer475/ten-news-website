@@ -181,11 +181,13 @@ export default function OnboardingPage() {
 
     // Check if user is already logged in (auth user)
     let authUserId = null;
+    let authEmail = null;
     try {
       const storedUser = localStorage.getItem('tennews_user');
       if (storedUser) {
         const userData = JSON.parse(storedUser);
         authUserId = userData?.id || null;
+        authEmail = userData?.email || null;
       }
     } catch (e) {}
 
@@ -193,6 +195,7 @@ export default function OnboardingPage() {
       const body = { ...preferences };
       if (authUserId) {
         body.auth_user_id = authUserId;
+        if (authEmail) body.email = authEmail;  // fast path for profiles.email (NOT NULL) upsert
       }
       const response = await fetch('/api/user/onboarding', {
         method: 'POST',

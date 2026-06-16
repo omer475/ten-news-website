@@ -262,83 +262,54 @@ export default async function handler(req, res) {
       });
     }
 
-    // If user_id provided, update existing profile
-    if (user_id) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(profilesData)
-        .eq('id', user_id)
-        .select()
-        .single();
+    // Persist for any identified user (auth_user_id preferred over user_id).
+    // CRITICAL: UPSERT, not UPDATE. A brand-new account has no `profiles` row
+    // yet, so .update().eq('id',…) silently wrote NOTHING and the user's chosen
+    // topics never reached the warm-start synthesizer (which reads
+    // profiles.followed_topics) → generic cold feed for everyone. This was the
+    // root cause of "0 users have onboarding topics".
+    const profileId = auth_user_id || user_id;
 
-      if (error) {
-        // user_id doesn't match a profiles row — likely a localStorage-only user
-        console.error('Error updating profile:', error);
-        return res.status(200).json({
-          success: true,
-          user: { ...personalizationData, id: user_id }
-        });
-      }
-
-      // Country fields live on `users`, not `profiles` (best-effort, never fatal).
-      try { await supabase.from('users').update(usersData).eq('id', user_id); } catch (_) {}
-
-      // V3: Ensure personalization_profiles row exists for this user
-      const { data: persResult } = await supabase.rpc('resolve_personalization_id', { p_auth_id: user_id }).catch(() => ({ data: null }));
-
-      // Store subtopic selection order for weighted allocation
-      if (persResult && persResult.length > 0) {
-        await supabase.from('personalization_profiles')
-          .update({ subtopic_order: followed_topics })
-          .eq('personalization_id', persResult[0].personalization_id)
-          .catch(() => {});
-      }
-
-      // V3: best-effort taste-vector init — must not fail the request after
-      // topics are already saved (else the client retries and topics look unsaved).
-      try { await initializeTasteVector(supabase, user_id, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
-
-      return res.status(200).json({ success: true, user: data });
+    // profiles.email is NOT NULL — resolve it (body → auth lookup) so the
+    // INSERT half of the upsert can't fail on a first-time row.
+    let emailVal = email || null;
+    if (!emailVal) {
+      try { const { data: au } = await supabase.auth.admin.getUserById(profileId); emailVal = au?.user?.email || null; } catch (_) {}
     }
 
-    // Authenticated user: upsert into profiles using auth_user_id as the id
-    if (auth_user_id) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(profilesData)
-        .eq('id', auth_user_id)
-        .select()
-        .single();
+    const profilesRow = { id: profileId, ...profilesData, ...(emailVal ? { email: emailVal } : {}) };
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(profilesRow, { onConflict: 'id' })
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Error updating profile for auth user:', error);
-        return res.status(500).json({ error: 'Failed to update profile' });
-      }
-
-      // Country fields live on `users`, not `profiles` (best-effort, never fatal).
-      try { await supabase.from('users').update(usersData).eq('id', auth_user_id); } catch (_) {}
-
-      // V3: Ensure personalization_profiles row exists
-      const { data: persResult2 } = await supabase.rpc('resolve_personalization_id', { p_auth_id: auth_user_id }).catch(() => ({ data: null }));
-
-      // Store subtopic selection order for weighted allocation
-      if (persResult2 && persResult2.length > 0) {
-        await supabase.from('personalization_profiles')
-          .update({ subtopic_order: followed_topics })
-          .eq('personalization_id', persResult2[0].personalization_id)
-          .catch(() => {});
-      }
-
-      // V3: best-effort taste-vector init (non-fatal — topics already saved).
-      try { await initializeTasteVector(supabase, auth_user_id, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
-
-      return res.status(200).json({ success: true, user: data });
+    if (error) {
+      console.error('Error upserting profile:', error);
+      return res.status(500).json({ error: 'Failed to save profile' });
     }
 
-    return res.status(200).json({
-      success: true,
-      user: { ...personalizationData, id: null }
-    });
+    // Country fields live on `users`, not `profiles` (best-effort, never fatal).
+    try { await supabase.from('users').upsert({ id: profileId, ...usersData, ...(emailVal ? { email: emailVal } : {}) }, { onConflict: 'id' }); } catch (_) {}
+
+    // Ensure a personalization_profiles row + store subtopic selection order.
+    const { data: persResult } = await supabase.rpc('resolve_personalization_id', { p_auth_id: profileId }).catch(() => ({ data: null }));
+    if (persResult && persResult.length > 0) {
+      await supabase.from('personalization_profiles')
+        .update({ subtopic_order: followed_topics })
+        .eq('personalization_id', persResult[0].personalization_id)
+        .catch(() => {});
+    }
+
+    // Best-effort taste-vector init — must not fail the request after topics saved.
+    try { await initializeTasteVector(supabase, profileId, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
+
+    // Bust caches so the very next feed reflects the chosen interests immediately
+    // (warm-start re-synthesizes from the fresh followed_topics).
+    try { await supabase.from('user_feed_cache').delete().eq('user_id', profileId); } catch (_) {}
+    try { await supabase.from('user_histogram_cache').delete().eq('user_id', profileId); } catch (_) {}
+
+    return res.status(200).json({ success: true, user: data });
 
   } catch (error) {
     console.error('Onboarding error:', error);
