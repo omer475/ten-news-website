@@ -2600,18 +2600,26 @@ export default function Home({ initialNews, initialWorldEvents }) {
         setLoading(true);
         loadNewsData(false);
       } else {
-        // Guest: the SSR feed IS their feed — render it as-is, with just an instant
-        // freshness shuffle on the head (pre-read, same tick, no visible change).
-        // NO background fetch: guests hit the 12-card sign-up gate, well under the
-        // ~30 SSR cards, so there is nothing more to reach. The old pageSize=2000
-        // background was a wasted request that also risked swapping the feed
-        // mid-read. hasMore=false keeps the sentinel from firing an empty page-2.
-        setStories(prev => {
-          if (!prev || prev.length <= 1) return prev;
-          const [opening, ...news] = prev;
-          return [opening, ...applyFreshness(news)];
-        });
-        setHasMoreArticles(false);
+        // Guest WITH onboarding interests → pull the FULL pool and personalize.
+        // The 30-card SSR paint is importance-sorted hard news and rarely contains
+        // a user's niche picks (F1, space, …), so personalizing it in place does
+        // nothing. loadNewsData fetches /api/news?pageSize=2000 and runs the topic
+        // boost + interest-first reorder, so the guest's picks actually lead.
+        // Guest with NO interests → keep the SSR feed as-is (no wasted fetch).
+        let guestHasInterests = false;
+        try { guestHasInterests = ((JSON.parse(localStorage.getItem('todayplus_preferences') || 'null') || {}).followed_topics || []).length > 0; } catch (_) {}
+        if (guestHasInterests) {
+          hydratingRef.current = true;
+          setLoading(true);
+          loadNewsData(false);
+        } else {
+          setStories(prev => {
+            if (!prev || prev.length <= 1) return prev;
+            const [opening, ...news] = prev;
+            return [opening, ...applyFreshness(news)];
+          });
+          setHasMoreArticles(false);
+        }
       }
     } else {
       // No SSR data - load immediately
