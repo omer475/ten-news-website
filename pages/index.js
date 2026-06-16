@@ -2078,7 +2078,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 const prefsRaw = typeof window !== 'undefined' ? localStorage.getItem('todayplus_preferences') : null;
                 if (prefsRaw) {
                   const prefs = JSON.parse(prefsRaw);
-                  if (prefs.onboarding_completed && prefs.home_country) {
+                  // Run on topics alone — a guest who picked interests but no
+                  // country was getting ZERO personalization (the home_country
+                  // gate silently skipped all topic boosts).
+                  if (prefs.onboarding_completed && (prefs.home_country || (prefs.followed_topics || []).length > 0)) {
                     const userPrefs = {
                       home_country: prefs.home_country,
                       followed_countries: prefs.followed_countries || [],
@@ -2149,6 +2152,30 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // composes recency with the (personalized) score and adds light jitter so
               // fresh news surfaces and the order varies between loads. See utils/sortArticles.
               sortedNews = applyFreshness(sortedNews);
+
+              // ====== STEP 4.5: INTEREST-FIRST (the "this feed is mine" guarantee) ======
+              // Score boosts alone let a high-importance world/politics story still
+              // outrank a user's niche pick — so picking interests felt like it did
+              // nothing. Float every article that matches a followed topic to the top
+              // (preserving their freshness order); general top news follows below for
+              // breadth. Works WITHOUT an account (reads localStorage), so a guest who
+              // picks "F1 / AI / Space" immediately sees those lead.
+              try {
+                const _p = JSON.parse(localStorage.getItem('todayplus_preferences') || 'null');
+                const _ft = new Set((_p && _p.followed_topics) || []);
+                if (_ft.size > 0) {
+                  const matched = [];
+                  const rest = [];
+                  for (const s of sortedNews) {
+                    const t = s.topics || s.display?.topics || [];
+                    (Array.isArray(t) && t.some((x) => _ft.has(x)) ? matched : rest).push(s);
+                  }
+                  if (matched.length > 0 && rest.length > 0) {
+                    sortedNews = [...matched, ...rest];
+                    console.log(`🎯 [Interest-first] ${matched.length} interest-matched stories floated to top of ${sortedNews.length}`);
+                  }
+                }
+              } catch (_) {}
 
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
