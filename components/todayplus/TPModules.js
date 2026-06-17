@@ -7,6 +7,19 @@ import React, { useEffect, useState } from 'react';
 import { TP, FONT_HEAD, FONT_BODY, FONT_MONO, Markup } from './tokens';
 import { CountUp, useRevealOnce, revealStyle } from './shared';
 
+// The Cloud Run image pipeline sometimes writes a RELATIVE storage path
+// (/storage/v1/object/public/…) instead of a full Supabase URL. On the website
+// that resolves to todayplus.news/storage/… → 404, so the image never shows.
+// Normalize any relative storage path to the absolute Supabase URL. (The proper
+// fix is in the pipeline — it should store the full public URL.)
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
+function absUrl(u) {
+  if (!u || typeof u !== 'string') return u;
+  if (/^https?:\/\//i.test(u)) return u;            // already absolute
+  if (u.startsWith('/storage/') && SUPABASE_URL) return SUPABASE_URL + u;
+  return u;
+}
+
 function ModuleHeader({ title, shown = true, animate = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -170,7 +183,7 @@ export function HistoryModule({ module }) {
               key={i}
               year={year}
               text={text}
-              image={image || null}
+              image={absUrl(image) || null}
               shown={shown}
               animate={animate}
               delay={0.15 + i * 0.14}
