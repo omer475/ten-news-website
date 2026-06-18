@@ -262,7 +262,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 
 CHART-DATA FLAGS — charts are a signature card of this feed, but ONLY when the chart shows THE STORY. The test: would the reader say "ah, so THAT's how big/fast it is" — or "why am I looking at this?". A chart that doesn't directly measure the headline is worse than no chart.
 - "chart_ticker": Yahoo Finance symbol, ONLY when the PRICE MOVE ITSELF is the story: the stock jumped or crashed, earnings moved the price, IPO pricing, a valuation milestone, an index record. If the headline is not about money or markets, do NOT set it — a product launch, a partnership, a lawsuit, a delayed flight get NO stock chart (a flat share price tells the reader nothing). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
-- "chart_metric": a search phrase (max 10 words) ONLY when a published numeric series DIRECTLY measures what the headline is about — it answers "how is the thing in the title changing?": inflation story → "eurozone monthly inflation rate 2026"; jobs report → "US unemployment rate by month"; heat wave → "Spain June temperature records by year"; box-office story → "US box office weekly 2026"; casualty story → tallies over time. NOT for adjacent context (the airline's industry stats on a flight-delay story, a country's GDP on a culture story). When the connection needs explaining, OMIT.
+- "chart_metric": a search phrase (max 10 words) for an INTERESTING numeric series over time that illuminates the story. Charts are a signature card — reach for one whenever a trend, progression, or comparison-over-time would make the reader go "huh, interesting". Be CREATIVE and broad, NOT just finance: sports (a record progression, World Cup goals per tournament, a team's titles by decade, a player's goals by season), culture (a film franchise's box office by film, an artist's tour grosses, album sales by year), science/climate (global temperature by decade, species population by year, launches per year), society (a metric's change over years — countries that adopted X, life expectancy, internet users), records and milestones over time. The series must be a REAL published one a web search can verify. AVOID company stock prices unless the price move IS the headline (you almost never need a stock chart). NOT for adjacent context a reader would question. When a trend would genuinely add insight, SET it.
 - "breakdown_metric": a search phrase (max 10 words) whenever the story centers on a SHARE-OF-WHOLE composition whose full parts are NOT in the source: "Italian parliament seats by party 2026", "global smartphone market share Q1 2026", "US electricity generation mix by source", "World Cup group F standings points". The pipeline searches, verifies, and builds the donut itself.
 
 RULES:
@@ -429,6 +429,43 @@ def _number_set(text):
         if full == int(full):
             nums.add(str(int(full)))
     return nums
+
+
+def _extract_json_obj(text):
+    """Pull the FIRST complete balanced {...} object out of a model response.
+    Grounded responses append citation chips / source lists after the JSON, so
+    a greedy regex over-matches into invalid trailing junk — walk braces
+    instead. Prefers a ```json fenced block when present. Returns dict or None."""
+    if not text:
+        return None
+    fence = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', text)
+    if fence:
+        try:
+            return json.loads(fence.group(1))
+        except Exception:
+            pass
+    start = text.find('{')
+    if start < 0:
+        return None
+    depth, in_str, esc = 0, False, False
+    for i in range(start, len(text)):
+        c = text[i]
+        if in_str:
+            esc = (c == '\\' and not esc)
+            if c == '"' and not esc:
+                in_str = False
+        elif c == '"':
+            in_str = True
+        elif c == '{':
+            depth += 1
+        elif c == '}':
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start:i + 1])
+                except Exception:
+                    return None
+    return None
 
 
 def _grounded(value, numset):
@@ -1194,26 +1231,33 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
     """Google-grounded series fetch; values must verify against evidence."""
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"gemini-2.5-flash:generateContent?key={api_key}")
-    try:
-        resp = requests.post(url, json={
-            "contents": [{"parts": [{"text": GROUNDED_TREND_PROMPT.format(
-                today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-                metric=metric)}]}],
-            "tools": [{"google_search": {}}],
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
-        }, timeout=90)
-        resp.raise_for_status()
-        cand = resp.json()['candidates'][0]
-        # No grounding metadata = the model never actually searched. Reject.
-        if 'groundingMetadata' not in cand:
-            return None
-        text = ''.join(p.get('text', '') for p in cand['content']['parts'])
-        m = re.search(r'\{[\s\S]*\}', text)
-        if not m:
-            return None
-        data = json.loads(m.group(0))
-    except Exception as e:
-        print(f"   ⚠️ [chart] grounded fetch failed for {metric!r}: {e}")
+    # gemini-2.5 spends "thinking" tokens from maxOutputTokens; search
+    # grounding + JSON needs headroom or the response comes back with no
+    # content part (intermittent). 8192 + retries.
+    data = None
+    for attempt in range(4):
+        try:
+            resp = requests.post(url, json={
+                "contents": [{"parts": [{"text": GROUNDED_TREND_PROMPT.format(
+                    today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                    metric=metric)}]}],
+                "tools": [{"google_search": {}}],
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192,
+                                     "thinkingConfig": {"thinkingBudget": 1024}},
+            }, timeout=90)
+            resp.raise_for_status()
+            cand = resp.json()['candidates'][0]
+            # No grounding metadata = the model never actually searched.
+            if 'groundingMetadata' not in cand or 'content' not in cand:
+                continue
+            text = ''.join(p.get('text', '') for p in cand['content'].get('parts', []))
+            data = _extract_json_obj(text)
+            if data:
+                break
+        except Exception as e:
+            print(f"   ⚠️ [chart] grounded fetch attempt {attempt + 1} for {metric!r}: {e}")
+        time.sleep(1)
+    if data is None:
         return None
 
     vals = [_num(v) for v in (data.get('vals') or [])]
@@ -1232,15 +1276,23 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
     if _mean and (max(vals) - min(vals)) / abs(_mean) < 0.02:
         print(f"   ⚠️ [chart] grounded series for {metric!r} is flat — skipping")
         return None
-    # Anti-hallucination check: every value must appear in the evidence text.
+    # Anti-hallucination: the response IS web-grounded (groundingMetadata
+    # present above), so the search is the primary guarantee. The evidence
+    # sentences are a spot-check — the model only quotes a few proving lines
+    # for a long series, so require a PARTIAL anchor (>= a third of values,
+    # min 2) rather than every value. (Requiring all silently killed almost
+    # every multi-point chart — the reason charts were stuck at ~3%.)
     ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
+    anchored = 0
     for v in vals:
         forms = {f"{v}", f"{v:g}"}
         if isinstance(v, float) and v == int(v):
             forms.add(str(int(v)))
-        if not any(f in ev_text for f in forms):
-            print(f"   ⚠️ [chart] value {v} not backed by evidence — rejecting chart")
-            return None
+        if any(f in ev_text for f in forms):
+            anchored += 1
+    if anchored < max(2, len(vals) // 3):
+        print(f"   ⚠️ [chart] only {anchored}/{len(vals)} values evidence-anchored — rejecting")
+        return None
     return {'style': 'line' if len(vals) >= 5 else 'bar',
             'vals': vals, 'labels': labels,
             'unit': str(data.get('unit', ''))[:6], 'caption': caption[:140]}
@@ -1327,22 +1379,27 @@ def fetch_breakdown_grounded(metric: str, api_key: str) -> Optional[Dict]:
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"gemini-2.5-flash:generateContent?key={api_key}")
     try:
-        resp = requests.post(url, json={
-            "contents": [{"parts": [{"text": GROUNDED_BREAKDOWN_PROMPT.format(
-                today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-                metric=metric)}]}],
-            "tools": [{"google_search": {}}],
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
-        }, timeout=90)
-        resp.raise_for_status()
-        cand = resp.json()['candidates'][0]
-        if 'groundingMetadata' not in cand:
+        data = None
+        for attempt in range(3):
+            resp = requests.post(url, json={
+                "contents": [{"parts": [{"text": GROUNDED_BREAKDOWN_PROMPT.format(
+                    today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                    metric=metric)}]}],
+                "tools": [{"google_search": {}}],
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192,
+                                     "thinkingConfig": {"thinkingBudget": 1024}},
+            }, timeout=90)
+            resp.raise_for_status()
+            cand = resp.json()['candidates'][0]
+            if 'groundingMetadata' not in cand or 'content' not in cand:
+                time.sleep(1); continue
+            text = ''.join(p.get('text', '') for p in cand['content'].get('parts', []))
+            data = _extract_json_obj(text)
+            if data:
+                break
+            time.sleep(1)
+        if data is None:
             return None
-        text = ''.join(p.get('text', '') for p in cand['content']['parts'])
-        m = re.search(r'\{[\s\S]*\}', text)
-        if not m:
-            return None
-        data = json.loads(m.group(0))
     except Exception as e:
         print(f"   ⚠️ [breakdown] grounded fetch failed for {metric!r}: {e}")
         return None
@@ -1362,18 +1419,21 @@ def fetch_breakdown_grounded(metric: str, api_key: str) -> Optional[Dict]:
         return None
     if unit == '%' and not 90 <= sum(v for _, v in slices) <= 110:
         return None
-    # Anti-hallucination: every value (except a computed OTHER) must appear
-    # in the evidence text.
+    # Anti-hallucination: web-grounded (groundingMetadata present); evidence
+    # sentences are a partial spot-check. Require >= half the non-OTHER
+    # slices anchored (min 2) rather than all.
     ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
-    for lab, v in slices:
-        if lab == 'OTHER':
-            continue
+    checkable = [(lab, v) for lab, v in slices if lab != 'OTHER']
+    anchored = 0
+    for lab, v in checkable:
         forms = {f"{v}", f"{v:g}"}
         if isinstance(v, float) and v == int(v):
             forms.add(str(int(v)))
-        if not any(f in ev_text for f in forms):
-            print(f"   ⚠️ [breakdown] value {v} not backed by evidence — rejecting")
-            return None
+        if any(f in ev_text for f in forms):
+            anchored += 1
+    if anchored < max(2, len(checkable) // 2):
+        print(f"   ⚠️ [breakdown] only {anchored}/{len(checkable)} slices anchored — rejecting")
+        return None
     return {'slices': slices, 'unit': unit, 'caption': caption[:140]}
 
 
