@@ -40,12 +40,7 @@ class ErrorBoundary extends React.Component {
             color: '#f5f5f7',
             marginBottom: '12px'
           }}>
-            today<span style={{
-              background: 'linear-gradient(120deg,#8B5CF6,#EC4899,#F97316)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>+</span>
+            today<span style={{ color: '#CC2E22' }}>+</span>
           </h1>
           <p style={{ 
             fontSize: '17px', 
