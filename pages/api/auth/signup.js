@@ -18,8 +18,8 @@ export default async function handler(req, res) {
     if (!email || !password) {
       return res.status(400).json({ success: false, error: 'Email and password are required' })
     }
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' })
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' })
     }
     if (username && !/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
       return res.status(400).json({ success: false, error: 'Username must be 3-20 chars, letters/numbers/underscore only' })

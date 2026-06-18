@@ -6,7 +6,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import NewFirstPage from '../components/NewFirstPage';
 import TodayPlusLoader from '../components/TodayPlusLoader';
 import MustKnowCompletePage from '../components/MustKnowCompletePage';
-import { LoginForm, SignupForm, EmailConfirmation, ResetPasswordModal, OAuthButtons } from '../components/AuthForms';
+import { EmailConfirmation, ResetPasswordModal, AuthPanel, storeAvatar } from '../components/AuthForms';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore, applyFreshness } from '../utils/sortArticles';
@@ -100,8 +100,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
           }
         }
         
-        // 3. No preferences anywhere - redirect to onboarding
-        router.replace('/onboarding');
+        // 3. No preferences anywhere. A logged-in user who hasn't onboarded
+        //    yet (e.g. fresh Google/Apple sign-in) goes straight to onboarding;
+        //    a logged-out first-time visitor sees the landing / front door.
+        router.replace(storedUser ? '/onboarding' : '/welcome');
       } catch (e) {
         // If everything fails, let them through
         setOnboardingChecked(true);
@@ -2716,8 +2718,20 @@ export default function Home({ initialNews, initialWorldEvents }) {
     if (error) setAuthError(error.message);
   };
 
-  const handleSignup = async (email, password, fullName) => {
+  const handleMagicLink = async (email) => {
     setAuthError('');
+    const supabase = createClient();
+    if (!supabase) { setAuthError('Sign-in is not configured.'); throw new Error('no client'); }
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) { setAuthError(error.message); throw error; }
+  };
+
+  const handleSignup = async (email, password, fullName, avatar) => {
+    setAuthError('');
+    if (avatar) storeAvatar(avatar);
     try {
       // Detect user's timezone automatically
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -2992,14 +3006,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (!user && fIndex >= paywallThreshold) {
         if (fIndex === paywallThreshold) {
           return (
-            <div key="paywall" className="paywall-modal" style={{ padding: '32px 20px', textAlign: 'center', maxWidth: 480, margin: '24px auto' }}>
-              <h2>Create your free account</h2>
-              <p>Sign up to keep reading the news.</p>
-              {authError && <div className="auth-error" style={{ marginBottom: 16 }}>{authError}</div>}
-              <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
-              <p style={{ marginTop: 12 }}>Already have an account?{' '}
-                <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button>
-              </p>
+            <div key="paywall" style={{ display: 'flex', justifyContent: 'center', maxWidth: 440, margin: '24px auto', padding: '0 16px' }}>
+              <AuthPanel
+                mode="signup"
+                onModeChange={(m) => { if (m === 'login') { setAuthModal('login'); setAuthError(''); } }}
+                onLogin={handleLogin}
+                onSignup={handleSignup}
+                onOAuthLogin={handleOAuthLogin}
+                onMagicLink={handleMagicLink}
+                onForgotPassword={handleForgotPassword}
+                error={authError}
+              />
             </div>
           );
         }
@@ -5713,44 +5730,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
           onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setAuthModal(null); } }}
           style={{ touchAction: 'auto', pointerEvents: 'auto' }}
         >
-          <div 
-            className="auth-modal" 
-            onClick={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-          >
-            <>
-              <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                <h2>{authModal === 'login' ? 'Log in' : 'Sign up'}</h2>
-                <button 
-                  className="auth-close" 
-                  onClick={() => setAuthModal(null)} 
-                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
-                  style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-                >×</button>
-              </div>
-
-              <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                {authError && (
-                  <div className="auth-error">{authError}</div>
-                )}
-
-                {authModal === 'login' ? (
-                  <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} onOAuthLogin={handleOAuthLogin} formData={formData} setFormData={setFormData} />
-                ) : (
-                  <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} formData={formData} setFormData={setFormData} />
-                )}
-
-                <div className="auth-modal-footer">
-                  {authModal === 'login' ? (
-                    <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('signup'); setAuthError(''); }}>Sign up</button></p>
-                  ) : (
-                    <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); setAuthError(''); }}>Log in</button></p>
-                  )}
-                </div>
-              </div>
-            </>
-          </div>
+          <AuthPanel
+            mode={authModal === 'login' ? 'login' : 'signup'}
+            onModeChange={(m) => { setAuthModal(m); setAuthError(''); }}
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            onOAuthLogin={handleOAuthLogin}
+            onMagicLink={handleMagicLink}
+            onForgotPassword={handleForgotPassword}
+            error={authError}
+            onClose={() => setAuthModal(null)}
+          />
         </div>
       )}
 

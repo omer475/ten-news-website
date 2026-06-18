@@ -33,14 +33,19 @@ class ErrorBoundary extends React.Component {
           padding: '24px',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '64px', marginBottom: '24px' }}>📰</div>
           <h1 style={{
-            fontSize: '28px',
-            fontWeight: '700',
+            fontSize: '40px',
+            fontWeight: '800',
+            letterSpacing: '-1px',
             color: '#f5f5f7',
             marginBottom: '12px'
           }}>
-            TEN NEWS
+            today<span style={{
+              background: 'linear-gradient(120deg,#8B5CF6,#EC4899,#F97316)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>+</span>
           </h1>
           <p style={{ 
             fontSize: '17px', 
