@@ -173,6 +173,58 @@ function rankByFreshnessServer(articles, halfLifeHours = 8, jitter = 0.18) {
   return [...kept, ...deferred];
 }
 
+// ── Serve-time duplicate collapse (embedding-based, the real fix) ────────────
+// The pipeline's world_event tag misses ~71% of dupes (and gave same_event=false
+// for obvious twins like two "Kyiv missiles" stories). vq_secondary splits them
+// too. Only the raw MiniLM embedding cosine catches them — so we cluster on that
+// here, greedily, in RANK ORDER (the first/highest-ranked of a cluster is kept =
+// the best-FOR-USER representative since the list is already personalized/ranked).
+// Category-blocked + bounded comparison window so it stays O(n) for a serverless fn.
+function parseEmbedding(v) {
+  if (!v) return null;
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'string') { try { const a = JSON.parse(v); return Array.isArray(a) ? a : null; } catch { return null; } }
+  return null;
+}
+function cosineSim(a, b) {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  const den = Math.sqrt(na) * Math.sqrt(nb);
+  return den > 0 ? dot / den : 0;
+}
+// Drop an article if it's a near-dup of an already-kept, higher-ranked one:
+//   cosine >= 0.88                      → near-identical wire copy (any topic)
+//   cosine >= 0.60 AND a shared topic   → same EVENT, different wording (the
+//                                         "15 US-Iran articles" / "2 Kyiv" case)
+// The shared-topic gate stops same-TOPIC-different-EVENT from over-merging.
+function collapseDuplicates(rankedFormatted, embById) {
+  const NEAR_DUP = 0.88, SAME_EVENT = 0.60, WINDOW = 80;
+  const keptByCat = new Map();
+  const out = [];
+  for (const a of rankedFormatted) {
+    const info = embById.get(a.id);
+    const emb = info?.emb || null;
+    const topics = info?.topics || [];
+    const cat = a.category || '?';
+    const kept = keptByCat.get(cat) || [];
+    let dup = false;
+    if (emb) {
+      for (let i = kept.length - 1; i >= Math.max(0, kept.length - WINDOW); i--) {
+        const k = kept[i];
+        if (!k.emb) continue;
+        const c = cosineSim(emb, k.emb);
+        if (c >= NEAR_DUP || (c >= SAME_EVENT && topics.some((t) => k.topics.includes(t)))) { dup = true; break; }
+      }
+    }
+    if (dup) continue;
+    out.push(a);
+    kept.push({ emb, topics });
+    keptByCat.set(cat, kept);
+  }
+  return out;
+}
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -416,6 +468,15 @@ export default async function handler(req, res) {
         // THEN slice to pageSize — so the returned articles (incl. the SSR first
         // paint) prioritise recent high-importance stories, not a frozen pure-score
         // order. Ranking is deterministic (cacheable); the client adds per-load jitter.
+        // id → embedding + topics from the RAW rows (formatArticle strips the
+        // heavy embedding before it reaches the client; we need it here to dedupe).
+        const embById = new Map();
+        for (const article of filteredArticles) {
+          embById.set(article.id, {
+            emb: parseEmbedding(article.embedding_minilm_vec),
+            topics: safeJsonParse(article.topics, []),
+          });
+        }
         const formattedPool = filteredArticles.map(article => {
           const formatted = formatArticle(article);
           if (eventMap[article.id]) {
@@ -426,7 +487,13 @@ export default async function handler(req, res) {
           if (dd) formatted.deepDive = dd;
           return formatted;
         });
-        const formattedArticles = rankByFreshnessServer(formattedPool).slice(0, pageSize);
+        // Rank (importance × freshness) FIRST, then collapse near-duplicate
+        // stories (keeps the highest-ranked representative), then slice. This is
+        // what kills the "same story 15×" / adjacent-twin problem on the guest feed.
+        const ranked = rankByFreshnessServer(formattedPool);
+        const deduped = collapseDuplicates(ranked, embById);
+        console.log(`🧹 [dedup] collapsed ${ranked.length - deduped.length} near-duplicate stories (pool ${ranked.length} → ${deduped.length})`);
+        const formattedArticles = deduped.slice(0, pageSize);
 
         const totalCount = count || formattedArticles.length;
         const hasMore = (offset + pageSize) < totalCount;
