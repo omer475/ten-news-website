@@ -2177,6 +2177,38 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 }
               } catch (_) {}
 
+              // ====== STEP 4.6: ADJACENCY SPACING (no two same-theme stories back-to-back) ======
+              // Server-side embedding collapse already removed true duplicates; this
+              // is the lighter "don't sit two very-similar stories next to each other"
+              // pass. Conservative on purpose (client has no embeddings, only topics):
+              // only defer when the next card shares ALL its topics with the previous
+              // one AND the same category — i.e. near-certain same-theme (two football
+              // results, two same-subtopic items) — so it won't over-spread.
+              try {
+                const topicsOf = (a) => (a.topics || a.display?.topics || []);
+                const sameTheme = (a, b) => {
+                  const ta = topicsOf(a), tb = topicsOf(b);
+                  if (!ta.length || !tb.length || a.category !== b.category) return false;
+                  const sb = new Set(tb);
+                  return ta.every((t) => sb.has(t)) || tb.every((t) => new Set(ta).has(t));
+                };
+                const pending = [...sortedNews];
+                const spaced = [];
+                let guard = 0;
+                while (pending.length && guard++ < 5000) {
+                  let idx = 0;
+                  if (spaced.length) {
+                    const last = spaced[spaced.length - 1];
+                    if (sameTheme(last, pending[0])) {
+                      const j = pending.findIndex((p) => !sameTheme(last, p));
+                      if (j > 0) idx = j; // pull up the nearest different-theme story
+                    }
+                  }
+                  spaced.push(pending.splice(idx, 1)[0]);
+                }
+                if (spaced.length === sortedNews.length) sortedNews = spaced;
+              } catch (_) {}
+
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
               let foundSharedArticle = false;
