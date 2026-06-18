@@ -198,14 +198,20 @@ function cosineSim(a, b) {
 //   cosine >= 0.60 AND a shared topic   → same EVENT, different wording (the
 //                                         "15 US-Iran articles" / "2 Kyiv" case)
 // The shared-topic gate stops same-TOPIC-different-EVENT from over-merging.
-function collapseDuplicates(rankedFormatted, embById) {
+// Only the TOP slice is deduped — duplicates of mega-stories cluster at the top
+// (high importance), and users see ~12-40 cards. Parsing 2000 embeddings + cosine
+// every request is too slow for a serverless fn (~2s); the tail passes through
+// untouched. rawById holds the raw rows so we parse embeddings lazily for the head.
+function collapseDuplicates(rankedFormatted, rawById, topN = 160) {
   const NEAR_DUP = 0.88, SAME_EVENT = 0.60, WINDOW = 80;
   const keptByCat = new Map();
   const out = [];
-  for (const a of rankedFormatted) {
-    const info = embById.get(a.id);
-    const emb = info?.emb || null;
-    const topics = info?.topics || [];
+  for (let idx = 0; idx < rankedFormatted.length; idx++) {
+    const a = rankedFormatted[idx];
+    if (idx >= topN) { out.push(a); continue; }   // tail: no dedup work
+    const raw = rawById.get(a.id);
+    const emb = raw ? parseEmbedding(raw.embedding_minilm_vec) : null;
+    const topics = raw ? safeJsonParse(raw.topics, []) : [];
     const cat = a.category || '?';
     const kept = keptByCat.get(cat) || [];
     let dup = false;
@@ -468,15 +474,10 @@ export default async function handler(req, res) {
         // THEN slice to pageSize — so the returned articles (incl. the SSR first
         // paint) prioritise recent high-importance stories, not a frozen pure-score
         // order. Ranking is deterministic (cacheable); the client adds per-load jitter.
-        // id → embedding + topics from the RAW rows (formatArticle strips the
-        // heavy embedding before it reaches the client; we need it here to dedupe).
-        const embById = new Map();
-        for (const article of filteredArticles) {
-          embById.set(article.id, {
-            emb: parseEmbedding(article.embedding_minilm_vec),
-            topics: safeJsonParse(article.topics, []),
-          });
-        }
+        // id → RAW row (formatArticle strips the heavy embedding before it reaches
+        // the client; the dedup parses embeddings lazily for the top slice only).
+        const rawById = new Map();
+        for (const article of filteredArticles) rawById.set(article.id, article);
         const formattedPool = filteredArticles.map(article => {
           const formatted = formatArticle(article);
           if (eventMap[article.id]) {
@@ -491,7 +492,7 @@ export default async function handler(req, res) {
         // stories (keeps the highest-ranked representative), then slice. This is
         // what kills the "same story 15×" / adjacent-twin problem on the guest feed.
         const ranked = rankByFreshnessServer(formattedPool);
-        const deduped = collapseDuplicates(ranked, embById);
+        const deduped = collapseDuplicates(ranked, rawById);
         console.log(`🧹 [dedup] collapsed ${ranked.length - deduped.length} near-duplicate stories (pool ${ranked.length} → ${deduped.length})`);
         const formattedArticles = deduped.slice(0, pageSize);
 
