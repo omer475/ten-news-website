@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Avatar, { AVATAR_COLORS, FACE_COUNT, ACCESSORY_COUNT, avatarFromSeed } from "../components/Avatar";
+import { getStoredAvatar, storeAvatar } from "../components/AuthForms";
 
 // ============================================
 // DATA — uses existing codes from lib/personalization.js
@@ -17,7 +19,7 @@ const COUNTRY_GROUPS = [
     { code: "italy", flag: "\u{1F1EE}\u{1F1F9}", name: "Italy" },
     { code: "ukraine", flag: "\u{1F1FA}\u{1F1E6}", name: "Ukraine" },
     { code: "russia", flag: "\u{1F1F7}\u{1F1FA}", name: "Russia" },
-    { code: "turkiye", flag: "\u{1F1F9}\u{1F1F7}", name: "T\u00FCrkiye" },
+    { code: "turkiye", flag: "\u{1F1F9}\u{1F1F7}", name: "Türkiye" },
   ]},
   { continent: "Asia & Pacific", countries: [
     { code: "china", flag: "\u{1F1E8}\u{1F1F3}", name: "China" },
@@ -62,17 +64,17 @@ const TOPIC_CATEGORIES = [
     { id: "biotech", name: "Biotech", icon: "\u{1F9EC}" },
   ]},
   { name: "Politics & World", topics: [
-    { id: "politics", name: "Politics", icon: "\u{1F3DB}\uFE0F" },
+    { id: "politics", name: "Politics", icon: "\u{1F3DB}️" },
     { id: "geopolitics", name: "Geopolitics", icon: "\u{1F310}" },
-    { id: "conflicts", name: "Conflicts & Wars", icon: "\u2694\uFE0F" },
+    { id: "conflicts", name: "Conflicts & Wars", icon: "⚔️" },
     { id: "human_rights", name: "Human Rights", icon: "\u{1F4DC}" },
   ]},
   { name: "Sports", topics: [
-    { id: "football", name: "Football", icon: "\u26BD" },
+    { id: "football", name: "Football", icon: "⚽" },
     { id: "american_football", name: "American Football", icon: "\u{1F3C8}" },
     { id: "basketball", name: "Basketball", icon: "\u{1F3C0}" },
     { id: "tennis", name: "Tennis", icon: "\u{1F3BE}" },
-    { id: "f1", name: "Formula 1", icon: "\u{1F3CE}\uFE0F" },
+    { id: "f1", name: "Formula 1", icon: "\u{1F3CE}️" },
     { id: "cricket", name: "Cricket", icon: "\u{1F3CF}" },
     { id: "combat_sports", name: "Combat Sports", icon: "\u{1F94A}" },
     { id: "olympics", name: "Olympics", icon: "\u{1F3C5}" },
@@ -81,46 +83,9 @@ const TOPIC_CATEGORIES = [
     { id: "entertainment", name: "Entertainment", icon: "\u{1F3AC}" },
     { id: "music", name: "Music", icon: "\u{1F3B5}" },
     { id: "gaming", name: "Gaming", icon: "\u{1F3AE}" },
-    { id: "travel", name: "Travel", icon: "\u2708\uFE0F" },
+    { id: "travel", name: "Travel", icon: "✈️" },
   ]},
 ];
-
-// ============================================
-// TYPING HOOKS
-// ============================================
-function useSequentialTyped(title, desc, titleSpeed = 45, descSpeed = 25, onDescDoneCallback) {
-  const [titleText, setTitleText] = useState("");
-  const [descText, setDescText] = useState("");
-  const [descDone, setDescDone] = useState(false);
-  const [showTitleCursor, setShowTitleCursor] = useState(true);
-
-  useEffect(() => {
-    let ti = 0, di = 0, cancelled = false;
-    setTitleText(""); setDescText(""); setDescDone(false); setShowTitleCursor(true);
-
-    const t1 = setTimeout(() => {
-      const iv1 = setInterval(() => {
-        if (cancelled) return;
-        ti++; setTitleText(title.slice(0, ti));
-        if (ti >= title.length) {
-          clearInterval(iv1);
-          setTimeout(() => {
-            if (cancelled) return;
-            setShowTitleCursor(false);
-            const iv2 = setInterval(() => {
-              if (cancelled) return;
-              di++; setDescText(desc.slice(0, di));
-              if (di >= desc.length) { clearInterval(iv2); setDescDone(true); if (onDescDoneCallback) onDescDoneCallback(); }
-            }, descSpeed);
-          }, 200);
-        }
-      }, titleSpeed);
-    }, 250);
-    return () => { cancelled = true; clearTimeout(t1); };
-  }, [title, desc, titleSpeed, descSpeed]);
-
-  return { titleText, descText, descDone, showTitleCursor };
-}
 
 // ============================================
 // MAIN ONBOARDING FLOW
@@ -134,19 +99,17 @@ export default function OnboardingPage() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [saving, setSaving] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState(null);
+  const [avatar, setAvatar] = useState(() => avatarFromSeed("today+"));
 
-  // Check if already onboarded
+  // Already onboarded? skip. Also adopt a previously-picked avatar.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const prefs = localStorage.getItem('todayplus_preferences');
-      if (prefs) {
-        const parsed = JSON.parse(prefs);
-        if (parsed.onboarding_completed) {
-          router.replace('/');
-        }
-      }
+      if (prefs && JSON.parse(prefs).onboarding_completed) { router.replace('/'); return; }
     } catch (e) {}
+    const stored = getStoredAvatar();
+    if (stored) setAvatar(stored);
   }, [router]);
 
   // Detect user's country via IP geolocation
@@ -156,10 +119,7 @@ export default function OnboardingPage() {
       .then(data => {
         if (data && data.country) {
           const code = ISO_TO_CODE[data.country];
-          if (code) {
-            const country = ALL_COUNTRIES.find(c => c.code === code);
-            if (country) setDetectedCountry(country);
-          }
+          if (code) { const country = ALL_COUNTRIES.find(c => c.code === code); if (country) setDetectedCountry(country); }
         }
       })
       .catch(() => {});
@@ -171,6 +131,7 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setSaving(true);
+    storeAvatar(avatar);
     const preferences = {
       home_country: homeCountry,
       followed_countries: followCountries,
@@ -178,286 +139,172 @@ export default function OnboardingPage() {
       onboarding_completed: true,
       created_at: new Date().toISOString(),
     };
-
-    // Check if user is already logged in (auth user)
     let authUserId = null;
     try {
       const storedUser = localStorage.getItem('tennews_user');
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        authUserId = userData?.id || null;
-      }
+      if (storedUser) { const userData = JSON.parse(storedUser); authUserId = userData?.id || null; }
     } catch (e) {}
-
     try {
       const body = { ...preferences };
-      if (authUserId) {
-        body.auth_user_id = authUserId;
-      }
+      if (authUserId) body.auth_user_id = authUserId;
       const response = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
-      if (response.ok) {
-        const data = await response.json();
-        preferences.user_id = data.user?.id;
-      }
-    } catch (e) {
-      console.warn('API save error, using localStorage only:', e);
-    }
-
+      if (response.ok) { const data = await response.json(); preferences.user_id = data.user?.id; }
+    } catch (e) { console.warn('API save error, using localStorage only:', e); }
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
     go(4);
   };
 
-  // Liquid glass box-shadow (matches share/event buttons in news page)
-  const glassBoxShadow = `
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.35),
-    inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.7),
-    inset -1px -1px 0px -1px rgba(255, 255, 255, 0.5),
-    inset -1.5px -4px 0.5px -3px rgba(255, 255, 255, 0.4),
-    inset -0.15px -0.5px 2px 0px rgba(0, 0, 0, 0.06),
-    inset -0.75px 1.25px 0px -1px rgba(0, 0, 0, 0.08),
-    inset 0px 1.5px 2px -1px rgba(0, 0, 0, 0.06),
-    0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.04),
-    0px 2px 6px 0px rgba(0, 0, 0, 0.03)
-  `;
-
-  const glassSelectedShadow = `
-    inset 0 0 0 0.5px rgba(0, 87, 183, 0.2),
-    inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.9),
-    inset -1px -1px 0px -1px rgba(255, 255, 255, 0.8),
-    inset -1.5px -4px 0.5px -3px rgba(255, 255, 255, 0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0, 87, 183, 0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0, 87, 183, 0.1),
-    inset 0px 1.5px 2px -1px rgba(0, 87, 183, 0.06),
-    0px 0.5px 2.5px 0px rgba(0, 87, 183, 0.08),
-    0px 3px 10px 0px rgba(0, 87, 183, 0.1)
-  `;
-
   return (
     <div className="ob">
       <style>{`
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@400,500,700,900&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-.ob{position:fixed;inset:0;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;background:#000000;color:#f5f5f7;-webkit-font-smoothing:antialiased;overflow:hidden}
+.ob{position:fixed;inset:0;--bg:#0B0A09;--surface:#16140F;--surface2:#1C1A14;--ink:#F4EFE6;--mut:#9A9488;--line:rgba(244,239,230,0.11);--accent:#FF5C38;--accent2:#FFB23E;
+  font-family:'Satoshi',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
+.disp{font-family:'Clash Display','Satoshi',sans-serif;font-weight:600}
 
-.sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:0.4s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:.42s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .sc.fwd{animation-name:sf}.sc.back{animation-name:sb}
-@keyframes sf{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:none}}
-@keyframes sb{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:none}}
+@keyframes sf{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes sb{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes rin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.rin{opacity:0;animation:rin .55s cubic-bezier(0.22,1,0.36,1) forwards}
 
 /* Header */
-.hd{display:flex;align-items:center;padding:14px 20px 0;position:sticky;top:0;z-index:10;background:rgba(8,8,8,0.8);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
-.hd-back{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);backdrop-filter:blur(4px) saturate(150%);-webkit-backdrop-filter:blur(4px) saturate(150%);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#f5f5f7;transition:all 0.15s;flex-shrink:0}
-.hd-back:active{transform:scale(0.92);background:rgba(255,255,255,0.14)}
-.hd-step{flex:1;text-align:center;font-size:12px;font-weight:600;color:#9ca3af;letter-spacing:0.5px}
-.hd-sp{width:36px;flex-shrink:0}
-.pbar{height:3px;background:rgba(255,255,255,0.1);margin:14px 20px 0;border-radius:2px;overflow:hidden}
-.pbar-f{height:100%;background:#f5f5f7;border-radius:2px;transition:width 0.4s cubic-bezier(0.22,1,0.36,1)}
+.hd{display:flex;align-items:center;gap:12px;padding:16px 20px 0;position:sticky;top:0;z-index:10;background:rgba(11,10,9,0.82);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%)}
+.hd-back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(244,239,230,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:all .15s;flex-shrink:0}
+.hd-back:active{transform:scale(0.92);background:rgba(244,239,230,0.12)}
+.hd-step{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:1.4px;text-transform:uppercase}
+.hd-av{margin-left:auto;flex-shrink:0;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.4))}
+.pbar{height:4px;background:rgba(244,239,230,0.09);margin:14px 20px 0;border-radius:999px;overflow:hidden}
+.pbar-f{height:100%;background:var(--accent);border-radius:999px;transition:width .45s cubic-bezier(0.22,1,0.36,1);box-shadow:0 0 12px rgba(255,92,56,0.5)}
 
 /* Body */
-.bd{flex:1;padding:24px 20px 0;padding-bottom:110px}
-.tt{font-size:clamp(26px,6vw,34px);font-weight:800;color:#f5f5f7;letter-spacing:-0.8px;line-height:1.1;margin-bottom:6px;min-height:1.15em}
-.cur{display:inline-block;width:2.5px;height:0.78em;background:#f5f5f7;margin-left:1px;vertical-align:text-bottom;animation:bl 0.55s step-end infinite}
-.cur.hide{opacity:0;animation:none}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
-.ds{font-size:15px;color:#9ca3af;line-height:1.5;margin-bottom:24px;max-width:320px;min-height:1.5em}
-.cnt{opacity:0;transform:translateY(10px);transition:opacity 0.4s ease,transform 0.4s cubic-bezier(0.22,1,0.36,1)}
-.cnt.on{opacity:1;transform:none}
-.cnt-rest{opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
-.cnt-rest.on{opacity:1;transform:none}
+.bd{flex:1;max-width:480px;margin:0 auto;width:100%;padding:26px 20px 130px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--accent);margin-bottom:12px}
+.tt{font-size:clamp(28px,6.5vw,38px);font-weight:600;color:var(--ink);letter-spacing:-1.2px;line-height:1.04;margin-bottom:8px}
+.ds{font-size:15.5px;color:var(--mut);line-height:1.55;margin-bottom:26px;max-width:360px}
 
-/* Section label */
-.con{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;padding-left:2px}
+/* Section labels + grid */
+.con{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin:22px 0 11px;padding-left:2px}
 .con:first-child{margin-top:0}
-.cat{margin-bottom:20px}
-.cat-t{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-left:2px}
+.cat{margin-bottom:22px}
+.cat-t{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:11px;padding-left:2px}
+.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 
-/* Grid */
-.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+/* Tile */
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:15px 6px;min-height:82px;border-radius:16px;border:1px solid var(--line);background:rgba(244,239,230,0.04);color:var(--ink);cursor:pointer;font-family:inherit;position:relative;transition:background .16s,border-color .16s,transform .12s;-webkit-tap-highlight-color:transparent}
+.tile:hover:not(:disabled){background:rgba(244,239,230,0.08)}
+.tile:active:not(:disabled){transform:scale(.96)}
+.tile:disabled{opacity:.3;cursor:not-allowed}
+.tile.sel{border-color:var(--accent);background:rgba(255,92,56,0.13);box-shadow:0 8px 22px rgba(255,92,56,0.16)}
+.tile-ic{font-size:25px;line-height:1}
+.tile-lb{font-size:11px;font-weight:600;color:var(--mut);text-align:center;line-height:1.2}
+.tile.sel .tile-lb{color:var(--accent)}
+.tile-ck{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:pop .25s cubic-bezier(0.34,1.56,0.64,1)}
 
 /* Footer */
-.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:0 20px;pointer-events:none;background:transparent}
-.ft::before{display:none}
-.ft-in{max-width:440px;margin:0 auto;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
-.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;letter-spacing:-0.1px;transition:color 0.2s ease}
-.sl.met{color:#f5f5f7}
-.sl.max{color:#ff3b30}
+.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:18px 20px 0;background:linear-gradient(180deg,transparent,var(--bg) 38%);pointer-events:none}
+.ft-in{max-width:440px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
+.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:11px;transition:color .2s}
+.sl.met{color:var(--ink)}.sl.max{color:var(--accent2)}
 .br{display:flex;gap:10px}
-.bt{flex:1;padding:16px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s cubic-bezier(0.22,1,0.36,1);letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-.bt:active{transform:scale(0.97)}
-.bt.p{
-  background:#f0f0f3;color:#000000;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.5),
-    inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.9),
-    inset -1px -1px 0px -1px rgba(255,255,255,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.1),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.1),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.06),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
-    0px 3px 8px 0px rgba(0,0,0,0.06)}
-.bt.p:disabled{
-  background:rgba(255,255,255,0.14);color:rgba(255,255,255,0.3);cursor:default;transform:none;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.3),
-    inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.4),
-    inset -1px -1px 0px -1px rgba(255,255,255,0.3),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.04)}
-.bt.s{
-  background:rgba(255,255,255,0.08);color:#f5f5f7;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.4),
-    inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.9),
-    inset -1px -1px 0px -1px rgba(255,255,255,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.1),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.1),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.06),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
-    0px 3px 8px 0px rgba(0,0,0,0.06)}
+.bt{flex:1;padding:16px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s,background .18s,box-shadow .2s;-webkit-tap-highlight-color:transparent;user-select:none}
+.bt:active{transform:scale(0.975)}
+.bt.p{background:var(--accent);color:#1A0E08;box-shadow:0 12px 28px rgba(255,92,56,0.32)}
+.bt.p:hover:not(:disabled){background:#FF6B49}
+.bt.p:disabled{background:rgba(244,239,230,0.08);color:rgba(244,239,230,0.3);cursor:default;box-shadow:none}
+.bt.s{background:rgba(244,239,230,0.06);color:var(--ink);border:1px solid var(--line)}
+.bt.s:hover{background:rgba(244,239,230,0.11)}
 
 /* Welcome */
-.wl{display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;padding:0 28px;
-  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,87,183,0.2) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(0,87,183,0.12) 0%,transparent 50%),#000}
-.wl-top{flex:1;display:flex;align-items:center;justify-content:center}
-.wl-center{text-align:left;width:100%;max-width:360px;margin-top:-6vh}
-.wl-pre{font-size:clamp(32px,8vw,44px);font-weight:800;color:#f5f5f7;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em}
-.wl-line{font-size:clamp(32px,8vw,44px);font-weight:800;color:#f5f5f7;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em;white-space:nowrap}
-.wl-plus{color:#4d94ff}
-.wl-line2{font-size:clamp(32px,8vw,44px);font-weight:800;color:#c4c4c6;letter-spacing:-1.2px;line-height:1.08;margin-bottom:0;min-height:1.08em}
-.wl-cur{display:inline-block;width:2.5px;height:0.78em;background:#c4c4c6;margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:bl 0.55s step-end infinite}
-.wl-cur.hide{opacity:0;animation:none;transition:opacity 0.25s ease}
-.wl-bottom{flex:0 0 auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));width:100%;max-width:360px;align-self:center}
-.wl-tagline{font-size:14px;color:#9ca3af;line-height:1.6;text-align:center;margin-bottom:16px;letter-spacing:-0.1px;opacity:0;transform:translateY(10px);transition:opacity 0.65s ease,transform 0.65s cubic-bezier(0.22,1,0.36,1)}
-.wl-tagline.on{opacity:1;transform:none}
-.wl-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:-0.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
-  opacity:0;transform:translateY(12px) scale(0.97);transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1),transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  background:#f0f0f3;color:#000000;
-  backdrop-filter:blur(16px) saturate(200%);-webkit-backdrop-filter:blur(16px) saturate(200%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.6),
-    inset 0 1.5px 0 0 rgba(255,255,255,0.85),
-    inset 0 -1px 2px 0 rgba(0,0,0,0.04),
-    inset 1px 0 0 0 rgba(255,255,255,0.3),
-    inset -1px 0 0 0 rgba(255,255,255,0.3),
-    0 1px 3px 0 rgba(0,0,0,0.06),
-    0 4px 12px 0 rgba(0,0,0,0.04),
-    0 8px 28px -4px rgba(0,0,0,0.05)}
-.wl-btn.on{opacity:1;transform:none}
-.wl-btn:active{transform:scale(0.975);transition:transform 0.1s ease;
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.4),
-    inset 0 1px 0 0 rgba(255,255,255,0.6),
-    inset 0 -0.5px 1px 0 rgba(0,0,0,0.05),
-    0 1px 2px 0 rgba(0,0,0,0.08),
-    0 2px 6px 0 rgba(0,0,0,0.04)}
-@media(max-height:680px){.wl-center{margin-top:-3vh}.wl-pre,.wl-line,.wl-line2{font-size:clamp(28px,7vw,36px)}}
-@media(min-width:768px){.wl{padding:0 48px}.wl-center,.wl-bottom{max-width:420px}}
+.wl{min-height:100%;display:flex;flex-direction:column;padding:0 28px;position:relative;overflow:hidden;
+  background:radial-gradient(120% 80% at 80% 0%,rgba(255,92,56,0.16),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(255,178,62,0.08),transparent 55%)}
+.wl-brand{font-family:'Clash Display';font-weight:700;font-size:22px;letter-spacing:-0.4px;padding:22px 0 0}
+.wl-plus{color:var(--accent)}
+.wl-mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;max-width:380px;width:100%;margin:0 auto;padding:30px 0}
+.wl-av{filter:drop-shadow(0 18px 34px rgba(0,0,0,0.55));margin-bottom:22px}
+.wl-remix{display:inline-flex;align-items:center;gap:12px;padding:8px 8px 8px 14px;border:1px solid var(--line);border-radius:999px;background:rgba(244,239,230,0.04);margin-bottom:26px}
+.wl-remix b{font-size:12.5px;font-weight:600;color:var(--mut)}
+.wl-rbtn{background:var(--surface2);border:1px solid var(--line);color:var(--ink);font:inherit;font-weight:700;font-size:12px;cursor:pointer;padding:6px 12px;border-radius:999px}
+.wl-rbtn:active{transform:scale(.94)}
+.wl-rdots{display:flex;gap:5px}
+.wl-rdot{width:17px;height:17px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
+.wl-rdot:hover{transform:scale(1.2)}.wl-rdot[data-on="1"]{border-color:var(--ink);transform:scale(1.1)}
+.wl-h{font-family:'Clash Display';font-weight:600;font-size:clamp(34px,9vw,46px);letter-spacing:-1.6px;line-height:1.02;margin-bottom:14px}
+.wl-tag{font-size:15px;color:var(--mut);line-height:1.55;margin-bottom:0;max-width:330px}
+.wl-bot{max-width:380px;width:100%;margin:0 auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px))}
+.wl-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;background:var(--accent);color:#1A0E08;box-shadow:0 14px 34px rgba(255,92,56,0.34);transition:transform .12s,background .2s}
+.wl-btn:hover{background:#FF6B49}.wl-btn:active{transform:scale(.985)}
 
 /* Complete */
-.cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#000}
-.sw{margin-bottom:24px;opacity:0;transform:scale(0.7);transition:opacity 0.3s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
-.sw.on{opacity:1;transform:scale(1)}
-.sw-p{stroke-dasharray:72;stroke-dashoffset:72;transition:stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s}
-.sw-p.draw{stroke-dashoffset:0}
-.cp-t{font-size:clamp(28px,7vw,38px);font-weight:800;color:#f5f5f7;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;min-height:1.1em}
-.cp-c{display:inline-block;width:2.5px;height:0.82em;background:#f5f5f7;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
-.cp-c.hide{opacity:0;animation:none}
-.cp-s{font-size:15px;color:#9ca3af;line-height:1.6;max-width:250px;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
-.cp-s.on{opacity:1;transform:none}
-.cp-b{margin-top:28px;padding:16px 40px;border-radius:50px;border:none;color:#000000;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease 0.1s,transform 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s;
-  background:#f0f0f3;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.1),
-    inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.9),
-    inset -1px -1px 0px -1px rgba(255,255,255,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.12),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.2),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.2),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.1),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.1),
-    0px 3px 8px 0px rgba(0,0,0,0.08)}
-.cp-b.on{opacity:1;transform:none}
-.cp-b:active{transform:scale(0.96)}
+.cp{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 32px}
+.cp-av{filter:drop-shadow(0 16px 30px rgba(0,0,0,0.5));margin-bottom:22px}
+.sw{margin-bottom:18px}
+.sw-p{stroke-dasharray:72;stroke-dashoffset:72;animation:draw .5s cubic-bezier(0.12,0,0.39,0) .1s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cp-t{font-family:'Clash Display';font-weight:600;font-size:clamp(30px,7vw,40px);letter-spacing:-1.2px;line-height:1.05;margin-bottom:12px}
+.cp-s{font-size:15.5px;color:var(--mut);line-height:1.6;max-width:280px}
+.cp-b{margin-top:28px;padding:17px 42px;border-radius:16px;border:none;background:var(--accent);color:#1A0E08;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 14px 32px rgba(255,92,56,0.34);transition:transform .12s,background .2s}
+.cp-b:hover{background:#FF6B49}.cp-b:active{transform:scale(.97)}
 
 @media(max-width:360px){.gr{grid-template-columns:repeat(2,1fr)}}
       `}</style>
 
-      {screen===0 && <WelcomeScreen onStart={()=>go(1)} dir={dir}/>}
+      {screen===0 && <WelcomeScreen dir={dir} avatar={avatar} setAvatar={setAvatar} onStart={()=>go(1)} />}
 
-      {screen===1 && <TSScreen key="s1" dir={dir} step={1}
-        title="Where are you from?"
-        desc={detectedCountry ? `Hmmm let me guess... ${detectedCountry.flag} from ${detectedCountry.name}?` : "You\u2019ll see more news about your home country"}
+      {screen===1 && <Step key="s1" dir={dir} step={1} avatar={avatar}
+        eyebrow="● WHERE YOU'RE BASED"
+        title="Where are you based?"
+        desc={detectedCountry ? `Looks like you're in ${detectedCountry.flag} ${detectedCountry.name} — tap to confirm.` : "We'll lead your feed with news from home."}
         onBack={()=>go(0)}
-        onDescDone={() => { if (detectedCountry && !homeCountry) setHomeCountry(detectedCountry.code); }}
-        guessSection={detectedCountry ? <div><div className="con">Our Guess</div><div className="gr">
-          <GlassTile key={detectedCountry.code} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)}
-            glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-            <span style={{fontSize:28,lineHeight:1}}>{detectedCountry.flag}</span>
-            <span style={{fontSize:11,fontWeight:600,color:homeCountry===detectedCountry.code?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{detectedCountry.name}</span>
-          </GlassTile>
-        </div></div> : null}
         footer={<div className="ft"><div className="ft-in">
-          {homeCountry && <div className="sl">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</div>}
+          {homeCountry && <div className="sl met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</div>}
           <div className="br"><button className="bt p" disabled={!homeCountry} onClick={()=>go(2)}>Continue</button></div>
         </div></div>}>
+        {detectedCountry && <div><div className="con">Our guess</div><div className="gr">
+          <Tile icon={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
+        </div></div>}
         {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-          {g.countries.map(c=>
-            <GlassTile key={c.code} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)}
-              glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:homeCountry===c.code?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{c.name}</span>
-            </GlassTile>
-          )}
+          {g.countries.map(c=><Tile key={c.code} icon={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />)}
         </div></div>)}
-      </TSScreen>}
+      </Step>}
 
-      {screen===2 && <TSScreen key="s2" dir={dir} step={2} title="Any other countries you care about?" desc="Stay closer to the places that matter to you" onBack={()=>go(1)}
+      {screen===2 && <Step key="s2" dir={dir} step={2} avatar={avatar}
+        eyebrow="● ON YOUR RADAR"
+        title="Anywhere else on your radar?"
+        desc="Add up to five more places you want to keep an eye on."
+        onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected"}</div>
+          <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected — that's fine too"}</div>
           <div className="br"><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></div>
         </div></div>}>
         {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
           {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
-            <GlassTile key={c.code} selected={followCountries.includes(c.code)} disabled={isHome}
-              onClick={()=>!isHome&&toggleFollow(c.code)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#4d94ff':isHome?'#c4c4c6':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>
-                {c.name}{isHome ? ' (home)' : ''}
-              </span>
-            </GlassTile>);})}
+            <Tile key={c.code} icon={c.flag} label={isHome?`${c.name} (home)`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
+          );})}
         </div></div>)}
-      </TSScreen>}
+      </Step>}
 
-      {screen===3 && <TSScreen key="s3" dir={dir} step={3} title="What interests you?" desc="Select 3 to 10 topics" onBack={()=>go(2)}
+      {screen===3 && <Step key="s3" dir={dir} step={3} avatar={avatar}
+        eyebrow="● YOUR INTERESTS"
+        title="What are you into?"
+        desc="Pick 3 to 10 topics. You can change these anytime."
+        onBack={()=>go(2)}
         footer={<div className="ft"><div className="ft-in">
           <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} of 10 selected`}</div>
-          <div className="br"><button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up...' : 'Continue'}</button></div>
+          <div className="br"><button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up…' : 'Continue'}</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
-          {cat.topics.map(t=>
-            <GlassTile key={t.id} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)}
-              glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:24,lineHeight:1}}>{t.icon}</span>
-              <span style={{fontSize:11,fontWeight:600,color:selectedTopics.includes(t.id)?'#4d94ff':'rgba(255,255,255,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
-            </GlassTile>
-          )}
+          {cat.topics.map(t=><Tile key={t.id} icon={t.icon} label={t.name} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)} />)}
         </div></div>)}
-      </TSScreen>}
+      </Step>}
 
-      {screen===4 && <CompScreen dir={dir}
+      {screen===4 && <CompScreen dir={dir} avatar={avatar}
         homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
         followCountries={followCountries.map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
         topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
@@ -469,210 +316,39 @@ export default function OnboardingPage() {
 }
 
 // ============================================
-// GLASS TILE COMPONENT
+// COMPONENTS
 // ============================================
-function GlassTile({ selected, disabled, onClick, children, glassShadow, selectedShadow }) {
+function Tile({ icon, label, selected, disabled, onClick }) {
   return (
-    <div
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        padding: '14px 6px',
-        borderRadius: 16,
-        border: selected ? '1.5px solid rgba(77, 148, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.12)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'all 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
-        position: 'relative',
-        minHeight: 80,
-        WebkitTapHighlightColor: 'transparent',
-        opacity: disabled ? 0.3 : 1,
-        pointerEvents: disabled ? 'none' : 'auto',
-        // Liquid glass styling
-        backgroundColor: selected
-          ? 'rgba(77, 148, 255, 0.15)'
-          : 'rgba(255, 255, 255, 0.06)',
-        backdropFilter: 'blur(12px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-        boxShadow: selected ? selectedShadow : glassShadow,
-      }}
-    >
-      {/* Checkmark badge */}
+    <button type="button" className={`tile ${selected ? 'sel' : ''}`} disabled={disabled} onClick={onClick}>
       {selected && (
-        <div style={{
-          position: 'absolute',
-          top: 5,
-          right: 5,
-          width: 18,
-          height: 18,
-          borderRadius: '50%',
-          background: '#4d94ff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          animation: 'checkPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
-        </div>
+        <span className="tile-ck">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1A0E08" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
+        </span>
       )}
-      {children}
-      <style>{`@keyframes checkPop{from{transform:scale(0)}to{transform:scale(1)}}`}</style>
-    </div>
+      <span className="tile-ic">{icon}</span>
+      <span className="tile-lb">{label}</span>
+    </button>
   );
 }
 
-// ============================================
-// SCREENS
-// ============================================
-function WelcomeScreen({ onStart, dir }) {
-  const [preText, setPreText] = useState("");
-  const [brandText, setBrandText] = useState("");
-  const [line2Text, setLine2Text] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
-  const [cursorLine, setCursorLine] = useState(0); // 0=pre, 1=brand, 2=line2
-  const [phase, setPhase] = useState(0);
-
-  useEffect(() => {
-    const pre = "Welcome to";
-    const brandFull = "TodayPlus";
-    const brandBack = "Today";
-    const brandFinal = "Today+";
-    const line2 = "News, reimagined.";
-    let cancelled = false;
-
-    const wait = (ms) => new Promise(r => { const t = setTimeout(r, ms); if (cancelled) clearTimeout(t); });
-
-    (async () => {
-      await wait(400);
-
-      // Phase 1: Type "Welcome to"
-      setCursorLine(0);
-      for (let i = 1; i <= pre.length; i++) {
-        if (cancelled) return;
-        setPreText(pre.slice(0, i));
-        await wait(50);
-      }
-
-      await wait(150);
-
-      // Phase 2: Type "TodayPlus" on brand line
-      setCursorLine(1);
-      for (let i = 1; i <= brandFull.length; i++) {
-        if (cancelled) return;
-        setBrandText(brandFull.slice(0, i));
-        await wait(55);
-      }
-
-      // Pause before backspacing
-      await wait(500);
-
-      // Phase 3: Backspace "Plus"
-      for (let i = brandFull.length - 1; i >= brandBack.length; i--) {
-        if (cancelled) return;
-        setBrandText(brandFull.slice(0, i));
-        await wait(70);
-      }
-
-      // Phase 4: Type "+"
-      await wait(180);
-      if (cancelled) return;
-      setBrandText(brandFinal);
-
-      // Pause, then type line 2
-      await wait(400);
-
-      // Phase 5: Type "News, reimagined."
-      setCursorLine(2);
-      for (let j = 1; j <= line2.length; j++) {
-        if (cancelled) return;
-        setLine2Text(line2.slice(0, j));
-        await wait(45);
-      }
-
-      // Done
-      await wait(350);
-      if (cancelled) return;
-      setShowCursor(false);
-      setTimeout(() => setPhase(1), 100);
-      setTimeout(() => setPhase(2), 400);
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-  return (
-    <div className={`sc ${dir > 0 ? "fwd" : "back"}`}>
-      <div className="wl">
-        <div className="wl-top">
-          <div className="wl-center">
-            {/* Line 1: "Welcome to" */}
-            <div className="wl-pre">
-              {preText}
-              {showCursor && cursorLine === 0 && <span className="wl-cur" />}
-            </div>
-            {/* Line 2: "TodayPlus" → "Today+" — never wraps */}
-            <div className="wl-line">
-              {(() => {
-                if (!brandText) return null;
-                if (brandText.endsWith("+")) {
-                  const name = brandText.slice(0, -1);
-                  return <>{name}<span className="wl-plus">+</span></>;
-                }
-                return brandText;
-              })()}
-              {showCursor && cursorLine === 1 && <span className="wl-cur" />}
-            </div>
-            {/* Line 3: "News, reimagined." */}
-            <div className="wl-line2">
-              {line2Text}
-              {showCursor && cursorLine === 2 && <span className="wl-cur" />}
-              {!showCursor && line2Text && <span className="wl-cur hide" />}
-            </div>
-          </div>
-        </div>
-        <div className="wl-bottom">
-          <p className={`wl-tagline ${phase >= 1 ? "on" : ""}`}>
-            Your daily briefing, powered by AI. Set up takes under a minute.
-          </p>
-          <button className={`wl-btn ${phase >= 2 ? "on" : ""}`} onClick={onStart}>
-            Get Started
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TSScreen({ dir, step, title, desc, onBack, onDescDone, guessSection, footer, children }) {
-  const { titleText, descText, descDone, showTitleCursor } = useSequentialTyped(title, desc, 45, 25, onDescDone);
-  const [showRest, setShowRest] = useState(!guessSection);
-
-  useEffect(() => {
-    if (descDone && guessSection) {
-      const t = setTimeout(() => setShowRest(true), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [descDone, guessSection]);
-
+function Step({ dir, step, avatar, eyebrow, title, desc, onBack, footer, children }) {
   return (
     <>
       <div className={`sc ${dir>0?"fwd":"back"}`}>
         <div className="hd">
-          <button className="hd-back" onClick={onBack}>
+          <button className="hd-back" onClick={onBack} aria-label="Back">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <span className="hd-step">Step {step} of 3</span>
-          <div className="hd-sp"/>
+          <span className="hd-av"><Avatar config={avatar} size={32} /></span>
         </div>
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/3)*100}%`}}/></div>
         <div className="bd">
-          <h1 className="tt">{titleText}<span className={`cur ${!showTitleCursor?"hide":""}`}/></h1>
-          <p className="ds">{descText}</p>
-          {guessSection && <div className={`cnt ${descDone?"on":""}`}>{guessSection}</div>}
-          <div className={guessSection ? `cnt-rest ${showRest?"on":""}` : `cnt ${descDone?"on":""}`}>{children}</div>
+          <div className="eyebrow rin">{eyebrow}</div>
+          <h1 className="tt rin" style={{animationDelay:'40ms'}}>{title}</h1>
+          <p className="ds rin" style={{animationDelay:'90ms'}}>{desc}</p>
+          <div className="rin" style={{animationDelay:'150ms'}}>{children}</div>
         </div>
       </div>
       {footer}
@@ -680,98 +356,59 @@ function TSScreen({ dir, step, title, desc, onBack, onDescDone, guessSection, fo
   );
 }
 
-function CompScreen({ dir, homeCountry, followCountries, topics, onStartReading, onBack }) {
-  const [typed, setTyped] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
-  const [phase, setPhase] = useState(0);
-  useEffect(() => {
-    let i=0; const h="You\u2019re all set!";
-    const t = setTimeout(()=>{const iv=setInterval(()=>{i++;setTyped(h.slice(0,i));if(i>=h.length){clearInterval(iv);setTimeout(()=>setShowCursor(false),400);setTimeout(()=>setPhase(1),350);setTimeout(()=>setPhase(2),850);setTimeout(()=>setPhase(3),1250);setTimeout(()=>setPhase(4),1650);}},55);},300);
-    return ()=>clearTimeout(t);
-  }, []);
-
-  return <div className={`sc ${dir>0?"fwd":"back"}`}>
-    {/* Back button header - same as other pages */}
-    <div className="hd">
-      <button className="hd-back" onClick={onBack}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div className="hd-sp"/>
-      <div className="hd-sp"/>
-    </div>
-    <div className="cp">
-    {/* Swoosh checkmark */}
-    <div className={`sw ${phase>=1?"on":""}`}>
-      <svg viewBox="0 0 52 40" fill="none" width="44" height="34">
-        <path className={`sw-p ${phase>=1?"draw":""}`} d="M4 22L18 34L48 6" stroke="#f5f5f7" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </div>
-    <h1 className="cp-t">{typed}<span className={`cp-c ${!showCursor?"hide":""}`}/></h1>
-    <p className={`cp-s ${phase>=2?"on":""}`}>Your personalized feed is ready</p>
-
-    {/* Summary card — liquid glass */}
-    <div style={{
-      marginTop: 22,
-      padding: '16px 18px',
-      borderRadius: 16,
-      border: '1px solid rgba(255,255,255,0.12)',
-      textAlign: 'left',
-      width: '100%',
-      maxWidth: 300,
-      opacity: phase>=3 ? 1 : 0,
-      transform: phase>=3 ? 'none' : 'translateY(10px)',
-      transition: 'opacity 0.5s, transform 0.5s cubic-bezier(0.22,1,0.36,1)',
-      backgroundColor: 'rgba(255,255,255,0.06)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      boxShadow: `
-        inset 0 0 0 0.5px rgba(255,255,255,0.35),
-        inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.7),
-        0px 2px 8px rgba(0,0,0,0.04),
-        0px 4px 16px rgba(0,0,0,0.03)
-      `,
-    }}>
-      {homeCountry && <SummaryRow label="Home" value={`${homeCountry.flag} ${homeCountry.name}`} />}
-      {followCountries.length>0 && <SummaryRow label="Following" value={
-        <span style={{display:'flex',flexWrap:'wrap',gap:4}}>
-          {followCountries.map(c=><span key={c.code} style={chipStyle}>{c.flag} {c.name}</span>)}
-        </span>
-      } />}
-      {topics.length>0 && <SummaryRow label="Topics" value={
-        <span style={{display:'flex',flexWrap:'wrap',gap:4}}>
-          {topics.map(t=><span key={t.id} style={chipStyle}>{t.icon} {t.name}</span>)}
-        </span>
-      } last />}
-    </div>
-
-    <button className={`cp-b ${phase>=4?"on":""}`} onClick={onStartReading}>Start Reading</button>
-  </div></div>;
-}
-
-function SummaryRow({ label, value, last }) {
+function WelcomeScreen({ dir, avatar, setAvatar, onStart }) {
+  const remix = () => setAvatar({
+    color: (avatar.color + 3) % AVATAR_COLORS.length,
+    face: (avatar.face + 1) % FACE_COUNT,
+    accessory: (avatar.accessory + 1) % ACCESSORY_COUNT,
+  });
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 8,
-      marginBottom: last ? 0 : 10,
-      paddingBottom: last ? 0 : 10,
-      borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.08)',
-    }}>
-      <span style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:0.5,minWidth:52,paddingTop:4}}>{label}</span>
-      <span style={{display:'flex',flexWrap:'wrap',gap:4,fontSize:13,fontWeight:600,color:'#f5f5f7'}}>{value}</span>
+    <div className={`sc ${dir>0?"fwd":"back"}`}>
+      <div className="wl">
+        <div className="wl-brand rin">today<span className="wl-plus">+</span></div>
+        <div className="wl-mid">
+          <div className="wl-av rin"><Avatar config={avatar} size={104} ring /></div>
+          <div className="wl-remix rin" style={{animationDelay:'60ms'}}>
+            <b>Your reader</b>
+            <button className="wl-rbtn" onClick={remix}>⟳ Remix</button>
+            <div className="wl-rdots">
+              {AVATAR_COLORS.slice(0,6).map((c,i)=>(
+                <span key={c.id} className="wl-rdot" data-on={avatar.color===i?'1':'0'}
+                  style={{background:`linear-gradient(135deg,${c.from},${c.to})`}}
+                  onClick={()=>setAvatar({...avatar,color:i})} />
+              ))}
+            </div>
+          </div>
+          <h1 className="wl-h disp rin" style={{animationDelay:'120ms'}}>Let’s build<br/>your briefing.</h1>
+          <p className="wl-tag rin" style={{animationDelay:'200ms'}}>Three quick taps and your front page is yours. Under a minute — promise.</p>
+        </div>
+        <div className="wl-bot rin" style={{animationDelay:'280ms'}}>
+          <button className="wl-btn" onClick={onStart}>Get started</button>
+        </div>
+      </div>
     </div>
   );
 }
 
-const chipStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 3,
-  padding: '3px 8px',
-  borderRadius: 6,
-  background: 'rgba(77, 148, 255, 0.15)',
-  fontSize: 11,
-  fontWeight: 600,
-  color: '#4d94ff',
-};
+function CompScreen({ dir, avatar, homeCountry, followCountries, topics, onStartReading, onBack }) {
+  return (
+    <div className={`sc ${dir>0?"fwd":"back"}`}>
+      <div className="hd">
+        <button className="hd-back" onClick={onBack} aria-label="Back">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+      <div className="cp">
+        <div className="cp-av rin"><Avatar config={avatar} size={92} ring /></div>
+        <div className="sw rin" style={{animationDelay:'60ms'}}>
+          <svg viewBox="0 0 52 40" fill="none" width="40" height="30">
+            <path className="sw-p" d="M4 22L18 34L48 6" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <h1 className="cp-t rin" style={{animationDelay:'100ms'}}>You’re all set.</h1>
+        <p className="cp-s rin" style={{animationDelay:'160ms'}}>Your front page is ready{homeCountry ? ` — leading with ${homeCountry.flag} ${homeCountry.name}` : ''}{topics.length ? ` and ${topics.length} topic${topics.length>1?'s':''} you love` : ''}.</p>
+        <button className="cp-b rin" style={{animationDelay:'240ms'}} onClick={onStartReading}>Start reading</button>
+      </div>
+    </div>
+  );
+}
