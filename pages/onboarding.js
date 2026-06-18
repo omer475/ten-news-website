@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { createClient } from "../lib/supabase";
+import { AuthPanel, EmailConfirmation } from "../components/AuthForms";
 
 // ============================================
 // DATA — uses existing codes from lib/personalization.js
@@ -82,6 +84,9 @@ export default function OnboardingPage() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [saving, setSaving] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState(null);
+  const [authMode, setAuthMode] = useState(null);
+  const [authError, setAuthError] = useState('');
+  const [emailSent, setEmailSent] = useState(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -106,6 +111,61 @@ export default function OnboardingPage() {
   const go = (n) => { setDir(n > screen ? 1 : -1); setScreen(n); };
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
+
+  // ---- auth (sign in for returning users) ----
+  const routeAfterAuth = async (user) => {
+    try {
+      if (user?.id) {
+        const r = await fetch(`/api/user/preferences?auth_user_id=${user.id}`);
+        if (r.ok) {
+          const sp = await r.json();
+          if (sp && sp.onboarding_completed) {
+            localStorage.setItem('todayplus_preferences', JSON.stringify({
+              home_country: sp.home_country, followed_countries: sp.followed_countries || [],
+              followed_topics: sp.followed_topics || [], onboarding_completed: true, user_id: sp.id }));
+            router.push('/'); return;
+          }
+        }
+      }
+    } catch {}
+    setAuthMode(null); // signed in but not onboarded — continue here
+  };
+  const handleLogin = async (email, password) => {
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('tennews_user', JSON.stringify(data.user));
+        if (data.session) localStorage.setItem('tennews_session', JSON.stringify(data.session));
+        await routeAfterAuth(data.user);
+      } else setAuthError(data.message || 'Login failed. Please try again.');
+    } catch { setAuthError('Login failed. Please check your connection.'); }
+  };
+  const handleSignup = async (email, password, fullName) => {
+    setAuthError('');
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const res = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, fullName, timezone }) });
+      const text = await res.text(); let data; try { data = JSON.parse(text); } catch { setAuthError('Server error. Please try again.'); return; }
+      if (res.ok && data.success) { setAuthMode(null); setEmailSent({ email }); }
+      else setAuthError(data.message || data.error || 'Signup failed. Please try again.');
+    } catch { setAuthError('Signup failed. Please check your connection.'); }
+  };
+  const handleOAuthLogin = async (provider) => {
+    setAuthError(''); const supabase = createClient(); if (!supabase) { setAuthError('Sign-in is not configured.'); return; }
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback`, ...(provider === 'google' && { queryParams: { access_type: 'offline', prompt: 'consent' } }) } });
+    if (error) setAuthError(error.message);
+  };
+  const handleMagicLink = async (email) => {
+    setAuthError(''); const supabase = createClient(); if (!supabase) { setAuthError('Sign-in is not configured.'); throw new Error('no client'); }
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    if (error) { setAuthError(error.message); throw error; }
+  };
+  const handleForgotPassword = async (email) => {
+    setAuthError('');
+    try { await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); } catch {}
+  };
 
   const handleComplete = async () => {
     setSaving(true);
@@ -200,8 +260,12 @@ export default function OnboardingPage() {
 
 /* Welcome */
 .wl{min-height:100%;display:flex;flex-direction:column;padding:0 28px;position:relative;overflow:hidden}
-.wl-brand{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-0.3px;padding:24px 0 0}
+.wl-bar{display:flex;align-items:center;justify-content:space-between;max-width:400px;width:100%;margin:0 auto;padding:24px 0 0}
+.wl-brand{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-0.3px}
 .wl-plus{color:var(--accent)}
+.wl-signin{background:none;border:1px solid var(--line);color:var(--ink);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;padding:9px 18px;border-radius:999px;transition:background .15s}
+.wl-signin:hover{background:var(--soft)}
+.ov{position:fixed;inset:0;z-index:9999;background:rgba(23,21,15,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .wl-mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;max-width:400px;width:100%;margin:0 auto;padding:30px 0}
 .wl-eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
 .wl-eyebrow::before{content:'';width:18px;height:2px;background:var(--accent)}
@@ -224,7 +288,7 @@ export default function OnboardingPage() {
 @media(max-width:360px){.gr{grid-template-columns:repeat(2,1fr)}}
       `}</style>
 
-      {screen===0 && <WelcomeScreen dir={dir} onStart={()=>go(1)} />}
+      {screen===0 && <WelcomeScreen dir={dir} onStart={()=>go(1)} onSignIn={()=>{setAuthError('');setAuthMode('login');}} />}
 
       {screen===1 && <Step key="s1" dir={dir} step={1}
         eyebrow="Where you're based"
@@ -279,6 +343,20 @@ export default function OnboardingPage() {
         onStartReading={()=>router.push('/')}
         onBack={()=>go(3)}
       />}
+
+      {authMode && (
+        <div className="ov" onClick={()=>setAuthMode(null)}>
+          <AuthPanel mode={authMode} onModeChange={(m)=>{setAuthError('');setAuthMode(m);}}
+            onLogin={handleLogin} onSignup={handleSignup} onOAuthLogin={handleOAuthLogin}
+            onMagicLink={handleMagicLink} onForgotPassword={handleForgotPassword}
+            error={authError} onClose={()=>setAuthMode(null)} />
+        </div>
+      )}
+      {emailSent && (
+        <div className="ov" onClick={()=>setEmailSent(null)}>
+          <EmailConfirmation email={emailSent.email} onBack={()=>setEmailSent(null)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -324,11 +402,14 @@ function Step({ dir, step, eyebrow, title, desc, onBack, footer, children }) {
   );
 }
 
-function WelcomeScreen({ dir, onStart }) {
+function WelcomeScreen({ dir, onStart, onSignIn }) {
   return (
     <div className={`sc ${dir>0?"fwd":"back"}`}>
       <div className="wl">
-        <div className="wl-brand rin">today<span className="wl-plus">+</span></div>
+        <div className="wl-bar rin">
+          <span className="wl-brand">today<span className="wl-plus">+</span></span>
+          <button className="wl-signin" onClick={onSignIn}>Sign in</button>
+        </div>
         <div className="wl-mid">
           <div className="wl-eyebrow rin">Let’s set you up</div>
           <h1 className="wl-h rin" style={{animationDelay:'70ms'}}>Let’s build<br/>your briefing.</h1>

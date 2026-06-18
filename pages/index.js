@@ -100,10 +100,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
           }
         }
         
-        // 3. No preferences anywhere. A logged-in user who hasn't onboarded
-        //    yet (e.g. fresh Google/Apple sign-in) goes straight to onboarding;
-        //    a logged-out first-time visitor sees the landing / front door.
-        router.replace(storedUser ? '/onboarding' : '/welcome');
+        // 3. No preferences anywhere — start everyone directly in the
+        //    personalization flow (returning users can sign in from there).
+        router.replace('/onboarding');
       } catch (e) {
         // If everything fails, let them through
         setOnboardingChecked(true);
