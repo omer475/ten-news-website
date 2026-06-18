@@ -23,86 +23,82 @@ export function storeAvatar(a) {
 function AuthStyles() {
   return (
     <style jsx global>{`
+      @import url('https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@400,500,700,900&display=swap');
       .tpa-card {
-        width: 100%;
-        max-width: 400px;
-        background: #ffffff;
-        border-radius: 28px;
-        padding: 26px 24px 22px;
-        box-shadow: 0 30px 80px rgba(20,16,40,0.28), 0 2px 0 rgba(255,255,255,0.7) inset;
-        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-        position: relative;
-        overflow: hidden;
-        animation: tpaPop 0.42s cubic-bezier(0.34,1.56,0.64,1);
+        --a: #FF5C38; --bg2: #211D15; --ink: #F4EFE6; --mut: #9A9488; --line: rgba(244,239,230,0.11);
+        width: 100%; max-width: 404px; position: relative; overflow: hidden;
+        background: linear-gradient(180deg,#1A1810,#100E0A);
+        border: 1px solid var(--line); border-radius: 26px; padding: 26px 24px 22px;
+        box-shadow: 0 40px 90px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset;
+        font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--ink); animation: tpaPop 0.42s cubic-bezier(0.34,1.56,0.64,1);
       }
       @keyframes tpaPop { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+      .tpa-card::before { content: ''; position: absolute; top: -80px; right: -60px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(255,92,56,0.18), transparent 70%); pointer-events: none; }
       .tpa-close {
-        position: absolute; top: 16px; right: 16px;
-        width: 32px; height: 32px; border-radius: 50%;
-        border: none; background: #f0eef6; color: #6b6680;
-        font-size: 20px; line-height: 1; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        transition: background 0.15s, transform 0.15s;
+        position: absolute; top: 15px; right: 15px; z-index: 2;
+        width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
+        background: rgba(244,239,230,0.05); color: var(--mut);
+        font-size: 19px; line-height: 1; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.2s, color .15s;
       }
-      .tpa-close:hover { background: #e6e3f0; transform: rotate(90deg); }
-      .tpa-wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #18161f; }
-      .tpa-title { font-size: 24px; font-weight: 800; letter-spacing: -0.6px; color: #18161f; margin: 14px 0 2px; }
-      .tpa-sub { font-size: 14px; color: #6b6680; margin-bottom: 18px; }
-      .tpa-oauth { display: flex; flex-direction: column; gap: 10px; }
+      .tpa-close:hover { background: rgba(244,239,230,0.12); color: var(--ink); transform: rotate(90deg); }
+      .tpa-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.6px; color: var(--a); margin-bottom: 4px; }
+      .tpa-wordmark { font-family: 'Clash Display', sans-serif; font-size: 21px; font-weight: 700; letter-spacing: -0.4px; color: var(--ink); }
+      .tpa-title { font-family: 'Clash Display', sans-serif; font-size: 27px; font-weight: 600; letter-spacing: -0.8px; color: var(--ink); margin: 12px 0 3px; line-height: 1.05; }
+      .tpa-sub { font-size: 14px; color: var(--mut); margin-bottom: 18px; line-height: 1.5; }
+      .tpa-oauth { display: flex; flex-direction: column; gap: 9px; }
       .tpa-oauth-btn {
-        width: 100%; height: 48px; border-radius: 14px;
+        width: 100%; height: 48px; border-radius: 13px;
         display: flex; align-items: center; justify-content: center; gap: 10px;
-        font-size: 15px; font-weight: 600; cursor: pointer;
-        border: 1.5px solid #e6e3ee; background: #fff; color: #1d1d1f;
-        transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
+        font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+        border: 1px solid var(--line); background: rgba(244,239,230,0.05); color: var(--ink);
+        transition: transform 0.12s, background 0.15s, border-color .15s;
       }
-      .tpa-oauth-btn:hover { box-shadow: 0 6px 18px rgba(20,16,40,0.10); transform: translateY(-1px); }
+      .tpa-oauth-btn:hover { background: rgba(244,239,230,0.1); transform: translateY(-1px); }
       .tpa-oauth-btn:active { transform: scale(0.98); }
-      .tpa-oauth-btn:disabled { opacity: 0.55; cursor: default; }
-      .tpa-oauth-apple { background: #000; color: #fff; border-color: #000; }
-      .tpa-oauth-magic { background: #f6f4fb; border-color: #ece9f5; }
-      .tpa-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #b6b2c4; font-size: 12px; font-weight: 600; }
-      .tpa-divider::before, .tpa-divider::after { content: ''; flex: 1; height: 1px; background: #ece9f3; }
-      .tpa-field { margin-bottom: 12px; }
-      .tpa-field label { display: block; font-size: 12.5px; font-weight: 700; color: #57536a; margin-bottom: 6px; letter-spacing: 0.1px; }
+      .tpa-oauth-btn:disabled { opacity: 0.5; cursor: default; }
+      .tpa-oauth-google { background: #fff; color: #1d1d1f; border-color: #fff; }
+      .tpa-oauth-google:hover { background: #f1f1f1; }
+      .tpa-divider { display: flex; align-items: center; gap: 12px; margin: 15px 0; color: var(--mut); font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+      .tpa-divider::before, .tpa-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+      .tpa-field { margin-bottom: 13px; }
+      .tpa-field label { display: block; font-size: 11px; font-weight: 700; color: var(--mut); margin-bottom: 7px; letter-spacing: 0.9px; text-transform: uppercase; }
       .tpa-field input {
         width: 100%; height: 48px; padding: 0 14px; font-size: 16px;
-        border-radius: 14px; border: 1.5px solid #e6e3ee; background: #faf9fd;
-        color: #18161f; outline: none; transition: border 0.15s, box-shadow 0.15s, background 0.15s;
-        font-family: inherit;
+        border-radius: 13px; border: 1px solid var(--line); background: var(--bg2);
+        color: var(--ink); outline: none; transition: border 0.15s, box-shadow 0.15s; font-family: inherit;
       }
-      .tpa-field input:focus { border-color: #8B5CF6; background: #fff; box-shadow: 0 0 0 4px rgba(139,92,246,0.14); }
-      .tpa-field input::placeholder { color: #b0acbe; }
+      .tpa-field input:focus { border-color: var(--a); box-shadow: 0 0 0 3px rgba(255,92,56,0.18); }
+      .tpa-field input::placeholder { color: #6f6a60; }
       .tpa-submit {
-        width: 100%; height: 50px; border-radius: 14px; border: none; margin-top: 6px;
-        font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
-        background: linear-gradient(120deg, #8B5CF6 0%, #EC4899 60%, #F97316 120%);
-        background-size: 160% 100%; background-position: 0% 0;
-        transition: background-position 0.4s, transform 0.12s, opacity 0.15s;
-        box-shadow: 0 10px 26px rgba(139,92,246,0.32);
+        width: 100%; height: 50px; border-radius: 13px; border: none; margin-top: 8px;
+        font-size: 16px; font-weight: 700; color: #1A0E08; cursor: pointer; font-family: inherit;
+        background: var(--a); transition: transform 0.12s, box-shadow 0.2s, background .2s;
+        box-shadow: 0 12px 28px rgba(255,92,56,0.34);
       }
-      .tpa-submit:hover:not(:disabled) { background-position: 100% 0; transform: translateY(-1px); }
+      .tpa-submit:hover:not(:disabled) { background: #FF6B49; transform: translateY(-1px); box-shadow: 0 16px 36px rgba(255,92,56,0.44); }
       .tpa-submit:active:not(:disabled) { transform: scale(0.985); }
-      .tpa-submit:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
-      .tpa-link { background: none; border: none; color: #8B5CF6; font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: inherit; padding: 0; }
+      .tpa-submit:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+      .tpa-link { background: none; border: none; color: var(--a); font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: inherit; padding: 0; }
       .tpa-link:hover { text-decoration: underline; }
-      .tpa-error { background: rgba(244,63,94,0.10); color: #e11d48; font-size: 13.5px; font-weight: 600; padding: 11px 14px; border-radius: 12px; margin-bottom: 14px; }
-      .tpa-foot { text-align: center; font-size: 14px; color: #6b6680; margin-top: 16px; }
-      .tpa-meter { height: 6px; border-radius: 999px; background: #ece9f3; margin: 8px 0 2px; overflow: hidden; }
+      .tpa-error { background: rgba(255,69,58,0.12); color: #FF6B5C; font-size: 13.5px; font-weight: 600; padding: 11px 14px; border-radius: 11px; margin-bottom: 14px; }
+      .tpa-foot { text-align: center; font-size: 14px; color: var(--mut); margin-top: 16px; }
+      .tpa-meter { height: 5px; border-radius: 999px; background: rgba(244,239,230,0.08); margin: 9px 0 2px; overflow: hidden; }
       .tpa-meter > div { height: 100%; border-radius: 999px; transition: width 0.25s, background 0.25s; }
-      .tpa-pickwrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
-      .tpa-pickrow { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+      .tpa-pickwrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 6px; }
+      .tpa-pickrow { display: flex; align-items: center; gap: 8px; margin-top: 13px; flex-wrap: wrap; justify-content: center; }
       .tpa-chip {
         display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px;
-        border-radius: 999px; border: 1.5px solid #e6e3ee; background: #faf9fd; color: #57536a;
+        border-radius: 999px; border: 1px solid var(--line); background: rgba(244,239,230,0.05); color: var(--ink);
         font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: transform 0.12s, background 0.15s;
       }
-      .tpa-chip:hover { background: #f1eef9; }
+      .tpa-chip:hover { background: rgba(244,239,230,0.11); }
       .tpa-chip:active { transform: scale(0.95); }
-      .tpa-swatches { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
-      .tpa-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; transition: transform 0.12s; }
+      .tpa-swatches { display: flex; gap: 7px; margin-top: 13px; flex-wrap: wrap; justify-content: center; }
+      .tpa-swatch { width: 23px; height: 23px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; transition: transform 0.12s; }
       .tpa-swatch:hover { transform: scale(1.15); }
-      .tpa-swatch[data-on="1"] { border-color: #18161f; transform: scale(1.12); }
+      .tpa-swatch[data-on="1"] { border-color: var(--ink); transform: scale(1.12); }
     `}</style>
   );
 }
@@ -129,14 +125,14 @@ export function OAuthButtons({ onOAuthLogin, onMagicLink }) {
   };
   return (
     <div className="tpa-oauth">
-      <button type="button" className="tpa-oauth-btn" onClick={() => click('google')} disabled={!!busy}>
+      <button type="button" className="tpa-oauth-btn tpa-oauth-google" onClick={() => click('google')} disabled={!!busy}>
         <GoogleIcon />{busy === 'google' ? 'Redirecting…' : 'Continue with Google'}
       </button>
-      <button type="button" className="tpa-oauth-btn tpa-oauth-apple" onClick={() => click('apple')} disabled={!!busy}>
+      <button type="button" className="tpa-oauth-btn" onClick={() => click('apple')} disabled={!!busy}>
         <AppleIcon />{busy === 'apple' ? 'Redirecting…' : 'Continue with Apple'}
       </button>
       {onMagicLink && (
-        <button type="button" className="tpa-oauth-btn tpa-oauth-magic" onClick={onMagicLink} disabled={!!busy}>
+        <button type="button" className="tpa-oauth-btn" onClick={onMagicLink} disabled={!!busy}>
           ✦ Email me a magic link
         </button>
       )}
@@ -221,7 +217,7 @@ export function AuthPanel({
           </div>
           <h2 className="tpa-title" style={{ margin: '4px 0 6px' }}>Check your inbox ✉️</h2>
           <p className="tpa-sub" style={{ marginBottom: 6 }}>
-            We sent a {sent === 'magic' ? 'magic sign-in link' : 'password reset link'} to<br /><strong style={{ color: '#18161f' }}>{email}</strong>
+            We sent a {sent === 'magic' ? 'magic sign-in link' : 'password reset link'} to<br /><strong style={{ color: 'var(--ink)' }}>{email}</strong>
           </p>
           <p className="tpa-sub" style={{ fontSize: 13 }}>Tap the link in the email to continue. Don’t forget to check spam.</p>
           <button className="tpa-link" onClick={() => { setSent(null); setSub(null); }} style={{ marginTop: 6 }}>← Back</button>
@@ -244,9 +240,12 @@ export function AuthPanel({
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Avatar config={avatar} size={34} />
-        <span className="tpa-wordmark">today<span style={{ color: '#8B5CF6' }}>+</span></span>
+        <span className="tpa-wordmark">today<span style={{ color: 'var(--a)' }}>+</span></span>
       </div>
-      <h2 className="tpa-title">{headline}</h2>
+      <div className="tpa-eyebrow" style={{ marginTop: 14 }}>
+        {sub === 'forgot' ? '● ACCOUNT RECOVERY' : sub === 'magic' ? '● PASSWORDLESS' : mode === 'login' ? '● WELCOME BACK' : '● JOIN TODAY+'}
+      </div>
+      <h2 className="tpa-title" style={{ marginTop: 2 }}>{headline}</h2>
       <p className="tpa-sub">{subline}</p>
 
       {error && <div className="tpa-error">{error}</div>}
@@ -353,10 +352,10 @@ export function EmailConfirmation({ email, type, onBack }) {
         </div>
         <h2 className="tpa-title" style={{ margin: '2px 0 6px' }}>{isReset ? 'Reset link sent 🔐' : 'Almost there! ✉️'}</h2>
         <p className="tpa-sub">
-          We sent a {isReset ? 'password reset' : 'verification'} link to<br /><strong style={{ color: '#18161f' }}>{email}</strong>
+          We sent a {isReset ? 'password reset' : 'verification'} link to<br /><strong style={{ color: 'var(--ink)' }}>{email}</strong>
         </p>
-        <div style={{ background: '#f7f5fc', borderRadius: 16, padding: 16, textAlign: 'left', margin: '6px 0 4px' }}>
-          <ol style={{ margin: 0, paddingLeft: 18, color: '#57536a', fontSize: 14, lineHeight: 1.7 }}>
+        <div style={{ background: 'rgba(244,239,230,0.05)', border: '1px solid var(--line)', borderRadius: 16, padding: 16, textAlign: 'left', margin: '6px 0 4px' }}>
+          <ol style={{ margin: 0, paddingLeft: 18, color: 'var(--mut)', fontSize: 14, lineHeight: 1.7 }}>
             <li>Open your inbox (and peek in spam)</li>
             <li>Tap the {isReset ? 'reset' : 'verification'} link</li>
             <li>{isReset ? 'Choose a new password' : 'You’re in — start reading'}</li>
