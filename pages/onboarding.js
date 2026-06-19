@@ -226,8 +226,8 @@ export default function OnboardingPage() {
 .wel-plus{color:var(--ink)}
 .wel-signin{background:var(--soft);border:1px solid var(--line);color:var(--ink);font-family:inherit;font-weight:500;font-size:14px;cursor:pointer;padding:10px 20px;border-radius:980px;transition:background .15s}
 .wel-signin:hover{background:rgba(245,245,247,0.12)}
-.wel-mid{flex:1;display:flex;align-items:center;padding:0 clamp(22px,6vw,72px) 8vh}
-.wel-type{font-size:clamp(44px,9.5vw,104px);font-weight:600;letter-spacing:-0.035em;line-height:1.04;max-width:14ch}
+.wel-mid{flex:1;display:flex;align-items:center;padding:0 clamp(20px,5vw,64px) 6vh}
+.wel-type{font-size:clamp(64px,16vw,200px);font-weight:600;letter-spacing:-0.045em;line-height:0.92;max-width:11ch}
 .car{display:inline-block;width:.045em;height:.92em;background:var(--ink);margin-left:.06em;vertical-align:-0.08em;border-radius:2px;animation:blink 1.05s step-end infinite}
 .wel-hint{padding:0 clamp(22px,6vw,72px) calc(34px + env(safe-area-inset-bottom,0px));font-size:13.5px;color:#5A5A5E;font-weight:500;opacity:0;animation:riseIn .6s ease 2.6s forwards;letter-spacing:.01em}
 
@@ -300,7 +300,6 @@ export default function OnboardingPage() {
 
       {screen===1 && <Step key="s1" dir={dir} step={1} kick="Your place"
         title={<><Words text="Where's" base={120}/> <Words text="home?" base={300}/></>}
-        desc={detectedCountry ? `Looks like ${detectedCountry.flag} ${detectedCountry.name} — tap to confirm, or pick your own.` : "We'll open your front page with the news closest to you."}
         onBack={()=>go(0)}
         footer={<Bar
           status={homeCountry ? <span className="met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</span> : 'Choose your home country'}
@@ -315,7 +314,6 @@ export default function OnboardingPage() {
 
       {screen===2 && <Step key="s2" dir={dir} step={2} kick="Your world"
         title={<><Words text="What else is on your" base={120}/> <Words text="radar?" base={460}/></>}
-        desc="Add the places you can't look away from. Up to five."
         onBack={()=>go(1)}
         footer={<Bar
           status={<span className={followCountries.length>=5?"max":followCountries.length>0?"met":""}>{followCountries.length>=5?`That's the max — five places`:followCountries.length>0?`${followCountries.length} on your radar`:"Optional — skip if you like"}</span>}
