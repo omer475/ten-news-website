@@ -36,13 +36,15 @@ export default async function handler(req, res) {
   if (!text || typeof text !== 'string' || text.trim().length < 2) {
     return res.status(200).json({ topic_codes: [], entities: [], interest_tags: [], avoid_topics: [], tone_prefs: {}, summary_line: null });
   }
+  const debug = req.query && req.query.debug === '1';
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return res.status(200).json({ topic_codes: [], entities: [], interest_tags: [], avoid_topics: [], tone_prefs: {}, summary_line: null });
+  if (!key) return res.status(200).json({ topic_codes: [], entities: [], interest_tags: [], avoid_topics: [], tone_prefs: {}, summary_line: null, ...(debug ? { _nokey: true } : {}) });
 
+  let geminiStatus = null, rawSnippet = null;
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const timer = setTimeout(() => ctrl.abort(), 9000); // generous for cold starts
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,9 +55,11 @@ export default async function handler(req, res) {
       }),
     }).finally(() => clearTimeout(timer));
 
-    if (!resp.ok) throw new Error(`Gemini ${resp.status}`);
+    geminiStatus = resp.status;
+    if (!resp.ok) { rawSnippet = (await resp.text().catch(() => '')).slice(0, 200); throw new Error(`Gemini ${resp.status}: ${rawSnippet}`); }
     const data = await resp.json();
     const raw = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
+    rawSnippet = raw.slice(0, 200);
     let parsed;
     try { parsed = JSON.parse(raw); } catch { const m = raw.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : {}; }
 
@@ -69,9 +73,9 @@ export default async function handler(req, res) {
     const tone_prefs = (parsed.tone_prefs && typeof parsed.tone_prefs === 'object') ? parsed.tone_prefs : {};
     const summary_line = parsed.summary_line ? String(parsed.summary_line).slice(0, 160) : null;
 
-    return res.status(200).json({ topic_codes, entities, interest_tags, avoid_topics, tone_prefs, summary_line });
+    return res.status(200).json({ topic_codes, entities, interest_tags, avoid_topics, tone_prefs, summary_line, ...(debug ? { _geminiStatus: geminiStatus, _rawSnippet: rawSnippet } : {}) });
   } catch (e) {
     // graceful: never block onboarding on a parse failure
-    return res.status(200).json({ topic_codes: [], entities: [], interest_tags: [], avoid_topics: [], tone_prefs: {}, summary_line: null, _error: e?.message });
+    return res.status(200).json({ topic_codes: [], entities: [], interest_tags: [], avoid_topics: [], tone_prefs: {}, summary_line: null, ...(debug ? { _error: e?.message, _geminiStatus: geminiStatus } : {}) });
   }
 }
