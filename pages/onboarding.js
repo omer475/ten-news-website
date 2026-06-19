@@ -87,6 +87,7 @@ export default function OnboardingPage() {
   const [authMode, setAuthMode] = useState(null);
   const [authError, setAuthError] = useState('');
   const [emailSent, setEmailSent] = useState(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -228,27 +229,34 @@ export default function OnboardingPage() {
 .tt{font-family:'Fraunces',serif;font-size:clamp(28px,6.4vw,38px);font-weight:600;color:var(--ink);letter-spacing:-0.6px;line-height:1.05;margin-bottom:8px}
 .ds{font-size:15.5px;color:var(--mut);line-height:1.55;margin-bottom:26px;max-width:360px}
 
-.con{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin:22px 0 11px;padding-left:2px}
-.con:first-child{margin-top:0}
-.cat{margin-bottom:22px}
-.cat-t{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:11px;padding-left:2px}
-.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+/* Search */
+.search{position:relative;margin-bottom:22px}
+.search > svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
+.search input{width:100%;height:50px;padding:0 42px;border-radius:13px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:15.5px;color:var(--ink);outline:none;transition:border .15s,box-shadow .15s}
+.search input::placeholder{color:#A8A296}
+.search input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(23,21,15,0.06)}
+.search-x{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--soft);color:var(--mut);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:15px 6px;min-height:80px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;font-family:inherit;position:relative;transition:background .16s,border-color .16s,transform .12s,box-shadow .18s;-webkit-tap-highlight-color:transparent}
-.tile:hover:not(:disabled){background:var(--soft)}
-.tile:active:not(:disabled){transform:scale(.96)}
-.tile:disabled{opacity:.4;cursor:not-allowed}
-.tile.sel{border-color:var(--accent);background:#FBF0EE;box-shadow:0 8px 20px rgba(204,46,34,0.12)}
-.tile-ic{font-size:25px;line-height:1}
-.tile-lb{font-size:11.5px;font-weight:600;color:var(--mut);text-align:center;line-height:1.25}
-.tile.txt .tile-lb{font-size:13.5px;color:var(--ink)}
-.tile.sel .tile-lb{color:var(--accent)}
-.tile-ck{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:pop .25s cubic-bezier(0.34,1.56,0.64,1)}
+/* Groups + chips */
+.grp{margin-bottom:24px}
+.grp:last-child{margin-bottom:0}
+.grp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.grp-t{font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px}
+.grp-c{font-size:11px;font-weight:700;color:#B0AB9F}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;position:relative;transition:background .16s,border-color .16s,transform .1s,box-shadow .2s,color .16s;-webkit-tap-highlight-color:transparent}
+.chip:hover:not(:disabled){background:var(--soft);border-color:rgba(23,21,15,0.2)}
+.chip:active:not(:disabled){transform:scale(.95)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 8px 20px rgba(204,46,34,0.22)}
+.chip-fl{font-size:18px;line-height:1}
+.chip-ck{display:flex;color:#fff;margin-right:-3px;animation:pop .22s cubic-bezier(0.34,1.56,0.64,1)}
+.empty{text-align:center;color:var(--mut);font-size:14.5px;padding:28px 0}
 
-.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:18px 20px 0;background:linear-gradient(180deg,rgba(251,250,248,0),var(--paper) 38%);pointer-events:none}
+.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:24px 20px 0;background:linear-gradient(180deg,rgba(251,250,248,0),var(--paper) 32%);pointer-events:none}
 .ft-in{max-width:440px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
-.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:11px;transition:color .2s}
-.sl.met{color:var(--ink)}.sl.max{color:var(--accent)}
+.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:12px;transition:color .2s}
+.sl .met{color:var(--ink)}.sl .max{color:var(--accent)}
 .br{display:flex;gap:10px}
 .bt{flex:1;padding:16px;border-radius:13px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s,background .18s,box-shadow .2s;-webkit-tap-highlight-color:transparent;user-select:none}
 .bt:active{transform:scale(0.975)}
@@ -284,8 +292,6 @@ export default function OnboardingPage() {
 .cp-s{font-size:15.5px;color:var(--mut);line-height:1.6;max-width:300px}
 .cp-b{margin-top:28px;padding:17px 42px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 12px 28px rgba(204,46,34,0.26);transition:transform .12s,background .2s}
 .cp-b:hover{background:#B5281D}.cp-b:active{transform:scale(.97)}
-
-@media(max-width:360px){.gr{grid-template-columns:repeat(2,1fr)}}
       `}</style>
 
       {screen===0 && <WelcomeScreen dir={dir} onStart={()=>go(1)} onSignIn={()=>{setAuthError('');setAuthMode('login');}} />}
@@ -295,16 +301,15 @@ export default function OnboardingPage() {
         title="Where are you based?"
         desc={detectedCountry ? `Looks like you're in ${detectedCountry.flag} ${detectedCountry.name} — tap to confirm.` : "We'll lead your feed with news from home."}
         onBack={()=>go(0)}
-        footer={<div className="ft"><div className="ft-in">
-          {homeCountry && <div className="sl met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</div>}
-          <div className="br"><button className="bt p" disabled={!homeCountry} onClick={()=>go(2)}>Continue</button></div>
-        </div></div>}>
-        {detectedCountry && <div><div className="con">Our guess</div><div className="gr">
-          <Tile icon={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
-        </div></div>}
-        {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-          {g.countries.map(c=><Tile key={c.code} icon={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />)}
-        </div></div>)}
+        footer={<Bar
+          status={homeCountry ? <span className="met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name} selected</span> : 'Choose your home country'}
+          actions={<button className="bt p" disabled={!homeCountry} onClick={()=>go(2)}>Continue</button>} />}>
+        {detectedCountry && <Group title="Suggested">
+          <Chip flag={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
+        </Group>}
+        {COUNTRY_GROUPS.map(g=><Group key={g.continent} title={g.continent}>
+          {g.countries.map(c=><Chip key={c.code} flag={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />)}
+        </Group>)}
       </Step>}
 
       {screen===2 && <Step key="s2" dir={dir} step={2}
@@ -312,29 +317,33 @@ export default function OnboardingPage() {
         title="Anywhere else on your radar?"
         desc="Add up to five more places you want to keep an eye on."
         onBack={()=>go(1)}
-        footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected — that's fine too"}</div>
-          <div className="br"><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></div>
-        </div></div>}>
-        {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
+        footer={<Bar
+          status={<span className={followCountries.length>=5?"max":followCountries.length>0?"met":""}>{followCountries.length>=5?`Maximum reached · 5 of 5`:followCountries.length>0?`${followCountries.length} selected`:"Optional — skip if you like"}</span>}
+          actions={<><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></>} />}>
+        {COUNTRY_GROUPS.map(g=><Group key={g.continent} title={g.continent}>
           {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
-            <Tile key={c.code} icon={c.flag} label={isHome?`${c.name} (home)`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
+            <Chip key={c.code} flag={c.flag} label={isHome?`${c.name} · home`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
           );})}
-        </div></div>)}
+        </Group>)}
       </Step>}
 
       {screen===3 && <Step key="s3" dir={dir} step={3}
         eyebrow="Your interests"
         title="What are you into?"
-        desc="Pick 3 to 10 topics. You can change these anytime."
+        desc="Pick 3 to 10 topics. You can fine-tune these anytime."
         onBack={()=>go(2)}
-        footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} of 10 selected`}</div>
-          <div className="br"><button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up…' : 'Continue'}</button></div>
-        </div></div>}>
-        {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
-          {cat.topics.map(t=><Tile key={t.id} text label={t.name} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)} />)}
-        </div></div>)}
+        search={<Search value={query} onChange={setQuery} placeholder="Search topics…" />}
+        footer={<Bar
+          status={<span className={selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more to continue`:selectedTopics.length>=10?`Maximum reached · 10 of 10`:`${selectedTopics.length} of 10 selected`}</span>}
+          actions={<button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up…' : 'Continue'}</button>} />}>
+        {(() => {
+          const q = query.trim().toLowerCase();
+          const cats = TOPIC_CATEGORIES.map(cat => ({ ...cat, topics: q ? cat.topics.filter(t => t.name.toLowerCase().includes(q)) : cat.topics })).filter(cat => cat.topics.length);
+          if (!cats.length) return <div className="empty">No topics match “{query}”.</div>;
+          return cats.map(cat => <Group key={cat.name} title={cat.name}>
+            {cat.topics.map(t => <Chip key={t.id} label={t.name} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)} />)}
+          </Group>);
+        })()}
       </Step>}
 
       {screen===4 && <CompScreen dir={dir}
@@ -364,21 +373,50 @@ export default function OnboardingPage() {
 // ============================================
 // COMPONENTS
 // ============================================
-function Tile({ icon, label, text, selected, disabled, onClick }) {
+function Chip({ flag, label, selected, disabled, onClick }) {
   return (
-    <button type="button" className={`tile ${text ? 'txt' : ''} ${selected ? 'sel' : ''}`} disabled={disabled} onClick={onClick}>
+    <button type="button" className={`chip ${selected ? 'sel' : ''}`} disabled={disabled} onClick={onClick}>
+      {flag && <span className="chip-fl">{flag}</span>}
+      <span className="chip-lb">{label}</span>
       {selected && (
-        <span className="tile-ck">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
+        <span className="chip-ck">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
         </span>
       )}
-      {icon && <span className="tile-ic">{icon}</span>}
-      <span className="tile-lb">{label}</span>
     </button>
   );
 }
 
-function Step({ dir, step, eyebrow, title, desc, onBack, footer, children }) {
+function Group({ title, children }) {
+  const count = Array.isArray(children) ? children.length : 1;
+  return (
+    <div className="grp">
+      <div className="grp-h"><span className="grp-t">{title}</span><span className="grp-c">{count}</span></div>
+      <div className="chips">{children}</div>
+    </div>
+  );
+}
+
+function Search({ value, onChange, placeholder }) {
+  return (
+    <div className="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder} onKeyDown={(e)=>e.stopPropagation()} />
+      {value && <button className="search-x" onClick={()=>onChange('')} aria-label="Clear">×</button>}
+    </div>
+  );
+}
+
+function Bar({ status, actions }) {
+  return (
+    <div className="ft"><div className="ft-in">
+      <div className="sl">{status}</div>
+      <div className="br">{actions}</div>
+    </div></div>
+  );
+}
+
+function Step({ dir, step, eyebrow, title, desc, onBack, search, footer, children }) {
   return (
     <>
       <div className={`sc ${dir>0?"fwd":"back"}`}>
@@ -394,7 +432,8 @@ function Step({ dir, step, eyebrow, title, desc, onBack, footer, children }) {
           <div className="eyebrow rin">{eyebrow}</div>
           <h1 className="tt rin" style={{animationDelay:'40ms'}}>{title}</h1>
           <p className="ds rin" style={{animationDelay:'90ms'}}>{desc}</p>
-          <div className="rin" style={{animationDelay:'150ms'}}>{children}</div>
+          {search && <div className="rin" style={{animationDelay:'130ms'}}>{search}</div>}
+          <div className="rin" style={{animationDelay:'170ms'}}>{children}</div>
         </div>
       </div>
       {footer}
