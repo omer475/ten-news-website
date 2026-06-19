@@ -2169,29 +2169,31 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   ...(_p && _p.home_country ? [_p.home_country] : []),
                   ...((_p && _p.followed_countries) || []),
                 ]);
-                // conservative adjacency — only widen genuinely thin-supply interests
+                // TIGHT adjacency — only same-family widening (a culture pick pulls
+                // other culture, never politics/hard-news).
                 const ADJ = {
-                  gaming: ['tech_industry', 'consumer_tech', 'entertainment'],
+                  gaming: ['consumer_tech', 'entertainment'],
                   music: ['entertainment'],
                   entertainment: ['music', 'gaming'],
-                  travel: ['science', 'climate'],
-                  fashion: ['entertainment', 'consumer_tech'],
+                  fashion: ['entertainment'],
                 };
                 const wantTopics = new Set();
                 for (const p of picks) { wantTopics.add(p); (ADJ[p] || []).forEach((x) => wantTopics.add(x)); }
                 if (wantTopics.size > 0 || countries.size > 0) {
-                  const matched = [], rest = [];
+                  // STRICT TIERS: (1) your topics, (2) your countries, (3) everything
+                  // else. Topics ALWAYS lead — country news (which for a big country
+                  // like the USA is ~45% of the pool and mostly politics) can never
+                  // outrank your actual interests; it just fills below them.
+                  const topicMatched = [], countryMatched = [], theRest = [];
                   for (const s of sortedNews) {
                     const t = s.topics || s.display?.topics || [];
                     const c = s.countries || s.display?.countries || [];
-                    const hit = (Array.isArray(t) && t.some((x) => wantTopics.has(x)))
-                             || (Array.isArray(c) && c.some((x) => countries.has(x)));
-                    (hit ? matched : rest).push(s);
+                    if (Array.isArray(t) && t.some((x) => wantTopics.has(x))) topicMatched.push(s);
+                    else if (countries.size && Array.isArray(c) && c.some((x) => countries.has(x))) countryMatched.push(s);
+                    else theRest.push(s);
                   }
-                  if (matched.length > 0 && rest.length > 0) {
-                    sortedNews = [...matched, ...rest];
-                    console.log(`🎯 [Interest+country-first] ${matched.length}/${sortedNews.length} matched (topics+adjacency+countries)`);
-                  }
+                  sortedNews = [...topicMatched, ...countryMatched, ...theRest];
+                  console.log(`🎯 [Interest→country→rest] topics=${topicMatched.length} country=${countryMatched.length} rest=${theRest.length}`);
                 }
               } catch (_) {}
 
