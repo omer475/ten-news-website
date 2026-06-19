@@ -2192,8 +2192,18 @@ export default function Home({ initialNews, initialWorldEvents }) {
                     else if (countries.size && Array.isArray(c) && c.some((x) => countries.has(x))) countryMatched.push(s);
                     else theRest.push(s);
                   }
-                  sortedNews = [...topicMatched, ...countryMatched, ...theRest];
-                  console.log(`🎯 [Interest→country→rest] topics=${topicMatched.length} country=${countryMatched.length} rest=${theRest.length}`);
+                  // INTERLEAVE topics + country (3:1) so the user's COUNTRY stays
+                  // visible even when their topics are plentiful (strict tiers buried
+                  // a small country like Türkiye under 100s of global topic matches),
+                  // and a country-only user gets an all-country feed. Global news last.
+                  const blended = [];
+                  let ti = 0, ci = 0;
+                  while (ti < topicMatched.length || ci < countryMatched.length) {
+                    for (let k = 0; k < 3 && ti < topicMatched.length; k++) blended.push(topicMatched[ti++]);
+                    if (ci < countryMatched.length) blended.push(countryMatched[ci++]);
+                  }
+                  sortedNews = [...blended, ...theRest];
+                  console.log(`🎯 [Interest+country blend 3:1] topics=${topicMatched.length} country=${countryMatched.length} rest=${theRest.length}`);
                 }
               } catch (_) {}
 
