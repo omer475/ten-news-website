@@ -134,6 +134,14 @@ export default function OnboardingPage() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [saving, setSaving] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState(null);
+  // Onboarding v2 extra signals
+  const [freeText, setFreeText] = useState("");
+  const [parsed, setParsed] = useState(null);           // LLM result {topic_codes, entities, interest_tags, summary_line}
+  const [depthPref, setDepthPref] = useState(3);        // 1 quick-hits .. 5 deep dives
+  const [seriousnessPref, setSeriousnessPref] = useState(3); // 1 serious only .. 5 fun too
+  const [avoidTopics, setAvoidTopics] = useState([]);
+  const [cadence, setCadence] = useState(null);         // 'skim' | 'daily' | 'deep'
+  const TOTAL_STEPS = 7;
 
   // Check if already onboarded
   useEffect(() => {
@@ -168,13 +176,35 @@ export default function OnboardingPage() {
   const go = (n) => { setDir(n > screen ? 1 : -1); setScreen(n); };
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
+  const toggleAvoid = (id) => setAvoidTopics(p => p.includes(id) ? p.filter(t=>t!==id) : [...p,id]);
 
   const handleComplete = async () => {
     setSaving(true);
+
+    // Parse the free-text "obsession" box with the LLM (best-effort) and MERGE
+    // its extracted topic codes into followed_topics so it flows through the
+    // existing warm-start path. Reuse a live-parsed result if we already have one.
+    let signals = parsed;
+    if (!signals && freeText.trim().length > 2) {
+      try {
+        const pr = await fetch('/api/user/onboarding/parse', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: freeText }),
+        });
+        if (pr.ok) signals = await pr.json();
+      } catch (_) {}
+    }
+    const mergedTopics = [...new Set([...selectedTopics, ...((signals && signals.topic_codes) || [])])].slice(0, 16);
+    if (signals) setParsed(signals);
+
     const preferences = {
       home_country: homeCountry,
       followed_countries: followCountries,
-      followed_topics: selectedTopics,
+      followed_topics: mergedTopics,
+      avoid_topics: avoidTopics,
+      depth_pref: depthPref,
+      seriousness_pref: seriousnessPref,
+      reading_cadence: cadence,
       onboarding_completed: true,
       created_at: new Date().toISOString(),
     };
@@ -192,7 +222,12 @@ export default function OnboardingPage() {
     } catch (e) {}
 
     try {
-      const body = { ...preferences };
+      const body = {
+        ...preferences,
+        followed_entities: signals ? (signals.entities || null) : null,
+        onboarding_freetext: freeText || null,
+        onboarding_signals: signals || null,
+      };
       if (authUserId) {
         body.auth_user_id = authUserId;
         if (authEmail) body.email = authEmail;  // fast path for profiles.email (NOT NULL) upsert
@@ -212,7 +247,7 @@ export default function OnboardingPage() {
 
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
-    go(4);
+    go(8); // reveal / complete screen
   };
 
   // Liquid glass box-shadow (matches share/event buttons in news page)
@@ -400,7 +435,7 @@ export default function OnboardingPage() {
 
       {screen===0 && <WelcomeScreen onStart={()=>go(1)} dir={dir}/>}
 
-      {screen===1 && <TSScreen key="s1" dir={dir} step={1}
+      {screen===1 && <TSScreen key="s1" dir={dir} step={1} total={TOTAL_STEPS}
         title="Where are you from?"
         desc={detectedCountry ? `Hmmm let me guess... ${detectedCountry.flag} from ${detectedCountry.name}?` : "You\u2019ll see more news about your home country"}
         onBack={()=>go(0)}
@@ -427,7 +462,7 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===2 && <TSScreen key="s2" dir={dir} step={2} title="Any other countries you care about?" desc="Stay closer to the places that matter to you" onBack={()=>go(1)}
+      {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL_STEPS} title="Any other countries you care about?" desc="Stay closer to the places that matter to you" onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in">
           <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected"}</div>
           <div className="br"><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></div>
@@ -444,10 +479,10 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===3 && <TSScreen key="s3" dir={dir} step={3} title="What interests you?" desc="Select 3 to 10 topics" onBack={()=>go(2)}
+      {screen===3 && <TSScreen key="s3" dir={dir} step={3} total={TOTAL_STEPS} title="What are you obsessed with?" desc="Pick at least 3 — your front page builds around these" onBack={()=>go(2)}
         footer={<div className="ft"><div className="ft-in">
           <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} of 10 selected`}</div>
-          <div className="br"><button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up...' : 'Continue'}</button></div>
+          <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(4)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
           {cat.topics.map(t=>
@@ -460,13 +495,132 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===4 && <CompScreen dir={dir}
+      {screen===4 && <FreeTextScreen key="s4" dir={dir} step={4} total={TOTAL_STEPS}
+        value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed}
+        onBack={()=>go(3)} onContinue={()=>go(5)} onSkip={()=>go(5)} />}
+
+      {screen===5 && <TSScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS} title="How do you like your news?" desc="Tune the vibe — change it anytime" onBack={()=>go(4)}
+        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" onClick={()=>go(6)}>Continue</button></div></div></div>}>
+        <SliderRow label="Length" left="Quick hits" right="Deep dives" value={depthPref} onChange={setDepthPref} />
+        <SliderRow label="Tone" left="Just the serious stuff" right="Fun stuff too" value={seriousnessPref} onChange={setSeriousnessPref} />
+      </TSScreen>}
+
+      {screen===6 && <TSScreen key="s6" dir={dir} step={6} total={TOTAL_STEPS} title="Anything you'd rather NOT see?" desc="Mute these and we'll keep them off your front page" onBack={()=>go(5)}
+        footer={<div className="ft"><div className="ft-in">
+          <div className={`sl ${avoidTopics.length>0?"met":""}`}>{avoidTopics.length>0?`Muting ${avoidTopics.length}`:"Nothing muted"}</div>
+          <div className="br"><button className="bt s" onClick={()=>go(7)}>Skip</button><button className="bt p" onClick={()=>go(7)}>Continue</button></div>
+        </div></div>}>
+        {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
+          {cat.topics.map(t=>
+            <GlassTile key={t.id} selected={avoidTopics.includes(t.id)} onClick={()=>toggleAvoid(t.id)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
+              <span style={{fontSize:24,lineHeight:1,opacity:avoidTopics.includes(t.id)?0.4:1}}>{t.icon}</span>
+              <span style={{fontSize:11,fontWeight:600,color:avoidTopics.includes(t.id)?'#ff3b30':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
+            </GlassTile>
+          )}
+        </div></div>)}
+      </TSScreen>}
+
+      {screen===7 && <TSScreen key="s7" dir={dir} step={7} total={TOTAL_STEPS} title="How often do you want us in your day?" desc="Sets your rhythm — you can change it anytime" onBack={()=>go(6)}
+        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" disabled={saving} onClick={handleComplete}>{saving?'Building your feed…':'Finish'}</button></div></div></div>}>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {[['skim','Just a skim','When I open it, give me the highlights'],['daily','A daily briefing','Catch me up once a day'],['deep','Deep dives, bring it on','I want the full story']].map(([val,t,d])=>
+            <div key={val} onClick={()=>setCadence(val)} style={{padding:'16px 18px',borderRadius:14,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:cadence===val?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.08)',background:cadence===val?'rgba(168,128,47,0.1)':'rgba(255,255,255,0.55)',transition:'all 0.18s'}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#16150F'}}>{t}</div>
+              <div style={{fontSize:13,color:'#5F5B51',marginTop:2}}>{d}</div>
+            </div>)}
+        </div>
+      </TSScreen>}
+
+      {screen===8 && <CompScreen dir={dir}
+        summaryLine={parsed && parsed.summary_line}
         homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
         followCountries={followCountries.map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
         topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
         onStartReading={()=>router.push('/')}
-        onBack={()=>go(3)}
+        onBack={()=>go(7)}
       />}
+    </div>
+  );
+}
+
+// ============================================
+// FREE-TEXT (AI-parsed) SCREEN — the delighter
+// ============================================
+function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, onBack, onContinue, onSkip }) {
+  const [busy, setBusy] = useState(false);
+  // live parse (debounced) → "we heard: …" chips
+  useEffect(() => {
+    const txt = (value || '').trim();
+    if (txt.length < 4) { return; }
+    const id = setTimeout(async () => {
+      setBusy(true);
+      try {
+        const r = await fetch('/api/user/onboarding/parse', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: txt }),
+        });
+        if (r.ok) setParsed(await r.json());
+      } catch (_) {} finally { setBusy(false); }
+    }, 750);
+    return () => clearTimeout(id);
+  }, [value, setParsed]);
+
+  const chips = [
+    ...((parsed && parsed.topic_codes) || []),
+    ...(((parsed && parsed.entities) || []).map((e) => e.name)),
+    ...((parsed && parsed.interest_tags) || []),
+  ].slice(0, 8);
+
+  return (
+    <>
+      <div className={`sc ${dir>0?"fwd":"back"}`}>
+        <div className="hd">
+          <button className="hd-back" onClick={onBack}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span className="hd-step">Step {step} of {total}</span>
+          <div className="hd-sp"/>
+        </div>
+        <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
+        <div className="bd">
+          <h1 className="tt" style={{minHeight:0}}>In your words…</h1>
+          <p className="ds">What do you actually want to keep up with? Be specific — a team, a company, a person, a storyline. Our AI reads it and tunes your feed.</p>
+          <textarea
+            value={value} onChange={(e)=>onChange(e.target.value)} rows={4}
+            placeholder={"e.g. AI model releases and the chip wars · Everything Formula 1, especially Ferrari · Turkish economy + the Lakers"}
+            style={{width:'100%',padding:'14px 16px',borderRadius:16,border:'1px solid rgba(22,21,15,0.12)',background:'rgba(255,255,255,0.6)',fontFamily:'inherit',fontSize:16,lineHeight:1.5,color:'#16150F',resize:'none',outline:'none',WebkitTapHighlightColor:'transparent'}}
+          />
+          {(busy || chips.length>0) && (
+            <div style={{marginTop:16}}>
+              <div className="con" style={{margin:'0 0 8px'}}>{busy && chips.length===0 ? 'Reading…' : 'We heard'}</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {chips.map((c,i)=>(
+                  <span key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:99,background:'rgba(168,128,47,0.12)',color:'#A8802F',fontSize:13,fontWeight:600,animation:'checkPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>{c}</span>
+                ))}
+              </div>
+              {parsed && parsed.summary_line && <p style={{fontSize:13,color:'#5F5B51',marginTop:12,lineHeight:1.5,fontStyle:'italic'}}>{parsed.summary_line}</p>}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="ft"><div className="ft-in"><div className="br">
+        <button className="bt s" onClick={onSkip}>Skip</button>
+        <button className="bt p" onClick={onContinue}>Continue</button>
+      </div></div></div>
+    </>
+  );
+}
+
+// ============================================
+// SLIDER ROW
+// ============================================
+function SliderRow({ label, left, right, value, onChange }) {
+  return (
+    <div style={{marginBottom:26}}>
+      <div className="cat-t" style={{marginBottom:12}}>{label}</div>
+      <input type="range" min={1} max={5} step={1} value={value} onChange={(e)=>onChange(Number(e.target.value))}
+        style={{width:'100%',accentColor:'#A8802F',height:28,cursor:'pointer'}} />
+      <div style={{display:'flex',justifyContent:'space-between',marginTop:2}}>
+        <span style={{fontSize:12,fontWeight:600,color:value<=2?'#16150F':'#A39E92'}}>{left}</span>
+        <span style={{fontSize:12,fontWeight:600,color:value>=4?'#16150F':'#A39E92'}}>{right}</span>
+      </div>
     </div>
   );
 }
@@ -649,7 +803,7 @@ function WelcomeScreen({ onStart, dir }) {
   );
 }
 
-function TSScreen({ dir, step, title, desc, onBack, onDescDone, guessSection, footer, children }) {
+function TSScreen({ dir, step, total = 3, title, desc, onBack, onDescDone, guessSection, footer, children }) {
   const { titleText, descText, descDone, showTitleCursor } = useSequentialTyped(title, desc, 45, 25, onDescDone);
   const [showRest, setShowRest] = useState(!guessSection);
 
@@ -667,10 +821,10 @@ function TSScreen({ dir, step, title, desc, onBack, onDescDone, guessSection, fo
           <button className="hd-back" onClick={onBack}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <span className="hd-step">Step {step} of 3</span>
+          <span className="hd-step">Step {step} of {total}</span>
           <div className="hd-sp"/>
         </div>
-        <div className="pbar"><div className="pbar-f" style={{width:`${(step/3)*100}%`}}/></div>
+        <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
         <div className="bd">
           <h1 className="tt">{titleText}<span className={`cur ${!showTitleCursor?"hide":""}`}/></h1>
           <p className="ds">{descText}</p>
@@ -683,7 +837,7 @@ function TSScreen({ dir, step, title, desc, onBack, onDescDone, guessSection, fo
   );
 }
 
-function CompScreen({ dir, homeCountry, followCountries, topics, onStartReading, onBack }) {
+function CompScreen({ dir, summaryLine, homeCountry, followCountries, topics, onStartReading, onBack }) {
   const [typed, setTyped] = useState("");
   const [showCursor, setShowCursor] = useState(true);
   const [phase, setPhase] = useState(0);
@@ -710,7 +864,7 @@ function CompScreen({ dir, homeCountry, followCountries, topics, onStartReading,
       </svg>
     </div>
     <h1 className="cp-t">{typed}<span className={`cp-c ${!showCursor?"hide":""}`}/></h1>
-    <p className={`cp-s ${phase>=2?"on":""}`}>Your personalized feed is ready</p>
+    <p className={`cp-s ${phase>=2?"on":""}`}>{summaryLine || 'Your personalized feed is ready'}</p>
 
     {/* Summary card — liquid glass */}
     <div style={{

@@ -97,6 +97,12 @@ export default async function handler(req, res) {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { home_country, followed_countries = [], followed_topics, email, user_id, auth_user_id } = req.body;
+    // Onboarding v2 signals (all optional / additive).
+    const {
+      avoid_topics = null, followed_entities = null, depth_pref = null,
+      seriousness_pref = null, reading_cadence = null, onboarding_freetext = null,
+      onboarding_signals = null, headline_picks = null,
+    } = req.body || {};
 
     // Validate home_country
     if (!home_country || !validCountryCodes.includes(home_country)) {
@@ -250,7 +256,14 @@ export default async function handler(req, res) {
     const profilesData = {
       followed_topics,
       onboarding_completed: true,
+      onboarding_version: 2,
       ...(initialTasteVector ? { taste_vector_minilm: initialTasteVector } : {}),
+      ...(Array.isArray(avoid_topics) ? { avoid_topics } : {}),
+      ...(followed_entities != null ? { followed_entities } : {}),
+      ...(depth_pref != null ? { depth_pref } : {}),
+      ...(seriousness_pref != null ? { seriousness_pref } : {}),
+      ...(reading_cadence != null ? { reading_cadence } : {}),
+      ...(onboarding_freetext != null ? { onboarding_freetext } : {}),
     };
     const usersData = { home_country, followed_countries, followed_topics, onboarding_completed: true };
 
@@ -303,6 +316,31 @@ export default async function handler(req, res) {
 
     // Best-effort taste-vector init — must not fail the request after topics saved.
     try { await initializeTasteVector(supabase, profileId, null, followed_topics); } catch (e) { console.warn('initializeTasteVector failed (non-fatal):', e?.message); }
+
+    // Durable home for LLM-parsed free-text signals (entities/tags/avoid/tone +
+    // the summary line + raw text for re-parsing if the prompt improves later).
+    if (onboarding_signals && typeof onboarding_signals === 'object') {
+      try {
+        await supabase.from('onboarding_signals').insert({
+          profile_id: profileId,
+          topic_codes: onboarding_signals.topic_codes || null,
+          entities: onboarding_signals.entities || null,
+          interest_tags: onboarding_signals.interest_tags || null,
+          avoid_topics: onboarding_signals.avoid_topics || null,
+          tone_prefs: onboarding_signals.tone_prefs || null,
+          summary_line: onboarding_signals.summary_line || null,
+          raw_text: onboarding_freetext || null,
+        });
+      } catch (_) {}
+    }
+    // Headline-pick burn-in log (which fresh headlines the user swiped).
+    if (Array.isArray(headline_picks) && headline_picks.length) {
+      try {
+        await supabase.from('onboarding_headline_picks').insert(
+          headline_picks.slice(0, 30).map((h) => ({ profile_id: profileId, article_id: h.article_id, picked: !!h.picked }))
+        );
+      } catch (_) {}
+    }
 
     // Bust caches so the very next feed reflects the chosen interests immediately
     // (warm-start re-synthesizes from the fresh followed_topics).
