@@ -329,7 +329,6 @@ export default function OnboardingPage() {
 
       {screen===3 && <Step key="s3" dir={dir} step={3} kick="Your interests"
         title={<><Words text="What do you" base={120}/> <Words text="care about?" base={360}/></>}
-        desc="Pick your obsessions. We'll bring the stories that matter."
         onBack={()=>go(2)}
         search={<Search value={query} onChange={setQuery} placeholder="Search topics…" />}
         footer={<Bar
@@ -446,7 +445,7 @@ function Step({ dir, step, kick, title, desc, onBack, search, footer, children }
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/3)*100}%`}}/></div>
         <div className="bd">
           <h1 className="tt">{title}</h1>
-          <p className="ds rise" style={{animationDelay:'300ms'}}>{desc}</p>
+          {desc && <p className="ds rise" style={{animationDelay:'300ms'}}>{desc}</p>}
           {search}
           {children}
         </div>
