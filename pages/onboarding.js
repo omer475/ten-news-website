@@ -129,7 +129,7 @@ export default function OnboardingPage() {
         }
       }
     } catch {}
-    setAuthMode(null); // signed in but not onboarded — continue here
+    setAuthMode(null);
   };
   const handleLogin = async (email, password) => {
     setAuthError('');
@@ -198,150 +198,173 @@ export default function OnboardingPage() {
   return (
     <div className="ob">
       <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap');
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-.ob{position:fixed;inset:0;--paper:#FBFAF8;--ink:#17150F;--mut:#6B6760;--line:rgba(23,21,15,0.10);--soft:#F4F1EB;--accent:#CC2E22;
+.ob{position:fixed;inset:0;--paper:#FBF8F2;--ink:#16130E;--mut:#6E6A60;--line:rgba(22,19,14,0.11);--soft:#F1ECE2;--accent:#E0301F;
   font-family:'Satoshi',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden}
-.disp{font-family:'Fraunces',Georgia,serif;font-weight:600}
+.disp{font-family:'Bricolage Grotesque','Satoshi',sans-serif;font-weight:700}
 
-.sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:.42s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+/* drifting background */
+.bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bg b{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5}
+.bg b:nth-child(1){width:46vw;height:46vw;background:rgba(224,48,31,0.10);top:-14vw;right:-10vw;animation:fl1 22s ease-in-out infinite}
+.bg b:nth-child(2){width:40vw;height:40vw;background:rgba(255,176,60,0.10);bottom:-16vw;left:-12vw;animation:fl2 26s ease-in-out infinite}
+@keyframes fl1{0%,100%{transform:translate(0,0)}50%{transform:translate(-4vw,4vw)}}
+@keyframes fl2{0%,100%{transform:translate(0,0)}50%{transform:translate(5vw,-3vw)}}
+
+.sc{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;animation:.5s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .sc.fwd{animation-name:sf}.sc.back{animation-name:sb}
-@keyframes sf{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
-@keyframes sb{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes sf{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:none}}
+@keyframes sb{from{opacity:0;transform:translateX(-42px)}to{opacity:1;transform:none}}
+
+/* word-by-word headline reveal */
+.ww{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.1em;margin-bottom:-.1em}
+.word{display:inline-block;animation:wordUp .8s cubic-bezier(0.2,1,0.32,1) both}
+@keyframes wordUp{from{transform:translateY(112%)}to{transform:translateY(0)}}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes chipIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:none}}
 @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
-@keyframes rin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes draw{to{stroke-dashoffset:0}}
-.rin{opacity:0;animation:rin .55s cubic-bezier(0.22,1,0.36,1) forwards}
+@keyframes ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.rise{opacity:0;animation:riseIn .6s cubic-bezier(0.22,1,0.36,1) forwards}
 
-.hd{display:flex;align-items:center;gap:12px;padding:16px 20px 0;position:sticky;top:0;z-index:10;background:rgba(251,250,248,0.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-.hd-back{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:all .15s;flex-shrink:0}
-.hd-back:active{transform:scale(0.92);background:var(--soft)}
-.hd-step{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:1.4px;text-transform:uppercase}
-.hd-brand{margin-left:auto;font-family:'Fraunces',serif;font-weight:600;font-size:18px}
+/* header */
+.hd{display:flex;align-items:center;gap:14px;padding:18px 22px 0;position:relative;z-index:2}
+.hd-back{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:all .15s;flex-shrink:0}
+.hd-back:hover{background:#fff}.hd-back:active{transform:scale(0.92)}
+.hd-step{font-family:'Bricolage Grotesque';font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.3px}
+.hd-step b{color:var(--accent)}
+.hd-brand{margin-left:auto;font-family:'Bricolage Grotesque';font-weight:700;font-size:19px}
 .hd-brand .pl{color:var(--accent)}
-.pbar{height:4px;background:rgba(23,21,15,0.08);margin:14px 20px 0;border-radius:999px;overflow:hidden}
-.pbar-f{height:100%;background:var(--accent);border-radius:999px;transition:width .45s cubic-bezier(0.22,1,0.36,1)}
+.pbar{height:5px;background:rgba(22,19,14,0.07);margin:16px 22px 0;border-radius:999px;overflow:hidden;position:relative;z-index:2}
+.pbar-f{height:100%;background:var(--accent);border-radius:999px;transition:width .6s cubic-bezier(0.22,1,0.36,1)}
 
-.bd{flex:1;max-width:480px;margin:0 auto;width:100%;padding:26px 20px 130px}
-.eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
-.eyebrow::before{content:'';width:16px;height:2px;background:var(--accent)}
-.tt{font-family:'Fraunces',serif;font-size:clamp(28px,6.4vw,38px);font-weight:600;color:var(--ink);letter-spacing:-0.6px;line-height:1.05;margin-bottom:8px}
-.ds{font-size:15.5px;color:var(--mut);line-height:1.55;margin-bottom:26px;max-width:360px}
+.bd{flex:1;max-width:540px;margin:0 auto;width:100%;padding:28px 22px 140px}
+.eyebrow{font-family:'Bricolage Grotesque';font-size:12.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.tt{font-family:'Bricolage Grotesque',serif;font-size:clamp(34px,8.5vw,52px);font-weight:700;color:var(--ink);letter-spacing:-1.5px;line-height:0.98;margin-bottom:14px}
+.tt .ac{color:var(--accent)}
+.ds{font-size:16.5px;color:var(--mut);line-height:1.5;margin-bottom:28px;max-width:400px;font-weight:500}
 
 /* Search */
-.search{position:relative;margin-bottom:22px}
-.search > svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
-.search input{width:100%;height:50px;padding:0 42px;border-radius:13px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:15.5px;color:var(--ink);outline:none;transition:border .15s,box-shadow .15s}
+.search{position:relative;margin-bottom:24px}
+.search > svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none}
+.search input{width:100%;height:52px;padding:0 44px;border-radius:14px;border:1px solid var(--line);background:#fff;font-family:inherit;font-size:16px;color:var(--ink);outline:none;transition:border .15s,box-shadow .15s}
 .search input::placeholder{color:#A8A296}
-.search input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(23,21,15,0.06)}
-.search-x{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:var(--soft);color:var(--mut);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(224,48,31,0.12)}
+.search-x{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:none;background:var(--soft);color:var(--mut);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-/* Groups + chips */
-.grp{margin-bottom:24px}
-.grp:last-child{margin-bottom:0}
-.grp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--line)}
-.grp-t{font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px}
+/* groups + chips */
+.grp{margin-bottom:26px}.grp:last-child{margin-bottom:0}
+.grp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.grp-t{font-family:'Bricolage Grotesque';font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.2px}
 .grp-c{font-size:11px;font-weight:700;color:#B0AB9F}
-.chips{display:flex;flex-wrap:wrap;gap:9px}
-.chip{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;position:relative;transition:background .16s,border-color .16s,transform .1s,box-shadow .2s,color .16s;-webkit-tap-highlight-color:transparent}
-.chip:hover:not(:disabled){background:var(--soft);border-color:rgba(23,21,15,0.2)}
-.chip:active:not(:disabled){transform:scale(.95)}
-.chip:disabled{opacity:.4;cursor:not-allowed}
-.chip.sel{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 8px 20px rgba(204,46,34,0.22)}
-.chip-fl{font-size:18px;line-height:1}
-.chip-ck{display:flex;color:#fff;margin-right:-3px;animation:pop .22s cubic-bezier(0.34,1.56,0.64,1)}
-.empty{text-align:center;color:var(--mut);font-size:14.5px;padding:28px 0}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;position:relative;opacity:0;animation:chipIn .5s cubic-bezier(0.22,1,0.36,1) forwards;transition:background .18s,border-color .18s,transform .12s,box-shadow .22s,color .18s;-webkit-tap-highlight-color:transparent}
+.chip:hover:not(:disabled){background:var(--soft);border-color:rgba(22,19,14,0.2);transform:translateY(-1px)}
+.chip:active:not(:disabled){transform:scale(.94)}
+.chip:disabled{opacity:.4;cursor:not-allowed;animation-fill-mode:forwards}
+.chip.sel{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 10px 24px rgba(22,19,14,0.2)}
+.chip.sel .chip-ck{background:var(--accent)}
+.chip-fl{font-size:19px;line-height:1}
+.chip-ck{display:flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;color:#fff;margin-right:-4px;animation:pop .24s cubic-bezier(0.34,1.56,0.64,1)}
+.empty{text-align:center;color:var(--mut);font-size:15px;padding:30px 0}
 
-.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:24px 20px 0;background:linear-gradient(180deg,rgba(251,250,248,0),var(--paper) 32%);pointer-events:none}
-.ft-in{max-width:440px;margin:0 auto;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
-.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:12px;transition:color .2s}
+/* footer */
+.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:26px 22px 0;background:linear-gradient(180deg,rgba(251,248,242,0),var(--paper) 34%);pointer-events:none}
+.ft-in{max-width:460px;margin:0 auto;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px));pointer-events:auto}
+.sl{display:block;text-align:center;font-size:13.5px;font-weight:600;color:var(--mut);margin-bottom:13px;transition:color .2s}
 .sl .met{color:var(--ink)}.sl .max{color:var(--accent)}
 .br{display:flex;gap:10px}
-.bt{flex:1;padding:16px;border-radius:13px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s,background .18s,box-shadow .2s;-webkit-tap-highlight-color:transparent;user-select:none}
+.bt{flex:1;padding:17px;border-radius:14px;border:none;font-family:'Bricolage Grotesque';font-size:17px;font-weight:700;cursor:pointer;transition:transform .12s,background .18s,box-shadow .2s;-webkit-tap-highlight-color:transparent;user-select:none}
 .bt:active{transform:scale(0.975)}
-.bt.p{background:var(--accent);color:#fff;box-shadow:0 10px 24px rgba(204,46,34,0.24)}
-.bt.p:hover:not(:disabled){background:#B5281D}
-.bt.p:disabled{background:#E7E3DB;color:#AFA99E;cursor:default;box-shadow:none}
+.bt.p{background:var(--accent);color:#fff;box-shadow:0 12px 28px rgba(224,48,31,0.3)}
+.bt.p:hover:not(:disabled){background:#C8281A;transform:translateY(-1px)}
+.bt.p:disabled{background:#E6E0D6;color:#AFA99E;cursor:default;box-shadow:none}
 .bt.s{background:#fff;color:var(--ink);border:1px solid var(--line)}
 .bt.s:hover{background:var(--soft)}
 
-/* Welcome */
-.wl{min-height:100%;display:flex;flex-direction:column;padding:0 28px;position:relative;overflow:hidden}
-.wl-bar{display:flex;align-items:center;justify-content:space-between;max-width:400px;width:100%;margin:0 auto;padding:24px 0 0}
-.wl-brand{font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-0.3px}
+/* welcome */
+.wl{min-height:100%;display:flex;flex-direction:column;padding:0 28px;position:relative;z-index:1}
+.wl-bar{display:flex;align-items:center;justify-content:space-between;max-width:460px;width:100%;margin:0 auto;padding:24px 0 0}
+.wl-brand{font-family:'Bricolage Grotesque';font-weight:700;font-size:23px;letter-spacing:-0.3px}
 .wl-plus{color:var(--accent)}
-.wl-signin{background:none;border:1px solid var(--line);color:var(--ink);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;padding:9px 18px;border-radius:999px;transition:background .15s}
-.wl-signin:hover{background:var(--soft)}
-.ov{position:fixed;inset:0;z-index:9999;background:rgba(23,21,15,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.wl-mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;max-width:400px;width:100%;margin:0 auto;padding:30px 0}
-.wl-eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
-.wl-eyebrow::before{content:'';width:18px;height:2px;background:var(--accent)}
-.wl-h{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(36px,9.5vw,50px);letter-spacing:-1.4px;line-height:1.0;margin-bottom:16px}
-.wl-tag{font-size:15.5px;color:var(--mut);line-height:1.55;max-width:340px}
-.wl-bot{max-width:400px;width:100%;margin:0 auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px))}
-.wl-btn{width:100%;padding:18px;border-radius:14px;border:none;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(204,46,34,0.26);transition:transform .12s,background .2s}
-.wl-btn:hover{background:#B5281D}.wl-btn:active{transform:scale(.985)}
-.wl-note{text-align:center;font-size:12.5px;color:#A8A296;margin-top:12px;font-weight:600}
+.wl-signin{background:rgba(255,255,255,0.5);border:1px solid var(--line);color:var(--ink);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;padding:9px 18px;border-radius:999px;transition:background .15s}
+.wl-signin:hover{background:#fff}
+.ov{position:fixed;inset:0;z-index:9999;background:rgba(22,19,14,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.wl-mid{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;max-width:460px;width:100%;margin:0 auto;padding:30px 0}
+.wl-kick{font-family:'Bricolage Grotesque';font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:20px;opacity:0;animation:riseIn .6s ease forwards}
+.wl-h{font-family:'Bricolage Grotesque';font-weight:700;font-size:clamp(44px,12vw,68px);letter-spacing:-2.4px;line-height:0.92;margin-bottom:20px}
+.wl-h .ac{color:var(--accent)}
+.wl-tag{font-size:17px;color:var(--mut);line-height:1.5;max-width:380px;font-weight:500;opacity:0;animation:riseIn .6s ease forwards}
+.wl-bot{max-width:460px;width:100%;margin:0 auto;padding:0 0 calc(30px + env(safe-area-inset-bottom,0px))}
+.wl-btn{width:100%;padding:19px;border-radius:15px;border:none;font-family:'Bricolage Grotesque';font-size:18px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 14px 34px rgba(224,48,31,0.32);transition:transform .12s,background .2s;opacity:0;animation:riseIn .6s ease forwards}
+.wl-btn:hover{background:#C8281A;transform:translateY(-2px)}.wl-btn:active{transform:scale(.985)}
+.wl-note{text-align:center;font-size:13px;color:#A8A296;margin-top:13px;font-weight:600;opacity:0;animation:riseIn .6s ease forwards}
 
-/* Complete */
-.cp{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 32px}
-.cp-badge{width:72px;height:72px;border-radius:50%;background:#FBF0EE;border:1px solid rgba(204,46,34,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:22px}
-.sw-p{stroke-dasharray:72;stroke-dashoffset:72;animation:draw .5s cubic-bezier(0.12,0,0.39,0) .15s forwards}
-.cp-t{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,7vw,40px);letter-spacing:-0.8px;line-height:1.05;margin-bottom:12px}
-.cp-s{font-size:15.5px;color:var(--mut);line-height:1.6;max-width:300px}
-.cp-b{margin-top:28px;padding:17px 42px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 12px 28px rgba(204,46,34,0.26);transition:transform .12s,background .2s}
-.cp-b:hover{background:#B5281D}.cp-b:active{transform:scale(.97)}
+/* complete */
+.cp{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 32px;position:relative;z-index:1}
+.cp-badge{position:relative;width:84px;height:84px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:28px;opacity:0;animation:pop .5s cubic-bezier(0.34,1.56,0.64,1) forwards;box-shadow:0 16px 36px rgba(224,48,31,0.34)}
+.cp-badge::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);animation:ring 1s ease-out .35s forwards}
+.sw-p{stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s cubic-bezier(0.2,0,0.4,0) .35s forwards}
+.cp-t{font-family:'Bricolage Grotesque';font-weight:700;font-size:clamp(38px,9vw,56px);letter-spacing:-1.8px;line-height:0.96;margin-bottom:14px}
+.cp-t .ac{color:var(--accent)}
+.cp-s{font-size:16.5px;color:var(--mut);line-height:1.55;max-width:330px;font-weight:500;opacity:0;animation:riseIn .6s ease .2s forwards}
+.cp-b{margin-top:30px;padding:18px 44px;border-radius:15px;border:none;background:var(--accent);color:#fff;font-family:'Bricolage Grotesque';font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 14px 32px rgba(224,48,31,0.3);transition:transform .12s,background .2s;opacity:0;animation:riseIn .6s ease .35s forwards}
+.cp-b:hover{background:#C8281A;transform:translateY(-2px)}.cp-b:active{transform:scale(.97)}
+
+@media (prefers-reduced-motion: reduce){
+  .word,.rise,.chip,.wl-kick,.wl-h .word,.wl-tag,.wl-btn,.wl-note,.cp-badge,.cp-s,.cp-b,.sw-p,.bg b{animation:none !important;opacity:1 !important;transform:none !important;stroke-dashoffset:0 !important}
+}
       `}</style>
+
+      <div className="bg"><b/><b/></div>
 
       {screen===0 && <WelcomeScreen dir={dir} onStart={()=>go(1)} onSignIn={()=>{setAuthError('');setAuthMode('login');}} />}
 
-      {screen===1 && <Step key="s1" dir={dir} step={1}
-        eyebrow="Where you're based"
-        title="Where are you based?"
-        desc={detectedCountry ? `Looks like you're in ${detectedCountry.flag} ${detectedCountry.name} — tap to confirm.` : "We'll lead your feed with news from home."}
+      {screen===1 && <Step key="s1" dir={dir} step={1} kick="Your place"
+        title={<><Words text="Where's" base={120}/> <Words text="home?" base={300} accent/></>}
+        desc={detectedCountry ? `Looks like ${detectedCountry.flag} ${detectedCountry.name} — tap to confirm, or pick your own.` : "We'll open your front page with the news closest to you."}
         onBack={()=>go(0)}
         footer={<Bar
-          status={homeCountry ? <span className="met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name} selected</span> : 'Choose your home country'}
+          status={homeCountry ? <span className="met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</span> : 'Choose your home country'}
           actions={<button className="bt p" disabled={!homeCountry} onClick={()=>go(2)}>Continue</button>} />}>
-        {detectedCountry && <Group title="Suggested">
-          <Chip flag={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
+        {detectedCountry && <Group title="Best guess" base={0}>
+          <Chip i={0} flag={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
         </Group>}
-        {COUNTRY_GROUPS.map(g=><Group key={g.continent} title={g.continent}>
-          {g.countries.map(c=><Chip key={c.code} flag={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />)}
+        {COUNTRY_GROUPS.map((g,gi)=><Group key={g.continent} title={g.continent} base={gi*60}>
+          {g.countries.map((c,i)=><Chip key={c.code} i={i} flag={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />)}
         </Group>)}
       </Step>}
 
-      {screen===2 && <Step key="s2" dir={dir} step={2}
-        eyebrow="On your radar"
-        title="Anywhere else on your radar?"
-        desc="Add up to five more places you want to keep an eye on."
+      {screen===2 && <Step key="s2" dir={dir} step={2} kick="Your world"
+        title={<><Words text="What else is on your" base={120}/> <Words text="radar?" base={460} accent/></>}
+        desc="Add the places you can't look away from. Up to five."
         onBack={()=>go(1)}
         footer={<Bar
-          status={<span className={followCountries.length>=5?"max":followCountries.length>0?"met":""}>{followCountries.length>=5?`Maximum reached · 5 of 5`:followCountries.length>0?`${followCountries.length} selected`:"Optional — skip if you like"}</span>}
+          status={<span className={followCountries.length>=5?"max":followCountries.length>0?"met":""}>{followCountries.length>=5?`That's the max — five places`:followCountries.length>0?`${followCountries.length} on your radar`:"Optional — skip if you like"}</span>}
           actions={<><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></>} />}>
-        {COUNTRY_GROUPS.map(g=><Group key={g.continent} title={g.continent}>
-          {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
-            <Chip key={c.code} flag={c.flag} label={isHome?`${c.name} · home`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
+        {COUNTRY_GROUPS.map((g,gi)=><Group key={g.continent} title={g.continent} base={gi*60}>
+          {g.countries.map((c,i)=>{const isHome=c.code===homeCountry;return(
+            <Chip key={c.code} i={i} flag={c.flag} label={isHome?`${c.name} · home`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
           );})}
         </Group>)}
       </Step>}
 
-      {screen===3 && <Step key="s3" dir={dir} step={3}
-        eyebrow="Your interests"
-        title="What are you into?"
-        desc="Pick 3 to 10 topics. You can fine-tune these anytime."
+      {screen===3 && <Step key="s3" dir={dir} step={3} kick="Your interests"
+        title={<><Words text="What do you" base={120}/> <Words text="care" base={360} accent/> <Words text="about?" base={460}/></>}
+        desc="Pick your obsessions. We'll bring the stories that matter."
         onBack={()=>go(2)}
         search={<Search value={query} onChange={setQuery} placeholder="Search topics…" />}
         footer={<Bar
-          status={<span className={selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more to continue`:selectedTopics.length>=10?`Maximum reached · 10 of 10`:`${selectedTopics.length} of 10 selected`}</span>}
-          actions={<button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up…' : 'Continue'}</button>} />}>
+          status={<span className={selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more to continue`:selectedTopics.length>=10?`Ten is the max — nicely curated`:`${selectedTopics.length} in your briefing`}</span>}
+          actions={<button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Building…' : 'Build my briefing'}</button>} />}>
         {(() => {
           const q = query.trim().toLowerCase();
           const cats = TOPIC_CATEGORIES.map(cat => ({ ...cat, topics: q ? cat.topics.filter(t => t.name.toLowerCase().includes(q)) : cat.topics })).filter(cat => cat.topics.length);
           if (!cats.length) return <div className="empty">No topics match “{query}”.</div>;
-          return cats.map(cat => <Group key={cat.name} title={cat.name}>
-            {cat.topics.map(t => <Chip key={t.id} label={t.name} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)} />)}
+          return cats.map((cat,gi) => <Group key={cat.name} title={cat.name} base={gi*40}>
+            {cat.topics.map((t,i) => <Chip key={t.id} i={i} label={t.name} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)} />)}
           </Group>);
         })()}
       </Step>}
@@ -373,25 +396,36 @@ export default function OnboardingPage() {
 // ============================================
 // COMPONENTS
 // ============================================
-function Chip({ flag, label, selected, disabled, onClick }) {
+function Words({ text, base = 0, step = 58, accent }) {
+  const words = text.split(' ');
+  return words.map((w, i) => (
+    <span className="ww" key={i}>
+      <span className={`word ${accent ? 'ac' : ''}`} style={{ animationDelay: `${base + i * step}ms` }}>{w}</span>
+      {i < words.length - 1 ? ' ' : ''}
+    </span>
+  ));
+}
+
+function Chip({ i = 0, flag, label, selected, disabled, onClick }) {
   return (
-    <button type="button" className={`chip ${selected ? 'sel' : ''}`} disabled={disabled} onClick={onClick}>
+    <button type="button" className={`chip ${selected ? 'sel' : ''}`} disabled={disabled} onClick={onClick}
+      style={{ animationDelay: `${420 + Math.min(i, 12) * 30}ms` }}>
       {flag && <span className="chip-fl">{flag}</span>}
       <span className="chip-lb">{label}</span>
       {selected && (
         <span className="chip-ck">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
         </span>
       )}
     </button>
   );
 }
 
-function Group({ title, children }) {
+function Group({ title, base = 0, children }) {
   const count = Array.isArray(children) ? children.length : 1;
   return (
     <div className="grp">
-      <div className="grp-h"><span className="grp-t">{title}</span><span className="grp-c">{count}</span></div>
+      <div className="grp-h rise" style={{ animationDelay: `${360 + base}ms` }}><span className="grp-t">{title}</span><span className="grp-c">{count}</span></div>
       <div className="chips">{children}</div>
     </div>
   );
@@ -399,7 +433,7 @@ function Group({ title, children }) {
 
 function Search({ value, onChange, placeholder }) {
   return (
-    <div className="search">
+    <div className="search rise" style={{ animationDelay: '420ms' }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
       <input value={value} onChange={(e)=>onChange(e.target.value)} placeholder={placeholder} onKeyDown={(e)=>e.stopPropagation()} />
       {value && <button className="search-x" onClick={()=>onChange('')} aria-label="Clear">×</button>}
@@ -416,7 +450,7 @@ function Bar({ status, actions }) {
   );
 }
 
-function Step({ dir, step, eyebrow, title, desc, onBack, search, footer, children }) {
+function Step({ dir, step, kick, title, desc, onBack, search, footer, children }) {
   return (
     <>
       <div className={`sc ${dir>0?"fwd":"back"}`}>
@@ -424,16 +458,15 @@ function Step({ dir, step, eyebrow, title, desc, onBack, search, footer, childre
           <button className="hd-back" onClick={onBack} aria-label="Back">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <span className="hd-step">Step {step} of 3</span>
+          <span className="hd-step"><b>{String(step).padStart(2,'0')}</b> / 03 · {kick}</span>
           <span className="hd-brand">today<span className="pl">+</span></span>
         </div>
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/3)*100}%`}}/></div>
         <div className="bd">
-          <div className="eyebrow rin">{eyebrow}</div>
-          <h1 className="tt rin" style={{animationDelay:'40ms'}}>{title}</h1>
-          <p className="ds rin" style={{animationDelay:'90ms'}}>{desc}</p>
-          {search && <div className="rin" style={{animationDelay:'130ms'}}>{search}</div>}
-          <div className="rin" style={{animationDelay:'170ms'}}>{children}</div>
+          <h1 className="tt">{title}</h1>
+          <p className="ds rise" style={{animationDelay:'320ms'}}>{desc}</p>
+          {search}
+          {children}
         </div>
       </div>
       {footer}
@@ -445,18 +478,20 @@ function WelcomeScreen({ dir, onStart, onSignIn }) {
   return (
     <div className={`sc ${dir>0?"fwd":"back"}`}>
       <div className="wl">
-        <div className="wl-bar rin">
+        <div className="wl-bar" style={{opacity:0,animation:'riseIn .6s ease forwards'}}>
           <span className="wl-brand">today<span className="wl-plus">+</span></span>
           <button className="wl-signin" onClick={onSignIn}>Sign in</button>
         </div>
         <div className="wl-mid">
-          <div className="wl-eyebrow rin">Let’s set you up</div>
-          <h1 className="wl-h rin" style={{animationDelay:'70ms'}}>Let’s build<br/>your briefing.</h1>
-          <p className="wl-tag rin" style={{animationDelay:'150ms'}}>Three quick steps — your home, the places on your radar, and the topics you care about. Then your front page is yours.</p>
+          <div className="wl-kick" style={{animationDelay:'120ms'}}>The world, made for you</div>
+          <h1 className="wl-h">
+            <Words text="Let's build your" base={220} step={64}/> <Words text="briefing." base={460} step={64} accent/>
+          </h1>
+          <p className="wl-tag" style={{animationDelay:'620ms'}}>Three questions. One front page. Ten stories that are entirely, unmistakably yours.</p>
         </div>
-        <div className="wl-bot rin" style={{animationDelay:'230ms'}}>
-          <button className="wl-btn" onClick={onStart}>Get started</button>
-          <div className="wl-note">Takes under a minute</div>
+        <div className="wl-bot">
+          <button className="wl-btn" style={{animationDelay:'760ms'}} onClick={onStart}>Start building</button>
+          <div className="wl-note" style={{animationDelay:'860ms'}}>Takes under a minute · No account needed</div>
         </div>
       </div>
     </div>
@@ -470,17 +505,16 @@ function CompScreen({ dir, homeCountry, topics, onStartReading, onBack }) {
         <button className="hd-back" onClick={onBack} aria-label="Back">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span className="hd-step" style={{marginLeft:'auto',visibility:'hidden'}}>·</span>
       </div>
       <div className="cp">
-        <div className="cp-badge rin">
-          <svg viewBox="0 0 52 40" fill="none" width="38" height="30">
-            <path className="sw-p" d="M4 22L18 34L48 6" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+        <div className="cp-badge">
+          <svg viewBox="0 0 52 40" fill="none" width="40" height="32">
+            <path className="sw-p" d="M5 22L18 34L47 6" stroke="#fff" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h1 className="cp-t rin" style={{animationDelay:'80ms'}}>You’re all set.</h1>
-        <p className="cp-s rin" style={{animationDelay:'150ms'}}>Your front page is ready{homeCountry ? ` — leading with ${homeCountry.flag} ${homeCountry.name}` : ''}{topics.length ? ` and ${topics.length} topic${topics.length>1?'s':''} you chose` : ''}.</p>
-        <button className="cp-b rin" style={{animationDelay:'230ms'}} onClick={onStartReading}>Start reading</button>
+        <h1 className="cp-t"><Words text="Your briefing is" base={250} step={62}/> <Words text="ready." base={520} step={62} accent/></h1>
+        <p className="cp-s">Ten stories{homeCountry ? `, led from ${homeCountry.flag} ${homeCountry.name}` : ''}{topics.length ? `, tuned to ${topics.length} thing${topics.length>1?'s':''} you love` : ''}. Chosen for you, every morning.</p>
+        <button className="cp-b" onClick={onStartReading}>Read today’s briefing</button>
       </div>
     </div>
   );
