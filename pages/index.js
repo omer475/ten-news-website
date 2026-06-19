@@ -2153,26 +2153,44 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // fresh news surfaces and the order varies between loads. See utils/sortArticles.
               sortedNews = applyFreshness(sortedNews);
 
-              // ====== STEP 4.5: INTEREST-FIRST (the "this feed is mine" guarantee) ======
-              // Score boosts alone let a high-importance world/politics story still
-              // outrank a user's niche pick — so picking interests felt like it did
-              // nothing. Float every article that matches a followed topic to the top
-              // (preserving their freshness order); general top news follows below for
-              // breadth. Works WITHOUT an account (reads localStorage), so a guest who
-              // picks "F1 / AI / Space" immediately sees those lead.
+              // ====== STEP 4.5: INTEREST + COUNTRY FIRST ("this feed is mine") ======
+              // Float every article that matches the user's TOPICS *or* their chosen
+              // COUNTRIES to the top (preserving freshness order); general news follows
+              // for breadth. Two upgrades over the topic-only version:
+              //   1. Countries count too (the user picks countries AND topics; before,
+              //      only topics floated — their country's news got buried).
+              //   2. Low-supply interests (gaming/music/travel/…) expand to closely-
+              //      related topics so a niche pick pulls RELATED content instead of
+              //      hard-news filler when there aren't enough exact matches.
               try {
                 const _p = JSON.parse(localStorage.getItem('todayplus_preferences') || 'null');
-                const _ft = new Set((_p && _p.followed_topics) || []);
-                if (_ft.size > 0) {
-                  const matched = [];
-                  const rest = [];
+                const picks = (_p && _p.followed_topics) || [];
+                const countries = new Set([
+                  ...(_p && _p.home_country ? [_p.home_country] : []),
+                  ...((_p && _p.followed_countries) || []),
+                ]);
+                // conservative adjacency — only widen genuinely thin-supply interests
+                const ADJ = {
+                  gaming: ['tech_industry', 'consumer_tech', 'entertainment'],
+                  music: ['entertainment'],
+                  entertainment: ['music', 'gaming'],
+                  travel: ['science', 'climate'],
+                  fashion: ['entertainment', 'consumer_tech'],
+                };
+                const wantTopics = new Set();
+                for (const p of picks) { wantTopics.add(p); (ADJ[p] || []).forEach((x) => wantTopics.add(x)); }
+                if (wantTopics.size > 0 || countries.size > 0) {
+                  const matched = [], rest = [];
                   for (const s of sortedNews) {
                     const t = s.topics || s.display?.topics || [];
-                    (Array.isArray(t) && t.some((x) => _ft.has(x)) ? matched : rest).push(s);
+                    const c = s.countries || s.display?.countries || [];
+                    const hit = (Array.isArray(t) && t.some((x) => wantTopics.has(x)))
+                             || (Array.isArray(c) && c.some((x) => countries.has(x)));
+                    (hit ? matched : rest).push(s);
                   }
                   if (matched.length > 0 && rest.length > 0) {
                     sortedNews = [...matched, ...rest];
-                    console.log(`🎯 [Interest-first] ${matched.length} interest-matched stories floated to top of ${sortedNews.length}`);
+                    console.log(`🎯 [Interest+country-first] ${matched.length}/${sortedNews.length} matched (topics+adjacency+countries)`);
                   }
                 }
               } catch (_) {}
