@@ -102,7 +102,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
         
         // 3. No preferences anywhere - redirect to onboarding
-        router.replace('/onboarding');
+        router.replace('/onboard-chat');
       } catch (e) {
         // If everything fails, let them through
         setOnboardingChecked(true);
