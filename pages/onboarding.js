@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
+import { createClient } from "../lib/supabase";
 
 // ============================================
 // DATA — uses existing codes from lib/personalization.js
@@ -188,6 +189,28 @@ export default function OnboardingPage() {
   const [depthPref, setDepthPref] = useState(3);        // 3-stop: 1 quick-hits / 3 mix / 5 deep dives
   const [seriousnessPref, setSeriousnessPref] = useState(3); // 3-stop: 1 just-serious / 3 mix / 5 fun too
   const TOTAL_STEPS = 5;
+  // sign-in (returning users) — self-contained, OAuth + magic link
+  const [signIn, setSignIn] = useState(false);
+  const [siEmail, setSiEmail] = useState("");
+  const [siErr, setSiErr] = useState("");
+  const [siSent, setSiSent] = useState(false);
+  const [siBusy, setSiBusy] = useState("");
+
+  const handleOAuth = async (provider) => {
+    setSiErr(""); setSiBusy(provider);
+    const supabase = createClient();
+    if (!supabase) { setSiErr("Sign-in is not configured."); setSiBusy(""); return; }
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback`, ...(provider === 'google' && { queryParams: { access_type: 'offline', prompt: 'consent' } }) } });
+    if (error) { setSiErr(error.message); setSiBusy(""); }
+  };
+  const handleMagic = async () => {
+    if (!siEmail) return;
+    setSiErr(""); setSiBusy("magic");
+    const supabase = createClient();
+    if (!supabase) { setSiErr("Sign-in is not configured."); setSiBusy(""); return; }
+    const { error } = await supabase.auth.signInWithOtp({ email: siEmail, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    if (error) { setSiErr(error.message); setSiBusy(""); } else { setSiSent(true); setSiBusy(""); }
+  };
 
   // Check if already onboarded
   useEffect(() => {
@@ -480,9 +503,46 @@ export default function OnboardingPage() {
 .cp-b:active{transform:scale(0.96)}
 
 @media(max-width:360px){.gr{grid-template-columns:repeat(2,1fr)}}
+
+/* === Apple-style welcome (screen 0) === */
+.wel{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;cursor:pointer;background:#000;color:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;animation:welFade .6s ease both}
+@keyframes welFade{from{opacity:0}to{opacity:1}}
+.wel-bar{display:flex;align-items:center;justify-content:space-between;padding:24px clamp(22px,6vw,48px) 0}
+.wel-brand{font-size:23px;font-weight:600;letter-spacing:-0.02em;color:#F5F5F7}
+.wel-plus{color:#F5F5F7}
+.wel-signin{background:rgba(245,245,247,0.08);border:1px solid rgba(245,245,247,0.18);color:#F5F5F7;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer;padding:10px 20px;border-radius:980px;transition:background .15s}
+.wel-signin:hover{background:rgba(245,245,247,0.14)}
+.wel-mid{flex:1;display:flex;align-items:center;padding:0 clamp(20px,5vw,64px) 6vh}
+.wel-type{font-size:clamp(64px,16vw,200px);font-weight:600;letter-spacing:-0.045em;line-height:0.92;max-width:11ch}
+.wel-car{display:inline-block;width:0.045em;height:0.9em;background:#F5F5F7;margin-left:0.06em;vertical-align:-0.08em;border-radius:2px;animation:welBlink 1.05s step-end infinite}
+@keyframes welBlink{0%,100%{opacity:1}50%{opacity:0}}
+.wel-hint{padding:0 clamp(22px,6vw,72px) calc(34px + env(safe-area-inset-bottom,0px));font-size:13.5px;color:#5A5A5E;font-weight:500;opacity:0;animation:welHint .6s ease 2.6s forwards}
+@keyframes welHint{to{opacity:1}}
+
+/* === minimal sign-in modal === */
+.si-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}
+.si-card{position:relative;width:100%;max-width:380px;background:#1A1A1C;border:1px solid rgba(245,245,247,0.12);border-radius:22px;padding:30px 26px 26px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;color:#F5F5F7;animation:welFade .35s ease both}
+.si-x{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(245,245,247,0.14);background:rgba(245,245,247,0.06);color:#9A9A9E;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.si-title{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
+.si-sub{font-size:14.5px;color:#9A9A9E;line-height:1.45;margin-bottom:18px}
+.si-err{background:rgba(255,69,58,0.12);color:#FF6B5C;font-size:13.5px;font-weight:500;padding:10px 13px;border-radius:10px;margin-bottom:14px}
+.si-btn{width:100%;height:48px;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:9px;border:1px solid rgba(245,245,247,0.14);background:rgba(245,245,247,0.06);color:#F5F5F7;transition:background .15s}
+.si-btn:hover:not(:disabled){background:rgba(245,245,247,0.12)}
+.si-btn:disabled{opacity:.5;cursor:default}
+.si-google{background:#fff;color:#1d1d1f;border-color:#fff}
+.si-google:hover:not(:disabled){background:#f1f1f1}
+.si-apple{background:#000;border-color:rgba(245,245,247,0.2)}
+.si-div{display:flex;align-items:center;gap:12px;margin:14px 0;color:#7A7A7E;font-size:12px;text-transform:uppercase;letter-spacing:0.06em}
+.si-div::before,.si-div::after{content:'';flex:1;height:1px;background:rgba(245,245,247,0.12)}
+.si-input{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid rgba(245,245,247,0.14);background:rgba(245,245,247,0.05);color:#F5F5F7;font-family:inherit;font-size:16px;outline:none;margin-bottom:9px;transition:border .15s}
+.si-input::placeholder{color:#6A6A6E}
+.si-input:focus{border-color:rgba(245,245,247,0.4)}
+.si-mail{background:#F5F5F7;color:#000;border-color:#F5F5F7}
+.si-mail:hover:not(:disabled){background:#fff}
+.si-link{background:none;border:none;color:#9A9A9E;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
       `}</style>
 
-      {screen===0 && <WelcomeScreen onStart={()=>go(1)} dir={dir}/>}
+      {screen===0 && <WelcomeScreen onStart={()=>go(1)} onSignIn={()=>{setSiErr('');setSiSent(false);setSignIn(true);}} dir={dir}/>}
 
       {screen===1 && <TSScreen key="s1" dir={dir} step={1} total={TOTAL_STEPS}
         title="Where are you from?"
@@ -592,6 +652,38 @@ export default function OnboardingPage() {
         onStartReading={()=>router.push('/')}
         onBack={()=>go(5)}
       />}
+
+      {signIn && (
+        <div className="si-ov" onClick={()=>setSignIn(false)}>
+          <div className="si-card" onClick={(e)=>e.stopPropagation()}>
+            <button className="si-x" onClick={()=>setSignIn(false)} aria-label="Close">×</button>
+            {siSent ? (
+              <div style={{textAlign:'center'}}>
+                <div className="si-title">Check your inbox</div>
+                <p className="si-sub">We sent a sign-in link to <b style={{color:'#fff'}}>{siEmail}</b>. Tap it to continue.</p>
+                <button className="si-link" onClick={()=>setSiSent(false)}>← Back</button>
+              </div>
+            ) : (
+              <>
+                <div className="si-title">Welcome back</div>
+                <p className="si-sub">Sign in to pick up your briefing.</p>
+                {siErr && <div className="si-err">{siErr}</div>}
+                <button className="si-btn si-google" onClick={()=>handleOAuth('google')} disabled={!!siBusy}>
+                  <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 2.58 9 3.58z" fill="#EA4335"/></svg>
+                  {siBusy==='google'?'Redirecting…':'Continue with Google'}
+                </button>
+                <button className="si-btn si-apple" onClick={()=>handleOAuth('apple')} disabled={!!siBusy}>
+                  <svg width="16" height="19" viewBox="0 0 17 20" fill="#fff"><path d="M14.04 15.49c-.26.6-.57 1.16-.93 1.67-.49.7-.9 1.18-1.21 1.45-.49.45-1.01.68-1.57.69-.4 0-.89-.11-1.45-.35-.57-.23-1.09-.34-1.57-.34-.5 0-1.03.11-1.61.34-.58.24-1.05.36-1.41.37-.54.02-1.07-.22-1.59-.71-.34-.29-.77-.79-1.28-1.49-.55-.75-1-1.62-1.36-2.61C.31 13.86.09 12.83.09 11.83c0-1.14.25-2.13.74-2.95.39-.66.9-1.18 1.55-1.57.64-.38 1.34-.58 2.09-.59.42 0 .98.13 1.68.39.7.26 1.15.39 1.34.39.15 0 .65-.15 1.49-.46.8-.28 1.47-.4 2.02-.35 1.49.12 2.61.71 3.35 1.77-1.33.81-1.99 1.94-1.98 3.39.01 1.13.42 2.07 1.23 2.81.37.34.78.61 1.24.8-.1.29-.21.57-.32.83zM11.32.36c0 .85-.31 1.65-.93 2.39-.74.88-1.64 1.39-2.62 1.31a2.62 2.62 0 01-.02-.32c0-.82.36-1.69.99-2.41.32-.36.72-.66 1.21-.9.49-.23.95-.36 1.38-.39.01.11.01.21.01.32z"/></svg>
+                  {siBusy==='apple'?'Redirecting…':'Continue with Apple'}
+                </button>
+                <div className="si-div"><span>or</span></div>
+                <input className="si-input" type="email" value={siEmail} placeholder="you@example.com" onChange={(e)=>setSiEmail(e.target.value)} onKeyDown={(e)=>{e.stopPropagation(); if(e.key==='Enter') handleMagic();}} />
+                <button className="si-btn si-mail" onClick={handleMagic} disabled={!siEmail || !!siBusy}>{siBusy==='magic'?'Sending…':'Email me a sign-in link'}</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -755,120 +847,45 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
 // ============================================
 // SCREENS
 // ============================================
-function WelcomeScreen({ onStart, dir }) {
-  const [preText, setPreText] = useState("");
-  const [brandText, setBrandText] = useState("");
-  const [line2Text, setLine2Text] = useState("");
-  const [showCursor, setShowCursor] = useState(true);
-  const [cursorLine, setCursorLine] = useState(0); // 0=pre, 1=brand, 2=line2
-  const [phase, setPhase] = useState(0);
+function WelcomeScreen({ onStart, onSignIn, dir }) {
+  const full = "Let’s start your briefing.";
+  const [typed, setTyped] = useState('');
+  const fired = useRef(false);
 
   useEffect(() => {
-    const pre = "Welcome to";
-    const brandFull = "TodayPlus";
-    const brandBack = "Today";
-    const brandFinal = "Today+";
-    const line2 = "News, reimagined.";
-    let cancelled = false;
-
-    const wait = (ms) => new Promise(r => { const t = setTimeout(r, ms); if (cancelled) clearTimeout(t); });
-
-    (async () => {
-      await wait(400);
-
-      // Phase 1: Type "Welcome to"
-      setCursorLine(0);
-      for (let i = 1; i <= pre.length; i++) {
-        if (cancelled) return;
-        setPreText(pre.slice(0, i));
-        await wait(50);
-      }
-
-      await wait(150);
-
-      // Phase 2: Type "TodayPlus" on brand line
-      setCursorLine(1);
-      for (let i = 1; i <= brandFull.length; i++) {
-        if (cancelled) return;
-        setBrandText(brandFull.slice(0, i));
-        await wait(55);
-      }
-
-      // Pause before backspacing
-      await wait(500);
-
-      // Phase 3: Backspace "Plus"
-      for (let i = brandFull.length - 1; i >= brandBack.length; i--) {
-        if (cancelled) return;
-        setBrandText(brandFull.slice(0, i));
-        await wait(70);
-      }
-
-      // Phase 4: Type "+"
-      await wait(180);
-      if (cancelled) return;
-      setBrandText(brandFinal);
-
-      // Pause, then type line 2
-      await wait(400);
-
-      // Phase 5: Type "News, reimagined."
-      setCursorLine(2);
-      for (let j = 1; j <= line2.length; j++) {
-        if (cancelled) return;
-        setLine2Text(line2.slice(0, j));
-        await wait(45);
-      }
-
-      // Done
-      await wait(350);
-      if (cancelled) return;
-      setShowCursor(false);
-      setTimeout(() => setPhase(1), 100);
-      setTimeout(() => setPhase(2), 400);
-    })();
-
-    return () => { cancelled = true; };
+    let i = 0;
+    const id = setInterval(() => { i++; setTyped(full.slice(0, i)); if (i >= full.length) clearInterval(id); }, 62);
+    return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    const advance = () => { if (fired.current) return; fired.current = true; onStart(); };
+    const onWheel = (e) => { if (e.deltaY > 2) advance(); };
+    let sy = 0;
+    const onTS = (e) => { sy = e.touches[0].clientY; };
+    const onTM = (e) => { if (sy - e.touches[0].clientY > 26) advance(); };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTS, { passive: true });
+    window.addEventListener('touchmove', onTM, { passive: true });
+    return () => { window.removeEventListener('wheel', onWheel); window.removeEventListener('touchstart', onTS); window.removeEventListener('touchmove', onTM); };
+  }, [onStart]);
+
+  const tap = (e) => {
+    if (e.target.closest('.wel-signin')) return;
+    if (fired.current) return; fired.current = true; onStart();
+  };
 
   return (
     <div className={`sc ${dir > 0 ? "fwd" : "back"}`}>
-      <div className="wl">
-        <div className="wl-top">
-          <div className="wl-center">
-            {/* Line 1: "Welcome to" */}
-            <div className="wl-pre">
-              {preText}
-              {showCursor && cursorLine === 0 && <span className="wl-cur" />}
-            </div>
-            {/* Line 2: "TodayPlus" → "Today+" — never wraps */}
-            <div className="wl-line">
-              {(() => {
-                if (!brandText) return null;
-                if (brandText.endsWith("+")) {
-                  const name = brandText.slice(0, -1);
-                  return <>{name}<span className="wl-plus">+</span></>;
-                }
-                return brandText;
-              })()}
-              {showCursor && cursorLine === 1 && <span className="wl-cur" />}
-            </div>
-            {/* Line 3: "News, reimagined." */}
-            <div className="wl-line2">
-              {line2Text}
-              {showCursor && cursorLine === 2 && <span className="wl-cur" />}
-              {!showCursor && line2Text && <span className="wl-cur hide" />}
-            </div>
-          </div>
+      <div className="wel" onClick={tap}>
+        <div className="wel-bar">
+          <span className="wel-brand">today<span className="wel-plus">+</span></span>
+          <button className="wel-signin" onClick={(e)=>{e.stopPropagation(); onSignIn();}}>Sign in</button>
         </div>
-        <div className="wl-bottom">
-          <p className={`wl-tagline ${phase >= 1 ? "on" : ""}`}>
-            Your daily briefing, powered by AI. Set up takes under a minute.
-          </p>
-          <button className={`wl-btn ${phase >= 2 ? "on" : ""}`} onClick={onStart}>
-            Get Started
-          </button>
+        <div className="wel-mid">
+          <h1 className="wel-type">{typed}<span className="wel-car" /></h1>
         </div>
+        <div className="wel-hint">Tap anywhere to begin</div>
       </div>
     </div>
   );
