@@ -187,7 +187,7 @@ export default function OnboardingPage() {
   const [parsed, setParsed] = useState(null);           // LLM result {topic_codes, entities, interest_tags, summary_line}
   const [depthPref, setDepthPref] = useState(3);        // 3-stop: 1 quick-hits / 3 mix / 5 deep dives
   const [seriousnessPref, setSeriousnessPref] = useState(3); // 3-stop: 1 just-serious / 3 mix / 5 fun too
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 5;
 
   // Check if already onboarded
   useEffect(() => {
@@ -296,7 +296,7 @@ export default function OnboardingPage() {
 
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
-    go(7); // reveal / complete screen
+    go(6); // reveal / complete screen
   };
 
   // Liquid glass box-shadow (matches share/event buttons in news page)
@@ -581,22 +581,16 @@ export default function OnboardingPage() {
       </TSScreen>}
 
       {screen===5 && <FreeTextScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS}
-        value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed}
-        onBack={()=>go(subtopicTopics.length?4:3)} onContinue={()=>go(6)} onSkip={()=>go(6)} />}
+        value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed} finishing={saving}
+        onBack={()=>go(subtopicTopics.length?4:3)} onContinue={handleComplete} onSkip={handleComplete} />}
 
-      {screen===6 && <TSScreen key="s6" dir={dir} step={6} total={TOTAL_STEPS} title="How do you like your news served?" desc="Two quick dials — no commitment, change them anytime." onBack={()=>go(5)}
-        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" disabled={saving} onClick={handleComplete}>{saving?'Building your feed…':'Finish'}</button></div></div></div>}>
-        <SegRow label="Depth" value={depthPref} onChange={setDepthPref} options={[["Quick hits",1],["A mix",3],["Take me deep",5]]} />
-        <SegRow label="Tone" value={seriousnessPref} onChange={setSeriousnessPref} options={[["Just serious",1],["A mix",3],["Some fun too",5]]} />
-      </TSScreen>}
-
-      {screen===7 && <CompScreen dir={dir}
+      {screen===6 && <CompScreen dir={dir}
         summaryLine={parsed && parsed.summary_line}
         homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
         followCountries={(globalBreadth==='some'?followCountries:[]).map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
         topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
         onStartReading={()=>router.push('/')}
-        onBack={()=>go(6)}
+        onBack={()=>go(5)}
       />}
     </div>
   );
@@ -605,7 +599,7 @@ export default function OnboardingPage() {
 // ============================================
 // FREE-TEXT (AI-parsed) SCREEN — the delighter
 // ============================================
-function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, onBack, onContinue, onSkip }) {
+function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, onBack, onContinue, onSkip, finishing }) {
   const [busy, setBusy] = useState(false);
   // live parse (debounced) → "we heard: …" chips
   useEffect(() => {
@@ -668,8 +662,8 @@ function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, 
         </div>
       </div>
       <div className="ft"><div className="ft-in"><div className="br">
-        <button className="bt s" onClick={onSkip}>Skip</button>
-        <button className="bt p" onClick={onContinue}>Continue</button>
+        <button className="bt s" onClick={onSkip} disabled={finishing}>Skip</button>
+        <button className="bt p" onClick={onContinue} disabled={finishing}>{finishing?'Building your feed…':'Finish'}</button>
       </div></div></div>
     </>
   );
