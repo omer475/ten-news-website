@@ -468,6 +468,18 @@ def _extract_json_obj(text):
     return None
 
 
+def _is_trivial_series(vals):
+    """A series that just counts up by 1 (1,2,3,4,5,6 — e.g. a running win
+    tally) is not a real metric and makes a meaningless chart. Reject it."""
+    if not vals or len(vals) < 3:
+        return False
+    try:
+        diffs = [vals[i + 1] - vals[i] for i in range(len(vals) - 1)]
+    except TypeError:
+        return False
+    return all(d == 1 for d in diffs)
+
+
 def _grounded(value, numset):
     """Is this numeric value present in the number set? Non-numeric → True
     (grounding is a numeric gate; text values are handled elsewhere)."""
@@ -898,7 +910,8 @@ def validate_display(result: Dict, pipeline_category: str,
         labels = [str(l).strip().upper()[:8] for l in (trend.get('labels') or [])]
         caption = _strip_tags(str(trend.get('caption', ''))).strip()
         if (3 <= len(vals) <= 8 and all(v is not None for v in vals)
-                and len(labels) == len(vals) and all(labels) and caption):
+                and len(labels) == len(vals) and all(labels) and caption
+                and not _is_trivial_series(vals)):
             style = str(trend.get('style', '')).strip().lower()
             if style not in ('bar', 'line'):
                 style = 'line' if len(vals) >= 5 else 'bar'
@@ -1269,6 +1282,9 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
             and isinstance(evidence, list) and evidence):
         return None
     if len(set(vals)) == 1:
+        return None
+    if _is_trivial_series(vals):       # a 1,2,3,4,5,6 count-up isn't a metric
+        print(f"   ⚠️ [chart] trivial count series for {metric!r} — skipping")
         return None
     # Near-flat series make pointless charts (rates/polls move in small
     # steps, so the threshold is gentler than the market fetcher's).
