@@ -134,14 +134,13 @@ export default function OnboardingPage() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [saving, setSaving] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState(null);
-  // Onboarding v2 extra signals
+  // Onboarding v2 extra signals (refined question set)
+  const [globalBreadth, setGlobalBreadth] = useState('home'); // 'home' | 'some' | 'global'
   const [freeText, setFreeText] = useState("");
   const [parsed, setParsed] = useState(null);           // LLM result {topic_codes, entities, interest_tags, summary_line}
-  const [depthPref, setDepthPref] = useState(3);        // 1 quick-hits .. 5 deep dives
-  const [seriousnessPref, setSeriousnessPref] = useState(3); // 1 serious only .. 5 fun too
-  const [avoidTopics, setAvoidTopics] = useState([]);
-  const [cadence, setCadence] = useState(null);         // 'skim' | 'daily' | 'deep'
-  const TOTAL_STEPS = 7;
+  const [depthPref, setDepthPref] = useState(3);        // 3-stop: 1 quick-hits / 3 mix / 5 deep dives
+  const [seriousnessPref, setSeriousnessPref] = useState(3); // 3-stop: 1 just-serious / 3 mix / 5 fun too
+  const TOTAL_STEPS = 5;
 
   // Check if already onboarded
   useEffect(() => {
@@ -176,7 +175,6 @@ export default function OnboardingPage() {
   const go = (n) => { setDir(n > screen ? 1 : -1); setScreen(n); };
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
-  const toggleAvoid = (id) => setAvoidTopics(p => p.includes(id) ? p.filter(t=>t!==id) : [...p,id]);
 
   const handleComplete = async () => {
     setSaving(true);
@@ -199,12 +197,12 @@ export default function OnboardingPage() {
 
     const preferences = {
       home_country: homeCountry,
-      followed_countries: followCountries,
+      // followed_countries only meaningful when they chose "a few countries"
+      followed_countries: globalBreadth === 'some' ? followCountries : [],
+      global_breadth: globalBreadth,
       followed_topics: mergedTopics,
-      avoid_topics: avoidTopics,
       depth_pref: depthPref,
       seriousness_pref: seriousnessPref,
-      reading_cadence: cadence,
       onboarding_completed: true,
       created_at: new Date().toISOString(),
     };
@@ -247,7 +245,7 @@ export default function OnboardingPage() {
 
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
-    go(8); // reveal / complete screen
+    go(6); // reveal / complete screen
   };
 
   // Liquid glass box-shadow (matches share/event buttons in news page)
@@ -462,36 +460,42 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL_STEPS} title="Any other countries you care about?" desc="Stay closer to the places that matter to you" onBack={()=>go(1)}
-        footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected"}</div>
-          <div className="br"><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></div>
-        </div></div>}>
-        {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-          {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
-            <GlassTile key={c.code} selected={followCountries.includes(c.code)} disabled={isHome}
-              onClick={()=>!isHome&&toggleFollow(c.code)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#A8802F':isHome?'#5F5B51':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>
-                {c.name}{isHome ? ' (home)' : ''}
-              </span>
-            </GlassTile>);})}
-        </div></div>)}
+      {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL_STEPS} title="Beyond home, how wide do you want the world?" desc="We'd rather nail a tight feed than spread you thin — most of our deepest coverage is US + global today." onBack={()=>go(1)}
+        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" onClick={()=>go(3)}>Continue</button></div></div></div>}>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {[['home','Just home + the big global stories','Keep it tight'],['some','Home, plus a few countries I follow','I track specific places closely'],['global','Truly global','Give me the whole map']].map(([val,t,d])=>
+            <div key={val} onClick={()=>setGlobalBreadth(val)} style={{padding:'16px 18px',borderRadius:14,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:globalBreadth===val?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.08)',background:globalBreadth===val?'rgba(168,128,47,0.1)':'rgba(255,255,255,0.55)',transition:'all 0.18s'}}>
+              <div style={{fontSize:16,fontWeight:700,color:'#16150F'}}>{t}</div>
+              <div style={{fontSize:13,color:'#5F5B51',marginTop:2}}>{d}</div>
+            </div>)}
+        </div>
+        {globalBreadth==='some' && <div style={{marginTop:22}}>
+          <div className="con" style={{color:'#16150F'}}>Which places are always on your radar? <span style={{fontWeight:600,color:'#5F5B51'}}>(up to 5)</span></div>
+          {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
+            {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
+              <GlassTile key={c.code} selected={followCountries.includes(c.code)} disabled={isHome}
+                onClick={()=>!isHome&&toggleFollow(c.code)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
+                <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
+                <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#A8802F':isHome?'#5F5B51':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>
+                  {c.name}{isHome ? ' (home)' : ''}
+                </span>
+              </GlassTile>);})}
+          </div></div>)}
+        </div>}
       </TSScreen>}
 
-      {screen===3 && <TSScreen key="s3" dir={dir} step={3} total={TOTAL_STEPS} title="What are you obsessed with?" desc="Pick at least 3 — your front page builds around these" onBack={()=>go(2)}
+      {screen===3 && <TSScreen key="s3" dir={dir} step={3} total={TOTAL_STEPS} title="What pulls you in?" desc="Tap your obsessions — your first picks weigh heaviest. Pick at least 3." onBack={()=>go(2)}
         footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} of 10 selected`}</div>
+          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} picked · #1 weighs most`}</div>
           <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(4)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
-          {cat.topics.map(t=>
-            <GlassTile key={t.id} selected={selectedTopics.includes(t.id)} onClick={()=>toggleTopic(t.id)}
+          {cat.topics.map(t=>{const rank=selectedTopics.indexOf(t.id);return(
+            <GlassTile key={t.id} selected={rank>=0} rank={rank>=0?rank+1:0} onClick={()=>toggleTopic(t.id)}
               glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
               <span style={{fontSize:24,lineHeight:1}}>{t.icon}</span>
-              <span style={{fontSize:11,fontWeight:600,color:selectedTopics.includes(t.id)?'#A8802F':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
-            </GlassTile>
-          )}
+              <span style={{fontSize:11,fontWeight:600,color:rank>=0?'#A8802F':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
+            </GlassTile>);})}
         </div></div>)}
       </TSScreen>}
 
@@ -499,45 +503,19 @@ export default function OnboardingPage() {
         value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed}
         onBack={()=>go(3)} onContinue={()=>go(5)} onSkip={()=>go(5)} />}
 
-      {screen===5 && <TSScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS} title="How do you like your news?" desc="Tune the vibe — change it anytime" onBack={()=>go(4)}
-        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" onClick={()=>go(6)}>Continue</button></div></div></div>}>
-        <SliderRow label="Length" left="Quick hits" right="Deep dives" value={depthPref} onChange={setDepthPref} />
-        <SliderRow label="Tone" left="Just the serious stuff" right="Fun stuff too" value={seriousnessPref} onChange={setSeriousnessPref} />
-      </TSScreen>}
-
-      {screen===6 && <TSScreen key="s6" dir={dir} step={6} total={TOTAL_STEPS} title="Anything you'd rather NOT see?" desc="Mute these and we'll keep them off your front page" onBack={()=>go(5)}
-        footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${avoidTopics.length>0?"met":""}`}>{avoidTopics.length>0?`Muting ${avoidTopics.length}`:"Nothing muted"}</div>
-          <div className="br"><button className="bt s" onClick={()=>go(7)}>Skip</button><button className="bt p" onClick={()=>go(7)}>Continue</button></div>
-        </div></div>}>
-        {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
-          {cat.topics.map(t=>
-            <GlassTile key={t.id} selected={avoidTopics.includes(t.id)} onClick={()=>toggleAvoid(t.id)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:24,lineHeight:1,opacity:avoidTopics.includes(t.id)?0.4:1}}>{t.icon}</span>
-              <span style={{fontSize:11,fontWeight:600,color:avoidTopics.includes(t.id)?'#ff3b30':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
-            </GlassTile>
-          )}
-        </div></div>)}
-      </TSScreen>}
-
-      {screen===7 && <TSScreen key="s7" dir={dir} step={7} total={TOTAL_STEPS} title="How often do you want us in your day?" desc="Sets your rhythm — you can change it anytime" onBack={()=>go(6)}
+      {screen===5 && <TSScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS} title="How do you like your news served?" desc="Two quick dials — no commitment, change them anytime." onBack={()=>go(4)}
         footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" disabled={saving} onClick={handleComplete}>{saving?'Building your feed…':'Finish'}</button></div></div></div>}>
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {[['skim','Just a skim','When I open it, give me the highlights'],['daily','A daily briefing','Catch me up once a day'],['deep','Deep dives, bring it on','I want the full story']].map(([val,t,d])=>
-            <div key={val} onClick={()=>setCadence(val)} style={{padding:'16px 18px',borderRadius:14,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:cadence===val?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.08)',background:cadence===val?'rgba(168,128,47,0.1)':'rgba(255,255,255,0.55)',transition:'all 0.18s'}}>
-              <div style={{fontSize:16,fontWeight:700,color:'#16150F'}}>{t}</div>
-              <div style={{fontSize:13,color:'#5F5B51',marginTop:2}}>{d}</div>
-            </div>)}
-        </div>
+        <SegRow label="Depth" value={depthPref} onChange={setDepthPref} options={[["Quick hits",1],["A mix",3],["Take me deep",5]]} />
+        <SegRow label="Tone" value={seriousnessPref} onChange={setSeriousnessPref} options={[["Just serious",1],["A mix",3],["Some fun too",5]]} />
       </TSScreen>}
 
-      {screen===8 && <CompScreen dir={dir}
+      {screen===6 && <CompScreen dir={dir}
         summaryLine={parsed && parsed.summary_line}
         homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
-        followCountries={followCountries.map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
+        followCountries={(globalBreadth==='some'?followCountries:[]).map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
         topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
         onStartReading={()=>router.push('/')}
-        onBack={()=>go(7)}
+        onBack={()=>go(5)}
       />}
     </div>
   );
@@ -580,13 +558,21 @@ function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, 
         </div>
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
         <div className="bd">
-          <h1 className="tt" style={{minHeight:0}}>In your words…</h1>
-          <p className="ds">What do you actually want to keep up with? Be specific — a team, a company, a person, a storyline. Our AI reads it and tunes your feed.</p>
+          <h1 className="tt" style={{minHeight:0}}>In your own words — who & what do you follow?</h1>
+          <p className="ds">Drop names: a team, a company, a founder, a beat. One line is plenty — we'll read it back and tune to it.</p>
           <textarea
             value={value} onChange={(e)=>onChange(e.target.value)} rows={4}
-            placeholder={"e.g. AI model releases and the chip wars · Everything Formula 1, especially Ferrari · Turkish economy + the Lakers"}
+            placeholder={"e.g. Arsenal + the Premier League title race · OpenAI, Nvidia, the AI-chip race · The Fed and interest rates"}
             style={{width:'100%',padding:'14px 16px',borderRadius:16,border:'1px solid rgba(22,21,15,0.12)',background:'rgba(255,255,255,0.6)',fontFamily:'inherit',fontSize:16,lineHeight:1.5,color:'#16150F',resize:'none',outline:'none',WebkitTapHighlightColor:'transparent'}}
           />
+          {/* starter chips — tap to drop an example in (and show what "good" looks like) */}
+          {(value || '').trim().length === 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:12}}>
+              {["Arsenal + the Premier League title race","OpenAI, Nvidia & the AI-chip race","The Fed and interest rates","SpaceX + anything Mars"].map((s,i)=>(
+                <button key={i} onClick={()=>onChange(s)} style={{padding:'7px 12px',borderRadius:99,border:'1px dashed rgba(22,21,15,0.18)',background:'transparent',color:'#5F5B51',fontSize:12.5,fontWeight:600,fontFamily:'inherit',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>+ {s}</button>
+              ))}
+            </div>
+          )}
           {(busy || chips.length>0) && (
             <div style={{marginTop:16}}>
               <div className="con" style={{margin:'0 0 8px'}}>{busy && chips.length===0 ? 'Reading…' : 'We heard'}</div>
@@ -609,17 +595,25 @@ function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, 
 }
 
 // ============================================
-// SLIDER ROW
+// SEGMENTED ROW — 3-stop selector (faster than a slider on mobile)
 // ============================================
-function SliderRow({ label, left, right, value, onChange }) {
+function SegRow({ label, value, onChange, options }) {
   return (
-    <div style={{marginBottom:26}}>
-      <div className="cat-t" style={{marginBottom:12}}>{label}</div>
-      <input type="range" min={1} max={5} step={1} value={value} onChange={(e)=>onChange(Number(e.target.value))}
-        style={{width:'100%',accentColor:'#A8802F',height:28,cursor:'pointer'}} />
-      <div style={{display:'flex',justifyContent:'space-between',marginTop:2}}>
-        <span style={{fontSize:12,fontWeight:600,color:value<=2?'#16150F':'#A39E92'}}>{left}</span>
-        <span style={{fontSize:12,fontWeight:600,color:value>=4?'#16150F':'#A39E92'}}>{right}</span>
+    <div style={{marginBottom:24}}>
+      <div className="cat-t" style={{marginBottom:10}}>{label}</div>
+      <div style={{display:'flex',gap:8}}>
+        {options.map(([lbl,val])=>{
+          const on = value===val;
+          return (
+            <button key={val} onClick={()=>onChange(val)} style={{
+              flex:1, padding:'13px 6px', borderRadius:12, fontFamily:'inherit', fontSize:13, fontWeight:700, cursor:'pointer',
+              WebkitTapHighlightColor:'transparent', transition:'all 0.16s cubic-bezier(0.22,1,0.36,1)',
+              border: on?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.1)',
+              background: on?'rgba(168,128,47,0.12)':'rgba(255,255,255,0.55)',
+              color: on?'#A8802F':'#5F5B51',
+            }}>{lbl}</button>
+          );
+        })}
       </div>
     </div>
   );
@@ -628,7 +622,7 @@ function SliderRow({ label, left, right, value, onChange }) {
 // ============================================
 // GLASS TILE COMPONENT
 // ============================================
-function GlassTile({ selected, disabled, onClick, children, glassShadow, selectedShadow }) {
+function GlassTile({ selected, disabled, onClick, children, glassShadow, selectedShadow, rank }) {
   return (
     <div
       onClick={onClick}
@@ -672,7 +666,9 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
           justifyContent: 'center',
           animation: 'checkPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>
+          {rank > 0
+            ? <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>{rank}</span>
+            : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>}
         </div>
       )}
       {children}

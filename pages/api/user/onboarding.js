@@ -101,7 +101,7 @@ export default async function handler(req, res) {
     const {
       avoid_topics = null, followed_entities = null, depth_pref = null,
       seriousness_pref = null, reading_cadence = null, onboarding_freetext = null,
-      onboarding_signals = null, headline_picks = null,
+      onboarding_signals = null, headline_picks = null, global_breadth = null,
     } = req.body || {};
 
     // Validate home_country
@@ -263,6 +263,7 @@ export default async function handler(req, res) {
       ...(depth_pref != null ? { depth_pref } : {}),
       ...(seriousness_pref != null ? { seriousness_pref } : {}),
       ...(reading_cadence != null ? { reading_cadence } : {}),
+      ...(global_breadth != null ? { global_breadth } : {}),
       ...(onboarding_freetext != null ? { onboarding_freetext } : {}),
     };
     const usersData = { home_country, followed_countries, followed_topics, onboarding_completed: true };
