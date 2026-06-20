@@ -2179,31 +2179,39 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 };
                 const wantTopics = new Set();
                 for (const p of picks) { wantTopics.add(p); (ADJ[p] || []).forEach((x) => wantTopics.add(x)); }
-                if (wantTopics.size > 0 || countries.size > 0) {
-                  // STRICT TIERS: (1) your topics, (2) your countries, (3) everything
-                  // else. Topics ALWAYS lead — country news (which for a big country
-                  // like the USA is ~45% of the pool and mostly politics) can never
-                  // outrank your actual interests; it just fills below them.
-                  const topicMatched = [], countryMatched = [], theRest = [];
+                // SPECIFIC sub-interests (teams/companies/beats) — matched against
+                // article interest_tags. These are the user's MOST precise picks
+                // ("Knicks", "OpenAI"), so they get the very top tier.
+                const wantSubs = new Set(((_p && _p.followed_subtopics) || []).map((x) => String(x).toLowerCase()));
+                const tagHit = (s) => {
+                  if (!wantSubs.size) return false;
+                  const tags = s.interest_tags || s.display?.interest_tags || [];
+                  return Array.isArray(tags) && tags.some((x) => wantSubs.has(String(x).toLowerCase()));
+                };
+                if (wantSubs.size > 0 || wantTopics.size > 0 || countries.size > 0) {
+                  // TIERS, most-specific first: (0) exact sub-interest (Knicks/OpenAI),
+                  // (1) your topics, (2) your countries, (3) the rest. A specific pick
+                  // always leads its topic; topics always lead country (USA politics
+                  // can't drown your interests); rest fills below.
+                  const subMatched = [], topicMatched = [], countryMatched = [], theRest = [];
                   for (const s of sortedNews) {
                     const t = s.topics || s.display?.topics || [];
                     const c = s.countries || s.display?.countries || [];
-                    if (Array.isArray(t) && t.some((x) => wantTopics.has(x))) topicMatched.push(s);
+                    if (tagHit(s)) subMatched.push(s);
+                    else if (Array.isArray(t) && t.some((x) => wantTopics.has(x))) topicMatched.push(s);
                     else if (countries.size && Array.isArray(c) && c.some((x) => countries.has(x))) countryMatched.push(s);
                     else theRest.push(s);
                   }
-                  // INTERLEAVE topics + country (3:1) so the user's COUNTRY stays
-                  // visible even when their topics are plentiful (strict tiers buried
-                  // a small country like Türkiye under 100s of global topic matches),
-                  // and a country-only user gets an all-country feed. Global news last.
+                  // INTERLEAVE topic + country (3:1) so a chosen country stays visible
+                  // even when topics are plentiful; sub-interest matches always lead.
                   const blended = [];
                   let ti = 0, ci = 0;
                   while (ti < topicMatched.length || ci < countryMatched.length) {
                     for (let k = 0; k < 3 && ti < topicMatched.length; k++) blended.push(topicMatched[ti++]);
                     if (ci < countryMatched.length) blended.push(countryMatched[ci++]);
                   }
-                  sortedNews = [...blended, ...theRest];
-                  console.log(`🎯 [Interest+country blend 3:1] topics=${topicMatched.length} country=${countryMatched.length} rest=${theRest.length}`);
+                  sortedNews = [...subMatched, ...blended, ...theRest];
+                  console.log(`🎯 [Sub→topic→country→rest] subs=${subMatched.length} topics=${topicMatched.length} country=${countryMatched.length} rest=${theRest.length}`);
                 }
               } catch (_) {}
 

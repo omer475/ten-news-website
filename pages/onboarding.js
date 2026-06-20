@@ -86,6 +86,52 @@ const TOPIC_CATEGORIES = [
 ];
 
 // ============================================
+// SUB-INTERESTS — drill-down per topic. `id` is the EXACT lowercase tag string
+// that appears in article interest_tags (so feed matching is exact). EVERY chip
+// here is grounded in real corpus supply (verified ≥ ~15 articles/14d); thin/
+// niche interests (e.g. quantum physics) are intentionally left to the free-text
+// AI box, never shown as a dead chip.
+// ============================================
+const SUBINTERESTS = {
+  football: [
+    { id: "world cup", label: "World Cup", icon: "\u{1F3C6}" },
+    { id: "premier league", label: "Premier League", icon: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
+    { id: "champions league", label: "Champions League", icon: "⭐" },
+    { id: "real madrid", label: "Real Madrid", icon: "⚪" },
+    { id: "barcelona", label: "Barcelona", icon: "\u{1F535}" },
+    { id: "manchester united", label: "Man United", icon: "\u{1F534}" },
+    { id: "arsenal", label: "Arsenal", icon: "\u{1F9E8}" },
+    { id: "la liga", label: "La Liga", icon: "\u{1F1EA}\u{1F1F8}" },
+    { id: "serie a", label: "Serie A", icon: "\u{1F1EE}\u{1F1F9}" },
+    { id: "bundesliga", label: "Bundesliga", icon: "\u{1F1E9}\u{1F1EA}" },
+    { id: "usmnt", label: "USMNT", icon: "\u{1F1FA}\u{1F1F8}" },
+  ],
+  basketball: [
+    { id: "nba", label: "NBA", icon: "\u{1F3C0}" },
+    { id: "nba finals", label: "NBA Finals", icon: "\u{1F3C6}" },
+    { id: "new york knicks", label: "Knicks", icon: "\u{1F7E0}" },
+    { id: "san antonio spurs", label: "Spurs", icon: "⚫" },
+    { id: "boston celtics", label: "Celtics", icon: "☘️" },
+    { id: "golden state warriors", label: "Warriors", icon: "\u{1F311}" },
+    { id: "wnba", label: "WNBA", icon: "\u{1F3C0}" },
+  ],
+  american_football: [ { id: "nfl", label: "NFL", icon: "\u{1F3C8}" } ],
+  f1: [ { id: "formula 1", label: "Formula 1", icon: "\u{1F3CE}️" }, { id: "motorsport", label: "Motorsport", icon: "\u{1F3C1}" }, { id: "nascar", label: "NASCAR", icon: "\u{1F698}" } ],
+  tennis: [ { id: "wimbledon", label: "Wimbledon", icon: "\u{1F3BE}" }, { id: "grand slam", label: "Grand Slams", icon: "\u{1F3C6}" } ],
+  combat_sports: [ { id: "ufc", label: "UFC", icon: "\u{1F94A}" }, { id: "boxing", label: "Boxing", icon: "\u{1F94A}" } ],
+  cricket: [ { id: "cricket", label: "Cricket", icon: "\u{1F3CF}" } ],
+  ai: [ { id: "openai", label: "OpenAI", icon: "\u{1F9E0}" }, { id: "chatgpt", label: "ChatGPT", icon: "\u{1F4AC}" }, { id: "nvidia", label: "Nvidia", icon: "\u{1F3AE}" } ],
+  tech_industry: [ { id: "apple", label: "Apple", icon: "\u{1F34E}" }, { id: "google", label: "Google", icon: "\u{1F50D}" }, { id: "microsoft", label: "Microsoft", icon: "\u{1FA9F}" }, { id: "meta", label: "Meta", icon: "\u{1F535}" }, { id: "nvidia", label: "Nvidia", icon: "\u{1F3AE}" }, { id: "tesla", label: "Tesla", icon: "⚡" } ],
+  consumer_tech: [ { id: "apple", label: "Apple", icon: "\u{1F34E}" }, { id: "google", label: "Google", icon: "\u{1F50D}" } ],
+  space: [ { id: "spacex", label: "SpaceX", icon: "\u{1F680}" }, { id: "nasa", label: "NASA", icon: "\u{1F6F0}️" }, { id: "astronomy", label: "Astronomy", icon: "\u{1F52D}" }, { id: "mars", label: "Mars", icon: "\u{1F534}" } ],
+  science: [ { id: "astronomy", label: "Astronomy", icon: "\u{1F52D}" }, { id: "physics", label: "Physics", icon: "⚛️" }, { id: "neuroscience", label: "Neuroscience", icon: "\u{1F9E0}" }, { id: "genetics", label: "Genetics", icon: "\u{1F9EC}" } ],
+  climate: [ { id: "climate change", label: "Climate Change", icon: "\u{1F30D}" } ],
+  startups: [ { id: "openai", label: "OpenAI", icon: "\u{1F9E0}" }, { id: "ipo", label: "IPOs", icon: "\u{1F4C8}" } ],
+  stock_markets: [ { id: "bitcoin", label: "Bitcoin", icon: "₿" }, { id: "stock market", label: "Stock Market", icon: "\u{1F4CA}" } ],
+  entertainment: [ { id: "netflix", label: "Netflix", icon: "\u{1F3AC}" } ],
+};
+
+// ============================================
 // TYPING HOOKS
 // ============================================
 function useSequentialTyped(title, desc, titleSpeed = 45, descSpeed = 25, onDescDoneCallback) {
@@ -136,11 +182,12 @@ export default function OnboardingPage() {
   const [detectedCountry, setDetectedCountry] = useState(null);
   // Onboarding v2 extra signals (refined question set)
   const [globalBreadth, setGlobalBreadth] = useState('home'); // 'home' | 'some' | 'global'
+  const [followedSubtopics, setFollowedSubtopics] = useState([]); // exact tag strings (teams/companies/sub-topics)
   const [freeText, setFreeText] = useState("");
   const [parsed, setParsed] = useState(null);           // LLM result {topic_codes, entities, interest_tags, summary_line}
   const [depthPref, setDepthPref] = useState(3);        // 3-stop: 1 quick-hits / 3 mix / 5 deep dives
   const [seriousnessPref, setSeriousnessPref] = useState(3); // 3-stop: 1 just-serious / 3 mix / 5 fun too
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6;
 
   // Check if already onboarded
   useEffect(() => {
@@ -175,6 +222,9 @@ export default function OnboardingPage() {
   const go = (n) => { setDir(n > screen ? 1 : -1); setScreen(n); };
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
+  const toggleSub = (id) => setFollowedSubtopics(p => p.includes(id) ? p.filter(s=>s!==id) : [...p,id]);
+  // which picked topics actually have a sub-interest row to show
+  const subtopicTopics = selectedTopics.filter(t => (SUBINTERESTS[t] || []).length > 0);
 
   const handleComplete = async () => {
     setSaving(true);
@@ -201,6 +251,7 @@ export default function OnboardingPage() {
       followed_countries: globalBreadth === 'some' ? followCountries : [],
       global_breadth: globalBreadth,
       followed_topics: mergedTopics,
+      followed_subtopics: followedSubtopics,
       depth_pref: depthPref,
       seriousness_pref: seriousnessPref,
       onboarding_completed: true,
@@ -245,7 +296,7 @@ export default function OnboardingPage() {
 
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
-    go(6); // reveal / complete screen
+    go(7); // reveal / complete screen
   };
 
   // Liquid glass box-shadow (matches share/event buttons in news page)
@@ -487,7 +538,7 @@ export default function OnboardingPage() {
       {screen===3 && <TSScreen key="s3" dir={dir} step={3} total={TOTAL_STEPS} title="What pulls you in?" desc="Tap your obsessions — your first picks weigh heaviest. Pick at least 3." onBack={()=>go(2)}
         footer={<div className="ft"><div className="ft-in">
           <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} picked · #1 weighs most`}</div>
-          <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(4)}>Continue</button></div>
+          <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(subtopicTopics.length?4:5)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
           {cat.topics.map(t=>{const rank=selectedTopics.indexOf(t.id);return(
@@ -499,23 +550,53 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===4 && <FreeTextScreen key="s4" dir={dir} step={4} total={TOTAL_STEPS}
-        value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed}
-        onBack={()=>go(3)} onContinue={()=>go(5)} onSkip={()=>go(5)} />}
+      {screen===4 && <TSScreen key="s4" dir={dir} step={4} total={TOTAL_STEPS} title="Now get specific." desc="Pick the exact teams, companies, and beats you follow — these go straight to the top of your feed." onBack={()=>go(3)}
+        footer={<div className="ft"><div className="ft-in">
+          <div className={`sl ${followedSubtopics.length>0?"met":""}`}>{followedSubtopics.length>0?`Following ${followedSubtopics.length}`:"Tap any that are yours"}</div>
+          <div className="br"><button className="bt s" onClick={()=>go(5)}>Skip</button><button className="bt p" onClick={()=>go(5)}>Continue</button></div>
+        </div></div>}>
+        {subtopicTopics.map(code=>{
+          const cat = TOPIC_CATEGORIES.flatMap(c=>c.topics).find(t=>t.id===code);
+          return (
+            <div key={code} className="cat">
+              <div className="cat-t">{cat ? `${cat.icon} ${cat.name}` : code}</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {SUBINTERESTS[code].map(s=>{
+                  const on = followedSubtopics.includes(s.id);
+                  return (
+                    <button key={s.id} onClick={()=>toggleSub(s.id)} style={{
+                      display:'inline-flex',alignItems:'center',gap:6,padding:'9px 14px',borderRadius:99,fontFamily:'inherit',fontSize:13.5,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all 0.16s cubic-bezier(0.22,1,0.36,1)',
+                      border: on?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.1)',
+                      background: on?'rgba(168,128,47,0.12)':'rgba(255,255,255,0.6)',
+                      color: on?'#A8802F':'#16150F',
+                    }}>
+                      <span style={{fontSize:15,lineHeight:1}}>{s.icon}</span>{s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </TSScreen>}
 
-      {screen===5 && <TSScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS} title="How do you like your news served?" desc="Two quick dials — no commitment, change them anytime." onBack={()=>go(4)}
+      {screen===5 && <FreeTextScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS}
+        value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed}
+        onBack={()=>go(subtopicTopics.length?4:3)} onContinue={()=>go(6)} onSkip={()=>go(6)} />}
+
+      {screen===6 && <TSScreen key="s6" dir={dir} step={6} total={TOTAL_STEPS} title="How do you like your news served?" desc="Two quick dials — no commitment, change them anytime." onBack={()=>go(5)}
         footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" disabled={saving} onClick={handleComplete}>{saving?'Building your feed…':'Finish'}</button></div></div></div>}>
         <SegRow label="Depth" value={depthPref} onChange={setDepthPref} options={[["Quick hits",1],["A mix",3],["Take me deep",5]]} />
         <SegRow label="Tone" value={seriousnessPref} onChange={setSeriousnessPref} options={[["Just serious",1],["A mix",3],["Some fun too",5]]} />
       </TSScreen>}
 
-      {screen===6 && <CompScreen dir={dir}
+      {screen===7 && <CompScreen dir={dir}
         summaryLine={parsed && parsed.summary_line}
         homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
         followCountries={(globalBreadth==='some'?followCountries:[]).map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
         topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
         onStartReading={()=>router.push('/')}
-        onBack={()=>go(5)}
+        onBack={()=>go(6)}
       />}
     </div>
   );
