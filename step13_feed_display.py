@@ -262,7 +262,7 @@ OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most st
 
 CHART-DATA FLAGS — charts are a signature card of this feed, but ONLY when the chart shows THE STORY. The test: would the reader say "ah, so THAT's how big/fast it is" — or "why am I looking at this?". A chart that doesn't directly measure the headline is worse than no chart.
 - "chart_ticker": Yahoo Finance symbol, ONLY when the PRICE MOVE ITSELF is the story: the stock jumped or crashed, earnings moved the price, IPO pricing, a valuation milestone, an index record. If the headline is not about money or markets, do NOT set it — a product launch, a partnership, a lawsuit, a delayed flight get NO stock chart (a flat share price tells the reader nothing). US stocks "TSLA" "AAPL", European listings "BOSS.DE" "AIR.PA", indices "^GSPC" "^DJI" "^IXIC", crypto "BTC-USD" "ETH-USD".
-- "chart_metric": a search phrase (max 10 words) for an INTERESTING numeric series over time that illuminates the story. Charts are a signature card — reach for one whenever a trend, progression, or comparison-over-time would make the reader go "huh, interesting". Be CREATIVE and broad, NOT just finance: sports (a record progression, World Cup goals per tournament, a team's titles by decade, a player's goals by season), culture (a film franchise's box office by film, an artist's tour grosses, album sales by year), science/climate (global temperature by decade, species population by year, launches per year), society (a metric's change over years — countries that adopted X, life expectancy, internet users), records and milestones over time. The series must be a REAL published one a web search can verify. AVOID company stock prices unless the price move IS the headline (you almost never need a stock chart). NOT for adjacent context a reader would question. When a trend would genuinely add insight, SET it.
+- "chart_metric": a search phrase (max 10 words) for a real numeric series over time that measures THE STORY'S OWN NAMED SUBJECT. The series must be about the SPECIFIC entity/event in the title — not industry, market, macro, or career-history backdrop. SET it only when the chart would show how the headline's own subject changed over time. GOOD (subject-specific & verifiable): a record progression the story is about (World Cup goals per tournament for a World Cup story), a named indicator the story IS about (eurozone inflation for an inflation story), heat-deaths per year for a heatwave story. BAD — never do these: a CEO's obituary → "US economic expansion lengths" (macro backdrop, not the person); one rocket launch → "yearly launch totals" (industry aggregate, not this launch); a company's local project → "global mine production" (industry, not the company); a culture story → unrelated population stats. If the only series you can name is generic industry/market/career background, OMIT chart_metric. Prefer NO chart over an adjacent one. AVOID company stock prices entirely unless the price move IS the headline.
 - "breakdown_metric": a search phrase (max 10 words) whenever the story centers on a SHARE-OF-WHOLE composition whose full parts are NOT in the source: "Italian parliament seats by party 2026", "global smartphone market share Q1 2026", "US electricity generation mix by source", "World Cup group F standings points". The pipeline searches, verifies, and builds the donut itself.
 
 RULES:
@@ -478,6 +478,41 @@ def _is_trivial_series(vals):
     except TypeError:
         return False
     return all(d == 1 for d in diffs)
+
+
+_METRIC_STOP = {'the', 'and', 'for', 'with', 'from', 'over', 'time', 'year',
+                'years', 'by', 'per', 'rate', 'number', 'total', 'global',
+                'world', 'national', 'annual', 'monthly', 'data', 'index',
+                'since', 'amid', 'after', 'before', 'new', 'news'}
+
+
+def _metric_on_subject(metric, display_obj):
+    """A grounded chart must measure the STORY'S named subject, not a topic-
+    adjacent macro/industry/career backdrop (audit: 44% of charts were off-
+    subject). Require the metric phrase to name an entity from the article's
+    tags or a distinctive title word."""
+    toks = set()
+    for t in (display_obj.get('tags') or []):
+        for w in re.sub(r'[^a-z0-9 ]', ' ', str(t).lower()).split():
+            if len(w) >= 4:
+                toks.add(w)
+    title = re.sub(r'<[^>]+>', '', display_obj.get('title', '')).lower()
+    for w in re.sub(r'[^a-z0-9 ]', ' ', title).split():
+        if len(w) >= 4 and w not in _METRIC_STOP:
+            toks.add(w)
+    m = (metric or '').lower()
+    return any(w in m for w in toks)
+
+
+def _labels_temporal(labels):
+    """Trend x-axis must be a real time axis — years / dated periods — not
+    arbitrary category names. Require most labels to look temporal."""
+    if not labels:
+        return False
+    pat = re.compile(r'(\d{4}|^Q[1-4]|\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|'
+                     r'\d{2,4}S|\d+\s*BC|\d+\s*AD)\b|^\d{1,2}$|-)', re.I)
+    hits = sum(1 for l in labels if pat.search(str(l)))
+    return hits >= max(2, int(len(labels) * 0.6))
 
 
 def _grounded(value, numset):
@@ -1292,12 +1327,15 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
     if _mean and (max(vals) - min(vals)) / abs(_mean) < 0.02:
         print(f"   ⚠️ [chart] grounded series for {metric!r} is flat — skipping")
         return None
-    # Anti-hallucination: the response IS web-grounded (groundingMetadata
-    # present above), so the search is the primary guarantee. The evidence
-    # sentences are a spot-check — the model only quotes a few proving lines
-    # for a long series, so require a PARTIAL anchor (>= a third of values,
-    # min 2) rather than every value. (Requiring all silently killed almost
-    # every multi-point chart — the reason charts were stuck at ~3%.)
+    # Valid time axis — reject category-axis "trends" (audit: many charts had
+    # arbitrary non-temporal labels).
+    if not _labels_temporal(labels):
+        print(f"   ⚠️ [chart] non-temporal labels for {metric!r} — rejecting")
+        return None
+    # Anti-hallucination: require a MAJORITY of values to be anchored in the
+    # cited evidence sentences. The previous 1/3 threshold let through charts
+    # that were 44% data-wrong (audit) — web-grounding alone isn't enough;
+    # demand the evidence actually prove most of the plotted points.
     ev_text = ' '.join(str(e) for e in evidence).replace(',', '')
     anchored = 0
     for v in vals:
@@ -1306,7 +1344,7 @@ def fetch_trend_grounded(metric: str, api_key: str) -> Optional[Dict]:
             forms.add(str(int(v)))
         if any(f in ev_text for f in forms):
             anchored += 1
-    if anchored < max(2, len(vals) // 3):
+    if anchored <= len(vals) // 2:
         print(f"   ⚠️ [chart] only {anchored}/{len(vals)} values evidence-anchored — rejecting")
         return None
     return {'style': 'line' if len(vals) >= 5 else 'bar',
@@ -1466,13 +1504,16 @@ def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
             trend = fetch_trend_from_market(ticker)
             if trend:
                 print(f"   📈 [chart] real market series attached ({ticker})")
-        if trend is None and metric:
+        # Subject-match gate: skip off-subject grounded series entirely.
+        if trend is None and metric and _metric_on_subject(metric, display_obj):
             trend = fetch_trend_grounded(metric, api_key)
             if trend:
                 print(f"   📈 [chart] grounded series attached ({metric!r})")
+        elif metric:
+            print(f"   ⏭️ [chart] off-subject metric skipped ({metric!r})")
         if trend:
             display_obj['trend'] = trend
-    if bmetric and 'breakdown' not in display_obj:
+    if bmetric and 'breakdown' not in display_obj and _metric_on_subject(bmetric, display_obj):
         breakdown = fetch_breakdown_grounded(bmetric, api_key)
         if breakdown:
             display_obj['breakdown'] = breakdown
