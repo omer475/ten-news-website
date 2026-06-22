@@ -3,6 +3,7 @@ ONE art style per day (deterministic), rotating through 20 distinct styles so
 the module looks fresh daily but internally consistent. Images are square,
 text-free, stored in the public `history-images` Supabase bucket."""
 import os
+import re
 import base64
 import requests
 from datetime import date, datetime, timezone
@@ -101,13 +102,29 @@ def generate_history_image(event_text: str, style_prompt: str, api_key: str):
     return None
 
 
+def _supabase_base_url(supabase):
+    """Resolve the Supabase project URL robustly. Cloud Run sets SUPABASE_URL
+    (NOT NEXT_PUBLIC_SUPABASE_URL), so the old single-env lookup produced a
+    RELATIVE, broken image URL in production. Try both envs, then the live
+    client's own URL, then the known project URL as a last resort."""
+    base = (os.environ.get('NEXT_PUBLIC_SUPABASE_URL')
+            or os.environ.get('SUPABASE_URL')
+            or getattr(supabase, 'supabase_url', None)
+            or getattr(supabase, 'rest_url', None)
+            or 'https://sdhdylsfngiybvoltoks.supabase.co')
+    base = str(base).rstrip('/')
+    # strip a trailing /rest/v1 if the client url included it
+    base = re.sub(r'/rest/v1$', '', base)
+    return base
+
+
 def upload_history_image(supabase, img_bytes: bytes, path: str):
     """Upload PNG to the public history-images bucket; return public URL."""
     try:
         supabase.storage.from_('history-images').upload(
             path, img_bytes,
             {"content-type": "image/png", "upsert": "true"})
-        base = os.environ.get('NEXT_PUBLIC_SUPABASE_URL', '').rstrip('/')
+        base = _supabase_base_url(supabase)
         return f"{base}/storage/v1/object/public/history-images/{path}"
     except Exception as e:
         print(f"   ⚠️ [history-img] upload failed for {path}: {e}")
