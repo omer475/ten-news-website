@@ -7,19 +7,6 @@ import React, { useEffect, useState } from 'react';
 import { TP, FONT_HEAD, FONT_BODY, FONT_MONO, Markup } from './tokens';
 import { CountUp, useRevealOnce, revealStyle } from './shared';
 
-// The Cloud Run image pipeline sometimes writes a RELATIVE storage path
-// (/storage/v1/object/public/…) instead of a full Supabase URL. On the website
-// that resolves to todayplus.news/storage/… → 404, so the image never shows.
-// Normalize any relative storage path to the absolute Supabase URL. (The proper
-// fix is in the pipeline — it should store the full public URL.)
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
-function absUrl(u) {
-  if (!u || typeof u !== 'string') return u;
-  if (/^https?:\/\//i.test(u)) return u;            // already absolute
-  if (u.startsWith('/storage/') && SUPABASE_URL) return SUPABASE_URL + u;
-  return u;
-}
-
 function ModuleHeader({ title, shown = true, animate = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -92,102 +79,31 @@ export function CountdownModule({ row }) {
   );
 }
 
-// ── 8.2 TODAY IN HISTORY — illustrated set ───────────────────────────────────
-// Each day, all 3 entries are illustrated in ONE rotating art style (style_index
-// 0..15), so the module reads as a cohesive set. Rows are [year, text, imageURL]
-// (imageURL may be null → text-only fallback). The square image is the visual
-// anchor; the year sits big in gold beside it. Images are ~1.6–2MB PNGs, so they
-// lazy-load and fade in over a skeleton.
-
-function HistoryRow({ year, text, image, shown, animate, delay }) {
-  const [loaded, setLoaded] = useState(false);
-  const yearEl = (size) => (
-    <span style={{
-      fontFamily: FONT_HEAD, fontWeight: 800, fontSize: size,
-      letterSpacing: '-0.014em', color: TP.gold, fontVariantNumeric: 'tabular-nums',
-      lineHeight: 1, display: 'block',
-    }}>{year}</span>
-  );
-
-  // text-only fallback (no illustration for this entry)
-  if (!image) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, ...revealStyle(shown, animate, delay, 10) }}>
-        <span style={{ width: 64, flexShrink: 0 }}>{yearEl(20.8)}</span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.5, color: TP.ink2 }}>
-          <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 15, ...revealStyle(shown, animate, delay, 10) }}>
-      <div style={{
-        position: 'relative', width: 88, height: 88, borderRadius: 16, flexShrink: 0,
-        overflow: 'hidden', background: TP.line,
-        boxShadow: '0 2px 10px rgba(22,21,15,0.07)',
-      }}>
-        <img
-          src={image}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          style={{
-            width: '100%', height: '100%', objectFit: 'cover', display: 'block',
-            opacity: loaded ? 1 : 0, transition: 'opacity 0.55s ease-out',
-          }}
-        />
-        <span style={{
-          position: 'absolute', inset: 0, borderRadius: 16, pointerEvents: 'none',
-          boxShadow: 'inset 0 0 0 1px rgba(22,21,15,0.06)',
-        }} />
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        {yearEl(20.8)}
-        <p style={{
-          fontFamily: FONT_BODY, fontSize: 14.4, lineHeight: 1.48, color: TP.ink2,
-          margin: '6px 0 0',
-        }}>
-          <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
-        </p>
-      </div>
-    </div>
-  );
-}
+// ── 8.2 TODAY IN HISTORY ─────────────────────────────────────────────────────
 
 export function HistoryModule({ module }) {
   const rows = (module.rows || []).slice(0, 3);
-  const style = module.style;
   const [ref, shown, animate] = useRevealOnce('mod.history', 0.3);
   return (
     <section ref={ref}>
       <ModuleHeader title="TODAY IN HISTORY" shown={shown} animate={animate} />
-      {style ? (
-        <div style={{
-          fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500, letterSpacing: '0.18em',
-          textTransform: 'uppercase', color: TP.ink3, marginTop: 9,
-          ...revealStyle(shown, animate, 0.1, 6),
-        }}>
-          Illustrated in — <span style={{ color: TP.gold }}>{style}</span>
-        </div>
-      ) : null}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
+      <div style={{ marginTop: 16 }}>
         {rows.map((row, i) => {
-          const [year, text, image] = Array.isArray(row)
-            ? row
-            : [row?.year, row?.text, row?.image_url || row?.image];
+          const [year, text] = Array.isArray(row) ? row : [row?.year, row?.text];
           return (
-            <HistoryRow
-              key={i}
-              year={year}
-              text={text}
-              image={absUrl(image) || null}
-              shown={shown}
-              animate={animate}
-              delay={0.15 + i * 0.14}
-            />
+            <React.Fragment key={i}>
+              {i > 0 ? <div style={{ height: 1, background: TP.line, margin: '13px 0' }} /> : null}
+              <div style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
+                <span style={{
+                  fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18.5,
+                  letterSpacing: '-0.012em', color: TP.gold, width: 64, flexShrink: 0,
+                  fontVariantNumeric: 'tabular-nums',
+                }}>{year}</span>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.5, color: TP.ink2 }}>
+                  <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
+                </span>
+              </div>
+            </React.Fragment>
           );
         })}
       </div>

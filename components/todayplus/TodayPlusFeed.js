@@ -10,35 +10,15 @@ import FeedCard from '../feed/FeedCard';
 import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
 import { TP, FONT_MONO, accentFor } from './tokens';
-import { Entrance, useReducedMotion, FeedSignalContext, CardFooter } from './shared';
+import { Entrance, useReducedMotion } from './shared';
+import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock } from './TPModules';
-import { createPlanner } from './cardPlan';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
-  ArticleCard, PhotoStrip, WashLayer, InsetPhoto,
 } from './TPCards';
 import { MapCard } from './TPMapCard';
-
-// Card-render instrumentation (§E): record dwell + skip for stat-hero / quote /
-// versus shown PURE vs EMBEDDED, so we can later force types permanently pure
-// if embedding loses. Fire-and-forget; deduped per card per load.
-const _modeLogged = new Set();
-function logCardMode(story, heroType, mode, outcome, dwellMs) {
-  if (!story?.id || _modeLogged.has(`${story.id}:${outcome}`)) return;
-  _modeLogged.add(`${story.id}:${outcome}`);
-  try {
-    const body = JSON.stringify({
-      event_type: 'card_mode',
-      article_id: story.id,
-      metadata: { hero_type: heroType, mode, outcome, dwell_ms: Math.round(dwellMs) },
-    });
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/analytics/track', new Blob([body], { type: 'application/json' }));
-    else fetch('/api/analytics/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
-  } catch (_) {}
-}
-const INSTRUMENTED_HEROES = new Set(['big', 'stat', 'quote', 'versus']);
 
 const CARD_BY_TEMPLATE = {
   cover: CoverCard,
@@ -53,66 +33,6 @@ const CARD_BY_TEMPLATE = {
   score: ScoreCard,
   map: MapCard,
 };
-
-// ── Card render: content (article|data) × photo placement (v4) ──────────────
-
-// A DATA card with its photo accent (placement) applied.
-function DataCardView({ plan, story, display, accent }) {
-  const Comp = CARD_BY_TEMPLATE[plan.template];
-  if (!Comp) return null;
-  const { placement } = plan;
-
-  if (placement === 'inset') {
-    return <Comp story={story} display={display} accent={accent} insetPhoto={<InsetPhoto display={display} story={story} />} />;
-  }
-  if (placement === 'wash') {
-    return (
-      <div style={{ position: 'relative', borderRadius: 24 }}>
-        <WashLayer display={display} story={story} accent={accent} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <Comp story={story} display={display} accent={accent} />
-        </div>
-      </div>
-    );
-  }
-  if (placement === 'strip-above') {
-    return (
-      <div>
-        <PhotoStrip display={display} story={story} position="above" />
-        <Comp story={story} display={display} accent={accent} />
-      </div>
-    );
-  }
-  if (placement === 'strip-below') {
-    // wrapper owns the footer so the strip sits between figure and footer:
-    // suppress the card's built-in footer via context, render ours after the strip.
-    return (
-      <FeedSignalContext.Consumer>
-        {(ctx) => (
-          <div>
-            <FeedSignalContext.Provider value={{ ...ctx, suppressFooter: true }}>
-              <Comp story={story} display={display} accent={accent} />
-            </FeedSignalContext.Provider>
-            <PhotoStrip display={display} story={story} position="below" />
-            <div style={{ marginTop: 14 }}>
-              <CardFooter story={story} tags={display.tags} />
-            </div>
-          </div>
-        )}
-      </FeedSignalContext.Consumer>
-    );
-  }
-  return <Comp story={story} display={display} accent={accent} />; // 'none' — clean data beat
-}
-
-// Resolve a plan to the right card component.
-function CardView({ plan, story, display, accent }) {
-  if (plan.mode === 'article') {
-    if (plan.placement === 'full-bleed') return <CoverCard story={story} display={display} accent={accent} />;
-    return <ArticleCard story={story} display={display} accent={accent} placement={plan.placement} />;
-  }
-  return <DataCardView plan={plan} story={story} display={display} accent={accent} />;
-}
 
 // ── Block assembly: incremental, stable across loadMore appends ─────────────
 
@@ -146,7 +66,7 @@ function useFeedBlocks(stories, modules) {
 
   return useMemo(() => {
     const news = stories.filter((s) => s && s.type === 'news');
-    promoteHero(news); // reorders so the day's breaking story is first (→ pure cover)
+    const hasHero = promoteHero(news);
     const firstId = news[0]?.id ?? null;
     let cache = cacheRef.current;
 
@@ -161,7 +81,7 @@ function useFeedBlocks(stories, modules) {
         firstId,
         count: 0,
         blocks: [],
-        planner: createPlanner(),
+        selector: createSelector(),
         nextModule: buildModuleRotation(modules),
         storyCount: 0,
         blockIdx: 0,
@@ -173,15 +93,32 @@ function useFeedBlocks(stories, modules) {
     for (let i = cache.count; i < news.length; i += 1) {
       const story = news[i];
       const display = story.display || null;
-      // display == null → legacy card (no plan). Otherwise the v3 planner
-      // resolves ONE pure card type (image OR data) with the rhythm engine
-      // carried across loadMore via the cached planner instance. The plan is
-      // deterministic for a given stories order, so reloads stay stable without
-      // a separate template memory.
-      const plan = display ? cache.planner.plan(display, story) : null;
+      let template = 'legacy';
+      if (display) {
+        if (i === 0 && hasHero) {
+          // The promoted breaking story always opens as the flagship Cover.
+          template = cache.selector.use('cover', cache.blockIdx, display);
+          rememberTemplate(story.id, 'cover');
+        } else {
+          // Same article = same card style across loads (24h memory), so a
+          // repeat can't masquerade as a new story in a different template.
+          const kept = rememberedTemplate(story.id);
+          const reused = kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]
+            ? cache.selector.use(kept, cache.blockIdx, display)
+            : null;
+          if (reused) {
+            template = reused;
+          } else {
+            // no memory, or honoring it would repeat the previous card
+            template = cache.selector.choose(display, cache.blockIdx);
+            rememberTemplate(story.id, template);
+          }
+        }
+      } else {
+        cache.selector.recordLegacy(cache.blockIdx);
+      }
 
-      // index-qualified so duplicate ids across loadMore appends can't collide
-      cache.blocks.push({ type: 'story', story, plan, key: `s-${i}-${story.id ?? 'x'}` });
+      cache.blocks.push({ type: 'story', story, template, key: `s-${story.id ?? i}` });
       cache.blockIdx += 1;
       cache.storyCount += 1;
 
@@ -201,117 +138,70 @@ function useFeedBlocks(stories, modules) {
 
 // ── Story block: counts toward the read counter at ≥55% visibility ──────────
 
-function StoryBlock({ story, plan, onOpen, onEngage, onSignal, isDark, textOnly }) {
+function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
   const accent = accentFor(story.display?.category || story.category);
+  const Card = CARD_BY_TEMPLATE[template];
   const rootRef = useRef(null);
-  const [dismissed, setDismissed] = useState(false);
 
-  // §E instrumentation: record which content type + placement each article
-  // rendered as, plus dwell on read / skip on early exit.
-  const heroType = plan?.template || (plan?.mode === 'article' ? 'article' : null);
-  const instrument = !!heroType && INSTRUMENTED_HEROES.has(heroType);
-  const mode = plan?.placement || 'none';
-
-  // Signal bus for this card's footer (save / share / like / not-interested).
-  const signalCtx = useMemo(() => ({
-    fireSignal: (type) => { try { onSignal?.(type, story); } catch (_) {} },
-    notInterested: () => { try { onSignal?.('article_not_interested', story); } catch (_) {} setDismissed(true); },
-  }), [onSignal, story]);
-
-  // Cards are read IN PLACE (no tap), so visibility IS the read signal:
-  //   ≥55% visible for 1.5s  → impression (exposure decay sinks it next load)
-  //   ≥55% visible for 7s    → "read" marker (24h dedup + skip/read instrument)
-  //   ACTIVE DWELL accumulated while visible → sent on exit as the engagement
-  //     signal. The server turns it into read_fraction = dwell /
-  //     expected_read_seconds — i.e. the length-normalized "% of the story you
-  //     actually read", which is the dominant ongoing taste signal. (Previously
-  //     we sent a bare article_engaged with NO dwell, so reading time taught the
-  //     algorithm nothing — this wires it up.)
+  // Cards are read IN PLACE (no tap), so visibility is the read signal:
+  //   ≥55% visible for 1.5s  → impression: exposure decay sinks it next load
+  //   ≥55% visible for 7s    → read: 24h exclusion + engagement event, so the
+  //                            interest engine keeps learning without taps.
+  // Leaving the viewport before a threshold cancels it (fast scrolls count
+  // nothing). Both fire at most once per card per page load.
   useEffect(() => {
     const el = rootRef.current;
     if (!el || story?.id == null || story.type !== 'news') return undefined;
     let impressionTimer = null;
     let readTimer = null;
     let readDone = false;
-    let visibleSince = 0;     // ts when card became ≥55% visible (0 = hidden)
-    let dwellMs = 0;          // accumulated active visible time across re-views
-    let signalSent = false;
-    let skipLogged = false;
-
-    const sendDwell = () => {
-      if (signalSent) return;
-      const total = dwellMs + (visibleSince ? Date.now() - visibleSince : 0);
-      if (total < 1500) return;            // ignore fly-bys (server reads <5s as negative anyway)
-      signalSent = true;
-      try { onEngage?.(story, { dwell: Math.round(total / 1000) }); } catch (_) {}
-    };
-
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries[0]?.isIntersecting;
         if (visible) {
-          visibleSince = Date.now();
-          if (!impressionTimer) impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
+          if (!impressionTimer) {
+            impressionTimer = setTimeout(() => recordImpression(story.id, story.world_event?.id), 1500);
+          }
           if (!readTimer && !readDone) {
             readTimer = setTimeout(() => {
               readDone = true;
               markSeenRead(story.id, story.world_event?.id);
-              if (instrument) logCardMode(story, heroType, mode, 'read', Date.now() - visibleSince);
+              try { onEngage?.(story); } catch (_) {}
+              io.disconnect();
             }, 7000);
           }
         } else {
-          if (visibleSince) { dwellMs += Date.now() - visibleSince; visibleSince = 0; }
           if (impressionTimer) { clearTimeout(impressionTimer); impressionTimer = null; }
           if (readTimer) { clearTimeout(readTimer); readTimer = null; }
-          if (instrument && !readDone && !skipLogged && dwellMs) { skipLogged = true; logCardMode(story, heroType, mode, 'skip', dwellMs); }
-          sendDwell();   // card left the viewport → record the reading-time signal
         }
       },
       { threshold: 0.55 }
     );
     io.observe(el);
-    const onHide = () => { if (visibleSince) { dwellMs += Date.now() - visibleSince; visibleSince = 0; } sendDwell(); };
-    window.addEventListener('pagehide', onHide);
-    document.addEventListener('visibilitychange', onHide);
     return () => {
       if (impressionTimer) clearTimeout(impressionTimer);
       if (readTimer) clearTimeout(readTimer);
       io.disconnect();
-      window.removeEventListener('pagehide', onHide);
-      document.removeEventListener('visibilitychange', onHide);
-      onHide();   // unmount → flush accumulated dwell
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story?.id, heroType, mode]);
+  }, [story?.id]);
 
-  // Cards are read IN PLACE — only the footer controls are interactive.
-  const canRender = !!(story.display && plan && (plan.mode === 'article' || CARD_BY_TEMPLATE[plan.template]));
-
-  if (dismissed) {
-    return (
-      <div ref={rootRef} style={{ padding: '0 16px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center',
-          padding: '22px 0', color: TP.ink3, fontFamily: FONT_MONO, fontSize: 11,
-          letterSpacing: '0.06em', borderTop: `1px solid ${TP.line}`, borderBottom: `1px solid ${TP.line}`,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TP.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"/></svg>
-          Got it — you’ll see less like this.
-        </div>
-      </div>
-    );
-  }
-
+  // Per user direction (2026-06-13): tapping an article does NOTHING — cards
+  // are read in place. Only bookmark/share in the footer are interactive.
   return (
     <div ref={rootRef}>
-      {!canRender ? (
-        <FeedCard story={story} isDark={false} textOnly={textOnly} onOpen={() => {}} onEngage={onEngage} />
-      ) : (
+      {Card && story.display ? (
         <div style={{ padding: '0 16px' }}>
-          <FeedSignalContext.Provider value={signalCtx}>
-            <CardView plan={plan} story={story} display={story.display} accent={accent} />
-          </FeedSignalContext.Provider>
+          <Card story={story} display={story.display} accent={accent} />
         </div>
+      ) : (
+        <FeedCard
+          story={story}
+          isDark={false}
+          textOnly={textOnly}
+          onOpen={() => {}}
+          onEngage={onEngage}
+        />
       )}
     </div>
   );
@@ -326,7 +216,6 @@ export default function TodayPlusFeed({
   renderPaywall,
   onOpen,
   onEngage,
-  onSignal,
   onLoadMore,
   hasMore,
   loadingMore,
@@ -375,10 +264,9 @@ export default function TodayPlusFeed({
             <Entrance entryKey={block.key}>
               <StoryBlock
                 story={block.story}
-                plan={block.plan}
+                template={block.template}
                 onOpen={onOpen}
                 onEngage={onEngage}
-                onSignal={onSignal}
                 textOnly={textOnly}
               />
             </Entrance>
