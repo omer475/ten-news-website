@@ -102,7 +102,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
         
         // 3. No preferences anywhere - redirect to onboarding
-        router.replace('/onboard-chat');
+        //    (chip survey with the "Let's start your briefing" Apple welcome;
+        //     the conversational /onboard-chat is shelved for now)
+        router.replace('/onboarding');
       } catch (e) {
         // If everything fails, let them through
         setOnboardingChecked(true);
