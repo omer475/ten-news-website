@@ -352,89 +352,59 @@ export default function OnboardingPage() {
       <style>{`
 @import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@500;600;700;800&family=Figtree:wght@400;500;600&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-.ob{position:fixed;inset:0;font-family:'Gabarito','Figtree',-apple-system,BlinkMacSystemFont,sans-serif;background:#FCFBF8;color:#16150F;-webkit-font-smoothing:antialiased;overflow:hidden}
+.ob{position:fixed;inset:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;background:#000;color:#F5F5F7;-webkit-font-smoothing:antialiased;overflow:hidden}
 
-.sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:0.4s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;animation:0.5s cubic-bezier(0.22,1,0.36,1) both;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .sc.fwd{animation-name:sf}.sc.back{animation-name:sb}
-@keyframes sf{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:none}}
-@keyframes sb{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:none}}
+@keyframes sf{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+@keyframes sb{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes chipIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
 
 /* Header */
-.hd{display:flex;align-items:center;padding:14px 20px 0;position:sticky;top:0;z-index:10;background:rgba(252,251,248,0.85);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
-.hd-back{width:36px;height:36px;border-radius:50%;border:none;background:rgba(22,21,15,0.05);backdrop-filter:blur(4px) saturate(150%);-webkit-backdrop-filter:blur(4px) saturate(150%);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#16150F;transition:all 0.15s;flex-shrink:0}
-.hd-back:active{transform:scale(0.92);background:rgba(22,21,15,0.1)}
-.hd-step{flex:1;text-align:center;font-size:12px;font-weight:600;color:#5F5B51;letter-spacing:0.5px}
-.hd-sp{width:36px;flex-shrink:0}
-.pbar{height:3px;background:#EAE6DD;margin:14px 20px 0;border-radius:2px;overflow:hidden}
-.pbar-f{height:100%;background:#A8802F;border-radius:2px;transition:width 0.4s cubic-bezier(0.22,1,0.36,1)}
+.hd{display:flex;align-items:center;padding:18px 22px 0;position:sticky;top:0;z-index:10;background:rgba(0,0,0,0.7);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
+.hd-back{width:40px;height:40px;border-radius:50%;border:1px solid rgba(245,245,247,0.14);background:rgba(245,245,247,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#F5F5F7;transition:all 0.15s;flex-shrink:0}
+.hd-back:hover{background:rgba(245,245,247,0.12)}.hd-back:active{transform:scale(0.92)}
+.hd-step{flex:1;text-align:center;font-size:12px;font-weight:600;color:#86868B;letter-spacing:0.4px}
+.hd-sp{width:40px;flex-shrink:0}
+.pbar{height:3px;background:rgba(245,245,247,0.12);margin:18px 22px 0;border-radius:999px;overflow:hidden}
+.pbar-f{height:100%;background:#F5F5F7;border-radius:999px;transition:width 0.5s cubic-bezier(0.22,1,0.36,1)}
 
 /* Body */
-.bd{flex:1;padding:24px 20px 0;padding-bottom:110px}
-.tt{font-size:clamp(26px,6vw,34px);font-weight:800;color:#16150F;letter-spacing:-0.8px;line-height:1.1;margin-bottom:6px;min-height:1.15em}
-.cur{display:inline-block;width:2.5px;height:0.78em;background:#16150F;margin-left:1px;vertical-align:text-bottom;animation:bl 0.55s step-end infinite}
-.cur.hide{opacity:0;animation:none}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
-.ds{font-size:15px;color:#5F5B51;line-height:1.5;margin-bottom:24px;max-width:320px;min-height:1.5em}
+.bd{flex:1;max-width:600px;margin:0 auto;width:100%;padding:30px 22px 0;padding-bottom:130px}
+.tt{font-size:clamp(34px,8vw,52px);font-weight:600;color:#F5F5F7;letter-spacing:-0.04em;line-height:1.02;margin-bottom:10px;animation:rise .6s cubic-bezier(0.22,1,0.36,1) both}
+.cur{display:none}
+.ds{font-size:16px;color:#86868B;line-height:1.45;margin-bottom:30px;max-width:420px;font-weight:400;animation:rise .6s cubic-bezier(0.22,1,0.36,1) .08s both}
 .cnt{opacity:0;transform:translateY(10px);transition:opacity 0.4s ease,transform 0.4s cubic-bezier(0.22,1,0.36,1)}
 .cnt.on{opacity:1;transform:none}
 .cnt-rest{opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
 .cnt-rest.on{opacity:1;transform:none}
 
 /* Section label */
-.con{font-size:11px;font-weight:700;color:#5F5B51;text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px;padding-left:2px}
+.con{font-size:11px;font-weight:700;color:#86868B;text-transform:uppercase;letter-spacing:0.08em;margin:22px 0 11px;padding-left:2px}
 .con:first-child{margin-top:0}
-.cat{margin-bottom:20px}
-.cat-t{font-size:11px;font-weight:700;color:#5F5B51;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-left:2px}
+.cat{margin-bottom:22px}
+.cat-t{font-size:11px;font-weight:700;color:#86868B;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:11px;padding-left:2px}
 
 /* Grid */
-.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+.gr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:6px}
 
 /* Footer */
-.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:0 20px;pointer-events:none;background:transparent}
+.ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:36px 22px 0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,0),#000 42%)}
 .ft::before{display:none}
-.ft-in{max-width:440px;margin:0 auto;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
-.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:#5F5B51;margin-bottom:10px;letter-spacing:-0.1px;transition:color 0.2s ease}
-.sl.met{color:#16150F}
-.sl.max{color:#ff3b30}
+.ft-in{max-width:460px;margin:0 auto;padding:0 0 calc(24px + env(safe-area-inset-bottom,0px));pointer-events:auto}
+.sl{display:block;text-align:center;font-size:13.5px;font-weight:500;color:#86868B;margin-bottom:13px;letter-spacing:-0.1px;transition:color 0.2s ease}
+.sl.met{color:#F5F5F7}
+.sl.max{color:#F5F5F7}
 .br{display:flex;gap:10px}
-.bt{flex:1;padding:16px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s cubic-bezier(0.22,1,0.36,1);letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.bt{flex:1;height:54px;display:inline-flex;align-items:center;justify-content:center;border-radius:980px;border:none;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;transition:transform 0.16s cubic-bezier(0.34,1.56,0.64,1),background 0.18s,opacity 0.2s;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .bt:active{transform:scale(0.97)}
-.bt.p{
-  background:#16150F;color:#FCFBF8;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.5),
-    inset 0.9px 1.5px 0px -1px rgba(22,21,15,0.9),
-    inset -1px -1px 0px -1px rgba(22,21,15,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(22,21,15,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.1),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.1),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.06),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
-    0px 3px 8px 0px rgba(0,0,0,0.06)}
-.bt.p:disabled{
-  background:rgba(22,21,15,0.08);color:rgba(22,21,15,0.32);cursor:default;transform:none;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(22,21,15,0.3),
-    inset 0.9px 1.5px 0px -1px rgba(22,21,15,0.4),
-    inset -1px -1px 0px -1px rgba(22,21,15,0.3),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.04)}
-.bt.s{
-  background:rgba(22,21,15,0.05);color:#16150F;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(22,21,15,0.4),
-    inset 0.9px 1.5px 0px -1px rgba(22,21,15,0.9),
-    inset -1px -1px 0px -1px rgba(22,21,15,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(22,21,15,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.1),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.1),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.06),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
-    0px 3px 8px 0px rgba(0,0,0,0.06)}
+.bt.p{background:#F5F5F7;color:#000}
+.bt.p:hover:not(:disabled){transform:translateY(-1px)}
+.bt.p:disabled{background:rgba(245,245,247,0.12);color:rgba(245,245,247,0.4);cursor:default}
+.bt.s{background:transparent;color:#F5F5F7;border:1px solid rgba(245,245,247,0.18)}
+.bt.s:hover{background:rgba(245,245,247,0.06)}
 
 /* Welcome */
 .wl{display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;padding:0 28px;
@@ -475,30 +445,17 @@ export default function OnboardingPage() {
 @media(min-width:768px){.wl{padding:0 48px}.wl-center,.wl-bottom{max-width:420px}}
 
 /* Complete */
-.cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#FCFBF8}
-.sw{margin-bottom:24px;opacity:0;transform:scale(0.7);transition:opacity 0.3s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
+.cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#000}
+.sw{margin-bottom:26px;opacity:0;transform:scale(0.7);transition:opacity 0.3s,transform 0.5s cubic-bezier(0.34,1.56,0.64,1)}
 .sw.on{opacity:1;transform:scale(1)}
 .sw-p{stroke-dasharray:72;stroke-dashoffset:72;transition:stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s}
 .sw-p.draw{stroke-dashoffset:0}
-.cp-t{font-size:clamp(28px,7vw,38px);font-weight:800;color:#16150F;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;min-height:1.1em}
-.cp-c{display:inline-block;width:2.5px;height:0.82em;background:#16150F;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
+.cp-t{font-size:clamp(40px,9vw,60px);font-weight:600;color:#F5F5F7;letter-spacing:-0.04em;line-height:1.0;margin-bottom:14px;min-height:1.0em}
+.cp-c{display:inline-block;width:0.045em;height:0.82em;background:#F5F5F7;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
 .cp-c.hide{opacity:0;animation:none}
-.cp-s{font-size:15px;color:#5F5B51;line-height:1.6;max-width:250px;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
+.cp-s{font-size:15.5px;color:#86868B;line-height:1.55;max-width:280px;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
 .cp-s.on{opacity:1;transform:none}
-.cp-b{margin-top:28px;padding:16px 40px;border-radius:50px;border:none;color:#FCFBF8;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease 0.1s,transform 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s;
-  background:#16150F;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(22,21,15,0.08),
-    inset 0.9px 1.5px 0px -1px rgba(22,21,15,0.9),
-    inset -1px -1px 0px -1px rgba(22,21,15,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(22,21,15,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.12),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.2),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.2),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.1),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.1),
-    0px 3px 8px 0px rgba(0,0,0,0.08)}
+.cp-b{margin-top:30px;height:54px;padding:0 42px;display:inline-flex;align-items:center;border-radius:980px;border:none;color:#000;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease 0.1s,transform 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s,background .18s;background:#F5F5F7}
 .cp-b.on{opacity:1;transform:none}
 .cp-b:active{transform:scale(0.96)}
 
@@ -550,23 +507,15 @@ export default function OnboardingPage() {
         onBack={()=>go(0)}
         onDescDone={() => { if (detectedCountry && !homeCountry) setHomeCountry(detectedCountry.code); }}
         guessSection={detectedCountry ? <div><div className="con">Our Guess</div><div className="gr">
-          <GlassTile key={detectedCountry.code} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)}
-            glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-            <span style={{fontSize:28,lineHeight:1}}>{detectedCountry.flag}</span>
-            <span style={{fontSize:11,fontWeight:600,color:homeCountry===detectedCountry.code?'#A8802F':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{detectedCountry.name}</span>
-          </GlassTile>
+          <GlassTile key={detectedCountry.code} flag={detectedCountry.flag} label={detectedCountry.name} selected={homeCountry===detectedCountry.code} onClick={()=>setHomeCountry(detectedCountry.code)} />
         </div></div> : null}
         footer={<div className="ft"><div className="ft-in">
-          {homeCountry && <div className="sl">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</div>}
+          {homeCountry && <div className="sl met">{ALL_COUNTRIES.find(c=>c.code===homeCountry)?.flag} {ALL_COUNTRIES.find(c=>c.code===homeCountry)?.name}</div>}
           <div className="br"><button className="bt p" disabled={!homeCountry} onClick={()=>go(2)}>Continue</button></div>
         </div></div>}>
         {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-          {g.countries.map(c=>
-            <GlassTile key={c.code} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)}
-              glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-              <span style={{fontSize:11,fontWeight:600,color:homeCountry===c.code?'#A8802F':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{c.name}</span>
-            </GlassTile>
+          {g.countries.map((c,i)=>
+            <GlassTile key={c.code} i={i} flag={c.flag} label={c.name} selected={homeCountry===c.code} onClick={()=>setHomeCountry(c.code)} />
           )}
         </div></div>)}
       </TSScreen>}
@@ -574,23 +523,20 @@ export default function OnboardingPage() {
       {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL_STEPS} title="Beyond home, how wide do you want the world?" desc="We'd rather nail a tight feed than spread you thin — most of our deepest coverage is US + global today." onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" onClick={()=>go(3)}>Continue</button></div></div></div>}>
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {[['home','Just home + the big global stories','Keep it tight'],['some','Home, plus a few countries I follow','I track specific places closely'],['global','Truly global','Give me the whole map']].map(([val,t,d])=>
-            <div key={val} onClick={()=>setGlobalBreadth(val)} style={{padding:'16px 18px',borderRadius:14,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:globalBreadth===val?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.08)',background:globalBreadth===val?'rgba(168,128,47,0.1)':'rgba(255,255,255,0.55)',transition:'all 0.18s'}}>
-              <div style={{fontSize:16,fontWeight:700,color:'#16150F'}}>{t}</div>
-              <div style={{fontSize:13,color:'#5F5B51',marginTop:2}}>{d}</div>
-            </div>)}
+          {[['home','Just home + the big global stories','Keep it tight'],['some','Home, plus a few countries I follow','I track specific places closely'],['global','Truly global','Give me the whole map']].map(([val,t,d])=>{
+            const on = globalBreadth===val;
+            return (
+            <div key={val} onClick={()=>setGlobalBreadth(val)} style={{padding:'17px 18px',borderRadius:16,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:on?'1px solid rgba(245,245,247,0.55)':'1px solid rgba(245,245,247,0.12)',background:on?'rgba(245,245,247,0.12)':'rgba(245,245,247,0.04)',transition:'all 0.18s'}}>
+              <div style={{fontSize:16,fontWeight:600,color:'#F5F5F7'}}>{t}</div>
+              <div style={{fontSize:13.5,color:'#86868B',marginTop:3}}>{d}</div>
+            </div>);})}
         </div>
-        {globalBreadth==='some' && <div style={{marginTop:22}}>
-          <div className="con" style={{color:'#16150F'}}>Which places are always on your radar? <span style={{fontWeight:600,color:'#5F5B51'}}>(up to 5)</span></div>
+        {globalBreadth==='some' && <div style={{marginTop:24}}>
+          <div className="con" style={{color:'#F5F5F7'}}>Which places are always on your radar? <span style={{fontWeight:600,color:'#86868B'}}>(up to 5)</span></div>
           {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-            {g.countries.map(c=>{const isHome=c.code===homeCountry;return(
-              <GlassTile key={c.code} selected={followCountries.includes(c.code)} disabled={isHome}
-                onClick={()=>!isHome&&toggleFollow(c.code)} glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-                <span style={{fontSize:28,lineHeight:1}}>{c.flag}</span>
-                <span style={{fontSize:11,fontWeight:600,color:followCountries.includes(c.code)?'#A8802F':isHome?'#5F5B51':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>
-                  {c.name}{isHome ? ' (home)' : ''}
-                </span>
-              </GlassTile>);})}
+            {g.countries.map((c,i)=>{const isHome=c.code===homeCountry;return(
+              <GlassTile key={c.code} i={i} flag={c.flag} label={isHome?`${c.name} (home)`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
+            );})}
           </div></div>)}
         </div>}
       </TSScreen>}
@@ -601,12 +547,9 @@ export default function OnboardingPage() {
           <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(subtopicTopics.length?4:5)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
-          {cat.topics.map(t=>{const rank=selectedTopics.indexOf(t.id);return(
-            <GlassTile key={t.id} selected={rank>=0} rank={rank>=0?rank+1:0} onClick={()=>toggleTopic(t.id)}
-              glassShadow={glassBoxShadow} selectedShadow={glassSelectedShadow}>
-              <span style={{fontSize:24,lineHeight:1}}>{t.icon}</span>
-              <span style={{fontSize:11,fontWeight:600,color:rank>=0?'#A8802F':'rgba(22,21,15,0.65)',textAlign:'center',lineHeight:1.2}}>{t.name}</span>
-            </GlassTile>);})}
+          {cat.topics.map((t,i)=>{const rank=selectedTopics.indexOf(t.id);return(
+            <GlassTile key={t.id} i={i} icon={t.icon} label={t.name} selected={rank>=0} rank={rank>=0?rank+1:0} onClick={()=>toggleTopic(t.id)} />
+          );})}
         </div></div>)}
       </TSScreen>}
 
@@ -625,10 +568,10 @@ export default function OnboardingPage() {
                   const on = followedSubtopics.includes(s.id);
                   return (
                     <button key={s.id} onClick={()=>toggleSub(s.id)} style={{
-                      display:'inline-flex',alignItems:'center',gap:6,padding:'9px 14px',borderRadius:99,fontFamily:'inherit',fontSize:13.5,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all 0.16s cubic-bezier(0.22,1,0.36,1)',
-                      border: on?'1.5px solid rgba(168,128,47,0.5)':'1px solid rgba(22,21,15,0.1)',
-                      background: on?'rgba(168,128,47,0.12)':'rgba(255,255,255,0.6)',
-                      color: on?'#A8802F':'#16150F',
+                      display:'inline-flex',alignItems:'center',gap:6,height:44,padding:'0 16px',borderRadius:980,fontFamily:'inherit',fontSize:14,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all 0.16s cubic-bezier(0.22,1,0.36,1)',
+                      border: on?'1px solid #F5F5F7':'1px solid rgba(245,245,247,0.14)',
+                      background: on?'#F5F5F7':'rgba(245,245,247,0.05)',
+                      color: on?'#000':'#F5F5F7',
                     }}>
                       <span style={{fontSize:15,lineHeight:1}}>{s.icon}</span>{s.label}
                     </button>
@@ -730,25 +673,25 @@ function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, 
           <textarea
             value={value} onChange={(e)=>onChange(e.target.value)} rows={4}
             placeholder={"e.g. Arsenal + the Premier League title race · OpenAI, Nvidia, the AI-chip race · The Fed and interest rates"}
-            style={{width:'100%',padding:'14px 16px',borderRadius:16,border:'1px solid rgba(22,21,15,0.12)',background:'rgba(255,255,255,0.6)',fontFamily:'inherit',fontSize:16,lineHeight:1.5,color:'#16150F',resize:'none',outline:'none',WebkitTapHighlightColor:'transparent'}}
+            style={{width:'100%',padding:'16px',borderRadius:16,border:'1px solid rgba(245,245,247,0.14)',background:'rgba(245,245,247,0.05)',fontFamily:'inherit',fontSize:16,lineHeight:1.5,color:'#F5F5F7',resize:'none',outline:'none',WebkitTapHighlightColor:'transparent'}}
           />
           {/* starter chips — tap to drop an example in (and show what "good" looks like) */}
           {(value || '').trim().length === 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:12}}>
               {["Arsenal + the Premier League title race","OpenAI, Nvidia & the AI-chip race","The Fed and interest rates","SpaceX + anything Mars"].map((s,i)=>(
-                <button key={i} onClick={()=>onChange(s)} style={{padding:'7px 12px',borderRadius:99,border:'1px dashed rgba(22,21,15,0.18)',background:'transparent',color:'#5F5B51',fontSize:12.5,fontWeight:600,fontFamily:'inherit',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>+ {s}</button>
+                <button key={i} onClick={()=>onChange(s)} style={{padding:'8px 13px',borderRadius:980,border:'1px dashed rgba(245,245,247,0.22)',background:'transparent',color:'#86868B',fontSize:12.5,fontWeight:600,fontFamily:'inherit',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>+ {s}</button>
               ))}
             </div>
           )}
           {(busy || chips.length>0) && (
-            <div style={{marginTop:16}}>
-              <div className="con" style={{margin:'0 0 8px'}}>{busy && chips.length===0 ? 'Reading…' : 'We heard'}</div>
+            <div style={{marginTop:18}}>
+              <div className="con" style={{margin:'0 0 9px'}}>{busy && chips.length===0 ? 'Reading…' : 'We heard'}</div>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                 {chips.map((c,i)=>(
-                  <span key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:99,background:'rgba(168,128,47,0.12)',color:'#A8802F',fontSize:13,fontWeight:600,animation:'checkPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>{c}</span>
+                  <span key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'8px 13px',borderRadius:980,background:'#F5F5F7',color:'#000',fontSize:13,fontWeight:600,animation:'checkPop 0.25s cubic-bezier(0.34,1.56,0.64,1)'}}>{c}</span>
                 ))}
               </div>
-              {parsed && parsed.summary_line && <p style={{fontSize:13,color:'#5F5B51',marginTop:12,lineHeight:1.5,fontStyle:'italic'}}>{parsed.summary_line}</p>}
+              {parsed && parsed.summary_line && <p style={{fontSize:13.5,color:'#86868B',marginTop:13,lineHeight:1.5,fontStyle:'italic'}}>{parsed.summary_line}</p>}
             </div>
           )}
         </div>
@@ -789,56 +732,36 @@ function SegRow({ label, value, onChange, options }) {
 // ============================================
 // GLASS TILE COMPONENT
 // ============================================
-function GlassTile({ selected, disabled, onClick, children, glassShadow, selectedShadow, rank }) {
+function GlassTile({ selected, disabled, onClick, icon, flag, label, rank, i = 0 }) {
   return (
     <div
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        padding: '14px 6px',
-        borderRadius: 16,
-        border: selected ? '1.5px solid rgba(77, 148, 255, 0.5)' : '1px solid rgba(255, 255, 255, 0.12)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 7, padding: '14px 6px', borderRadius: 16, minHeight: 80, position: 'relative',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'all 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
-        position: 'relative',
-        minHeight: 80,
         WebkitTapHighlightColor: 'transparent',
-        opacity: disabled ? 0.3 : 1,
-        pointerEvents: disabled ? 'none' : 'auto',
-        // Liquid glass styling
-        backgroundColor: selected
-          ? 'rgba(168, 128, 47, 0.12)'
-          : 'rgba(255, 255, 255, 0.06)',
-        backdropFilter: 'blur(12px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-        boxShadow: selected ? selectedShadow : glassShadow,
+        opacity: disabled ? 0.32 : 1, pointerEvents: disabled ? 'none' : 'auto',
+        border: selected ? '1px solid rgba(245,245,247,0.55)' : '1px solid rgba(245,245,247,0.12)',
+        background: selected ? 'rgba(245,245,247,0.14)' : 'rgba(245,245,247,0.05)',
+        transition: 'background 0.18s, border-color 0.18s, transform 0.16s cubic-bezier(0.34,1.56,0.64,1)',
+        animation: 'chipIn 0.5s cubic-bezier(0.22,1,0.36,1) both',
+        animationDelay: `${Math.min(i, 14) * 22}ms`,
       }}
     >
-      {/* Checkmark badge */}
       {selected && (
         <div style={{
-          position: 'absolute',
-          top: 5,
-          right: 5,
-          width: 18,
-          height: 18,
-          borderRadius: '50%',
-          background: '#A8802F',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          animation: 'checkPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          position: 'absolute', top: 6, right: 6, width: 18, height: 18, borderRadius: '50%',
+          background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'checkPop 0.24s cubic-bezier(0.34,1.7,0.5,1)',
         }}>
           {rank > 0
-            ? <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>{rank}</span>
-            : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>}
+            ? <span style={{ color: '#000', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>{rank}</span>
+            : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7"/></svg>}
         </div>
       )}
-      {children}
+      <span style={{ fontSize: flag ? 28 : 24, lineHeight: 1 }}>{flag || icon}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, textAlign: 'center', lineHeight: 1.2, color: selected ? '#F5F5F7' : 'rgba(245,245,247,0.62)' }}>{label}</span>
       <style>{`@keyframes checkPop{from{transform:scale(0)}to{transform:scale(1)}}`}</style>
     </div>
   );
@@ -892,15 +815,9 @@ function WelcomeScreen({ onStart, onSignIn, dir }) {
 }
 
 function TSScreen({ dir, step, total = 3, title, desc, onBack, onDescDone, guessSection, footer, children }) {
-  const { titleText, descText, descDone, showTitleCursor } = useSequentialTyped(title, desc, 45, 25, onDescDone);
-  const [showRest, setShowRest] = useState(!guessSection);
-
   useEffect(() => {
-    if (descDone && guessSection) {
-      const t = setTimeout(() => setShowRest(true), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [descDone, guessSection]);
+    if (onDescDone) { const t = setTimeout(onDescDone, 420); return () => clearTimeout(t); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -914,10 +831,10 @@ function TSScreen({ dir, step, total = 3, title, desc, onBack, onDescDone, guess
         </div>
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
         <div className="bd">
-          <h1 className="tt">{titleText}<span className={`cur ${!showTitleCursor?"hide":""}`}/></h1>
-          <p className="ds">{descText}</p>
-          {guessSection && <div className={`cnt ${descDone?"on":""}`}>{guessSection}</div>}
-          <div className={guessSection ? `cnt-rest ${showRest?"on":""}` : `cnt ${descDone?"on":""}`}>{children}</div>
+          <h1 className="tt">{title}</h1>
+          <p className="ds">{desc}</p>
+          {guessSection && <div className="cnt on">{guessSection}</div>}
+          <div className="cnt on">{children}</div>
         </div>
       </div>
       {footer}
@@ -948,7 +865,7 @@ function CompScreen({ dir, summaryLine, homeCountry, followCountries, topics, on
     {/* Swoosh checkmark */}
     <div className={`sw ${phase>=1?"on":""}`}>
       <svg viewBox="0 0 52 40" fill="none" width="44" height="34">
-        <path className={`sw-p ${phase>=1?"draw":""}`} d="M4 22L18 34L48 6" stroke="#16150F" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path className={`sw-p ${phase>=1?"draw":""}`} d="M4 22L18 34L48 6" stroke="#F5F5F7" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </div>
     <h1 className="cp-t">{typed}<span className={`cp-c ${!showCursor?"hide":""}`}/></h1>
@@ -1001,10 +918,10 @@ function SummaryRow({ label, value, last }) {
       gap: 8,
       marginBottom: last ? 0 : 10,
       paddingBottom: last ? 0 : 10,
-      borderBottom: last ? 'none' : '1px solid rgba(22,21,15,0.05)',
+      borderBottom: last ? 'none' : '1px solid rgba(245,245,247,0.1)',
     }}>
-      <span style={{fontSize:10,fontWeight:700,color:'#5F5B51',textTransform:'uppercase',letterSpacing:0.5,minWidth:52,paddingTop:4}}>{label}</span>
-      <span style={{display:'flex',flexWrap:'wrap',gap:4,fontSize:13,fontWeight:600,color:'#16150F'}}>{value}</span>
+      <span style={{fontSize:10,fontWeight:700,color:'#86868B',textTransform:'uppercase',letterSpacing:0.5,minWidth:52,paddingTop:4}}>{label}</span>
+      <span style={{display:'flex',flexWrap:'wrap',gap:4,fontSize:13,fontWeight:600,color:'#F5F5F7'}}>{value}</span>
     </div>
   );
 }
@@ -1013,10 +930,10 @@ const chipStyle = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 3,
-  padding: '3px 8px',
-  borderRadius: 6,
-  background: 'rgba(168, 128, 47, 0.12)',
+  padding: '4px 9px',
+  borderRadius: 999,
+  background: 'rgba(245,245,247,0.1)',
   fontSize: 11,
   fontWeight: 600,
-  color: '#A8802F',
+  color: '#F5F5F7',
 };
