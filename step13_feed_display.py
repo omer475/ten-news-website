@@ -1491,6 +1491,13 @@ def fetch_breakdown_grounded(metric: str, api_key: str) -> Optional[Dict]:
     return {'slices': slices, 'unit': unit, 'caption': caption[:140]}
 
 
+_PRICE_MOVE = re.compile(
+    r'\b(stocks?|shares?|share price|plunges?|plunged|soars?|surges?|surged|'
+    r'tumbles?|rally|rallies|rallied|jumps?|jumped|drops?|dropped|falls?|fell|'
+    r'rises?|rose|sinks?|sank|crash|crashes|crashed|ipo|valuation|market cap|'
+    r'all-time high|record high|sell-?off|listing|float|earnings)\b|%', re.I)
+
+
 def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
     """Consume chart_ticker/chart_metric flags; attach a verified trend."""
     if not isinstance(display_obj, dict):
@@ -1498,12 +1505,18 @@ def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
     ticker = display_obj.pop('chart_ticker', None)
     metric = display_obj.pop('chart_metric', None)
     bmetric = display_obj.pop('breakdown_metric', None)
+    title_l = re.sub(r'<[^>]+>', '', display_obj.get('title', '')).lower()
     if 'trend' not in display_obj:
         trend = None
-        if ticker:
+        # Stock chart ONLY when the headline is about a price move — otherwise
+        # a tradeable company in the story (e.g. a billionaire's firm on a
+        # trafficking story) wrongly gets a share-price chart.
+        if ticker and _PRICE_MOVE.search(title_l):
             trend = fetch_trend_from_market(ticker)
             if trend:
                 print(f"   📈 [chart] real market series attached ({ticker})")
+        elif ticker:
+            print(f"   ⏭️ [chart] ticker {ticker} skipped — headline not about price")
         # Subject-match gate: skip off-subject grounded series entirely.
         if trend is None and metric and _metric_on_subject(metric, display_obj):
             trend = fetch_trend_grounded(metric, api_key)
