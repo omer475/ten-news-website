@@ -195,6 +195,9 @@ export default function OnboardingPage() {
   const [siErr, setSiErr] = useState("");
   const [siSent, setSiSent] = useState(false);
   const [siBusy, setSiBusy] = useState("");
+  // adaptive drill-down: AI suggestions per topic + per-topic "add your own" text
+  const [suggestions, setSuggestions] = useState({}); // topicCode -> { loading, groups }
+  const [customAdds, setCustomAdds] = useState({});   // topicCode -> free text
 
   const handleOAuth = async (provider) => {
     setSiErr(""); setSiBusy(provider);
@@ -246,80 +249,91 @@ export default function OnboardingPage() {
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
   const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
   const toggleSub = (id) => setFollowedSubtopics(p => p.includes(id) ? p.filter(s=>s!==id) : [...p,id]);
-  // which picked topics actually have a sub-interest row to show
-  const subtopicTopics = selectedTopics.filter(t => (SUBINTERESTS[t] || []).length > 0);
+
+  // ── adaptive drill-down: one page per picked topic (up to 4), then catch-all, then reveal ──
+  const drillTopics = selectedTopics.slice(0, 4);
+  const DRILL0 = 3;
+  const CATCH_INDEX = DRILL0 + drillTopics.length;
+  const REVEAL_INDEX = CATCH_INDEX + 1;
+  const TOTAL = 2 + drillTopics.length + 1; // country + interests + drills + catch-all (reveal uncounted)
+
+  // Fetch AI drill-down options for one topic (cached in state; never blocks the flow)
+  const fetchSuggest = async (topic) => {
+    if (!topic) return;
+    setSuggestions(prev => ({ ...prev, [topic]: { loading: true, groups: [] } }));
+    try {
+      const r = await fetch('/api/user/onboarding/suggest', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, country: homeCountry || '' }),
+      });
+      const data = r.ok ? await r.json() : { groups: [] };
+      setSuggestions(prev => ({ ...prev, [topic]: { loading: false, groups: Array.isArray(data.groups) ? data.groups : [] } }));
+    } catch (_) {
+      setSuggestions(prev => ({ ...prev, [topic]: { loading: false, groups: [] } }));
+    }
+  };
 
   const handleComplete = async () => {
     setSaving(true);
 
-    // Parse the free-text "obsession" box with the LLM (best-effort) and MERGE
-    // its extracted topic codes into followed_topics so it flows through the
-    // existing warm-start path. Reuse a live-parsed result if we already have one.
-    let signals = parsed;
-    if (!signals && freeText.trim().length > 2) {
+    // Combine everything the user typed (per-topic "add your own" + final catch-all),
+    // parse it once, and merge into the warm-start signals.
+    const combinedText = [
+      ...Object.values(customAdds).map(s => (s || '').trim()).filter(Boolean),
+      (freeText || '').trim(),
+    ].filter(Boolean).join(' · ');
+
+    let signals = null;
+    if (combinedText.length > 2) {
       try {
         const pr = await fetch('/api/user/onboarding/parse', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: freeText }),
+          body: JSON.stringify({ text: combinedText }),
         });
         if (pr.ok) signals = await pr.json();
       } catch (_) {}
     }
-    const mergedTopics = [...new Set([...selectedTopics, ...((signals && signals.topic_codes) || [])])].slice(0, 16);
     if (signals) setParsed(signals);
+
+    const mergedTopics = [...new Set([...selectedTopics, ...((signals && signals.topic_codes) || [])])].slice(0, 16);
+    const mergedSubs = [...new Set([
+      ...followedSubtopics,
+      ...(((signals && signals.entities) || []).map(e => (e && e.name) ? String(e.name).toLowerCase() : '').filter(Boolean)),
+      ...((signals && signals.interest_tags) || []),
+    ])].slice(0, 40);
 
     const preferences = {
       home_country: homeCountry,
-      // followed_countries only meaningful when they chose "a few countries"
-      followed_countries: globalBreadth === 'some' ? followCountries : [],
-      global_breadth: globalBreadth,
+      followed_countries: [],
       followed_topics: mergedTopics,
-      followed_subtopics: followedSubtopics,
-      depth_pref: depthPref,
-      seriousness_pref: seriousnessPref,
+      followed_subtopics: mergedSubs,
+      avoid_topics: (signals && signals.avoid_topics) || [],
       onboarding_completed: true,
       created_at: new Date().toISOString(),
     };
 
-    // Check if user is already logged in (auth user)
-    let authUserId = null;
-    let authEmail = null;
+    let authUserId = null, authEmail = null;
     try {
       const storedUser = localStorage.getItem('tennews_user');
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        authUserId = userData?.id || null;
-        authEmail = userData?.email || null;
-      }
+      if (storedUser) { const u = JSON.parse(storedUser); authUserId = u?.id || null; authEmail = u?.email || null; }
     } catch (e) {}
 
     try {
       const body = {
         ...preferences,
         followed_entities: signals ? (signals.entities || null) : null,
-        onboarding_freetext: freeText || null,
-        onboarding_signals: signals || null,
+        onboarding_freetext: combinedText || null,
       };
-      if (authUserId) {
-        body.auth_user_id = authUserId;
-        if (authEmail) body.email = authEmail;  // fast path for profiles.email (NOT NULL) upsert
-      }
+      if (authUserId) { body.auth_user_id = authUserId; if (authEmail) body.email = authEmail; }
       const response = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
-      if (response.ok) {
-        const data = await response.json();
-        preferences.user_id = data.user?.id;
-      }
-    } catch (e) {
-      console.warn('API save error, using localStorage only:', e);
-    }
+      if (response.ok) { const data = await response.json(); preferences.user_id = data.user?.id; }
+    } catch (e) { console.warn('API save error, using localStorage only:', e); }
 
     localStorage.setItem('todayplus_preferences', JSON.stringify(preferences));
     setSaving(false);
-    go(6); // reveal / complete screen
+    go(REVEAL_INDEX);
   };
 
   // Liquid glass box-shadow (matches share/event buttons in news page)
@@ -361,6 +375,7 @@ export default function OnboardingPage() {
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes chipIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:none}}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 
 /* Header */
 .hd{display:flex;align-items:center;padding:18px 22px 0;position:sticky;top:0;z-index:10;background:rgba(0,0,0,0.7);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
@@ -501,9 +516,9 @@ export default function OnboardingPage() {
 
       {screen===0 && <WelcomeScreen onStart={()=>go(1)} onSignIn={()=>{setSiErr('');setSiSent(false);setSignIn(true);}} dir={dir}/>}
 
-      {screen===1 && <TSScreen key="s1" dir={dir} step={1} total={TOTAL_STEPS}
-        title="Where are you from?"
-        desc={detectedCountry ? `Hmmm let me guess... ${detectedCountry.flag} from ${detectedCountry.name}?` : "You\u2019ll see more news about your home country"}
+      {screen===1 && <TSScreen key="s1" dir={dir} step={1} total={TOTAL}
+        title="Where are you?"
+        desc={detectedCountry ? `Looks like ${detectedCountry.flag} ${detectedCountry.name} \u2014 tap to confirm, or pick your own.` : "We'll lead your feed with the news closest to you."}
         onBack={()=>go(0)}
         onDescDone={() => { if (detectedCountry && !homeCountry) setHomeCountry(detectedCountry.code); }}
         guessSection={detectedCountry ? <div><div className="con">Our Guess</div><div className="gr">
@@ -520,31 +535,13 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL_STEPS} title="Beyond home, how wide do you want the world?" desc="We'd rather nail a tight feed than spread you thin — most of our deepest coverage is US + global today." onBack={()=>go(1)}
-        footer={<div className="ft"><div className="ft-in"><div className="br"><button className="bt p" onClick={()=>go(3)}>Continue</button></div></div></div>}>
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {[['home','Just home + the big global stories','Keep it tight'],['some','Home, plus a few countries I follow','I track specific places closely'],['global','Truly global','Give me the whole map']].map(([val,t,d])=>{
-            const on = globalBreadth===val;
-            return (
-            <div key={val} onClick={()=>setGlobalBreadth(val)} style={{padding:'17px 18px',borderRadius:16,cursor:'pointer',WebkitTapHighlightColor:'transparent',border:on?'1px solid rgba(245,245,247,0.55)':'1px solid rgba(245,245,247,0.12)',background:on?'rgba(245,245,247,0.12)':'rgba(245,245,247,0.04)',transition:'all 0.18s'}}>
-              <div style={{fontSize:16,fontWeight:600,color:'#F5F5F7'}}>{t}</div>
-              <div style={{fontSize:13.5,color:'#86868B',marginTop:3}}>{d}</div>
-            </div>);})}
-        </div>
-        {globalBreadth==='some' && <div style={{marginTop:24}}>
-          <div className="con" style={{color:'#F5F5F7'}}>Which places are always on your radar? <span style={{fontWeight:600,color:'#86868B'}}>(up to 5)</span></div>
-          {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
-            {g.countries.map((c,i)=>{const isHome=c.code===homeCountry;return(
-              <GlassTile key={c.code} i={i} flag={c.flag} label={isHome?`${c.name} (home)`:c.name} selected={followCountries.includes(c.code)} disabled={isHome} onClick={()=>!isHome&&toggleFollow(c.code)} />
-            );})}
-          </div></div>)}
-        </div>}
-      </TSScreen>}
-
-      {screen===3 && <TSScreen key="s3" dir={dir} step={3} total={TOTAL_STEPS} title="What pulls you in?" desc="Tap your obsessions — your first picks weigh heaviest. Pick at least 3." onBack={()=>go(2)}
+      {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL}
+        title="What do you keep up with?"
+        desc="Tap your obsessions — your first picks weigh heaviest. Pick at least 3."
+        onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} picked · #1 weighs most`}</div>
-          <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(subtopicTopics.length?4:5)}>Continue</button></div>
+          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} picked · #1 weighs most`}</div>
+          <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(3)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
           {cat.topics.map((t,i)=>{const rank=selectedTopics.indexOf(t.id);return(
@@ -553,48 +550,27 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===4 && <TSScreen key="s4" dir={dir} step={4} total={TOTAL_STEPS} title="Now get specific." desc="Pick the exact teams, companies, and beats you follow — these go straight to the top of your feed." onBack={()=>go(3)}
-        footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${followedSubtopics.length>0?"met":""}`}>{followedSubtopics.length>0?`Following ${followedSubtopics.length}`:"Tap any that are yours"}</div>
-          <div className="br"><button className="bt s" onClick={()=>go(5)}>Skip</button><button className="bt p" onClick={()=>go(5)}>Continue</button></div>
-        </div></div>}>
-        {subtopicTopics.map(code=>{
-          const cat = TOPIC_CATEGORIES.flatMap(c=>c.topics).find(t=>t.id===code);
-          return (
-            <div key={code} className="cat">
-              <div className="cat-t">{cat ? `${cat.icon} ${cat.name}` : code}</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {SUBINTERESTS[code].map(s=>{
-                  const on = followedSubtopics.includes(s.id);
-                  return (
-                    <button key={s.id} onClick={()=>toggleSub(s.id)} style={{
-                      display:'inline-flex',alignItems:'center',gap:6,height:44,padding:'0 16px',borderRadius:980,fontFamily:'inherit',fontSize:14,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all 0.16s cubic-bezier(0.22,1,0.36,1)',
-                      border: on?'1px solid #F5F5F7':'1px solid rgba(245,245,247,0.14)',
-                      background: on?'#F5F5F7':'rgba(245,245,247,0.05)',
-                      color: on?'#000':'#F5F5F7',
-                    }}>
-                      <span style={{fontSize:15,lineHeight:1}}>{s.icon}</span>{s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </TSScreen>}
+      {screen>=DRILL0 && screen<CATCH_INDEX && (() => {
+        const topic = drillTopics[screen - DRILL0];
+        return <DrillScreen key={`drill-${topic}`} dir={dir} step={screen} total={TOTAL}
+          topicCode={topic} sug={suggestions[topic]} onFetch={fetchSuggest}
+          selected={followedSubtopics} onToggle={toggleSub}
+          custom={customAdds[topic] || ''} onCustom={(v)=>setCustomAdds(s=>({...s,[topic]:v}))}
+          onBack={()=>go(screen-1)} onContinue={()=>go(screen+1)} />;
+      })()}
 
-      {screen===5 && <FreeTextScreen key="s5" dir={dir} step={5} total={TOTAL_STEPS}
+      {screen===CATCH_INDEX && <FreeTextScreen key="catch" dir={dir} step={CATCH_INDEX} total={TOTAL}
         value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed} finishing={saving}
-        onBack={()=>go(subtopicTopics.length?4:3)} onContinue={handleComplete} onSkip={handleComplete} />}
+        onBack={()=>go(CATCH_INDEX-1)} onContinue={handleComplete} onSkip={handleComplete} />}
 
-      {screen===6 && <CompScreen dir={dir}
-        summaryLine={parsed && parsed.summary_line}
-        homeCountry={ALL_COUNTRIES.find(c=>c.code===homeCountry)}
-        followCountries={(globalBreadth==='some'?followCountries:[]).map(code=>ALL_COUNTRIES.find(c=>c.code===code))}
-        topics={selectedTopics.map(id=>{for(const cat of TOPIC_CATEGORIES){const t=cat.topics.find(t=>t.id===id);if(t)return t}return null}).filter(Boolean)}
-        onStartReading={()=>router.push('/')}
-        onBack={()=>go(5)}
-      />}
+      {screen===REVEAL_INDEX && <RevealScreen dir={dir}
+        profile={{
+          country: (ALL_COUNTRIES.find(c=>c.code===homeCountry)||{}).name || homeCountry || '',
+          topics: selectedTopics.map(id=>{const t=TOPIC_CATEGORIES.flatMap(c=>c.topics).find(x=>x.id===id);return t?t.name:id;}),
+          subtopics: followedSubtopics,
+          themes: (parsed && parsed.interest_tags) || [],
+        }}
+        onStartReading={()=>router.push('/')} onBack={()=>go(CATCH_INDEX)} />}
 
       {signIn && (
         <div className="si-ov" onClick={()=>setSignIn(false)}>
@@ -632,7 +608,125 @@ export default function OnboardingPage() {
 }
 
 // ============================================
-// FREE-TEXT (AI-parsed) SCREEN — the delighter
+// DRILL-DOWN SCREEN — AI-suggested specifics for one topic (one page per topic)
+// ============================================
+function DrillPill({ label, on, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      display:'inline-flex',alignItems:'center',height:44,padding:'0 16px',borderRadius:980,fontFamily:'inherit',fontSize:14,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all .16s cubic-bezier(0.22,1,0.36,1)',
+      border:on?'1px solid #F5F5F7':'1px solid rgba(245,245,247,0.14)',
+      background:on?'#F5F5F7':'rgba(245,245,247,0.05)', color:on?'#000':'#F5F5F7',
+    }}>{label}</button>
+  );
+}
+
+function DrillScreen({ dir, step, total, topicCode, sug, onFetch, selected, onToggle, custom, onCustom, onBack, onContinue }) {
+  useEffect(() => { if (!sug) onFetch(topicCode); }, [topicCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const topic = TOPIC_CATEGORIES.flatMap(c=>c.topics).find(t=>t.id===topicCode);
+  const name = topic ? topic.name : topicCode;
+  const loading = !sug || sug.loading;
+  const groups = (sug && sug.groups) || [];
+  return (
+    <>
+      <div className={`sc ${dir>0?"fwd":"back"}`}>
+        <div className="hd">
+          <button className="hd-back" onClick={onBack}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <span className="hd-step">Step {step} of {total}</span>
+          <div className="hd-sp"/>
+        </div>
+        <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
+        <div className="bd">
+          <h1 className="tt">{topic && topic.icon ? topic.icon+' ' : ''}Anything in {name} you follow?</h1>
+          <p className="ds">Tap any that are yours — they lead your feed. Or add your own below.</p>
+          {loading ? (
+            <div>
+              <div className="cat-t" style={{marginBottom:13}}>Finding {name.toLowerCase()} options…</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {[96,120,72,108,84,132,90,76].map((w,i)=><span key={i} style={{height:44,width:w,borderRadius:980,background:'rgba(245,245,247,0.07)',animation:'pulse 1.2s ease-in-out infinite',animationDelay:`${i*0.09}s`}}/>)}
+              </div>
+            </div>
+          ) : groups.length===0 ? (
+            <p style={{color:'#86868B',fontSize:14.5,lineHeight:1.5}}>Nothing preset for this one — just type what you follow below.</p>
+          ) : groups.map((g,gi)=>(
+            <div key={gi} className="cat">
+              <div className="cat-t">{g.label}</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {(g.items||[]).map((it,ii)=>{ const val=String(it).toLowerCase(); return (
+                  <DrillPill key={ii} label={it} on={selected.includes(val)} onClick={()=>onToggle(val)} />
+                );})}
+              </div>
+            </div>
+          ))}
+          <div className="cat" style={{marginTop:18}}>
+            <div className="cat-t">+ Add your own</div>
+            <input value={custom} onChange={(e)=>onCustom(e.target.value)} onKeyDown={(e)=>e.stopPropagation()}
+              placeholder={`Anything else in ${name.toLowerCase()}…`}
+              style={{width:'100%',height:50,padding:'0 16px',borderRadius:14,border:'1px solid rgba(245,245,247,0.14)',background:'rgba(245,245,247,0.05)',color:'#F5F5F7',fontFamily:'inherit',fontSize:16,outline:'none',WebkitTapHighlightColor:'transparent'}} />
+          </div>
+        </div>
+      </div>
+      <div className="ft"><div className="ft-in"><div className="br">
+        <button className="bt s" onClick={onContinue}>Skip</button>
+        <button className="bt p" onClick={onContinue}>Continue</button>
+      </div></div></div>
+    </>
+  );
+}
+
+// ============================================
+// REVEAL SCREEN — short AI-written personal note, typed in (final page)
+// ============================================
+function RevealScreen({ dir, profile, onStartReading, onBack }) {
+  const [text, setText] = useState('');
+  const [typed, setTyped] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let t = '';
+      try {
+        const r = await fetch('/api/user/onboarding/reveal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ profile }) });
+        if (r.ok) { const d = await r.json(); t = (d && d.text) || ''; }
+      } catch (_) {}
+      if (!t) t = `You're all set. I'll lead your mornings with ${profile.country || 'your part of the world'} and the things you picked — and slip in the stories around them too. Let's go.`;
+      if (cancelled) return;
+      setText(t); setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!text) return;
+    let i = 0;
+    const id = setInterval(() => { i++; setTyped(text.slice(0, i)); if (i >= text.length) { clearInterval(id); setReady(true); } }, 20);
+    return () => clearInterval(id);
+  }, [text]);
+  return (
+    <div className={`sc ${dir>0?"fwd":"back"}`}>
+      <div className="hd">
+        <button className="hd-back" onClick={onBack}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div className="hd-sp"/><div className="hd-sp"/>
+      </div>
+      <div className="cp">
+        {loading ? (
+          <>
+            <div style={{fontSize:30,marginBottom:16,animation:'pulse 1.2s ease-in-out infinite'}}>✦</div>
+            <p className="cp-s on" style={{opacity:1,transform:'none'}}>Putting your briefing together…</p>
+          </>
+        ) : (
+          <>
+            <div style={{fontSize:24,marginBottom:22}}>✦</div>
+            <p style={{fontSize:'clamp(20px,4.6vw,27px)',fontWeight:500,lineHeight:1.32,letterSpacing:'-0.02em',color:'#F5F5F7',maxWidth:560,margin:'0 auto'}}>{typed}<span className={`cp-c ${ready?'hide':''}`}/></p>
+            <button className={`cp-b ${ready?'on':''}`} onClick={onStartReading}>Start reading</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// FREE-TEXT (AI-parsed) SCREEN — the catch-all
 // ============================================
 function FreeTextScreen({ dir, step, total, value, onChange, parsed, setParsed, onBack, onContinue, onSkip, finishing }) {
   const [busy, setBusy] = useState(false);
