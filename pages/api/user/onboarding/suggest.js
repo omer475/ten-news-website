@@ -131,6 +131,32 @@ export default async function handler(req, res) {
   // single-topic mode (back-compat)
   const topic = String(body.topic || '').toLowerCase().trim();
   if (!topic || !VALID_TOPICS.has(topic)) return res.status(200).json({ groups: [] });
+
+  // ?debug=1 — surface exactly what Gemini returns so prod failures are diagnosable
+  if (req.query && req.query.debug === '1') {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) return res.status(200).json({ _nokey: true });
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      const r = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildPrompt(topic, country) }] }],
+          generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 6144, thinkingConfig: { thinkingBudget: 0 } },
+        }),
+      }).finally(() => clearTimeout(timer));
+      const status = r.status;
+      const d = await r.json().catch(() => ({}));
+      const fin = d?.candidates?.[0]?.finishReason;
+      const txt = d?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
+      return res.status(200).json({ _status: status, _finish: fin, _textLen: txt.length, _err: d?.error?.message || null, _snippet: txt.slice(0, 120) });
+    } catch (e) {
+      return res.status(200).json({ _exception: e?.message });
+    }
+  }
+
   const out = await getSuggestions(topic, country, supabase);
   return res.status(200).json(out);
 }
