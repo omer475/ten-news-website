@@ -19,13 +19,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 function buildPrompt(topic, country) {
-  return `A user in ${country || 'their country'} follows "${topic}". Build the options they can tap to refine their news feed. Give a MIX of different KINDS of interest, not just specific names:
-1) ANGLES / sub-themes people follow within this topic (e.g. for AI: "AI breakthroughs", "AI stocks & business", "AI in healthcare", "AI policy & safety"; for football: "Transfers & rumors", "Match results & standings").
-2) SPECIFIC NAMES — the recognizable companies / people / teams / products / models, tailored to their country (include local + global).
+  return `A user in ${country || 'their country'} follows "${topic}". Build a DETAILED, rich set of options they can tap to refine their news feed — give plenty of specific choices, not just a few. Include a MIX of KINDS of interest:
+1) ANGLES / sub-themes within the topic (e.g. for AI: "AI breakthroughs", "AI stocks & business", "AI in healthcare", "AI policy & safety", "AI tools").
+2) SPECIFIC NAMES — recognizable companies / people / teams / products / models / leagues, tailored to their country (LOCAL + global).
 3) ALWAYS include one broad catch-all item: "All ${topic} news".
-Group them with short labels. Keep recognizable and tight.
-Return ONLY valid JSON (no trailing commas): { "groups": [ { "label": "<short label>", "items": ["<name>", ...] } ] }
-~4-5 groups, ~3-5 items each, ~18 total max. Respond in ENGLISH only (Latin script). Common short names people know.`;
+For EVERY item, also give a single minimal EMOJI icon that best represents it (a flag for a national team, a sport emoji for a club, a person emoji for a player, a relevant emoji for a company/theme).
+Group with short labels. Be DETAILED: aim for ~6 groups and ~5-6 items per group (~28-34 items total).
+Return ONLY valid JSON (no trailing commas):
+{ "groups": [ { "label": "<short label>", "items": [ { "name": "<short name people know>", "icon": "<one emoji>" } ] } ] }
+Respond in ENGLISH only (Latin script).`;
 }
 
 function parseJson(t) {
@@ -36,15 +38,27 @@ function parseJson(t) {
   return null;
 }
 
+// Normalize items to { name, icon }. Tolerates the AI returning a bare string or
+// {name, icon}. Dedups by name. Detailed: up to 8 groups, 8 items each.
 function clean(j) {
   if (!j || !Array.isArray(j.groups)) return { groups: [] };
   const groups = j.groups
     .filter((g) => g && g.label && Array.isArray(g.items))
-    .slice(0, 6)
-    .map((g) => ({
-      label: String(g.label).slice(0, 40),
-      items: [...new Set(g.items.map((i) => String(i).slice(0, 50)).filter(Boolean))].slice(0, 6),
-    }))
+    .slice(0, 8)
+    .map((g) => {
+      const seen = new Set();
+      const items = [];
+      for (const it of g.items) {
+        const name = String(it && typeof it === 'object' ? it.name : it || '').slice(0, 50).trim();
+        if (!name) continue;
+        const k = name.toLowerCase();
+        if (seen.has(k)) continue; seen.add(k);
+        const icon = String((it && typeof it === 'object' && it.icon) || '').slice(0, 8);
+        items.push({ name, icon });
+        if (items.length >= 8) break;
+      }
+      return { label: String(g.label).slice(0, 40), items };
+    })
     .filter((g) => g.items.length);
   return { groups };
 }
@@ -60,7 +74,7 @@ async function geminiSuggest(topic, country) {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildPrompt(topic, country) }] }],
-        generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 6144 },
       }),
     }).finally(() => clearTimeout(timer));
     if (!r.ok) return { groups: [] };
