@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 9000); // generous for cold starts
+    const timer = setTimeout(() => ctrl.abort(), 20000); // generous for cold starts
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -69,12 +69,15 @@ async function geminiSuggest(topic, country) {
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 9000);
+    const timer = setTimeout(() => ctrl.abort(), 20000); // detailed gen is bigger; 9s aborted it
     const r = await fetch(url, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildPrompt(topic, country) }] }],
-        generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 6144 },
+        // thinkingBudget:0 — this is structured extraction, not reasoning; turning
+        // off Gemini-2.5 "thinking" makes it faster AND stops thinking tokens from
+        // eating the output budget (was returning empty).
+        generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 6144, thinkingConfig: { thinkingBudget: 0 } },
       }),
     }).finally(() => clearTimeout(timer));
     if (!r.ok) return { groups: [] };
