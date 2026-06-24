@@ -471,16 +471,8 @@ export function CardFooter({ story, tags, onOpen }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <div style={{ display: 'flex', gap: 7, overflowX: 'auto', flex: 1, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {(tags || []).map((tag) => (
-          <span key={tag} style={{
-            fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 500, color: TP.ink2,
-            letterSpacing: '0.005em',
-            border: '1px solid rgba(245,245,247,0.12)', borderRadius: 99, padding: '7.5px 14px',
-            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(245,245,247,0.06)',
-          }}>{tag}</span>
-        ))}
-      </div>
+      <div style={{ flex: 1 }} />
+      {/* tag chips removed per design — feed stays clean */}
       {iconBtn(toggleBookmark, 'Bookmark', (
         <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? TP.gold : 'none'} stroke={bookmarked ? TP.gold : 'currentColor'} strokeWidth="1.6" strokeLinejoin="round"><path d="M6 3.8h12a.7.7 0 01.7.7v15.6a.4.4 0 01-.64.32L12 16l-6.06 4.42a.4.4 0 01-.64-.32V4.5a.7.7 0 01.7-.7z"/></svg>
       ), bookmarked ? TP.gold : TP.ink3, {

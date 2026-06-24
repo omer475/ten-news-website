@@ -445,26 +445,10 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
         </div>
       )}
 
-      {/* Action row: entities on the left, Save + Share on the right (app layout) */}
+      {/* Action row: Save + Share on the right (tags removed per design) */}
       {!minimal && (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
-        {/* Entities (interest_tags) — horizontally scrollable, takes remaining space */}
-        <div style={{
-          display: 'flex', gap: 6, flex: 1, minWidth: 0,
-          overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
-        }}>
-          {entities.map((tag, i) => (
-            <span key={i} style={{
-              flexShrink: 0,
-              fontSize: 12.5, fontWeight: 500, lineHeight: 1,
-              color: colors.chipText, background: colors.chipBg,
-              padding: '6px 11px', borderRadius: 999, whiteSpace: 'nowrap',
-              textTransform: 'capitalize',
-            }}>
-              {tag}
-            </span>
-          ))}
-        </div>
+        <div style={{ flex: 1, minWidth: 0 }} />
 
         {/* Save + Share */}
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
