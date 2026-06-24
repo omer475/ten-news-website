@@ -43,94 +43,60 @@ const ISO_TO_CODE = {
 };
 
 const TOPIC_CATEGORIES = [
-  { name: "Business & Finance", topics: [
-    { id: "economics", name: "Economics", icon: "\u{1F4B0}" },
-    { id: "stock_markets", name: "Stock Markets", icon: "\u{1F4C8}" },
-    { id: "banking", name: "Banking & Finance", icon: "\u{1F3E6}" },
-    { id: "startups", name: "Startups", icon: "\u{1F680}" },
+  { name: "Business & Money", topics: [
+    { id: "economics", name: "Economy", icon: "📉" },
+    { id: "stock_markets", name: "Markets & Investing", icon: "📈" },
+    { id: "banking", name: "Banking & Finance", icon: "🏦" },
+    { id: "startups", name: "Startups & VC", icon: "🚀" },
+    { id: "crypto", name: "Crypto", icon: "🪙" },
+    { id: "real_estate", name: "Real Estate & Housing", icon: "🏠" },
   ]},
   { name: "Technology", topics: [
-    { id: "ai", name: "AI", icon: "\u{1F916}" },
-    { id: "tech_industry", name: "Tech Industry", icon: "\u{1F4BB}" },
-    { id: "consumer_tech", name: "Consumer Tech", icon: "\u{1F4F1}" },
-    { id: "cybersecurity", name: "Cybersecurity", icon: "\u{1F510}" },
-    { id: "space", name: "Space & Aerospace", icon: "\u{1F6F8}" },
+    { id: "ai", name: "AI", icon: "🤖" },
+    { id: "tech_industry", name: "Tech & Big Tech", icon: "💻" },
+    { id: "consumer_tech", name: "Gadgets & Consumer Tech", icon: "📱" },
+    { id: "cybersecurity", name: "Cybersecurity", icon: "🔐" },
+    { id: "space", name: "Space", icon: "🛰️" },
   ]},
   { name: "Science & Health", topics: [
-    { id: "science", name: "Science", icon: "\u{1F52C}" },
-    { id: "climate", name: "Climate", icon: "\u{1F30D}" },
-    { id: "health", name: "Health & Medicine", icon: "\u{1FA7A}" },
-    { id: "biotech", name: "Biotech", icon: "\u{1F9EC}" },
+    { id: "science", name: "Science", icon: "🔬" },
+    { id: "climate", name: "Climate & Environment", icon: "🌍" },
+    { id: "health", name: "Health & Medicine", icon: "⚕️" },
+    { id: "biotech", name: "Biotech & Pharma", icon: "🧬" },
+    { id: "mental_health", name: "Mental Health & Wellness", icon: "🧠" },
   ]},
   { name: "Politics & World", topics: [
-    { id: "politics", name: "Politics", icon: "\u{1F3DB}\uFE0F" },
-    { id: "geopolitics", name: "Geopolitics", icon: "\u{1F310}" },
-    { id: "conflicts", name: "Conflicts & Wars", icon: "\u2694\uFE0F" },
-    { id: "human_rights", name: "Human Rights", icon: "\u{1F4DC}" },
+    { id: "politics", name: "Politics", icon: "🏛️" },
+    { id: "geopolitics", name: "World & Geopolitics", icon: "🌐" },
+    { id: "conflicts", name: "Conflicts & War", icon: "⚔️" },
+    { id: "human_rights", name: "Human Rights", icon: "📜" },
+    { id: "crime", name: "Crime & Justice", icon: "🚨" },
   ]},
   { name: "Sports", topics: [
-    { id: "football", name: "Football", icon: "\u26BD" },
-    { id: "american_football", name: "American Football", icon: "\u{1F3C8}" },
-    { id: "basketball", name: "Basketball", icon: "\u{1F3C0}" },
-    { id: "tennis", name: "Tennis", icon: "\u{1F3BE}" },
-    { id: "f1", name: "Formula 1", icon: "\u{1F3CE}\uFE0F" },
-    { id: "cricket", name: "Cricket", icon: "\u{1F3CF}" },
-    { id: "combat_sports", name: "Combat Sports", icon: "\u{1F94A}" },
-    { id: "olympics", name: "Olympics", icon: "\u{1F3C5}" },
+    { id: "football", name: "Football", icon: "⚽" },
+    { id: "american_football", name: "American Football", icon: "🏈" },
+    { id: "basketball", name: "Basketball", icon: "🏀" },
+    { id: "f1", name: "F1 & Motorsport", icon: "🏎️" },
+    { id: "cricket", name: "Cricket", icon: "🏏" },
+    { id: "combat_sports", name: "Combat Sports", icon: "🥊" },
+    { id: "golf", name: "Golf", icon: "⛳" },
+    { id: "ice_hockey", name: "Ice Hockey", icon: "🏒" },
+    { id: "rugby", name: "Rugby", icon: "🏉" },
+    { id: "olympics", name: "Olympics & More", icon: "🏅" },
+  ]},
+  { name: "Entertainment & Culture", topics: [
+    { id: "movies_tv", name: "Movies & TV", icon: "🎬" },
+    { id: "music", name: "Music", icon: "🎵" },
+    { id: "celebrity", name: "Celebrity & Royals", icon: "⭐" },
+    { id: "gaming", name: "Gaming", icon: "🎮" },
   ]},
   { name: "Lifestyle", topics: [
-    { id: "entertainment", name: "Entertainment", icon: "\u{1F3AC}" },
-    { id: "music", name: "Music", icon: "\u{1F3B5}" },
-    { id: "gaming", name: "Gaming", icon: "\u{1F3AE}" },
-    { id: "travel", name: "Travel", icon: "\u2708\uFE0F" },
+    { id: "food_industry", name: "Food & Dining", icon: "🍽️" },
+    { id: "travel", name: "Travel", icon: "✈️" },
+    { id: "autos", name: "Cars & EVs", icon: "🚗" },
+    { id: "education", name: "Education", icon: "🎓" },
   ]},
 ];
-
-// ============================================
-// SUB-INTERESTS — drill-down per topic. `id` is the EXACT lowercase tag string
-// that appears in article interest_tags (so feed matching is exact). EVERY chip
-// here is grounded in real corpus supply (verified ≥ ~15 articles/14d); thin/
-// niche interests (e.g. quantum physics) are intentionally left to the free-text
-// AI box, never shown as a dead chip.
-// ============================================
-const SUBINTERESTS = {
-  football: [
-    { id: "world cup", label: "World Cup", icon: "\u{1F3C6}" },
-    { id: "premier league", label: "Premier League", icon: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}" },
-    { id: "champions league", label: "Champions League", icon: "⭐" },
-    { id: "real madrid", label: "Real Madrid", icon: "⚪" },
-    { id: "barcelona", label: "Barcelona", icon: "\u{1F535}" },
-    { id: "manchester united", label: "Man United", icon: "\u{1F534}" },
-    { id: "arsenal", label: "Arsenal", icon: "\u{1F9E8}" },
-    { id: "la liga", label: "La Liga", icon: "\u{1F1EA}\u{1F1F8}" },
-    { id: "serie a", label: "Serie A", icon: "\u{1F1EE}\u{1F1F9}" },
-    { id: "bundesliga", label: "Bundesliga", icon: "\u{1F1E9}\u{1F1EA}" },
-    { id: "usmnt", label: "USMNT", icon: "\u{1F1FA}\u{1F1F8}" },
-  ],
-  basketball: [
-    { id: "nba", label: "NBA", icon: "\u{1F3C0}" },
-    { id: "nba finals", label: "NBA Finals", icon: "\u{1F3C6}" },
-    { id: "new york knicks", label: "Knicks", icon: "\u{1F7E0}" },
-    { id: "san antonio spurs", label: "Spurs", icon: "⚫" },
-    { id: "boston celtics", label: "Celtics", icon: "☘️" },
-    { id: "golden state warriors", label: "Warriors", icon: "\u{1F311}" },
-    { id: "wnba", label: "WNBA", icon: "\u{1F3C0}" },
-  ],
-  american_football: [ { id: "nfl", label: "NFL", icon: "\u{1F3C8}" } ],
-  f1: [ { id: "formula 1", label: "Formula 1", icon: "\u{1F3CE}️" }, { id: "motorsport", label: "Motorsport", icon: "\u{1F3C1}" }, { id: "nascar", label: "NASCAR", icon: "\u{1F698}" } ],
-  tennis: [ { id: "wimbledon", label: "Wimbledon", icon: "\u{1F3BE}" }, { id: "grand slam", label: "Grand Slams", icon: "\u{1F3C6}" } ],
-  combat_sports: [ { id: "ufc", label: "UFC", icon: "\u{1F94A}" }, { id: "boxing", label: "Boxing", icon: "\u{1F94A}" } ],
-  cricket: [ { id: "cricket", label: "Cricket", icon: "\u{1F3CF}" } ],
-  ai: [ { id: "openai", label: "OpenAI", icon: "\u{1F9E0}" }, { id: "chatgpt", label: "ChatGPT", icon: "\u{1F4AC}" }, { id: "nvidia", label: "Nvidia", icon: "\u{1F3AE}" } ],
-  tech_industry: [ { id: "apple", label: "Apple", icon: "\u{1F34E}" }, { id: "google", label: "Google", icon: "\u{1F50D}" }, { id: "microsoft", label: "Microsoft", icon: "\u{1FA9F}" }, { id: "meta", label: "Meta", icon: "\u{1F535}" }, { id: "nvidia", label: "Nvidia", icon: "\u{1F3AE}" }, { id: "tesla", label: "Tesla", icon: "⚡" } ],
-  consumer_tech: [ { id: "apple", label: "Apple", icon: "\u{1F34E}" }, { id: "google", label: "Google", icon: "\u{1F50D}" } ],
-  space: [ { id: "spacex", label: "SpaceX", icon: "\u{1F680}" }, { id: "nasa", label: "NASA", icon: "\u{1F6F0}️" }, { id: "astronomy", label: "Astronomy", icon: "\u{1F52D}" }, { id: "mars", label: "Mars", icon: "\u{1F534}" } ],
-  science: [ { id: "astronomy", label: "Astronomy", icon: "\u{1F52D}" }, { id: "physics", label: "Physics", icon: "⚛️" }, { id: "neuroscience", label: "Neuroscience", icon: "\u{1F9E0}" }, { id: "genetics", label: "Genetics", icon: "\u{1F9EC}" } ],
-  climate: [ { id: "climate change", label: "Climate Change", icon: "\u{1F30D}" } ],
-  startups: [ { id: "openai", label: "OpenAI", icon: "\u{1F9E0}" }, { id: "ipo", label: "IPOs", icon: "\u{1F4C8}" } ],
-  stock_markets: [ { id: "bitcoin", label: "Bitcoin", icon: "₿" }, { id: "stock market", label: "Stock Market", icon: "\u{1F4CA}" } ],
-  entertainment: [ { id: "netflix", label: "Netflix", icon: "\u{1F3AC}" } ],
-};
 
 // ============================================
 // TYPING HOOKS
@@ -196,8 +162,10 @@ export default function OnboardingPage() {
   const [siSent, setSiSent] = useState(false);
   const [siBusy, setSiBusy] = useState("");
   // adaptive drill-down: AI suggestions per topic + per-topic "add your own" text
-  const [suggestions, setSuggestions] = useState({}); // topicCode -> { loading, groups }
+  const [suggestions, setSuggestions] = useState({}); // topicCode -> { groups }
   const [customAdds, setCustomAdds] = useState({});   // topicCode -> free text
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestDone, setSuggestDone] = useState(false);
 
   const handleOAuth = async (provider) => {
     setSiErr(""); setSiBusy(provider);
@@ -247,29 +215,31 @@ export default function OnboardingPage() {
 
   const go = (n) => { setDir(n > screen ? 1 : -1); setScreen(n); };
   const toggleFollow = (code) => setFollowCountries(p => p.includes(code) ? p.filter(c=>c!==code) : p.length<5 ? [...p,code] : p);
-  const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : p.length<10 ? [...p,id] : p);
+  const toggleTopic = (id) => setSelectedTopics(p => p.includes(id) ? p.filter(t=>t!==id) : [...p,id]); // pick any number
   const toggleSub = (id) => setFollowedSubtopics(p => p.includes(id) ? p.filter(s=>s!==id) : [...p,id]);
 
-  // ── adaptive drill-down: one page per picked topic (up to 4), then catch-all, then reveal ──
-  const drillTopics = selectedTopics.slice(0, 4);
-  const DRILL0 = 3;
-  const CATCH_INDEX = DRILL0 + drillTopics.length;
-  const REVEAL_INDEX = CATCH_INDEX + 1;
-  const TOTAL = 2 + drillTopics.length + 1; // country + interests + drills + catch-all (reveal uncounted)
+  // ── adaptive drill-down: ONE combined batch step, then catch-all, then reveal ──
+  const DRILL_INDEX = 3;
+  const CATCH_INDEX = 4;
+  const REVEAL_INDEX = 5;
+  const TOTAL = 4; // country + interests + drill + catch-all (reveal uncounted)
 
-  // Fetch AI drill-down options for one topic (cached in state; never blocks the flow)
-  const fetchSuggest = async (topic) => {
-    if (!topic) return;
-    setSuggestions(prev => ({ ...prev, [topic]: { loading: true, groups: [] } }));
+  // Fetch EVERY picked topic's drill-down options in ONE batch call (one loading state).
+  const fetchSuggestBatch = async () => {
+    if (suggestDone || suggestLoading) return;
+    setSuggestLoading(true);
     try {
       const r = await fetch('/api/user/onboarding/suggest', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, country: homeCountry || '' }),
+        body: JSON.stringify({ topics: selectedTopics, country: homeCountry || '' }),
       });
-      const data = r.ok ? await r.json() : { groups: [] };
-      setSuggestions(prev => ({ ...prev, [topic]: { loading: false, groups: Array.isArray(data.groups) ? data.groups : [] } }));
+      const data = r.ok ? await r.json() : { results: {} };
+      setSuggestions((data && data.results) || {});
     } catch (_) {
-      setSuggestions(prev => ({ ...prev, [topic]: { loading: false, groups: [] } }));
+      setSuggestions({});
+    } finally {
+      setSuggestLoading(false);
+      setSuggestDone(true);
     }
   };
 
@@ -537,10 +507,10 @@ export default function OnboardingPage() {
 
       {screen===2 && <TSScreen key="s2" dir={dir} step={2} total={TOTAL}
         title="What do you keep up with?"
-        desc="Tap your obsessions — your first picks weigh heaviest. Pick at least 3."
+        desc="Tap your obsessions — your first picks weigh heaviest. Pick as many as you like."
         onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} picked · #1 weighs most`}</div>
+          <div className={`sl ${selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Pick ${3-selectedTopics.length} more`:`${selectedTopics.length} picked · #1 weighs most`}</div>
           <div className="br"><button className="bt p" disabled={selectedTopics.length<3} onClick={()=>go(3)}>Continue</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">
@@ -550,14 +520,13 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen>=DRILL0 && screen<CATCH_INDEX && (() => {
-        const topic = drillTopics[screen - DRILL0];
-        return <DrillScreen key={`drill-${topic}`} dir={dir} step={screen} total={TOTAL}
-          topicCode={topic} sug={suggestions[topic]} onFetch={fetchSuggest}
-          selected={followedSubtopics} onToggle={toggleSub}
-          custom={customAdds[topic] || ''} onCustom={(v)=>setCustomAdds(s=>({...s,[topic]:v}))}
-          onBack={()=>go(screen-1)} onContinue={()=>go(screen+1)} />;
-      })()}
+      {screen===DRILL_INDEX && <DrillAllScreen key="drill" dir={dir} step={3} total={TOTAL}
+        topics={selectedTopics} suggestions={suggestions} loading={suggestLoading}
+        onFetch={fetchSuggestBatch}
+        selected={followedSubtopics} onToggle={toggleSub}
+        customAdds={customAdds} onCustom={(topic,v)=>setCustomAdds(s=>({...s,[topic]:v}))}
+        topicName={(id)=>{const t=TOPIC_CATEGORIES.flatMap(c=>c.topics).find(x=>x.id===id);return t?`${t.icon} ${t.name}`:id;}}
+        onBack={()=>go(2)} onContinue={()=>go(CATCH_INDEX)} />}
 
       {screen===CATCH_INDEX && <FreeTextScreen key="catch" dir={dir} step={CATCH_INDEX} total={TOTAL}
         value={freeText} onChange={setFreeText} parsed={parsed} setParsed={setParsed} finishing={saving}
@@ -608,24 +577,23 @@ export default function OnboardingPage() {
 }
 
 // ============================================
-// DRILL-DOWN SCREEN — AI-suggested specifics for one topic (one page per topic)
+// DRILL-DOWN SCREEN — ALL interests' AI-suggested specifics on ONE page (one batch load)
 // ============================================
-function DrillPill({ label, on, onClick }) {
+function DrillPill({ icon, label, on, onClick }) {
   return (
     <button onClick={onClick} style={{
-      display:'inline-flex',alignItems:'center',height:44,padding:'0 16px',borderRadius:980,fontFamily:'inherit',fontSize:14,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all .16s cubic-bezier(0.22,1,0.36,1)',
+      display:'inline-flex',alignItems:'center',gap:6,height:44,padding:'0 16px',borderRadius:980,fontFamily:'inherit',fontSize:14,fontWeight:600,cursor:'pointer',WebkitTapHighlightColor:'transparent',transition:'all .16s cubic-bezier(0.22,1,0.36,1)',
       border:on?'1px solid #F5F5F7':'1px solid rgba(245,245,247,0.14)',
       background:on?'#F5F5F7':'rgba(245,245,247,0.05)', color:on?'#000':'#F5F5F7',
-    }}>{label}</button>
+    }}>{icon ? <span style={{fontSize:15,lineHeight:1}}>{icon}</span> : null}{label}</button>
   );
 }
 
-function DrillScreen({ dir, step, total, topicCode, sug, onFetch, selected, onToggle, custom, onCustom, onBack, onContinue }) {
-  useEffect(() => { if (!sug) onFetch(topicCode); }, [topicCode]); // eslint-disable-line react-hooks/exhaustive-deps
-  const topic = TOPIC_CATEGORIES.flatMap(c=>c.topics).find(t=>t.id===topicCode);
-  const name = topic ? topic.name : topicCode;
-  const loading = !sug || sug.loading;
-  const groups = (sug && sug.groups) || [];
+function DrillAllScreen({ dir, step, total, topics, suggestions, loading, onFetch, selected, onToggle, customAdds, onCustom, topicName, onBack, onContinue }) {
+  useEffect(() => { onFetch(); }, []); // single batch fetch on mount  // eslint-disable-line react-hooks/exhaustive-deps
+  const sections = topics.map(t => ({ topic: t, groups: ((suggestions[t] || {}).groups) || [] }));
+  const anyOptions = sections.some(s => s.groups.length > 0);
+  const inputStyle = { width:'100%',height:46,padding:'0 15px',borderRadius:12,border:'1px solid rgba(245,245,247,0.12)',background:'rgba(245,245,247,0.04)',color:'#F5F5F7',fontFamily:'inherit',fontSize:15,outline:'none',marginTop:6,WebkitTapHighlightColor:'transparent' };
   return (
     <>
       <div className={`sc ${dir>0?"fwd":"back"}`}>
@@ -636,39 +604,52 @@ function DrillScreen({ dir, step, total, topicCode, sug, onFetch, selected, onTo
         </div>
         <div className="pbar"><div className="pbar-f" style={{width:`${(step/total)*100}%`}}/></div>
         <div className="bd">
-          <h1 className="tt">{topic && topic.icon ? topic.icon+' ' : ''}Anything in {name} you follow?</h1>
-          <p className="ds">Tap any that are yours — they lead your feed. Or add your own below.</p>
+          <h1 className="tt">Get specific.</h1>
+          <p className="ds">Tap the exact teams, people and things you follow — they lead your feed. Skip anything that isn't you.</p>
           {loading ? (
-            <div>
-              <div className="cat-t" style={{marginBottom:13}}>Finding {name.toLowerCase()} options…</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {[96,120,72,108,84,132,90,76].map((w,i)=><span key={i} style={{height:44,width:w,borderRadius:980,background:'rgba(245,245,247,0.07)',animation:'pulse 1.2s ease-in-out infinite',animationDelay:`${i*0.09}s`}}/>)}
+            topics.slice(0, 4).map((t, ti) => (
+              <div key={t} style={{ marginBottom: 24 }}>
+                <div className="cat-t" style={{ color:'#F5F5F7', fontSize:13, fontWeight:700, textTransform:'none', letterSpacing:'-0.01em', marginBottom:11 }}>{topicName(t)}</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {[96,120,72,108,84,132].map((w, i) => <span key={i} style={{ height:44, width:w, borderRadius:980, background:'rgba(245,245,247,0.07)', animation:'pulse 1.2s ease-in-out infinite', animationDelay:`${(ti + i) * 0.07}s` }} />)}
+                </div>
               </div>
-            </div>
-          ) : groups.length===0 ? (
-            <p style={{color:'#86868B',fontSize:14.5,lineHeight:1.5}}>Nothing preset for this one — just type what you follow below.</p>
-          ) : groups.map((g,gi)=>(
-            <div key={gi} className="cat">
-              <div className="cat-t">{g.label}</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {(g.items||[]).map((it,ii)=>{ const val=String(it).toLowerCase(); return (
-                  <DrillPill key={ii} label={it} on={selected.includes(val)} onClick={()=>onToggle(val)} />
-                );})}
+            ))
+          ) : (
+            sections.map(({ topic, groups }) => (
+              <div key={topic} style={{ marginBottom: 26 }}>
+                <div className="cat-t" style={{ color:'#F5F5F7', fontSize:13, fontWeight:700, textTransform:'none', letterSpacing:'-0.01em', marginBottom:12 }}>{topicName(topic)}</div>
+                {groups.map((g, gi) => (
+                  <div key={gi} className="cat" style={{ marginBottom: 14 }}>
+                    {g.label ? <div className="cat-t">{g.label}</div> : null}
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                      {(g.items || []).map((it, ii) => {
+                        const name = typeof it === 'string' ? it : (it && it.name) || '';
+                        const icon = (typeof it === 'object' && it) ? it.icon : '';
+                        if (!name) return null;
+                        const val = name.toLowerCase();
+                        return <DrillPill key={ii} icon={icon} label={name} on={selected.includes(val)} onClick={() => onToggle(val)} />;
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <input value={customAdds[topic] || ''} onChange={(e) => onCustom(topic, e.target.value)} onKeyDown={(e) => e.stopPropagation()}
+                  placeholder="+ Add your own…" style={inputStyle} />
               </div>
-            </div>
-          ))}
-          <div className="cat" style={{marginTop:18}}>
-            <div className="cat-t">+ Add your own</div>
-            <input value={custom} onChange={(e)=>onCustom(e.target.value)} onKeyDown={(e)=>e.stopPropagation()}
-              placeholder={`Anything else in ${name.toLowerCase()}…`}
-              style={{width:'100%',height:50,padding:'0 16px',borderRadius:14,border:'1px solid rgba(245,245,247,0.14)',background:'rgba(245,245,247,0.05)',color:'#F5F5F7',fontFamily:'inherit',fontSize:16,outline:'none',WebkitTapHighlightColor:'transparent'}} />
-          </div>
+            ))
+          )}
+          {!loading && !anyOptions && (
+            <p style={{ color:'#86868B', fontSize:14.5, lineHeight:1.5, marginTop:4 }}>No specifics this time — add anything you follow above, or on the next step.</p>
+          )}
         </div>
       </div>
-      <div className="ft"><div className="ft-in"><div className="br">
-        <button className="bt s" onClick={onContinue}>Skip</button>
-        <button className="bt p" onClick={onContinue}>Continue</button>
-      </div></div></div>
+      <div className="ft"><div className="ft-in">
+        <div className="sl">{selected.length > 0 ? `Following ${selected.length}` : 'Tap any that are yours'}</div>
+        <div className="br">
+          <button className="bt s" onClick={onContinue}>Skip</button>
+          <button className="bt p" onClick={onContinue}>Continue</button>
+        </div>
+      </div></div>
     </>
   );
 }
