@@ -1,10 +1,12 @@
-// POST /api/user/onboarding/suggest  { topic, country }
-// Returns AI-generated, country-tailored drill-down options for one topic — a MIX
-// of angles/themes + specific names + an "All X news" catch-all, grouped. Live
-// Gemini, but cached in onboarding_suggestion_cache by (topic, country) since the
-// options depend only on the topic+country, not the individual — so the first
-// "football + Türkiye" user triggers the AI and everyone after reuses it instantly.
-// Never throws; returns { groups: [] } on any failure so onboarding never blocks.
+// POST /api/user/onboarding/suggest
+//   single:  { topic, country }            → { groups: [...] }
+//   BATCH:   { topics: [code,...], country } → { results: { <topic>: { groups:[...] }, ... } }
+//
+// Batch mode lets onboarding fetch the drill-down options for ALL chosen interests
+// in ONE call (one loading state), then show them combined — instead of a separate
+// spinner per interest. Options are AI-generated (live Gemini), country-tailored
+// (angles + names + "All X news"), and cached in onboarding_suggestion_cache by
+// (topic, country) so repeat combos are instant + cheap. Never throws.
 
 import { createClient } from '@supabase/supabase-js';
 import { TOPICS } from '../../../../lib/personalization';
@@ -34,7 +36,6 @@ function parseJson(t) {
   return null;
 }
 
-// sanitize the LLM output into {groups:[{label, items:[...]}]}
 function clean(j) {
   if (!j || !Array.isArray(j.groups)) return { groups: [] };
   const groups = j.groups
@@ -48,33 +49,9 @@ function clean(j) {
   return { groups };
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const topic = String((req.body && req.body.topic) || '').toLowerCase().trim();
-  const country = String((req.body && req.body.country) || '').toLowerCase().trim();
-  if (!topic || !VALID_TOPICS.has(topic)) return res.status(200).json({ groups: [] });
-
-  const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
-
-  // 1) cache lookup (topic + country)
-  if (supabase) {
-    try {
-      const { data } = await supabase
-        .from('onboarding_suggestion_cache')
-        .select('payload, created_at')
-        .eq('topic', topic).eq('country', country || '_')
-        .maybeSingle();
-      if (data && data.payload) {
-        const ageDays = (Date.now() - new Date(data.created_at).getTime()) / 86400000;
-        if (ageDays < CACHE_TTL_DAYS) return res.status(200).json({ ...data.payload, _cached: true });
-      }
-    } catch (_) {}
-  }
-
-  // 2) live Gemini
+async function geminiSuggest(topic, country) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return res.status(200).json({ groups: [] });
-  let out = { groups: [] };
+  if (!key) return { groups: [] };
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
     const ctrl = new AbortController();
@@ -86,20 +63,57 @@ export default async function handler(req, res) {
         generationConfig: { temperature: 0.3, responseMimeType: 'application/json', maxOutputTokens: 4096 },
       }),
     }).finally(() => clearTimeout(timer));
-    if (r.ok) {
-      const d = await r.json();
-      const t = d?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
-      out = clean(parseJson(t));
-    }
-  } catch (_) { out = { groups: [] }; }
+    if (!r.ok) return { groups: [] };
+    const d = await r.json();
+    const t = d?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '';
+    return clean(parseJson(t));
+  } catch (_) { return { groups: [] }; }
+}
 
-  // 3) store in cache (best-effort) only if we got real content
+// Resolve one topic's options: cache → Gemini → store. Returns {groups}.
+async function getSuggestions(topic, country, supabase) {
+  const ckey = country || '_';
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('onboarding_suggestion_cache')
+        .select('payload, created_at')
+        .eq('topic', topic).eq('country', ckey).maybeSingle();
+      if (data && data.payload) {
+        const ageDays = (Date.now() - new Date(data.created_at).getTime()) / 86400000;
+        if (ageDays < CACHE_TTL_DAYS) return data.payload;
+      }
+    } catch (_) {}
+  }
+  const out = await geminiSuggest(topic, country);
   if (supabase && out.groups.length) {
     try {
       await supabase.from('onboarding_suggestion_cache')
-        .upsert({ topic, country: country || '_', payload: out, created_at: new Date().toISOString() }, { onConflict: 'topic,country' });
+        .upsert({ topic, country: ckey, payload: out, created_at: new Date().toISOString() }, { onConflict: 'topic,country' });
     } catch (_) {}
   }
+  return out;
+}
 
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const body = req.body || {};
+  const country = String(body.country || '').toLowerCase().trim();
+  const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
+  // BATCH mode — all chosen interests in one call (one loading state)
+  if (Array.isArray(body.topics)) {
+    const topics = [...new Set(body.topics.map((t) => String(t).toLowerCase().trim()))]
+      .filter((t) => VALID_TOPICS.has(t)).slice(0, 12);
+    const settled = await Promise.all(topics.map((t) => getSuggestions(t, country, supabase)));
+    const results = {};
+    topics.forEach((t, i) => { results[t] = settled[i] || { groups: [] }; });
+    return res.status(200).json({ results });
+  }
+
+  // single-topic mode (back-compat)
+  const topic = String(body.topic || '').toLowerCase().trim();
+  if (!topic || !VALID_TOPICS.has(topic)) return res.status(200).json({ groups: [] });
+  const out = await getSuggestions(topic, country, supabase);
   return res.status(200).json(out);
 }
