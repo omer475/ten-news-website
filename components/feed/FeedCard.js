@@ -169,14 +169,14 @@ function InfoIcon({ type, color = 'currentColor', size = 14 }) {
 
 export default function FeedCard({ story, isDark = false, onOpen, onEngage, minimal = false, textOnly = false }) {
   const colors = {
-    text: isDark ? '#FFFFFF' : '#1d1d1f',
-    secondary: isDark ? 'rgba(255,255,255,0.55)' : '#6e6e73',
-    chipBg: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F4',
-    chipText: isDark ? 'rgba(255,255,255,0.70)' : '#5a5a5f',
-    divider: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-    glassBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-    cardBg: isDark ? '#0E0E0E' : '#FFFFFF',
-    actionHover: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.05)',
+    text: isDark ? '#F5F5F7' : '#1d1d1f',
+    secondary: isDark ? '#86868B' : '#6e6e73',
+    chipBg: isDark ? 'rgba(245,245,247,0.06)' : '#F2F2F4',
+    chipText: isDark ? 'rgba(245,245,247,0.66)' : '#5a5a5f',
+    divider: isDark ? 'rgba(245,245,247,0.10)' : 'rgba(0,0,0,0.06)',
+    glassBg: isDark ? 'rgba(245,245,247,0.05)' : 'rgba(0,0,0,0.04)',
+    cardBg: isDark ? 'transparent' : '#FFFFFF',
+    actionHover: isDark ? 'rgba(245,245,247,0.10)' : 'rgba(0,0,0,0.05)',
   };
 
   const title = story.title_news || story.title || '';
@@ -393,7 +393,7 @@ export default function FeedCard({ story, isDark = false, onOpen, onEngage, mini
             <div key={i} style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
               <div style={{
                 width: 6, height: 6, borderRadius: '50%', marginTop: 10, flexShrink: 0,
-                background: BULLET_COLORS[i % BULLET_COLORS.length],
+                background: withAlpha(accent, 1 - i * 0.22),
               }} />
               <div style={{ fontSize: 18, lineHeight: 1.5, color: colors.text, letterSpacing: '-0.2px' }}>
                 {renderBold(b)}

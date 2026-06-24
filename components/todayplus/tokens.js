@@ -5,36 +5,36 @@
 import React from 'react';
 
 export const TP = {
-  bg: '#FCFBF8',
-  ink: '#16150F',
-  ink2: '#5F5B51',
-  ink3: '#A39E92',
-  line: '#EAE6DD',
-  gold: '#A8802F',      // brand accent on white (NOT the old #C9A464)
-  goldSoft: '#C9A464',  // only on dark surfaces (cover overlay, map card)
-  red: '#C8362F',
-  green: '#1E7F4F',
+  bg: '#000000',
+  ink: '#F5F5F7',
+  ink2: '#86868B',
+  ink3: '#6E6E73',
+  line: 'rgba(245,245,247,0.10)',
+  gold: '#F5F5F7',      // base accent → white (minimal, matches onboarding)
+  goldSoft: '#C9A464',  // legacy dark-surface accent (cover overlay, map card)
+  red: '#FF453A',
+  green: '#34C759',
   breakingDot: '#FF5A52',
-  mapBg: '#0E1320',
+  mapBg: '#0A0A0A',
   mapLand: '#1A2233',
   mapLandStroke: '#27314A',
   mapGrid: '#1D2536',
   mapText: '#E8EAF2',
 };
 
-// §2.2 + the 3 pipeline additions (SPORTS/CULTURE/HEALTH)
+// §2.2 — category accents, brightened to read on pure black.
 export const CATEGORY_ACCENTS = {
-  WORLD: '#B5443F',
-  AI: '#A8802F',
-  ECONOMY: '#946A1C',
-  TECH: '#2F66D0',
-  POLICY: '#7A4FB6',
-  MARKETS: '#A8802F',
-  SCIENCE: '#1F8A70',
-  ENERGY: '#C25A1F',
-  SPORTS: '#2D7A31',
-  CULTURE: '#B23A77',
-  HEALTH: '#0E7C86',
+  WORLD: '#FF6B5C',
+  AI: '#F5C451',
+  ECONOMY: '#E0A33A',
+  TECH: '#5B9BFF',
+  POLICY: '#B98BFF',
+  MARKETS: '#F5C451',
+  SCIENCE: '#34D3A6',
+  ENERGY: '#FF9E4D',
+  SPORTS: '#4FD56A',
+  CULTURE: '#FF7AB8',
+  HEALTH: '#3FD4DE',
 };
 
 export function accentFor(category) {
@@ -45,10 +45,11 @@ export function accentFor(category) {
 // Gabarito: bold rounded geometric display — friendly, confident, the
 // Duolingo/Spotify generation. Figtree: clean warm body. IBM Plex Mono:
 // small technical labels for a cool data edge.
-export const FONT_HEAD = "'Gabarito', -apple-system, BlinkMacSystemFont, sans-serif";
-export const FONT_SERIF = "'Gabarito', -apple-system, BlinkMacSystemFont, sans-serif"; // serif voice retired (too news)
-export const FONT_BODY = "'Figtree', -apple-system, BlinkMacSystemFont, sans-serif";
-export const FONT_MONO = "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace";
+// Match the onboarding: clean Apple system type (SF Pro) across the feed.
+export const FONT_HEAD = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, 'Helvetica Neue', sans-serif";
+export const FONT_SERIF = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif";
+export const FONT_BODY = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Helvetica Neue', sans-serif";
+export const FONT_MONO = "'SF Mono', ui-monospace, 'IBM Plex Mono', monospace";
 
 // §7.2 number formatting: thousands separators for ≥1000; one decimal iff the
 // target has decimals. Prefix/unit are passed around the formatted number.

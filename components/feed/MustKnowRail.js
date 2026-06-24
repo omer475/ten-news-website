@@ -35,9 +35,9 @@ function timeAgo(dateStr) {
 export default function MustKnowRail({ stories, isDark = true, onOpen }) {
   if (!stories || stories.length === 0) return null;
 
-  const text = isDark ? '#FFFFFF' : '#1d1d1f';
-  const sub = isDark ? 'rgba(255,255,255,0.5)' : '#6e6e73';
-  const nodeBg = isDark ? '#0E0E0E' : '#FFFFFF';
+  const text = isDark ? '#F5F5F7' : '#1d1d1f';
+  const sub = isDark ? '#86868B' : '#6e6e73';
+  const nodeBg = isDark ? '#000000' : '#FFFFFF';
 
   return (
     <section style={{ maxWidth: 640, margin: '0 auto', width: '100%', padding: '20px 16px 10px', boxSizing: 'border-box' }}>
@@ -94,7 +94,7 @@ export default function MustKnowRail({ stories, isDark = true, onOpen }) {
       </div>
 
       {/* divider below the rail */}
-      <div style={{ height: 0.5, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)', marginTop: 18 }} />
+      <div style={{ height: 0.5, background: isDark ? 'rgba(245,245,247,0.1)' : 'rgba(0,0,0,0.07)', marginTop: 18 }} />
     </section>
   );
 }

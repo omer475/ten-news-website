@@ -131,7 +131,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showGraph, setShowGraph] = useState({});
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
-  const [darkMode, setDarkMode] = useState(false); // LIGHT chrome — the redesign is a light product (user, 2026-06-13)
+  const [darkMode, setDarkMode] = useState(true); // BLACK minimal — matches the onboarding design (user, 2026-06-24)
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -5576,14 +5576,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
         </>
       )}
 
-      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#0E0E0E' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100dvh', background: darkMode ? '#000000' : '#FFFFFF', WebkitOverflowScrolling: 'touch' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
         {currentIndex === 0 && (
           <div className="header">
             <div className="logo">
-              Today<span className="logo-ten" style={{ color: plusColor }}>+</span>
+              today<span className="logo-ten" style={{ color: '#F5F5F7' }}>+</span>
             </div>
             
             <div style={{ flex: 1 }}></div>

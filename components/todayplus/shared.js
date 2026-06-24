@@ -476,9 +476,8 @@ export function CardFooter({ story, tags, onOpen }) {
           <span key={tag} style={{
             fontFamily: FONT_BODY, fontSize: 12.5, fontWeight: 500, color: TP.ink2,
             letterSpacing: '0.005em',
-            border: '1px solid rgba(22,21,15,0.07)', borderRadius: 99, padding: '7.5px 14px',
-            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(255,255,255,0.65)',
-            boxShadow: '0 1px 2px rgba(22,21,15,0.03)',
+            border: '1px solid rgba(245,245,247,0.12)', borderRadius: 99, padding: '7.5px 14px',
+            whiteSpace: 'nowrap', flexShrink: 0, background: 'rgba(245,245,247,0.06)',
           }}>{tag}</span>
         ))}
       </div>

@@ -504,7 +504,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
           {/* rail draws downward; accent fades into the hairline */}
           <span style={{
             position: 'absolute', left: 5, top: 6, bottom: 6, width: 1.5,
-            background: `linear-gradient(to bottom, ${accent} 0%, color-mix(in srgb, ${accent} 35%, ${'#EAE6DD'}) 40%, #EAE6DD 100%)`,
+            background: `linear-gradient(to bottom, ${accent} 0%, color-mix(in srgb, ${accent} 35%, rgba(245,245,247,0.12)) 40%, rgba(245,245,247,0.10) 100%)`,
             transform: shown ? 'scaleY(1)' : 'scaleY(0)',
             transformOrigin: 'top',
             transition: animate ? 'transform 0.9s cubic-bezier(.2,.7,.2,1) 0.2s' : 'none',
