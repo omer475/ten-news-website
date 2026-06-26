@@ -222,6 +222,7 @@ export default function TodayPlusFeed({
   textOnly,
 }) {
   const [modules, setModules] = useState(null);
+  const essentialsCount = (stories || []).filter((s) => s && s.is_essential).length;
   const sentinelRef = useRef(null);
   const reduced = useReducedMotion();
 
@@ -301,6 +302,15 @@ export default function TodayPlusFeed({
         display: 'flex', flexDirection: 'column', gap: 48,
         padding: '24px 0 90px',
       }}>
+        {essentialsCount > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '0 20px', marginBottom: -28 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: TP.gold, boxShadow: `0 0 9px ${TP.gold}`, flexShrink: 0 }} />
+            <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: TP.ink2 }}>
+              {essentialsCount} essential {essentialsCount === 1 ? 'story' : 'stories'} today
+            </span>
+          </div>
+        ) : null}
+
         {rendered}
 
         {hasMore ? <div ref={sentinelRef} style={{ height: 1 }} /> : null}

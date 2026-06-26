@@ -325,17 +325,33 @@ export function TPCountdownChip({ countdown, accent, light = false }) {
 // the category lives only in the accent color. The row keeps the accent dash
 // (a quiet category-color cue) + the right-aligned timestamp.
 export function KickerRow({ category, accent, story, prefix, countdown, label }) {
+  const essential = !!(story && story.is_essential);
+  const lighter = String((story && story.display && story.display.tone) || '').toLowerCase().startsWith('li');
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-      {label ? (
-        <span style={{
-          fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
-          letterSpacing: '0.2em', textTransform: 'uppercase', color: accent,
-        }}>{label}</span>
-      ) : (
-        <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)`, flexShrink: 0 }} />
-      )}
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        {essential ? (
+          <span style={{
+            fontFamily: FONT_MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+            color: '#000', background: accent, padding: '3px 7px', borderRadius: 6, flexShrink: 0,
+          }}>ESSENTIAL</span>
+        ) : null}
+        {label ? (
+          <span style={{
+            fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
+            letterSpacing: '0.2em', textTransform: 'uppercase', color: accent,
+          }}>{label}</span>
+        ) : (!essential ? (
+          <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)`, flexShrink: 0 }} />
+        ) : null)}
+        {lighter ? (
+          <span style={{
+            fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500, letterSpacing: '0.12em',
+            color: TP.ink3, border: `1px solid ${TP.line}`, padding: '3px 7px', borderRadius: 6, flexShrink: 0,
+          }}>LIGHTER</span>
+        ) : null}
+      </span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minWidth: 0, flexShrink: 0 }}>
         {countdown ? <TPCountdownChip countdown={countdown} accent={accent} /> : null}
         <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
           {ageLabel(story?.publishedAt)}
@@ -427,6 +443,82 @@ function loadBookmarks() {
   try { return new Set(JSON.parse(localStorage.getItem('tp_bookmarks') || '[]')); } catch { return new Set(); }
 }
 
+// ── "Why it matters" callout (display.why_it_matters) ───────────────────────
+export function WhyItMatters({ story }) {
+  const why = story && story.display && story.display.why_it_matters;
+  if (!why || !String(why).trim()) return null;
+  return (
+    <div style={{
+      marginBottom: 16, padding: '12px 14px', borderRadius: 14,
+      background: 'rgba(245,245,247,0.04)', border: '1px solid rgba(245,245,247,0.08)',
+    }}>
+      <div style={{ fontFamily: FONT_MONO, fontSize: 9, fontWeight: 600, letterSpacing: '0.16em', color: TP.ink3, marginBottom: 6 }}>
+        WHY IT MATTERS
+      </div>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink }}>
+        {String(why)}
+      </div>
+    </div>
+  );
+}
+
+// ── Less / More feedback → POST /api/feed/signal (built defensively;
+//    optimistic + persisted locally; a 404 until the backend ships is a no-op) ──
+function postSignal(story, signal) {
+  try {
+    const body = { article_id: story.id, signal };
+    if (story.cluster_id) body.cluster_id = story.cluster_id;
+    const topic = (story.display && story.display.category) || story.category;
+    if (topic) body.topic = topic;
+    if (story.source) body.source = story.source;
+    fetch('/api/feed/signal', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    }).catch(() => {});
+  } catch (_) {}
+}
+
+export function FeedSignal({ story }) {
+  const id = String(story.id || '');
+  const [val, setVal] = useState(null); // 'more' | 'less' | null
+  useEffect(() => {
+    try { const m = JSON.parse(localStorage.getItem('tp_signals') || '{}'); if (m[id]) setVal(m[id]); } catch (_) {}
+  }, [id]);
+  const pick = (sig) => (e) => {
+    e.stopPropagation();
+    const next = val === sig ? null : sig;
+    setVal(next);
+    try {
+      const m = JSON.parse(localStorage.getItem('tp_signals') || '{}');
+      if (next) m[id] = next; else delete m[id];
+      localStorage.setItem('tp_signals', JSON.stringify(m));
+    } catch (_) {}
+    if (next) postSignal(story, next);
+  };
+  const pill = (sig, text, path) => {
+    const on = val === sig;
+    return (
+      <button onClick={pick(sig)} aria-label={`${text} like this`} title={`${text} stories like this`} style={{
+        all: 'unset', cursor: 'pointer', height: 32, padding: '0 12px', borderRadius: 999,
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontFamily: FONT_MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+        color: on ? '#000' : TP.ink3,
+        background: on ? TP.ink : 'rgba(245,245,247,0.05)',
+        border: `1px solid ${on ? TP.ink : 'rgba(245,245,247,0.12)'}`,
+        WebkitTapHighlightColor: 'transparent', transition: 'all 0.16s ease',
+      }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>
+        {text}
+      </button>
+    );
+  };
+  return (
+    <div style={{ display: 'flex', gap: 7 }}>
+      {pill('more', 'More', <><path d="M12 19V5" /><path d="M5 12l7-7 7 7" /></>)}
+      {pill('less', 'Less', <><path d="M12 5v14" /><path d="M5 12l7 7 7-7" /></>)}
+    </div>
+  );
+}
+
 export function CardFooter({ story, tags, onOpen }) {
   const reduced = useReducedMotion();
   const [bookmarked, setBookmarked] = useState(false);
@@ -470,9 +562,11 @@ export function CardFooter({ story, tags, onOpen }) {
   );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <div>
+      <WhyItMatters story={story} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <FeedSignal story={story} />
       <div style={{ flex: 1 }} />
-      {/* tag chips removed per design — feed stays clean */}
       {iconBtn(toggleBookmark, 'Bookmark', (
         <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? TP.gold : 'none'} stroke={bookmarked ? TP.gold : 'currentColor'} strokeWidth="1.6" strokeLinejoin="round"><path d="M6 3.8h12a.7.7 0 01.7.7v15.6a.4.4 0 01-.64.32L12 16l-6.06 4.42a.4.4 0 01-.64-.32V4.5a.7.7 0 01.7-.7z"/></svg>
       ), bookmarked ? TP.gold : TP.ink3, {
@@ -482,6 +576,7 @@ export function CardFooter({ story, tags, onOpen }) {
       {iconBtn(share, 'Share', (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6.2a.8.8 0 00.8.8h12.4a.8.8 0 00.8-.8V13"/></svg>
       ))}
+      </div>
     </div>
   );
 }
