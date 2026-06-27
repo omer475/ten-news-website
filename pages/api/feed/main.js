@@ -20,7 +20,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { serveTrinityFeed, recordSlateExposure } from '../../../lib/trinityServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
+import { getEssentials } from '../../../lib/essentials.js'
 import { readFeedCache, writeFeedCache, buildExposureMeta, expandExposureMeta } from '../../../lib/feedCache.js'
+
+// Mark each served article's is_essential flag from the global daily set.
+function markEssentials(articles, essentialIds) {
+  for (const a of articles) a.is_essential = essentialIds.has(a.id)
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -147,6 +153,23 @@ export default async function handler(req, res) {
   // writes and trusts the client's seen_ids (built from its ≥55%-visibility
   // tracking). iOS keeps the default serve-side logging.
   const clientExposure = req.query.client_exposure === '1'
+
+  // "New since last visit" (Feature 2, logged-in cross-device). Read the prior
+  // visit timestamp to return to the client, then stamp now(). Guests are
+  // handled frontend-side via localStorage. Best-effort: never fail the feed.
+  let lastVisitAt = null
+  if (userId && isFirstPage && !isWarmer) {
+    try {
+      const { data: prof } = await supabase
+        .from('profiles').select('last_feed_visit_at').eq('id', userId).maybeSingle()
+      lastVisitAt = prof?.last_feed_visit_at || null
+      await supabase.from('profiles')
+        .update({ last_feed_visit_at: new Date().toISOString() }).eq('id', userId)
+    } catch (e) {
+      console.error('[feed.lastvisit] failed:', e.message)
+    }
+  }
+
   if (FEED_CACHE_ENABLED && userId && isFirstPage && !isWarmer) {
     const cacheT0 = Date.now()
     try {
@@ -175,6 +198,8 @@ export default async function handler(req, res) {
           if (impInsert?.error) console.error('[trinity.cache] impression log failed:', impInsert.error.message)
         }
         console.log(`[trinity.cache] HIT user=${userId.slice(0, 8)} served=${cached.articles.length} poolStored=${cached.poolSize} ageMs=${cached.ageMs} durationMs=${Date.now() - cacheT0}`)
+        const essentials = await getEssentials(supabase)
+        markEssentials(cached.articles, essentials.ids)
         return res.status(200).json({
           articles: cached.articles,
           next_cursor: null,
@@ -183,6 +208,8 @@ export default async function handler(req, res) {
           feed_state: 'normal',
           fresh_count: cached.articles.length,
           caught_up_message: null,
+          essentials_total: essentials.total,
+          last_visit_at: lastVisitAt,
           _trinity_debug: { path: 'cache', ageMs: cached.ageMs },
         })
       }
@@ -266,6 +293,12 @@ export default async function handler(req, res) {
     }
   }
 
+  // "Today's essentials" boundary (Feature 2). Global daily must-know set —
+  // mark which served articles belong to it; essentials_total is the boundary
+  // size. Marked before the cache write so the persisted slate stays consistent.
+  const essentials = await getEssentials(supabase)
+  markEssentials(formatted, essentials.ids)
+
   // user_feed_impressions has user_id NOT NULL and NO guest_device_id column.
   // Skip impression logging for anonymous-device requests; Trinity bandit
   // updates already happened inside serveTrinityFeed.
@@ -313,6 +346,8 @@ export default async function handler(req, res) {
     feed_state: 'normal',
     fresh_count: formatted.length,
     caught_up_message: null,
+    essentials_total: essentials.total,
+    last_visit_at: lastVisitAt,
     _trinity_debug: dbg,
   })
 }

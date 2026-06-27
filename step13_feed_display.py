@@ -71,6 +71,8 @@ REQUIRED FIELDS (always present):
 - "category": one of WORLD, AI, ECONOMY, TECH, POLICY, MARKETS, SCIENCE, ENERGY, SPORTS, CULTURE, HEALTH. Pick the best fit (an AI-company story is AI, not TECH; an oil/power/climate-infrastructure story is ENERGY; central-bank/stocks/crypto is MARKETS; macro/trade/jobs is ECONOMY; legislation/regulation/elections is POLICY).
 - "title": the story title with 1-2 key entities wrapped in <em>…</em> (company, person, country, product). Keep the wording of the title EXACTLY as given — only add <em> marks.
 - "lede": ONE plain sentence (max ~140 chars) summarizing the story. No tags.
+- "why_it_matters": 1-2 short sentences (max ~200 chars) on the CONSEQUENCE or meaning of the story — why a reader should CARE. State the stakes / what changes / who is affected, NOT more facts and NOT a restated headline. Every name and number in it MUST appear in the bullets or source text. Do NOT speculate ("could", "might", vague predictions) and do NOT invent stakes. If the source does not support a real, concrete consequence, return null. No tags.
+- "tone": "light" or "standard". "light" = a deliberately lighter story: uplifting, fascinating, surprising, low-stakes, non-political, non-distressing (e.g. a science-wonder, a sports/culture delight, good news, a surprising fact). "standard" = everything else (politics, conflict, economy, disasters, hard news). When unsure, use "standard".
 - "bullets": the 2-3 bullets EXACTLY as given, but with key entities wrapped in <em>…</em> and the single most important phrase per bullet (optionally) in <b>…</b>. Do not rewrite the text.
 - "stats": 2-3 key numbers of the story, each as [LABEL, value, prefix, unit, sub]:
     LABEL: 1-3 words, uppercase, max 14 chars (e.g. "DEAL SIZE")
@@ -162,8 +164,81 @@ def _valid_stat(item) -> Optional[list]:
     return [label.upper(), value, prefix, unit, sub]
 
 
+# Common interpretive words a "why it matters" sentence legitimately adds on
+# top of source vocabulary — excluded from the anti-generic overlap check.
+_WHY_STOPWORDS = frozenset("""
+the a an and or but for nor so yet of to in on at by with from into over under
+this that these those it its their your our his her they them what which who whom
+is are was were be been being has have had will would could should may might can
+more most less least very much many such only also than then when while because
+matters meaning consequence stakes change changes affect affects impact about
+""".split())
+
+
+def _why_tokens(s: str) -> List[str]:
+    return re.findall(r"[a-z0-9']+", (s or '').lower())
+
+
+def _why_numbers(s: str) -> set:
+    """Numeric tokens, comma-stripped, trailing-zero-decimal normalized."""
+    out = set()
+    for n in re.findall(r'\d[\d,]*(?:\.\d+)?', s or ''):
+        n = n.replace(',', '')
+        out.add(n)
+        if n.endswith('.0'):
+            out.add(n[:-2])
+    return out
+
+
+def _ground_why_it_matters(sentence: str, source_text: str,
+                           orig_title: str, orig_bullets: List[str]) -> Optional[str]:
+    """
+    Conservative anti-fabrication gate for why_it_matters. Returns the cleaned
+    sentence if it is grounded in the source, else None. Grounds on the HARD
+    fabrication signals (numbers + proper nouns) rather than full content
+    overlap, since a consequence sentence legitimately introduces interpretive
+    words not present verbatim in the source.
+    """
+    sentence = _strip_tags(str(sentence or '')).replace('**', '').strip()
+    if not sentence or len(sentence) < 20:
+        return None
+    corpus = f"{orig_title} {' '.join(orig_bullets or [])} {source_text or ''}"
+    corpus_tokens = set(_why_tokens(corpus))
+    corpus_nums = _why_numbers(corpus)
+
+    # 1. Every number in the sentence must trace to the source.
+    if not _why_numbers(sentence) <= corpus_nums:
+        return None
+
+    # 2. Every proper noun / acronym (capitalized token NOT at a sentence
+    #    start) must appear in the source — catches invented names/places.
+    words = sentence.split()
+    prev_ends_sentence = True
+    for w in words:
+        bare = re.sub(r"[^A-Za-z0-9]", '', w)
+        sentence_initial = prev_ends_sentence
+        prev_ends_sentence = w.endswith(('.', '!', '?', ':'))
+        if not bare or len(bare) < 3:
+            continue
+        looks_proper = (bare[0].isupper() and bare[1:].lower() == bare[1:]) \
+            or (bare.isupper() and bare.isalpha())
+        if looks_proper and not sentence_initial:
+            if bare.lower() not in corpus_tokens:
+                return None
+
+    # 3. Anti-generic: at least 2 substantive content words shared with the
+    #    source so the sentence is demonstrably about THIS story.
+    content = {t for t in _why_tokens(sentence)
+               if len(t) >= 4 and t not in _WHY_STOPWORDS}
+    if sum(1 for t in content if t in corpus_tokens) < 2:
+        return None
+
+    return sentence[:200]
+
+
 def validate_display(result: Dict, pipeline_category: str,
-                     orig_title: str, orig_bullets: List[str]) -> Optional[Dict]:
+                     orig_title: str, orig_bullets: List[str],
+                     source_text: str = '') -> Optional[Dict]:
     """
     Validate + repair the model output. Required fields are repaired with
     deterministic fallbacks; invalid OPTIONAL signals are silently dropped
@@ -203,6 +278,13 @@ def validate_display(result: Dict, pipeline_category: str,
     if not lede:
         lede = _plain(orig_bullets[0]) if orig_bullets else ''
     out['lede'] = lede[:200]
+
+    # why_it_matters — grounded consequence line; null when not groundable.
+    out['why_it_matters'] = _ground_why_it_matters(
+        result.get('why_it_matters', ''), source_text, orig_title, orig_bullets)
+
+    # tone — "light" vs "standard" (default standard when unsure/missing)
+    out['tone'] = 'light' if str(result.get('tone', '')).strip().lower() == 'light' else 'standard'
 
     # bullets — same count/wording as original, only marks added
     bullets = result.get('bullets')
@@ -373,7 +455,8 @@ class FeedDisplayWriter:
                     text = m.group(0)
                 result = json.loads(text)
                 cleaned = validate_display(result, article.get('category', 'Other'),
-                                           title, bullets)
+                                           title, bullets,
+                                           source_text=article.get('source_text') or '')
                 if cleaned:
                     if cleaned.get('stats') or _digit_groups < 6 \
                             or attempt >= self.config.retry_attempts - 1:
