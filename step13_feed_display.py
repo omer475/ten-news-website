@@ -233,7 +233,20 @@ def _ground_why_it_matters(sentence: str, source_text: str,
     if sum(1 for t in content if t in corpus_tokens) < 2:
         return None
 
-    return sentence[:200]
+    # Clean-truncate to ~200 chars: prefer a sentence boundary, else a word
+    # boundary — never cut mid-word (the client renders this verbatim).
+    if len(sentence) > 200:
+        cut = sentence[:200]
+        ends = [m.end() for m in re.finditer(r'[.!?](?:\s|$)', cut) if m.end() >= 120]
+        if ends:
+            sentence = cut[:ends[-1]].strip()
+        else:
+            sp = cut.rfind(' ')
+            sentence = (cut[:sp] if sp >= 120 else cut).rstrip()
+        if sentence.count('(') > sentence.count(')'):
+            sentence = re.sub(r'\s*\([^)]*$', '', sentence).rstrip()
+        sentence = sentence.rstrip(' ,;:—-')
+    return sentence
 
 
 def validate_display(result: Dict, pipeline_category: str,
