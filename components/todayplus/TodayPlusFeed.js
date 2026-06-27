@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FeedCard from '../feed/FeedCard';
 import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
-import { TP, FONT_MONO, accentFor } from './tokens';
+import { TP, FONT_MONO, FONT_HEAD, accentFor } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
 import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
@@ -90,18 +90,19 @@ function useFeedBlocks(stories, modules) {
       cacheRef.current = cache;
     }
 
-    for (let i = cache.count; i < news.length; i += 1) {
-      const story = news[i];
+    if (!cache.lightPool) cache.lightPool = [];
+
+    // Assign a template (honoring 24h per-article memory + image rhythm) and push.
+    const placeStory = (story, key, isFirst) => {
       const display = story.display || null;
       let template = 'legacy';
       if (display) {
-        if (i === 0 && hasHero) {
+        if (isFirst && hasHero) {
           // The promoted breaking story always opens as the flagship Cover.
           template = cache.selector.use('cover', cache.blockIdx, display);
           rememberTemplate(story.id, 'cover');
         } else {
-          // Same article = same card style across loads (24h memory), so a
-          // repeat can't masquerade as a new story in a different template.
+          // Same article = same card style across loads (24h memory).
           const kept = rememberedTemplate(story.id);
           const reused = kept && kept !== 'legacy' && CARD_BY_TEMPLATE[kept]
             ? cache.selector.use(kept, cache.blockIdx, display)
@@ -109,7 +110,6 @@ function useFeedBlocks(stories, modules) {
           if (reused) {
             template = reused;
           } else {
-            // no memory, or honoring it would repeat the previous card
             template = cache.selector.choose(display, cache.blockIdx);
             rememberTemplate(story.id, template);
           }
@@ -117,10 +117,22 @@ function useFeedBlocks(stories, modules) {
       } else {
         cache.selector.recordLegacy(cache.blockIdx);
       }
-
-      cache.blocks.push({ type: 'story', story, template, key: `s-${story.id ?? i}` });
+      cache.blocks.push({ type: 'story', story, template, key });
       cache.blockIdx += 1;
       cache.storyCount += 1;
+    };
+
+    // Feature 3 — a non-essential "light" story becomes a mood reset placed ~every
+    // 10 cards (not its natural slot). Essentials never get pulled aside.
+    const isLight = (s) => !!(s && s.display && String(s.display.tone || '').toLowerCase().startsWith('li')) && !s.is_essential;
+
+    for (let i = cache.count; i < news.length; i += 1) {
+      const story = news[i];
+
+      // Hold light stories aside (the hero at i===0 is never pooled).
+      if (isLight(story) && !(i === 0 && hasHero)) { cache.lightPool.push(story); continue; }
+
+      placeStory(story, `s-${story.id ?? i}`, i === 0);
 
       // One module after every 3 story cards (§4); modules don't touch rhythm.
       if (cache.storyCount % 3 === 0) {
@@ -129,6 +141,12 @@ function useFeedBlocks(stories, modules) {
           cache.blocks.push({ type: 'module', item, key: `m-${cache.blockIdx}-${cache.storyCount}` });
           cache.blockIdx += 1;
         }
+      }
+
+      // One light story as a mood reset every ~10 cards (never two in a row).
+      if (cache.storyCount % 10 === 0 && cache.lightPool.length) {
+        const ls = cache.lightPool.shift();
+        placeStory(ls, `s-light-${ls.id}`, false);
       }
     }
     cache.count = news.length;
@@ -209,6 +227,48 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
 
 // ── The feed ─────────────────────────────────────────────────────────────────
 
+// ── Layer dividers / finish line (black minimal) ───────────────────────────
+function FeedDivider({ label }) {
+  return (
+    <div style={{ padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ flex: 1, height: 1, background: TP.line }} />
+        <span style={{ fontFamily: FONT_MONO, fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: TP.ink2, whiteSpace: 'nowrap' }}>{label}</span>
+        <span style={{ flex: 1, height: 1, background: TP.line }} />
+      </div>
+    </div>
+  );
+}
+
+function FeedNote({ text }) {
+  return (
+    <div style={{ padding: '0 20px', textAlign: 'center', fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: TP.ink3 }}>
+      {text}
+    </div>
+  );
+}
+
+function EssentialsFinish({ onKeepReading }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '8px 24px' }}>
+      <div style={{ width: 42, height: 42, borderRadius: '50%', border: `1.5px solid ${TP.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TP.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+      </div>
+      <div style={{ fontFamily: FONT_HEAD, fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: TP.ink, textAlign: 'center', maxWidth: 280, lineHeight: 1.25 }}>
+        You’re caught up on today’s essentials
+      </div>
+      <button onClick={onKeepReading} style={{
+        all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
+        height: 44, padding: '0 22px', borderRadius: 999, background: TP.ink, color: '#000',
+        fontFamily: FONT_HEAD, fontSize: 15, fontWeight: 600, WebkitTapHighlightColor: 'transparent',
+      }}>
+        Keep reading
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+      </button>
+    </div>
+  );
+}
+
 export default function TodayPlusFeed({
   stories,
   user,
@@ -222,9 +282,27 @@ export default function TodayPlusFeed({
   textOnly,
 }) {
   const [modules, setModules] = useState(null);
-  const essentialsCount = (stories || []).filter((s) => s && s.is_essential).length;
+  const [lastVisit, setLastVisit] = useState(undefined); // undefined=loading · null=first visit · number=ms
   const sentinelRef = useRef(null);
   const reduced = useReducedMotion();
+
+  // "New since you were here": read the PRIOR visit, THEN stamp now. For logged-in
+  // users also fold in the backend's last_feed_visit_at when exposed. Read once.
+  useEffect(() => {
+    let prev = null;
+    try {
+      const v = localStorage.getItem('tn_last_visit');
+      prev = v ? Number(v) : null;
+      localStorage.setItem('tn_last_visit', String(Date.now()));
+    } catch (_) {}
+    let backend = null;
+    try {
+      const t = user && user.last_feed_visit_at;
+      if (t) { const ms = new Date(t).getTime(); if (!Number.isNaN(ms)) backend = ms; }
+    } catch (_) {}
+    const cand = [prev, backend].filter((v) => v != null && !Number.isNaN(v));
+    setLastVisit(cand.length ? Math.max(...cand) : null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Daily interstitial modules — a missing key is skipped in the rotation.
   useEffect(() => {
@@ -250,44 +328,74 @@ export default function TodayPlusFeed({
 
   const blocks = useFeedBlocks(stories, modules);
 
-  // Render with the existing sign-up gate: non-users see paywall at index N.
+  // ── Two-layer feed: Today's Essentials first → finish line → Keep reading ──
+  const renderStoryBlock = (block) => (
+    <LazyMount key={block.key} estimate={520}>
+      <CardBoundary>
+        <Entrance entryKey={block.key}>
+          <StoryBlock story={block.story} template={block.template} onOpen={onOpen} onEngage={onEngage} textOnly={textOnly} />
+        </Entrance>
+      </CardBoundary>
+    </LazyMount>
+  );
+  const renderModuleBlock = (block) => (
+    <LazyMount key={block.key} estimate={260}>
+      <CardBoundary>
+        <Entrance entryKey={block.key}>
+          <div style={{ padding: '0 16px' }}><ModuleBlock item={block.item} moduleKey={block.key} /></div>
+        </Entrance>
+      </CardBoundary>
+    </LazyMount>
+  );
+
+  const storyMs = (s) => {
+    const t = s && (s.published_at || s.publishedAt);
+    const ms = t ? new Date(t).getTime() : NaN;
+    return Number.isNaN(ms) ? null : ms;
+  };
+
+  const essentialBlocks = blocks.filter((b) => b.type === 'story' && b.story && b.story.is_essential);
+  const restBlocks = blocks.filter((b) => !(b.type === 'story' && b.story && b.story.is_essential));
+  const hasEssentials = essentialBlocks.length > 0;
+  const isReturn = typeof lastVisit === 'number';
+  const newEssentials = isReturn
+    ? essentialBlocks.filter((b) => { const ms = storyMs(b.story); return ms != null && ms > lastVisit; }).length
+    : 0;
+
+  // Sign-up gate spans both layers (paywall after N total stories).
   let storyIdx = 0;
-  const rendered = [];
-  for (const block of blocks) {
-    if (block.type === 'story') {
-      if (!user && storyIdx >= paywallThreshold) {
-        if (storyIdx === paywallThreshold && renderPaywall) rendered.push(<React.Fragment key="paywall">{renderPaywall()}</React.Fragment>);
-        break;
-      }
-      rendered.push(
-        <LazyMount key={block.key} estimate={520}>
-          <CardBoundary>
-            <Entrance entryKey={block.key}>
-              <StoryBlock
-                story={block.story}
-                template={block.template}
-                onOpen={onOpen}
-                onEngage={onEngage}
-                textOnly={textOnly}
-              />
-            </Entrance>
-          </CardBoundary>
-        </LazyMount>
-      );
-      storyIdx += 1;
-    } else {
-      rendered.push(
-        <LazyMount key={block.key} estimate={260}>
-          <CardBoundary>
-            <Entrance entryKey={block.key}>
-              <div style={{ padding: '0 16px' }}>
-                <ModuleBlock item={block.item} moduleKey={block.key} />
-              </div>
-            </Entrance>
-          </CardBoundary>
-        </LazyMount>
-      );
+  let stopped = false;
+  const gateStory = (push, block, bucket) => {
+    if (stopped) return;
+    if (!user && storyIdx >= paywallThreshold) {
+      if (storyIdx === paywallThreshold && renderPaywall) bucket.push(<React.Fragment key="paywall">{renderPaywall()}</React.Fragment>);
+      stopped = true;
+      return;
     }
+    bucket.push(push(block));
+    storyIdx += 1;
+  };
+
+  // Layer 1 — essentials (+ "new since you were here" divider on return visits)
+  const layer1 = [];
+  if (isReturn && hasEssentials && newEssentials === 0) {
+    layer1.push(<FeedNote key="ahead" text="Nothing major since you were here — you're ahead." />);
+  }
+  let newDividerPlaced = false;
+  for (const block of essentialBlocks) {
+    if (isReturn && !newDividerPlaced && newEssentials > 0) {
+      const ms = storyMs(block.story);
+      if (ms != null && ms > lastVisit) { layer1.push(<FeedDivider key="new-since" label="New since you were here" />); newDividerPlaced = true; }
+    }
+    gateStory(renderStoryBlock, block, layer1);
+  }
+
+  // Layer 2 — the rest (infinite scroll)
+  const layer2 = [];
+  for (const block of restBlocks) {
+    if (stopped) break;
+    if (block.type === 'story') gateStory(renderStoryBlock, block, layer2);
+    else layer2.push(renderModuleBlock(block));
   }
 
   return (
@@ -302,16 +410,17 @@ export default function TodayPlusFeed({
         display: 'flex', flexDirection: 'column', gap: 48,
         padding: '24px 0 90px',
       }}>
-        {essentialsCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '0 20px', marginBottom: -28 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: TP.gold, boxShadow: `0 0 9px ${TP.gold}`, flexShrink: 0 }} />
-            <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: TP.ink2 }}>
-              {essentialsCount} essential {essentialsCount === 1 ? 'story' : 'stories'} today
-            </span>
-          </div>
+        {layer1}
+
+        {hasEssentials && !stopped ? (
+          <EssentialsFinish onKeepReading={() => {
+            try { document.getElementById('tp-keep-reading')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); } catch (_) {}
+          }} />
         ) : null}
 
-        {rendered}
+        {hasEssentials ? <div id="tp-keep-reading" style={{ scrollMarginTop: 70 }} /> : null}
+
+        {layer2}
 
         {hasMore ? <div ref={sentinelRef} style={{ height: 1 }} /> : null}
 

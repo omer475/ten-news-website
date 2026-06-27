@@ -325,33 +325,17 @@ export function TPCountdownChip({ countdown, accent, light = false }) {
 // the category lives only in the accent color. The row keeps the accent dash
 // (a quiet category-color cue) + the right-aligned timestamp.
 export function KickerRow({ category, accent, story, prefix, countdown, label }) {
-  const essential = !!(story && story.is_essential);
-  const lighter = String((story && story.display && story.display.tone) || '').toLowerCase().startsWith('li');
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        {essential ? (
-          <span style={{
-            fontFamily: FONT_MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
-            color: '#000', background: accent, padding: '3px 7px', borderRadius: 6, flexShrink: 0,
-          }}>ESSENTIAL</span>
-        ) : null}
-        {label ? (
-          <span style={{
-            fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
-            letterSpacing: '0.2em', textTransform: 'uppercase', color: accent,
-          }}>{label}</span>
-        ) : (!essential ? (
-          <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)`, flexShrink: 0 }} />
-        ) : null)}
-        {lighter ? (
-          <span style={{
-            fontFamily: FONT_MONO, fontSize: 9, fontWeight: 500, letterSpacing: '0.12em',
-            color: TP.ink3, border: `1px solid ${TP.line}`, padding: '3px 7px', borderRadius: 6, flexShrink: 0,
-          }}>LIGHTER</span>
-        ) : null}
-      </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minWidth: 0, flexShrink: 0 }}>
+      {label ? (
+        <span style={{
+          fontFamily: FONT_MONO, fontSize: 9.5, fontWeight: 500,
+          letterSpacing: '0.2em', textTransform: 'uppercase', color: accent,
+        }}>{label}</span>
+      ) : (
+        <span style={{ width: 26, height: 3, borderRadius: 99, background: `color-mix(in srgb, ${accent} 85%, white)`, flexShrink: 0 }} />
+      )}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         {countdown ? <TPCountdownChip countdown={countdown} accent={accent} /> : null}
         <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: TP.ink3 }}>
           {ageLabel(story?.publishedAt)}
