@@ -37,10 +37,11 @@ Response-level meta:
 - **Essentials**: a strict `ai_final_score >= 900` cut yields only ~4 stories/day.
   Backend uses an **adaptive top-N** (floor 820 / target 10 / cap 12, 36h window),
   so `essentials_total` lands ~10 on a normal day, more on a big news day.
-- **Light tone supply is thin**: obviously-light categories are only ~4.7% of
-  volume; LLM tone-tagging lifts it across Tech/Sports/World feel-good items but
-  margin is tight. **Place light cards _up to_ 1-in-10 and degrade gracefully**
-  (skip if none available in the current window) rather than forcing one.
+- **Light tone supply is healthy**: ~22% of the 48h serving window is tagged
+  `tone:"light"` (measured after backfill) — far above the ~4.7% the light
+  *categories* alone suggested, because the LLM surfaces feel-good items across
+  Sports/Tech/World too. Comfortably enough for 1-in-10. Still **degrade
+  gracefully** (skip if none in the current window) rather than forcing one.
 
 ## Where the fields come from (no UI work needed beyond what you built)
 - `why_it_matters` + `tone`: generated in `step13_feed_display.py` (live for all
