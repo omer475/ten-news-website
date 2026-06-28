@@ -358,7 +358,7 @@ export default function OnboardingPage() {
 
 /* Body */
 .bd{flex:1;max-width:600px;margin:0 auto;width:100%;padding:30px 22px 0;padding-bottom:130px}
-.tt{font-size:clamp(34px,8vw,52px);font-weight:600;color:#F5F5F7;letter-spacing:-0.04em;line-height:1.02;margin-bottom:10px;animation:rise .6s cubic-bezier(0.22,1,0.36,1) both}
+.tt{font-family:var(--font-scribble);font-size:clamp(40px,9vw,60px);font-weight:700;color:#F5F5F7;letter-spacing:0;line-height:1.04;margin-bottom:10px;animation:rise .6s cubic-bezier(0.22,1,0.36,1) both}
 .cur{display:none}
 .ds{font-size:16px;color:#86868B;line-height:1.45;margin-bottom:30px;max-width:420px;font-weight:400;animation:rise .6s cubic-bezier(0.22,1,0.36,1) .08s both}
 .cnt{opacity:0;transform:translateY(10px);transition:opacity 0.4s ease,transform 0.4s cubic-bezier(0.22,1,0.36,1)}
@@ -435,7 +435,7 @@ export default function OnboardingPage() {
 .sw.on{opacity:1;transform:scale(1)}
 .sw-p{stroke-dasharray:72;stroke-dashoffset:72;transition:stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s}
 .sw-p.draw{stroke-dashoffset:0}
-.cp-t{font-size:clamp(40px,9vw,60px);font-weight:600;color:#F5F5F7;letter-spacing:-0.04em;line-height:1.0;margin-bottom:14px;min-height:1.0em}
+.cp-t{font-family:var(--font-scribble);font-size:clamp(46px,10vw,68px);font-weight:700;color:#F5F5F7;letter-spacing:0;line-height:1.02;margin-bottom:14px;min-height:1.0em}
 .cp-c{display:inline-block;width:0.045em;height:0.82em;background:#F5F5F7;margin-left:2px;vertical-align:text-bottom;animation:bl 0.6s step-end infinite}
 .cp-c.hide{opacity:0;animation:none}
 .cp-s{font-size:15.5px;color:#86868B;line-height:1.55;max-width:280px;opacity:0;transform:translateY(10px);transition:opacity 0.5s,transform 0.5s cubic-bezier(0.22,1,0.36,1)}
@@ -455,7 +455,7 @@ export default function OnboardingPage() {
 .wel-signin{background:rgba(245,245,247,0.08);border:1px solid rgba(245,245,247,0.18);color:#F5F5F7;font-family:inherit;font-weight:500;font-size:14px;cursor:pointer;padding:10px 20px;border-radius:980px;transition:background .15s}
 .wel-signin:hover{background:rgba(245,245,247,0.14)}
 .wel-mid{flex:1;display:flex;align-items:center;padding:0 clamp(20px,5vw,64px) 6vh}
-.wel-type{font-size:clamp(64px,16vw,200px);font-weight:600;letter-spacing:-0.045em;line-height:0.92;max-width:11ch}
+.wel-type{font-family:var(--font-scribble);font-size:clamp(60px,15vw,168px);font-weight:700;letter-spacing:0;line-height:0.98;max-width:12ch}
 .wel-car{display:inline-block;width:0.045em;height:0.9em;background:#F5F5F7;margin-left:0.06em;vertical-align:-0.08em;border-radius:2px;animation:welBlink 1.05s step-end infinite}
 @keyframes welBlink{0%,100%{opacity:1}50%{opacity:0}}
 .wel-hint{padding:0 clamp(22px,6vw,72px) calc(34px + env(safe-area-inset-bottom,0px));font-size:13.5px;color:#5A5A5E;font-weight:500;opacity:0;animation:welHint .6s ease 2.6s forwards}

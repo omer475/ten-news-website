@@ -1,3 +1,10 @@
+:root {
+  /* Special hand-drawn display face for expressive moments only (personalization
+     headings, pull-quotes) — NOT for news body copy. Single swap point: to use
+     the real "Imperfetto" font, add its @font-face and change this one line. */
+  --font-scribble: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+}
+
 * {
   margin: 0;
   padding: 0;

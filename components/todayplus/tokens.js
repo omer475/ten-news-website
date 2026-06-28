@@ -1,20 +1,24 @@
 // TodayPlus Feed — design tokens + text helpers (spec §2)
-// The redesigned feed is a LIGHT surface; colors are calibrated for the warm
-// white background and do not follow the site dark-mode toggle.
+// The feed supports BOTH a dark and a light surface. Every color below is a CSS
+// custom property (set on the feed root by tpVars), so inline styles flip the
+// whole theme instantly with no prop-threading. The hard-coded fallback in each
+// var() is the dark palette, so the feed degrades to dark if a var is missing.
 
 import React from 'react';
 
 export const TP = {
-  bg: '#000000',
-  ink: '#F5F5F7',
-  ink2: '#86868B',
-  ink3: '#6E6E73',
-  line: 'rgba(245,245,247,0.10)',
-  gold: '#F5F5F7',      // base accent → white (minimal, matches onboarding)
-  goldSoft: '#C9A464',  // legacy dark-surface accent (cover overlay, map card)
+  bg: 'var(--tp-bg, #000000)',
+  ink: 'var(--tp-ink, #F5F5F7)',
+  ink2: 'var(--tp-ink2, #86868B)',
+  ink3: 'var(--tp-ink3, #6E6E73)',
+  line: 'var(--tp-line, rgba(245,245,247,0.10))',
+  gold: 'var(--tp-gold, #F5F5F7)',  // strong accent = full-contrast ink
+  goldSoft: '#C9A464',  // cover-image overlay accent — always sits on a dark scrim
   red: '#FF453A',
   green: '#34C759',
   breakingDot: '#FF5A52',
+  // The stylised world-map widget stays dark in both themes (reads as a dark
+  // "card" floating in the light feed — intentional, like an Apple map tile).
   mapBg: '#0A0A0A',
   mapLand: '#1A2233',
   mapLandStroke: '#27314A',
@@ -22,7 +26,7 @@ export const TP = {
   mapText: '#E8EAF2',
 };
 
-// §2.2 — category accents, brightened to read on pure black.
+// §2.2 — category accents, brightened to read on pure black (the dark palette).
 export const CATEGORY_ACCENTS = {
   WORLD: '#FF6B5C',
   AI: '#F5C451',
@@ -37,9 +41,58 @@ export const CATEGORY_ACCENTS = {
   HEALTH: '#3FD4DE',
 };
 
-export function accentFor(category) {
-  return CATEGORY_ACCENTS[(category || '').toUpperCase()] || TP.gold;
+// Darker, more saturated accents that hold their contrast on a white surface.
+export const CATEGORY_ACCENTS_LIGHT = {
+  WORLD: '#E03A2B',
+  AI: '#B07A00',
+  ECONOMY: '#B26B16',
+  TECH: '#1769E0',
+  POLICY: '#7A3FE0',
+  MARKETS: '#B07A00',
+  SCIENCE: '#0E9E78',
+  ENERGY: '#DB6A18',
+  SPORTS: '#1F9E37',
+  CULTURE: '#D63C92',
+  HEALTH: '#0E96B0',
+};
+
+// accentFor returns a CONCRETE hex for the active theme. It must stay concrete
+// (not a CSS var): accents are used as SVG presentation attributes (stroke=/
+// fill=/stopColor=) in the charts, where var() does NOT resolve. The lone call
+// site (StoryBlock) computes it once with the feed's isDark and passes it down.
+export function accentFor(category, isDark = true) {
+  const key = (category || '').toUpperCase();
+  const map = isDark ? CATEGORY_ACCENTS : CATEGORY_ACCENTS_LIGHT;
+  return map[key] || (isDark ? '#F5F5F7' : '#1D1D1F');
 }
+
+// The CSS variables to spread onto the feed root for the active theme. Only the
+// surface tokens are vars (used in HTML inline styles + a few SVG `style`
+// attributes, both of which resolve var()); accents are concrete (see above).
+export function tpVars(isDark) {
+  return isDark
+    ? {
+        '--tp-bg': '#000000',
+        '--tp-ink': '#F5F5F7',
+        '--tp-ink2': '#86868B',
+        '--tp-ink3': '#6E6E73',
+        '--tp-line': 'rgba(245,245,247,0.10)',
+        '--tp-gold': '#F5F5F7',
+      }
+    : {
+        '--tp-bg': '#FFFFFF',
+        '--tp-ink': '#1D1D1F',
+        '--tp-ink2': '#6E6E73',
+        '--tp-ink3': '#A1A1A6',
+        '--tp-line': 'rgba(0,0,0,0.10)',
+        '--tp-gold': '#1D1D1F',
+      };
+}
+
+// Special hand-drawn display face — used ONLY for expressive moments
+// (personalization headings, pull-quotes), never for news body copy. Swappable
+// in ONE place: redefine --font-scribble (see styles/globals.css + _document).
+export const FONT_SCRIBBLE = "var(--font-scribble, 'Caveat', 'Segoe Print', cursive)";
 
 // Type system v4 — young, app-like energy (not a newspaper).
 // Gabarito: bold rounded geometric display — friendly, confident, the

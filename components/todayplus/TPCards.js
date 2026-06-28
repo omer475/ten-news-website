@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import {
-  TP, FONT_HEAD, FONT_BODY, FONT_MONO,
+  TP, FONT_HEAD, FONT_BODY, FONT_MONO, FONT_SCRIBBLE,
   ageLabel, Markup, formatNumber, shouldAnimateOnce, hasAnimated,
 } from './tokens';
 import {
@@ -209,33 +209,32 @@ export function QuoteCard({ story, display, accent, onOpen }) {
           <KickerRow category={display.category} accent={accent} story={story} countdown={display.countdown} />
         </div>
 
-        {/* chat-style quote bubble: soft accent tint, speech corner, and a
-            springing quote badge — designed, not a newspaper glyph */}
-        <div style={{ position: 'relative', marginTop: 26 }}>
+        {/* Editorial pull-quote — no box. An oversized hand-drawn quote glyph
+            as a watermark, the quote set in the scribble display face, and a
+            vertical accent rule that draws itself down the left edge. */}
+        <div style={{ position: 'relative', marginTop: 30, paddingLeft: 20 }}>
+          {/* vertical accent rule */}
           <span aria-hidden style={{
-            position: 'absolute', top: -17, left: 18, zIndex: 1,
-            width: 32, height: 32, borderRadius: '50%',
-            background: `linear-gradient(135deg, color-mix(in srgb, ${accent} 80%, white), ${accent})`,
-            boxShadow: `0 5px 14px color-mix(in srgb, ${accent} 35%, transparent), 0 0 0 3px ${TP.bg}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: shown ? 1 : 0,
-            transform: shown ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-30deg)',
-            transition: animate ? 'opacity 0.4s ease-out 0.3s, transform 0.55s cubic-bezier(.22,1.6,.36,1) 0.3s' : 'none',
-          }}>
-            <svg width="16" height="13" viewBox="0 0 16 13" aria-hidden>
-              <path d="M0 13V8.2C0 5.9.5 4.1 1.6 2.7 2.7 1.3 4.3.4 6.4 0l.9 2.1c-1.2.4-2.1 1-2.7 1.8-.5.7-.8 1.5-.9 2.4H7V13H0zm9 0V8.2c0-2.3.5-4.1 1.6-5.5C11.7 1.3 13.3.4 15.4 0l.6 2.1c-1.2.4-2.1 1-2.7 1.8-.5.7-.8 1.5-.9 2.4H16V13H9z" fill="#fff"/>
-            </svg>
-          </span>
+            position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, borderRadius: 99,
+            background: `linear-gradient(to bottom, ${accent}, color-mix(in srgb, ${accent} 20%, transparent))`,
+            transform: shown ? 'scaleY(1)' : 'scaleY(0)', transformOrigin: 'top',
+            transition: animate ? 'transform 0.6s cubic-bezier(.2,.7,.2,1) 0.15s' : 'none',
+          }} />
+          {/* oversized opening quote glyph, hand-drawn, sitting behind the text */}
+          <span aria-hidden style={{
+            position: 'absolute', left: 6, top: -30, zIndex: 0, pointerEvents: 'none',
+            fontFamily: FONT_SCRIBBLE, fontSize: 100, lineHeight: 1, fontWeight: 700,
+            color: accent, opacity: shown ? 0.13 : 0,
+            transform: shown ? 'translateY(0)' : 'translateY(10px)',
+            transition: animate ? 'opacity 0.55s ease 0.1s, transform 0.55s cubic-bezier(.2,.7,.2,1) 0.1s' : 'none',
+          }}>&ldquo;</span>
 
           <blockquote style={{
-            fontFamily: FONT_HEAD, fontWeight: 700,
-            fontSize: 21, lineHeight: 1.32, letterSpacing: '-0.012em',
+            position: 'relative', zIndex: 1,
+            fontFamily: FONT_SCRIBBLE, fontWeight: 600,
+            fontSize: 31, lineHeight: 1.26, letterSpacing: '0',
             color: TP.ink, margin: 0, textWrap: 'balance',
-            background: `linear-gradient(165deg, color-mix(in srgb, ${accent} 7%, white), color-mix(in srgb, ${accent} 3%, ${TP.bg}))`,
-            border: `1px solid color-mix(in srgb, ${accent} 13%, white)`,
-            borderRadius: '6px 24px 24px 24px',
-            padding: '26px 20px 18px',
-            ...revealStyle(shown, animate, 0.12, 14),
+            ...revealStyle(shown, animate, 0.14, 14),
           }}>
             <Markup raw={quote.text} emColor={accent} strongColor={TP.ink} strongWeight={700} />
           </blockquote>
@@ -504,7 +503,7 @@ export function TimelineCard({ story, display, accent, onOpen }) {
           {/* rail draws downward; accent fades into the hairline */}
           <span style={{
             position: 'absolute', left: 5, top: 6, bottom: 6, width: 1.5,
-            background: `linear-gradient(to bottom, ${accent} 0%, color-mix(in srgb, ${accent} 35%, rgba(245,245,247,0.12)) 40%, rgba(245,245,247,0.10) 100%)`,
+            background: `linear-gradient(to bottom, ${accent} 0%, color-mix(in srgb, ${accent} 35%, color-mix(in srgb, ${TP.ink} 12%, transparent)) 40%, color-mix(in srgb, ${TP.ink} 10%, transparent) 100%)`,
             transform: shown ? 'scaleY(1)' : 'scaleY(0)',
             transformOrigin: 'top',
             transition: animate ? 'transform 0.9s cubic-bezier(.2,.7,.2,1) 0.2s' : 'none',
@@ -685,7 +684,7 @@ function TrendLine({ trend, accent, drawn, animate, storyId }) {
         {[0.25, 0.55, 0.85].map((f) => (
           <line key={f} x1={PAD_X} x2={W - PAD_X}
             y1={PAD_T + f * (H - PAD_T - PAD_B)} y2={PAD_T + f * (H - PAD_T - PAD_B)}
-            stroke={TP.line} strokeWidth="1" strokeDasharray="1 7" strokeLinecap="round" />
+            strokeWidth="1" strokeDasharray="1 7" strokeLinecap="round" style={{ stroke: TP.line }} />
         ))}
         <path d={area} fill={`url(#${gid})`}
           style={{ opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.8s ease-out 0.5s' : 'none' }} />
@@ -694,11 +693,11 @@ function TrendLine({ trend, accent, drawn, animate, storyId }) {
           pathLength="1" strokeDasharray="1" strokeDashoffset={drawn ? 0 : 1}
           style={{ transition: animate ? 'stroke-dashoffset 0.9s ease-out' : 'none' }} />
         {/* dots on the FIRST and LAST points only */}
-        <circle cx={x(0)} cy={y(vals[0])} r="3.5" fill={TP.bg} stroke={accent} strokeWidth="2"
-          style={{ opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.3s ease-out 0.25s' : 'none' }} />
+        <circle cx={x(0)} cy={y(vals[0])} r="3.5" stroke={accent} strokeWidth="2"
+          style={{ fill: TP.bg, opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.3s ease-out 0.25s' : 'none' }} />
         <text x={x(0)} y={y(vals[0]) - 10} textAnchor="start"
-          fontFamily={FONT_MONO} fontSize="10.5" fill={TP.ink3}
-          style={{ opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.4s ease-out 0.35s' : 'none' }}>
+          fontFamily={FONT_MONO} fontSize="10.5"
+          style={{ fill: TP.ink3, opacity: drawn ? 1 : 0, transition: animate ? 'opacity 0.4s ease-out 0.35s' : 'none' }}>
           {formatNumber(vals[0])}{trend.unit || ''}
         </text>
         <circle cx={x(lastIdx)} cy={y(lastVal)} r="4.5" fill={accent}
@@ -814,7 +813,7 @@ function BreakdownDonut({ breakdown, accent, drawn, animate, storyId }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
       <div style={{ position: 'relative', width: D, height: D, flexShrink: 0 }}>
         <svg viewBox={`0 0 ${D} ${D}`} width={D} height={D} aria-hidden>
-          <circle cx={D / 2} cy={D / 2} r={R} fill="none" stroke={TP.line} strokeOpacity="0.5" strokeWidth={STROKE} />
+          <circle cx={D / 2} cy={D / 2} r={R} fill="none" strokeOpacity="0.5" strokeWidth={STROKE} style={{ stroke: TP.line }} />
           {segs.map((seg, i) => (
             <circle key={i} cx={D / 2} cy={D / 2} r={R} fill="none"
               stroke={seg.color} strokeWidth={STROKE} strokeLinecap="butt"
@@ -1264,7 +1263,7 @@ export function MiniChart({ display, accent, storyId }) {
     body = (
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <svg viewBox={`0 0 ${D} ${D}`} width={D} height={D} aria-hidden style={{ flexShrink: 0 }}>
-          <circle cx={D / 2} cy={D / 2} r={R} fill="none" stroke={TP.line} strokeOpacity="0.5" strokeWidth={ST} />
+          <circle cx={D / 2} cy={D / 2} r={R} fill="none" strokeOpacity="0.5" strokeWidth={ST} style={{ stroke: TP.line }} />
           {segs.map((seg, i) => (
             <circle key={i} cx={D / 2} cy={D / 2} r={R} fill="none"
               stroke={seg.color} strokeWidth={ST} pathLength="100"
@@ -1326,7 +1325,7 @@ export function MiniChart({ display, accent, storyId }) {
           </defs>
           <path d={area} fill={`url(#${gid})`} />
           <path d={line} fill="none" stroke={accent} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx={x(0)} cy={y(vals[0])} r="3" fill={TP.bg} stroke={accent} strokeWidth="1.8" />
+          <circle cx={x(0)} cy={y(vals[0])} r="3" stroke={accent} strokeWidth="1.8" style={{ fill: TP.bg }} />
           <circle cx={x(n - 1)} cy={y(vals[n - 1])} r="3.6" fill={accent} />
         </svg>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>

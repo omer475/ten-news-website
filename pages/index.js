@@ -2766,8 +2766,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Restore saved dark-mode preference (defaults to dark when unset)
   useEffect(() => {
     try {
-      // tn_dark_mode is intentionally ignored — the site is light-only now;
-      // stored dark prefs from the old design must not resurrect a black header.
+      const savedDark = localStorage.getItem('tn_dark_mode');
+      if (savedDark !== null) setDarkMode(savedDark === '1');
       const savedTextOnly = localStorage.getItem('tn_text_only');
       if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}
@@ -5583,13 +5583,48 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {currentIndex === 0 && (
           <div className="header">
             <div className="logo">
-              today<span className="logo-ten" style={{ color: '#F5F5F7' }}>+</span>
+              today<span className="logo-ten">+</span>
             </div>
             
             <div style={{ flex: 1 }}></div>
             
             <div className="header-right">
                             <span className="time">{currentTime}</span>
+              {/* Light / dark theme toggle */}
+              <button
+                className="theme-toggle"
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={darkMode ? 'Light mode' : 'Dark mode'}
+                onClick={toggleDarkMode}
+                onTouchEnd={(e) => { e.preventDefault(); toggleDarkMode(); }}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 34,
+                  height: 34,
+                  borderRadius: 980,
+                  color: darkMode ? 'rgba(255,255,255,0.85)' : '#1d1d1f',
+                  background: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {darkMode ? (
+                  /* sun — tap to go light */
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                  </svg>
+                ) : (
+                  /* moon — tap to go dark */
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                )}
+              </button>
               {user ? (
                 <div style={{ position: 'relative' }}>
                   <button
@@ -5771,6 +5806,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           hasMore={hasMoreArticles}
           loadingMore={loadingMore}
           textOnly={textOnly}
+          isDark={darkMode}
         />
 
 

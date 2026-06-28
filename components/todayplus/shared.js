@@ -434,7 +434,8 @@ export function WhyItMatters({ story }) {
   return (
     <div style={{
       marginBottom: 16, padding: '12px 14px', borderRadius: 14,
-      background: 'rgba(245,245,247,0.04)', border: '1px solid rgba(245,245,247,0.08)',
+      background: `color-mix(in srgb, ${TP.ink} 4%, transparent)`,
+      border: `1px solid color-mix(in srgb, ${TP.ink} 8%, transparent)`,
     }}>
       <div style={{ fontFamily: FONT_MONO, fontSize: 9, fontWeight: 600, letterSpacing: '0.16em', color: TP.ink3, marginBottom: 6 }}>
         WHY IT MATTERS
@@ -485,9 +486,9 @@ export function FeedSignal({ story }) {
         all: 'unset', cursor: 'pointer', height: 32, padding: '0 12px', borderRadius: 999,
         display: 'inline-flex', alignItems: 'center', gap: 5,
         fontFamily: FONT_MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
-        color: on ? '#000' : TP.ink3,
-        background: on ? TP.ink : 'rgba(245,245,247,0.05)',
-        border: `1px solid ${on ? TP.ink : 'rgba(245,245,247,0.12)'}`,
+        color: on ? TP.bg : TP.ink3,
+        background: on ? TP.ink : `color-mix(in srgb, ${TP.ink} 5%, transparent)`,
+        border: `1px solid ${on ? TP.ink : TP.line}`,
         WebkitTapHighlightColor: 'transparent', transition: 'all 0.16s ease',
       }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>

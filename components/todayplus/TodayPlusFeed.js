@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import FeedCard from '../feed/FeedCard';
 import CardBoundary from '../feed/CardBoundary';
 import LazyMount from '../feed/LazyMount';
-import { TP, FONT_MONO, FONT_HEAD, accentFor } from './tokens';
+import { TP, FONT_MONO, FONT_HEAD, accentFor, tpVars } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
 import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
@@ -190,7 +190,7 @@ function useFeedBlocks(stories, modules) {
 // ── Story block: counts toward the read counter at ≥55% visibility ──────────
 
 function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
-  const accent = accentFor(story.display?.category || story.category);
+  const accent = accentFor(story.display?.category || story.category, isDark);
   const Card = CARD_BY_TEMPLATE[template];
   const rootRef = useRef(null);
 
@@ -248,7 +248,7 @@ function StoryBlock({ story, template, onOpen, onEngage, isDark, textOnly }) {
       ) : (
         <FeedCard
           story={story}
-          isDark={false}
+          isDark={isDark}
           textOnly={textOnly}
           onOpen={() => {}}
           onEngage={onEngage}
@@ -285,14 +285,14 @@ function EssentialsFinish({ onKeepReading }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '8px 24px' }}>
       <div style={{ width: 42, height: 42, borderRadius: '50%', border: `1.5px solid ${TP.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TP.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: TP.ink }}><path d="M5 12l5 5L19 7" /></svg>
       </div>
       <div style={{ fontFamily: FONT_HEAD, fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', color: TP.ink, textAlign: 'center', maxWidth: 280, lineHeight: 1.25 }}>
         You’re caught up on today’s essentials
       </div>
       <button onClick={onKeepReading} style={{
         all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
-        height: 44, padding: '0 22px', borderRadius: 999, background: TP.ink, color: '#000',
+        height: 44, padding: '0 22px', borderRadius: 999, background: TP.ink, color: TP.bg,
         fontFamily: FONT_HEAD, fontSize: 15, fontWeight: 600, WebkitTapHighlightColor: 'transparent',
       }}>
         Keep reading
@@ -313,6 +313,7 @@ export default function TodayPlusFeed({
   hasMore,
   loadingMore,
   textOnly,
+  isDark = true,
 }) {
   const [modules, setModules] = useState(null);
   const [lastVisit, setLastVisit] = useState(undefined); // undefined=loading · null=first visit · number=ms
@@ -389,7 +390,7 @@ export default function TodayPlusFeed({
     <LazyMount key={block.key} estimate={520}>
       <CardBoundary>
         <Entrance entryKey={block.key}>
-          <StoryBlock story={block.story} template={block.template} onOpen={onOpen} onEngage={onEngage} textOnly={textOnly} />
+          <StoryBlock story={block.story} template={block.template} onOpen={onOpen} onEngage={onEngage} textOnly={textOnly} isDark={isDark} />
         </Entrance>
       </CardBoundary>
     </LazyMount>
@@ -455,7 +456,7 @@ export default function TodayPlusFeed({
   }
 
   return (
-    <div style={{ background: TP.bg, minHeight: '100vh' }}>
+    <div style={{ ...tpVars(isDark), background: TP.bg, minHeight: '100vh' }}>
       {/* Per user direction (2026-06-12): no extra todayplus header / read
           counter / breaking ticker — the site's existing header is enough.
           The feed starts directly with the cards. */}
