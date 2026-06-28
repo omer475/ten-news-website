@@ -1689,7 +1689,10 @@ def run_complete_pipeline():
             selected_image = None
             try:
                 with gemini_semaphore:
-                    ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                    # 2026-06-28: modest loosen 70->60 to raise cover-eligible
+                    # supply (more published articles carry a usable hero image);
+                    # the resolution floor + text-overlay/logo rejection still hold.
+                    ai_approved = check_and_select_best_image(valid_candidates, min_confidence=60)
                 if ai_approved:
                     _qc = ai_approved.get('quality_check', {})
                     selected_image = {

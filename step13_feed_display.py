@@ -214,6 +214,8 @@ REQUIRED FIELDS (always present):
 - "category": one of WORLD, AI, ECONOMY, TECH, POLICY, MARKETS, SCIENCE, ENERGY, SPORTS, CULTURE, HEALTH. Pick the best fit (an AI-company story is AI, not TECH; an oil/power/climate-infrastructure story is ENERGY; central-bank/stocks/crypto is MARKETS; macro/trade/jobs is ECONOMY; legislation/regulation/elections is POLICY).
 - "title": the story title with 1-2 key entities wrapped in <em>…</em> (company, person, country, product). Keep the wording of the title EXACTLY as given — only add <em> marks.
 - "lede": ONE plain COMPLETE sentence summarizing the story, max ~120 chars (it renders in a small card — it must fit whole, never get cut off). No tags.
+- "why_it_matters": 1-2 short sentences (max ~200 chars) on the CONSEQUENCE or meaning — why a reader should CARE. State the stakes / what changes / who is affected, NOT more facts and NOT a restated headline. Every name and number in it MUST appear in the bullets or source text. No speculation ("could", "might"). If the source supports no real, concrete consequence, set it to null. No tags.
+- "tone": "light" or "standard". "light" = a deliberately lighter story: uplifting, fascinating, surprising, low-stakes, non-political, non-distressing (a science wonder, a sports/culture delight, good news, a surprising fact). "standard" = everything else (politics, conflict, economy, disasters, hard news). When unsure, "standard".
 - "bullets": the 2-3 bullets EXACTLY as given, but with key entities wrapped in <em>…</em> and the single most important phrase per bullet (optionally) in <b>…</b>. Do not rewrite the text.
 - "stats": 2-3 key numbers of the story, each as [LABEL, value, prefix, unit, sub]:
     LABEL: 1-3 words, uppercase, max 14 chars (e.g. "DEAL SIZE")
@@ -237,12 +239,13 @@ REQUIRED FIELDS (always present):
 - "tags": 2-3 proper-noun entity tags (e.g. ["Nvidia", "Jensen Huang"]).
 
 OPTIONAL SIGNALS — include ONLY when the story GENUINELY supports one (most stories support 0-2). NEVER fabricate data for a signal. Quality bar is high:
-- "big": [value, prefix, unit, caption] — include ONLY if ONE number IS the story (a record, an unprecedented scale). caption: max ~50 chars explaining the number. The value must appear in the source.
-- "quote": {{"text": "…", "who": "Name · Role"}} — ONLY if the source text contains a real, verbatim, striking quotation (8-30 words). Wrap the key phrase in <em>. NEVER paraphrase into quotation marks.
+- "big": [value, prefix, unit, caption] — include when ONE standout figure dominates the story: the single number a reader will remember (the headline deal/funding size, the death toll, the scale, the record, the valuation). It need NOT be a world record — just clearly THE number of this story. caption: max ~50 chars explaining the number. The value must appear in the source.
+- "quote": {{"text": "…", "who": "Name · Role"}} — RARE, high bar: ONLY a genuinely strong, meaningful, verbatim quotation (10-30 words) from a NAMED newsmaker (a real person or named official — "who" must be "Name · Role", never an anonymous "spokesperson"/"official"/"statement"). The quote must ADVANCE or characterize the story — not boilerplate, not a sentence that merely restates a fact already in the bullets. Wrap the key phrase in <em>. NEVER paraphrase into quotation marks. Most stories have NO quote.
 - "versus": {{"kind": "duel|change|gap", "a": {{"val": N, "unit": "", "who": "SIDE A"}}, "b": {{"val": N, "unit": "", "who": "SIDE B"}}, "note": "one-line context"}} — a two-sided numeric comparison from the source. Pick the kind that matches the RELATIONSHIP:
     "duel"   = genuine opposition: vote for/against, match score, two rivals competing. (a and b face off)
     "change" = the SAME metric before vs after: a = BEFORE/older value, b = AFTER/current value (dev time cut from 55 to 26 months; obesity rate pre-COVID vs now). NOT a fight — never use duel for this.
     "gap"    = two related quantities contrasted for scale (company X's fleet vs company Y's, spend vs budget).
+  Eligible patterns are broad — emit one whenever the source states two grounded, same-unit numbers worth contrasting: vote/poll splits (for vs against, party A vs B), match or election margins, market-share or revenue A vs B, this-period vs last (quarter, year, season), before vs after a change, two rivals/countries on the same metric. The deterministic grounding gate drops anything not in the source, so prefer emitting a real comparison over omitting.
   who: SHORT uppercase label, max 14 chars ("FOR", "PRE-COVID", "2022-24", "TESLA") — long labels get cut off on screen. Include unit ("%", "MONTHS") in unit, not in who.
 - "score": {{"sport": "football|basketball|tennis|hockey|baseball|cricket|rugby|mma|boxing|amfootball|volleyball|other", "a": {{"team": "MEXICO", "score": "2", "detail": ""}}, "b": {{"team": "S. AFRICA", "score": "1", "detail": ""}}, "status": "FT", "note": "Lozano 23' and 67'; Estadio Azteca"}} — ONLY when a played or live head-to-head MATCH RESULT is the story. team: short uppercase name max 13 chars. score: the headline number as a string (goals/points; for tennis = SETS won). detail: secondary score line ("6-4 3-6 7-5" sets, "(4-2 pens)", "1st innings 245"). status: FT, HT, LIVE, Q3, SET 2, FINAL, R3 — max 8 chars. note: scorers/venue/round one-liner. Golf, F1, athletics, leagues tables are NOT score — use "ranking". Transfer news, injuries, previews = NOT score.
 - "timeline_story": true — a FLAG, not the timeline itself (a dedicated writer builds it). Set true ONLY if ALL three hold: (1) this story is the latest development in a saga running for days/weeks (war, trial, deal process, investigation, crisis, transfer saga, election process); (2) the SOURCE TEXT itself describes at least TWO earlier dated developments of THIS story; (3) a reader landing on it would ask "how did we get here?". Single events, match results, product launches, awards, announcements, profiles = false. Expect true on roughly 1 story in 10.
@@ -329,6 +332,50 @@ def _num(v):
         except (ValueError, OverflowError):
             return None
     return None
+
+
+_SCALE_UNITS = {'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12}
+
+
+def _humanize_number(value, prefix='', unit=''):
+    """Rescale a magnitude number so it renders human-readably:
+    '$0.0039B'->'$3.9M', '5000 M'->'5 B', '2500000'->'2.5M'. Only touches pure
+    magnitude units (K/M/B/T) or bare numbers >= 10000; leaves %, KM, PTS, x,
+    small/mid numbers untouched. Returns (value, prefix, unit)."""
+    n = _num(value)
+    if n is None:
+        return value, prefix, unit
+    u = str(unit or '').strip()
+    if u.upper() in _SCALE_UNITS:
+        total = n * _SCALE_UNITS[u.upper()]
+    elif u == '' and abs(n) >= 10000:
+        total = float(n)
+    else:
+        return value, prefix, unit
+    if total == 0:
+        return 0, prefix, ''
+    neg = total < 0
+    a = abs(total)
+    for suf, div in (('T', 1e12), ('B', 1e9), ('M', 1e6), ('K', 1e3), ('', 1)):
+        if a >= div:
+            mant = a / div
+            mant = round(mant, 1) if mant < 100 else round(mant)
+            if isinstance(mant, float) and mant == int(mant):
+                mant = int(mant)
+            return (-mant if neg else mant), prefix, suf
+    return value, prefix, unit
+
+
+def _humanize_display_numbers(out: Dict) -> None:
+    """Final display pass: rescale stat/big magnitudes so nothing renders like
+    '$0.0039B'. Runs AFTER grounding (grounding checks the raw source value),
+    so this only changes presentation, never whether a number is allowed."""
+    for s in out.get('stats', []) or []:
+        if isinstance(s, list) and len(s) >= 4:
+            s[1], s[2], s[3] = _humanize_number(s[1], s[2], s[3])
+    if isinstance(out.get('big'), list) and len(out['big']) >= 3:
+        b = out['big']
+        b[0], b[1], b[2] = _humanize_number(b[0], b[1], b[2])
 
 
 def _vs_label(who) -> str:
@@ -668,7 +715,19 @@ def _apply_grounding_gates(out, title_text, head_text, full_text, category):
             ' '.join(qw[i:i + 6]) in gw for i in range(0, max(1, len(qw) - 5)))
         has_attribution = bool(re.search(
             r'\b(said|says|according to|told|stated|added|noted)\b', qtext))
-        if not verbatim or has_attribution:
+        # Named-newsmaker gate (2026-06-28): a quote must be attributable to a
+        # real, named person — a bare "spokesperson"/"official"/"statement"
+        # with no name is boilerplate, not a newsmaker voice. Require the
+        # "who" to carry a proper name (a Titlecase token) and not be a generic
+        # attribution alone. This is the dominant lever to cut quote volume.
+        who_raw = _strip_tags(str(q.get('who', '')))
+        who_l = who_raw.lower()
+        has_name = bool(re.search(r'\b[A-Z][a-z]+', who_raw))
+        generic_only = (not has_name) or bool(re.fullmatch(
+            r'\s*(a\s+)?(spokesperson|spokesman|spokeswoman|official|officials|'
+            r'statement|report|reports|source|sources|representative|the\s+\w+)\s*',
+            who_l))
+        if not verbatim or has_attribution or generic_only:
             del out['quote']
 
     # --- geo: every pin label must be grounded; venue/HQ pins dropped for
@@ -796,6 +855,61 @@ def compute_hero_rank(display_obj: Dict, category: str = '') -> None:
         and frozenset(hero_rank) in _COMPLEMENTARY_PAIRS)
 
 
+_WHY_STOP = frozenset("""the a an and or but nor of to in on at by with from into over under this that
+these those it its their your our his her they them what which who whom is are was were be been being
+has have had will would could should may might can more most less least very much many such only also
+than then when while because matters meaning consequence stakes change changes affect affects impact
+about as""".split())
+
+
+def _ground_why_it_matters(sentence, head_text, full_text):
+    """Anti-fabrication gate for why_it_matters. full_text is the lowercased,
+    comma-stripped corpus from _build_ground_text (title+bullets+body). Every
+    number and proper noun in the sentence must trace to the source, plus a
+    minimum topical overlap. Returns the cleaned sentence or None. Reuses the
+    same grounding primitives as the card signals (no separate gate)."""
+    s = _strip_tags(str(sentence or '')).replace('**', '').strip()
+    if len(s) < 20:
+        return None
+    corpus = full_text or ''
+    corpus_nums = _number_set(corpus)
+    # 1. every number must be grounded in the source
+    for n in re.findall(r'\d+(?:\.\d+)?', s):
+        base = n[:-2] if n.endswith('.0') else n
+        if n not in corpus_nums and base not in corpus_nums and n not in corpus:
+            return None
+    # 2. proper nouns / acronyms (not at a sentence start) must appear in source
+    prev_end = True
+    for w in s.split():
+        bare = re.sub(r"[^A-Za-z0-9]", '', w)
+        initial = prev_end
+        prev_end = w.endswith(('.', '!', '?', ':'))
+        if len(bare) < 3:
+            continue
+        proper = (bare[0].isupper() and bare[1:].lower() == bare[1:]) \
+            or (bare.isupper() and bare.isalpha())
+        if proper and not initial and bare.lower() not in corpus:
+            return None
+    # 3. topical overlap: >=2 substantive content words shared with the source
+    content = {t for t in re.findall(r"[a-z0-9']+", s.lower())
+               if len(t) >= 4 and t not in _WHY_STOP}
+    if sum(1 for t in content if t in corpus) < 2:
+        return None
+    # clean-truncate to ~200 chars at a sentence/word boundary (never mid-word)
+    if len(s) > 200:
+        cut = s[:200]
+        ends = [m.end() for m in re.finditer(r'[.!?](?:\s|$)', cut) if m.end() >= 120]
+        if ends:
+            s = cut[:ends[-1]].strip()
+        else:
+            sp = cut.rfind(' ')
+            s = (cut[:sp] if sp >= 120 else cut).rstrip()
+        if s.count('(') > s.count(')'):
+            s = re.sub(r'\s*\([^)]*$', '', s).rstrip()
+        s = s.rstrip(' ,;:—-')
+    return s
+
+
 def validate_display(result: Dict, pipeline_category: str,
                      orig_title: str, orig_bullets: List[str],
                      source_text: str = '') -> Optional[Dict]:
@@ -847,6 +961,12 @@ def validate_display(result: Dict, pipeline_category: str,
             else lede[:158].rsplit(' ', 1)[0] + '.'
     out['lede'] = lede
 
+    # why_it_matters (grounded later in the span-grounding pass) + tone.
+    # Keep original case here so proper-noun grounding works downstream.
+    wim = _strip_tags(str(result.get('why_it_matters', ''))).replace('**', '').strip()
+    out['why_it_matters'] = wim or None
+    out['tone'] = 'light' if str(result.get('tone', '')).strip().lower() == 'light' else 'standard'
+
     # bullets — same count/wording as original, only marks added
     bullets = result.get('bullets')
     clean_bullets = []
@@ -893,7 +1013,7 @@ def validate_display(result: Dict, pipeline_category: str,
         qtext = _sanitize_marked_text(str(quote.get('text', '')))
         qwho = _strip_tags(str(quote.get('who', ''))).strip()
         words = len(_strip_tags(qtext).split())
-        if qtext and qwho and 5 <= words <= 40:
+        if qtext and qwho and 10 <= words <= 32:
             out['quote'] = {'text': _canonicalize_marks(qtext), 'who': qwho[:60]}
 
     versus = result.get('versus')
@@ -1119,6 +1239,14 @@ def validate_display(result: Dict, pipeline_category: str,
     head_text, full_text = _build_ground_text(orig_title, orig_bullets, source_text)
     title_text = _strip_tags(orig_title or '').lower()
     _apply_grounding_gates(out, title_text, head_text, full_text, pipeline_category)
+
+    # why_it_matters consequence line — grounded against the source (numbers +
+    # proper nouns must trace to title/bullets/body); nulled otherwise.
+    out['why_it_matters'] = _ground_why_it_matters(
+        out.get('why_it_matters'), head_text, full_text)
+
+    # Final display formatting: rescale magnitudes ($0.0039B -> $3.9M).
+    _humanize_display_numbers(out)
 
     return out
 
@@ -1543,20 +1671,21 @@ def enrich_display_with_chart(display_obj: Dict, api_key: str) -> None:
 MODULES_PROMPT = """You produce daily interstitial-module content for a news feed.
 TODAY'S DATE: {today}
 
-RECENT HEADLINES (today's published stories, most recent first):
+RECENT HEADLINES (today's published stories; each line is numbered with its id):
 {headlines}
 
-Return ONE JSON object with EXACTLY these keys:
+Return ONE JSON object with EXACTLY these keys. These are POOLS — produce the
+full set; the feed personalizes which ones each reader sees.
 
-- "history": exactly 3 significant events that happened on {month_day} in past years, as [[year, "one-sentence event description"], …]. Only well-documented, major events (year as integer). Most impactful first.
+- "history": 8-12 genuinely significant, well-documented events that happened on {month_day} in past years, each as [year, "one-sentence description", ["topic","tags"], major]. year = integer. The 1-3 topic tags are lowercase everyday keywords for the event's subject (e.g. "space","war","science","music","politics","sports","technology"). major = a boolean; set it true for EXACTLY ONE event (the single most globally significant) and false for all the rest. Most impactful first.
 
-- "notd": ONE "number of the day" from TODAY'S HEADLINES above: {{"value": N, "prefix": "$", "unit": "B", "context": "sentence with a memorable comparison (e.g. 'more than the GDP of Denmark')"}}. The number must come from a headline above. NEVER invent one.
+- "notd": 3-5 candidate "numbers of the day", each from a DIFFERENT headline above: {{"value": N, "prefix": "$", "unit": "B", "context": "one sentence with a memorable comparison", "headline": <the headline NUMBER it comes from>, "topic_tags": ["..."]}}. value = the BARE number (magnitude like B/M/% goes in unit, never in value). The number MUST appear in its headline. topic_tags = 1-3 lowercase subject keywords. NEVER invent a number.
 
 - "briefs": exactly 3 one-line briefs from DIFFERENT headlines above, each {{"tag": "2-6 char uppercase topic tag (EU, OIL, CHIPS)", "text": "one sentence, max 110 chars, key entity in <b>"}}.
 
-- "countdowns": 0-2 UPCOMING scheduled events within the next 30 days that you are CONFIDENT about (central-bank decisions, scheduled launches, major scheduled releases/votes), each {{"name": "event name", "datetime": "YYYY-MM-DDTHH:MM:SSZ", "context": "one factual line (market pricing / calendar fact, never user data)"}}. If you are not certain of an exact date, OMIT the event. An empty list is fine.
+- "countdowns": 0-4 UPCOMING scheduled events within the next 30 days that you are CONFIDENT about (central-bank decisions, scheduled launches, votes, releases, fixtures), each {{"name": "event name", "datetime": "YYYY-MM-DDTHH:MM:SSZ", "context": "one factual line", "headline": <headline number if it came from one, else null>, "topic_tags": ["..."]}}. If you are not certain of an exact date, OMIT it. An empty list is fine.
 
-Rules: no fabricated numbers or dates; return ONLY the JSON object."""
+Rules: no fabricated numbers or dates; every notd/countdown must trace to a headline or a genuinely-known scheduled event; return ONLY the JSON object."""
 
 
 def _fetch_launch_countdowns() -> list:
@@ -1658,6 +1787,126 @@ def _fetch_grounded_calendar(api_key: str) -> list:
     return rows
 
 
+_UPCOMING_TAG_KEYWORDS = [
+    (('fomc', 'rate decision', 'interest rate', 'cpi', 'inflation', 'ecb',
+      'central bank', 'federal reserve'), ['economy', 'interest rates', 'markets']),
+    (('earnings', 'quarterly', 'results'), ['markets', 'business', 'earnings']),
+    (('launch', 'rocket', 'spacex', 'nasa', 'starship', 'satellite'), ['space', 'technology']),
+    (('election', 'vote', 'referendum', 'ballot'), ['politics', 'election']),
+    (('summit', 'talks', 'nato', 'united nations'), ['politics', 'world']),
+    (('final', 'semi-final', 'match', 'fixture', 'cup', 'grand prix'), ['sports']),
+    (('film', 'movie', 'premiere', 'release', 'season', 'episode'), ['entertainment']),
+    (('verdict', 'trial', 'hearing', 'court', 'ruling'), ['law', 'politics']),
+    (('ipo', 'listing'), ['markets', 'business']),
+]
+
+
+def _infer_topic_tags(text):
+    """Coarse topic tags for calendar events with no source article."""
+    t = (text or '').lower()
+    for keys, tags in _UPCOMING_TAG_KEYWORDS:
+        if any(k in t for k in keys):
+            return tags[:3]
+    return []
+
+
+UPCOMING_EXTRACT_PROMPT = """Today's date: {today}.
+From the numbered headlines below, extract EVERY concretely SCHEDULED FUTURE event whose date is stated or clearly implied IN the headline/bullet text, happening within the next 30 days. Examples: earnings dates, central-bank decisions, product launches, releases, votes, summits, court dates, sports fixtures.
+
+{headlines}
+
+Return ONLY JSON: {{"events":[{{"name":"short event name","datetime":"YYYY-MM-DDTHH:MM:SSZ","headline":<headline NUMBER>,"entity":"central entity","context":"one factual line drawn from the article"}}]}}
+Use T00:00:00Z when only a date is known. NEVER guess a date not supported by the text. Skip vague timing ("soon","next year","Q3" with no year). An empty list is fine."""
+
+
+def _populate_upcoming_events(supabase, api_key, calendar_rows, hl_by_num, headlines, now):
+    """Refresh the upcoming_events pool: expire past, extract groundable future
+    events from today's articles, merge with the calendar/launch supply, dedup
+    by name+date, insert. Runs once/day (gated by the modules guard)."""
+    horizon = now + timedelta(days=30)
+    grace = (now - timedelta(days=1)).isoformat()
+    try:
+        supabase.table('upcoming_events').delete().lt('event_date', grace).execute()
+    except Exception as e:
+        print(f"   ⚠️ [upcoming_events] expire failed: {e}")
+
+    events = []
+
+    # (a) structured launch/calendar/model supply
+    for r in calendar_rows:
+        try:
+            dt = datetime.fromisoformat(str(r['datetime']).replace('Z', '+00:00'))
+        except (ValueError, KeyError):
+            continue
+        if not (now < dt < horizon):
+            continue
+        tags = r.get('topic_tags') or _infer_topic_tags(f"{r.get('name', '')} {r.get('context', '')}")
+        events.append({'name': str(r['name'])[:120], 'event_date': dt.isoformat(),
+                       'topic_tags': tags[:3],
+                       'entity': (r.get('entity') or '')[:80] or None,
+                       'context': (r.get('context') or '')[:200] or None,
+                       'source_article_id': r.get('source_article_id')})
+
+    # (b) groundable future events extracted from today's article text
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"gemini-2.5-flash:generateContent?key={api_key}")
+    ex = {}
+    try:
+        resp = requests.post(url, json={
+            "contents": [{"parts": [{"text": UPCOMING_EXTRACT_PROMPT.format(
+                today=now.strftime('%Y-%m-%d'), headlines=headlines)}]}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096,
+                                 "responseMimeType": "application/json"},
+        }, timeout=90)
+        resp.raise_for_status()
+        text = resp.json()['candidates'][0]['content']['parts'][0]['text']
+        ex = _extract_json_obj(text) or {}
+    except Exception as e:
+        print(f"   ⚠️ [upcoming_events] extraction failed: {e}")
+    for e in (ex.get('events') or [])[:20]:
+        if not (isinstance(e, dict) and e.get('name') and e.get('datetime')):
+            continue
+        try:
+            dt = datetime.fromisoformat(str(e['datetime']).replace('Z', '+00:00'))
+        except ValueError:
+            continue
+        if not (now < dt < horizon):
+            continue
+        hn = _num(e.get('headline'))
+        src = hl_by_num.get(int(hn), {}) if hn is not None else {}
+        tags = [str(t).strip().lower()[:24] for t in (src.get('tags') or [])[:3]]
+        if not tags:
+            tags = _infer_topic_tags(f"{e.get('name', '')} {e.get('context', '')}")
+        events.append({'name': _strip_tags(str(e['name'])).strip()[:120],
+                       'event_date': dt.isoformat(), 'topic_tags': tags[:3],
+                       'entity': _strip_tags(str(e.get('entity', ''))).strip()[:80] or None,
+                       'context': _strip_tags(str(e.get('context', ''))).strip()[:200] or None,
+                       'source_article_id': src.get('id')})
+
+    if not events:
+        return
+    seen = set()
+    try:
+        existing = supabase.table('upcoming_events').select('name, event_date') \
+            .gte('event_date', grace).execute()
+        for r in (existing.data or []):
+            seen.add((str(r['name']).lower(), str(r['event_date'])[:10]))
+    except Exception:
+        pass
+    inserted = 0
+    for ev in events:
+        key = (ev['name'].lower(), ev['event_date'][:10])
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            supabase.table('upcoming_events').insert(ev).execute()
+            inserted += 1
+        except Exception:
+            pass   # unique-index dedup race — fine
+    print(f"   ✅ [upcoming_events] {inserted} new events (pool refreshed)")
+
+
 def generate_daily_modules(supabase, api_key: str):
     """Generate today's interstitial modules if not already present."""
     today = datetime.now(timezone.utc).date().isoformat()
@@ -1672,14 +1921,20 @@ def generate_daily_modules(supabase, api_key: str):
         print(f"   ⚠️ [modules] table check failed: {e}")
         return
 
+    # Numbered headlines w/ id + tags so notd/countdowns can cite a headline
+    # number that maps back to a real source_article_id.
+    hl_by_num = {}        # headline number -> {'id', 'tags'}
     try:
         arts = supabase.table('published_articles') \
-            .select('title_news, summary_bullets_news') \
+            .select('id, title_news, summary_bullets_news, interest_tags') \
             .order('published_at', desc=True).limit(15).execute()
-        headlines = '\n'.join(
-            f"- {a['title_news']}: {' '.join((a.get('summary_bullets_news') or [])[:1])[:150]}"
-            for a in (arts.data or [])
-        ) or 'none available'
+        lines = []
+        for i, a in enumerate((arts.data or []), 1):
+            hl_by_num[i] = {'id': a.get('id'),
+                            'tags': a.get('interest_tags') or []}
+            bullet = ' '.join((a.get('summary_bullets_news') or [])[:1])[:150]
+            lines.append(f"{i}. {a['title_news']}: {bullet}")
+        headlines = '\n'.join(lines) or 'none available'
     except Exception:
         headlines = 'none available'
 
@@ -1713,28 +1968,76 @@ def generate_daily_modules(supabase, api_key: str):
         return
 
     payloads = {}
+
+    # ── history POOL (8-12 tagged events, exactly one major) ──────────────
     hist = data.get('history')
     if isinstance(hist, list):
-        rows = [[int(_num(e[0])), _strip_tags(str(e[1])).strip()[:180]]
-                for e in hist[:3]
-                if isinstance(e, (list, tuple)) and len(e) >= 2 and _num(e[0])]
-        if len(rows) == 3:
+        pool = []
+        for e in hist[:12]:
+            # Accept BOTH the array form [year, text, [tags], major] and the
+            # object form {year, text/event, topic_tags/tags, major} — the
+            # model returns either depending on the day.
+            if isinstance(e, dict):
+                yr = _num(e.get('year'))
+                text = _strip_tags(str(e.get('text') or e.get('event')
+                                       or e.get('description') or '')).strip()[:180]
+                raw_tags = e.get('topic_tags') or e.get('tags') or []
+                major = bool(e.get('major'))
+            elif isinstance(e, (list, tuple)) and len(e) >= 2:
+                yr = _num(e[0])
+                text = _strip_tags(str(e[1])).strip()[:180]
+                raw_tags = e[2] if len(e) >= 3 and isinstance(e[2], list) else []
+                major = bool(e[3]) if len(e) >= 4 else False
+            else:
+                continue
+            if not yr or not text:
+                continue
+            tags = [str(t).strip().lower()[:24] for t in (raw_tags or [])[:3] if str(t).strip()]
+            pool.append([int(yr), text, tags, major])
+        if len(pool) >= 3:
+            # Exactly one major: if none/many flagged, most-impactful (first) wins.
+            if sum(1 for r in pool if r[3]) != 1:
+                for r in pool:
+                    r[3] = False
+                pool[0][3] = True
             # Illustrate each event in the day's rotating art style.
+            style = style_index = None
+            gen_rows = []
             try:
                 from history_image_gen import generate_history_images
-                payloads['history'] = generate_history_images(supabase, rows, api_key)
+                gen = generate_history_images(supabase, [[r[0], r[1]] for r in pool], api_key)
+                gen_rows = gen.get('rows', [])
+                style, style_index = gen.get('style'), gen.get('style_index')
             except Exception as _hist_err:
                 print(f"   ⚠️ [history-img] illustration failed (text-only): {_hist_err}")
-                payloads['history'] = {'rows': rows}
+            rows = []
+            for idx, r in enumerate(pool):
+                url = gen_rows[idx][2] if idx < len(gen_rows) and len(gen_rows[idx]) > 2 else None
+                rows.append([r[0], r[1], url, r[2], r[3]])
+            payloads['history'] = {'rows': rows, 'style': style, 'style_index': style_index}
+
+    # ── notd CANDIDATES (3-5 story-linked numbers, auto-scaled) ───────────
     notd = data.get('notd')
-    if isinstance(notd, dict) and _num(notd.get('value')) is not None \
-            and notd.get('context'):
-        payloads['notd'] = {
-            'value': _num(notd['value']),
-            'prefix': str(notd.get('prefix', ''))[:3],
-            'unit': str(notd.get('unit', ''))[:8],
-            'context': _strip_tags(str(notd['context'])).strip()[:160],
-        }
+    notd_list = notd if isinstance(notd, list) else ([notd] if isinstance(notd, dict) else [])
+    cand = []
+    for c in notd_list[:5]:
+        if not (isinstance(c, dict) and _num(c.get('value')) is not None and c.get('context')):
+            continue
+        v, p, u = _humanize_number(_num(c['value']), str(c.get('prefix', ''))[:3],
+                                   str(c.get('unit', ''))[:8])
+        hn = _num(c.get('headline'))
+        src = hl_by_num.get(int(hn), {}) if hn is not None else {}
+        tags = ([str(t).strip().lower()[:24] for t in c['topic_tags'][:3] if str(t).strip()]
+                if isinstance(c.get('topic_tags'), list) else [])
+        if not tags:
+            tags = [str(t).strip().lower()[:24] for t in (src.get('tags') or [])[:3]]
+        cand.append({'value': v, 'prefix': p, 'unit': u,
+                     'context': _strip_tags(str(c['context'])).strip()[:160],
+                     'source_article_id': src.get('id'), 'topic_tags': tags})
+    if cand:
+        payloads['notd'] = {**cand[0], 'candidates': cand}   # hoist best for old clients
+
+    # ── briefs (global, unchanged) ────────────────────────────────────────
     briefs = data.get('briefs')
     if isinstance(briefs, list):
         rows = []
@@ -1744,31 +2047,47 @@ def generate_daily_modules(supabase, api_key: str):
                              'text': _sanitize_marked_text(str(b['text']))[:130]})
         if len(rows) == 3:
             payloads['briefs'] = {'rows': rows}
+
+    # ── countdowns: model rows + structured launch/calendar supply ────────
     cds = data.get('countdowns')
     model_rows = []
     if isinstance(cds, list):
-        for c in cds[:2]:
+        for c in cds[:4]:
             if not (isinstance(c, dict) and c.get('name') and c.get('datetime')):
                 continue
             try:
                 dt = datetime.fromisoformat(str(c['datetime']).replace('Z', '+00:00'))
-                if dt > now:
-                    model_rows.append({'name': _strip_tags(str(c['name'])).strip()[:44],
-                                       'datetime': dt.isoformat(),
-                                       'context': _strip_tags(str(c.get('context', ''))).strip()[:140]})
             except ValueError:
                 continue
-    # Calendar-backed supply: the model alone almost never has a verifiable
-    # date, leaving the COUNTING DOWN module empty. Launches come from a
-    # structured API; Fed/CPI/ECB dates from grounded search with evidence.
+            if dt <= now:
+                continue
+            hn = _num(c.get('headline'))
+            src = hl_by_num.get(int(hn), {}) if hn is not None else {}
+            tags = ([str(t).strip().lower()[:24] for t in c['topic_tags'][:3] if str(t).strip()]
+                    if isinstance(c.get('topic_tags'), list) else [])
+            if not tags:
+                tags = [str(t).strip().lower()[:24] for t in (src.get('tags') or [])[:3]]
+            model_rows.append({'name': _strip_tags(str(c['name'])).strip()[:60],
+                               'datetime': dt.isoformat(),
+                               'context': _strip_tags(str(c.get('context', ''))).strip()[:140],
+                               'source_article_id': src.get('id'), 'topic_tags': tags})
+    merged = {}
+    for r in _fetch_launch_countdowns() + _fetch_grounded_calendar(api_key) + model_rows:
+        key = r['name'].lower()[:20]
+        if key not in merged:
+            merged[key] = r
+    all_upcoming = sorted(merged.values(), key=lambda r: r['datetime'])
     if 'countdowns' in needed:
-        merged = {}
-        for r in _fetch_launch_countdowns() + _fetch_grounded_calendar(api_key) + model_rows:
-            key = r['name'].lower()[:20]
-            if key not in merged:
-                merged[key] = r
-        rows = sorted(merged.values(), key=lambda r: r['datetime'])[:6]
-        payloads['countdowns'] = {'rows': rows}
+        # feed_modules global fallback (old contract: {rows:[{name,datetime,context}]}).
+        payloads['countdowns'] = {'rows': [
+            {'name': r['name'], 'datetime': r['datetime'], 'context': r.get('context', '')}
+            for r in all_upcoming[:6]]}
+
+    # ── upcoming_events POOL (personalized countdowns, Task 2) ────────────
+    try:
+        _populate_upcoming_events(supabase, api_key, all_upcoming, hl_by_num, headlines, now)
+    except Exception as e:
+        print(f"   ⚠️ [upcoming_events] populate failed: {e}")
 
     for mtype, payload in payloads.items():
         if mtype not in needed:
