@@ -13,7 +13,7 @@ import { TP, FONT_MONO, FONT_HEAD, accentFor } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
 import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
-import { buildModuleRotation, ModuleBlock } from './TPModules';
+import { buildModuleRotation, ModuleBlock, countdownCards } from './TPModules';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
@@ -71,11 +71,18 @@ function useFeedBlocks(stories, modules) {
     let cache = cacheRef.current;
 
     const modulesReady = !!modules;
+    // Identity of the module payload — a personalized refetch (login/out, interests)
+    // swaps one non-null payload for another, so the boolean modulesReady alone
+    // wouldn't rebuild; this forces a clean rebuild (fresh rotation + countdownPool).
+    const modulesSig = modules
+      ? JSON.stringify({ d: modules.date || null, p: modules.countdown_primary || null, c: modules.countdown_cards || null, n: modules.notd || null, h: !!modules.history?.rows?.length, b: !!modules.briefs?.rows?.length })
+      : null;
     if (
       !cache ||
       cache.firstId !== firstId ||
       news.length < cache.count ||
-      cache.modulesReady !== modulesReady
+      cache.modulesReady !== modulesReady ||
+      cache.modulesSig !== modulesSig
     ) {
       cache = {
         firstId,
@@ -86,11 +93,18 @@ function useFeedBlocks(stories, modules) {
         storyCount: 0,
         blockIdx: 0,
         modulesReady,
+        modulesSig,
+        countdownPool: countdownCards(modules),
+        sinceCountdown: 0,
+        lastRestType: null,
       };
       cacheRef.current = cache;
     }
 
     if (!cache.lightPool) cache.lightPool = [];
+    if (cache.countdownPool == null) cache.countdownPool = countdownCards(modules);
+    if (cache.sinceCountdown == null) cache.sinceCountdown = 0;
+    if (cache.lastRestType === undefined) cache.lastRestType = null;
 
     // Assign a template (honoring 24h per-article memory + image rhythm) and push.
     const placeStory = (story, key, isFirst) => {
@@ -120,6 +134,10 @@ function useFeedBlocks(stories, modules) {
       cache.blocks.push({ type: 'story', story, template, key });
       cache.blockIdx += 1;
       cache.storyCount += 1;
+      cache.sinceCountdown += 1;
+      // Essential stories are split into Layer 1 at render, so they don't count
+      // as the "previous rendered block" for Layer-2 no-cluster checks.
+      if (!story.is_essential) cache.lastRestType = 'story';
     };
 
     // Feature 3 — a non-essential "light" story becomes a mood reset placed ~every
@@ -140,6 +158,7 @@ function useFeedBlocks(stories, modules) {
         if (item) {
           cache.blocks.push({ type: 'module', item, key: `m-${cache.blockIdx}-${cache.storyCount}` });
           cache.blockIdx += 1;
+          cache.lastRestType = 'module';
         }
       }
 
@@ -147,6 +166,20 @@ function useFeedBlocks(stories, modules) {
       if (cache.storyCount % 10 === 0 && cache.lightPool.length) {
         const ls = cache.lightPool.shift();
         placeStory(ls, `s-light-${ls.id}`, false);
+      }
+
+      // An extra relevant countdown card ~every 9 cards — but never right after
+      // another module/countdown in the RENDERED layer (essentials are split out,
+      // so check the last non-essential block, not the raw flat array). Holds the
+      // slot until a clean spot opens, then resets.
+      if (cache.sinceCountdown >= 9 && cache.countdownPool.length) {
+        if (cache.lastRestType !== 'module') {
+          const cd = cache.countdownPool.shift();
+          cache.blocks.push({ type: 'module', item: { kind: 'countdown', row: cd }, key: `cd-${cd.id ?? cache.blockIdx}` });
+          cache.blockIdx += 1;
+          cache.lastRestType = 'module';
+          cache.sinceCountdown = 0;
+        }
       }
     }
     cache.count = news.length;
@@ -304,15 +337,38 @@ export default function TodayPlusFeed({
     setLastVisit(cand.length ? Math.max(...cand) : null);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Daily interstitial modules — a missing key is skipped in the rotation.
+  // Daily interstitial modules — USER-AWARE: pass auth id / guest id + the
+  // locally-known interests so the payload is personalized. Unknown params are
+  // ignored by the backend, and a global payload still renders fine.
   useEffect(() => {
     let alive = true;
-    fetch('/api/feed/modules')
+    const qs = new URLSearchParams();
+    try {
+      const u = JSON.parse(localStorage.getItem('tennews_user') || 'null');
+      if (u && u.id) qs.set('user_id', String(u.id));
+    } catch (_) {}
+    try {
+      let gid = localStorage.getItem('tn_guest_id');
+      if (!gid) { gid = `g_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`; localStorage.setItem('tn_guest_id', gid); }
+      qs.set('guest_device_id', gid); // match the house contract (api/feed/main, explore, analytics)
+    } catch (_) {}
+    try {
+      const p = JSON.parse(localStorage.getItem('todayplus_preferences') || 'null');
+      if (p) {
+        if (Array.isArray(p.followed_topics) && p.followed_topics.length) qs.set('topics', p.followed_topics.join(','));
+        if (Array.isArray(p.followed_subtopics) && p.followed_subtopics.length) qs.set('subtopics', p.followed_subtopics.slice(0, 24).join(','));
+        if (p.home_country) qs.set('country', String(p.home_country));
+      }
+    } catch (_) {}
+    const url = qs.toString() ? `/api/feed/modules?${qs.toString()}` : '/api/feed/modules';
+    fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (alive && d?.modules) setModules(d.modules); })
       .catch(() => {});
     return () => { alive = false; };
-  }, []);
+    // Depend on the stable auth id (not the user object, which gets a fresh
+    // reference every render for guests) so we refetch on login/out, not on every render.
+  }, [user && user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll (§7.4): sentinel ~1100px below the viewport bottom.
   useEffect(() => {

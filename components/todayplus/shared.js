@@ -102,7 +102,7 @@ export const revealStyle = (shown, animate, delay = 0, dy = 12) => ({
 
 // ── Count-up (§7.2): 0 → target, 0.9s ease-out-cubic, once per key ──────────
 
-export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, style }) {
+export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, style, format }) {
   const reduced = useReducedMotion();
   const already = hasAnimated(`count.${animKey}`);
   const [display, setDisplay] = useState(already || reduced ? value : 0);
@@ -132,7 +132,7 @@ export function CountUp({ value, prefix = '', unit = '', unitStyle, animKey, sty
 
   return (
     <span ref={ref} style={{ fontVariantNumeric: 'tabular-nums', ...style }}>
-      {prefix}{formatNumber(display)}
+      {prefix}{(format || formatNumber)(display)}
       {unit ? <span style={unitStyle}>{unit}</span> : null}
     </span>
   );

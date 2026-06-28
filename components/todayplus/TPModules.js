@@ -43,7 +43,11 @@ export function CountdownModule({ row }) {
     [total % 60, 'SEC'],
   ];
 
-  const [ref, shown, animate] = useRevealOnce('mod.countdown', 0.3);
+  // Unique per instance — the primary and each injected countdown card render
+  // the same component, so a fixed key would let only the first one animate
+  // (animatedKeys is module-global).
+  const revealKey = 'mod.countdown.' + (row?.id ?? row?.datetime ?? 'primary');
+  const [ref, shown, animate] = useRevealOnce(revealKey, 0.3);
   return (
     <section ref={ref}>
       <ModuleHeader title="COUNTING DOWN" shown={shown} animate={animate} />
@@ -89,7 +93,10 @@ export function HistoryModule({ module }) {
       <ModuleHeader title="TODAY IN HISTORY" shown={shown} animate={animate} />
       <div style={{ marginTop: 16 }}>
         {rows.map((row, i) => {
-          const [year, text] = Array.isArray(row) ? row : [row?.year, row?.text];
+          const arr = Array.isArray(row);
+          const year = arr ? row[0] : row?.year;
+          const text = arr ? row[1] : row?.text;
+          const major = arr ? !!row[3] : !!row?.major; // landmark anchor (row 0)
           return (
             <React.Fragment key={i}>
               {i > 0 ? <div style={{ height: 1, background: TP.line, margin: '13px 0' }} /> : null}
@@ -99,7 +106,10 @@ export function HistoryModule({ module }) {
                   letterSpacing: '-0.012em', color: TP.gold, width: 64, flexShrink: 0,
                   fontVariantNumeric: 'tabular-nums',
                 }}>{year}</span>
-                <span style={{ fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.5, color: TP.ink2 }}>
+                <span style={{
+                  fontFamily: FONT_BODY, fontSize: major ? 15.2 : 14.7, lineHeight: 1.5,
+                  color: major ? TP.ink : TP.ink2, fontWeight: major ? 500 : 400,
+                }}>
                   <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
                 </span>
               </div>
@@ -139,8 +149,29 @@ export function BriefsModule({ module, title }) {
 
 // ── 8.5 NUMBER OF THE DAY ────────────────────────────────────────────────────
 
+// Human-readable NOTD number. The backend pre-scales value + unit (3.9 / "M"),
+// so we just render the value cleanly — never re-scale into "$0.0039B".
+// The decimal count is fixed from the TARGET so the tabular-nums column doesn't
+// jitter during the count-up and a sub-1 target never collapses to a bare int.
+function notdDecimals(target) {
+  const abs = Math.abs(target);
+  if (abs % 1 < 1e-9) return 0;   // integer
+  if (abs >= 100) return 0;       // 250.4 -> 250
+  if (abs >= 1) return 1;         // 3.94 -> 3.9
+  if (abs >= 0.01) return 2;      // 0.42
+  return 3;                       // tiny but bounded — never exponential
+}
+function fmtFixed(v, dp) {
+  if (v == null || Number.isNaN(v)) return '0';
+  return v.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+
 export function NotdModule({ module, moduleKey }) {
   const [ref, shown, animate] = useRevealOnce('mod.notd', 0.3);
+  // Hide the whole module when there's no real number to show.
+  if (!module || module.value == null) return null;
+  const target = Number(module.value) || 0;
+  const dp = notdDecimals(target);
   return (
     <section ref={ref}>
       <ModuleHeader title="NUMBER OF THE DAY" shown={shown} animate={animate} />
@@ -150,16 +181,26 @@ export function NotdModule({ module, moduleKey }) {
         ...revealStyle(shown, animate, 0.12, 12),
       }}>
         <CountUp
-          value={Number(module.value) || 0}
+          value={target}
           prefix={module.prefix || ''}
           unit={module.unit || ''}
           unitStyle={{ fontSize: '0.42em', color: TP.gold }}
           animKey={`notd.${moduleKey}`}
+          format={(v) => fmtFixed(v, dp)}
         />
       </div>
+      {module.title ? (
+        <p style={{
+          fontFamily: FONT_HEAD, fontWeight: 600, fontSize: 15.5, lineHeight: 1.32,
+          letterSpacing: '-0.01em', color: TP.ink, margin: '13px 0 0',
+          ...revealStyle(shown, animate, 0.24, 10),
+        }}>
+          {module.title}
+        </p>
+      ) : null}
       {module.context ? (
         <p style={{
-          fontFamily: FONT_BODY, fontSize: 14.7, lineHeight: 1.55, color: TP.ink2, margin: '14px 0 0',
+          fontFamily: FONT_BODY, fontSize: 14.2, lineHeight: 1.55, color: TP.ink2, margin: '7px 0 0',
           ...revealStyle(shown, animate, 0.3, 10),
         }}>
           {module.context}
@@ -174,16 +215,34 @@ export function NotdModule({ module, moduleKey }) {
 // list is exhausted, no more interstitials are inserted. MARKET PULSE (§8.4)
 // is client-side prices and intentionally skipped in v1. ──────────────────────
 
+// The primary COUNTING DOWN event: prefer the user-aware countdown_primary,
+// fall back to the first future row of the old global `countdowns` shape.
+export function primaryCountdown(modules) {
+  if (!modules) return null;
+  const p = modules.countdown_primary;
+  if (p && p.datetime && new Date(p.datetime).getTime() > Date.now()) return p;
+  return (modules.countdowns?.rows || []).find((r) => r && new Date(r.datetime).getTime() > Date.now()) || null;
+}
+
+// Future-only countdown_cards (the extra relevant events spread through the feed),
+// excluding whatever is already shown as the primary.
+export function countdownCards(modules) {
+  if (!modules || !Array.isArray(modules.countdown_cards)) return [];
+  const primary = primaryCountdown(modules);
+  const pKey = primary ? `${primary.name}|${primary.datetime}` : null;
+  return modules.countdown_cards.filter(
+    (c) => c && c.datetime && new Date(c.datetime).getTime() > Date.now() && `${c.name}|${c.datetime}` !== pKey
+  );
+}
+
 export function buildModuleRotation(modules) {
   if (!modules) return () => null;
   const kinds = [];
-  const firstFutureCountdown = () =>
-    (modules.countdowns?.rows || []).find((r) => new Date(r.datetime).getTime() > Date.now()) || null;
 
-  if (firstFutureCountdown()) kinds.push('countdown');
+  if (primaryCountdown(modules)) kinds.push('countdown');
   if (modules.history?.rows?.length) kinds.push('history');
   if (modules.briefs?.rows?.length) kinds.push('briefs');
-  if (modules.notd) kinds.push('notd');
+  if (modules.notd && modules.notd.value != null) kinds.push('notd');
 
   let cursor = 0;
 
@@ -193,7 +252,7 @@ export function buildModuleRotation(modules) {
     cursor += 1;
     switch (kind) {
       case 'countdown': {
-        const row = firstFutureCountdown();
+        const row = primaryCountdown(modules);
         if (!row) return next();
         return { kind, row };
       }
