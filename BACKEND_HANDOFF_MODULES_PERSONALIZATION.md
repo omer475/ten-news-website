@@ -1,54 +1,54 @@
-# Backend handoff — personalized modules + card retune
+# Backend handoff — rotating personalized modules + reminders (v2)
 
-Live on prod (todayplus.news). Website on `claude/todayplus-web-redesign`;
-pipeline on Cloud Run. The contract is **additive** — the legacy
-`d.modules.{history,notd,briefs,countdowns}` shape still works unchanged, so the
-current consumer keeps rendering. New richer fields are added alongside.
+Live on prod (todayplus.news). Additive — the legacy `d.modules.*` shape still
+works. New this round: **seen-aware rotation**, **stable item ids**, and
+**reminders / pin-to-top**.
 
-## /api/feed/modules?user_id=... (user_id optional)
+## GET /api/feed/modules?user_id=...&seen_ids=...
+
+`seen_ids` = comma-separated list of module-item ids the user has already seen.
+Pass it on refresh and the endpoint returns the most-relevant **UNSEEN** item(s)
+per module, rotating; empty/null when a pool is exhausted. A read item is never
+repeated. Every item carries a **stable id**:
+
+- history: `modules.history.ids[i]` (parallel to `rows[i]`), form `h:<date>:<idx>`
+- notd: `notd.id`, form `n:<date>:<idx>`
+- briefs: `briefs.rows[i].id`, form `b:<date>:<idx>`
+- countdowns: the numeric `upcoming_events.id`
+
+Collect the ids of what the user actually saw, accumulate into `seen_ids`, send
+on the next call.
 
 ```jsonc
 {
-  "date": "2026-06-28",
-  "personalized": true,                 // false for guests / no-interest users
-  "modules": { /* legacy shape, still populated (now personalized) */
-    "history":    { "rows": [[year, text, image_url, [tags], major], ...3], "style", "style_index" },
-    "notd":       { "value", "prefix", "unit", "context", "source_article_id", "topic_tags" },
-    "briefs":     { "rows": [{ "tag", "text" }, ...3] },
-    "countdowns": { "rows": [{ "name", "datetime", "context" }, ...] }   // global, soonest
+  "date": "2026-06-29",
+  "personalized": true,
+  "modules": {
+    "history": { "rows": [[year, text, image_url, major], ...], "ids": ["h:..:0", ...], "style", "style_index" },
+    "notd":    { "id": "n:..:0", "value", "prefix", "unit", "context", "source_article_id", "title", "topic_tags" },
+    "briefs":  { "rows": [{ "id": "b:..:0", "tag", "text" }, ...] },
+    "countdowns": { "rows": [{ "name", "datetime", "context" }, ...] },   // legacy soonest
+    "countdown_primary": { "id", "name", "datetime", "context", "source_article_id", "topic_tags" } | null,
+    "countdown_cards":  [ { "id", "name", "datetime", "context", "source_article_id", "topic_tags" }, ...≤3 ]
   },
-  // NEW richer top-level fields (migrate the UI to these):
-  "history": { "rows": [[year, text, image_url, [topic_tags], major], ...3], "style", "style_index" },
-  "notd":    { "value", "prefix", "unit", "context", "source_article_id", "topic_tags" } | null,
-  "briefs":  { "rows": [{ "tag", "text" }, ...3] },
-  "countdown_primary": { "id", "name", "datetime", "context", "source_article_id", "topic_tags" } | null,
-  "countdown_cards":  [ { "id", "name", "datetime", "context", "source_article_id", "topic_tags" }, ...≤3 ]
+  // also mirrored at top level:
+  "history", "notd", "briefs", "countdown_primary", "countdown_cards"
 }
 ```
 
-Notes for the UI:
-- **history**: always 1 `major:true` event (most globally significant) + 2 more.
-  For a logged-in user with interests the 2 extras are interest-matched; guests
-  get the 2 most-impactful. Each row is `[year, text, image_url, topic_tags[], major]`
-  — `image_url` is a real illustration (may be null on rare gen failure). The old
-  `[year, text]` read still works (extra elements are ignored).
-- **notd**: a single best-matching "number of the day", auto-scaled so it never
-  renders like `$0.0039B` (→ `$3.9M`). `source_article_id` links to the story.
-- **countdowns**: `countdown_primary` = the single most relevant upcoming event,
-  `countdown_cards` = up to 3 more. Personalized by the user's interests; guests
-  get soonest-first. From a live `upcoming_events` pool (real, grounded, dated
-  events — launches, Fed/CPI/ECB, plus events extracted from article text).
-- **caching**: guest responses are CDN-cacheable; `user_id` responses are
-  `private` (per-user), so don't shared-cache them.
-- **degrade gracefully**: any field can be `null`/empty (thin supply, gen miss).
+- **history rows are now `[year, text, image_url, major]`** (major = 4th element, index 3). The matching id is in the parallel `history.ids` array.
+- `notd.value` is **pre-scaled** (e.g. `3.9` / `"M"`, never `0.0039` / `"B"`).
+- No shared CDN cache (rotation is per-user + per-seen-set) — don't cache responses yourself.
+- Pools are big now: history = full on-this-date set (up to 16), briefs = 10–15, notd = 3–5 candidates, countdowns = many. So there's real room to rotate.
 
-## Card production (display jsonb) changes — already flowing on new articles
-- `display.why_it_matters` + `display.tone` are now generated **in the pipeline**
-  (previously only on the website branch, so no new article had them — fixed).
-- Numbers in `display.stats` / `display.big` / notd are auto-scaled (no `$0.0039B`).
-- Quotes are rarer + stronger (named-newsmaker only). `big`/`versus` slightly more
-  frequent where grounded. Charts unchanged. More articles carry a usable cover
-  image (image gate 70→60). NOTE: the cover-template choice is still your
-  `selector.js` (`cover_ok` is a never-written/dead flag you could implement).
+## Reminders / pin-to-top (NEW)
 
-Ping me if you want any field renamed/reshaped before you wire the UI.
+- **POST /api/feed/reminder** `{ event_id, guest_device_id? }` → add a reminder (logged-in via cookie/bearer, or guest via `guest_device_id`). Idempotent. `event_id` is an `upcoming_events.id` (the `countdown_primary.id` / `countdown_cards[].id` you already get). Past/unknown events are rejected (400/404).
+- **DELETE /api/feed/reminder** `{ event_id, guest_device_id? }` → remove it.
+- **GET /api/feed/main** now returns **`pinned_events`**: the subject's reminded events still in the future (auto-excludes past), shape `[{ id, name, datetime, context, topic_tags, source_article_id }]` — render these pinned at the top of the feed.
+- The literal "alarm" (web-push at event time) is **not** built — it needs a service worker (your domain). Tell me if you want the backend half (a scheduled notifier).
+
+## Supply / behavior notes
+- **Delight lane** (pipeline): non-Sports fascinating/uplifting stories (Science/Space/Health/Tech/Entertainment/Lifestyle/World) now publish a reserved ~12% even at mid importance, so the "every ~10 cards" light beat serves real science/good-news to non-sports users (was 84% Sports). This trends in over the next day as the pipeline runs.
+- `display.tone` backfilled on the recent window; new articles always carry it.
+- Card mix retune (fewer/stronger quotes, more grounded stat/chart/versus, auto-scaled numbers, more covers) is live and trends in as articles regenerate.
