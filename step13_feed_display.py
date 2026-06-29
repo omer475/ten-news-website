@@ -1677,11 +1677,11 @@ RECENT HEADLINES (today's published stories; each line is numbered with its id):
 Return ONE JSON object with EXACTLY these keys. These are POOLS — produce the
 full set; the feed personalizes which ones each reader sees.
 
-- "history": 8-12 genuinely significant, well-documented events that happened on {month_day} in past years, each as [year, "one-sentence description", ["topic","tags"], major]. year = integer. The 1-3 topic tags are lowercase everyday keywords for the event's subject (e.g. "space","war","science","music","politics","sports","technology"). major = a boolean; set it true for EXACTLY ONE event (the single most globally significant) and false for all the rest. Most impactful first.
+- "history": the FULL set of genuinely significant, well-documented events that happened on {month_day} in past years — as many as you confidently know, up to 16 (aim for 10+), spanning DIVERSE topics (science, space, culture, sports, politics, disasters, discovery). Each as [year, "one-sentence description", ["topic","tags"], major]. year = integer. The 1-3 topic tags are lowercase everyday keywords for the event's subject (e.g. "space","war","science","music","politics","sports","technology"). major = a boolean; set it true for EXACTLY ONE event (the single most globally significant) and false for all the rest. Most impactful first.
 
 - "notd": 3-5 candidate "numbers of the day", each from a DIFFERENT headline above: {{"value": N, "prefix": "$", "unit": "B", "context": "one sentence with a memorable comparison", "headline": <the headline NUMBER it comes from>, "topic_tags": ["..."]}}. value = the BARE number (magnitude like B/M/% goes in unit, never in value). The number MUST appear in its headline. topic_tags = 1-3 lowercase subject keywords. NEVER invent a number.
 
-- "briefs": exactly 3 one-line briefs from DIFFERENT headlines above, each {{"tag": "2-6 char uppercase topic tag (EU, OIL, CHIPS)", "text": "one sentence, max 110 chars, key entity in <b>"}}.
+- "briefs": 10-15 one-line briefs, each from a DIFFERENT headline above (cover as many distinct stories as you can), each {{"tag": "2-6 char uppercase topic tag (EU, OIL, CHIPS)", "text": "one sentence, max 110 chars, key entity in <b>"}}.
 
 - "countdowns": 0-4 UPCOMING scheduled events within the next 30 days that you are CONFIDENT about (central-bank decisions, scheduled launches, votes, releases, fixtures), each {{"name": "event name", "datetime": "YYYY-MM-DDTHH:MM:SSZ", "context": "one factual line", "headline": <headline number if it came from one, else null>, "topic_tags": ["..."]}}. If you are not certain of an exact date, OMIT it. An empty list is fine.
 
@@ -1845,7 +1845,8 @@ def _populate_upcoming_events(supabase, api_key, calendar_rows, hl_by_num, headl
                        'topic_tags': tags[:3],
                        'entity': (r.get('entity') or '')[:80] or None,
                        'context': (r.get('context') or '')[:200] or None,
-                       'source_article_id': r.get('source_article_id')})
+                       'source_article_id': r.get('source_article_id'),
+                       'confidence': 9})   # structured launch / grounded calendar
 
     # (b) groundable future events extracted from today's article text
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
@@ -1881,7 +1882,8 @@ def _populate_upcoming_events(supabase, api_key, calendar_rows, hl_by_num, headl
                        'event_date': dt.isoformat(), 'topic_tags': tags[:3],
                        'entity': _strip_tags(str(e.get('entity', ''))).strip()[:80] or None,
                        'context': _strip_tags(str(e.get('context', ''))).strip()[:200] or None,
-                       'source_article_id': src.get('id')})
+                       'source_article_id': src.get('id'),
+                       'confidence': 7})   # grounded extraction from article text
 
     if not events:
         return
@@ -1923,15 +1925,16 @@ def generate_daily_modules(supabase, api_key: str):
 
     # Numbered headlines w/ id + tags so notd/countdowns can cite a headline
     # number that maps back to a real source_article_id.
-    hl_by_num = {}        # headline number -> {'id', 'tags'}
+    hl_by_num = {}        # headline number -> {'id', 'tags', 'title'}
     try:
         arts = supabase.table('published_articles') \
             .select('id, title_news, summary_bullets_news, interest_tags') \
-            .order('published_at', desc=True).limit(15).execute()
+            .order('published_at', desc=True).limit(20).execute()
         lines = []
         for i, a in enumerate((arts.data or []), 1):
             hl_by_num[i] = {'id': a.get('id'),
-                            'tags': a.get('interest_tags') or []}
+                            'tags': a.get('interest_tags') or [],
+                            'title': a.get('title_news')}
             bullet = ' '.join((a.get('summary_bullets_news') or [])[:1])[:150]
             lines.append(f"{i}. {a['title_news']}: {bullet}")
         headlines = '\n'.join(lines) or 'none available'
@@ -1969,11 +1972,11 @@ def generate_daily_modules(supabase, api_key: str):
 
     payloads = {}
 
-    # ── history POOL (8-12 tagged events, exactly one major) ──────────────
+    # ── history POOL (full tagged set, exactly one major) ─────────────────
     hist = data.get('history')
     if isinstance(hist, list):
         pool = []
-        for e in hist[:12]:
+        for e in hist[:16]:
             # Accept BOTH the array form [year, text, [tags], major] and the
             # object form {year, text/event, topic_tags/tags, major} — the
             # model returns either depending on the day.
@@ -2033,19 +2036,20 @@ def generate_daily_modules(supabase, api_key: str):
             tags = [str(t).strip().lower()[:24] for t in (src.get('tags') or [])[:3]]
         cand.append({'value': v, 'prefix': p, 'unit': u,
                      'context': _strip_tags(str(c['context'])).strip()[:160],
-                     'source_article_id': src.get('id'), 'topic_tags': tags})
+                     'source_article_id': src.get('id'),
+                     'title': src.get('title'), 'topic_tags': tags})
     if cand:
         payloads['notd'] = {**cand[0], 'candidates': cand}   # hoist best for old clients
 
-    # ── briefs (global, unchanged) ────────────────────────────────────────
+    # ── briefs POOL (10-15; feed rotates through unseen at serve time) ────
     briefs = data.get('briefs')
     if isinstance(briefs, list):
         rows = []
-        for b in briefs[:3]:
+        for b in briefs[:15]:
             if isinstance(b, dict) and b.get('tag') and b.get('text'):
                 rows.append({'tag': _strip_tags(str(b['tag'])).strip().upper()[:6],
                              'text': _sanitize_marked_text(str(b['text']))[:130]})
-        if len(rows) == 3:
+        if len(rows) >= 3:
             payloads['briefs'] = {'rows': rows}
 
     # ── countdowns: model rows + structured launch/calendar supply ────────

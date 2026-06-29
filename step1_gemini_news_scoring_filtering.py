@@ -59,6 +59,49 @@ def _fix_truncated_json(json_text: str) -> Dict:
         raise ValueError(f"Could not parse JSON: {e}")
 
 
+# Delight-lane categories: non-Sports buckets where a fascinating/uplifting
+# story deserves to publish even at interest 5-7. Sports is EXCLUDED (already
+# 84% of light supply / ~33% of all content).
+DELIGHT_CATEGORIES = {'Science', 'Health', 'Tech', 'Entertainment', 'Lifestyle',
+                      'World', 'Food', 'Travel'}
+
+
+def _apply_delight_lane(approved: List[Dict], filtered: List[Dict]):
+    """Promote a reserved quota of NON-SPORTS high-delight stories that the
+    interest>=8 gate dropped (interest 5-7). Fixes light supply being 84% Sports
+    (Science/Space/good-news score 5-7 on importance and never published). The
+    global interest gate is UNTOUCHED — this is additive headroom. Tunable via
+    DELIGHT_LANE_FRACTION (default 0.12; 0 disables) and DELIGHT_MIN (default 7)."""
+    try:
+        frac = float(os.getenv('DELIGHT_LANE_FRACTION', '0.12'))
+    except ValueError:
+        frac = 0.12
+    if frac <= 0 or not approved:
+        return approved, filtered
+    min_delight = int(os.getenv('DELIGHT_MIN', '7'))
+    quota = max(1, int(frac * len(approved) + 0.999))   # ceil, ~10-15%
+    cands = [a for a in filtered
+             if a.get('disqualifier') == 'low_interest'
+             and a.get('_delight_category') in DELIGHT_CATEGORIES
+             and 5 <= (a.get('interest_score') or 0) <= 7
+             and (a.get('delight_score') or 0) >= min_delight]
+    cands.sort(key=lambda a: (a.get('delight_score', 0), a.get('interest_score', 0)), reverse=True)
+    promote = cands[:quota]
+    if not promote:
+        return approved, filtered
+    promote_ids = {id(a) for a in promote}
+    for a in promote:
+        a['status'] = 'APPROVED'
+        a['category'] = a.get('_delight_category', 'Other')
+        a['score'] = 750
+        a['path'] = 'DELIGHT'
+        a.pop('disqualifier', None)
+    filtered = [a for a in filtered if id(a) not in promote_ids]
+    print(f"   ✨ [delight-lane] promoted {len(promote)} non-sports high-delight stories "
+          f"(quota {quota}, min_delight {min_delight})")
+    return approved + promote, filtered
+
+
 def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: int = 50, max_retries: int = 5) -> Dict:
     """
     Step 1: Approve or Eliminate news articles using Gemini API
@@ -116,6 +159,7 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
                     article['disqualifier'] = 'batch_error'
                 all_filtered.extend(batch)
         
+        all_approved, all_filtered = _apply_delight_lane(all_approved, all_filtered)
         return {
             "approved": all_approved,
             "filtered": all_filtered
@@ -123,6 +167,8 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
     else:
         # Single batch
         result = _process_batch(articles, url, api_key, max_retries)
+        result['approved'], result['filtered'] = _apply_delight_lane(
+            result.get('approved', []), result.get('filtered', []))
         return result
 
 
@@ -187,6 +233,26 @@ For each APPROVED article, also output an **interest score from 1-10**. Score fr
 **Key instruction:** A Premier League match result is a 6-7 for sports followers. A notable tech product launch is a 6. A celebrity health diagnosis is a 5-6. Turkish domestic news is a 7 if Türkiye followers would care. Only score 1-3 for truly routine filler or non-covered country local news with zero topic appeal.
 
 **PUBLISH BAR (tightened 2026-06-10):** We publish ONLY articles scoring **interest 8-10**, and an 8 must be EARNED. An 8 requires genuine novelty AND consequence — the standout of the cycle, not merely a real "major" event. If a story is routine for its own beat (another match result, another earnings beat, another official statement, another product refresh, another incremental policy step), it scores 6-7 and does NOT publish, even if technically "major". Commodity coverage, repetitive follow-ups, mid-table results, and low-novelty rewrites score 5-7 and will NOT publish. When torn between 7 and 8, ALWAYS choose 7. It is correct — and expected — for MOST approved articles to land at 5-7 and not publish.
+
+## DELIGHT SCORING (1-10) — separate from interest
+
+For each APPROVED article, ALSO output a **delight score from 1-10**, judged
+INDEPENDENTLY of interest/importance. Delight = is this **fascinating,
+uplifting, surprising, or shareable** — the kind of thing you'd send a friend
+saying "whoa, look at this", regardless of how globally important it is.
+
+| Score | Description |
+|-------|-------------|
+| 9-10 | A genuine wow: a stunning scientific discovery, a remarkable first, a beautiful/awe-inspiring feat, a story that makes you smile or marvel |
+| 7-8 | Clearly delightful: a cool space/science finding, a good-news human-interest story, a surprising fact, a charming cultural moment |
+| 5-6 | Mildly interesting/pleasant, but not striking |
+| 1-4 | Routine, grim, or dry — no delight (most hard-news, politics, conflict, business) |
+
+A war, a scandal, an earnings report = low delight (1-3) even if high interest.
+A newly discovered exoplanet, a medical breakthrough, an animal-rescue story, a
+record-breaking natural wonder, a quirky surprising fact = high delight (8-10)
+even if interest is only 5-7. Score delight honestly; do NOT inflate it for
+sports results (those are already well-covered).
 
 ---
 
@@ -420,14 +486,14 @@ When approving, assign one category:
 ```json
 {
   "results": [
-    {"id": 1, "decision": "APPROVED", "category": "Sports", "interest": 8},
+    {"id": 1, "decision": "APPROVED", "category": "Sports", "interest": 8, "delight": 3},
     {"id": 2, "decision": "ELIMINATED"},
-    {"id": 3, "decision": "APPROVED", "category": "Tech", "interest": 6}
+    {"id": 3, "decision": "APPROVED", "category": "Science", "interest": 6, "delight": 9}
   ]
 }
 ```
 
-For APPROVED articles, include `"interest"` (1-10 score). Omit for ELIMINATED articles.
+For APPROVED articles, include `"interest"` (1-10) AND `"delight"` (1-10). Omit both for ELIMINATED articles.
 
 ---
 
@@ -457,7 +523,7 @@ If yes → APPROVE it.
         if article.get("text"):
             articles_text += f'Description: {article.get("text", "")[:300]}\n'
     
-    articles_text += '\n\nReturn JSON object with "results" array. Each result needs: id, decision (APPROVED/ELIMINATED), category (only for APPROVED), and interest score 1-10 (only for APPROVED).'
+    articles_text += '\n\nReturn JSON object with "results" array. Each result needs: id, decision (APPROVED/ELIMINATED), category (only for APPROVED), interest score 1-10 (only for APPROVED), and delight score 1-10 (only for APPROVED).'
     
     # Prepare request
     request_data = {
@@ -564,6 +630,7 @@ If yes → APPROVE it.
                     original_article = articles[article_id].copy()
                     decision = result_item.get('decision', 'ELIMINATED').upper()
                     interest = result_item.get('interest', 5)
+                    delight = result_item.get('delight', 0)  # independent 1-10 (delight lane)
 
                     # PIPELINE 1 TIGHTENING (2026-05-24): publish only genuinely
                     # high-interest items. Gate at interest >= 8 (override via
@@ -579,7 +646,8 @@ If yes → APPROVE it.
                         original_article['score'] = 750  # Default score, will be updated after writing
                         original_article['path'] = 'A'  # Default path
                         original_article['interest_score'] = interest
-                        
+                        original_article['delight_score'] = delight
+
                         # Validate category
                         valid_categories = ['World', 'Politics', 'Business', 'Tech', 'Science',
                                           'Health', 'Finance', 'Sports', 'Entertainment',
@@ -617,6 +685,11 @@ If yes → APPROVE it.
                             'low_interest' if decision == 'APPROVED' else 'not_globally_relevant'
                         )
                         original_article['interest_score'] = interest
+                        original_article['delight_score'] = delight
+                        # Preserve the model's real category (category above is
+                        # forced to 'Other' for filtered rows) so the delight
+                        # lane can select non-Sports high-delight items.
+                        original_article['_delight_category'] = result_item.get('category', 'Other')
                         filtered.append(original_article)
             
             # Handle any articles not in results (mark as filtered)
