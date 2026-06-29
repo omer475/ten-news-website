@@ -270,22 +270,40 @@ export function HistoryModule({ module }) {
           const arr = Array.isArray(row);
           const year = arr ? row[0] : row?.year;
           const text = arr ? row[1] : row?.text;
+          const img = arr ? row[2] : (row?.image_url || row?.img); // AI illustration (history-images bucket)
           const major = arr ? !!row[3] : !!row?.major; // landmark anchor (row 0)
+          const thumb = major ? 60 : 52;
           return (
             <React.Fragment key={i}>
               {i > 0 ? <div style={{ height: 1, background: TP.line, margin: '13px 0' }} /> : null}
-              <div style={{ display: 'flex', alignItems: 'baseline', ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
-                <span style={{
-                  fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 18.5,
-                  letterSpacing: '-0.012em', color: TP.gold, width: 64, flexShrink: 0,
-                  fontVariantNumeric: 'tabular-nums',
-                }}>{year}</span>
-                <span style={{
-                  fontFamily: FONT_BODY, fontSize: major ? 15.2 : 14.7, lineHeight: 1.5,
-                  color: major ? TP.ink : TP.ink2, fontWeight: major ? 500 : 400,
-                }}>
-                  <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
-                </span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 13, ...revealStyle(shown, animate, 0.15 + i * 0.14, 10) }}>
+                {img ? (
+                  <img
+                    src={img}
+                    alt=""
+                    loading="lazy"
+                    width={thumb}
+                    height={thumb}
+                    style={{
+                      width: thumb, height: thumb, flexShrink: 0,
+                      borderRadius: 12, objectFit: 'cover', display: 'block',
+                      background: TP.line, border: `1px solid ${TP.line}`, boxSizing: 'border-box',
+                    }}
+                  />
+                ) : null}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 17,
+                    letterSpacing: '-0.012em', color: TP.gold, fontVariantNumeric: 'tabular-nums',
+                    marginBottom: 3,
+                  }}>{year}</div>
+                  <div style={{
+                    fontFamily: FONT_BODY, fontSize: major ? 15 : 14.4, lineHeight: 1.46,
+                    color: major ? TP.ink : TP.ink2, fontWeight: major ? 500 : 400,
+                  }}>
+                    <Markup raw={text || ''} emColor={TP.gold} strongColor={TP.ink} />
+                  </div>
+                </div>
               </div>
             </React.Fragment>
           );

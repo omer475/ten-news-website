@@ -478,26 +478,6 @@ function loadBookmarks() {
   try { return new Set(JSON.parse(localStorage.getItem('tp_bookmarks') || '[]')); } catch { return new Set(); }
 }
 
-// ── "Why it matters" callout (display.why_it_matters) ───────────────────────
-export function WhyItMatters({ story }) {
-  const why = story && story.display && story.display.why_it_matters;
-  if (!why || !String(why).trim()) return null;
-  return (
-    <div style={{
-      marginBottom: 16, padding: '12px 14px', borderRadius: 14,
-      background: `color-mix(in srgb, ${TP.ink} 4%, transparent)`,
-      border: `1px solid color-mix(in srgb, ${TP.ink} 8%, transparent)`,
-    }}>
-      <div style={{ fontFamily: FONT_MONO, fontSize: 9, fontWeight: 600, letterSpacing: '0.16em', color: TP.ink3, marginBottom: 6 }}>
-        WHY IT MATTERS
-      </div>
-      <div style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: TP.ink }}>
-        {String(why)}
-      </div>
-    </div>
-  );
-}
-
 // ── Less / More feedback → POST /api/feed/signal (built defensively;
 //    optimistic + persisted locally; a 404 until the backend ships is a no-op) ──
 function postSignal(story, signal) {
@@ -599,7 +579,6 @@ export function CardFooter({ story, tags, onOpen }) {
 
   return (
     <div>
-      <WhyItMatters story={story} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
       <FeedSignal story={story} />
       <div style={{ flex: 1 }} />
