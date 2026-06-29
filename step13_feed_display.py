@@ -214,7 +214,6 @@ REQUIRED FIELDS (always present):
 - "category": one of WORLD, AI, ECONOMY, TECH, POLICY, MARKETS, SCIENCE, ENERGY, SPORTS, CULTURE, HEALTH. Pick the best fit (an AI-company story is AI, not TECH; an oil/power/climate-infrastructure story is ENERGY; central-bank/stocks/crypto is MARKETS; macro/trade/jobs is ECONOMY; legislation/regulation/elections is POLICY).
 - "title": the story title with 1-2 key entities wrapped in <em>…</em> (company, person, country, product). Keep the wording of the title EXACTLY as given — only add <em> marks.
 - "lede": ONE plain COMPLETE sentence summarizing the story, max ~120 chars (it renders in a small card — it must fit whole, never get cut off). No tags.
-- "why_it_matters": 1-2 short sentences (max ~200 chars) on the CONSEQUENCE or meaning — why a reader should CARE. State the stakes / what changes / who is affected, NOT more facts and NOT a restated headline. Every name and number in it MUST appear in the bullets or source text. No speculation ("could", "might"). If the source supports no real, concrete consequence, set it to null. No tags.
 - "tone": "light" or "standard". "light" = a deliberately lighter story: uplifting, fascinating, surprising, low-stakes, non-political, non-distressing (a science wonder, a sports/culture delight, good news, a surprising fact). "standard" = everything else (politics, conflict, economy, disasters, hard news). When unsure, "standard".
 - "bullets": the 2-3 bullets EXACTLY as given, but with key entities wrapped in <em>…</em> and the single most important phrase per bullet (optionally) in <b>…</b>. Do not rewrite the text.
 - "stats": 2-3 key numbers of the story, each as [LABEL, value, prefix, unit, sub]:
@@ -961,10 +960,7 @@ def validate_display(result: Dict, pipeline_category: str,
             else lede[:158].rsplit(' ', 1)[0] + '.'
     out['lede'] = lede
 
-    # why_it_matters (grounded later in the span-grounding pass) + tone.
-    # Keep original case here so proper-noun grounding works downstream.
-    wim = _strip_tags(str(result.get('why_it_matters', ''))).replace('**', '').strip()
-    out['why_it_matters'] = wim or None
+    # tone classification (light vs standard). why_it_matters removed 2026-06-29.
     out['tone'] = 'light' if str(result.get('tone', '')).strip().lower() == 'light' else 'standard'
 
     # bullets — same count/wording as original, only marks added
@@ -1239,11 +1235,6 @@ def validate_display(result: Dict, pipeline_category: str,
     head_text, full_text = _build_ground_text(orig_title, orig_bullets, source_text)
     title_text = _strip_tags(orig_title or '').lower()
     _apply_grounding_gates(out, title_text, head_text, full_text, pipeline_category)
-
-    # why_it_matters consequence line — grounded against the source (numbers +
-    # proper nouns must trace to title/bullets/body); nulled otherwise.
-    out['why_it_matters'] = _ground_why_it_matters(
-        out.get('why_it_matters'), head_text, full_text)
 
     # Final display formatting: rescale magnitudes ($0.0039B -> $3.9M).
     _humanize_display_numbers(out)
