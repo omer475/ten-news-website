@@ -2,8 +2,21 @@
 // implemented exactly per the pseudocode. Runs at feed-assembly time
 // (selection depends on neighboring cards, so it cannot be precomputed).
 
-const IMG_DESIGNS = new Set(['cover', 'classic', 'split', 'legacy']);
-const ORDER = ['cover', 'classic', 'stat', 'quote', 'receipts', 'score', 'versus', 'line', 'split', 'chart', 'map'];
+// Special "data" templates — picked ONLY when the story actually carries the
+// data they visualize (never for decoration). Probed in priority order. Anything
+// that matches none of these falls through to CLASSIC (image-on-top), the
+// default for ~80% of cards. COVER is reserved for the hero (position 0) and is
+// assigned by the feed, not chosen here. SPLIT is dropped entirely.
+const DATA_TEMPLATES = [
+  ['map',      (d) => !!(d.geo && d.geo.pins && d.geo.pins.length)],
+  ['chart',    (d) => !!(d.trend || d.breakdown || d.ranking)],
+  ['stat',     (d) => !!d.big],
+  ['line',     (d) => Array.isArray(d.timeline) && d.timeline.length > 0],
+  ['score',    (d) => !!d.score],
+  ['versus',   (d) => !!d.versus],
+  ['receipts', (d) => !!d.receipts],
+];
+const QUOTE_MIN_GAP = 6; // rationed: ≥6 blocks between quote cards
 
 // --- Per-article template memory ---------------------------------------------
 // The selector picks by feed POSITION, and the order jitters between loads —
@@ -11,7 +24,7 @@ const ORDER = ['cover', 'classic', 'stat', 'quote', 'receipts', 'score', 'versus
 // refresh, disguising repeats as new content. Remember the first template an
 // article gets (24h, matching the serving window) and reuse it on every load.
 
-const TPL_KEY = 'tn_card_templates';
+const TPL_KEY = 'tn_card_templates_v2'; // v2: data-driven selection (image-on-top default)
 const TPL_TTL_MS = 24 * 60 * 60 * 1000;
 let _tplCache = null; // { id: { t, ts } }
 
@@ -51,94 +64,36 @@ export function rememberTemplate(articleId, template) {
 }
 
 export function createSelector() {
-  const lastUsed = {};          // design -> last block index (default -∞)
-  let lastDesign = null;
-  let lastWasImage = false;
-  let noImgStreak = 0;
-
-  // split shows its image only when the pipeline graded it square-thumb
-  // readable — an image-variant split counts as an image card for rhythm.
-  const showsImage = (design, d) =>
-    design === 'split' ? d?.split_ok === true : IMG_DESIGNS.has(design);
-
-  const eligible = (d) =>
-    ORDER.filter((design) => {
-      switch (design) {
-        // cover goes full-bleed — the pipeline's image-quality flag blocks
-        // pixelated/mugshot images. Older rows predate the flag (missing =
-        // pre-flag era, not rejected); a strict ===true gate erased the cover
-        // template from 97% of the feed, so only an explicit false blocks.
-        case 'cover': return d.cover_ok !== false;
-        case 'split': return true;
-        case 'classic': return (d.bullets || []).length >= 2;
-        case 'stat': return !!d.big;
-        case 'quote': return !!d.quote;
-        case 'receipts': return !!d.receipts;
-        case 'score': return !!d.score;
-        case 'versus': return !!d.versus;
-        case 'line': return Array.isArray(d.timeline) && d.timeline.length > 0;
-        case 'chart': return !!(d.trend || d.breakdown || d.ranking);
-        case 'map': return !!(d.geo && d.geo.pins && d.geo.pins.length);
-        default: return false;
-      }
-    });
-
-  const record = (design, blockIdx, wasImage) => {
-    lastUsed[design] = blockIdx;
-    lastDesign = design;
-    lastWasImage = wasImage ?? IMG_DESIGNS.has(design);
-    noImgStreak = lastWasImage ? 0 : noImgStreak + 1;
-  };
+  let lastQuoteIdx = -Infinity;
 
   return {
+    // Data-driven, position-independent: a story shows a special template only
+    // when it owns the data for it; otherwise CLASSIC (image on top). The result
+    // is uniform — image-on-top almost everywhere, with the few visually distinct
+    // cards being the ones that actually display data.
     choose(display, blockIdx) {
-      let candidates = eligible(display).filter((c) => c !== lastDesign);
-      if (!candidates.length) candidates = ['split'];
-
-      if (lastWasImage) {
-        // rule: never 2 image cards in a row
-        const nonImg = candidates.filter((c) => !showsImage(c, display));
-        if (nonImg.length) candidates = nonImg;
-      } else if (noImgStreak >= 3) {
-        // rule: force an image after 3 dry cards
-        const img = candidates.filter((c) => showsImage(c, display));
-        if (img.length) candidates = img;
+      for (const [name, has] of DATA_TEMPLATES) {
+        if (has(display)) return name;
       }
-
-      if (display.breaking && display.cover_ok !== false && !lastWasImage
-          && (lastUsed.cover ?? -Infinity) < blockIdx - 3) {
-        // breaking prefers cover, never breaks rhythm (and never with a weak image)
-        candidates = ['cover'];
+      // Quote carries a little content but mostly varies the layout — ration it.
+      if (display.quote && blockIdx - lastQuoteIdx >= QUOTE_MIN_GAP) {
+        lastQuoteIdx = blockIdx;
+        return 'quote';
       }
-
-      // least-recently-used → max variety; on an LRU tie, an image-variant
-      // split beats other contenders (quality-gated thumbs earn presence)
-      let pick = candidates[0];
-      let best = Infinity;
-      for (const c of candidates) {
-        const used = lastUsed[c] ?? -Infinity;
-        if (used < best) { best = used; pick = c; }
-        else if (used === best && c === 'split' && display.split_ok === true) pick = c;
-      }
-
-      record(pick, blockIdx, showsImage(pick, display));
-      return pick;
+      return 'classic';
     },
 
-    // A template remembered from a previous load — record it so the rhythm
-    // rules (image spacing, LRU) account for it, without re-choosing.
-    // Returns null when honoring the memory would put the same design twice
-    // in a row (the core rhythm rule outranks per-article stability).
+    // Replay a template remembered from a previous load. Cover is hero-only, so
+    // a remembered cover anywhere but position 0 is rejected (→ re-choose); the
+    // dropped split is likewise rejected. Returns null when the memory shouldn't
+    // be honored, telling the caller to re-choose.
     use(design, blockIdx, display) {
-      if (design === lastDesign) return null;
-      record(design, blockIdx, showsImage(design, display));
+      if (design === 'split') return null;
+      if (design === 'cover' && blockIdx !== 0) return null;
+      if (design === 'quote') lastQuoteIdx = blockIdx;
       return design;
     },
 
-    // display == null → only the legacy fallback card; it shows the photo,
-    // so it still participates in the image rhythm.
-    recordLegacy(blockIdx) {
-      record('legacy', blockIdx, true);
-    },
+    recordLegacy() {},
   };
 }

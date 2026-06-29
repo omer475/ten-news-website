@@ -26,44 +26,13 @@ export const TP = {
   mapText: '#E8EAF2',
 };
 
-// §2.2 — category accents, brightened to read on pure black (the dark palette).
-export const CATEGORY_ACCENTS = {
-  WORLD: '#FF6B5C',
-  AI: '#F5C451',
-  ECONOMY: '#E0A33A',
-  TECH: '#5B9BFF',
-  POLICY: '#B98BFF',
-  MARKETS: '#F5C451',
-  SCIENCE: '#34D3A6',
-  ENERGY: '#FF9E4D',
-  SPORTS: '#4FD56A',
-  CULTURE: '#FF7AB8',
-  HEALTH: '#3FD4DE',
-};
-
-// Darker, more saturated accents that hold their contrast on a white surface.
-export const CATEGORY_ACCENTS_LIGHT = {
-  WORLD: '#E03A2B',
-  AI: '#B07A00',
-  ECONOMY: '#B26B16',
-  TECH: '#1769E0',
-  POLICY: '#7A3FE0',
-  MARKETS: '#B07A00',
-  SCIENCE: '#0E9E78',
-  ENERGY: '#DB6A18',
-  SPORTS: '#1F9E37',
-  CULTURE: '#D63C92',
-  HEALTH: '#0E96B0',
-};
-
-// accentFor returns a CONCRETE hex for the active theme. It must stay concrete
-// (not a CSS var): accents are used as SVG presentation attributes (stroke=/
-// fill=/stopColor=) in the charts, where var() does NOT resolve. The lone call
-// site (StoryBlock) computes it once with the feed's isDark and passes it down.
+// ONE accent for every category — the full-contrast ink. No per-category
+// rainbow: the screen stays at two colors (ink + background), with TP.red the
+// only exception, reserved for breaking / negative deltas. Stays a CONCRETE hex
+// (not a CSS var) because accents feed SVG presentation attributes (stroke=/
+// fill=/stopColor=) in the charts, where var() does NOT resolve.
 export function accentFor(category, isDark = true) {
-  const key = (category || '').toUpperCase();
-  const map = isDark ? CATEGORY_ACCENTS : CATEGORY_ACCENTS_LIGHT;
-  return map[key] || (isDark ? '#F5F5F7' : '#1D1D1F');
+  return isDark ? '#F5F5F7' : '#1D1D1F';
 }
 
 // The CSS variables to spread onto the feed root for the active theme. Only the

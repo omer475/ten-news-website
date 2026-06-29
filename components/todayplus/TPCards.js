@@ -384,9 +384,8 @@ export function VersusCard({ story, display, accent, onOpen }) {
   // ── change: before → after; the AFTER value is the hero ──
   const changeFigure = () => {
     const delta = versus.delta || '';
-    const deltaColor = delta.trim().startsWith('+') ? TP.green
-      : /^[−-]/.test(delta.trim()) ? TP.red
-      : accent;
+    // Two-color rule: ink for positive/neutral, red ONLY for negative deltas.
+    const deltaColor = /^[−-]/.test(delta.trim()) ? TP.red : accent;
     return (
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginTop: 22 }}>
         <div style={{ flex: 1, textAlign: 'center', minWidth: 0, ...sideReveal(-14) }}>
@@ -611,7 +610,7 @@ export function SplitCard({ story, display, accent, onOpen }) {
         </div>
       </div>
       <MiniChart display={display} accent={accent} storyId={story.id} />
-      <div style={{ marginTop: 12, ...revealStyle(shown, animate, 0.4, 8) }}>
+      <div style={{ marginTop: 14, ...revealStyle(shown, animate, 0.4, 8) }}>
         <CardFooter story={story} tags={display.tags} onOpen={onOpen} />
       </div>
     </article>

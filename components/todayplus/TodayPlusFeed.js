@@ -16,7 +16,7 @@ import { recordImpression, markSeenRead } from '../../utils/exposure';
 import { buildModuleRotation, ModuleBlock, countdownCards, PinnedRail, moduleSeenIds, getSeenModuleIds, markModuleSeen } from './TPModules';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
-  VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
+  VersusCard, TimelineCard, ChartCard, ReceiptsCard, ScoreCard,
 } from './TPCards';
 import { MapCard } from './TPMapCard';
 
@@ -27,7 +27,6 @@ const CARD_BY_TEMPLATE = {
   quote: QuoteCard,
   versus: VersusCard,
   line: TimelineCard,
-  split: SplitCard,
   chart: ChartCard,
   receipts: ReceiptsCard,
   score: ScoreCard,
@@ -111,9 +110,12 @@ function useFeedBlocks(stories, modules) {
       const display = story.display || null;
       let template = 'legacy';
       if (display) {
-        if (isFirst && hasHero) {
-          // The promoted breaking story always opens as the flagship Cover.
-          template = cache.selector.use('cover', cache.blockIdx, display);
+        if (isFirst && display.cover_ok !== false) {
+          // Position 0 is the flagship Cover (the only Cover in the feed), as
+          // long as its image is acceptable; otherwise it falls through to the
+          // normal data-driven choice below.
+          cache.selector.use('cover', cache.blockIdx, display);
+          template = 'cover';
           rememberTemplate(story.id, 'cover');
         } else {
           // Same article = same card style across loads (24h memory).
