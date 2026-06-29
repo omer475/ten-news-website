@@ -69,10 +69,14 @@ export default async function handler(req, res) {
     if (!ev) return res.status(404).json({ error: 'event not found' })
     if (new Date(ev.event_date) <= new Date()) return res.status(400).json({ error: 'event already passed' })
 
-    const { error } = await admin.from('user_reminders')
-      .upsert({ ...subject, event_id: eventId },
-        { onConflict: userId ? 'user_id,event_id' : 'guest_id,event_id', ignoreDuplicates: true })
-    if (error) { console.error('[reminder] insert failed:', error.message); return res.status(500).json({ error: 'insert failed' }) }
+    // Plain insert; a unique-violation (23505) means it's already reminded —
+    // idempotent success. (The dedup indexes are partial, so ON CONFLICT can't
+    // be inferred by PostgREST; insert-and-tolerate-dup is the robust path.)
+    const { error } = await admin.from('user_reminders').insert({ ...subject, event_id: eventId })
+    if (error && error.code !== '23505') {
+      console.error('[reminder] insert failed:', error.message)
+      return res.status(500).json({ error: 'insert failed' })
+    }
     return res.status(200).json({ success: true, reminded: true, event_id: eventId })
   } catch (e) {
     console.error('[reminder] handler error:', e?.message || e)
