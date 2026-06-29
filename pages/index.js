@@ -116,6 +116,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
   // Use initial data from SSR if available, otherwise start empty
   const [stories, setStories] = useState(initialNews?.stories || []);
+  const [pinnedEvents, setPinnedEvents] = useState([]); // feed-response pinned countdowns (optional)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(!initialNews?.stories?.length);
   
@@ -132,6 +133,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showScorecard, setShowScorecard] = useState({});
   const [showRecipe, setShowRecipe] = useState({});
   const [darkMode, setDarkMode] = useState(true); // BLACK minimal — matches the onboarding design (user, 2026-06-24)
+  const [themePref, setThemePref] = useState('dark'); // 'system' | 'light' | 'dark' (resolved on mount)
   const [textOnly, setTextOnly] = useState(false); // Text-only mode hides article images
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -1607,6 +1609,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
       // converges to a no-op. iOS renders its own fallback and is unaffected.
       d.articles = d.articles.filter((a) => a && a.display);
       if (d.articles.length < 5) return null;
+      try { if (Array.isArray(d.pinned_events)) setPinnedEvents(d.pinned_events); } catch (_) {}
       return d;
     } catch (_) { return null; }
   };
@@ -2763,14 +2766,26 @@ export default function Home({ initialNews, initialWorldEvents }) {
     console.log(`🔄 Toggling summary display mode for story ${storyIndex}`);
   };
 
-  // Restore saved dark-mode preference (defaults to dark when unset)
+  // Resolve the theme: System (prefers-color-scheme) / Light / Dark. Migrates the
+  // old binary tn_dark_mode so existing choices are preserved; new users get System.
   useEffect(() => {
+    let mql = null;
+    let onChange = null;
     try {
-      const savedDark = localStorage.getItem('tn_dark_mode');
-      if (savedDark !== null) setDarkMode(savedDark === '1');
+      let pref = localStorage.getItem('tn_theme');
+      if (!pref) {
+        const legacy = localStorage.getItem('tn_dark_mode');
+        pref = legacy === null ? 'system' : (legacy === '1' ? 'dark' : 'light');
+      }
+      setThemePref(pref);
+      mql = window.matchMedia('(prefers-color-scheme: dark)');
+      setDarkMode(pref === 'dark' || (pref === 'system' && mql.matches));
+      onChange = () => { try { if ((localStorage.getItem('tn_theme') || 'system') === 'system') setDarkMode(mql.matches); } catch (_) {} };
+      mql.addEventListener ? mql.addEventListener('change', onChange) : mql.addListener(onChange);
       const savedTextOnly = localStorage.getItem('tn_text_only');
       if (savedTextOnly !== null) setTextOnly(savedTextOnly === '1');
     } catch (_) {}
+    return () => { try { if (mql && onChange) (mql.removeEventListener ? mql.removeEventListener('change', onChange) : mql.removeListener(onChange)); } catch (_) {} };
   }, []);
 
   // Text-only toggle (persists choice) — hides all article images.
@@ -2782,11 +2797,16 @@ export default function Home({ initialNews, initialWorldEvents }) {
     });
   };
 
-  // Dark mode toggle function (persists choice)
-  const toggleDarkMode = () => {
-    setDarkMode(prev => {
-      const next = !prev;
-      try { localStorage.setItem('tn_dark_mode', next ? '1' : '0'); } catch (_) {}
+  // Cycle theme preference: System → Light → Dark → System (persists choice).
+  const cycleTheme = () => {
+    setThemePref(prev => {
+      const order = ['system', 'light', 'dark'];
+      const next = order[(order.indexOf(prev) + 1) % order.length];
+      try { localStorage.setItem('tn_theme', next); } catch (_) {}
+      try {
+        const mql = window.matchMedia('(prefers-color-scheme: dark)');
+        setDarkMode(next === 'dark' || (next === 'system' && mql.matches));
+      } catch (_) { setDarkMode(next === 'dark'); }
       return next;
     });
   };
@@ -5590,13 +5610,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             <div className="header-right">
                             <span className="time">{currentTime}</span>
-              {/* Light / dark theme toggle */}
+              {/* Theme toggle — cycles System → Light → Dark */}
               <button
                 className="theme-toggle"
-                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={darkMode ? 'Light mode' : 'Dark mode'}
-                onClick={toggleDarkMode}
-                onTouchEnd={(e) => { e.preventDefault(); toggleDarkMode(); }}
+                aria-label={`Theme: ${themePref}. Tap to change.`}
+                title={`Theme: ${themePref[0].toUpperCase()}${themePref.slice(1)}`}
+                onClick={cycleTheme}
+                onTouchEnd={(e) => { e.preventDefault(); cycleTheme(); }}
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
@@ -5612,14 +5632,20 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {darkMode ? (
-                  /* sun — tap to go light */
+                {themePref === 'system' ? (
+                  /* auto — follows the OS */
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                  </svg>
+                ) : themePref === 'light' ? (
+                  /* sun */
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
                   </svg>
                 ) : (
-                  /* moon — tap to go dark */
+                  /* moon */
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                   </svg>
@@ -5807,6 +5833,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           loadingMore={loadingMore}
           textOnly={textOnly}
           isDark={darkMode}
+          pinnedEvents={pinnedEvents}
         />
 
 

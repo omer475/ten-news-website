@@ -13,7 +13,7 @@ import { TP, FONT_MONO, FONT_HEAD, accentFor, tpVars } from './tokens';
 import { Entrance, useReducedMotion } from './shared';
 import { createSelector, rememberedTemplate, rememberTemplate } from './selector';
 import { recordImpression, markSeenRead } from '../../utils/exposure';
-import { buildModuleRotation, ModuleBlock, countdownCards } from './TPModules';
+import { buildModuleRotation, ModuleBlock, countdownCards, PinnedRail, moduleSeenIds, getSeenModuleIds, markModuleSeen } from './TPModules';
 import {
   CoverCard, ClassicCard, StatHeroCard, QuoteCard,
   VersusCard, TimelineCard, SplitCard, ChartCard, ReceiptsCard, ScoreCard,
@@ -302,6 +302,26 @@ function EssentialsFinish({ onKeepReading }) {
   );
 }
 
+// Marks a module's items "seen" once they've been ≥55% visible for 1.5s (same
+// read signal as stories) so the next /api/feed/modules refresh can rotate them out.
+function ModuleSeen({ ids, children }) {
+  const ref = useRef(null);
+  const sig = ids && ids.length ? ids.join('|') : '';
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !sig) return undefined;
+    let t = null;
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        if (!t) t = setTimeout(() => { markModuleSeen(sig.split('|')); io.disconnect(); }, 1500);
+      } else if (t) { clearTimeout(t); t = null; }
+    }, { threshold: 0.55 });
+    io.observe(el);
+    return () => { if (t) clearTimeout(t); io.disconnect(); };
+  }, [sig]);
+  return <div ref={ref}>{children}</div>;
+}
+
 export default function TodayPlusFeed({
   stories,
   user,
@@ -314,7 +334,9 @@ export default function TodayPlusFeed({
   loadingMore,
   textOnly,
   isDark = true,
+  pinnedEvents,
 }) {
+  const [unpinned, setUnpinned] = useState(() => new Set());
   const [modules, setModules] = useState(null);
   const [lastVisit, setLastVisit] = useState(undefined); // undefined=loading · null=first visit · number=ms
   const sentinelRef = useRef(null);
@@ -361,6 +383,11 @@ export default function TodayPlusFeed({
         if (p.home_country) qs.set('country', String(p.home_country));
       }
     } catch (_) {}
+    try {
+      // Seen module items → backend rotates in fresh ones (param name: seen_ids).
+      const seen = getSeenModuleIds().slice(-80);
+      if (seen.length) qs.set('seen_ids', seen.join(','));
+    } catch (_) {}
     const url = qs.toString() ? `/api/feed/modules?${qs.toString()}` : '/api/feed/modules';
     fetch(url)
       .then((r) => (r.ok ? r.json() : null))
@@ -399,7 +426,9 @@ export default function TodayPlusFeed({
     <LazyMount key={block.key} estimate={260}>
       <CardBoundary>
         <Entrance entryKey={block.key}>
-          <div style={{ padding: '0 16px' }}><ModuleBlock item={block.item} moduleKey={block.key} /></div>
+          <ModuleSeen ids={moduleSeenIds(block.item)}>
+            <div style={{ padding: '0 16px' }}><ModuleBlock item={block.item} moduleKey={block.key} /></div>
+          </ModuleSeen>
         </Entrance>
       </CardBoundary>
     </LazyMount>
@@ -410,6 +439,14 @@ export default function TodayPlusFeed({
     const ms = t ? new Date(t).getTime() : NaN;
     return Number.isNaN(ms) ? null : ms;
   };
+
+  // Pinned countdowns — from the feed response (prop) or the modules payload;
+  // hidden once the user un-pins (optimistic) and auto-gone when the backend drops them.
+  const pinnedSrc = (pinnedEvents && pinnedEvents.length) ? pinnedEvents : ((modules && modules.pinned_events) || []);
+  const pinnedVisible = pinnedSrc.filter((e) => {
+    const id = e && (e.event_id != null ? String(e.event_id) : (e.id != null ? String(e.id) : (e.name && e.datetime ? `${e.name}|${e.datetime}` : null)));
+    return !(id && unpinned.has(id));
+  });
 
   const essentialBlocks = blocks.filter((b) => b.type === 'story' && b.story && b.story.is_essential);
   const restBlocks = blocks.filter((b) => !(b.type === 'story' && b.story && b.story.is_essential));
@@ -467,6 +504,10 @@ export default function TodayPlusFeed({
         display: 'flex', flexDirection: 'column', gap: 48,
         padding: '24px 0 90px',
       }}>
+        {pinnedVisible.length ? (
+          <PinnedRail events={pinnedVisible} onUnpin={(id) => setUnpinned((s) => { const n = new Set(s); n.add(id); return n; })} />
+        ) : null}
+
         {layer1}
 
         {hasEssentials && !stopped ? (

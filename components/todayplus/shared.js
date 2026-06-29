@@ -167,11 +167,12 @@ export function focusObjectPosition(img, focus, targetY = 0.5) {
   return `${posX.toFixed(1)}% ${posY.toFixed(1)}%`;
 }
 
-export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, children, overlay, focus, focusTargetY = 0.5 }) {
+export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, children, overlay, focus, focusTargetY = 0.5, natural = false, maxHeight = '80vh' }) {
   const reduced = useReducedMotion();
   const wrapRef = useRef(null);
   const imgRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
+  const [naturalAR, setNaturalAR] = useState(null); // width/height of the loaded image (natural mode)
   const [objectPosition, setObjectPosition] = useState('50% 50%');
 
   const fx = focus?.x;
@@ -183,7 +184,7 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, c
   }, [loaded, fx, fy, focusTargetY]);
 
   useEffect(() => {
-    if (reduced) return undefined;
+    if (reduced || natural) return undefined; // natural mode renders the image in normal flow, no parallax
     const wrap = wrapRef.current;
     const img = imgRef.current;
     if (!wrap || !img) return undefined;
@@ -205,6 +206,56 @@ export function ParallaxImage({ src, alt = '', aspectRatio, borderRadius = 26, c
       if (raf) cancelAnimationFrame(raf);
     };
   }, [reduced]);
+
+  // Natural mode (CLASSIC card): show the photo at its ORIGINAL aspect ratio —
+  // no forced crop, no parallax. Reserve space with a skeleton min-height until
+  // the image loads, then lock the container to the image's true aspect (capped
+  // at maxHeight so a tall portrait can't dominate the feed; contain letterboxes
+  // that rare case so the whole frame is still visible).
+  if (natural) {
+    return (
+      <div
+        ref={wrapRef}
+        style={{
+          position: 'relative',
+          borderRadius,
+          overflow: 'hidden',
+          background: TP.line,
+          aspectRatio: naturalAR ? String(naturalAR) : undefined,
+          minHeight: naturalAR ? undefined : 200,
+          maxHeight,
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+          borderRadius, boxShadow: `inset 0 0 0 1px ${TP.line}`,
+        }} />
+        {src ? (
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt}
+            loading="lazy"
+            onLoad={(e) => {
+              setLoaded(true);
+              const w = e.currentTarget.naturalWidth;
+              const h = e.currentTarget.naturalHeight;
+              if (w && h) setNaturalAR(w / h);
+            }}
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'contain', objectPosition: 'center',
+              opacity: loaded ? 1 : 0,
+              transition: 'opacity 0.6s ease-out',
+            }}
+          />
+        ) : null}
+        {overlay}
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div

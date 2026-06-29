@@ -100,7 +100,7 @@ export function ClassicCard({ story, display, accent, onOpen }) {
   return (
     <article ref={ref}>
       <div>
-        <ParallaxImage src={display.imageURL || story.urlToImage} aspectRatio="16 / 10" borderRadius={26} focus={display.image_focus} />
+        <ParallaxImage src={display.imageURL || story.urlToImage} natural borderRadius={26} />
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 17, ...revealStyle(shown, animate, 0.08, 12) }}>
           <div style={{ flex: 1 }}>

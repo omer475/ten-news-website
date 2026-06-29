@@ -7,6 +7,106 @@ import React, { useEffect, useState } from 'react';
 import { TP, FONT_HEAD, FONT_BODY, FONT_MONO, Markup } from './tokens';
 import { CountUp, useRevealOnce, revealStyle } from './shared';
 
+// ── Reminders / pins (consume-only; graceful no-op until the endpoint ships) ──
+// One shared store backs both the countdown "Remind me" button and the alarm on
+// pinned events. Optimistic: localStorage is the source of truth for the toggle
+// state; the POST/DELETE is best-effort. event_id is whatever stably identifies
+// the event in the contract (event_id → id → "name|datetime").
+export function eventIdOf(row) {
+  if (!row) return null;
+  if (row.event_id != null) return String(row.event_id);
+  if (row.id != null) return String(row.id);
+  if (row.name && row.datetime) return `${row.name}|${row.datetime}`;
+  return null;
+}
+function readReminders() {
+  try { const a = JSON.parse(localStorage.getItem('tp_reminders') || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; }
+}
+function writeReminders(ids) {
+  try { localStorage.setItem('tp_reminders', JSON.stringify(ids.slice(-200))); } catch (_) {}
+}
+function postReminder(eventId, on) {
+  try {
+    let gid = null;
+    try { gid = localStorage.getItem('tn_guest_id'); } catch (_) {}
+    fetch('/api/feed/reminder', {
+      method: on ? 'POST' : 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: Number(eventId), guest_device_id: gid || undefined }),
+    }).catch(() => {});
+  } catch (_) {}
+}
+
+// ── Module rotation via seen-ids: once an item is READ (55%-visible signal) its
+// id is remembered, and sent to /api/feed/modules so the next refresh can return
+// FRESH items. No-op until the backend honors `seen`; ids are best-effort stable.
+// Returns the BACKEND-assigned ids for an item so they echo back exactly in
+// `seen_ids` (history → module.ids[], notd → module.id, briefs → row.id,
+// countdown → numeric upcoming_events id). Falls back to nothing when absent.
+export function moduleSeenIds(item) {
+  if (!item) return [];
+  switch (item.kind) {
+    case 'countdown': { const id = item.row && item.row.id; return id != null ? [String(id)] : []; }
+    case 'notd': { const id = item.module && item.module.id; return id != null ? [String(id)] : []; }
+    case 'history': { const ids = item.module && item.module.ids; return Array.isArray(ids) ? ids.map(String) : []; }
+    case 'briefs': {
+      const rows = (item.module && item.module.rows) || [];
+      return rows.map((r) => r && r.id).filter((x) => x != null).map(String);
+    }
+    default: return [];
+  }
+}
+export function getSeenModuleIds() {
+  try { const a = JSON.parse(localStorage.getItem('tp_module_seen') || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; }
+}
+export function markModuleSeen(ids) {
+  if (!ids || !ids.length) return;
+  try {
+    const cur = new Set(getSeenModuleIds());
+    ids.forEach((i) => cur.add(i));
+    localStorage.setItem('tp_module_seen', JSON.stringify(Array.from(cur).slice(-400)));
+  } catch (_) {}
+}
+
+export function ReminderButton({ eventId, accent, label = 'Remind me', onToggle }) {
+  const [on, setOn] = useState(false);
+  useEffect(() => { if (eventId != null) setOn(readReminders().includes(String(eventId))); }, [eventId]);
+  if (eventId == null) return null;
+  const toggle = (e) => {
+    if (e) { e.stopPropagation(); }
+    const id = String(eventId);
+    const next = !on;
+    setOn(next); // optimistic
+    const cur = readReminders();
+    writeReminders(next ? Array.from(new Set([...cur, id])) : cur.filter((x) => x !== id));
+    postReminder(id, next);
+    try { onToggle?.(next); } catch (_) {}
+  };
+  return (
+    <button
+      onClick={toggle}
+      aria-pressed={on}
+      aria-label={on ? 'Reminder set — tap to remove' : label}
+      style={{
+        all: 'unset', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+        marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 7,
+        height: 34, padding: '0 14px', borderRadius: 999,
+        fontFamily: FONT_MONO, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+        color: on ? TP.bg : accent,
+        background: on ? accent : `color-mix(in srgb, ${accent} 8%, transparent)`,
+        border: `1px solid ${on ? accent : `color-mix(in srgb, ${accent} 32%, transparent)`}`,
+        transition: 'all 0.16s ease',
+      }}
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill={on ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+      {on ? 'Reminder set' : label}
+    </button>
+  );
+}
+
 function ModuleHeader({ title, shown = true, animate = false }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -79,7 +179,81 @@ export function CountdownModule({ row }) {
           {row.context}
         </p>
       ) : null}
+      <div style={revealStyle(shown, animate, 0.34, 8)}>
+        <ReminderButton eventId={eventIdOf(row)} accent={TP.gold} />
+      </div>
     </section>
+  );
+}
+
+// ── Pinned countdowns — rendered at the TOP of the feed, compact + distinct,
+// every visit until the event passes. The alarm un-pins (DELETE reminder). ─────
+
+function compactRemain(target, now) {
+  const total = Math.max(0, Math.floor((target - now) / 1000));
+  const d = Math.floor(total / 86400);
+  const h = Math.floor((total % 86400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${total % 60}s`;
+}
+
+function PinnedCountdown({ row, onUnpin }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  const target = new Date(row.datetime).getTime();
+  const id = eventIdOf(row);
+  const unpin = (e) => {
+    if (e) e.stopPropagation();
+    const cur = readReminders();
+    writeReminders(cur.filter((x) => x !== String(id)));
+    postReminder(String(id), false);
+    try { onUnpin?.(String(id)); } catch (_) {}
+  };
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 14,
+      background: `color-mix(in srgb, ${TP.gold} 6%, transparent)`,
+      border: `1px solid ${TP.line}`,
+    }}>
+      <span aria-hidden style={{
+        width: 7, height: 7, borderRadius: '50%', background: TP.gold, flexShrink: 0,
+        boxShadow: `0 0 0 4px color-mix(in srgb, ${TP.gold} 14%, transparent)`,
+      }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: FONT_MONO, fontSize: 8.5, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: TP.ink3 }}>
+          PINNED · COUNTDOWN
+        </div>
+        <div style={{
+          fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 15, color: TP.ink, letterSpacing: '-0.01em',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>{row.name}</div>
+      </div>
+      <div style={{ fontFamily: FONT_HEAD, fontWeight: 800, fontSize: 16, color: TP.ink, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        {compactRemain(target, now)}
+      </div>
+      <button onClick={unpin} aria-label="Remove pin" title="Remove pin" style={{
+        all: 'unset', cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 30, height: 30, borderRadius: 999, color: TP.gold, flexShrink: 0,
+      }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+export function PinnedRail({ events, onUnpin }) {
+  const future = (events || []).filter((e) => e && e.datetime && new Date(e.datetime).getTime() > Date.now());
+  if (!future.length) return null;
+  return (
+    <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {future.slice(0, 4).map((e) => <PinnedCountdown key={eventIdOf(e) || e.datetime} row={e} onUnpin={onUnpin} />)}
+    </div>
   );
 }
 
