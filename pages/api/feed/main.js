@@ -21,6 +21,7 @@ import { createClient } from '@supabase/supabase-js'
 import { serveTrinityFeed, recordSlateExposure } from '../../../lib/trinityServe.js'
 import { formatArticle } from '../../../lib/formatArticle.js'
 import { getEssentials } from '../../../lib/essentials.js'
+import { getPinnedEvents } from '../../../lib/pinnedEvents.js'
 import { readFeedCache, writeFeedCache, buildExposureMeta, expandExposureMeta } from '../../../lib/feedCache.js'
 
 // Mark each served article's is_essential flag from the global daily set.
@@ -170,6 +171,11 @@ export default async function handler(req, res) {
     }
   }
 
+  // Reminder pins (Feature C): the user's/guest's reminded events still in the
+  // future, surfaced for top-of-feed pinning. Works for guests too.
+  const pinnedEvents = (isFirstPage && !isWarmer)
+    ? await getPinnedEvents(supabase, userId, guestDeviceId) : []
+
   if (FEED_CACHE_ENABLED && userId && isFirstPage && !isWarmer) {
     const cacheT0 = Date.now()
     try {
@@ -210,6 +216,7 @@ export default async function handler(req, res) {
           caught_up_message: null,
           essentials_total: essentials.total,
           last_visit_at: lastVisitAt,
+          pinned_events: pinnedEvents,
           _trinity_debug: { path: 'cache', ageMs: cached.ageMs },
         })
       }
@@ -348,6 +355,7 @@ export default async function handler(req, res) {
     caught_up_message: null,
     essentials_total: essentials.total,
     last_visit_at: lastVisitAt,
+    pinned_events: pinnedEvents,
     _trinity_debug: dbg,
   })
 }

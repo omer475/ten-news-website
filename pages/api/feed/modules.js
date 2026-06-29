@@ -1,17 +1,21 @@
-// GET /api/feed/modules?user_id=... — interstitial-module content for the
-// TodayPlus feed. Produces personalized selections from the daily tagged POOLS
-// the pipeline writes (history pool, notd candidates, upcoming_events), using
-// the same declared-interest signal Trinity uses. Guests / no-interest users
-// fall back to a global selection (cacheable).
+// GET /api/feed/modules?user_id=...&seen_ids=h:..,n:..,b:..,123
 //
-// ADDITIVE contract (2026-06-28): the legacy `modules.{history,notd,briefs,
-// countdowns}` shape is preserved (existing consumer keeps working) AND richer
-// top-level fields are added (countdown_primary, countdown_cards, history with
-// per-row major flag + image, story-linked notd) for the redesigned consumer.
-//   history.rows row = [year, text, image_url, [topic_tags], major]
-//   notd          = { value, prefix, unit, context, source_article_id, topic_tags }
-//   countdown_*    = { id?, name, datetime, context, source_article_id, topic_tags }
-// MARKET PULSE is intentionally absent — live quotes are fetched client-side.
+// Personalized + SEEN-AWARE interstitial modules. Selects from the daily tagged
+// POOLS the pipeline writes (history pool, notd candidates, upcoming_events),
+// rotating on each refresh: every item carries a STABLE id, and items whose id
+// is in seen_ids are skipped. Returns empty/null per module when its pool is
+// exhausted (frontend shows nothing). A read item is never repeated.
+//
+// ADDITIVE: legacy modules.{history,notd,briefs,countdowns} stay populated
+// (now personalized + rotating) AND richer fields are added —
+// modules.countdown_primary / modules.countdown_cards, history rows reshaped to
+// [year, text, image_url, major] with a parallel modules.history.ids[], notd
+// with source_article_id + title. notd.value is PRE-SCALED by the pipeline.
+//
+// Stable ids: history "h:<date>:<idx>", notd "n:<date>:<idx>",
+// briefs "b:<date>:<idx>", countdowns = upcoming_events.id (number).
+//
+// Caching: NO shared CDN cache (rotation is per-user + per-seen-set).
 
 import { createClient } from '@supabase/supabase-js';
 import { getUserInterestTags, tagMatchScore } from '../../../lib/userInterestTags.js';
@@ -19,8 +23,12 @@ import { getUserInterestTags, tagMatchScore } from '../../../lib/userInterestTag
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Pick `n` best-matching items by topic_tags, stable on the original order
-// (which is impact/soonest order) when scores tie or there's no user signal.
+function parseSeen(q) {
+  if (!q) return new Set();
+  return new Set(String(q).split(',').map(s => s.trim()).filter(Boolean));
+}
+
+// Rank items by topic-tag match (stable on original order), take n.
 function rankByTags(items, getTags, userTags, n) {
   return items
     .map((it, i) => ({ it, i, s: tagMatchScore(getTags(it), userTags) }))
@@ -29,122 +37,100 @@ function rankByTags(items, getTags, userTags, n) {
     .map(x => x.it);
 }
 
-function selectHistory(pool, userTags) {
-  if (!Array.isArray(pool) || !pool.length) return null;
-  const major = pool.find(r => Array.isArray(r) && r[4] === true) || pool[0];
-  const rest = pool.filter(r => r !== major);
-  const matched = rankByTags(rest, r => (Array.isArray(r) ? r[3] : []) || [], userTags, 2);
-  return [major, ...matched].filter(Boolean).slice(0, 3);
-}
-
-function normCountdown(e) {
-  return {
-    id: e.id,
-    name: e.name,
-    datetime: e.event_date,
-    context: e.context || '',
-    source_article_id: e.source_article_id ?? null,
-    topic_tags: e.topic_tags || [],
-  };
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    if (!supabaseUrl || !supabaseKey) {
-      return res.status(500).json({ error: 'Supabase not configured' });
-    }
+    if (!supabaseUrl || !supabaseKey) return res.status(500).json({ error: 'Supabase not configured' });
     const supabase = createClient(supabaseUrl, supabaseKey);
     const userId = req.query.user_id || null;
+    const seen = parseSeen(req.query.seen_ids);
 
-    // Newest row per module type (global pools the pipeline writes).
     const { data, error } = await supabase
       .from('feed_modules')
       .select('module_date, module_type, payload')
       .order('module_date', { ascending: false })
       .limit(12);
-    if (error) {
-      console.error('Error fetching feed modules:', error);
-      return res.status(500).json({ error: 'Failed to fetch modules' });
-    }
+    if (error) { console.error('Error fetching feed modules:', error); return res.status(500).json({ error: 'Failed to fetch modules' }); }
     const pools = {};
     let moduleDate = null;
     for (const row of data || []) {
-      if (!pools[row.module_type]) {
-        pools[row.module_type] = row.payload;
-        if (!moduleDate) moduleDate = row.module_date;
-      }
+      if (!pools[row.module_type]) { pools[row.module_type] = row.payload; if (!moduleDate) moduleDate = row.module_date; }
     }
+    const date = moduleDate || 'na';
 
-    // Upcoming-events pool (personalized countdowns) — future only, soonest first.
     let upcoming = [];
     try {
       const { data: ev } = await supabase
         .from('upcoming_events')
-        .select('id, name, event_date, topic_tags, context, source_article_id')
+        .select('id, name, event_date, topic_tags, context, source_article_id, confidence')
         .gt('event_date', new Date().toISOString())
         .order('event_date', { ascending: true })
-        .limit(40);
+        .limit(60);
       upcoming = ev || [];
-    } catch (e) {
-      console.error('[modules] upcoming_events fetch failed:', e.message);
-    }
+    } catch (e) { console.error('[modules] upcoming_events fetch failed:', e.message); }
 
     const { tags: userTags, personalized } = await getUserInterestTags(supabase, userId);
 
-    // ── history: 1 major + 2 interest-matched (or 2 most-impactful) ──
-    const histPool = pools.history?.rows || [];
-    const histRows = selectHistory(histPool, userTags) || [];
-    const history = histPool.length
-      ? { rows: histRows, style: pools.history?.style, style_index: pools.history?.style_index }
-      : null;
+    // ── history: major (if unseen) + interest-matched, rotating ──
+    const histPool = (pools.history?.rows || []).map((r, i) => ({
+      id: `h:${date}:${i}`, year: r[0], text: r[1], img: r[2] ?? null,
+      tags: Array.isArray(r[3]) ? r[3] : [], major: r[4] === true,
+    }));
+    let history = null;
+    if (histPool.length) {
+      const unseen = histPool.filter(it => !seen.has(it.id));
+      const major = unseen.find(it => it.major);
+      const rest = unseen.filter(it => it !== major);
+      const matched = rankByTags(rest, it => it.tags, userTags, major ? 2 : 3);
+      const chosen = (major ? [major, ...matched] : matched).slice(0, 3);
+      history = {
+        rows: chosen.map(it => [it.year, it.text, it.img, it.major]),
+        ids: chosen.map(it => it.id),
+        style: pools.history?.style, style_index: pools.history?.style_index,
+      };
+    }
 
-    // ── notd: best-matching candidate (fallback first / hoisted) ──
-    const notdCands = Array.isArray(pools.notd?.candidates) && pools.notd.candidates.length
-      ? pools.notd.candidates
-      : (pools.notd ? [pools.notd] : []);
-    const notd = notdCands.length
-      ? rankByTags(notdCands, c => c.topic_tags || [], userTags, 1)[0]
-      : null;
+    // ── notd: best unseen candidate (pre-scaled, story-linked) ──
+    const notdRaw = (Array.isArray(pools.notd?.candidates) && pools.notd.candidates.length)
+      ? pools.notd.candidates : (pools.notd ? [pools.notd] : []);
+    const notdItems = notdRaw.map((c, i) => ({ id: `n:${date}:${i}`, ...c, topic_tags: c.topic_tags || [] }));
+    const notdUnseen = notdItems.filter(it => !seen.has(it.id));
+    const notd = notdUnseen.length ? rankByTags(notdUnseen, c => c.topic_tags, userTags, 1)[0] : null;
 
-    // ── countdowns: primary + up to 3 cards, personalized ──
-    const ranked = upcoming
-      .map((e, i) => ({ e, i, s: tagMatchScore(e.topic_tags || [], userTags) }))
-      .sort((a, b) => (b.s - a.s) || (new Date(a.e.event_date) - new Date(b.e.event_date)));
-    const countdown_primary = ranked.length ? normCountdown(ranked[0].e) : null;
-    const countdown_cards = ranked.slice(1, 4).map(x => normCountdown(x.e));
+    // ── briefs: 3 unseen from the pool ──
+    const briefPool = (pools.briefs?.rows || []).map((b, i) => ({ id: `b:${date}:${i}`, tag: b.tag, text: b.text }));
+    const briefsUnseen = briefPool.filter(it => !seen.has(it.id)).slice(0, 3);
+    const briefs = briefPool.length ? { rows: briefsUnseen } : null;
 
-    // ── briefs: global, unchanged ──
-    const briefs = pools.briefs || null;
+    // ── countdowns: primary + cards, unseen, personalized ──
+    const cdUnseen = upcoming
+      .map(e => ({ id: e.id, name: e.name, datetime: e.event_date, context: e.context || '',
+                   source_article_id: e.source_article_id ?? null, topic_tags: e.topic_tags || [], confidence: e.confidence }))
+      .filter(e => !seen.has(String(e.id)));
+    const cdRanked = cdUnseen
+      .map((e, i) => ({ e, i, s: tagMatchScore(e.topic_tags, userTags) }))
+      .sort((a, b) => (b.s - a.s) || (new Date(a.e.datetime) - new Date(b.e.datetime)))
+      .map(x => x.e);
+    const countdown_primary = cdRanked.length ? cdRanked[0] : null;
+    const countdown_cards = cdRanked.slice(1, 4);
 
-    // Legacy `modules` object — preserved so the current consumer keeps working,
-    // but with personalized selections filled in.
+    // legacy modules object — populated with the personalized selection + new fields nested
     const modules = { ...pools };
     if (history) modules.history = history;
     if (notd) modules.notd = notd;
     if (briefs) modules.briefs = briefs;
-    // global soonest countdowns (old contract shape) — keep the pipeline's
-    // feed_modules.countdowns if present, else derive from upcoming_events.
-    if (!modules.countdowns) {
-      modules.countdowns = { rows: upcoming.slice(0, 6).map(e => ({
-        name: e.name, datetime: e.event_date, context: e.context || '' })) };
-    }
+    const cdList = (countdown_primary ? [countdown_primary, ...countdown_cards] : countdown_cards);
+    modules.countdowns = { rows: cdList.map(e => ({ name: e.name, datetime: e.datetime, context: e.context })) };
+    modules.countdown_primary = countdown_primary;
+    modules.countdown_cards = countdown_cards;
 
-    // Personalized responses must not be shared-cached; global ones are.
-    res.setHeader('Cache-Control', personalized
-      ? 'private, max-age=60, stale-while-revalidate=120'
-      : 's-maxage=900, stale-while-revalidate=3600');
-
+    // Rotation is per-user + per-seen-set — never shared-cache.
+    res.setHeader('Cache-Control', 'private, no-store, max-age=0');
     return res.status(200).json({
       date: moduleDate,
       personalized,
-      modules,                 // legacy shape (current frontend)
-      // richer top-level fields (redesigned consumer):
-      history,
-      notd,
-      briefs,
-      countdown_primary,
-      countdown_cards,
+      modules,                 // legacy shape (now personalized + rotating)
+      history, notd, briefs, countdown_primary, countdown_cards,
     });
   } catch (e) {
     console.error('feed/modules error:', e);
