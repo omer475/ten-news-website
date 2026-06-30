@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400" role="img" aria-label="Sample editorial ink illustration">
+  <rect width="600" height="400" fill="#FAF8F2"/>
+  <g fill="none" stroke="#15130F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- horizon / desk line -->
+    <path d="M70 300 H530"/>
+    <!-- a wry character bust -->
+    <path d="M300 120 c-46 0 -78 34 -78 80 c0 30 14 54 36 68 c-6 18 -22 26 -40 30 c40 8 78 6 110 -6 c30 -16 50 -46 50 -92 c0 -46 -32 -80 -78 -80 z"/>
+    <!-- eyes -->
+    <path d="M280 188 q6 -8 14 0"/>
+    <path d="M312 188 q6 -8 14 0"/>
+    <!-- raised brow -->
+    <path d="M276 172 q10 -8 22 -2"/>
+    <!-- a small smile -->
+    <path d="M286 214 q16 12 34 0"/>
+    <!-- cross-hatch shadow -->
+    <path d="M236 250 l18 18 M250 244 l20 20 M264 240 l18 18" stroke-width="1.6"/>
+  </g>
+  <!-- single gold accent -->
+  <circle cx="392" cy="150" r="20" fill="none" stroke="#BD8736" stroke-width="4"/>
+  <text x="300" y="356" text-anchor="middle" font-family="Georgia, serif" font-size="15" fill="#A39D92">sample illustration · pending generation</text>
+</svg>
