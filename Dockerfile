@@ -59,6 +59,12 @@ COPY sports_espn_poller.py .
 COPY pipeline2_ai_editor.py .
 COPY pipeline2_processor.py .
 
+# Edition pipeline (2026-06-30) — the once-daily Edition build replaces the old
+# per-article writing. Same image, routed by EDITION_JOB=1 in cloudrun_entrypoint.
+COPY edition_editor.py .
+COPY edition_illustrations.py .
+COPY edition_job.py .
+
 # Copy the Cloud Run entrypoint
 COPY cloudrun_entrypoint.py .
 

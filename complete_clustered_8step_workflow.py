@@ -1439,7 +1439,22 @@ def run_complete_pipeline():
     print(f"   🔗 Matched existing: {clustering_result['matched_to_existing']}")
     if clustering_result.get('failed', 0) > 0:
         print(f"   ⚠️  Failed: {clustering_result['failed']}")
-    
+
+    # EDITION MODE (2026-06-30): the once-daily Edition pipeline (edition_job.py)
+    # has REPLACED the old per-article writing. We keep ingest + clustering running
+    # frequently so the editor always has fresh clusters, but skip the expensive
+    # synthesis/components/fact-check/publish when DISABLE_ARTICLE_WRITING=1.
+    # Default '0' -> nothing changes until the env var is set on the Cloud Run job,
+    # so this commit is inert in production.
+    if os.getenv('DISABLE_ARTICLE_WRITING', '0') == '1':
+        print("\n🟦 EDITION MODE: per-article writing disabled — ingest + clustering only")
+        return {
+            'articles_processed': len(approved_articles),
+            'articles_published': 0,
+            'clusters_found': clustering_result.get('new_clusters_created', 0),
+            'errors': []
+        }
+
     # ONLY process NEW/UPDATED clusters from THIS cycle (not old ones)
     clusters_to_process = []
     

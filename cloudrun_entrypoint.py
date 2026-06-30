@@ -83,8 +83,34 @@ def release_run_lock(supabase):
         print(f"⚠️ Could not release run lock: {e}")
 
 
+def run_edition_mode():
+    """Entry path for the once-daily Edition job (07:00 Europe/London).
+
+    Selected when EDITION_JOB=1. Builds + publishes the day's Edition via
+    edition_job.run_edition_job() using the same image/secrets as the 20-min
+    ingest+clustering job. Independent of the run lock (different cadence).
+    """
+    start = time.time()
+    print("=" * 60)
+    print("📅 TEN NEWS — EDITION JOB (daily 07:00 Europe/London)")
+    print("=" * 60)
+    try:
+        from edition_job import run_edition_job
+        run_edition_job()  # date defaults to today UK; publishes the row
+        print(f"✅ Edition job completed in {time.time() - start:.1f}s")
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ Edition job failed after {time.time() - start:.1f}s: {e}")
+        sys.exit(1)
+
+
 def main():
     """Main entry point - runs once and exits (Cloud Run Job)"""
+    # The same container image serves two scheduled jobs. EDITION_JOB=1 routes to
+    # the daily Edition build; otherwise it's the 20-min ingest+clustering cycle.
+    if os.getenv('EDITION_JOB', '0') == '1':
+        return run_edition_mode()
+
     start_time = time.time()
     stats = {
         'articles_processed': 0,
