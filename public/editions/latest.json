@@ -1,0 +1,384 @@
+{
+  "date": "2026-09-04",
+  "issue": 247,
+  "sample": true,
+  "generated_at": "2026-09-04T05:30:00+00:00",
+  "window_hours": 24,
+  "feeds_read": 481,
+  "articles_seen": 0,
+  "stories_clustered": 0,
+  "note": "Sample edition — placeholder copy and no artwork yet, so the typographic fallback cover is shown. The daily job replaces this with real news and ten commissioned illustrations on its first run.",
+  "stories": [
+    {
+      "id": "sample01",
+      "tag": "GROUND",
+      "headline": "Sample story: the ground under a farming plain keeps giving way",
+      "dek": "Placeholder text. This slot holds the day's most instant story — the one that broke closest to press time and carries the most weight.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "This is placeholder copy in a sample edition. On a real morning this paragraph says what happened and why it happened now, in about forty words, written so that a reader who has never followed the story can still follow this one.",
+        "The second paragraph carries the context a newcomer needs: the number that has been climbing for years, the decision nobody made, the two things that cannot both stay true.",
+        "The third paragraph says what is still unresolved — the part nobody can answer yet, which is usually the part worth remembering."
+      ],
+      "changes": "In a real edition this line says what the story changes for an ordinary reader.",
+      "unchanged": "And this line punctures the overreaction: what it does not change.",
+      "category": "climate",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 1.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "2,700",
+        "bigLabel": "sinkholes counted this year",
+        "hook": "One every four kilometres. The newest opened on a road this morning."
+      },
+      "art": {
+        "tradition": "wood_engraving",
+        "label": "Wood engraving",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#eadfcb",
+        "overlay": "dark"
+      }
+    },
+    {
+      "id": "sample02",
+      "tag": "GENOME",
+      "headline": "Sample story: one injection, and children born deaf hear a first word",
+      "dek": "Placeholder text standing in for the day's second most instant story.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The cartoon poster style is chosen for stories with a human moment in them — a first, an absurdity, something a photograph would flatten.",
+        "The middle paragraph is where the mechanism goes: what was broken, what the fix does, how long it has held.",
+        "The last paragraph is the limit. Every result has one, and stating it is what separates a brief from a press release."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "science",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 2.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "MUM",
+        "bigLabel": "the first word, at seven",
+        "hook": "Seven years of silence, ended by a single dose."
+      },
+      "art": {
+        "tradition": "risograph",
+        "label": "Risograph poster",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#1a2f4c",
+        "overlay": "light"
+      }
+    },
+    {
+      "id": "sample03",
+      "tag": "HOUSING",
+      "headline": "Sample story: no-fault eviction ends at midnight",
+      "dek": "Placeholder text for a story where one rule flipped from off to on.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The minimal style is for binaries: one law, one door, one decision that was one way yesterday and is the other way today.",
+        "Context paragraph: who wanted this, who fought it, and how long the fight ran.",
+        "Unresolved paragraph: the first real test of the rule is always months away."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "politics",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 3.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "OPEN",
+        "bigLabel": "the door stays open",
+        "hook": "Security, not price. Rents are exactly where they were yesterday."
+      },
+      "art": {
+        "tradition": "gouache_midcentury",
+        "label": "Mid-century gouache",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#dfe7dc",
+        "overlay": "dark"
+      }
+    },
+    {
+      "id": "sample04",
+      "tag": "CARE",
+      "headline": "Sample story: the machine that phones discharged patients every day",
+      "dek": "Placeholder text for a story about an institution meeting a person.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The satire style is for the moment a system and a human being end up in the same room and neither quite fits.",
+        "Context paragraph: the pilot, the numbers, the claim made on its behalf.",
+        "Unresolved paragraph: the sentence a patient said that nobody has a good answer to."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "health",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 4.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "¼",
+        "bigLabel": "fewer readmissions",
+        "hook": "\"It is the only thing that calls me.\" The hospital called that a success."
+      },
+      "art": {
+        "tradition": "ink_wash",
+        "label": "Pen and wash",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#f2ece0",
+        "overlay": "dark"
+      }
+    },
+    {
+      "id": "sample05",
+      "tag": "MARKETS",
+      "headline": "Sample story: the rate cut nobody had pencilled in until this morning",
+      "dek": "Placeholder text for a story that is mostly a number moving.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The chart style is used when the story genuinely is the numbers, and a sentence describing them would be slower than looking.",
+        "Context paragraph: what the series has done for the last four periods.",
+        "Unresolved paragraph: what has to be true for the next move to go the other way."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "business",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 5.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "-0.5",
+        "bigLabel": "percentage points, in one step",
+        "hook": "Four holds, then the largest single cut in nine years."
+      },
+      "art": {
+        "tradition": "constructivist",
+        "label": "Constructivist poster",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#141414",
+        "overlay": "light"
+      }
+    },
+    {
+      "id": "sample06",
+      "tag": "BORDER",
+      "headline": "Sample story: a crossing reopens after eleven months shut",
+      "dek": "Placeholder text for a story that is fundamentally about a place.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The map style is for geography: a border, a strait, a region where the location is half the news.",
+        "Context paragraph: why it closed, who has been stuck on which side.",
+        "Unresolved paragraph: what would close it again."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "world",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 6.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "334",
+        "bigLabel": "days closed",
+        "hook": "Two queues, eleven months, one gate that opened at dawn."
+      },
+      "art": {
+        "tradition": "paper_collage",
+        "label": "Cut-paper collage",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#d8cfc0",
+        "overlay": "dark"
+      }
+    },
+    {
+      "id": "sample07",
+      "tag": "VERDICT",
+      "headline": "Sample story: the court says the words out loud",
+      "dek": "Placeholder text for a story where the language is the event.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The typographic style is for stories where a phrase — a verdict, a resignation, a formal finding — is the thing that happened.",
+        "Context paragraph: the years of process that produced three words.",
+        "Unresolved paragraph: what an appeal would need."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "politics",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 7.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "9-0",
+        "bigLabel": "unanimous",
+        "hook": "Six years of argument, resolved in three words."
+      },
+      "art": {
+        "tradition": "stipple_engraving",
+        "label": "Stipple portrait",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#121212",
+        "overlay": "light"
+      }
+    },
+    {
+      "id": "sample08",
+      "tag": "STREET",
+      "headline": "Sample story: a hundred thousand people and one closed road",
+      "dek": "Placeholder text for a story with a crowd in it.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The silhouette style is for crowds, marches, queues and departures — the stories where the count is the picture.",
+        "Context paragraph: what brought them out, and what happened the last time.",
+        "Unresolved paragraph: whether anyone in the building was listening."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "world",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 8.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "100k",
+        "bigLabel": "on one avenue",
+        "hook": "The largest turnout since the law passed, on the day it took effect."
+      },
+      "art": {
+        "tradition": "blueprint_technical",
+        "label": "Technical drawing",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#112c3f",
+        "overlay": "light"
+      }
+    },
+    {
+      "id": "sample09",
+      "tag": "SUPPLY",
+      "headline": "Sample story: one factory, and the shortage everyone downstream feels",
+      "dek": "Placeholder text for a story that is really a mechanism.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The diagram style is for systems: a chain, a loop, a dependency that most people never had to think about until it broke.",
+        "Context paragraph: how many steps sit between the failure and the shelf.",
+        "Unresolved paragraph: how long the substitution takes."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "technology",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 9.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "1",
+        "bigLabel": "plant, three continents",
+        "hook": "Everything downstream waits on one building."
+      },
+      "art": {
+        "tradition": "silkscreen_protest",
+        "label": "Silkscreen",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#1a1a1a",
+        "overlay": "light"
+      }
+    },
+    {
+      "id": "sample10",
+      "tag": "CULTURE",
+      "headline": "Sample story: the archive that turned out to be missing a decade",
+      "dek": "Placeholder text for a story assembled out of fragments.",
+      "dateline": "SAMPLE EDITION",
+      "paragraphs": [
+        "Placeholder copy. The collage style is for media and culture stories that arrive as pieces — a leak, a thread, a correction, a denial.",
+        "Context paragraph: how the gap was noticed, and by whom.",
+        "Unresolved paragraph: what else is missing."
+      ],
+      "changes": "Placeholder: what it changes.",
+      "unchanged": "Placeholder: what it does not.",
+      "category": "culture",
+      "sources": [
+        "Sample"
+      ],
+      "source_count": 1,
+      "url": "",
+      "published": null,
+      "age_hours": 10.0,
+      "importance": 0,
+      "instant": 0,
+      "cover": {
+        "big": "10",
+        "bigLabel": "years unaccounted for",
+        "hook": "Nobody looked until a student asked for a single file."
+      },
+      "art": {
+        "tradition": "surreal_object",
+        "label": "Editorial surrealism",
+        "concept": "Placeholder — the daily run writes a real brief here and commissions the illustration.",
+        "note": "",
+        "tint": "#e2ded3",
+        "overlay": "dark"
+      }
+    }
+  ],
+  "illustrated": 0
+}

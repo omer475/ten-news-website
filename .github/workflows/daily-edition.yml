@@ -1,0 +1,68 @@
+name: Today — Daily Edition
+
+# One edition a day:
+#   read every RSS source for the last 24 hours
+#   cluster, rank by how instant each story is, keep ten
+#   write them, commission ten illustrations, store the artwork
+#   upsert the edition to Supabase (live immediately) and commit the JSON
+#
+# Secrets used: GEMINI_API_KEY (or GOOGLE_API_KEY), NEXT_PUBLIC_SUPABASE_URL,
+# SUPABASE_SERVICE_KEY. Without Supabase the run still succeeds — the artwork is
+# written under public/editions/img/ and committed instead.
+on:
+  schedule:
+    - cron: '30 5 * * *'   # 05:30 UTC daily
+  workflow_dispatch:
+
+concurrency:
+  group: daily-edition
+  cancel-in-progress: false
+
+jobs:
+  build-edition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests feedparser python-dateutil beautifulsoup4 lxml Pillow
+
+      - name: Build today's edition
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/build_edition.py
+
+      - name: Commit the edition
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Today Edition Bot"
+          git add public/editions
+          if git diff --staged --quiet; then
+            echo "No edition changes to commit"
+          else
+            git commit -m "Today: edition for $(date -u +'%Y-%m-%d')"
+            git fetch origin main
+            git pull --rebase origin main || true
+            git push origin HEAD:main
+          fi
+
+      - name: Upload edition artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edition-${{ github.run_id }}
+          path: public/editions/latest.json
+          if-no-files-found: warn
