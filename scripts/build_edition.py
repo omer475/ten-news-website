@@ -60,6 +60,7 @@ MAX_PER_SOURCE = 2
 
 RECENCY_HALFLIFE_H = 6.0     # how fast "instant" decays
 MIN_IMPORTANCE = 68          # below this a story is filler, however fresh
+LONE_SOURCE_FLOOR = 86       # one outlet alone has to clear a higher bar
 UNDATED_ASSUMED_AGE_H = 10.0 # penalty for feeds that publish no date
 
 SCORING_MODEL = "gpt-5.4-mini"      # ranks 220 stories, cheap and fast
@@ -332,6 +333,13 @@ Score each story below 0-100 for how much it matters to a globally curious reade
  20  celebrity noise, listicles, opinion, sport results with no wider stake
   0  press releases, promotions, horoscopes, live blogs with no news in the title
 
+A LOCAL ACCIDENT, CRIME OR SINGLE-FAMILY TRAGEDY SCORES 20-30, however
+distressing it reads. One death, one arrest, one collapsed roof, one village's
+bad road — these matter enormously to the people involved and are not national
+or world news. Score them up only if they are already driving a change in law,
+a resignation, or nationwide protest. Ask yourself: would a reader on another
+continent be worse informed for not knowing this? If not, it is under 40.
+
 Also return `category`, one of:
 world, politics, business, technology, science, health, climate, culture, sport, security
 
@@ -387,17 +395,24 @@ def instant_score(c):
     return c["importance"] * (0.30 + 0.42 * recency + 0.28 * breadth)
 
 
+def eligible(clusters):
+    """
+    The pool an edition may draw from — used for the first pick AND for the
+    bench that backfills it. Filtering only the first pick let the duplicate
+    merge pull replacements straight past the floor.
+    """
+    strong = [c for c in clusters
+              if c["importance"] >= MIN_IMPORTANCE
+              and (c["source_count"] > 1 or c["importance"] >= LONE_SOURCE_FLOOR)]
+    return strong if len(strong) >= EDITION_SIZE else clusters
+
+
 def pick_ten(clusters):
     """Top ten by instant score, keeping one edition from being all one thing.
 
     Caps are relaxed in passes rather than abandoned, so a thin news day still
     yields ten stories and a normal one stays varied.
     """
-    # A story nobody rates as important is filler even if it broke a minute
-    # ago. Only fall back to the unfiltered pool if the floor starves us.
-    strong = [c for c in clusters if c["importance"] >= MIN_IMPORTANCE]
-    if len(strong) >= EDITION_SIZE:
-        clusters = strong
     ranked = sorted(clusters, key=instant_score, reverse=True)
     picked, chosen = [], set()
 
@@ -1115,8 +1130,10 @@ def build(now):
     shortlist = clusters[:SHORTLIST]
     log(f"Scoring {len(shortlist)} stories for importance ...")
     score_importance(shortlist)
-    ten = pick_ten(shortlist)
-    bench = reserves_for(shortlist, ten)
+    pool = eligible(shortlist)
+    log(f"  {len(pool)}/{len(shortlist)} stories clear the importance floor")
+    ten = pick_ten(pool)
+    bench = reserves_for(pool, ten)
     ten = drop_duplicates(ten, bench)
     ten = sorted(ten, key=instant_score, reverse=True)
 
