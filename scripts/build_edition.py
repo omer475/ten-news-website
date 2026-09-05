@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from rss_sources import RSS_FEEDS
 from art_direction import (TRADITIONS, ORDER as TRADITION_ORDER, LOUD, FAMILY,
-                           DENSITY, brief_for, tradition_menu)
+                           DENSITY, brief_for, tradition_menu, device_menu)
 
 try:
     import urllib3
@@ -599,9 +599,7 @@ def assign_traditions(written):
     rebalance("dense", MIN_DENSE)
 
     for w, t in zip(written, final):
-        art = w.setdefault("art", {})
-        art["reconcept"] = art.get("tradition") != t
-        art["tradition"] = t
+        w.setdefault("art", {})["tradition"] = t
     return written
 
 
@@ -609,45 +607,126 @@ def assign_traditions(written):
 # 5b · Commission the illustration
 # ----------------------------------------------------------------------------
 
-RECONCEPT_PROMPT = """An illustrator has been reassigned. The story is the same;
-the medium is not.
+
+# ----------------------------------------------------------------------------
+# 5c · Develop the cover idea
+#
+# How covers are actually made: an illustrator sketches several competing ideas
+# and an art director kills the weak ones. One concept written in one pass, as
+# a side-field while the model is busy writing the article, is how you get a
+# tasteful inventory of the story's objects instead of an idea about it.
+# ----------------------------------------------------------------------------
+
+IDEATE_PROMPT = """You are an editorial illustrator sketching cover ideas.
+
+STORY: %(headline)s
+%(dek)s
+%(body)s
+
+The cover will be made as: %(label)s — %(fits)s
+What that medium can physically do:
+%(brief)s
+
+Sketch FIVE different cover ideas. Each must be built on ONE named device:
+
+%(devices)s
+
+Rules for every idea:
+- ONE idea, not an arrangement of the story's objects. If your idea is "the
+  thing, plus another thing, plus a third thing", it is not an idea.
+- It must be SPECIFIC to this story. Name the actual company, place, machine,
+  document, animal. An idea that would fit a different story is dead.
+- No stock symbols: no cracked globe, ticking clock, chess piece, lightbulb,
+  scales of justice, tug of war, domino run, iceberg, house of cards.
+- No lettering, labels or words in the picture. A brand's own logo is the only
+  exception. Never say a thing "is labelled".
+- Real named people cannot be drawn. Use the office and its attributes.
+- It must be makeable in the medium above, and its lower third must be quiet.
+- Make them genuinely different from each other — not five framings of one idea.
+
+Return JSON:
+{"ideas":[{"device":"<key>","concept":"2-3 sentences: what is in the picture and how it is staged","second_beat":"the thing the reader notices a moment later, in one line"}]}"""
+
+
+SELECT_PROMPT = """You are the art director choosing which cover runs.
 
 STORY: %(headline)s
 %(dek)s
 
-The concept written for the previous medium was:
-  %(concept)s
+The candidates:
+%(ideas)s
 
-The new medium is %(label)s — %(fits)s
+Judge them hard, in this order:
+1. Is there ONE idea with a second beat — something that arrives a moment
+   after the first look? An idea with no second beat is decoration.
+2. Could this picture be moved onto a different news story without anyone
+   noticing? If yes, it fails, however handsome.
+3. Is it a stock symbol dressed up? Kill it.
+4. Can it actually be made in %(label)s, and does its lower third stay quiet
+   enough to set type across?
+5. Would someone who already knows this news still stop on it?
 
-%(brief)s
+Pick the strongest, then TIGHTEN it: cut anything the idea does not need,
+sharpen the staging, make the specific named things unmistakable. Remember that
+the aim is maximum communication from minimum elements.
 
-Rewrite the CONCEPT so it can actually be made in this medium. A scene at sea
-cannot be a tabletop still life; a crowd cannot be one mark on an empty field.
-Keep the story's real named subjects — the companies, places, objects — and
-restage them for what this medium can physically do. No lettering, labels,
-stamps or printed words anywhere in the picture; the only exception is a
-brand's own logo. Say what a thing IS, never that it is labelled.
+If the winner leans on any word, number, label or stamp being READABLE, restage
+it so it works without one — the shape of a stamp with no legible text, a form
+with ruled lines and no words, a mark rather than a word. The picture will be
+rendered with no lettering at all, so an idea that needs a word to land will
+arrive broken.
 
-Return JSON: {"concept": "2-3 sentences briefing the illustrator on what to make"}"""
+Return JSON:
+{"device":"<key of the winner>",
+ "concept":"the final brief to the illustrator, 2-3 sentences, staged concretely",
+ "why":"one line: what the second beat is"}"""
 
 
-def reconcept(story):
-    """Re-brief a story whose medium the edition-level rebalance changed."""
+def develop_concept(story):
+    """Sketch five ideas, then art-direct one. Sets art['concept']."""
     art = story["art"]
     t = TRADITIONS[art["tradition"]]
     if os.environ.get("EDITION_DRY_RUN"):
         return
+    ctx = {
+        "headline": story["headline"],
+        "dek": story.get("dek", ""),
+        "body": " ".join(story.get("paragraphs", []))[:900],
+        "label": t["label"],
+        "fits": t["fits"],
+        "brief": t["brief"],
+        # Stories are developed in parallel, so they cannot see each other's
+        # choices. Offering each one a different rotating slice of the
+        # vocabulary keeps one device from taking over the edition.
+        "devices": device_menu(story.get("slot", 0)),
+    }
     try:
-        out = ask_json(RECONCEPT_PROMPT % {
-            "headline": story["headline"], "dek": story.get("dek", ""),
-            "concept": art.get("concept", ""), "label": t["label"],
-            "fits": t["fits"], "brief": t["brief"],
-        }, WRITING_MODEL, temperature=0.6, max_tokens=700)
-        if out.get("concept"):
-            art["concept"] = out["concept"]
+        ideas = (ask_json(IDEATE_PROMPT % ctx, WRITING_MODEL,
+                          temperature=0.95, max_tokens=2200) or {}).get("ideas") or []
     except Exception as exc:
-        log(f"    ! reconcept failed for {story['id']}: {exc}")
+        log(f"    ! ideation failed for {story['id']}: {exc}")
+        return
+    if not ideas:
+        return
+
+    listed = "\n".join(
+        f"{i + 1}. [{d.get('device')}] {d.get('concept')}\n   second beat: {d.get('second_beat')}"
+        for i, d in enumerate(ideas))
+    try:
+        chosen = ask_json(SELECT_PROMPT % {**ctx, "ideas": listed},
+                          WRITING_MODEL, temperature=0.3, max_tokens=900)
+    except Exception as exc:
+        log(f"    ! selection failed for {story['id']}: {exc}")
+        chosen = None
+
+    if chosen and chosen.get("concept"):
+        art["concept"] = chosen["concept"]
+        art["device"] = chosen.get("device")
+        art["second_beat"] = chosen.get("why")
+    else:
+        art["concept"] = ideas[0].get("concept", art.get("concept", ""))
+        art["device"] = ideas[0].get("device")
+
 
 
 def generate_image(prompt):
@@ -816,8 +895,7 @@ def upload_image(image_bytes, mime, date, story_id):
 def commission(story, date):
     """Draw one poster. Mutates story['art'] with the finished image."""
     art = story["art"]
-    if art.pop("reconcept", False):
-        reconcept(story)
+    develop_concept(story)
     prompt = brief_for(art["tradition"], art.get("concept", story["headline"]), art.get("note", ""))
     art["prompt"] = prompt
     if os.environ.get("EDITION_DRY_RUN"):
@@ -905,11 +983,12 @@ def build(now):
 
     date = now.strftime("%Y-%m-%d")
     out = []
-    for c, w in zip(kept, drafts):
+    for slot, (c, w) in enumerate(zip(kept, drafts)):
         lead = c["lead"]
         cover = w.get("cover") or {}
         art = w.get("art") or {}
         out.append({
+            "slot": slot,
             "id": hashlib.sha1(norm_url(lead["url"]).encode()).hexdigest()[:12],
             "tag": (w.get("tag") or c["category"]).upper()[:14],
             "headline": w.get("headline", lead["title"]),
@@ -932,6 +1011,7 @@ def build(now):
             },
             "art": {
                 "tradition": art.get("tradition"),
+                "device": art.get("device"),
                 "label": (TRADITIONS.get(art.get("tradition")) or {}).get("label", ""),
                 "concept": art.get("concept", ""),
                 "note": art.get("note", ""),
@@ -951,6 +1031,9 @@ def build(now):
             log(f"  {done}/{len(out)} drawn")
 
     for story in out:
+        story["art"]["device"] = story["art"].get("device")
+        story["art"]["second_beat"] = story["art"].get("second_beat")
+        story.pop("slot", None)
         story["art"].pop("prompt", None)
         story["art"].pop("bytes", None)
 

@@ -448,3 +448,66 @@ def tradition_menu():
         lines.append(f"  {key} — {t['label']} [{t['family']}, {t['density']}]: "
                      f"{t['fits']}{tag}")
     return "\n".join(lines)
+
+# ----------------------------------------------------------------------------
+# The conceptual devices a cover idea is built on.
+#
+# A cover is not a depiction of the story — it is one idea ABOUT the story, and
+# working illustrators reach for a small, known set of moves to find it. Naming
+# the move forces a leap instead of an inventory of the story's objects.
+# ----------------------------------------------------------------------------
+
+DEVICES = [
+    ("negative_space",
+     "The empty space around or inside the subject forms a second, different "
+     "image. The reader sees one thing, then the other. Noma Bar's move."),
+    ("substitution",
+     "One object stands exactly where a different object should be, taking its "
+     "shape and role — a ballot paper folded as a paper plane, a pill as a "
+     "wheel. The swap is the whole idea."),
+    ("scale_inversion",
+     "The thing everyone thinks is small is drawn enormous, or the thing "
+     "everyone thinks is huge is drawn tiny beside something ordinary."),
+    ("repetition_with_a_break",
+     "A field of identical repeated things, and exactly one that is different, "
+     "missing, or facing the wrong way. The break carries the story."),
+    ("the_absence",
+     "Draw what is NOT there — the empty chair, the cleared shelf, the outline "
+     "where something used to be. The subject is the hole it left."),
+    ("visual_pun",
+     "A shape reads as two things at once because they share a silhouette — a "
+     "chart line that is also a crack, a coastline that is also a signature."),
+    ("before_and_after",
+     "Two states of the same thing held in one frame, left and right or top and "
+     "bottom, so the change is the picture."),
+    ("crop_to_abstraction",
+     "Crop so close to a familiar object that it becomes a pattern or a shape, "
+     "and only the caption's neighbour tells you what it was."),
+    ("wrong_behaviour",
+     "The object does something it cannot do — a building queues, a banknote "
+     "wilts, a fence walks. Everything else stays deadpan."),
+    ("containment",
+     "One thing sits inside, on top of, or growing out of another that should "
+     "not hold it, and the relationship is the argument."),
+    ("the_consequence",
+     "Do not draw the event. Draw the small ordinary thing that happens because "
+     "of it, three steps downstream, where a reader actually lives."),
+    ("literalised_phrase",
+     "Take the phrase everyone uses about this story and draw it dead "
+     "literally, with no wink."),
+]
+
+
+def device_menu(slot=0, take=6):
+    """
+    A rotating slice of the vocabulary.
+
+    Every story sees a different six of the twelve, offset by its position in
+    the edition, so ten stories developed in parallel cannot all land on
+    negative space — which is exactly what happened when they all saw the same
+    list.
+    """
+    n = len(DEVICES)
+    picks = [DEVICES[(slot * 5 + i) % n] for i in range(min(take, n))]
+    return "\n".join(f"  {k} — {v}" for k, v in picks)
+
