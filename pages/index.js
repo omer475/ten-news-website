@@ -42,68 +42,43 @@ function spaced(text) {
 }
 
 /**
- * A clip that never shows its seam.
+ * The clip plays continuously and restarts itself.
  *
- * Sora returns a four-second clip whose last frame is not its first, so a plain
- * `loop` snaps back and the eye catches it every time. Two copies play a fade
- * apart and cross-dissolve through the join, so the motion reads as continuous.
+ * An earlier version cross-dissolved two copies to hide the loop seam, and the
+ * cure was worse than the fault — the picture dropped out and came back. One
+ * element, always visible, is the right trade: a small jump at the join beats
+ * the artwork disappearing.
  */
 function LoopVideo({ src, poster, eager }) {
-  const a = useRef(null);
-  const b = useRef(null);
-  const FADE = 0.7;
+  const ref = useRef(null);
 
   useEffect(() => {
-    const A = a.current;
-    const B = b.current;
-    if (!A || !B) return undefined;
-    let front = A;
-    let back = B;
-    let raf = null;
-
-    const start = (el) => {
-      el.currentTime = 0;
-      const p = el.play();
-      if (p && p.catch) p.catch(() => {});
+    const el = ref.current;
+    if (!el) return undefined;
+    const play = () => { const p = el.play(); if (p && p.catch) p.catch(() => {}); };
+    play();
+    // Mobile browsers pause background video; pick it back up on return.
+    const onVisible = () => { if (!document.hidden) play(); };
+    el.addEventListener('ended', play);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      el.removeEventListener('ended', play);
+      document.removeEventListener('visibilitychange', onVisible);
     };
-    start(A);
-
-    const tick = () => {
-      const d = front.duration;
-      if (d && Number.isFinite(d)) {
-        const left = d - front.currentTime;
-        if (left <= FADE) {
-          if (back.paused || back.currentTime > FADE) start(back);
-          const t = Math.max(0, Math.min(1, 1 - left / FADE));
-          front.style.opacity = String(1 - t);
-          back.style.opacity = String(t);
-          if (left <= 0.04) {
-            const tmp = front; front = back; back = tmp;
-            front.style.opacity = '1';
-            back.style.opacity = '0';
-            back.pause();
-          }
-        }
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
   }, [src]);
 
-  const common = {
-    className: 'artwork loopvid',
-    src,
-    poster,
-    muted: true,
-    playsInline: true,
-    preload: eager ? 'auto' : 'metadata',
-  };
   return (
-    <>
-      <video {...common} ref={a} style={{ opacity: 1 }} />
-      <video {...common} ref={b} style={{ opacity: 0 }} />
-    </>
+    <video
+      className="artwork"
+      ref={ref}
+      src={src}
+      poster={poster}
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload={eager ? 'auto' : 'metadata'}
+    />
   );
 }
 
@@ -333,6 +308,7 @@ export default function Today() {
               onClick={(e) => { if (!e.target.closest('.save')) setOpenIndex(i); }}
               onKeyDown={(e) => e.key === 'Enter' && setOpenIndex(i)}
             >
+              <div className="card">
               {story.art?.video_url ? (
                 <LoopVideo
                   src={story.art.video_url}
@@ -344,6 +320,7 @@ export default function Today() {
               ) : (
                 <canvas className="artwork" ref={(el) => { fallbackRefs.current[i] = el; }} />
               )}
+              </div>
 
               <div className="panel">
                 <div className="kicker">{spaced(story.tag)}</div>
@@ -529,15 +506,23 @@ export default function Today() {
         /* --------------------------------------------------------- poster */
         .frame {
           position: relative; height: 100%; width: 100%; max-width: calc(100svh * 9 / 16);
-          margin: 0 auto; overflow: hidden; cursor: pointer; background: var(--panel);
+          margin: 0 auto; overflow: hidden; cursor: pointer;
+          background: var(--panel); color: var(--panel-ink);
+          display: flex; flex-direction: column;
+        }
+        /* The illustration is a rounded card. The type lives on the page under
+           it, never over it. */
+        .card {
+          position: relative; overflow: hidden;
+          margin: ${TYPE.cardTop * 100}% ${TYPE.gutter * 100}% 0;
+          height: ${TYPE.cardHeight * 100}%; flex: none;
+          border-radius: calc(var(--pw) * ${TYPE.radius});
+          background: rgba(0,0,0,.2);
         }
         .artwork {
           position: absolute; inset: 0; width: 100%; height: 100%;
           object-fit: cover; display: block;
         }
-        .loopvid { transition: opacity .12s linear; }
-        /* Stills breathe rather than sit dead — slow enough to read as a print
-           being looked at, not as an effect. */
         .drift { animation: drift 26s ease-in-out infinite alternate; will-change: transform; }
         @keyframes drift {
           from { transform: scale(1) translate3d(0, 0, 0); }
@@ -545,18 +530,16 @@ export default function Today() {
         }
         @media (prefers-reduced-motion: reduce) { .drift { animation: none; } }
 
-        /* The type is printed on a solid block sized to its own contents, so it
-           can never overflow into the artwork or off the bottom of the page. */
         .panel {
-          position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-          background: var(--panel); color: var(--panel-ink);
-          padding: calc(var(--pw) * ${TYPE.padTop}) ${TYPE.margin * 100}%
-                   calc(var(--pw) * ${TYPE.padBottom} + env(safe-area-inset-bottom));
+          flex: 1; min-height: 0;
+          padding: calc(var(--pw) * ${TYPE.textGap}) ${TYPE.gutter * 100}%
+                   calc(12px + env(safe-area-inset-bottom));
           pointer-events: none;
         }
         .kicker {
+          color: var(--accent);
           font-weight: 700; font-size: calc(var(--pw) * ${TYPE.kickerSize});
-          letter-spacing: .02em; opacity: .72;
+          letter-spacing: .02em;
           margin-bottom: calc(var(--pw) * ${TYPE.kickerGap} - var(--pw) * ${TYPE.kickerSize});
         }
         .title {
@@ -568,12 +551,12 @@ export default function Today() {
         .standfirst {
           margin: calc(var(--pw) * ${TYPE.titleGap}) 0 0;
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.footSize});
-          line-height: ${TYPE.footLead}; opacity: .88;
+          line-height: ${TYPE.footLead}; opacity: .85;
         }
         .colophon {
           margin-top: calc(var(--pw) * ${TYPE.colophonGap});
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.colophonSize});
-          letter-spacing: .06em; opacity: .55;
+          letter-spacing: .06em; opacity: .5;
         }
 
         .save {

@@ -72,7 +72,9 @@ IMAGE_URL = "https://api.openai.com/v1/images/generations"
 
 # Medium matches high on concept and composition for a quarter of the cost;
 # low loses the tonal structure that makes these read as real illustration.
-IMAGE_SIZE = "1024x1536"     # 2:3 — the tallest gpt-image-2 offers below 4K
+# The artwork is shown as a rounded card of roughly 4:5, so a 2:3 image would
+# lose a quarter of its height to the crop. Square loses ~6% a side instead.
+IMAGE_SIZE = "1024x1024"
 IMAGE_QUALITY = "medium"
 IMAGE_WEBP_QUALITY = 82      # re-encoded before upload; the API returns ~2.5MB
 IMAGE_BUCKET = "images"      # existing public Supabase Storage bucket

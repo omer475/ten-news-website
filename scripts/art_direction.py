@@ -79,29 +79,26 @@ BE SPECIFIC — DRAW THE ACTUAL THING
 - If the illustration could be swapped onto a different story without anyone
   noticing, it has failed.
 
-FORMAT — FULL BLEED, EDGE TO EDGE
-- The artwork fills the ENTIRE frame, corner to corner. No margins, no white
-  border, no floating drawing sitting on a page. Whatever the ground colour is,
-  it runs off all four edges.
-- A solid colour block is printed across the bottom third afterwards, carrying
-  the headline and text, so the lower third of your picture will be covered.
-  Compose for that: keep the subject and everything that matters in the TOP
-  TWO THIRDS. Nothing important below.
-- The subject is LARGE. It fills the upper two thirds and is cropped by the
-  left and right edges of the frame. A small object floating in the middle of
-  an empty field is the failure mode of this format.
-- The poster crops about 15% off the left and right edges, so keep anything
-  load-bearing away from the extreme sides.
-- No borders, frames, mockups, vignettes, rounded corners, or fake sheets of
-  paper with shadows under them.
+FORMAT — ONE FULL-BLEED PICTURE, NO ROOM RESERVED
+- The artwork is printed as a single rounded card. It fills the ENTIRE frame,
+  corner to corner. No margins, no white border, no drawing floating on a page.
+  The ground colour, whatever it is, runs off all four edges.
+- NOTHING IS RESERVED. There is no empty band, no space kept clear for type —
+  the headline and text are set on the page BELOW the card, not over it. Use
+  the whole picture.
+- Composed as a portrait slightly taller than it is wide. About 6% is cropped
+  from each side, so keep the subject and anything load-bearing off the extreme
+  left and right edges.
+- No borders, frames, mockups, vignettes, rounded corners drawn into the
+  artwork, or fake sheets of paper with shadows under them.
 
 POSTER COMPOSITION — COMMIT TO IT
 The empty bands are for type. The middle band is not a polite margin around a
 small drawing — it is the poster, and it must be FILLED.
 
-- THE SUBJECT IS LARGE AND FILLS THE FRAME. It runs from the top edge down
-  into the lower third, and off BOTH side edges. Err hard on the side of too
-  big — cropping the subject is good, shrinking it is not.
+- THE SUBJECT IS LARGE AND FILLS THE FRAME, top to bottom and off both side
+  edges. Err hard on the side of too big — cropping the subject is good,
+  shrinking it is not.
 - ONE dominant shape against ONE flat ground, with a silhouette so clear the
   page still reads as a thumbnail.
 - Use a poster designer's moves: extreme scale contrast, bold cropping so a
