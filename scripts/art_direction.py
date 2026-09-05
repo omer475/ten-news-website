@@ -1,206 +1,287 @@
 """
 TODAY — art direction for the daily edition.
 
-Ten illustration traditions, one per poster, so an edition reads like a magazine
-rather than ten variations of the same drawing. Each entry is a complete brief
-for the image model: medium, reference, palette, mark-making, composition.
+Twelve illustration traditions, drawn from contemporary editorial illustration
+rather than print history. Each entry is a complete brief for the image model:
+medium, reference, palette, mark-making, energy.
 
-The editor model picks the tradition that fits the story and writes the CONCEPT
-(the actual thing to draw). These briefs only say how it should be made.
+The editor model picks the tradition that suits the STORY and writes the
+CONCEPT — the actual thing to draw, naming the actual companies, products,
+places and objects involved. These briefs only say how it should be made.
+
+Two rules matter more than any single brief:
+  * be SPECIFIC — a story about Revolut has the Revolut card in it
+  * be LOUD — unless the story is grave, the picture should be in colour and
+    should be fun to look at
 """
 
-# Every poster carries type over the lower third, so every brief protects it.
 SHARED = """
+COLOUR — THIS IS NOT A QUIET PICTURE
+- Commit to colour. Saturated, confident, printed-poster colour that survives
+  being seen at arm's length on a phone. Two to five strong colours, chosen and
+  meant, working against each other.
+- Beige, grey-brown, muddy neutrals and washed-out sepia are wrong unless the
+  brief below explicitly asks for them. If you find yourself making something
+  tasteful and restrained, you have misread the assignment.
+- The exception is grave news — deaths, war, disaster. There, hold the colour
+  back to two tones and let it be severe. Nothing else gets that licence.
+
+BE SPECIFIC — DRAW THE ACTUAL THING
+- Named companies, products and logos belong IN the picture, drawn accurately
+  and legibly: a Revolut card, an Airbus fuselage, a Tesco storefront, a
+  ChatGPT interface, a Boeing tail fin, a euro coin, a specific national flag.
+- Named places get their real recognisable form: the Sydney Opera House, a
+  Kyiv apartment block, the Palace of Westminster, an Australian gum forest.
+- Named animals, machines, plants and objects get drawn as themselves — the
+  actual grey wolf, the actual oil tanker, the actual refinery.
+- Real, named individuals CANNOT be drawn — the image model refuses likenesses.
+  Use the office and its attributes instead, never the face: an empty podium
+  with the presidential seal, a red tie on an empty suit, a hand signing an
+  executive order, a motorcade, a vacated chair at a summit table. Any human
+  figures are anonymous — cropped, from behind, generic, or symbolic.
+- A generic picture is a failed picture. If the illustration could be swapped
+  onto a different story without anyone noticing, start again.
+
 FORMAT
-- Tall portrait, designed as a full-bleed magazine cover illustration for a phone.
+- Tall portrait, designed as a full-bleed magazine cover illustration.
 - THE LOWER THIRD MUST STAY QUIET. Large type is set across it. Give that band
-  open ground, flat colour, empty sky, still water, plain wall — somewhere the
-  eye rests and white or black lettering would read cleanly. Detail, texture and
-  incident belong above it. This is the single most important rule of the layout:
-  a beautiful drawing that fills the bottom third with busy detail is unusable.
-- The subject sits in the upper two thirds, off centre, breathing.
-- The poster crops roughly 15% from the left and right edges, so keep the subject
-  and anything load-bearing away from the side margins. Bleed background to the
-  edges; put nothing at the edges you would miss.
+  open ground, flat colour, empty sky, plain floor — somewhere the eye rests
+  and lettering would read cleanly. Detail and incident belong above it. A
+  beautiful drawing that fills the bottom third with busy detail is unusable.
+- The poster crops roughly 15% from the left and right edges, so keep anything
+  load-bearing away from the side margins. Bleed the background to the edges.
 - Edge to edge artwork. No borders, no frames, no mockups, no drop shadows,
   no vignette, no rounded corners, no paper edges, no torn-photo effects.
 
 ABSOLUTE CONSTRAINTS
 - NO text, NO letters, NO numbers, NO words, NO captions, NO signatures,
-  NO logos, NO watermarks, NO speech bubbles, NO UI, NO charts with labels.
-  Any lettering ruins the poster.
-- No collage of real photographs of identifiable living people. No real faces.
-  Figures are drawn, anonymous, seen from behind, in shadow, or generalised.
-- No gore, no bodies, no weapons pointed at the viewer, no distressing detail.
-  Serious news is handled with restraint and metaphor, never spectacle.
+  NO speech bubbles, NO UI labels. The ONLY lettering permitted anywhere is a
+  brand's own logo where the story is about that brand. Everything else ruins
+  the poster, because the edition sets its own type over the image.
+- No likenesses of real people. No photorealistic depictions of news events —
+  these must read unmistakably as drawn illustration, never as a photograph.
+- No gore, no bodies, no weapons aimed at the viewer. Grave news is handled
+  through metaphor and restraint, never spectacle.
 
 CRAFT
-- This is a paid editorial commission for a national title. It must look made by
-  a human illustrator with a point of view — considered composition, deliberate
-  negative space, confident drawing, real material texture.
-- One clear idea, read in under two seconds. No busy montage of five symbols.
-- Print-quality: clean separations, controlled palette, no muddy blending,
-  no airbrushed 3D render look, no stock-illustration flat-vector cliches
-  (no faceless purple people, no isometric city with floating icons).
+- A paid editorial commission for a national title. One clear idea, read in two
+  seconds, with a point of view. Deliberate composition, real craft, and — where
+  the story allows it — wit.
+- No corporate flat-vector cliches: no faceless purple blob-people, no isometric
+  city with floating icons, no generic "innovation" swooshes.
 """
 
 TRADITIONS = {
-    "wood_engraving": {
-        "label": "Wood engraving",
-        "fits": "land, weather, disaster, infrastructure, slow physical change, history",
+    # ---------------------------------------------------------------- loud
+    "bold_symbol": {
+        "label": "Bold symbol",
+        "energy": "loud",
+        "fits": "a company, a product, a launch, a single object that IS the story",
         "brief": """
-MEDIUM — Nineteenth-century wood engraving, in the manner of the illustrated
-weeklies: white line cut into end-grain boxwood, printed letterpress.
-- Tone is built ONLY from engraved line: parallel burin strokes, cross-hatching,
-  stipple and flicked white line. No grey washes, no soft gradients.
-- Line direction follows form — furrows across a field, contour around a hull.
-- Dramatic tonal structure: a deep near-black mass against open unworked white.
-- Slight ink spread and plate texture, as if printed on damp rag paper.
-PALETTE — Warm black ink on a cream, unbleached paper ground. At most one
-additional muted colour (oxide red, ochre or slate blue) used sparingly.
+MEDIUM — One giant graphic object filling the frame on a flat saturated ground,
+silkscreen-poster energy.
+- The subject — the card, the phone, the bottle, the machine, the logo — is
+  drawn large, clean, confident and unmistakable, tilted or cropped for drama.
+- Flat bold colour, hard edges, a strong rim light or glow, small energetic
+  marks (sparks, lightning, motion ticks) around it.
+- Small anonymous human figures at the base for scale and delight, reacting.
+PALETTE — The brand's own colour against black or a single screaming
+complementary. Three colours maximum, all of them loud.
 """,
     },
-    "risograph": {
+    "maximalist_doodle": {
+        "label": "Maximalist doodle",
+        "energy": "loud",
+        "fits": "abundance, excess, waste, sprawl, everything-everywhere stories, lists, markets",
+        "brief": """
+MEDIUM — Hundreds of small hand-drawn objects massing into one large shape,
+in the manner of a dense contemporary newspaper-magazine cover illustration.
+- Fine confident ink line, every small object individually drawn and readable,
+  flat colour fills inside the line.
+- The mass forms a recognisable silhouette — a figure, a wave, a mountain, a
+  head — while staying legibly made of specific, nameable things drawn from
+  the story itself.
+- Playful, obsessive, generous. The reward is looking closer.
+PALETTE — Bright, many-coloured, mostly cool with hot accents, on white.
+""",
+    },
+    "flat_character": {
+        "label": "Flat character",
+        "energy": "loud",
+        "fits": "people-shaped stories: health, work, courts, culture, everyday life, gentle comedy",
+        "brief": """
+MEDIUM — Modern flat character illustration, the contemporary magazine-cover
+manner: clean geometric bodies, simple dot-and-line faces, no rendering.
+- Characters are stacked, crowded, queued or piled to make the point — comic
+  timing through arrangement rather than expression.
+- Crisp vector-clean shapes, no outlines around everything, subtle grain.
+- Generous empty ground around the group. Warm, funny, human.
+PALETTE — Pastel base with three or four saturated accents: coral, mustard,
+mint, cobalt. Cheerful and modern.
+""",
+    },
+    "fractured_prism": {
+        "label": "Fractured prism",
+        "energy": "loud",
+        "fits": "power, ambition, reinvention, a figure at the centre of a scene, culture and fashion",
+        "brief": """
+MEDIUM — Overlapping translucent colour planes and geometric shards built over
+a central subject, in the manner of a contemporary weekly's cover portraiture.
+- Bold angular facets of transparent colour multiply where they cross; brushy
+  texture inside the planes; the subject reads clearly through the geometry.
+- The subject is an object, a garment, a silhouette or an anonymous figure —
+  never a real person's face.
+- Layered ghost silhouettes behind, receding in flat colour.
+PALETTE — High-chroma: cyan, magenta, yellow, violet, emerald, all at once,
+against a light ground. Loud and glamorous.
+""",
+    },
+    "marker_hand": {
+        "language": "loose",
+        "label": "Marker hand",
+        "energy": "loud",
+        "fits": "internet culture, consumer stories, anything that should feel handmade and cheerful",
+        "brief": """
+MEDIUM — Loose felt-tip and marker drawing, wonky and hand-made, the manner of
+a hand-drawn zine or a hand-lettered poster.
+- Deliberately imperfect line, visible marker streaks, shapes filled slightly
+  outside their outlines, cheerful clumsiness.
+- Flat hot colour blocked in behind the line. Hands, objects and props drawn
+  large and close.
+PALETTE — Hot yellow, hot pink, black line, one cool accent. Flat, unshaded,
+joyful.
+""",
+    },
+    "riso_poster": {
         "label": "Risograph poster",
-        "fits": "politics, protest, housing, energy, anything with a public argument in it",
+        "energy": "loud",
+        "fits": "politics, protest, housing, energy, technology, anything with a public argument",
         "brief": """
 MEDIUM — Risograph print, two or three spot inks, no black plate.
 - Flat shapes cut with a confident hand; forms simplified almost to symbol.
-- Visible risograph character: coarse paper grain, ink mottling, slight
-  misregistration where layers overlap, colours multiplying into a third colour.
-- Bold, poster-scaled shapes. Generous flat ground. No outlines around everything.
-PALETTE — Exactly two or three riso inks (for example fluorescent pink and
-federal blue; or yellow, medium blue and bright red) on off-white stock.
+- Coarse paper grain, ink mottling, slight misregistration where layers overlap,
+  colours multiplying into a third where they cross.
+- Poster-scaled shapes, generous flat ground, dramatic scale contrast between a
+  large subject and small anonymous figures.
+PALETTE — Two or three riso inks at full strength: fluorescent pink and federal
+blue; or yellow, red and blue. Never muted.
 """,
     },
-    "gouache_midcentury": {
-        "label": "Mid-century gouache",
-        "fits": "business, markets, transport, industry, institutions, the built world",
+    "punk_cutout": {
+        "label": "Punk cutout",
+        "energy": "loud",
+        "fits": "scandal, greed, institutions behaving badly, a story with a target",
         "brief": """
-MEDIUM — Mid-century painted editorial illustration, gouache and cut paper,
-in the lineage of 1950s business-magazine covers.
-- Simplified, slightly abstracted forms. Architecture and machinery reduced to
-  planes. Figures small, geometric, without facial detail.
-- Visible brush drag, dry-brush edges, paint that does not quite fill its shape.
-- Confident asymmetric composition with a strong diagonal or a single dominant mass.
-PALETTE — Muted, chalky, period palette: ochre, teal, oxblood, putty, cream,
-with one saturated accent. Nothing neon, nothing digital-bright.
+MEDIUM — One high-contrast black-and-white cutout subject slammed onto a flat
+screaming colour field, with crude hand-scrawled marks — the manner of a
+provocative European weekly's cover.
+- The subject (an animal, a machine, an object) is a hard-edged silhouette-ish
+  cutout with blown-out contrast, no mid-tones.
+- Crude analogue marks — scrawls, arrows, crossings-out, torn edges — added by
+  hand, deliberately rough.
+- Confrontational, funny, mean. Maximum contrast, zero politeness.
+PALETTE — One flat screaming ground (signal red, hazard orange, acid green)
+plus black and white. Nothing else.
 """,
     },
-    "ink_wash": {
-        "label": "Pen and wash",
-        "fits": "people, culture, courts, sport, human stories, gentle absurdity",
+    "comic_absurd": {
+        "label": "Comic absurd",
+        "energy": "loud",
+        "fits": "absurdity, mishaps, tech behaving oddly, sport, a story that is genuinely funny",
         "brief": """
-MEDIUM — Loose dip-pen line with watercolour wash, in the manner of a broadsheet
-op-ed illustrator.
-- Fast, searching, imperfect line with real weight variation and open corners.
-- Wash applied wet and left to pool and dry with hard edges; deliberate bleeding
-  outside the line. Large areas left as bare paper.
-- Wit rather than caricature. Figures anonymous — seen from behind, cropped,
-  or with the simplest possible features. No recognisable public figures.
-PALETTE — Sepia or blue-black ink with two or three transparent washes on white
-watercolour paper.
+MEDIUM — Exaggerated comic cartooning with full painted colour, the manner of a
+classic American humour magazine.
+- Wild exaggeration of scale and physics: objects enormous, bodies mid-tumble,
+  everything at the edge of collapse. Anonymous or symbolic characters only.
+- Motion is drawn: speed lines, impact bursts, flying debris, sweat drops.
+- Rendered with real painterly craft, not a flat cartoon — modelled, glossy,
+  saturated.
+PALETTE — Full-spectrum saturated. Comedy needs colour.
 """,
     },
-    "constructivist": {
-        "label": "Constructivist poster",
-        "fits": "systems, labour, movements, big collective decisions, upheaval",
+    "decorative_flat": {
+        "label": "Decorative flat",
+        "energy": "loud",
+        "fits": "nature, climate, land, agriculture, science, anything with pattern and scale",
         "brief": """
-MEDIUM — Constructivist / Bauhaus poster design.
-- Built from hard geometry: bold diagonals, circles, wedges, rules and bars.
-- Strong dynamic asymmetry. Photomontage-style silhouette shapes allowed, but as
-  flat cut-outs, never as photographic detail.
-- Machine-like precision, no hand wobble, generous flat ground.
-PALETTE — Red, black and off-white, or blue, black and off-white. Three tones
-maximum, no gradients, no shading.
+MEDIUM — Flat decorative illustration built from layered patterned shapes, the
+manner of a broadsheet's Sunday review cover.
+- The whole frame is filled with rhythmic repeated forms — trees, waves, roofs,
+  crowds, crops — each a flat shape with a simple internal texture.
+- One tiny human element hidden in the pattern gives the scale and the story.
+- Calm, ornamental, absorbing. No perspective drama; layered depth instead.
+PALETTE — A tight family of six or eight related colours — greens and teals, or
+ochres and rusts — bright and clean, plus one contrasting accent.
 """,
     },
-    "paper_collage": {
-        "label": "Cut-paper collage",
-        "fits": "media, culture, scandal, archives, anything assembled from fragments",
+    "newsprint_collage": {
+        "label": "Newsprint collage",
+        "energy": "loud",
+        "fits": "media, archives, information, misinformation, culture, anything made of fragments",
         "brief": """
-MEDIUM — Physical cut and torn paper collage, photographed under raking light.
-- Real paper: torn deckled edges with visible fibre, scissor cuts, newsprint and
-  sugar-paper texture, tiny cast shadows where a layer lifts off the ground.
-- Overlapping planes build the image. Halftone dot texture on one or two pieces.
-- No printed words on any scrap — use plain, blank, textured paper only.
-PALETTE — Aged newsprint, kraft, black, off-white and one bright ink colour.
+MEDIUM — Physical collage cut from printed newspaper, photographed flat.
+- Every shape is scissored from newsprint — visible columns of type, halftone
+  photo fragments, torn deckled edges, tiny cast shadows.
+- Naive, charming construction: creatures and objects assembled from cut paper,
+  arranged on a plain painted ground.
+- Analogue and witty. The texture of type carries the whole picture.
+PALETTE — Newsprint grey and cream against one flat painted colour — sky blue,
+tomato, mustard.
 """,
     },
-    "stipple_engraving": {
-        "label": "Stipple portrait",
-        "fits": "an individual at the centre of the story, a resignation, a verdict, an obituary",
-        "brief": """
-MEDIUM — Stipple and line engraving, the financial-press portrait tradition.
-- Form built entirely from dots and short strokes, denser in shadow, opening to
-  bare paper in the light. Absolute technical control.
-- The figure is anonymous and generalised — a back, a silhouette, hands, a chair,
-  a coat on a hook. Never a likeness of a real person.
-- Strong single light source, deep shadow, plenty of empty ground.
-PALETTE — Black ink on cream paper. Optionally one restrained accent tone.
-""",
-    },
-    "blueprint_technical": {
-        "label": "Technical drawing",
-        "fits": "science, engineering, medicine, supply chains, how a thing actually works",
-        "brief": """
-MEDIUM — Draughtsman's technical illustration: exploded axonometric or cutaway
-section, ruled with instruments.
-- Precise, even line weights, section hatching, leader lines that point at nothing
-  (no labels), construction geometry left visible.
-- The mechanism is the picture: layered, sectioned, understandable at a glance.
-- Cool, clinical, beautiful. No perspective drama, no lens effects.
-PALETTE — Prussian blue or graphite line on pale blue or bone drafting paper,
-with one warm accent picking out the single part that matters.
-""",
-    },
-    "silkscreen_protest": {
+    # ------------------------------------------------------------- restrained
+    "silkscreen_grave": {
         "label": "Silkscreen",
-        "fits": "conflict, crackdowns, crowds, sudden ruptures, moments of alarm",
+        "energy": "quiet",
+        "fits": "conflict, crackdowns, sudden ruptures, alarm — grave news that still needs force",
         "brief": """
 MEDIUM — Hand-pulled silkscreen poster, two colours, printed fast.
-- High-contrast photographic source reduced to hard black shapes; mid-tones
-  dropped entirely.
-- Print artefacts are part of it: ink starving at the squeegee edge, blocked
-  screen speckle, a colour layer printed slightly off.
-- Raw, urgent, graphic. Composition reads at fifty metres.
-PALETTE — Black plus one loud flat colour (signal red, hazard orange, acid
-yellow) on unbleached stock.
+- High-contrast source reduced to hard black shapes, mid-tones dropped entirely.
+- Print artefacts are part of it: ink starving at the squeegee edge, screen
+  speckle, one layer printed slightly off register.
+- Urgent, graphic, severe. Reads at fifty metres.
+PALETTE — Black plus ONE flat colour, held to those two. Signal red or hazard
+orange for alarm; deep blue for grief.
 """,
     },
-    "surreal_object": {
-        "label": "Editorial surrealism",
-        "fits": "law, money, privacy, technology, abstractions with no obvious picture",
+    "engraved_grave": {
+        "label": "Engraving",
+        "energy": "quiet",
+        "fits": "death, disaster, war's aftermath, slow irreversible change — the stories that need silence",
         "brief": """
-MEDIUM — Single-object editorial surrealism: one everyday object, altered by one
-idea, lit like a still life.
-- Exactly one subject on a plain sweep of ground. The whole meaning lives in a
-  single alteration — a door with no wall, a key made of water, a chair growing roots.
-- Rendered in soft matte paint or coloured pencil with quiet grain; gentle,
-  directional light and one long soft shadow.
-- Calm, precise, slightly unsettling. Never a pile of symbols.
-PALETTE — Two or three desaturated tones and a single warm accent.
+MEDIUM — Wood engraving: white line cut into end-grain boxwood, printed
+letterpress.
+- Tone built ONLY from engraved line — parallel burin strokes, cross-hatching,
+  stipple. No washes, no gradients.
+- A deep near-black mass against open unworked white. Line direction follows
+  form.
+- Still, severe, wordless. This tradition exists for the days that deserve it —
+  do not use it to make an ordinary story look important.
+PALETTE — Warm black ink on cream. At most one muted accent.
 """,
     },
 }
 
 ORDER = list(TRADITIONS.keys())
+LOUD = [k for k, v in TRADITIONS.items() if v["energy"] == "loud"]
 
 
 def brief_for(tradition, concept, palette_hint=""):
     """Full image-model prompt for one poster."""
     t = TRADITIONS.get(tradition) or TRADITIONS[ORDER[0]]
-    palette_line = f"\nART DIRECTION NOTE — {palette_hint}\n" if palette_hint else ""
+    note = f"\nART DIRECTION NOTE — {palette_hint}\n" if palette_hint else ""
     return (
-        f"An original editorial illustration for the front of a daily news brief.\n\n"
+        f"An original editorial illustration for the cover of a daily news brief.\n\n"
         f"SUBJECT — {concept}\n"
-        f"{t['brief']}{palette_line}{SHARED}"
+        f"{t['brief']}{note}{SHARED}"
     )
 
 
 def tradition_menu():
     """The list handed to the editor model when it picks a look."""
-    return "\n".join(
-        f"  {key} — {TRADITIONS[key]['label']}: {TRADITIONS[key]['fits']}"
-        for key in ORDER
-    )
+    lines = []
+    for key in ORDER:
+        t = TRADITIONS[key]
+        tag = "" if t["energy"] == "loud" else "  [GRAVE NEWS ONLY]"
+        lines.append(f"  {key} — {t['label']}: {t['fits']}{tag}")
+    return "\n".join(lines)

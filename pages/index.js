@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-import { TYPE, exportPoster, paintFallback } from '../lib/poster';
+import { TYPE, inkFor, accentFor, exportPoster, paintFallback } from '../lib/poster';
 
 /**
  * TODAY — the daily edition.
@@ -189,53 +189,71 @@ export default function Today() {
       </nav>
 
       {/* ---------------------------------------------------------- front */}
-      <section className="front" ref={(el) => { sectionRefs.current[0] = el; }}>
+      <section
+        className="front"
+        style={{ '--accent': accentFor(stories[0] || {}) }}
+        ref={(el) => { sectionRefs.current[0] = el; }}
+      >
         <header className="mast">
           <h1>Today</h1>
-          <span>{formatDate(edition.date)}<br />No. {edition.issue}</span>
+          <div className="mastMeta">
+            <span className="mastDate">{formatDate(edition.date)}</span>
+            <span className="mastIssue">No. {edition.issue}</span>
+          </div>
         </header>
 
-        <div className="rule">
+        <div className="strap">
           <span>Ten stories, ten illustrations</span>
           <span>{edition.window_hours || 24}h of the wire</span>
         </div>
 
         {edition.sample ? (
           <div className="sample">
-            Sample edition — placeholder copy, not news. The first real edition is
-            set on the next daily run.
+            Sample edition — placeholder copy, not news.
           </div>
         ) : null}
 
-        <div className="grid">
+        <div className="mosaic">
           {stories.map((story, i) => (
-            <button key={story.id || i} className="cell" onClick={() => jumpTo(i)} aria-label={story.headline}>
+            <button
+              key={story.id || i}
+              className={`tile ${i === 0 ? 'hero' : ''}`}
+              onClick={() => jumpTo(i)}
+              aria-label={story.cover?.title || story.headline}
+            >
               {story.art?.image_url ? (
-                <img src={story.art.image_url} alt="" loading="lazy" />
+                <img src={story.art.image_url} alt="" loading={i < 4 ? 'eager' : 'lazy'} />
               ) : (
-                <span className="cellFallback" />
+                <span className="tileFallback" />
               )}
-              <b>{i + 1}</b>
+              <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              {i === 0 ? (
+                <span className="heroCap">
+                  <em>{story.tag}</em>
+                  <b>{story.cover?.title || story.headline}</b>
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
 
-        <ol className="contents">
-          {stories.map((story, i) => (
-            <li key={story.id || i}>
-              <button onClick={() => jumpTo(i)}>
-                <em>{story.tag}</em>
-                {story.headline}
-              </button>
-            </li>
-          ))}
-        </ol>
+        <div className="frontFoot">
+          <span className="cue">Tap a cover, or swipe up ↑</span>
+        </div>
       </section>
 
       {/* --------------------------------------------------------- posters */}
       {stories.map((story, i) => {
-        // No illustration means the dark fallback ground, which always takes light type.
-        const light = !story.art?.image_url || story.art.overlay !== 'dark';
+        // Inks are measured off each illustration, so no two pages read alike.
+        const topInk = inkFor(story, 'top');
+        const bottomInk = inkFor(story, 'bottom');
+        const frameVars = {
+          '--ink-top': topInk,
+          '--ink-bottom': bottomInk,
+          '--accent': accentFor(story),
+          '--scrim-top': topInk === '#ffffff' ? '0,0,0' : '255,255,255',
+          '--scrim-bottom': bottomInk === '#ffffff' ? '0,0,0' : '255,255,255',
+        };
         return (
           <section
             key={story.id || i}
@@ -244,7 +262,8 @@ export default function Today() {
             ref={(el) => { sectionRefs.current[i + 1] = el; }}
           >
             <div
-              className={`frame ${light ? 'light' : 'dark'}`}
+              className="frame"
+              style={frameVars}
               ref={(el) => { frameRefs.current[i] = el; }}
               role="button"
               tabIndex={0}
@@ -260,15 +279,11 @@ export default function Today() {
               <div className="scrimTop" />
               <div className="scrimBottom" />
 
-              <div className="tag">{spaced(story.tag)}</div>
-              {story.cover?.big ? (
-                <>
-                  <div className="big">{story.cover.big}</div>
-                  <div className="bigLabel">{story.cover.bigLabel}</div>
-                </>
-              ) : null}
-              <div className="hook">{story.cover?.hook || story.dek}</div>
-              <div className="foot">{footer}</div>
+              <div className="kicker">{spaced(story.tag)}</div>
+              <h2 className="title">{story.cover?.title || story.headline}</h2>
+              <div className="rule" />
+              <p className="standfirst">{story.cover?.standfirst || story.dek}</p>
+              <div className="colophon">{footer}</div>
 
               <button
                 className={`save ${saved[i] === 'done' ? 'done' : ''}`}
@@ -285,7 +300,7 @@ export default function Today() {
                 <span>{i + 1} of {stories.length}</span>
               </div>
 
-              <div className="kicker">{story.tag}</div>
+              <div className="storyKicker">{story.tag}</div>
               <h2>{story.headline}</h2>
               {story.dek ? <p className="dek">{story.dek}</p> : null}
 
@@ -370,95 +385,129 @@ export default function Today() {
 
         /* ---------------------------------------------------------- front */
         .front {
-          background: #f4f0e6; color: #111;
-          padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
-          display: flex; flex-direction: column;
+          background: #f4f0e6; color: #14140f;
+          padding: max(18px, env(safe-area-inset-top)) 18px calc(14px + env(safe-area-inset-bottom));
+          display: flex; flex-direction: column; gap: 8px;
         }
-        .mast { display: flex; justify-content: space-between; align-items: baseline;
-                border-bottom: 3px solid #111; padding-bottom: 8px; }
+        .mast {
+          display: flex; justify-content: space-between; align-items: flex-end;
+          border-bottom: 4px solid #14140f; padding-bottom: 2px;
+        }
         .mast h1 {
           font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
-          font-size: clamp(40px, 13vw, 92px); line-height: 1; letter-spacing: -.02em;
+          font-size: clamp(52px, 19vw, 132px); line-height: .84;
+          letter-spacing: -.045em; margin: 0;
         }
-        .mast span { font-size: 12px; font-weight: 600; text-align: right; line-height: 1.35; }
-        .rule {
-          display: flex; justify-content: space-between; font-size: 12px; font-weight: 500;
-          border-bottom: 1px solid #111; padding: 6px 0;
+        .mastMeta { text-align: right; line-height: 1.15; padding-bottom: 6px; }
+        .mastDate { display: block; font-size: 11px; font-weight: 600; letter-spacing: .01em; }
+        .mastIssue {
+          display: block; font-size: 11px; font-weight: 700; color: var(--accent);
+          letter-spacing: .08em;
+        }
+        .strap {
+          display: flex; justify-content: space-between; font-size: 10.5px;
+          font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+          padding-bottom: 2px; border-bottom: 1px solid rgba(20,20,15,.25);
         }
         .sample {
-          margin-top: 8px; padding: 7px 9px; border: 1px solid #111; background: #ffe9a8;
-          font-size: 11px; font-weight: 600; line-height: 1.35;
+          padding: 6px 8px; border: 1px solid #14140f; background: #ffe9a8;
+          font-size: 10.5px; font-weight: 700; line-height: 1.3;
         }
-        .grid {
-          flex: 1; min-height: 0; display: grid; gap: 6px; margin-top: 10px;
-          grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr);
+
+        .mosaic {
+          flex: 1; min-height: 0; display: grid; gap: 5px;
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: 1.35fr 1.35fr repeat(3, 1fr);
         }
-        .cell { position: relative; overflow: hidden; border-radius: 3px; padding: 0; background: #ddd; }
-        .cell img, .cellFallback { position: absolute; inset: 0; width: 100%; height: 100%;
-                                   object-fit: cover; display: block; }
-        .cellFallback { background: #1b1b1b; }
-        .cell b {
-          position: absolute; left: 5px; top: 3px; font-size: 10px; font-weight: 700;
+        .tile {
+          position: relative; overflow: hidden; padding: 0; background: #ddd8cc;
+          border-radius: 2px;
+        }
+        .tile.hero { grid-column: 1 / -1; grid-row: 1 / 3; }
+        .tile img, .tileFallback {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+          object-fit: cover; display: block;
+        }
+        .tile.hero img { object-position: center 28%; }
+        .tileFallback { background: #1b1b1b; }
+        .num {
+          position: absolute; left: 5px; top: 3px; z-index: 2;
+          font-size: 10px; font-weight: 800; letter-spacing: .04em;
           color: #fff; mix-blend-mode: difference;
         }
-        .contents { margin-top: 12px; list-style: none; font-size: 13px; line-height: 1.3;
-                    max-height: 32svh; overflow-y: auto; }
-        .contents li { border-bottom: 1px solid rgba(0,0,0,.12); }
-        .contents button { display: block; width: 100%; text-align: left; padding: 7px 0; }
-        .contents em {
-          display: inline-block; font-style: normal; font-weight: 700; font-size: 10px;
-          letter-spacing: .07em; margin-right: 7px; opacity: .55; min-width: 62px;
+        .heroCap {
+          position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+          padding: 26px 12px 10px; text-align: left;
+          background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.72));
+          color: #fff;
+        }
+        .heroCap em {
+          display: block; font-style: normal; font-weight: 800; font-size: 9.5px;
+          letter-spacing: .14em; color: var(--accent); margin-bottom: 3px;
+        }
+        .heroCap b {
+          display: block; font-family: 'Playfair Display', Georgia, serif;
+          font-weight: 900; font-size: clamp(17px, 5.2vw, 26px); line-height: 1.08;
+          letter-spacing: -.01em;
+        }
+        .frontFoot { display: flex; justify-content: center; padding-top: 2px; }
+        .cue {
+          font-size: 10.5px; font-weight: 600; letter-spacing: .09em;
+          text-transform: uppercase; opacity: .55;
         }
 
         /* --------------------------------------------------------- poster */
         .frame {
           position: relative; height: 100%; width: 100%; max-width: calc(100svh * 9 / 16);
           margin: 0 auto; overflow: hidden; cursor: pointer;
-          --ink: #fff; --scrim: 0,0,0;
         }
-        .frame.dark { --ink: #111; --scrim: 255,255,255; }
         .artwork { position: absolute; inset: 0; width: 100%; height: 100%;
                    object-fit: cover; display: block; }
         .scrimTop {
           position: absolute; left: 0; right: 0; top: 0; height: ${TYPE.scrimTop * 100}%;
-          background: linear-gradient(rgba(var(--scrim), ${TYPE.scrimTopAlpha}), rgba(var(--scrim), 0));
+          background: linear-gradient(rgba(var(--scrim-top), ${TYPE.scrimTopAlpha}),
+                                      rgba(var(--scrim-top), 0));
         }
         .scrimBottom {
           position: absolute; left: 0; right: 0; bottom: 0; height: ${TYPE.scrim * 100}%;
-          background: linear-gradient(rgba(var(--scrim), 0), rgba(var(--scrim), ${TYPE.scrimAlpha}));
+          background: linear-gradient(rgba(var(--scrim-bottom), 0),
+                                      rgba(var(--scrim-bottom), ${TYPE.scrimAlpha}));
         }
 
-        .tag, .big, .bigLabel, .hook, .foot {
+        .kicker, .title, .rule, .standfirst, .colophon {
           position: absolute; left: ${TYPE.margin * 100}%;
           width: ${(1 - TYPE.margin * 2) * 100}%;
-          color: var(--ink); pointer-events: none;
+          pointer-events: none; margin: 0;
         }
-        .tag {
-          top: calc(var(--ph) * ${TYPE.tagY}); transform: translateY(-100%);
-          font-weight: 700; font-size: calc(var(--pw) * 0.03); letter-spacing: .02em;
+        .kicker {
+          top: calc(var(--ph) * ${TYPE.kickerY}); transform: translateY(-100%);
+          color: var(--accent);
+          font-weight: 700; font-size: calc(var(--pw) * 0.032); letter-spacing: .02em;
         }
-        .big {
-          top: calc(var(--ph) * ${TYPE.bigY}); transform: translateY(-100%);
-          font-family: Anton, Impact, sans-serif; line-height: .82;
-          font-size: calc(var(--pw) * ${TYPE.bigSize});
-          white-space: nowrap; overflow: hidden;
-        }
-        .bigLabel {
-          top: calc(var(--ph) * ${TYPE.bigY} + var(--pw) * ${TYPE.labelGap});
-          font-weight: 600; font-size: calc(var(--pw) * ${TYPE.labelSize});
-          text-transform: uppercase; letter-spacing: .02em; opacity: .88;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .hook {
-          bottom: calc(var(--ph) * ${TYPE.hookBottom} - var(--pw) * ${TYPE.hookSize} * 0.28);
-          font-family: 'Playfair Display', Georgia, serif; font-weight: 700;
-          font-size: calc(var(--pw) * ${TYPE.hookSize}); line-height: ${TYPE.hookLead};
+        .title {
+          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.82em);
+          color: var(--ink-top);
+          font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
+          font-size: calc(var(--pw) * ${TYPE.titleSize});
+          line-height: ${TYPE.titleLead}; letter-spacing: -0.015em;
           text-wrap: balance;
         }
-        .foot {
-          top: calc(var(--ph) * ${TYPE.footY}); transform: translateY(-100%);
+        .rule {
+          bottom: calc(var(--ph) * ${TYPE.footBottom} + var(--pw) * 0.115);
+          width: 13%; height: calc(var(--pw) * 0.006);
+          background: var(--accent); border-radius: 2px;
+        }
+        .standfirst {
+          bottom: calc(var(--ph) * ${TYPE.footBottom} - var(--pw) * ${TYPE.footSize} * 0.34);
+          color: var(--ink-bottom);
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.footSize});
-          letter-spacing: .06em; opacity: .7;
+          line-height: ${TYPE.footLead};
+        }
+        .colophon {
+          top: calc(var(--ph) * ${TYPE.colophonY}); transform: translateY(-100%);
+          color: var(--ink-bottom); opacity: .68;
+          font-weight: 500; font-size: calc(var(--pw) * ${TYPE.colophonSize});
+          letter-spacing: .06em;
         }
 
         .save {
@@ -490,7 +539,7 @@ export default function Today() {
           font-family: 'Inter Tight', system-ui, sans-serif; font-size: 12px; font-weight: 600;
           border-bottom: 2px solid #111; padding-bottom: 8px;
         }
-        .kicker {
+        .storyKicker {
           margin-top: 16px; font-family: 'Inter Tight', system-ui, sans-serif;
           font-size: 11px; font-weight: 700; letter-spacing: .09em;
         }

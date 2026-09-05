@@ -36,7 +36,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from rss_sources import RSS_FEEDS
-from art_direction import TRADITIONS, ORDER as TRADITION_ORDER, brief_for, tradition_menu
+from art_direction import (TRADITIONS, ORDER as TRADITION_ORDER, LOUD,
+                           brief_for, tradition_menu)
 
 try:
     import urllib3
@@ -477,24 +478,27 @@ Return JSON with exactly these keys:
   "changes": "one sentence: what this changes for an ordinary reader",
   "unchanged": "one sentence: what it does NOT change — puncture the overreaction",
   "cover": {
-    "big": "the cover line's number or word, MAX 7 characters, e.g. 2,700 / 1 / OPEN / 40%%",
-    "big_label": "max 34 chars, what the big thing counts",
-    "hook": "max 90 chars, the line set over the illustration — a fact, not a slogan"
+    "title": "the poster's headline, set large across the top. 4-8 words, max 48 characters. Punchy and concrete — it must name the actual subject, not gesture at it. Not a number, not a slogan.",
+    "standfirst": "the line set across the foot of the poster: 20-35 words, two sentences at most. Give the reader the specifics — who, where, how many, how much, when. This is the detail the title cannot carry."
   },
   "art": {
-    "tradition": "one of the keys below",
-    "concept": "2-3 sentences briefing an illustrator on WHAT to draw. One idea, one image. Describe a concrete scene or a single altered object that carries the meaning — not a list of symbols, not a diagram of the news. No text or lettering anywhere in it. No real, identifiable people.",
-    "note": "one short line of art direction: mood, light, or a palette steer"
+    "tradition": "one of the keys below — pick the one this STORY calls for, not the one that sounds impressive",
+    "concept": "2-3 sentences briefing an illustrator on WHAT to draw. NAME THE ACTUAL THINGS: if the story is about Revolut, the Revolut card is in the picture; if it is about a wolf, draw the wolf; if it is about Sydney, draw Sydney. One idea, one image, staged concretely. No text or lettering in it (a brand's own logo is the only exception). Real named individuals cannot be drawn — use their office and attributes instead, never a face.",
+    "note": "one short line of art direction: the mood and the palette you want"
   }
 }
 
-ILLUSTRATION TRADITIONS — pick the one the story actually calls for:
+ILLUSTRATION TRADITIONS — pick for fit:
 %(traditions)s
 
+Most stories should get a LOUD, colourful, characterful treatment. The two
+marked GRAVE NEWS ONLY are for death, war and disaster — using them on an
+ordinary story makes the edition look funereal, so don't.
+
 Writing the concept is the important part. Bad: "a globe with arrows and charts
-around it". Good: "A harvested field seen from low down, the soil opened in one
-clean circular void near the horizon; a parked tractor small at the left edge,
-its long shadow reaching the rim." Concrete, staged, one idea. JSON only."""
+around it". Good: "A giant matte-black Revolut card stands upright like a
+monolith, logo legible, euro coins spilling from a slot at its base while three
+tiny figures scramble to catch them." Specific, staged, one idea. JSON only."""
 
 
 def write_story(c):
@@ -508,8 +512,8 @@ def write_story(c):
             "paragraphs": [lead["description"] or lead["title"]] * 3,
             "changes": "Dry run.",
             "unchanged": "Dry run.",
-            "cover": {"big": str(c["source_count"]), "big_label": "outlets carried it",
-                      "hook": lead["title"][:90]},
+            "cover": {"title": lead["title"][:48],
+                      "standfirst": (lead["description"] or lead["title"])[:220]},
             "art": {"tradition": TRADITION_ORDER[c["id"] % len(TRADITION_ORDER)],
                     "concept": lead["title"], "note": ""},
         }
@@ -527,18 +531,22 @@ def write_story(c):
 
 
 def assign_traditions(written):
-    """No two posters in one edition are drawn the same way."""
-    used = set()
+    """
+    The model picks the tradition that fits the story; this only breaks up
+    monotony. Up to two posters may share a look — beyond that, the third is
+    moved to the nearest unused one, preferring the loud half of the set so an
+    ordinary day doesn't come out looking like a funeral.
+    """
+    used = {}
     for i, w in enumerate(written):
         art = w.setdefault("art", {})
-        tradition = art.get("tradition")
-        if tradition not in TRADITIONS or tradition in used:
-            tradition = next(
-                (t for t in TRADITION_ORDER if t not in used),
-                TRADITION_ORDER[i % len(TRADITION_ORDER)],
-            )
-        art["tradition"] = tradition
-        used.add(tradition)
+        t = art.get("tradition")
+        if t not in TRADITIONS or used.get(t, 0) >= 2:
+            spare = [k for k in LOUD if used.get(k, 0) == 0] or \
+                    [k for k in TRADITION_ORDER if used.get(k, 0) < 2]
+            t = spare[0] if spare else TRADITION_ORDER[i % len(TRADITION_ORDER)]
+        art["tradition"] = t
+        used[t] = used.get(t, 0) + 1
     return written
 
 
@@ -595,23 +603,60 @@ def shrink(raw):
         return raw
 
 
-def tone_of(image_bytes):
-    """Average colour of the lower third, and whether type over it should be light."""
+def palette_of(image_bytes):
+    """
+    Read the artwork so the type can be keyed to it.
+
+    The title sits across the top and the standfirst across the foot, so each
+    band gets its own ink decision, and one saturated colour is lifted out of
+    the picture for the kicker — which is what stops every poster in the
+    edition from looking like the same page.
+    """
+    fallback = {"tint": "#111111", "topInk": "light", "bottomInk": "light",
+                "accent": "#ffffff"}
     try:
         from PIL import Image
-        import io
+        import io, colorsys
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         w, h = img.size
-        strip = img.crop((0, int(h * 0.62), w, h)).resize((24, 12))
-        pixels = list(strip.getdata())
-        n = len(pixels)
-        r = sum(p[0] for p in pixels) // n
-        g = sum(p[1] for p in pixels) // n
-        b = sum(p[2] for p in pixels) // n
-        luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
-        return f"#{r:02x}{g:02x}{b:02x}", ("light" if luma < 0.55 else "dark")
+
+        def band(y0, y1):
+            strip = img.crop((0, int(h * y0), w, int(h * y1))).resize((32, 16))
+            px = list(strip.getdata())
+            n = len(px)
+            r = sum(p[0] for p in px) // n
+            g = sum(p[1] for p in px) // n
+            b = sum(p[2] for p in px) // n
+            luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+            return (r, g, b), luma
+
+        (_, _, _), top_luma = band(0.0, 0.34)[0], band(0.0, 0.34)[1]
+        (br, bg, bb), bottom_luma = band(0.60, 1.0)
+
+        # The most saturated colour with enough presence to feel deliberate.
+        small = img.resize((80, 120)).quantize(colors=12, method=Image.MEDIANCUT)
+        pal = small.getpalette()[: 12 * 3]
+        counts = dict(small.getcolors() or [])
+        best, best_score = None, -1.0
+        for i in range(12):
+            r, g, b = pal[i * 3: i * 3 + 3]
+            hh, ll, ss = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            share = counts.get(i, 0) / 9600.0
+            if ll < 0.18 or ll > 0.92:
+                continue
+            score = ss * (0.45 + share)     # saturated, but actually present
+            if score > best_score:
+                best, best_score = (r, g, b), score
+        accent = "#%02x%02x%02x" % (best or (255, 255, 255))
+
+        return {
+            "tint": f"#{br:02x}{bg:02x}{bb:02x}",
+            "topInk": "light" if top_luma < 0.55 else "dark",
+            "bottomInk": "light" if bottom_luma < 0.55 else "dark",
+            "accent": accent,
+        }
     except Exception:
-        return "#111111", "light"
+        return fallback
 
 
 def upload_image(image_bytes, mime, date, story_id):
@@ -654,10 +699,8 @@ def commission(story, date):
     if not data:
         log(f"    ! no illustration for {story['id']} ({art['tradition']})")
         return story
-    tint, overlay = tone_of(data)
+    art.update(palette_of(data))
     art["image_url"] = upload_image(data, mime, date, story["id"])
-    art["tint"] = tint
-    art["overlay"] = overlay
     art["bytes"] = len(data)
     return story
 
@@ -757,9 +800,8 @@ def build(now):
             "importance": round(c["importance"]),
             "instant": round(instant_score(c), 1),
             "cover": {
-                "big": str(cover.get("big", ""))[:7],
-                "bigLabel": str(cover.get("big_label", ""))[:40],
-                "hook": str(cover.get("hook", w.get("dek", "")))[:110],
+                "title": str(cover.get("title") or w.get("headline", ""))[:60],
+                "standfirst": str(cover.get("standfirst") or w.get("dek", ""))[:260],
             },
             "art": {
                 "tradition": art.get("tradition"),
