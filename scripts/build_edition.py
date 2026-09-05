@@ -68,7 +68,7 @@ GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:ge
 IMAGE_ASPECT = "9:16"        # a phone screen, full bleed
 IMAGE_BUCKET = "images"      # existing public Supabase Storage bucket
 IMAGE_PREFIX = "today"
-IMAGE_RETRIES = 3
+IMAGE_RETRIES = 4
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "public", "editions")
@@ -262,7 +262,19 @@ def cluster(articles):
 # 3 · Importance from Gemini, then the instant ranking
 # ----------------------------------------------------------------------------
 
-def gemini(prompt, model, temperature=0.3, max_tokens=4096, retries=3):
+def retry_after(response, attempt, cap=75):
+    """Seconds to wait after a 429. Google tells us how long — believe it."""
+    try:
+        for detail in response.json().get("error", {}).get("details", []):
+            delay = detail.get("retryDelay")
+            if delay:
+                return min(cap, float(str(delay).rstrip("s")) + 2)
+    except Exception:
+        pass
+    return min(cap, 5 * (2 ** attempt))
+
+
+def gemini(prompt, model, temperature=0.3, max_tokens=4096, retries=5):
     key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not key:
         raise RuntimeError("GEMINI_API_KEY (or GOOGLE_API_KEY) is not set")
@@ -283,6 +295,9 @@ def gemini(prompt, model, temperature=0.3, max_tokens=4096, retries=3):
                 text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
                 return json.loads(re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M))
             last = f"HTTP {r.status_code}: {r.text[:200]}"
+            if r.status_code == 429:
+                time.sleep(retry_after(r, attempt))
+                continue
         except Exception as exc:
             last = str(exc)
         time.sleep(2 ** attempt)
@@ -387,6 +402,24 @@ def pick_ten(clusters):
             break
 
     return sorted(picked, key=instant_score, reverse=True)[:EDITION_SIZE]
+
+
+def reserves_for(clusters, chosen):
+    """Everything that didn't make the ten, best first — the bench."""
+    taken = {c["id"] for c in chosen}
+    return [c for c in sorted(clusters, key=instant_score, reverse=True)
+            if c["id"] not in taken]
+
+
+def next_reserve(bench, kept):
+    """Pull the best reserve that doesn't unbalance what we already have."""
+    counts = {}
+    for c in kept:
+        counts[c["category"]] = counts.get(c["category"], 0) + 1
+    for i, c in enumerate(bench):
+        if counts.get(c["category"], 0) < MAX_PER_CATEGORY:
+            return bench.pop(i)
+    return bench.pop(0) if bench else None
 
 
 # ----------------------------------------------------------------------------
@@ -532,6 +565,11 @@ def generate_image(prompt):
                     inline = part.get("inlineData")
                     if inline and inline.get("data"):
                         return base64.b64decode(inline["data"]), inline.get("mimeType", "image/png")
+            elif r.status_code == 429:
+                wait = retry_after(r, attempt)
+                log(f"    image rate-limited, waiting {wait:.0f}s")
+                time.sleep(wait)
+                continue
             else:
                 log(f"    image HTTP {r.status_code}: {r.text[:160]}")
         except Exception as exc:
@@ -632,25 +670,50 @@ def build(now):
             f"{c['age_hours']:4.1f}h | {c['source_count']} outlets] {c['lead']['title'][:78]}")
 
     log("Writing ten stories ...")
-    written = [None] * len(ten)
-
-    def run(i, c):
-        try:
-            return i, write_story(c)
-        except Exception as exc:
-            log(f"  ! writing story {i + 1} failed: {exc}")
-            return i, None
-
-    with ThreadPoolExecutor(max_workers=5) as pool:
-        for fut in as_completed([pool.submit(run, i, c) for i, c in enumerate(ten)]):
-            i, w = fut.result()
-            written[i] = w
-
+    bench = reserves_for(shortlist, ten)
     kept, drafts = [], []
-    for c, w in zip(ten, written):
-        if w and w.get("headline"):
-            kept.append(c)
-            drafts.append(w)
+    batch = list(ten)
+
+    # A story that fails to write is replaced from the bench and tried again.
+    # The edition is ten stories; coming up short is not an option it has.
+    for attempt in range(4):
+        if not batch:
+            break
+        results = [None] * len(batch)
+
+        def run(i, c):
+            try:
+                return i, write_story(c)
+            except Exception as exc:
+                log(f"  ! writing '{c['lead']['title'][:50]}' failed: {exc}")
+                return i, None
+
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            for fut in as_completed([pool.submit(run, i, c) for i, c in enumerate(batch)]):
+                i, w = fut.result()
+                results[i] = w
+
+        failed = 0
+        for c, w in zip(batch, results):
+            if w and w.get("headline"):
+                kept.append(c)
+                drafts.append(w)
+            else:
+                failed += 1
+
+        if len(kept) >= EDITION_SIZE or not bench:
+            break
+        batch = []
+        while len(kept) + len(batch) < EDITION_SIZE:
+            nxt = next_reserve(bench, kept + batch)
+            if not nxt:
+                break
+            batch.append(nxt)
+        if batch:
+            log(f"  {failed} failed — bringing in {len(batch)} from the bench "
+                f"(attempt {attempt + 2})")
+
+    kept, drafts = kept[:EDITION_SIZE], drafts[:EDITION_SIZE]
     drafts = assign_traditions(drafts)
 
     date = now.strftime("%Y-%m-%d")
@@ -690,7 +753,7 @@ def build(now):
         })
 
     log("Commissioning ten illustrations ...")
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=2) as pool:
         futures = {pool.submit(commission, story, date): story for story in out}
         done = 0
         for fut in as_completed(futures):
