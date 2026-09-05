@@ -482,30 +482,30 @@ export default function Today() {
         .kicker {
           top: calc(var(--ph) * ${TYPE.kickerY}); transform: translateY(-100%);
           color: var(--accent);
-          font-weight: 700; font-size: calc(var(--pw) * 0.032); letter-spacing: .02em;
+          font-weight: 700; font-size: calc(var(--pw) * 0.03); letter-spacing: .02em;
         }
         .title {
-          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.82em);
+          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.8em);
           color: var(--ink-top);
           font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
           font-size: calc(var(--pw) * ${TYPE.titleSize});
-          line-height: ${TYPE.titleLead}; letter-spacing: -0.015em;
+          line-height: ${TYPE.titleLead}; letter-spacing: -.015em;
           text-wrap: balance;
         }
         .rule {
-          bottom: calc(var(--ph) * ${TYPE.footBottom} + var(--pw) * 0.115);
+          top: calc(var(--ph) * ${TYPE.ruleY});
           width: 13%; height: calc(var(--pw) * 0.006);
           background: var(--accent); border-radius: 2px;
         }
         .standfirst {
-          bottom: calc(var(--ph) * ${TYPE.footBottom} - var(--pw) * ${TYPE.footSize} * 0.34);
+          top: calc(var(--ph) * ${TYPE.footTop}); transform: translateY(-0.8em);
           color: var(--ink-bottom);
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.footSize});
           line-height: ${TYPE.footLead};
         }
         .colophon {
           top: calc(var(--ph) * ${TYPE.colophonY}); transform: translateY(-100%);
-          color: var(--ink-bottom); opacity: .68;
+          color: var(--ink-bottom); opacity: .62;
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.colophonSize});
           letter-spacing: .06em;
         }

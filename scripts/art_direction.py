@@ -79,14 +79,55 @@ BE SPECIFIC — DRAW THE ACTUAL THING
 - If the illustration could be swapped onto a different story without anyone
   noticing, it has failed.
 
-FORMAT
-- Tall portrait, a full-bleed magazine cover illustration.
-- THE LOWER THIRD MUST STAY QUIET — large type is set across it. Give that band
-  open ground or flat unbroken colour. Detail belongs above it.
-- The poster crops about 15% from the left and right edges, so keep anything
-  load-bearing off the side margins. Bleed the background to the edges.
-- No borders, no frames, no mockups, no vignette, no rounded corners, no
-  photographed-paper effects, no shadow under a fake sheet of paper.
+FORMAT — THIS IS A POSTER, NOT A FULL-BLEED PICTURE
+Think of the page the way a poster designer does: a headline zone at the top,
+one strong image in the middle, a text zone at the foot. The type is printed,
+not floated over the artwork, so the artwork has to leave room for it.
+
+- THE TOP 24% AND THE BOTTOM 32% OF THE IMAGE MUST BE COMPLETELY EMPTY.
+  Nothing there but the flat background colour: no subject, no texture, no
+  pattern, no gradient, no stray marks, no drifting particles, no horizon. Big
+  type is printed across both bands and has to sit on clean flat colour.
+- EVERYTHING YOU DRAW LIVES IN THE MIDDLE BAND, between roughly 26% and 68% of
+  the height. Centre the subject there and give it room to breathe. No part of
+  it may stray into either empty band — not a wingtip, not a shadow, not a
+  wisp of smoke.
+- The background colour runs edge to edge and top to bottom, unbroken and
+  even, so the empty bands are the same flat colour as the ground behind the
+  subject.
+- The subject should be BOLD at that size — one strong shape that carries the
+  whole page. A poster is read at a glance from across a room.
+- The poster crops about 15% off the left and right edges, so keep the subject
+  and anything load-bearing well clear of the side margins.
+- No borders, frames, mockups, vignettes, rounded corners, or fake sheets of
+  paper with shadows under them.
+
+POSTER COMPOSITION — COMMIT TO IT
+The empty bands are for type. The middle band is not a polite margin around a
+small drawing — it is the poster, and it must be FILLED.
+
+- THE SUBJECT IS LARGE. It fills the middle band from its top to its bottom and
+  runs off BOTH side edges, or is cropped by them. A small object floating in
+  the centre of a pale field is the failure mode of this format and the most
+  common way a page comes out looking weak.
+- ONE dominant shape against ONE flat ground, with a silhouette so clear the
+  page still reads as a thumbnail.
+- Use a poster designer's moves: extreme scale contrast, bold cropping so a
+  familiar thing runs out of frame, a single strong diagonal, a symmetry
+  deliberately broken, an object seen far closer than expected.
+- THE GROUND IS A COLOUR DECISION, and it is most of the page — the empty top
+  and bottom bands are the same colour as the space behind the subject, so that
+  colour IS the poster. Choose it for this story and commit: a deep ultramarine,
+  a hot vermilion, a dense forest green, a hard yellow. Cream and white are
+  choices you have to earn; reaching for them by default gives you a weak,
+  washed-out page every time.
+- DRAW THE MOMENT, NOT THE AFTERMATH. The strongest posters catch something
+  mid-event — arriving, tipping, tearing, spilling, giving way — a fraction
+  before or after the thing happens. A subject standing still and facing front
+  is the dullest choice available. (Grave news is the exception: there,
+  stillness is the correct register.)
+- Stand back and check: from across a room, does this stop someone? If it is
+  merely tasteful, it has failed.
 
 ABSOLUTE CONSTRAINTS
 - NO text, letters, numbers, words, captions, signatures or speech bubbles. The

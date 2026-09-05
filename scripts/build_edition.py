@@ -479,7 +479,7 @@ Return JSON with exactly these keys:
   "unchanged": "one sentence: what it does NOT change — puncture the overreaction",
   "cover": {
     "title": "the poster's headline, set large across the top. 4-8 words, max 48 characters. Punchy and concrete — it must name the actual subject, not gesture at it. Not a number, not a slogan.",
-    "standfirst": "the line set across the foot of the poster: 20-35 words, two sentences at most. Give the reader the specifics — who, where, how many, how much, when. This is the detail the title cannot carry."
+    "standfirst": "the paragraph set across the foot of the poster: 40-60 words, two or three sentences. This is the only text most readers will see, so make it carry the story on its own — who, where, how many, how much, when, and what happens next. Specifics, not summary."
   },
   "art": {
     "tradition": "one of the keys below — pick the one this STORY calls for, not the one that sounds impressive",
@@ -643,6 +643,11 @@ Rules for every idea:
 - Real named people cannot be drawn. Use the office and its attributes.
 - It must be makeable in the medium above, and its lower third must be quiet.
 - Make them genuinely different from each other — not five framings of one idea.
+- AT LEAST THREE OF THE FIVE MUST HAVE SOMETHING HAPPENING. A moment caught
+  mid-event: something arriving, falling, tearing, spilling, being pulled
+  apart, queueing, running out, about to touch. An object sitting still and
+  centred is the easiest idea to have and the dullest to look at — it is a
+  diagram, not a poster. Put a verb in the picture.
 
 Return JSON:
 {"ideas":[{"device":"<key>","concept":"2-3 sentences: what is in the picture and how it is staged","second_beat":"the thing the reader notices a moment later, in one line"}]}"""
@@ -664,7 +669,12 @@ Judge them hard, in this order:
 3. Is it a stock symbol dressed up? Kill it.
 4. Can it actually be made in %(label)s, and does its lower third stay quiet
    enough to set type across?
-5. Would someone who already knows this news still stop on it?
+5. Is anything HAPPENING? A still, centred object — however cleverly chosen —
+   is a diagram. Prefer the idea with a verb in it: the moment before, the
+   moment during, the moment it gives way. The exception is grave news, where
+   stillness is the right register and drama would be vulgar.
+6. Would someone who already knows this news still stop on it? If it is merely
+   tasteful, it has failed.
 
 Pick the strongest, then TIGHTEN it: cut anything the idea does not need,
 sharpen the staging, make the specific named things unmistakable. Remember that
@@ -790,7 +800,7 @@ def _contrast(a, b):
     return (hi + 0.05) / (lo + 0.05)
 
 
-def _ink_from(band, accent, target=7.0):
+def _ink_from(band, accent, target=8.0):
     """
     A type colour drawn OUT OF the picture rather than defaulted to white.
 
@@ -833,8 +843,10 @@ def palette_of(image_bytes):
             n = len(px)
             return tuple(sum(p[i] for p in px) // n for i in range(3))
 
-        top = band(0.0, 0.34)
-        bottom = band(0.60, 1.0)
+        # The brief now keeps these bands empty and flat, so a measurement of
+        # them is a measurement of exactly what the type will sit on.
+        top = band(0.0, 0.22)
+        bottom = band(0.70, 1.0)
 
         # The most saturated colour with enough presence to feel deliberate.
         small = img.resize((80, 120)).quantize(colors=12, method=Image.MEDIANCUT)
@@ -1007,7 +1019,7 @@ def build(now):
             "instant": round(instant_score(c), 1),
             "cover": {
                 "title": str(cover.get("title") or w.get("headline", ""))[:60],
-                "standfirst": str(cover.get("standfirst") or w.get("dek", ""))[:260],
+                "standfirst": str(cover.get("standfirst") or w.get("dek", ""))[:420],
             },
             "art": {
                 "tradition": art.get("tradition"),
