@@ -79,21 +79,19 @@ BE SPECIFIC — DRAW THE ACTUAL THING
 - If the illustration could be swapped onto a different story without anyone
   noticing, it has failed.
 
-FORMAT — THIS IS A POSTER, NOT A FULL-BLEED PICTURE
-Think of the page the way a poster designer does: one strong image filling the
-top, and a quiet block at the foot where the headline and the text are printed.
-
-- THE ILLUSTRATION FILLS THE TOP 66% OF THE FRAME, edge to edge, right up to
-  the top of the image. Nothing is reserved at the top — go all the way up.
-- THE BOTTOM 34% MUST BE COMPLETELY EMPTY. Nothing there but the flat
-  background colour: no subject, no texture, no pattern, no gradient, no stray
-  marks, no horizon, no shadow. The headline and a paragraph of text are
-  printed across that band and must sit on clean flat colour. Not a wingtip,
-  not a wisp of smoke may cross into it.
-- The background colour runs edge to edge and top to bottom, unbroken, so the
-  empty foot is the same flat colour as the ground behind the subject.
-- The poster crops about 15% off the left and right edges, so keep the subject
-  and anything load-bearing clear of the side margins.
+FORMAT — FULL BLEED, EDGE TO EDGE
+- The artwork fills the ENTIRE frame, corner to corner. No margins, no white
+  border, no floating drawing sitting on a page. Whatever the ground colour is,
+  it runs off all four edges.
+- A solid colour block is printed across the bottom third afterwards, carrying
+  the headline and text, so the lower third of your picture will be covered.
+  Compose for that: keep the subject and everything that matters in the TOP
+  TWO THIRDS. Nothing important below.
+- The subject is LARGE. It fills the upper two thirds and is cropped by the
+  left and right edges of the frame. A small object floating in the middle of
+  an empty field is the failure mode of this format.
+- The poster crops about 15% off the left and right edges, so keep anything
+  load-bearing away from the extreme sides.
 - No borders, frames, mockups, vignettes, rounded corners, or fake sheets of
   paper with shadows under them.
 
@@ -101,22 +99,21 @@ POSTER COMPOSITION — COMMIT TO IT
 The empty bands are for type. The middle band is not a polite margin around a
 small drawing — it is the poster, and it must be FILLED.
 
-- THE SUBJECT IS LARGE AND FILLS ITS BAND. It runs from the top edge of the
-  frame down to the foot band, and off BOTH side edges, or is cropped by them.
-  A small object floating in the centre of a pale field is the failure mode of
-  this format and the most common way a page comes out looking weak. Err on
-  the side of too big.
+- THE SUBJECT IS LARGE AND FILLS THE FRAME. It runs from the top edge down
+  into the lower third, and off BOTH side edges. Err hard on the side of too
+  big — cropping the subject is good, shrinking it is not.
 - ONE dominant shape against ONE flat ground, with a silhouette so clear the
   page still reads as a thumbnail.
 - Use a poster designer's moves: extreme scale contrast, bold cropping so a
   familiar thing runs out of frame, a single strong diagonal, a symmetry
   deliberately broken, an object seen far closer than expected.
-- THE GROUND IS A COLOUR DECISION, and it is most of the page — the empty top
-  and bottom bands are the same colour as the space behind the subject, so that
-  colour IS the poster. Choose it for this story and commit: a deep ultramarine,
-  a hot vermilion, a dense forest green, a hard yellow. Cream and white are
-  choices you have to earn; reaching for them by default gives you a weak,
-  washed-out page every time.
+- THE GROUND MUST BE A SATURATED COLOUR. It fills every part of the frame the
+  subject does not, so it IS the poster. Commit to one: deep ultramarine, hot
+  vermilion, dense forest green, hard chrome yellow, deep plum, burnt orange.
+  WHITE, CREAM, BEIGE AND PALE GREY GROUNDS ARE FORBIDDEN unless the medium
+  below is a photograph or an engraving — a drawing sitting on white paper
+  reads as a sketch on a page, not as a printed poster, and it is the single
+  most common way these come out looking weak.
 - DRAW THE MOMENT, NOT THE AFTERMATH. The strongest posters catch something
   mid-event — arriving, tipping, tearing, spilling, giving way — a fraction
   before or after the thing happens. A subject standing still and facing front

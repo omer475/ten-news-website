@@ -621,7 +621,7 @@ def write_story(c):
 
 
 MAX_PER_TRADITION = 2
-MAX_PER_FAMILY = 3
+MAX_PER_FAMILY = 2
 MIN_MINIMAL = 2          # at least this many very spare posters
 MIN_DENSE = 2            # and this many that reward looking closely
 
@@ -1018,6 +1018,7 @@ def palette_of(image_bytes):
     plus the accent, is what stops ten posters reading as one template.
     """
     fallback = {"tint": "#111111", "accent": "#ffffff",
+                "panel": "#14140f", "panelInk": "#ffffff",
                 "titleTop": "#ffffff", "titleBottom": "#ffffff",
                 "topInk": "light", "bottomInk": "light"}
     try:
@@ -1054,7 +1055,16 @@ def palette_of(image_bytes):
                 best, best_score = rgb, score
         accent = best or (230, 230, 230)
 
+        # The type is printed on a solid block, not floated over the picture.
+        # Its colour is lifted from the artwork so each page reads as one piece.
+        panel = accent if 0.06 < _luma(accent) < 0.72 else (
+            tuple(max(0, int(c * 0.35)) for c in bottom) if _luma(bottom) > 0.4
+            else tuple(min(255, int(c * 0.6 + 90)) for c in bottom))
+        panel_ink = (255, 255, 255) if _contrast((255, 255, 255), panel) >= 4.5 else (17, 17, 17)
+
         return {
+            "panel": "#%02x%02x%02x" % panel,
+            "panelInk": "#%02x%02x%02x" % panel_ink,
             "tint": "#%02x%02x%02x" % bottom,
             "accent": "#%02x%02x%02x" % accent,
             "titleTop": _ink_from(top, accent),

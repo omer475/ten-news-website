@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-import { TYPE, inkFor, accentFor, bandIsDark, exportPoster, paintFallback } from '../lib/poster';
+import { TYPE, accentFor, panelFor, panelInkFor, exportPoster, paintFallback } from '../lib/poster';
 
 /**
  * TODAY — the daily edition.
@@ -41,6 +41,72 @@ function spaced(text) {
   return String(text || '').toUpperCase().split('').join(' ');
 }
 
+/**
+ * A clip that never shows its seam.
+ *
+ * Sora returns a four-second clip whose last frame is not its first, so a plain
+ * `loop` snaps back and the eye catches it every time. Two copies play a fade
+ * apart and cross-dissolve through the join, so the motion reads as continuous.
+ */
+function LoopVideo({ src, poster, eager }) {
+  const a = useRef(null);
+  const b = useRef(null);
+  const FADE = 0.7;
+
+  useEffect(() => {
+    const A = a.current;
+    const B = b.current;
+    if (!A || !B) return undefined;
+    let front = A;
+    let back = B;
+    let raf = null;
+
+    const start = (el) => {
+      el.currentTime = 0;
+      const p = el.play();
+      if (p && p.catch) p.catch(() => {});
+    };
+    start(A);
+
+    const tick = () => {
+      const d = front.duration;
+      if (d && Number.isFinite(d)) {
+        const left = d - front.currentTime;
+        if (left <= FADE) {
+          if (back.paused || back.currentTime > FADE) start(back);
+          const t = Math.max(0, Math.min(1, 1 - left / FADE));
+          front.style.opacity = String(1 - t);
+          back.style.opacity = String(t);
+          if (left <= 0.04) {
+            const tmp = front; front = back; back = tmp;
+            front.style.opacity = '1';
+            back.style.opacity = '0';
+            back.pause();
+          }
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [src]);
+
+  const common = {
+    className: 'artwork loopvid',
+    src,
+    poster,
+    muted: true,
+    playsInline: true,
+    preload: eager ? 'auto' : 'metadata',
+  };
+  return (
+    <>
+      <video {...common} ref={a} style={{ opacity: 1 }} />
+      <video {...common} ref={b} style={{ opacity: 0 }} />
+    </>
+  );
+}
+
 export default function Today() {
   const [edition, setEdition] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -74,14 +140,6 @@ export default function Today() {
       const rect = frame.getBoundingClientRect();
       frame.style.setProperty('--pw', `${rect.width}px`);
       frame.style.setProperty('--ph', `${rect.height}px`);
-      // The paragraph hangs off the bottom of a headline whose height depends
-      // on how many lines it wrapped to, so it has to be measured, not assumed.
-      const title = frame.querySelector('.title');
-      const standfirst = frame.querySelector('.standfirst');
-      if (title && standfirst) {
-        const t = title.getBoundingClientRect();
-        standfirst.style.top = `${t.bottom - rect.top + rect.width * 0.026}px`;
-      }
     });
     stories.forEach((story, i) => {
       if (!story.art?.image_url) paintFallback(fallbackRefs.current[i], story, edition);
@@ -254,14 +312,10 @@ export default function Today() {
       {/* --------------------------------------------------------- posters */}
       {stories.map((story, i) => {
         // Inks are measured off each illustration, so no two pages read alike.
-        const topInk = inkFor(story, 'top');
-        const bottomInk = inkFor(story, 'bottom');
         const frameVars = {
-          '--ink-top': topInk,
-          '--ink-bottom': bottomInk,
+          '--panel': panelFor(story),
+          '--panel-ink': panelInkFor(story),
           '--accent': accentFor(story),
-          '--scrim-top': bandIsDark(story, 'top') ? '0,0,0' : '255,255,255',
-          '--scrim-bottom': bandIsDark(story, 'bottom') ? '0,0,0' : '255,255,255',
         };
         return (
           <section
@@ -280,15 +334,10 @@ export default function Today() {
               onKeyDown={(e) => e.key === 'Enter' && setOpenIndex(i)}
             >
               {story.art?.video_url ? (
-                <video
-                  className="artwork"
+                <LoopVideo
                   src={story.art.video_url}
                   poster={story.art.image_url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload={i < 3 ? 'auto' : 'metadata'}
+                  eager={i < 3}
                 />
               ) : story.art?.image_url ? (
                 <img className="artwork drift" src={story.art.image_url} alt={story.art?.concept || ''} />
@@ -296,13 +345,12 @@ export default function Today() {
                 <canvas className="artwork" ref={(el) => { fallbackRefs.current[i] = el; }} />
               )}
 
-              <div className="scrimTop" />
-              <div className="scrimBottom" />
-
-              <div className="kicker">{spaced(story.tag)}</div>
-              <h2 className="title">{story.cover?.title || story.headline}</h2>
-              <p className="standfirst">{story.cover?.standfirst || story.dek}</p>
-              <div className="colophon">{footer}</div>
+              <div className="panel">
+                <div className="kicker">{spaced(story.tag)}</div>
+                <h2 className="title">{story.cover?.title || story.headline}</h2>
+                <p className="standfirst">{story.cover?.standfirst || story.dek}</p>
+                <div className="colophon">{footer}</div>
+              </div>
 
               <button
                 className={`save ${saved[i] === 'done' ? 'done' : ''}`}
@@ -310,7 +358,6 @@ export default function Today() {
               >
                 {saved[i] === 'done' ? 'Saved' : saved[i] === 'working' ? 'Saving…' : 'Save poster'}
               </button>
-              <div className="read">Read ↑</div>
             </div>
 
             <article
@@ -482,60 +529,51 @@ export default function Today() {
         /* --------------------------------------------------------- poster */
         .frame {
           position: relative; height: 100%; width: 100%; max-width: calc(100svh * 9 / 16);
-          margin: 0 auto; overflow: hidden; cursor: pointer;
+          margin: 0 auto; overflow: hidden; cursor: pointer; background: var(--panel);
         }
-        .artwork { position: absolute; inset: 0; width: 100%; height: 100%;
-                   object-fit: cover; display: block; }
-        /* Stills breathe rather than sit dead. Slow enough to read as a print
+        .artwork {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+          object-fit: cover; display: block;
+        }
+        .loopvid { transition: opacity .12s linear; }
+        /* Stills breathe rather than sit dead — slow enough to read as a print
            being looked at, not as an effect. */
         .drift { animation: drift 26s ease-in-out infinite alternate; will-change: transform; }
         @keyframes drift {
           from { transform: scale(1) translate3d(0, 0, 0); }
-          to   { transform: scale(1.045) translate3d(0, -0.6%, 0); }
+          to   { transform: scale(1.05) translate3d(0, -0.7%, 0); }
         }
-        @media (prefers-reduced-motion: reduce) {
-          .drift { animation: none; }
-        }
-        .scrimTop {
-          position: absolute; left: 0; right: 0; top: 0; height: ${TYPE.scrimTop * 100}%;
-          background: linear-gradient(rgba(var(--scrim-top), ${TYPE.scrimTopAlpha}),
-                                      rgba(var(--scrim-top), 0));
-        }
-        .scrimBottom {
-          position: absolute; left: 0; right: 0; bottom: 0; height: ${TYPE.scrim * 100}%;
-          background: linear-gradient(rgba(var(--scrim-bottom), 0),
-                                      rgba(var(--scrim-bottom), ${TYPE.scrimAlpha}));
-        }
+        @media (prefers-reduced-motion: reduce) { .drift { animation: none; } }
 
-        .kicker, .title, .standfirst, .colophon {
-          position: absolute; left: ${TYPE.margin * 100}%;
-          width: ${(1 - TYPE.margin * 2) * 100}%;
-          pointer-events: none; margin: 0;
+        /* The type is printed on a solid block sized to its own contents, so it
+           can never overflow into the artwork or off the bottom of the page. */
+        .panel {
+          position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+          background: var(--panel); color: var(--panel-ink);
+          padding: calc(var(--pw) * ${TYPE.padTop}) ${TYPE.margin * 100}%
+                   calc(var(--pw) * ${TYPE.padBottom} + env(safe-area-inset-bottom));
+          pointer-events: none;
         }
         .kicker {
-          top: calc(var(--ph) * ${TYPE.kickerY}); transform: translateY(-100%);
-          color: var(--accent);
-          font-weight: 700; font-size: calc(var(--pw) * 0.028); letter-spacing: .02em;
+          font-weight: 700; font-size: calc(var(--pw) * ${TYPE.kickerSize});
+          letter-spacing: .02em; opacity: .72;
+          margin-bottom: calc(var(--pw) * ${TYPE.kickerGap} - var(--pw) * ${TYPE.kickerSize});
         }
         .title {
-          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.78em);
-          color: var(--ink-bottom);
           font-family: Anton, Impact, 'Arial Narrow', sans-serif; font-weight: 400;
           font-size: calc(var(--pw) * ${TYPE.titleSize});
-          line-height: ${TYPE.titleLead}; letter-spacing: .002em;
-          text-transform: uppercase; text-wrap: balance;
+          line-height: ${TYPE.titleLead}; letter-spacing: .003em;
+          text-transform: uppercase; margin: 0; text-wrap: balance;
         }
         .standfirst {
-          top: calc(var(--ph) * ${TYPE.titleTop} + var(--pw) * ${TYPE.footGap} + 1.05em);
-          color: var(--ink-bottom); opacity: .9;
+          margin: calc(var(--pw) * ${TYPE.titleGap}) 0 0;
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.footSize});
-          line-height: ${TYPE.footLead};
+          line-height: ${TYPE.footLead}; opacity: .88;
         }
         .colophon {
-          top: calc(var(--ph) * ${TYPE.colophonY}); transform: translateY(-100%);
-          color: var(--ink-bottom); opacity: .55;
+          margin-top: calc(var(--pw) * ${TYPE.colophonGap});
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.colophonSize});
-          letter-spacing: .06em;
+          letter-spacing: .06em; opacity: .55;
         }
 
         .save {
@@ -544,12 +582,6 @@ export default function Today() {
           background: rgba(0,0,0,.32); color: #fff; backdrop-filter: blur(8px);
         }
         .save.done { background: #fff; color: #000; }
-        .read {
-          position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); right: 16px; z-index: 3;
-          padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 700;
-          background: rgba(255,255,255,.92); color: #000; pointer-events: none;
-          box-shadow: 0 6px 20px rgba(0,0,0,.25);
-        }
 
         /* ---------------------------------------------------------- story */
         .story {
