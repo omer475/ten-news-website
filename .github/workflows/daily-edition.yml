@@ -6,8 +6,7 @@ name: Today — Daily Edition
 #   write them, commission ten illustrations, store the artwork
 #   upsert the edition to Supabase (live immediately) and commit the JSON
 #
-# Secrets used: GEMINI_API_KEY (or GOOGLE_API_KEY), NEXT_PUBLIC_SUPABASE_URL,
-# SUPABASE_SERVICE_KEY. Without Supabase the run still succeeds — the artwork is
+# Secrets used: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY. Without Supabase the run still succeeds — the artwork is
 # written under public/editions/img/ and committed instead.
 on:
   schedule:
@@ -39,8 +38,7 @@ jobs:
 
       - name: Build today's edition
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/build_edition.py

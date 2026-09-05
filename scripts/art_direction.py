@@ -12,10 +12,16 @@ The editor model picks the tradition that fits the story and writes the CONCEPT
 # Every poster carries type over the lower third, so every brief protects it.
 SHARED = """
 FORMAT
-- Portrait, 9:16, designed as a full-bleed magazine cover illustration for a phone.
-- The subject sits in the upper two thirds. The lower third stays visually calm —
-  open ground, flat colour or simple texture — because large type is set over it.
-  Do not centre the subject; let it breathe above the type zone.
+- Tall portrait, designed as a full-bleed magazine cover illustration for a phone.
+- THE LOWER THIRD MUST STAY QUIET. Large type is set across it. Give that band
+  open ground, flat colour, empty sky, still water, plain wall — somewhere the
+  eye rests and white or black lettering would read cleanly. Detail, texture and
+  incident belong above it. This is the single most important rule of the layout:
+  a beautiful drawing that fills the bottom third with busy detail is unusable.
+- The subject sits in the upper two thirds, off centre, breathing.
+- The poster crops roughly 15% from the left and right edges, so keep the subject
+  and anything load-bearing away from the side margins. Bleed background to the
+  edges; put nothing at the edges you would miss.
 - Edge to edge artwork. No borders, no frames, no mockups, no drop shadows,
   no vignette, no rounded corners, no paper edges, no torn-photo effects.
 

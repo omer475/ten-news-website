@@ -10,7 +10,7 @@ edition consumed by the website.
 Run once a day:  python scripts/build_edition.py
 
 Env:
-  GEMINI_API_KEY / GOOGLE_API_KEY   required — scoring + writing
+  OPENAI_API_KEY                    required — scoring, writing, illustrations
   SUPABASE_URL, SUPABASE_SERVICE_KEY   optional — upsert into daily_editions
   EDITION_DRY_RUN=1                 skip all AI calls (structure smoke test)
 """
@@ -60,12 +60,18 @@ MAX_PER_SOURCE = 2
 RECENCY_HALFLIFE_H = 6.0     # how fast "instant" decays
 UNDATED_ASSUMED_AGE_H = 10.0 # penalty for feeds that publish no date
 
-SCORING_MODEL = "gemini-2.5-flash-lite"
-WRITING_MODEL = "gemini-2.5-flash"
-IMAGE_MODEL = "gemini-2.5-flash-image"
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+SCORING_MODEL = "gpt-5.4-mini"      # ranks 220 stories, cheap and fast
+WRITING_MODEL = "gpt-5.4"           # writes the ten, quality is the product
+IMAGE_MODEL = "gpt-image-2"
 
-IMAGE_ASPECT = "9:16"        # a phone screen, full bleed
+CHAT_URL = "https://api.openai.com/v1/chat/completions"
+IMAGE_URL = "https://api.openai.com/v1/images/generations"
+
+# Medium matches high on concept and composition for a quarter of the cost;
+# low loses the tonal structure that makes these read as real illustration.
+IMAGE_SIZE = "1024x1536"     # 2:3 — the tallest gpt-image-2 offers below 4K
+IMAGE_QUALITY = "medium"
+IMAGE_WEBP_QUALITY = 82      # re-encoded before upload; the API returns ~2.5MB
 IMAGE_BUCKET = "images"      # existing public Supabase Storage bucket
 IMAGE_PREFIX = "today"
 IMAGE_RETRIES = 4
@@ -263,45 +269,45 @@ def cluster(articles):
 # ----------------------------------------------------------------------------
 
 def retry_after(response, attempt, cap=75):
-    """Seconds to wait after a 429. Google tells us how long — believe it."""
-    try:
-        for detail in response.json().get("error", {}).get("details", []):
-            delay = detail.get("retryDelay")
-            if delay:
-                return min(cap, float(str(delay).rstrip("s")) + 2)
-    except Exception:
-        pass
+    """Seconds to wait after a 429. Use the server's own number when it gives one."""
+    header = response.headers.get("retry-after")
+    if header:
+        try:
+            return min(cap, float(header) + 1)
+        except ValueError:
+            pass
     return min(cap, 5 * (2 ** attempt))
 
 
-def gemini(prompt, model, temperature=0.3, max_tokens=4096, retries=5):
-    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+def ask_json(prompt, model, temperature=0.3, max_tokens=4096, retries=5):
+    """One JSON answer from an OpenAI chat model."""
+    key = os.environ.get("OPENAI_API_KEY")
     if not key:
-        raise RuntimeError("GEMINI_API_KEY (or GOOGLE_API_KEY) is not set")
-    url = GEMINI_URL.format(model=model, key=key)
+        raise RuntimeError("OPENAI_API_KEY is not set")
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": temperature,
-            "maxOutputTokens": max_tokens,
-            "responseMimeType": "application/json",
-        },
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_completion_tokens": max_tokens,
+        "response_format": {"type": "json_object"},
     }
     last = None
     for attempt in range(retries):
         try:
-            r = requests.post(url, json=payload, timeout=120)
+            r = requests.post(
+                CHAT_URL, json=payload, timeout=180,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
             if r.status_code == 200:
-                text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M))
+                text = r.json()["choices"][0]["message"]["content"]
+                return json.loads(re.sub(r"^```(?:json)?|```$", "", (text or "").strip(), flags=re.M))
             last = f"HTTP {r.status_code}: {r.text[:200]}"
-            if r.status_code == 429:
+            if r.status_code == 429 or r.status_code >= 500:
                 time.sleep(retry_after(r, attempt))
                 continue
         except Exception as exc:
             last = str(exc)
         time.sleep(2 ** attempt)
-    raise RuntimeError(f"Gemini call failed after {retries} tries — {last}")
+    raise RuntimeError(f"{model} call failed after {retries} tries — {last}")
 
 
 SCORE_PROMPT = """You are the front-page editor of a daily world news brief.
@@ -339,7 +345,7 @@ def score_importance(clusters):
             lines.append(f'{i}. [{c["source_count"]} outlets, {c["age_hours"]:.0f}h ago] '
                          f'{c["lead"]["title"]} — {c["lead"]["description"][:180]}')
         try:
-            data = gemini(SCORE_PROMPT % "\n".join(lines), SCORING_MODEL, temperature=0.1)
+            data = ask_json(SCORE_PROMPT % "\n".join(lines), SCORING_MODEL, temperature=0.1)
             return batch_index, data.get("scores", [])
         except Exception as exc:
             log(f"  ! scoring batch {batch_index} failed: {exc}")
@@ -517,7 +523,7 @@ def write_story(c):
         "body": body[:5000] or "(full text unavailable — write from the summary only)",
         "traditions": tradition_menu(),
     }
-    return gemini(prompt, WRITING_MODEL, temperature=0.6, max_tokens=3000)
+    return ask_json(prompt, WRITING_MODEL, temperature=0.6, max_tokens=4000)
 
 
 def assign_traditions(written):
@@ -541,31 +547,28 @@ def assign_traditions(written):
 # ----------------------------------------------------------------------------
 
 def generate_image(prompt):
-    """One illustration from the image model. Returns (bytes, mime) or (None, None)."""
-    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    """One illustration from gpt-image-2. Returns (bytes, mime) or (None, None)."""
+    key = os.environ.get("OPENAI_API_KEY")
     if not key:
         return None, None
+    payload = {
+        "model": IMAGE_MODEL,
+        "prompt": prompt,
+        "size": IMAGE_SIZE,
+        "quality": IMAGE_QUALITY,
+        "output_format": "webp",
+        "n": 1,
+    }
     for attempt in range(IMAGE_RETRIES):
         try:
             r = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{IMAGE_MODEL}:generateContent",
-                headers={"Content-Type": "application/json", "x-goog-api-key": key},
-                json={
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {
-                        "responseModalities": ["IMAGE"],
-                        "imageConfig": {"aspectRatio": IMAGE_ASPECT},
-                    },
-                },
-                timeout=180,
-            )
+                IMAGE_URL, json=payload, timeout=300,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
             if r.status_code == 200:
-                parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
-                for part in parts:
-                    inline = part.get("inlineData")
-                    if inline and inline.get("data"):
-                        return base64.b64decode(inline["data"]), inline.get("mimeType", "image/png")
-            elif r.status_code == 429:
+                data = (r.json().get("data") or [{}])[0].get("b64_json")
+                if data:
+                    return shrink(base64.b64decode(data)), "image/webp"
+            elif r.status_code == 429 or r.status_code >= 500:
                 wait = retry_after(r, attempt)
                 log(f"    image rate-limited, waiting {wait:.0f}s")
                 time.sleep(wait)
@@ -576,6 +579,20 @@ def generate_image(prompt):
             log(f"    image error: {exc}")
         time.sleep(2 ** attempt)
     return None, None
+
+
+def shrink(raw):
+    """The API hands back ~2.5MB. Re-encode so the page isn't carrying that."""
+    try:
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(raw)).convert("RGB")
+        buf = io.BytesIO()
+        img.save(buf, format="WEBP", quality=IMAGE_WEBP_QUALITY, method=6)
+        out = buf.getvalue()
+        return out if len(out) < len(raw) else raw
+    except Exception:
+        return raw
 
 
 def tone_of(image_bytes):
@@ -599,7 +616,7 @@ def tone_of(image_bytes):
 
 def upload_image(image_bytes, mime, date, story_id):
     """Supabase Storage if configured, otherwise a file under public/."""
-    ext = "png" if "png" in (mime or "") else "jpg"
+    ext = {"image/webp": "webp", "image/png": "png"}.get(mime or "", "jpg")
     path = f"{IMAGE_PREFIX}/{date}/{story_id}.{ext}"
 
     url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
