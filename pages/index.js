@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-import { TYPE, inkFor, accentFor, exportPoster, paintFallback } from '../lib/poster';
+import { TYPE, inkFor, accentFor, bandIsDark, exportPoster, paintFallback } from '../lib/poster';
 
 /**
  * TODAY — the daily edition.
@@ -251,8 +251,8 @@ export default function Today() {
           '--ink-top': topInk,
           '--ink-bottom': bottomInk,
           '--accent': accentFor(story),
-          '--scrim-top': topInk === '#ffffff' ? '0,0,0' : '255,255,255',
-          '--scrim-bottom': bottomInk === '#ffffff' ? '0,0,0' : '255,255,255',
+          '--scrim-top': bandIsDark(story, 'top') ? '0,0,0' : '255,255,255',
+          '--scrim-bottom': bandIsDark(story, 'bottom') ? '0,0,0' : '255,255,255',
         };
         return (
           <section

@@ -36,8 +36,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from rss_sources import RSS_FEEDS
-from art_direction import (TRADITIONS, ORDER as TRADITION_ORDER, LOUD,
-                           brief_for, tradition_menu)
+from art_direction import (TRADITIONS, ORDER as TRADITION_ORDER, LOUD, FAMILY,
+                           DENSITY, brief_for, tradition_menu)
 
 try:
     import urllib3
@@ -491,9 +491,14 @@ Return JSON with exactly these keys:
 ILLUSTRATION TRADITIONS — pick for fit:
 %(traditions)s
 
-Most stories should get a LOUD, colourful, characterful treatment. The two
-marked GRAVE NEWS ONLY are for death, war and disaster — using them on an
-ordinary story makes the edition look funereal, so don't.
+Each is tagged [medium, density]. Newspapers do not illustrate everything by
+drawing it — some pages are a photograph of an object, some a chart, some a
+thing built out of felt, some a single mark on an empty field. Pick the MEDIUM
+this story deserves, not the one that is easiest to draw, and pick the DENSITY
+honestly: a small procedural story wants minimal, a sprawling one wants dense.
+
+The two marked GRAVE NEWS ONLY are for death, war and disaster — using them on
+an ordinary story makes the edition look funereal, so don't.
 
 Writing the concept is the important part. Bad: "a globe with arrows and charts
 around it". Good: "A giant matte-black Revolut card stands upright like a
@@ -530,29 +535,120 @@ def write_story(c):
     return ask_json(prompt, WRITING_MODEL, temperature=0.6, max_tokens=4000)
 
 
+MAX_PER_TRADITION = 2
+MAX_PER_FAMILY = 3
+MIN_MINIMAL = 2          # at least this many very spare posters
+MIN_DENSE = 2            # and this many that reward looking closely
+
+
 def assign_traditions(written):
     """
-    The model picks the tradition that fits the story; this only breaks up
-    monotony. Up to two posters may share a look — beyond that, the third is
-    moved to the nearest unused one, preferring the loud half of the set so an
-    ordinary day doesn't come out looking like a funeral.
+    The model picks what suits each story; this makes the EDITION vary.
+
+    Left alone the model reaches for drawing almost every time, so an edition
+    comes out as ten drawings in ten moods. Real papers move between media —
+    a photograph of an object, a chart, something built out of felt — and
+    between registers, from one mark on an empty field to something you have
+    to lean into. So: no more than two posters share a tradition, no more than
+    three share a medium, and every edition carries at least two spare pages
+    and two dense ones.
     """
-    used = {}
-    for i, w in enumerate(written):
+    picks = [(w.get("art") or {}).get("tradition") for w in written]
+    tally, fams = {}, {}
+
+    def take(t):
+        tally[t] = tally.get(t, 0) + 1
+        fams[FAMILY[t]] = fams.get(FAMILY[t], 0) + 1
+
+    def allowed(t):
+        return (tally.get(t, 0) < MAX_PER_TRADITION
+                and fams.get(FAMILY[t], 0) < MAX_PER_FAMILY)
+
+    # 1 · honour the model's choice where the edition can afford it
+    final = []
+    for i, t in enumerate(picks):
+        if t in TRADITIONS and allowed(t):
+            final.append(t)
+            take(t)
+            continue
+        spare = ([k for k in LOUD if allowed(k) and tally.get(k, 0) == 0]
+                 or [k for k in TRADITION_ORDER if allowed(k)]
+                 or [TRADITION_ORDER[i % len(TRADITION_ORDER)]])
+        # prefer a medium nobody has used yet
+        spare.sort(key=lambda k: (fams.get(FAMILY[k], 0), tally.get(k, 0)))
+        final.append(spare[0])
+        take(spare[0])
+
+    # 2 · guarantee the edition has both ends of the register
+    def rebalance(want, need):
+        have = [i for i, t in enumerate(final) if DENSITY[t] == want]
+        if len(have) >= need:
+            return
+        pool = [k for k in LOUD if DENSITY[k] == want and tally.get(k, 0) == 0]
+        swappable = [i for i, t in enumerate(final) if DENSITY[t] == "medium"]
+        while len(have) < need and pool and swappable:
+            i = swappable.pop()
+            new_t, old_t = pool.pop(0), final[i]
+            tally[old_t] -= 1
+            fams[FAMILY[old_t]] -= 1
+            final[i] = new_t
+            take(new_t)
+            have.append(i)
+
+    rebalance("minimal", MIN_MINIMAL)
+    rebalance("dense", MIN_DENSE)
+
+    for w, t in zip(written, final):
         art = w.setdefault("art", {})
-        t = art.get("tradition")
-        if t not in TRADITIONS or used.get(t, 0) >= 2:
-            spare = [k for k in LOUD if used.get(k, 0) == 0] or \
-                    [k for k in TRADITION_ORDER if used.get(k, 0) < 2]
-            t = spare[0] if spare else TRADITION_ORDER[i % len(TRADITION_ORDER)]
+        art["reconcept"] = art.get("tradition") != t
         art["tradition"] = t
-        used[t] = used.get(t, 0) + 1
     return written
 
 
 # ----------------------------------------------------------------------------
 # 5b · Commission the illustration
 # ----------------------------------------------------------------------------
+
+RECONCEPT_PROMPT = """An illustrator has been reassigned. The story is the same;
+the medium is not.
+
+STORY: %(headline)s
+%(dek)s
+
+The concept written for the previous medium was:
+  %(concept)s
+
+The new medium is %(label)s — %(fits)s
+
+%(brief)s
+
+Rewrite the CONCEPT so it can actually be made in this medium. A scene at sea
+cannot be a tabletop still life; a crowd cannot be one mark on an empty field.
+Keep the story's real named subjects — the companies, places, objects — and
+restage them for what this medium can physically do. No lettering, labels,
+stamps or printed words anywhere in the picture; the only exception is a
+brand's own logo. Say what a thing IS, never that it is labelled.
+
+Return JSON: {"concept": "2-3 sentences briefing the illustrator on what to make"}"""
+
+
+def reconcept(story):
+    """Re-brief a story whose medium the edition-level rebalance changed."""
+    art = story["art"]
+    t = TRADITIONS[art["tradition"]]
+    if os.environ.get("EDITION_DRY_RUN"):
+        return
+    try:
+        out = ask_json(RECONCEPT_PROMPT % {
+            "headline": story["headline"], "dek": story.get("dek", ""),
+            "concept": art.get("concept", ""), "label": t["label"],
+            "fits": t["fits"], "brief": t["brief"],
+        }, WRITING_MODEL, temperature=0.6, max_tokens=700)
+        if out.get("concept"):
+            art["concept"] = out["concept"]
+    except Exception as exc:
+        log(f"    ! reconcept failed for {story['id']}: {exc}")
+
 
 def generate_image(prompt):
     """One illustration from gpt-image-2. Returns (bytes, mime) or (None, None)."""
@@ -603,17 +699,49 @@ def shrink(raw):
         return raw
 
 
+def _luma(rgb):
+    r, g, b = [c / 255.0 for c in rgb]
+    f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+
+
+def _contrast(a, b):
+    la, lb = _luma(a), _luma(b)
+    hi, lo = max(la, lb), min(la, lb)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def _ink_from(band, accent, target=7.0):
+    """
+    A type colour drawn OUT OF the picture rather than defaulted to white.
+
+    Takes the artwork's own accent and walks it toward white or black — away
+    from whatever the band underneath is doing — until it clears the contrast
+    target. The result reads as chosen for that page instead of stamped on it.
+    """
+    toward = (255, 255, 255) if _luma(band) < 0.4 else (0, 0, 0)
+    best = toward
+    for step in range(0, 21):
+        t = step / 20.0
+        cand = tuple(round(accent[i] + (toward[i] - accent[i]) * t) for i in range(3))
+        if _contrast(cand, band) >= target:
+            best = cand
+            break
+        best = cand
+    return "#%02x%02x%02x" % best
+
+
 def palette_of(image_bytes):
     """
     Read the artwork so the type can be keyed to it.
 
-    The title sits across the top and the standfirst across the foot, so each
-    band gets its own ink decision, and one saturated colour is lifted out of
-    the picture for the kicker — which is what stops every poster in the
-    edition from looking like the same page.
+    Title and standfirst sit in different bands, so each band is measured
+    separately and gets its own ink mixed from the picture's own colour. That,
+    plus the accent, is what stops ten posters reading as one template.
     """
-    fallback = {"tint": "#111111", "topInk": "light", "bottomInk": "light",
-                "accent": "#ffffff"}
+    fallback = {"tint": "#111111", "accent": "#ffffff",
+                "titleTop": "#ffffff", "titleBottom": "#ffffff",
+                "topInk": "light", "bottomInk": "light"}
     try:
         from PIL import Image
         import io, colorsys
@@ -624,14 +752,10 @@ def palette_of(image_bytes):
             strip = img.crop((0, int(h * y0), w, int(h * y1))).resize((32, 16))
             px = list(strip.getdata())
             n = len(px)
-            r = sum(p[0] for p in px) // n
-            g = sum(p[1] for p in px) // n
-            b = sum(p[2] for p in px) // n
-            luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
-            return (r, g, b), luma
+            return tuple(sum(p[i] for p in px) // n for i in range(3))
 
-        (_, _, _), top_luma = band(0.0, 0.34)[0], band(0.0, 0.34)[1]
-        (br, bg, bb), bottom_luma = band(0.60, 1.0)
+        top = band(0.0, 0.34)
+        bottom = band(0.60, 1.0)
 
         # The most saturated colour with enough presence to feel deliberate.
         small = img.resize((80, 120)).quantize(colors=12, method=Image.MEDIANCUT)
@@ -639,21 +763,22 @@ def palette_of(image_bytes):
         counts = dict(small.getcolors() or [])
         best, best_score = None, -1.0
         for i in range(12):
-            r, g, b = pal[i * 3: i * 3 + 3]
-            hh, ll, ss = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
-            share = counts.get(i, 0) / 9600.0
-            if ll < 0.18 or ll > 0.92:
+            rgb = tuple(pal[i * 3: i * 3 + 3])
+            _, ll, ss = colorsys.rgb_to_hls(*[c / 255 for c in rgb])
+            if ll < 0.15 or ll > 0.93:
                 continue
-            score = ss * (0.45 + share)     # saturated, but actually present
+            score = ss * (0.45 + counts.get(i, 0) / 9600.0)
             if score > best_score:
-                best, best_score = (r, g, b), score
-        accent = "#%02x%02x%02x" % (best or (255, 255, 255))
+                best, best_score = rgb, score
+        accent = best or (230, 230, 230)
 
         return {
-            "tint": f"#{br:02x}{bg:02x}{bb:02x}",
-            "topInk": "light" if top_luma < 0.55 else "dark",
-            "bottomInk": "light" if bottom_luma < 0.55 else "dark",
-            "accent": accent,
+            "tint": "#%02x%02x%02x" % bottom,
+            "accent": "#%02x%02x%02x" % accent,
+            "titleTop": _ink_from(top, accent),
+            "titleBottom": _ink_from(bottom, accent),
+            "topInk": "light" if _luma(top) < 0.4 else "dark",
+            "bottomInk": "light" if _luma(bottom) < 0.4 else "dark",
         }
     except Exception:
         return fallback
@@ -691,6 +816,8 @@ def upload_image(image_bytes, mime, date, story_id):
 def commission(story, date):
     """Draw one poster. Mutates story['art'] with the finished image."""
     art = story["art"]
+    if art.pop("reconcept", False):
+        reconcept(story)
     prompt = brief_for(art["tradition"], art.get("concept", story["headline"]), art.get("note", ""))
     art["prompt"] = prompt
     if os.environ.get("EDITION_DRY_RUN"):

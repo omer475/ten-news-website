@@ -103,6 +103,8 @@ TRADITIONS = {
     "bold_symbol": {
         "label": "Bold symbol",
         "energy": "loud",
+        "family": "printed",
+        "density": "minimal",
         "fits": "a company, a product, a launch, a single object that IS the story",
         "brief": """
 MEDIUM — Screenprinted poster. One object, printed in three flat inks.
@@ -122,6 +124,8 @@ opposing ink, and off-white stock.
     "maximalist_doodle": {
         "label": "Maximalist doodle",
         "energy": "loud",
+        "family": "drawn",
+        "density": "dense",
         "fits": "abundance, excess, waste, sprawl, everything-everywhere stories, lists, markets",
         "brief": """
 MEDIUM — Ink line drawing on white, flat colour filled inside the line.
@@ -137,6 +141,8 @@ PALETTE — Line in black; fills in six or seven flat, slightly chalky colours.
     "flat_character": {
         "label": "Flat character",
         "energy": "loud",
+        "family": "drawn",
+        "density": "medium",
         "fits": "people-shaped stories: health, work, courts, culture, everyday life, gentle comedy",
         "brief": """
 MEDIUM — Flat character illustration, gouache-textured shapes, no outlines.
@@ -154,6 +160,8 @@ bright: clay, mustard, sage, dusty coral, ink blue.
     "fractured_prism": {
         "label": "Fractured prism",
         "energy": "loud",
+        "family": "printed",
+        "density": "medium",
         "fits": "power, ambition, reinvention, a figure at the centre of a scene, culture and fashion",
         "brief": """
 MEDIUM — Cut and overlaid translucent colour planes, screenprint-style.
@@ -168,9 +176,10 @@ violet — over an off-white ground.
 """,
     },
     "marker_hand": {
-        "language": "loose",
         "label": "Marker hand",
         "energy": "loud",
+        "family": "drawn",
+        "density": "medium",
         "fits": "internet culture, consumer stories, anything that should feel handmade and cheerful",
         "brief": """
 MEDIUM — Felt-tip marker and ballpoint on cheap paper, scanned.
@@ -186,6 +195,8 @@ unshaded, plus a black pen line, on white paper.
     "riso_poster": {
         "label": "Risograph poster",
         "energy": "loud",
+        "family": "printed",
+        "density": "medium",
         "fits": "politics, protest, housing, energy, technology, anything with a public argument",
         "brief": """
 MEDIUM — Risograph print, two spot inks, no black plate.
@@ -202,6 +213,8 @@ blue, or yellow and bright red. No third ink, no black.
     "punk_cutout": {
         "label": "Punk cutout",
         "energy": "loud",
+        "family": "collage",
+        "density": "minimal",
         "fits": "scandal, greed, institutions behaving badly, a story with a target",
         "brief": """
 MEDIUM — Photocopied high-contrast cutout on a flat painted ground, with marks
@@ -218,6 +231,8 @@ plus black and paper white. Three, no more.
     "comic_absurd": {
         "label": "Comic absurd",
         "energy": "loud",
+        "family": "drawn",
+        "density": "medium",
         "fits": "absurdity, mishaps, tech behaving oddly, sport, a story that is genuinely funny",
         "brief": """
 MEDIUM — Newspaper comic-strip cartooning: brush-inked line, flat colour, benday
@@ -234,6 +249,8 @@ PALETTE — Four flat comic inks on newsprint cream, plus black line.
     "decorative_flat": {
         "label": "Decorative flat",
         "energy": "loud",
+        "family": "printed",
+        "density": "dense",
         "fits": "nature, climate, land, agriculture, science, anything with pattern and scale",
         "brief": """
 MEDIUM — Flat decorative illustration: layered patterned shapes, screenprinted.
@@ -250,6 +267,8 @@ accent. Clean and slightly chalky.
     "newsprint_collage": {
         "label": "Newsprint collage",
         "energy": "loud",
+        "family": "collage",
+        "density": "medium",
         "fits": "media, archives, information, misinformation, culture, anything made of fragments",
         "brief": """
 MEDIUM — Physical collage cut from real newspaper, laid on painted paper and
@@ -266,6 +285,8 @@ PALETTE — Newsprint grey and cream against ONE flat painted colour.
     "silkscreen_grave": {
         "label": "Silkscreen",
         "energy": "quiet",
+        "family": "printed",
+        "density": "minimal",
         "fits": "conflict, crackdowns, sudden ruptures, alarm — grave news that still needs force",
         "brief": """
 MEDIUM — Hand-pulled silkscreen, two colours, printed fast.
@@ -280,6 +301,8 @@ Two, no more.
     "engraved_grave": {
         "label": "Engraving",
         "energy": "quiet",
+        "family": "drawn",
+        "density": "dense",
         "fits": "death, disaster, war's aftermath, slow irreversible change — the stories that need silence",
         "brief": """
 MEDIUM — Wood engraving: white line cut into end-grain boxwood, letterpressed.
@@ -292,10 +315,117 @@ MEDIUM — Wood engraving: white line cut into end-grain boxwood, letterpressed.
 PALETTE — Warm black ink on cream paper. One muted accent at most.
 """,
     },
+    "photo_still_life": {
+        "label": "Object photograph",
+        "energy": "loud",
+        "family": "photographic",
+        "density": "minimal",
+        "fits": "money, documents, consumer goods, evidence, a story that turns on a physical thing",
+        "brief": """
+MEDIUM — A studio photograph of real objects on a seamless coloured paper
+sweep, lit flat. NOT a drawing.
+- Objects ONLY. No people, no hands, and no depiction of an event happening —
+  this is a still life on a table and must read unmistakably as one.
+- Two or three real things placed deliberately with space between them: a
+  passport, a bank card, a sheaf of documents, a length of pipe, a hard hat.
+- Even, soft, frontal light and one quiet natural shadow. No dramatic lighting,
+  no glow, no gloss — a plain, honest product-photograph look.
+- Enormous areas of the coloured paper left empty.
+PALETTE — One flat seamless-paper colour and the true colours of the objects.
+""",
+    },
+    "minimal_mark": {
+        "label": "Minimal mark",
+        "energy": "loud",
+        "family": "graphic",
+        "density": "minimal",
+        "fits": "a single decision, a threshold crossed, an absence — a story that needs quiet",
+        "brief": """
+MEDIUM — Extreme graphic minimalism, in the manner of a Swiss or Japanese
+poster. One mark, enormous space.
+- ONE element only — a single object, silhouette or geometric form — small to
+  medium in a vast empty field. Nothing else in the frame at all.
+- The form is flat, precise and cleanly cut. No texture inside it, no shading.
+- Off-centre. The emptiness is the design, not a mistake.
+- Restraint is the entire brief. A second element ruins it.
+PALETTE — One flat ground and ONE mark colour. Two, total.
+""",
+    },
+    "data_graphic": {
+        "label": "Drawn chart",
+        "energy": "loud",
+        "family": "graphic",
+        "density": "medium",
+        "fits": "markets, prices, counts, rates — anything where the number IS the story",
+        "brief": """
+MEDIUM — A hand-made statistical graphic treated as a picture: bars, a line, or
+a grid of dots, drawn flat and large.
+- The chart IS the illustration. Bold flat bars, or a heavy hand-drawn line
+  climbing or falling across the frame, drawn slightly imperfectly by hand.
+- One real object may sit in or on the chart to say what it counts — a barrel,
+  a loaf, a house — drawn simply at the same flatness.
+- Absolutely no labels, numerals, axis text or legends of any kind.
+- Plenty of empty ground above or below the plot.
+PALETTE — A flat ground, one colour for the data, one accent for the single bar
+that matters. Three, total.
+""",
+    },
+    "made_object": {
+        "label": "Made object",
+        "energy": "loud",
+        "family": "made",
+        "density": "medium",
+        "fits": "warm human stories, food, home, craft — anything better for being handmade",
+        "brief": """
+MEDIUM — The subject BUILT physically from craft materials and photographed:
+plasticine, felt, coloured card, pipe cleaners, modelling clay.
+- Visible making: fingerprints in the clay, fuzzy felt edges, glue, wonky
+  joins, the seam where two pieces meet.
+- Set on a plain coloured surface, lit softly and evenly from the front,
+  photographed straight down or straight on. Tabletop and shallow.
+- Charmingly imperfect. The hand that made it should be obvious.
+PALETTE — The bright flat colours of craft materials on one plain surface.
+""",
+    },
+    "painted_gouache": {
+        "label": "Gouache painting",
+        "energy": "loud",
+        "family": "painted",
+        "density": "medium",
+        "fits": "landscape, weather, cities, atmosphere — a scene that wants to be painted",
+        "brief": """
+MEDIUM — Gouache on paper. Opaque matte paint with the brush marks left in.
+- Shapes blocked in with a loaded brush: streaky coverage, dry-brush skips,
+  edges that do not quite meet, one colour scumbled over another.
+- Form comes from flat planes of colour set beside each other, never from
+  blending or shading. Paper texture shows through in places.
+- Simplified, slightly naive drawing. A few big shapes, calmly arranged.
+PALETTE — Six mixed, slightly muted colours that clearly came from a palette
+rather than a screen. Chalky, never neon.
+""",
+    },
+    "mosaic_cut": {
+        "label": "Cut mosaic",
+        "energy": "loud",
+        "family": "collage",
+        "density": "dense",
+        "fits": "many parts making one whole: coalitions, migration, networks, cities, culture",
+        "brief": """
+MEDIUM — The image assembled from hundreds of small flat cut shapes, like a
+paper mosaic or a stained-glass panel.
+- Every area is built from small irregular tiles of flat colour, with thin gaps
+  of the dark ground showing between them.
+- The subject reads clearly at a distance and dissolves into tiles up close.
+- No shading inside any tile; depth comes from tile colour alone.
+PALETTE — Eight to ten flat colours in two families, over a dark ground.
+""",
+    },
 }
 
 ORDER = list(TRADITIONS.keys())
 LOUD = [k for k, v in TRADITIONS.items() if v["energy"] == "loud"]
+FAMILY = {k: v["family"] for k, v in TRADITIONS.items()}
+DENSITY = {k: v["density"] for k, v in TRADITIONS.items()}
 
 
 def brief_for(tradition, concept, palette_hint=""):
@@ -315,5 +445,6 @@ def tradition_menu():
     for key in ORDER:
         t = TRADITIONS[key]
         tag = "" if t["energy"] == "loud" else "  [GRAVE NEWS ONLY]"
-        lines.append(f"  {key} — {t['label']}: {t['fits']}{tag}")
+        lines.append(f"  {key} — {t['label']} [{t['family']}, {t['density']}]: "
+                     f"{t['fits']}{tag}")
     return "\n".join(lines)
