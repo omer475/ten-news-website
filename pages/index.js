@@ -190,7 +190,7 @@ export default function Today() {
     <>
       {head}
 
-      <nav className="dots" aria-hidden="true">
+      <nav className={`dots ${openIndex != null ? 'hidden' : ''}`} aria-hidden="true">
         {Array.from({ length: stories.length + 2 }).map((_, i) => (
           <i key={i} className={i === active ? 'on' : ''} />
         ))}
@@ -235,6 +235,7 @@ export default function Today() {
                 <span className="tileFallback" />
               )}
               <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              {story.art?.video_url ? <span className="moves" aria-hidden="true" /> : null}
               {i === 0 ? (
                 <span className="heroCap">
                   <em>{story.tag}</em>
@@ -278,8 +279,19 @@ export default function Today() {
               onClick={(e) => { if (!e.target.closest('.save')) setOpenIndex(i); }}
               onKeyDown={(e) => e.key === 'Enter' && setOpenIndex(i)}
             >
-              {story.art?.image_url ? (
-                <img className="artwork" src={story.art.image_url} alt={story.art?.concept || ''} />
+              {story.art?.video_url ? (
+                <video
+                  className="artwork"
+                  src={story.art.video_url}
+                  poster={story.art.image_url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload={i < 3 ? 'auto' : 'metadata'}
+                />
+              ) : story.art?.image_url ? (
+                <img className="artwork drift" src={story.art.image_url} alt={story.art?.concept || ''} />
               ) : (
                 <canvas className="artwork" ref={(el) => { fallbackRefs.current[i] = el; }} />
               )}
@@ -385,6 +397,7 @@ export default function Today() {
           transition: opacity .3s; mix-blend-mode: difference;
         }
         .dots i.on { opacity: 1; }
+        .dots.hidden { opacity: 0; pointer-events: none; }
 
         /* ---------------------------------------------------------- front */
         .front {
@@ -438,6 +451,13 @@ export default function Today() {
           font-size: 10px; font-weight: 800; letter-spacing: .04em;
           color: #fff; mix-blend-mode: difference;
         }
+        .moves {
+          position: absolute; right: 6px; top: 6px; z-index: 2;
+          width: 6px; height: 6px; border-radius: 50%; background: #fff;
+          box-shadow: 0 0 0 2px rgba(0,0,0,.25);
+          animation: pulse 2.4s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: .35 } 50% { opacity: 1 } }
         .heroCap {
           position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
           padding: 26px 12px 10px; text-align: left;
@@ -466,6 +486,16 @@ export default function Today() {
         }
         .artwork { position: absolute; inset: 0; width: 100%; height: 100%;
                    object-fit: cover; display: block; }
+        /* Stills breathe rather than sit dead. Slow enough to read as a print
+           being looked at, not as an effect. */
+        .drift { animation: drift 26s ease-in-out infinite alternate; will-change: transform; }
+        @keyframes drift {
+          from { transform: scale(1) translate3d(0, 0, 0); }
+          to   { transform: scale(1.045) translate3d(0, -0.6%, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .drift { animation: none; }
+        }
         .scrimTop {
           position: absolute; left: 0; right: 0; top: 0; height: ${TYPE.scrimTop * 100}%;
           background: linear-gradient(rgba(var(--scrim-top), ${TYPE.scrimTopAlpha}),
@@ -580,10 +610,10 @@ export default function Today() {
         }
         .colophon { margin-top: 22px; color: #555; font-size: 11.5px; line-height: 1.5; }
 
-        @media (min-width: 700px) {
-          .story { max-width: 720px; left: 50%; transform: translate(-50%, 100%); }
-          .poster.open .story { transform: translate(-50%, 0); }
-        }
+        /* The news page covers the whole screen — the poster behind it and the
+           letterboxing beside it both disappear. Text still measures sensibly. */
+        .story > * { max-width: 640px; margin-left: auto; margin-right: auto; }
+        .story h2, .story .storyKicker, .story .by { max-width: 640px; }
       `}</style>
     </>
   );

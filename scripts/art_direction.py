@@ -83,9 +83,9 @@ FORMAT — THIS IS A POSTER, NOT A FULL-BLEED PICTURE
 Think of the page the way a poster designer does: one strong image filling the
 top, and a quiet block at the foot where the headline and the text are printed.
 
-- THE ILLUSTRATION FILLS THE TOP 72% OF THE FRAME, edge to edge, right up to
+- THE ILLUSTRATION FILLS THE TOP 66% OF THE FRAME, edge to edge, right up to
   the top of the image. Nothing is reserved at the top — go all the way up.
-- THE BOTTOM 28% MUST BE COMPLETELY EMPTY. Nothing there but the flat
+- THE BOTTOM 34% MUST BE COMPLETELY EMPTY. Nothing there but the flat
   background colour: no subject, no texture, no pattern, no gradient, no stray
   marks, no horizon, no shadow. The headline and a paragraph of text are
   printed across that band and must sit on clean flat colour. Not a wingtip,

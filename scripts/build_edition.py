@@ -59,6 +59,7 @@ MAX_PER_CATEGORY = 2         # diversity guard on the final ten
 MAX_PER_SOURCE = 2
 
 RECENCY_HALFLIFE_H = 6.0     # how fast "instant" decays
+MIN_IMPORTANCE = 68          # below this a story is filler, however fresh
 UNDATED_ASSUMED_AGE_H = 10.0 # penalty for feeds that publish no date
 
 SCORING_MODEL = "gpt-5.4-mini"      # ranks 220 stories, cheap and fast
@@ -76,6 +77,15 @@ IMAGE_WEBP_QUALITY = 82      # re-encoded before upload; the API returns ~2.5MB
 IMAGE_BUCKET = "images"      # existing public Supabase Storage bucket
 IMAGE_PREFIX = "today"
 IMAGE_RETRIES = 4
+
+VIDEO_MODEL = "sora-2"
+VIDEO_URL = "https://api.openai.com/v1/videos"
+VIDEO_BUCKET = "today-video"
+VIDEO_COUNT = 3              # the day's top stories move; the rest hold still
+VIDEO_SECONDS = "4"
+VIDEO_SIZE = "720x1280"
+VIDEO_POLL_S = 12
+VIDEO_TIMEOUT_S = 600
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, "public", "editions")
@@ -374,7 +384,7 @@ def instant_score(c):
     breadth = min(c["source_count"], 8) / 8.0
     if not c["lead"]["dated"]:
         recency *= 0.6
-    return c["importance"] * (0.35 + 0.45 * recency + 0.20 * breadth)
+    return c["importance"] * (0.30 + 0.42 * recency + 0.28 * breadth)
 
 
 def pick_ten(clusters):
@@ -383,6 +393,11 @@ def pick_ten(clusters):
     Caps are relaxed in passes rather than abandoned, so a thin news day still
     yields ten stories and a normal one stays varied.
     """
+    # A story nobody rates as important is filler even if it broke a minute
+    # ago. Only fall back to the unfiltered pool if the floor starves us.
+    strong = [c for c in clusters if c["importance"] >= MIN_IMPORTANCE]
+    if len(strong) >= EDITION_SIZE:
+        clusters = strong
     ranked = sorted(clusters, key=instant_score, reverse=True)
     picked, chosen = [], set()
 
@@ -427,6 +442,61 @@ def next_reserve(bench, kept):
         if counts.get(c["category"], 0) < MAX_PER_CATEGORY:
             return bench.pop(i)
     return bench.pop(0) if bench else None
+
+
+DEDUP_PROMPT = """These are the ten stories chosen for today's edition. Some may
+be the SAME underlying event reported with different wording — a strike described
+twice, one summit filed under two angles. Group those together.
+
+%(headlines)s
+
+Two entries are the same story only if they report the same event, not merely
+the same topic: two separate attacks in one war are different stories; the same
+attack described twice is one.
+
+Return JSON: {"groups": [[1, 4], [2, 7]]} — one array per duplicate set, using
+the numbers above. Return {"groups": []} if every story is distinct."""
+
+
+def drop_duplicates(picked, bench):
+    """
+    Keyword clustering merges rewrites of one wire story; it does not merge two
+    newsrooms describing the same event in different words. That put the same
+    Iranian tanker strike in two slots of one edition, so the final ten get one
+    cheap read-through before anything is written.
+    """
+    if os.environ.get("EDITION_DRY_RUN") or len(picked) < 2:
+        return picked
+    for _ in range(2):
+        lines = "\n".join(f"{i + 1}. {c['lead']['title']}" for i, c in enumerate(picked))
+        try:
+            groups = (ask_json(DEDUP_PROMPT % {"headlines": lines}, SCORING_MODEL,
+                               temperature=0.0, max_tokens=600) or {}).get("groups") or []
+        except Exception as exc:
+            log(f"  ! duplicate check failed: {exc}")
+            return picked
+
+        drop = set()
+        for g in groups:
+            idx = [i - 1 for i in g if isinstance(i, int) and 1 <= i <= len(picked)]
+            if len(idx) < 2:
+                continue
+            keep = max(idx, key=lambda i: instant_score(picked[i]))
+            for i in idx:
+                if i != keep:
+                    drop.add(i)
+        if not drop:
+            return picked
+
+        log(f"  merged {len(drop)} duplicate slot(s): "
+            + "; ".join(picked[i]["lead"]["title"][:44] for i in sorted(drop)))
+        picked = [c for i, c in enumerate(picked) if i not in drop]
+        while len(picked) < EDITION_SIZE and bench:
+            nxt = next_reserve(bench, picked)
+            if not nxt:
+                break
+            picked.append(nxt)
+    return picked
 
 
 # ----------------------------------------------------------------------------
@@ -478,7 +548,7 @@ Return JSON with exactly these keys:
   "changes": "one sentence: what this changes for an ordinary reader",
   "unchanged": "one sentence: what it does NOT change — puncture the overreaction",
   "cover": {
-    "title": "the poster's headline, set large across the top. 4-8 words, max 48 characters. Punchy and concrete — it must name the actual subject, not gesture at it. Not a number, not a slogan.",
+    "title": "the poster headline. 7-12 words, max 85 characters. It must be a COMPLETE, PLAIN headline that someone who knows nothing about this story understands on its own: who did what, to whom or where. Compressed telegram fragments are the failure — 'Putin Pauses Kyiv Strikes' and 'US Hits Iranian Oil Carriers' are too clipped to mean anything; write 'Russia halts missile strikes on Kyiv as US envoys arrive' and 'US disables three Iranian oil tankers in the Indian Ocean'. No slogans, no puns, no colons.",
     "standfirst": "the paragraph set across the foot of the poster: 40-60 words, two or three sentences. This is the only text most readers will see, so make it carry the story on its own — who, where, how many, how much, when, and what happens next. Specifics, not summary."
   },
   "art": {
@@ -739,6 +809,110 @@ def develop_concept(story):
 
 
 
+# ----------------------------------------------------------------------------
+# 5d · Animate the lead posters
+#
+# A few pages a day move. The clip is a loop of the SAME poster — same medium,
+# same palette, same empty foot band — so the edition reads as one thing rather
+# than a slideshow with a video bolted on.
+# ----------------------------------------------------------------------------
+
+MOTION_PROMPT = """A short seamlessly looping animated poster.
+
+WHAT IS IN IT — %(concept)s
+
+HOW IT IS MADE — %(brief)s
+
+MOTION — one slow, continuous, looping movement and nothing more: a drift, a
+turn, a rise and fall, one element crossing the frame. It must end exactly where
+it began so it loops without a seam. No camera moves, no zoom, no push-in, no
+parallax, no cuts. The whole picture never changes.
+
+FORMAT — Tall portrait. The artwork fills the top two thirds. THE BOTTOM THIRD
+IS COMPLETELY EMPTY FLAT BACKGROUND COLOUR for the whole clip — nothing enters
+it at any point. No text, letters, numbers or captions anywhere in the frame.
+Flat printed colour, visible paper grain, no gradients, no glow, no gloss, no
+photorealism, no 3D rendering."""
+
+
+def generate_video(prompt):
+    """One looping clip from the video model. Returns bytes or None."""
+    key = os.environ.get("OPENAI_API_KEY")
+    if not key:
+        return None
+    headers = {"Authorization": f"Bearer {key}"}
+    try:
+        r = requests.post(VIDEO_URL, headers={**headers, "Content-Type": "application/json"},
+                          json={"model": VIDEO_MODEL, "prompt": prompt,
+                                "seconds": VIDEO_SECONDS, "size": VIDEO_SIZE}, timeout=90)
+        if r.status_code >= 300:
+            log(f"    video HTTP {r.status_code}: {r.text[:160]}")
+            return None
+        job = r.json().get("id")
+    except Exception as exc:
+        log(f"    video submit failed: {exc}")
+        return None
+
+    waited = 0
+    while waited < VIDEO_TIMEOUT_S:
+        time.sleep(VIDEO_POLL_S)
+        waited += VIDEO_POLL_S
+        try:
+            st = requests.get(f"{VIDEO_URL}/{job}", headers=headers, timeout=60).json()
+        except Exception:
+            continue
+        status = st.get("status")
+        if status == "completed":
+            try:
+                clip = requests.get(f"{VIDEO_URL}/{job}/content", headers=headers, timeout=180)
+                if clip.status_code == 200:
+                    return clip.content
+            except Exception as exc:
+                log(f"    video download failed: {exc}")
+            return None
+        if status in ("failed", "cancelled"):
+            log(f"    video {status}: {str(st.get('error'))[:140]}")
+            return None
+    log("    video timed out")
+    return None
+
+
+def upload_video(data, date, story_id):
+    url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    path = f"{IMAGE_PREFIX}/{date}/{story_id}.mp4"
+    if url and key:
+        try:
+            base = url.rstrip("/")
+            r = requests.post(f"{base}/storage/v1/object/{VIDEO_BUCKET}/{path}",
+                              headers={"Authorization": f"Bearer {key}", "apikey": key,
+                                       "Content-Type": "video/mp4", "x-upsert": "true"},
+                              data=data, timeout=180)
+            if r.status_code < 300:
+                return f"{base}/storage/v1/object/public/{VIDEO_BUCKET}/{path}"
+            log(f"    video upload HTTP {r.status_code}: {r.text[:140]}")
+        except Exception as exc:
+            log(f"    video upload failed: {exc}")
+    local_dir = os.path.join(ROOT, "public", "editions", "img", date)
+    os.makedirs(local_dir, exist_ok=True)
+    with open(os.path.join(local_dir, f"{story_id}.mp4"), "wb") as fh:
+        fh.write(data)
+    return f"/editions/img/{date}/{story_id}.mp4"
+
+
+def animate(story, date):
+    """Give one poster a looping clip alongside its still."""
+    art = story["art"]
+    t = TRADITIONS[art["tradition"]]
+    data = generate_video(MOTION_PROMPT % {"concept": art.get("concept", ""),
+                                           "brief": t["brief"]})
+    if not data:
+        return False
+    art["video_url"] = upload_video(data, date, story["id"])
+    return True
+
+
+
 def generate_image(prompt):
     """One illustration from gpt-image-2. Returns (bytes, mime) or (None, None)."""
     key = os.environ.get("OPENAI_API_KEY")
@@ -847,8 +1021,8 @@ def palette_of(image_bytes):
         # them is a measurement of exactly what the type will sit on.
         # All the type now sits in the foot band, which the brief keeps flat
         # and empty — so that is the only measurement that matters.
-        top = band(0.74, 1.0)
-        bottom = band(0.74, 1.0)
+        top = band(0.68, 1.0)
+        bottom = band(0.68, 1.0)
 
         # The most saturated colour with enough presence to feel deliberate.
         small = img.resize((80, 120)).quantize(colors=12, method=Image.MEDIANCUT)
@@ -942,6 +1116,9 @@ def build(now):
     log(f"Scoring {len(shortlist)} stories for importance ...")
     score_importance(shortlist)
     ten = pick_ten(shortlist)
+    bench = reserves_for(shortlist, ten)
+    ten = drop_duplicates(ten, bench)
+    ten = sorted(ten, key=instant_score, reverse=True)
 
     log("Picked:")
     for i, c in enumerate(ten, 1):
@@ -949,7 +1126,6 @@ def build(now):
             f"{c['age_hours']:4.1f}h | {c['source_count']} outlets] {c['lead']['title'][:78]}")
 
     log("Writing ten stories ...")
-    bench = reserves_for(shortlist, ten)
     kept, drafts = [], []
     batch = list(ten)
 
@@ -1022,11 +1198,12 @@ def build(now):
             "importance": round(c["importance"]),
             "instant": round(instant_score(c), 1),
             "cover": {
-                "title": str(cover.get("title") or w.get("headline", ""))[:60],
+                "title": str(cover.get("title") or w.get("headline", ""))[:95],
                 "standfirst": str(cover.get("standfirst") or w.get("dek", ""))[:420],
             },
             "art": {
                 "tradition": art.get("tradition"),
+                "video_url": art.get("video_url"),
                 "device": art.get("device"),
                 "label": (TRADITIONS.get(art.get("tradition")) or {}).get("label", ""),
                 "concept": art.get("concept", ""),
@@ -1056,6 +1233,18 @@ def build(now):
     drawn = sum(1 for st in out if st["art"].get("image_url"))
     log(f"  {drawn}/{len(out)} posters have an illustration")
 
+    movers = [st for st in out if st["art"].get("image_url")][:VIDEO_COUNT]
+    if movers and not os.environ.get("EDITION_DRY_RUN") and not os.environ.get("EDITION_NO_VIDEO"):
+        log(f"Animating the top {len(movers)} ...")
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            futures = {pool.submit(animate, st, date): st for st in movers}
+            for fut in as_completed(futures):
+                try:
+                    fut.result()
+                except Exception as exc:
+                    log(f"  ! animation failed: {exc}")
+        log(f"  {sum(1 for st in out if st['art'].get('video_url'))}/{len(movers)} posters move")
+
     return {
         "date": date,
         "issue": issue_number(now),
@@ -1065,6 +1254,7 @@ def build(now):
         "articles_seen": len(articles),
         "stories_clustered": len(clusters),
         "illustrated": drawn,
+        "animated": sum(1 for st in out if st["art"].get("video_url")),
         "stories": out,
     }
 
