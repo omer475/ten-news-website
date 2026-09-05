@@ -80,25 +80,20 @@ BE SPECIFIC — DRAW THE ACTUAL THING
   noticing, it has failed.
 
 FORMAT — THIS IS A POSTER, NOT A FULL-BLEED PICTURE
-Think of the page the way a poster designer does: a headline zone at the top,
-one strong image in the middle, a text zone at the foot. The type is printed,
-not floated over the artwork, so the artwork has to leave room for it.
+Think of the page the way a poster designer does: one strong image filling the
+top, and a quiet block at the foot where the headline and the text are printed.
 
-- THE TOP 24% AND THE BOTTOM 32% OF THE IMAGE MUST BE COMPLETELY EMPTY.
-  Nothing there but the flat background colour: no subject, no texture, no
-  pattern, no gradient, no stray marks, no drifting particles, no horizon. Big
-  type is printed across both bands and has to sit on clean flat colour.
-- EVERYTHING YOU DRAW LIVES IN THE MIDDLE BAND, between roughly 26% and 68% of
-  the height. Centre the subject there and give it room to breathe. No part of
-  it may stray into either empty band — not a wingtip, not a shadow, not a
-  wisp of smoke.
-- The background colour runs edge to edge and top to bottom, unbroken and
-  even, so the empty bands are the same flat colour as the ground behind the
-  subject.
-- The subject should be BOLD at that size — one strong shape that carries the
-  whole page. A poster is read at a glance from across a room.
+- THE ILLUSTRATION FILLS THE TOP 72% OF THE FRAME, edge to edge, right up to
+  the top of the image. Nothing is reserved at the top — go all the way up.
+- THE BOTTOM 28% MUST BE COMPLETELY EMPTY. Nothing there but the flat
+  background colour: no subject, no texture, no pattern, no gradient, no stray
+  marks, no horizon, no shadow. The headline and a paragraph of text are
+  printed across that band and must sit on clean flat colour. Not a wingtip,
+  not a wisp of smoke may cross into it.
+- The background colour runs edge to edge and top to bottom, unbroken, so the
+  empty foot is the same flat colour as the ground behind the subject.
 - The poster crops about 15% off the left and right edges, so keep the subject
-  and anything load-bearing well clear of the side margins.
+  and anything load-bearing clear of the side margins.
 - No borders, frames, mockups, vignettes, rounded corners, or fake sheets of
   paper with shadows under them.
 
@@ -106,10 +101,11 @@ POSTER COMPOSITION — COMMIT TO IT
 The empty bands are for type. The middle band is not a polite margin around a
 small drawing — it is the poster, and it must be FILLED.
 
-- THE SUBJECT IS LARGE. It fills the middle band from its top to its bottom and
-  runs off BOTH side edges, or is cropped by them. A small object floating in
-  the centre of a pale field is the failure mode of this format and the most
-  common way a page comes out looking weak.
+- THE SUBJECT IS LARGE AND FILLS ITS BAND. It runs from the top edge of the
+  frame down to the foot band, and off BOTH side edges, or is cropped by them.
+  A small object floating in the centre of a pale field is the failure mode of
+  this format and the most common way a page comes out looking weak. Err on
+  the side of too big.
 - ONE dominant shape against ONE flat ground, with a silhouette so clear the
   page still reads as a thumbnail.
 - Use a poster designer's moves: extreme scale contrast, bold cropping so a

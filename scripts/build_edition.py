@@ -845,8 +845,10 @@ def palette_of(image_bytes):
 
         # The brief now keeps these bands empty and flat, so a measurement of
         # them is a measurement of exactly what the type will sit on.
-        top = band(0.0, 0.22)
-        bottom = band(0.70, 1.0)
+        # All the type now sits in the foot band, which the brief keeps flat
+        # and empty — so that is the only measurement that matters.
+        top = band(0.74, 1.0)
+        bottom = band(0.74, 1.0)
 
         # The most saturated colour with enough presence to feel deliberate.
         small = img.resize((80, 120)).quantize(colors=12, method=Image.MEDIANCUT)
@@ -1013,6 +1015,8 @@ def build(now):
             "sources": c["sources"][:6],
             "source_count": c["source_count"],
             "url": lead["url"],
+            "photo": ({"url": c.get("image_url"), "credit": lead["source"]}
+                      if c.get("image_url") else None),
             "published": lead["published"],
             "age_hours": round(c["age_hours"], 1),
             "importance": round(c["importance"]),

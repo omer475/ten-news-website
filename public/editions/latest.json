@@ -1,458 +1,489 @@
 {
   "date": "2026-09-05",
   "issue": 248,
-  "generated_at": "2026-09-05T12:40:35.979279+00:00",
+  "generated_at": "2026-09-05T14:03:39.830675+00:00",
   "window_hours": 24,
   "feeds_read": 481,
-  "articles_seen": 3438,
-  "stories_clustered": 2934,
+  "articles_seen": 3332,
+  "stories_clustered": 2840,
   "illustrated": 10,
   "stories": [
     {
-      "id": "92fc6e18ef19",
-      "tag": "FLOODS",
-      "headline": "Nepal flood death toll climbs as thousands remain missing",
-      "dek": "Police said 1,344 people are now confirmed dead after an ice-rock avalanche triggered floods and mudslides across northern and central Nepal.",
-      "dateline": "KATHMANDU —",
+      "id": "36d78d2b5ce9",
+      "tag": "DIPLOMACY",
+      "headline": "Putin Halts Kyiv Strikes Before U.S. Envoys Arrive",
+      "dek": "Russian attacks on Kyiv were paused as Steve Witkoff and Jared Kushner reached Moscow for talks and prepared to travel on to Ukraine.",
+      "dateline": "MOSCOW —",
       "paragraphs": [
-        "Nepal's flood death toll rose to 1,344 on Saturday as rescue teams recovered more bodies from devastated towns and villages. Police said thousands are still missing. The update matters now because search crews are still working on the eleventh day after the disaster began.",
-        "The floods were triggered on August 26 by an ice-rock avalanche near the Nepal-Tibet border. The surge of water and mud tore through northern and central Nepal. Police said 843 bodies have been recovered intact, while 501 amputated body parts have also been retrieved from flood-hit areas.",
-        "Much is still unresolved. Police estimate 4,898 people remain missing, so the death toll may rise further. Authorities said 1,030 bodies have been temporarily buried after DNA collection and other required steps. Rescue teams led by the Nepal Army are still searching damaged settlements and river corridors."
+        "President Vladimir Putin ordered a pause in strikes on Kyiv before meetings in Moscow with Steve Witkoff and Jared Kushner, according to reports. The two U.S. envoys arrived as Washington tried to restart stalled peace contacts. They are expected to travel to Kyiv after the Moscow talks.",
+        "The visit links Moscow and Kyiv in one diplomatic trip. Witkoff is President Trump’s special envoy, and Kushner is Trump’s son-in-law. Their mission, as described in reports, is to test whether direct talks can be revived after long deadlock and continued fighting between Russia and Ukraine.",
+        "It is not clear how long the pause will last, whether it covers only Kyiv, or whether either side is ready to make concessions. No agreement has been announced. The talks could lower tensions for a short time, but the wider war and any path to a settlement remain unresolved."
       ],
-      "changes": "For people in Nepal, this means rescue, identification and burial work will continue, and many families still do not know who survived.",
-      "unchanged": "This does not mean all missing people are confirmed dead, and it does not mean the full scale of loss is known yet.",
+      "changes": "For ordinary readers, this means a new round of U.S.-backed diplomacy is under way and may briefly reduce danger in Kyiv.",
+      "unchanged": "This does not mean the war is ending, that strikes elsewhere have stopped, or that a peace deal is close.",
       "category": "world",
       "sources": [
         "Anadolu Agency English",
-        "TASS",
-        "The Hindu"
+        "Euronews",
+        "NV.ua English",
+        "TRT World",
+        "The New York Times World"
       ],
-      "source_count": 3,
-      "url": "https://www.thehindu.com/news/international/nepal-flash-floods-death-toll-rises-september-5-2026/article71431209.ece",
-      "published": "2026-09-05T12:26:43+00:00",
+      "source_count": 5,
+      "url": "https://www.nytimes.com/2026/09/05/world/europe/russia-ukraine-witkoff-kushner-moscow.html",
+      "photo": {
+        "url": "https://static01.nyt.com/images/2026/09/05/multimedia/05int-russia-meeting-sub-ckmh/05int-russia-meeting-sub-ckmh-mediumSquareAt3X.jpg",
+        "credit": "The New York Times World"
+      },
+      "published": "2026-09-05T13:49:50+00:00",
       "age_hours": 0.2,
-      "importance": 95,
-      "instant": 81.5,
+      "importance": 90,
+      "instant": 81.7,
       "cover": {
-        "title": "Nepal Flood Death Toll Rises",
-        "standfirst": "Flash floods and mudslides in Nepal have killed 1,344 people, police said on Saturday. The disaster began on August 26 after an ice-rock avalanche near the Nepal-Tibet border. Nearly 4,900 people are still missing, and army-led rescue teams are continuing searches in damaged towns and river valleys."
+        "title": "Putin Pauses Kyiv Strikes",
+        "standfirst": "Russian strikes on Kyiv were paused before Steve Witkoff and Jared Kushner arrived in Moscow for talks with Vladimir Putin. The two U.S. envoys plan to go on to Kyiv next. The trip is meant to test whether peace talks can restart, but no deal has been announced."
       },
       "art": {
-        "tradition": "engraved_grave",
+        "tradition": "riso_poster",
         "device": "negative_space",
-        "label": "Engraving",
-        "concept": "Show a near-black vertical wall of floodwater, mud and shattered debris driving down a tight Himalayan gorge, seen almost head-on so it fills the upper two-thirds. Carve a stark white channel through the center in the unmistakable silhouette of Nepal — long east-west, with its irregular southern edge and tapering ends — as if the country itself has become the route being gouged out; along the lower edges, let a few tiny Nepali rooflines and a snapped suspension bridge vanish into the surge, while the lower third stays mostly pale, open riverbed and scattered wreckage for type.",
-        "note": "Somber and quiet, in cold grey, brown and muted blue.",
-        "second_beat": "First it reads as a catastrophic flood in motion; a beat later, the white void resolves into Nepal’s map, making the disaster feel like the country being erased from within.",
-        "tint": "#f2e7d4",
-        "accent": "#fdf1dd",
-        "titleTop": "#4c4842",
-        "titleBottom": "#3f3c37",
+        "label": "Risograph poster",
+        "concept": "A large flat blue silhouette of Saint Sophia’s bell tower occupies the upper two-thirds, unmistakably Kyiv by its tiered belfry and small dome. Behind it, a single fluorescent-pink missile crosses right-to-left, but the narrow white gap where missile and tower nearly meet is shaped precisely like a descending passenger jet angled toward Kyiv — the flight path existing only as a temporary corridor between weapon and target. Keep the lower third largely empty off-white for type, with no extra skyline, smoke, or detail.",
+        "note": "Tense but restrained; deep blue, black, and muted red.",
+        "second_beat": "First you see missile and tower; a beat later the white slit resolves into the envoys’ plane, making diplomacy feel like a brief absence carved out of an ongoing attack.",
+        "tint": "#fbf3d5",
+        "accent": "#fef5d7",
+        "titleTop": "#403d36",
+        "titleBottom": "#403d36",
         "topInk": "dark",
         "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/92fc6e18ef19.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/36d78d2b5ce9.webp"
       }
     },
     {
-      "id": "f213f6309147",
-      "tag": "FLOODS",
-      "headline": "Two survivors found alive 10 days after Nepal floods",
-      "dek": "A woman was pulled from a mud-buried house and a man from a hydropower tunnel as thousands remain missing.",
-      "dateline": "KATHMANDU —",
+      "id": "d1d9e5e5dbfe",
+      "tag": "DIPLOMACY",
+      "headline": "Trump envoys arrive in Moscow for new Ukraine peace talks",
+      "dek": "Steve Witkoff and Jared Kushner are due in Moscow first, with a possible trip to Kyiv after Russian strikes hit Ukrainian targets.",
+      "dateline": "MOSCOW —",
       "paragraphs": [
-        "Nepal rescue teams found two people alive on Saturday, 10 days after flash floods tore through districts near the Nepal-Tibet border. A woman was pulled from a house buried in mud in Nuwakot. A Chinese man was rescued from a hydropower tunnel. Both were flown out by helicopter.",
-        "The floods hit Rasuwa, Nuwakot, Dhading, Gorkha and Tanahun and killed at least 1,300 people, according to authorities. More than 5,000 are still missing. Rescue work has centered on hydropower sites, where about 900 workers are unaccounted for and 500 may be trapped in tunnels across 12 projects.",
-        "The rescues show some people are still being found, but the scale of loss has not changed. Officials say the disaster was likely caused by a glacier collapse. Teams from China, India, South Korea and the United States are still searching, especially in tunnels and buried settlements."
+        "U.S. envoys Steve Witkoff and Jared Kushner landed in Moscow on Saturday to discuss a Trump administration proposal to end the Russia-Ukraine war. The visit comes after months of stalled diplomacy and rising civilian deaths from long-range missile and drone attacks by both sides.",
+        "Russia invaded Ukraine in 2022, and the war has now lasted more than four years. Trump says the envoys will test whether a peace deal is possible. After Moscow, they are expected to go to Kyiv, though the plan has shifted and the Ukraine leg was still uncertain on Friday.",
+        "It is not clear what the U.S. proposal contains or whether it asks Ukraine to give up territory. It is also unclear whether the envoys will meet Vladimir Putin, whether they will fly into closed Ukrainian airspace, and whether any temporary ceasefire will hold during the talks."
       ],
-      "changes": "For ordinary readers, this means the search in Nepal is still active and some families still have reason to hope for survivors.",
-      "unchanged": "It does not mean the disaster is easing, because thousands remain missing and most rescue efforts are still focused on mass casualties.",
+      "changes": "For ordinary readers, this means the United States is making another direct attempt to restart talks between Moscow and Kyiv.",
+      "unchanged": "This does not mean a ceasefire or peace deal exists yet, and fighting is still continuing on the ground.",
       "category": "world",
       "sources": [
-        "Euronews",
-        "The Age",
-        "The Sydney Morning Herald"
+        "Crypto Briefing",
+        "Financial Times",
+        "NPR World",
+        "The Hindu",
+        "The Japan Times"
       ],
-      "source_count": 3,
-      "url": "http://www.euronews.com/2026/09/05/two-people-pulled-alive-by-nepals-search-and-rescue-team-10-days-after-devastating-flash-f",
-      "published": "2026-09-05T12:25:57+00:00",
+      "source_count": 5,
+      "url": "https://www.thehindu.com/news/international/trump-says-witkoff-kushner-heading-abroad-to-discuss-ukraine-peace/article71430897.ece",
+      "photo": {
+        "url": "https://th-i.thgim.com/public/incoming/p272k4/article71430901.ece/alternates/LANDSCAPE_1200/2026-05-21T100334Z_320388633_RC2DNKA0FQT2_RTRMADP_3_USA-TRUMP-DIPLOMACY.JPG",
+        "credit": "The Hindu"
+      },
+      "published": "2026-09-05T13:50:40+00:00",
       "age_hours": 0.2,
-      "importance": 90,
-      "instant": 77.1,
+      "importance": 88,
+      "instant": 80.0,
       "cover": {
-        "title": "Survivors Found In Nepal Floods",
-        "standfirst": "Ten days after flash floods devastated central Nepal, rescuers pulled one woman from a house buried in mud in Nuwakot and one Chinese man from a hydropower tunnel. At least 1,300 people are dead and more than 5,000 remain missing. Search teams from several countries are still working."
+        "title": "US Envoys Reach Moscow",
+        "standfirst": "Steve Witkoff and Jared Kushner arrived in Moscow on Saturday with a Trump-backed plan to end the Russia-Ukraine war, now in its fifth year. They are expected to travel on to Kyiv on Sunday if security allows, after Russian strikes hit Kyiv airports and a civilian site in the Dnipro region."
       },
       "art": {
-        "tradition": "engraved_grave",
-        "device": "before_and_after",
-        "label": "Engraving",
-        "concept": "Show the mouth of a Nepal hydropower tunnel in one severe frontal view, split cleanly down the middle. On the left, the arched bore is open with unmistakable ribbed supports receding into darkness; on the right, the same arch is packed solid with engraved layers of mud, rock and broken timbers, and a rescue rope runs into the blockage toward a single tiny white hardhat-lamp glow buried deep inside. Keep the lower third quiet with only the tunnel apron and a thin wash of settled silt, so type can sit across it.",
-        "note": "Quiet, grave, muddy browns and slate greys with a thin cold blue.",
-        "second_beat": "First you read a tunnel open versus shut; a beat later the tiny lamp inside the blocked half reveals that the mountain has closed on someone still alive.",
-        "tint": "#d4c8b6",
-        "accent": "#f4e5d3",
-        "titleTop": "#3d3935",
-        "titleBottom": "#312e2a",
+        "tradition": "silkscreen_grave",
+        "device": "visual_pun",
+        "label": "Silkscreen",
+        "concept": "A nearly empty cover: from the upper left, a thin red in-flight route line curves diagonally down toward Moscow. In the last third it turns into a jagged crack in concrete, splitting the pale ground as it reaches a small black jet silhouette descending over the unmistakable onion domes and wall of the Kremlin; just before the city, a faint unresolved fork in the line peels westward and dies out. Keep the lower third quiet and open for type; use only black, red and a pale ground, with the Kremlin silhouette specific enough to read instantly as Moscow.",
+        "note": "Grave and spare, with deep reds, black, and cold grey-blue.",
+        "second_beat": "First it reads as envoys flying in for talks; a beat later the route is also a fracture, so diplomacy is shown arriving along a ceasefire already breaking and with Kyiv still unresolved.",
+        "tint": "#f3e8ce",
+        "accent": "#f5e8d0",
+        "titleTop": "#3d3a34",
+        "titleBottom": "#3d3a34",
         "topInk": "dark",
         "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/f213f6309147.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/d1d9e5e5dbfe.webp"
       }
     },
     {
-      "id": "d012cc0a2d18",
+      "id": "fe8a250d87f2",
       "tag": "SECURITY",
-      "headline": "Iran Says U.S. Missiles Hit Oil Tanker Near Kharg",
-      "dek": "Iranian state media reported a strike on an oil tanker near the country’s main export island after recent U.S. attacks.",
-      "dateline": "TEHRAN —",
+      "headline": "US strikes hit three Iranian oil carriers in Indian Ocean",
+      "dek": "The attack widened a fight over Iranian shipping and raised new fears for oil flows through the Strait of Hormuz.",
+      "dateline": "CENTCOM —",
       "paragraphs": [
-        "Iranian state media said U.S. missiles hit an Iranian oil tanker near Kharg Island, a key oil export hub in the Gulf. The United States military had not confirmed any attack. The report came after a wave of U.S. strikes launched in retaliation for Iranian attacks on ships and American forces.",
-        "Kharg Island is central to Iran’s oil trade, so any strike nearby carries economic and military weight. The latest report sits inside a wider exchange between Washington and Tehran that has already included attacks at sea and strikes on military targets. That raises the risk of further disruption in Gulf shipping lanes.",
-        "It is still unclear whether the tanker was badly damaged, whether there were casualties, or whether oil exports were interrupted. Independent confirmation is missing, and the U.S. military has not publicly backed the Iranian account. The next question is whether either side answers with another strike."
+        "The US military said it struck three Iranian crude oil carriers in the Indian Ocean. The reported attack came as fighting between Washington and Tehran sharpened around the Strait of Hormuz. Hitting oil carriers goes beyond earlier pressure on shipping and directly targets Iran’s export trade.",
+        "The Strait of Hormuz is one of the world’s main routes for oil and gas. Iran has faced a US naval blockade on parts of its shipping, and both sides have traded strikes in recent weeks. Any attack on tankers raises the risk of disrupted energy supplies and wider military retaliation.",
+        "It is still unclear how badly the vessels were damaged, whether there were casualties, and how Iran will respond. Traders and airlines are watching for any Iranian move to restrict airspace or shipping. Official statements from Tehran and Washington could quickly change the risk of further escalation."
       ],
-      "changes": "For ordinary readers, this adds to the risk of higher oil prices and more tension around Gulf shipping.",
-      "unchanged": "It does not mean a full regional war is certain, and the reported strike is not yet independently confirmed.",
+      "changes": "This raises the chance of higher fuel prices, shipping delays, and wider travel disruption if the conflict spreads.",
+      "unchanged": "It does not mean the Strait of Hormuz is closed now or that a broader regional war is certain.",
       "category": "security",
       "sources": [
-        "The New York Times World",
-        "The Straits Times"
+        "Crypto Briefing"
       ],
-      "source_count": 2,
-      "url": "https://www.nytimes.com/2026/09/05/world/middleeast/iran-us-kharg-oil-tanker-attack.html",
-      "published": "2026-09-05T11:39:55+00:00",
-      "age_hours": 1.0,
+      "source_count": 1,
+      "url": "https://cryptobriefing.com/us-military-strikes-iranian-oil-carriers-amid-escalating-tensions/",
+      "photo": {
+        "url": "https://static.cryptobriefing.com/wp-content/uploads/2026/09/05100258/iranian-vessel-jpg-1-400x210.jpeg",
+        "credit": "Crypto Briefing"
+      },
+      "published": "2026-09-05T14:02:59+00:00",
+      "age_hours": 0.0,
       "importance": 90,
-      "instant": 70.2,
+      "instant": 74.2,
       "cover": {
-        "title": "Missiles Reported Near Kharg",
-        "standfirst": "Iran’s state media said U.S. missiles hit an Iranian oil tanker near Kharg Island, the country’s main oil export point, on Sunday. The U.S. military had not confirmed the claim. The report followed recent U.S. retaliation for Iranian attacks on ships and American forces. Damage, casualties and any effect on oil exports remain unclear."
+        "title": "US Hits Iranian Oil Carriers",
+        "standfirst": "The US military said it struck three Iranian crude oil carriers in the Indian Ocean as tensions with Iran rose around the Strait of Hormuz. The attack puts Iran’s export route in the firing line. Markets, shippers and airlines are now watching for retaliation or fresh limits on airspace and sea traffic."
       },
       "art": {
         "tradition": "silkscreen_grave",
         "device": "negative_space",
         "label": "Silkscreen",
-        "concept": "Make the upper half a heavy black land-and-sea mass unmistakably shaped as Kharg Island and the surrounding Gulf, with the export channel cut out of it in white so that the void reads, on second glance, as the silhouette of a large tanker hull. From the right edge, a single red missile is already entering that white tanker-shape, not yet exploded; keep the lower third almost empty as flat water for type, with no extra ships, labels, or sky detail.",
-        "note": "Severe and tense; deep navy, black and one hard red-orange accent.",
-        "second_beat": "First you read place; then the hidden tanker appears inside Kharg itself, making the strike about the island’s export function, not just any generic attack at sea.",
-        "tint": "#06214f",
-        "accent": "#05204c",
-        "titleTop": "#b4bcc9",
-        "titleBottom": "#b4bcc9",
+        "concept": "Seen from above, a single vast black oil slick fills the page, its ragged edge spreading across open sea. Cut out of that slick in stark white negative space is the unmistakable narrow shape of the Strait of Hormuz and the Gulf beyond, so the stain itself becomes the threatened chokepoint; near the upper edge, three tiny red tanker silhouettes are caught mid-strike, breaking apart and burning, while the lower third remains mostly clear water for type.",
+        "note": "Severe and spare; deep navy, black, and one hard red-orange accent",
+        "second_beat": "First you see an expanding spill from the attacks; a beat later you realise the white void inside it is the map of Hormuz, turning damage at sea into a threat to the whole passage.",
+        "tint": "#072a62",
+        "accent": "#072b63",
+        "titleTop": "#c1cad8",
+        "titleBottom": "#c1cad8",
         "topInk": "light",
         "bottomInk": "light",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/d012cc0a2d18.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/fe8a250d87f2.webp"
       }
     },
     {
-      "id": "f21e666ad8fa",
-      "tag": "POLITICS",
-      "headline": "Sara Duterte posts bail after arrest order over threat case",
-      "dek": "The Philippine vice president paid 360,000 pesos bail and said she felt unsafe leaving court amid a widening clash with President Ferdinand Marcos Jr.",
-      "dateline": "QUEZON CITY —",
-      "paragraphs": [
-        "Philippine vice president Sara Duterte posted bail on Saturday after a court issued an arrest order a day earlier on three counts of grave threats. The case centers on remarks she made in 2024 about having President Ferdinand Marcos Jr, his wife and another senior official killed if she were killed.",
-        "Duterte denies threatening the president and says she was speaking about her own safety. But the case sits inside a deeper break between two political families that ran together in 2022. She is also facing an impeachment trial in the Senate over separate allegations including misuse of confidential funds.",
-        "The criminal case now moves ahead while Duterte remains free on bail. If she were convicted, she could be barred from public office and blocked from a 2028 presidential run. It is also unclear how far the Marcos administration will press the case as their political fight hardens."
-      ],
-      "changes": "An ordinary reader should now see that the feud at the top of Philippine politics has become a live criminal case with possible consequences for the next election.",
-      "unchanged": "This does not remove Sara Duterte from office today, and it does not by itself decide the impeachment case or the 2028 race.",
-      "category": "politics",
-      "sources": [
-        "ABC News International",
-        "NPR World",
-        "The Independent"
-      ],
-      "source_count": 3,
-      "url": "https://www.independent.co.uk/asia/southeast-asia/sara-duterte-bail-threats-philippines-marcos-jr-b3045135.html",
-      "published": "2026-09-05T12:17:58+00:00",
-      "age_hours": 0.4,
-      "importance": 80,
-      "instant": 67.8,
-      "cover": {
-        "title": "Sara Duterte Posts Bail",
-        "standfirst": "Philippine vice president Sara Duterte left a Quezon City court on Saturday after posting 360,000 pesos bail on three grave threat charges. Prosecutors point to remarks from a 2024 online briefing. She denies threatening President Ferdinand Marcos Jr. The criminal case and her separate impeachment trial will now run on."
-      },
-      "art": {
-        "tradition": "riso_poster",
-        "device": "visual_pun",
-        "label": "Risograph poster",
-        "concept": "At the entrance to a Manila courthouse, show a single waist-high security barrier arm swinging down across the path of a few tiny arriving figures. Draw the barrier so its silhouette unmistakably doubles as a pistol: the curved support reads as trigger guard and trigger, the horizontal arm as barrel, with the courthouse steps and columns reduced to simple blue geometry behind it; keep the lower third mostly open and flat for type. Use federal blue for the court setting and barrier, with one fluorescent pink accent on the moving arm or pivot to catch the eye and mark the moment of descent.",
-        "note": "Tense and public; red, black, and off-white.",
-        "second_beat": "First it reads as a court checkpoint in motion; a beat later the same barrier becomes a gun, turning Duterte’s claim of needing protection and the threat case against her into the same image.",
-        "tint": "#f4ebdc",
-        "accent": "#f7ede0",
-        "titleTop": "#3e3b38",
-        "titleBottom": "#3e3b38",
-        "topInk": "dark",
-        "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/f21e666ad8fa.webp"
-      }
-    },
-    {
-      "id": "e2b21d61f08f",
-      "tag": "TECHNOLOGY",
-      "headline": "Tesla puts steering wheel-free Cybercabs onto Austin streets",
-      "dek": "Dozens of gold robotaxis without pedals or steering wheels began running in Austin as Tesla tries to catch Waymo and calm public safety fears.",
-      "dateline": "AUSTIN, Texas —",
-      "paragraphs": [
-        "Tesla on Thursday sent dozens of gold Cybercabs onto Austin streets with no steering wheels or brake pedals. The launch is a bigger test of its driverless taxi plan. Tesla needs a win as car sales and profits have fallen, and investors want proof the business can grow beyond selling cars.",
-        "Tesla already runs robotaxis in Texas and Florida, but those cars still have human controls. Waymo is far ahead, with more than 4,000 driverless vehicles in 14 cities. Tesla is also taking a different technical path, relying mainly on cameras rather than adding lidar and radar to help cars read the road.",
-        "The main unknown is whether people will trust the service and whether regulators will allow faster expansion. Surveys show most Americans are uncomfortable with driverless cars. Tesla also faces safety investigations in the United States, including probes into crashes, low-visibility driving, red-light incidents and delayed crash reporting."
-      ],
-      "changes": "If you live in Austin, you may soon be able to book a Tesla ride with no driver and no backup controls.",
-      "unchanged": "This does not mean private Teslas everywhere can now drive themselves legally or safely without close limits.",
-      "category": "technology",
-      "sources": [
-        "The Independent"
-      ],
-      "source_count": 1,
-      "url": "https://www.independent.co.uk/news/world/americas/musk-tesla-cybercabs-strets-taxi-b3045214.html",
-      "published": "2026-09-05T12:37:31+00:00",
-      "age_hours": 0.1,
-      "importance": 80,
-      "instant": 65.7,
-      "cover": {
-        "title": "Tesla Cybercabs Hit Austin",
-        "standfirst": "Tesla put dozens of gold Cybercabs onto Austin streets on Thursday. The new robotaxis have no steering wheel and no brake pedal. Tesla is trying to expand to more cities, but it still trails Waymo, faces safety investigations, and must persuade wary riders to get in."
-      },
-      "art": {
-        "tradition": "bold_symbol",
-        "device": "containment",
-        "label": "Bold symbol",
-        "concept": "Show the gold Tesla Cybercab at a slight front three-quarter angle, nose-first and halfway forced through a standard orange traffic cone that impossibly sheaths most of the car like a too-small safety sleeve. Make the Cybercab unmistakable by its smooth gold body, blunt futuristic front, and visibly control-less cabin with no steering wheel or pedals; keep the background plain and the lower third empty for type, with the cone and car doing all the work.",
-        "note": "Cool, watchful mood; gold car against pale blue-gray city tones.",
-        "second_beat": "First you see a robotaxi emerging; a beat later you realize the whole car is absurdly being contained by a traffic cone, turning the safety-rollout argument into one sharp visual contradiction.",
-        "tint": "#9cb4bb",
-        "accent": "#944f30",
-        "titleTop": "#25140c",
-        "titleBottom": "#25140c",
-        "topInk": "dark",
-        "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/e2b21d61f08f.webp"
-      }
-    },
-    {
-      "id": "fd2ed48ae2f8",
+      "id": "1eae84387851",
       "tag": "SECURITY",
-      "headline": "US warns Iranian tanker after strike near Kharg Island",
-      "dek": "US forces hit one tanker and warned STARK 1 near Iran's main oil export terminal as Brent crude rose above $85.",
-      "dateline": "CENTCOM —",
+      "headline": "US disables three Iranian tankers after missiles hit Navy ships",
+      "dek": "The strikes in the Strait of Hormuz damaged ship systems without sinking the vessels, after Iran fired missiles at two US warships.",
+      "dateline": "STRAIT OF HORMUZ —",
       "paragraphs": [
-        "US Central Command said its forces warned the Iranian oil tanker STARK 1 during blockade operations near Kharg Island, then struck another vessel that did not comply. The action comes days after the US resumed a naval blockade around Iranian ports, saying it was responding to Iranian attacks on commercial shipping.",
-        "Kharg Island is Iran's main oil export hub and handles most of the country's crude shipments. The vessel hit was the Curacao-flagged M/T Belma, which US forces said ignored repeated warnings and was disabled with Hellfire missiles. Oil traders reacted quickly because traffic near the Strait of Hormuz affects global fuel supply.",
-        "It is still unclear how Iran will respond, whether more tankers will test the blockade, and how long the operation will last. The legal basis for stopping and striking ships will also face scrutiny. Further disruption near Kharg Island could raise shipping costs, insurance rates, and oil prices again."
+        "The US military said it disabled three oil tankers linked to Iran’s Revolutionary Guard on September 5 in the Strait of Hormuz. The action came after Iranian forces fired missiles at two US Navy warships. US officials said they used precision strikes to stop the tankers without causing major oil spills.",
+        "The Strait of Hormuz is one of the world’s most important oil routes. About one-fifth of global petroleum use passes through it. The US says Iran and the Revolutionary Guard have attacked ships and US targets in the region through 2026, while Washington has struck dozens of Iranian military assets and tightened pressure on oil exports.",
+        "It is still unclear whether Iran will answer with more attacks on warships, tankers or ports. Commercial traffic is still moving, but under heavier naval protection and higher insurance costs. The immediate danger is a wider fight that disrupts oil shipments, even if these three vessels stay afloat."
       ],
-      "changes": "If you buy fuel or goods moved by sea, this raises the risk of higher energy and shipping costs in the near term.",
-      "unchanged": "This does not mean the Strait of Hormuz is closed or that global oil supplies have stopped moving.",
+      "changes": "Oil shipping through the Gulf now carries more military risk, which can feed into fuel prices and insurance costs far from the region.",
+      "unchanged": "This does not mean the Strait has closed or that global oil supplies have stopped moving today.",
       "category": "security",
       "sources": [
         "Anadolu Agency English",
-        "Crypto Briefing",
-        "Euronews"
+        "Crypto Briefing"
       ],
-      "source_count": 3,
-      "url": "https://cryptobriefing.com/us-military-warns-iranian-tanker-stark-1-kharg-island/",
-      "published": "2026-09-05T11:56:32+00:00",
-      "age_hours": 0.7,
-      "importance": 75,
-      "instant": 61.7,
+      "source_count": 2,
+      "url": "https://cryptobriefing.com/us-centcom-strikes-iranian-oil-tankers/",
+      "photo": {
+        "url": "https://static.cryptobriefing.com/wp-content/uploads/2026/09/05100102/library-us-central-command-strikes-three-iranian-oil-tankers-aft-400x225.png",
+        "credit": "Crypto Briefing"
+      },
+      "published": "2026-09-05T14:01:07+00:00",
+      "age_hours": 0.0,
+      "importance": 83,
+      "instant": 70.3,
       "cover": {
-        "title": "US Warns STARK 1",
-        "standfirst": "US forces warned the Iranian tanker STARK 1 near Kharg Island after disabling another ship that ignored orders, CENTCOM said. Kharg handles most of Iran's crude exports. Brent crude rose above $85 a barrel. Markets now wait to see whether Iran retaliates and whether more tankers are stopped."
+        "title": "US Hits Iranian Oil Tankers",
+        "standfirst": "The US said it disabled three Iranian tankers in the Strait of Hormuz on September 5 after Iranian missiles targeted two Navy warships. The ships were damaged but not sunk, and no casualties were reported. Oil traffic is still moving under tighter naval escort as markets watch for Iran’s next step."
       },
       "art": {
-        "tradition": "punk_cutout",
-        "device": "repetition_with_a_break",
-        "label": "Punk cutout",
-        "concept": "Show a tight diagonal convoy of near-identical tanker silhouettes crossing a flat acid-green Gulf, all aimed past a hard black block of Kharg Island near the top edge. One tanker, just off the island and near the centre, is violently broken out of the line: a white impact burst punches through its hull, its body slews sideways, and a few raw marker arcs radiate the warning/strike so the whole shipping flow visibly jolts around a single interdiction. Keep the lower third mostly open acid-green water for type; no labels, no extra detail, just convoy, island, hit.",
-        "note": "Tense and spare; deep navy, rust red, and oil-black.",
-        "second_beat": "First you read a routine stream of oil traffic; a beat later the one ruptured ship makes clear that a single strike near Kharg Island has militarised and disrupted the whole route.",
-        "tint": "#b8cf17",
-        "accent": "#b9d016",
-        "titleTop": "#252a04",
-        "titleBottom": "#252a04",
-        "topInk": "dark",
-        "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/fd2ed48ae2f8.webp"
+        "tradition": "maximalist_doodle",
+        "device": "visual_pun",
+        "label": "Maximalist doodle",
+        "concept": "A single thick white contrail curves diagonally across a dark sea and, without changing style, becomes the exposed hose-and-pipe run along the deck of an oil tanker threading the Strait of Hormuz. At one end of the curve sit two tiny, unmistakable US destroyers with fading launch smoke; along the same line, three tankers in convoy are the only ships whose wakes abruptly stop and whose hulls cant out of lane, while the surrounding merchant traffic continues normally. Keep the lower third mostly open water with only a few faint route lines so type can sit there cleanly.",
+        "note": "Grave, high-contrast, with deep navy, black, rust red and a small harsh white.",
+        "second_beat": "First it reads as a clean shipping route; a beat later the same line snaps into a missile path, making oil flow and attack literally the same contour.",
+        "tint": "#07213a",
+        "accent": "#212b3a",
+        "titleTop": "#bcbfc4",
+        "titleBottom": "#bcbfc4",
+        "topInk": "light",
+        "bottomInk": "light",
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/1eae84387851.webp"
       }
     },
     {
-      "id": "64095ba4fe1f",
-      "tag": "TECH",
-      "headline": "Chinese AI firms push cheaper open models for global reach",
-      "dek": "Kai-Fu Lee says Chinese labs can compete abroad with models that are slightly weaker but far cheaper to train and use.",
-      "dateline": "BLOOMBERG INTERVIEW —",
+      "id": "6dc4a536b68d",
+      "tag": "BORDER",
+      "headline": "Masked anti-migrant protest blocks traffic at Dover ferry port",
+      "dek": "Hundreds in balaclavas halted vehicles for hours at Britain’s main ferry terminal before police restored normal traffic.",
+      "dateline": "DOVER — England",
       "paragraphs": [
-        "Kai-Fu Lee says Chinese AI companies may not need the strongest models to win global market share. In a Bloomberg interview, he argued that cheaper open-weight systems are now close enough in quality to US rivals for many users. That matters as developers and businesses look for lower-cost tools.",
-        "Lee said Chinese labs are producing models with about 90 to 95 percent of US capability at a small share of the training cost. He said export controls on advanced chips forced teams in China to use hardware more efficiently. Models from DeepSeek and Alibaba's Qwen now rank highly on open-source benchmarks.",
-        "It is still unclear whether low-cost open models can match US leaders in the most demanding business and research tasks. Benchmark claims vary, and frontier systems still lead in some areas. It is also not clear how tighter US export rules, safety rules, or commercial pressure will affect adoption outside China."
+        "Hundreds of anti-migrant protesters blocked traffic at the Port of Dover on Saturday, stopping ferry movement between Britain and France for several hours. Video showed masked demonstrators in balaclavas chanting \"stop the boats.\" The protest came as small-boat migration remains a live political issue despite a recent fall in crossings.",
+        "Dover is Britain’s busiest international ferry port. In summer it handles about 15,000 passengers a day and more than a third of the country’s trade with the European Union. Crossings of the English Channel by migrants fell 40% from January to August 2026 compared with the same period a year earlier.",
+        "Police said they were engaging with protesters and that normal traffic had resumed. The government condemned the disruption but repeated that peaceful protest is protected. It is still unclear whether arrests will follow, whether more actions are planned, and whether the protest will deepen pressure on the government’s migration policy."
       ],
-      "changes": "Readers may soon see more cheap AI products built on Chinese open models, especially in apps and services aimed at price-sensitive markets.",
-      "unchanged": "This does not mean Chinese AI has clearly surpassed US AI, or that the most advanced closed models no longer matter.",
-      "category": "technology",
+      "changes": "If you use Dover, this shows how quickly a political protest there can disrupt travel and freight for ordinary passengers and drivers.",
+      "unchanged": "It does not mean Channel crossings are rising again, or that Britain’s border system suddenly stopped working on Saturday.",
+      "category": "politics",
       "sources": [
-        "Crypto Briefing"
+        "Deutsche Welle"
       ],
       "source_count": 1,
-      "url": "https://cryptobriefing.com/kai-fu-lee-chinese-ai-global-edge/",
-      "published": "2026-09-05T12:35:12+00:00",
+      "url": "https://www.dw.com/en/masked-anti-migrant-protesters-block-uk-s-dover-terminal/a-79046929?maca=en-rss-en-all-1573-xml-mrss",
+      "photo": null,
+      "published": "2026-09-05T14:00:00+00:00",
       "age_hours": 0.1,
-      "importance": 70,
-      "instant": 57.3,
+      "importance": 75,
+      "instant": 61.5,
       "cover": {
-        "title": "Cheap Chinese AI Spreads",
-        "standfirst": "Kai-Fu Lee says Chinese AI labs are building open-weight models that reach roughly 90 to 95 percent of US performance at a fraction of the cost. DeepSeek and Alibaba's Qwen are gaining developers now. The next test is whether low prices can turn benchmark gains into global use."
+        "title": "Masked Protest Blocks Dover",
+        "standfirst": "Hundreds of anti-migrant protesters in balaclavas blocked traffic at the Port of Dover on Saturday, halting ferry movement between Britain and France for hours. Police later restored normal traffic. The government condemned the disruption at the port that carries 15,000 summer passengers a day and a large share of UK-EU trade."
+      },
+      "art": {
+        "tradition": "punk_cutout",
+        "device": "substitution",
+        "label": "Punk cutout",
+        "concept": "Show the Dover port road barrier in a stark black-and-white cutout, dropping diagonally across the frame over a flat hazard-orange ground. But the barrier arm is not a plank: it is a single fused bar made from a row of balaclava-covered heads and shoulders, rigid and mechanical, descending to stop two tiny waiting car silhouettes; keep the lower third mostly open road for type, and add only the minimum port cues — a clipped white ferry hull and chalk cliff edge high in the background — so Dover is unmistakable without clutter.",
+        "note": "Tense, public-facing, with flat reds, navy, grey, and ferry white.",
+        "second_beat": "First you see a port barrier stopping traffic; a beat later you realise the protesters have become the machinery that controls who moves and who doesn’t.",
+        "tint": "#ee4b01",
+        "accent": "#ef4c01",
+        "titleTop": "#ffffff",
+        "titleBottom": "#ffffff",
+        "topInk": "light",
+        "bottomInk": "light",
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/6dc4a536b68d.webp"
+      }
+    },
+    {
+      "id": "94c2f5a181ef",
+      "tag": "CYCLING",
+      "headline": "Pogacar ends season after Vuelta crash and neck fracture",
+      "dek": "The Slovenian champion will miss the World Championships after surgery on a broken collarbone, concussion and a stable neck fracture.",
+      "dateline": "UAE Team Emirates-XRG —",
+      "paragraphs": [
+        "Tadej Pogacar will not race again this season after injuries from his crash on stage eight of the Vuelta a Espana. His team announced the decision now because his recovery will continue through the autumn. He had surgery on a broken collarbone and also suffered concussion and a stable neck fracture.",
+        "Pogacar, 27, is one of cycling's biggest riders and has won the Tour de France five times. He crashed out of the Vuelta while leading the race and lost his chance to add that title to his Giro d'Italia win. He will now miss the World Championships in Montreal and October races in Europe.",
+        "It is not clear when he will race again, beyond the team saying it will not set a return date before next season. The team also said Pogacar has signed a two-year contract extension through 2032. His recovery, and how quickly he can resume full training, remain the main unknowns."
+      ],
+      "changes": "Fans will not see Pogacar defend his world title or race again this year.",
+      "unchanged": "This does not end his career, and his team says the focus is a full recovery rather than a rushed return.",
+      "category": "sport",
+      "sources": [
+        "BBC Sport",
+        "The Guardian UK Sport"
+      ],
+      "source_count": 2,
+      "url": "https://www.bbc.co.uk/sport/cycling/articles/c1dle4xep96o?at_medium=RSS&at_campaign=rss",
+      "photo": {
+        "url": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/7c80/live/c8178300-a3dd-11f1-9323-c53d27c293d7.jpg",
+        "credit": "BBC Sport"
+      },
+      "published": "2026-09-05T12:11:51+00:00",
+      "age_hours": 1.9,
+      "importance": 80,
+      "instant": 58.4,
+      "cover": {
+        "title": "Pogacar Out For Season",
+        "standfirst": "Tadej Pogacar will not race again in 2026 after his Vuelta a Espana crash last month. The Slovenian suffered a broken collarbone, concussion and a stable neck fracture, and had surgery. He will miss the World Championships in Montreal and his other autumn races while he recovers."
+      },
+      "art": {
+        "tradition": "comic_absurd",
+        "device": "substitution",
+        "label": "Comic absurd",
+        "concept": "On a steep Vuelta-style mountain descent, show the red leader’s bike in a violent front-end skid, but where the front wheel should be there is a white medical neck brace taking the load against the road, visibly buckling and scraping as the bike pitches forward. Keep the rider mostly out of frame — just the red leader’s jersey and arms being thrown ahead — and strip the scene to road, a hint of barrier, and open lower-third asphalt for type; add only two or three tiny bandage strips flicking off the brace like tyre spray so the substitution lands a beat later.",
+        "note": "Quiet, bruised mood; dusty reds, road grey and pale medical white.",
+        "second_beat": "First you read a crash; a moment later you realise the front wheel has become the neck brace, turning the injury into the mechanism of the fall and making this story unmistakable.",
+        "tint": "#7b776e",
+        "accent": "#ead6b7",
+        "titleTop": "#ffffff",
+        "titleBottom": "#ffffff",
+        "topInk": "light",
+        "bottomInk": "light",
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/94c2f5a181ef.webp"
+      }
+    },
+    {
+      "id": "837d828402b8",
+      "tag": "POLITICS",
+      "headline": "Sara Duterte posts bail after arrest order in threat case",
+      "dek": "The Philippine vice president paid 360,000 pesos after a court ordered her arrest over alleged threats against President Ferdinand Marcos Jr.",
+      "dateline": "MANILA —",
+      "paragraphs": [
+        "Philippine Vice President Sara Duterte posted bail on Saturday after a court ordered her arrest a day earlier. She faces three counts of grave threats over remarks in 2024 about having President Ferdinand Marcos Jr. and two others killed. The case now moves forward in court.",
+        "Duterte denies threatening the president. She says she was speaking about her own safety during a worsening political feud. She and Marcos won office together in 2022, but their alliance broke down. She is also facing an impeachment trial in the Senate over separate allegations.",
+        "It is not yet clear whether prosecutors can win a conviction or how fast the case will move. A conviction could bar Duterte from future public office, including a 2028 presidential run. She remains vice president for now, and the larger Marcos-Duterte power struggle is still unfolding."
+      ],
+      "changes": "An ordinary reader should now see Duterte's clash with Marcos as a live court case, not only a political feud.",
+      "unchanged": "This does not remove Duterte from office today, and it does not settle whether she will be convicted or impeached.",
+      "category": "politics",
+      "sources": [
+        "ABC News International",
+        "NPR World"
+      ],
+      "source_count": 2,
+      "url": "https://abcnews.com/International/wireStory/philippines-vice-president-duterte-posts-bail-after-arrest-136221580",
+      "photo": {
+        "url": "https://s.abcnews.com/images/International/wirestory_253a1caa41ef2b831d307fbe2b0489df_4x3_384.jpg",
+        "credit": "ABC News International"
+      },
+      "published": "2026-09-05T10:39:32+00:00",
+      "age_hours": 3.4,
+      "importance": 88,
+      "instant": 57.7,
+      "cover": {
+        "title": "Duterte Posts Bail",
+        "standfirst": "Philippine Vice President Sara Duterte posted 360,000 pesos bail in Manila on Saturday after a court ordered her arrest over alleged threats against President Ferdinand Marcos Jr., his wife and an ally. She denies the charges. The criminal case and her separate impeachment trial will now continue."
       },
       "art": {
         "tradition": "photo_still_life",
         "device": "containment",
         "label": "Object photograph",
-        "concept": "On pale red seamless paper, place a recognisable high-end server GPU cooler shroud diagonally across the upper half of the frame, tipped so it reads as an emptied shell rather than a hero object. From its open end, a lively spill of many identical cheap USB sticks pours outward and fans across the upper two-thirds, with a few still caught in the lip as if mid-flow; keep the lower third almost bare for type. Light it flat and deadpan so the contrast does the work: one expensive hardware vessel, emptied into a multitude of low-cost portable copies.",
-        "note": "Sharp, public-argument mood; red, blue, black, and off-white.",
-        "second_beat": "First read: costly AI hardware versus cheap distribution; second beat: the valuable thing is no longer the chip itself but the many inexpensive open models escaping from it.",
-        "tint": "#d32f24",
-        "accent": "#d32e22",
+        "concept": "On a plain studio sweep in a single muted colour, place a clear tamper-evident evidence bag slightly off-centre in the upper half of frame, leaving the entire lower third empty for type. Inside the sealed bag: one tight rubber-banded bundle of Philippine peso notes and, pressed visibly against the plastic, a small polished vice-presidential seal-like medallion or office insignia shape with no readable text; light it flat and forensic, with just enough crinkle in the plastic to show the bag has been closed around both objects. Keep everything else out: no extra props, no labels, no courtroom cues.",
+        "note": "Tense, public, procedural; red, black and off-white palette.",
+        "second_beat": "First it reads as bail cash bagged as evidence; a beat later, the office itself appears trapped inside the money and the case.",
+        "tint": "#b60f0e",
+        "accent": "#a80c0c",
         "titleTop": "#ffffff",
         "titleBottom": "#ffffff",
         "topInk": "light",
         "bottomInk": "light",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/64095ba4fe1f.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/837d828402b8.webp"
       }
     },
     {
-      "id": "e926f4d36255",
-      "tag": "POLITICS",
-      "headline": "Trump downplays Iran conflict as strikes and diplomacy continue",
-      "dek": "He called the fighting \"small potatoes\" even as the U.S. weighed another strike, pushed a U.N. referral, and approved a $5 billion Saudi arms sale.",
-      "dateline": "WASHINGTON —",
+      "id": "fed398631f72",
+      "tag": "SCIENCE",
+      "headline": "Dark matter detector logged one unexplained event deep underground",
+      "dek": "The LZ experiment in South Dakota saw a single xenon strike in 2023 that does not match any known particle signal.",
+      "dateline": "SOUTH DAKOTA — LZ",
       "paragraphs": [
-        "President Trump said the conflict with Iran was minor for the United States, while also warning that U.S. forces could strike Iran's Pickaxe Mountain site soon. His comments came as Iranian media reported explosions near Kharg Island and Western powers prepared a new push at the U.N. nuclear watchdog.",
-        "The fighting began after U.S. and Israeli attacks on Iranian nuclear sites earlier this year. Vice President JD Vance said he would not call the conflict a war and said major combat had ended after about six weeks. Trump publicly used both terms, calling it a military conflict and also a war.",
-        "It is still unclear whether the U.S. will launch another strike, whether Iran will answer with more attacks, and whether the IAEA board will vote to refer Iran to the U.N. Security Council next week. Even if that happens, Russia and China could block any new U.N. punishment."
+        "Scientists running the LZ dark matter detector said they found one strange particle event in data from 2023 and decided to publish it now. The signal came from nearly a mile underground and does not fit any interaction the team expected to see in the detector.",
+        "LZ is a seven-ton tank of liquid xenon in a former South Dakota gold mine. It is built to catch rare collisions between ordinary atoms and dark matter, the unseen material thought to make up most of the universe's mass and help hold galaxies together.",
+        "No one knows what caused this event. It could be a statistical fluke, an unknown background effect, or a sign of physics beyond standard dark matter models. The result falls far short of the proof scientists require, so other detectors will now try to check for the same kind of hit."
       ],
-      "changes": "For ordinary readers, this means the U.S. is still treating Iran as an active military and diplomatic problem, even while officials soften the language.",
-      "unchanged": "It does not mean a full new U.S. ground war has begun or that the U.N. is about to impose immediate new sanctions.",
-      "category": "politics",
+      "changes": "For now, it means dark matter searches may need to watch for rarer, higher-energy signals than many standard models predicted.",
+      "unchanged": "This does not mean dark matter has been discovered, and it does not change everyday life or settled physics yet.",
+      "category": "science",
       "sources": [
-        "CBS News World",
-        "NBC News",
-        "PBS NewsHour Politics",
-        "TRT World",
-        "The Japan Times",
-        "The Straits Times"
+        "Futurism"
       ],
-      "source_count": 6,
-      "url": "https://www.cbsnews.com/live-updates/iran-war-us-trump-diesel-gas-prices-labor-day/",
-      "published": "2026-09-05T07:28:04+00:00",
-      "age_hours": 5.2,
-      "importance": 80,
-      "instant": 55.1,
+      "source_count": 1,
+      "url": "https://futurism.com/space/something-strange-dark-matter-detector",
+      "photo": {
+        "url": "https://futurism.com/wp-content/uploads/2026/09/something-strange-dark-matter-detector.jpg?quality=85&w=2048",
+        "credit": "Futurism"
+      },
+      "published": "2026-09-05T14:02:00+00:00",
+      "age_hours": 0.0,
+      "importance": 70,
+      "instant": 57.6,
       "cover": {
-        "title": "Trump Shrugs Off Iran Fight",
-        "standfirst": "President Trump said Friday that the Iran conflict was \"small potatoes\" for the United States, even as he threatened a possible strike on Pickaxe Mountain. Iranian media reported blasts near Kharg Island, and the U.S., Britain, France and Germany are preparing a vote next week on referring Iran to the U.N. Security Council."
+        "title": "LZ Detector Sees Strange Hit",
+        "standfirst": "At the LZ dark matter detector in South Dakota, physicists found one unexplained particle event in 2023 inside seven tons of liquid xenon nearly a mile underground. The signal is too weak to count as a discovery. Teams at other detectors, including XENONnT and PandaX, will now look for a matching event."
       },
       "art": {
         "tradition": "minimal_mark",
         "device": "substitution",
         "label": "Minimal mark",
-        "concept": "On a stark white cover, place a single U.N. Security Council gavel off-centre and caught mid-swing, angled down toward the lower right, with ample quiet space across the lower third for type. Strip it to silhouette-level essentials: the handle and striking pose must read instantly as a gavel, but the head is not wood — it is unmistakably a bunker-buster bomb form, cleanly substituted in one piece, so the object reads first as procedure and a beat later as impending strike.",
-        "note": "Tense and spare; muted red, navy, sand, and black.",
-        "second_beat": "First you see a diplomatic gavel coming down; a moment later you realise the blow itself is a bomb, collapsing U.N. referral and U.S. military action into the same act.",
-        "tint": "#fcf9f3",
-        "accent": "#cecdc9",
-        "titleTop": "#484846",
-        "titleBottom": "#484846",
+        "concept": "A stark white cover with a single black silhouette hanging high and slightly off-centre: at first glance it is the familiar mine elevator cage descending into a shaft, suspended by one thin cable from the top edge. On the second look, the 'cage' is unmistakably the LZ detector tank — a clean cylindrical vessel with the proportions and domed ends of the xenon chamber, not a lift — dropping into empty white depth; keep the entire lower third clear and untouched for type.",
+        "note": "Quiet, precise, subterranean mood; deep charcoal, slate, and cold xenon blue.",
+        "second_beat": "First it reads as the old Homestake mine lift going down; then the substituted form lands, and the detector itself becomes the thing lowered into the underground unknown to catch one inexplicable strike.",
+        "tint": "#fefaf5",
+        "accent": "#5d5c5b",
+        "titleTop": "#4a4a49",
+        "titleBottom": "#4a4a49",
         "topInk": "dark",
         "bottomInk": "dark",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/e926f4d36255.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/fed398631f72.webp"
       }
     },
     {
-      "id": "964b766f838e",
-      "tag": "NUCLEAR",
-      "headline": "Ceasefire near Zaporizhzhia plant allows urgent power line repairs",
-      "dek": "The pause in fighting is meant to help restore outside electricity to Europe's largest nuclear power plant.",
-      "dateline": "IAEA",
+      "id": "785ad947fe30",
+      "tag": "SPACE",
+      "headline": "Isar Aerospace set for new orbital launch attempt from Norway",
+      "dek": "The German company's Spectrum rocket is due to lift off tonight from Andoya with six payloads after months of delays and one failed debut.",
+      "dateline": "ANDOYA, Norway —",
       "paragraphs": [
-        "A local ceasefire has taken effect around the Zaporizhzhia Nuclear Power Plant, the International Atomic Energy Agency said on Sept. 5. The pause is meant to let crews repair a damaged power line and restore external electricity to the site. That matters because the plant needs steady outside power for safety systems.",
-        "The Zaporizhzhia plant in southern Ukraine is Europe's largest nuclear power station. It has repeatedly lost outside power during the war and has had to rely on backup systems. Even when reactors are not generating electricity, the site still needs power to cool nuclear fuel and run essential equipment.",
-        "It is not yet clear how long the ceasefire will hold, how quickly repairs can be completed, or when a stable external supply will be fully restored. The wider war around the plant has not ended. Any new shelling, damage, or technical fault could again put the facility under pressure."
+        "Isar Aerospace is due to try again today to launch its Spectrum rocket from Andoya Space Center in northern Norway. If it reaches orbit, it would be the first rocket to do so from European soil. The launch window opens at 10 p.m. local time.",
+        "Spectrum is a two-stage rocket built by the German company Isar for small and medium-size satellites. Its first flight, from the same site in March 2025, failed less than a minute after liftoff. Investigators blamed a vent valve opening and a loss of attitude control.",
+        "It is not clear whether Spectrum can complete the full mission after earlier scrubs for valve, leak, weather and fluid-system problems. This flight carries five cubesats and one scientific experiment, so the test now matters to customers as well as to Isar."
       ],
-      "changes": "For nearby residents and anyone following nuclear safety, the immediate risk falls if outside power is restored and backup systems are used less.",
-      "unchanged": "This does not mean the plant is back to normal or that the fighting around southern Ukraine has been settled.",
+      "changes": "For ordinary readers, this could open a new European launch option for small satellites and the services that depend on them.",
+      "unchanged": "It does not mean Europe suddenly has routine independent access to space; one successful flight would be an early step, not a finished system.",
       "category": "science",
       "sources": [
-        "Anadolu Agency English",
-        "NV.ua English",
-        "TRT World"
+        "Space.com"
       ],
-      "source_count": 3,
-      "url": "https://english.nv.ua/russian-war/local-ceasefire-begins-near-zaporizhzhia-nuclear-plant-50638778.html",
-      "published": "2026-09-05T11:22:00+00:00",
-      "age_hours": 1.3,
+      "source_count": 1,
+      "url": "https://www.space.com/space-exploration/launches-spacecraft/isar-aerospace-second-launch-norway-andoya-spaceport-spectrum-rocket",
+      "photo": {
+        "url": "https://cdn.mos.cms.futurecdn.net/XsS7CFG8tJ2yLA8Uau3myE-1280-80.jpg",
+        "credit": "Space.com"
+      },
+      "published": "2026-09-05T14:00:00+00:00",
+      "age_hours": 0.1,
       "importance": 70,
-      "instant": 55.1,
+      "instant": 57.4,
       "cover": {
-        "title": "Ceasefire at Nuclear Plant",
-        "standfirst": "A local ceasefire began near the Zaporizhzhia Nuclear Power Plant on Sept. 5, the IAEA said. The aim is to repair a power line and restore outside electricity to the site. The plant still needs steady power for cooling and safety systems, even when reactors are not producing electricity."
+        "title": "Spectrum Launches From Norway",
+        "standfirst": "Isar Aerospace plans to launch its 28-meter Spectrum rocket from Andoya Space Center in northern Norway at 10 p.m. local time today. The German company is carrying five cubesats and one scientific experiment. If the rocket reaches orbit, it will be the first to do so from European soil."
       },
       "art": {
-        "tradition": "made_object",
-        "device": "the_absence",
-        "label": "Made object",
-        "concept": "Build a very stripped-down handmade model of the Zaporizhzhia plant on a flat bright-blue card: two unmistakable pale-grey cooling towers and a low reactor block clustered at left, with two thin pylons leading away to the right. Between the pylons, leave a clean, obvious gap where the external transmission line should be; from the far right edge, a tiny orange repair cherry-picker is just entering toward that break, its arm raised but not yet touching. Keep the lower third almost empty blue, with all the action riding the upper half and the missing line doing the work.",
-        "note": "Calm but tense; muted grey-blue palette with one sharp line of electric yellow.",
-        "second_beat": "First you see a nuclear plant and a repair scene; a beat later you realise the subject is the absence itself — the whole danger is one missing outside connection.",
-        "tint": "#0088de",
-        "accent": "#008ce0",
+        "tradition": "decorative_flat",
+        "device": "before_and_after",
+        "label": "Decorative flat",
+        "concept": "Show one Andoya launch in two stacked states using the same stripped-down coastal geometry so the place is unmistakable: low island, launch pad, bands of dark sea and pale Nordic sky. In the lower half, Spectrum’s first attempt is already going wrong — the rocket has just lifted but is tilting off-axis, its exhaust breaking into ragged fragments; in the upper half, tonight’s attempt rises from the same pad dead straight, clean plume, climbing into open sky. Keep the lower third quiet with only the pad, shoreline and a tight cluster of six tiny payload shapes waiting below the divide; above, those six reappear separated as a delicate trail following the successful rocket.",
+        "note": "Tense and clean; cold blues and blacks with a hard white-orange engine flare.",
+        "second_beat": "First read: failure versus success in the same place; second beat: the six payloads move from a waiting cluster below to a released trail above, turning the image into this specific delayed second attempt.",
+        "tint": "#2d4f82",
+        "accent": "#132744",
         "titleTop": "#ffffff",
         "titleBottom": "#ffffff",
         "topInk": "light",
         "bottomInk": "light",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/964b766f838e.webp"
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/785ad947fe30.webp"
       }
     },
     {
-      "id": "4f9a6cb33673",
-      "tag": "HEALTH",
-      "headline": "Justice Department broadens scrutiny of virus researchers beyond Fauci",
-      "dek": "A federal inquiry appears to reach past one public figure and into a wider group of scientists tied to pandemic-era research.",
+      "id": "4eb41a75750f",
+      "tag": "CRYPTO",
+      "headline": "White House review begins for SEC rewrite on crypto custody",
+      "dek": "A new SEC rule draft would spell out how advisers and investment companies must hold digital assets after an earlier proposal was dropped.",
       "dateline": "WASHINGTON —",
       "paragraphs": [
-        "The Justice Department is quietly investigating Dr. Anthony Fauci and other virus scientists, according to the summary of new reporting. The effort appears broader than the public fights in Congress. It matters now because Fauci has already become a political target, while federal investigators may be examining a wider set of research decisions and contacts.",
-        "Fauci led the National Institute of Allergy and Infectious Diseases for decades and became one of the most visible public officials during the Covid pandemic. Congressional Republicans have spent years attacking his handling of the crisis and questioning virus research links. A Justice Department inquiry would be separate from those hearings and could reach other researchers beyond government service.",
-        "It is still unclear what conduct investigators are examining, how many scientists are involved, or whether anyone will face charges. The full article text is unavailable, so key details are missing. It is also not known whether the inquiry centers on funding, public statements, records, outside collaborations, or some combination of those issues."
+        "A rewritten SEC rule on custody of digital assets has entered White House review, a late step before a federal proposal is released. The draft would apply to investment advisers and investment companies. It comes after the SEC withdrew a separate 2023 plan and started over on this part of crypto regulation.",
+        "Custody rules govern who can hold client assets and what safeguards they must use. For crypto, that has been a basic problem because tokens can sit in digital wallets, move across blockchains, and be lost through bad controls or theft. Advisers and funds have lacked clear federal guidance on what counts as proper custody.",
+        "The draft text is not public yet, so key details are still unknown. It is not clear which digital assets would be covered, what firms would qualify as custodians, or how strict the operational requirements would be. White House review can also lead to changes before the proposal is formally published."
       ],
-      "changes": "For ordinary readers, this means pandemic-era research decisions may face legal review, not just political criticism on television and in Congress.",
-      "unchanged": "It does not by itself prove wrongdoing by Fauci or any other scientist, and it does not change current medical advice or the basic history of Covid.",
-      "category": "health",
+      "changes": "If you invest through a fund or adviser, the government may soon set clearer rules on where your crypto can be held.",
+      "unchanged": "This does not mean crypto is newly approved, banned, or made safer overnight for people buying tokens on their own.",
+      "category": "business",
       "sources": [
-        "RealClearScience",
-        "The New York Times Science"
+        "The Defiant"
       ],
-      "source_count": 2,
-      "url": "https://www.nytimes.com/2026/09/05/health/fauci-morens-covid-prosecutions.html",
-      "published": "2026-09-05T09:00:49+00:00",
-      "age_hours": 1.5,
-      "importance": 70,
-      "instant": 52.6,
+      "source_count": 1,
+      "url": "https://thedefiant.io/converge/regulation/sec-crypto-custody-rewrite-enters-white-house-review",
+      "photo": {
+        "url": "https://cdn.sanity.io/images/6oftkxoa/production/6d9fbb8531c1aa6addad885741ca06e35d79f654-2048x1152.png",
+        "credit": "The Defiant"
+      },
+      "published": "2026-09-05T14:03:51+00:00",
+      "age_hours": 0.0,
+      "importance": 65,
+      "instant": 53.6,
       "cover": {
-        "title": "D.O.J. Examines Virus Scientists",
-        "standfirst": "A Justice Department investigation appears to extend beyond Anthony Fauci to a wider circle of researchers tied to pandemic-era virus work. The public knows little about its scope, targets, or legal theory. What comes next depends on what investigators were reviewing and whether they found evidence of crimes."
+        "title": "SEC Rewrites Crypto Custody",
+        "standfirst": "A new SEC draft on crypto custody has reached White House review in Washington, a key step before publication. The rule would cover investment advisers and investment companies and explain how digital assets should be held. It follows the withdrawal of a separate 2023 proposal. The text is still not public."
       },
       "art": {
         "tradition": "photo_still_life",
-        "device": "literalised_phrase",
+        "device": "containment",
         "label": "Object photograph",
-        "concept": "On a deep DOJ-blue seamless, stage a forensic dusting in progress: a broad, soft fingerprint brush sweeps diagonally across a row of small clear lab vials, with one vial already behind the brush and several more still ahead of it. Keep the powder arc faint but visible in the air and on the tabletop, and make the vials unmistakably scientific by their shape and caps alone—no labels, no text, no extra props; leave the lower third mostly clean for type.",
-        "note": "Cool, clinical light; muted blues and grays.",
-        "second_beat": "First it reads as crime-scene forensics, then you notice the brush has moved beyond a single vial and is dusting a whole line—scrutiny widening past one figure into a broader set of researchers.",
-        "tint": "#102f60",
-        "accent": "#0f2f60",
-        "titleTop": "#c3cbd7",
-        "titleBottom": "#c3cbd7",
-        "topInk": "light",
-        "bottomInk": "light",
-        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/4f9a6cb33673.webp"
+        "concept": "On a flat pale blue seamless, stage a small matte-black hardware crypto wallet halfway jammed into a narrow transparent document sleeve attached to a crisp stack of official-looking filing papers with ruled lines, boxes and a blind embossed seal shape but no readable text. The wallet is visibly too thick: the plastic sleeve bows outward, the top sheet buckles, and one corner catches as if the paperwork itself is trying and failing to hold the asset; keep the action in the upper half so the lower third stays clean for type.",
+        "note": "Cool, official mood; gray, silver, and muted blue palette.",
+        "second_beat": "First read: crypto and official custody paperwork; second beat: the asset physically does not fit the container, turning the custody-rule problem into one stuck, failing action.",
+        "tint": "#91b1cb",
+        "accent": "#95b4ce",
+        "titleTop": "#0f1215",
+        "titleBottom": "#0f1215",
+        "topInk": "dark",
+        "bottomInk": "dark",
+        "image_url": "https://sdhdylsfngiybvoltoks.supabase.co/storage/v1/object/public/images/today/2026-09-05/4eb41a75750f.webp"
       }
     }
   ]

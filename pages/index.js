@@ -74,6 +74,14 @@ export default function Today() {
       const rect = frame.getBoundingClientRect();
       frame.style.setProperty('--pw', `${rect.width}px`);
       frame.style.setProperty('--ph', `${rect.height}px`);
+      // The paragraph hangs off the bottom of a headline whose height depends
+      // on how many lines it wrapped to, so it has to be measured, not assumed.
+      const title = frame.querySelector('.title');
+      const standfirst = frame.querySelector('.standfirst');
+      if (title && standfirst) {
+        const t = title.getBoundingClientRect();
+        standfirst.style.top = `${t.bottom - rect.top + rect.width * 0.026}px`;
+      }
     });
     stories.forEach((story, i) => {
       if (!story.art?.image_url) paintFallback(fallbackRefs.current[i], story, edition);
@@ -281,7 +289,6 @@ export default function Today() {
 
               <div className="kicker">{spaced(story.tag)}</div>
               <h2 className="title">{story.cover?.title || story.headline}</h2>
-              <div className="rule" />
               <p className="standfirst">{story.cover?.standfirst || story.dek}</p>
               <div className="colophon">{footer}</div>
 
@@ -294,15 +301,14 @@ export default function Today() {
               <div className="read">Read ↑</div>
             </div>
 
-            <article className="story">
-              <div className="top">
-                <button className="back" onClick={() => setOpenIndex(null)}>← Poster</button>
-                <span>{i + 1} of {stories.length}</span>
-              </div>
-
+            <article
+              className="story"
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => { if (!e.target.closest('a')) setOpenIndex(null); }}
+            >
               <div className="storyKicker">{story.tag}</div>
               <h2>{story.headline}</h2>
-              {story.dek ? <p className="dek">{story.dek}</p> : null}
 
               <div className="by">
                 {story.dateline}
@@ -310,33 +316,30 @@ export default function Today() {
                 {story.source_count > 1 ? ` · ${story.source_count} outlets` : ''}
               </div>
 
+              {story.photo?.url ? (
+                <figure className="photo">
+                  <img src={story.photo.url} alt="" loading="lazy" />
+                  {story.url ? (
+                    <figcaption>
+                      <a href={story.url} target="_blank" rel="noreferrer">
+                        {hostOf(story.url)}
+                      </a>
+                    </figcaption>
+                  ) : null}
+                </figure>
+              ) : null}
+
               {(story.paragraphs || []).map((para, k) => (
-                <p key={k} className={k === 0 ? 'drop' : ''}>{para}</p>
+                <p key={k}>{para}</p>
               ))}
 
-              <div className="box">
-                <div>
-                  <b>What it changes</b>
-                  <span>{story.changes}</span>
-                </div>
-                <div>
-                  <b>What it doesn&apos;t</b>
-                  <span>{story.unchanged}</span>
-                </div>
-              </div>
+              {story.url ? (
+                <a className="readAt" href={story.url} target="_blank" rel="noreferrer">
+                  Read it at {hostOf(story.url)} →
+                </a>
+              ) : null}
 
-              <div className="src">
-                {(story.sources || []).join(' · ')}
-                {story.url ? (
-                  <>
-                    <br />
-                    <a href={story.url} target="_blank" rel="noreferrer">
-                      Read it at {hostOf(story.url)} →
-                    </a>
-                  </>
-                ) : null}
-                {story.art?.label ? <><br />Illustration: {story.art.label}</> : null}
-              </div>
+              <div className="close">Tap anywhere to close</div>
             </article>
           </section>
         );
@@ -421,9 +424,9 @@ export default function Today() {
         }
         .tile {
           position: relative; overflow: hidden; padding: 0; background: #ddd8cc;
-          border-radius: 2px;
+          border-radius: 10px;
         }
-        .tile.hero { grid-column: 1 / -1; grid-row: 1 / 3; }
+        .tile.hero { grid-column: 1 / -1; grid-row: 1 / 3; border-radius: 14px; }
         .tile img, .tileFallback {
           position: absolute; inset: 0; width: 100%; height: 100%;
           object-fit: cover; display: block;
@@ -474,7 +477,7 @@ export default function Today() {
                                       rgba(var(--scrim-bottom), ${TYPE.scrimAlpha}));
         }
 
-        .kicker, .title, .rule, .standfirst, .colophon {
+        .kicker, .title, .standfirst, .colophon {
           position: absolute; left: ${TYPE.margin * 100}%;
           width: ${(1 - TYPE.margin * 2) * 100}%;
           pointer-events: none; margin: 0;
@@ -482,30 +485,25 @@ export default function Today() {
         .kicker {
           top: calc(var(--ph) * ${TYPE.kickerY}); transform: translateY(-100%);
           color: var(--accent);
-          font-weight: 700; font-size: calc(var(--pw) * 0.03); letter-spacing: .02em;
+          font-weight: 700; font-size: calc(var(--pw) * 0.028); letter-spacing: .02em;
         }
         .title {
-          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.8em);
-          color: var(--ink-top);
-          font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
+          top: calc(var(--ph) * ${TYPE.titleTop}); transform: translateY(-0.78em);
+          color: var(--ink-bottom);
+          font-family: Anton, Impact, 'Arial Narrow', sans-serif; font-weight: 400;
           font-size: calc(var(--pw) * ${TYPE.titleSize});
-          line-height: ${TYPE.titleLead}; letter-spacing: -.015em;
-          text-wrap: balance;
-        }
-        .rule {
-          top: calc(var(--ph) * ${TYPE.ruleY});
-          width: 13%; height: calc(var(--pw) * 0.006);
-          background: var(--accent); border-radius: 2px;
+          line-height: ${TYPE.titleLead}; letter-spacing: .002em;
+          text-transform: uppercase; text-wrap: balance;
         }
         .standfirst {
-          top: calc(var(--ph) * ${TYPE.footTop}); transform: translateY(-0.8em);
-          color: var(--ink-bottom);
+          top: calc(var(--ph) * ${TYPE.titleTop} + var(--pw) * ${TYPE.footGap} + 1.05em);
+          color: var(--ink-bottom); opacity: .9;
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.footSize});
           line-height: ${TYPE.footLead};
         }
         .colophon {
           top: calc(var(--ph) * ${TYPE.colophonY}); transform: translateY(-100%);
-          color: var(--ink-bottom); opacity: .62;
+          color: var(--ink-bottom); opacity: .55;
           font-weight: 500; font-size: calc(var(--pw) * ${TYPE.colophonSize});
           letter-spacing: .06em;
         }
@@ -526,51 +524,48 @@ export default function Today() {
         /* ---------------------------------------------------------- story */
         .story {
           position: absolute; inset: 0; z-index: 4;
-          transform: translateY(100%); transition: transform .5s cubic-bezier(.2,.8,.2,1);
-          background: #f4f0e6; color: #111; border-radius: 20px 20px 0 0;
-          overflow-y: auto; -webkit-overflow-scrolling: touch;
-          padding: 20px 20px calc(48px + env(safe-area-inset-bottom));
-          font-family: Georgia, 'Times New Roman', serif;
-          box-shadow: 0 -20px 60px rgba(0,0,0,.35);
+          transform: translateY(100%); transition: transform .45s cubic-bezier(.2,.8,.2,1);
+          background: #faf8f3; color: #14140f;
+          overflow-y: auto; -webkit-overflow-scrolling: touch; cursor: pointer;
+          padding: max(28px, env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom));
+          font-family: 'Inter Tight', system-ui, sans-serif;
         }
         .poster.open .story { transform: none; }
-        .story .top {
-          display: flex; justify-content: space-between; align-items: center;
-          font-family: 'Inter Tight', system-ui, sans-serif; font-size: 12px; font-weight: 600;
-          border-bottom: 2px solid #111; padding-bottom: 8px;
-        }
         .storyKicker {
-          margin-top: 16px; font-family: 'Inter Tight', system-ui, sans-serif;
-          font-size: 11px; font-weight: 700; letter-spacing: .09em;
+          font-size: 11px; font-weight: 700; letter-spacing: .14em;
+          text-transform: uppercase; color: #9a9689;
         }
         .story h2 {
-          font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
-          font-size: clamp(26px, 7vw, 42px); line-height: 1.05; margin-top: 8px;
-          letter-spacing: -.01em;
+          font-family: Anton, Impact, 'Arial Narrow', sans-serif; font-weight: 400;
+          font-size: clamp(28px, 8vw, 44px); line-height: .98; margin-top: 10px;
+          text-transform: uppercase; letter-spacing: .004em;
         }
-        .dek { margin-top: 12px; font-size: 16px; line-height: 1.4; color: #444; font-style: italic; }
         .by {
-          margin-top: 14px; font-family: 'Inter Tight', system-ui, sans-serif; font-size: 11px;
-          color: #777; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc;
-          padding: 8px 0; text-transform: uppercase; letter-spacing: .04em;
+          margin-top: 12px; font-size: 11px; color: #9a9689;
+          text-transform: uppercase; letter-spacing: .07em;
         }
-        .story p { margin-top: 15px; font-size: 16.5px; line-height: 1.55; }
-        .story p.drop::first-letter {
-          font-family: 'Playfair Display', Georgia, serif; font-weight: 900;
-          font-size: 3.1em; float: left; line-height: .85; padding: 4px 8px 0 0;
+        .photo { margin: 22px 0 4px; }
+        .photo img {
+          width: 100%; display: block; border-radius: 14px; background: #eeebe3;
         }
-        .box {
-          margin-top: 22px; display: grid; gap: 12px; background: #fff; border: 1px solid #ddd;
-          padding: 15px; border-radius: 4px; font-family: 'Inter Tight', system-ui, sans-serif;
+        .photo figcaption {
+          margin-top: 7px; font-size: 11px; color: #9a9689;
+          text-transform: uppercase; letter-spacing: .06em;
         }
-        .box b { display: block; font-size: 11px; letter-spacing: .07em;
-                 text-transform: uppercase; margin-bottom: 4px; }
-        .box span { font-size: 14.5px; line-height: 1.45; color: #333; }
-        .src {
-          margin-top: 18px; font-family: 'Inter Tight', system-ui, sans-serif;
-          font-size: 11.5px; color: #888; line-height: 1.7;
+        .photo figcaption a { color: #9a9689; text-decoration: underline; }
+        .story p {
+          margin-top: 18px; font-size: 17px; line-height: 1.62; color: #232019;
+          max-width: 34em;
         }
-        .src a { color: #111; font-weight: 600; }
+        .readAt {
+          display: inline-block; margin-top: 26px; font-size: 13px; font-weight: 700;
+          letter-spacing: .02em; color: #14140f;
+          border-bottom: 2px solid var(--accent, #14140f); padding-bottom: 2px;
+        }
+        .close {
+          margin-top: 34px; font-size: 10.5px; letter-spacing: .12em;
+          text-transform: uppercase; color: #bdb8ab;
+        }
 
         /* ------------------------------------------------------------ end */
         .end { background: #111; display: flex; flex-direction: column; justify-content: center; padding: 28px; }
