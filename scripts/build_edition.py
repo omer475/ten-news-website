@@ -55,6 +55,7 @@ FETCH_TIMEOUT = 8            # seconds per feed
 FETCH_WORKERS = 60
 SHORTLIST = 220              # clusters sent to the importance model
 EDITION_SIZE = 10
+MIN_PUBLISHABLE = 6          # below this, yesterday's edition is better than this one
 MAX_PER_CATEGORY = 2         # diversity guard on the final ten
 MAX_PER_SOURCE = 2
 
@@ -1289,6 +1290,20 @@ def build(now):
 
 
 def save(edition):
+    """
+    Publish — unless the run came out too thin to be worth publishing.
+
+    The first live cron ran without an API key: it read 2,641 articles, wrote
+    nothing, and pushed an empty edition over a good one, so the site showed no
+    news at all. A run that fails should leave yesterday's edition standing,
+    which is a bad edition rather than no edition.
+    """
+    count = len(edition.get("stories") or [])
+    if count < MIN_PUBLISHABLE:
+        log(f"  REFUSING TO PUBLISH: only {count} stories survived "
+            f"(need {MIN_PUBLISHABLE}). The previous edition stands.")
+        return False
+
     os.makedirs(OUT_DIR, exist_ok=True)
     for name in (f"{edition['date']}.json", "latest.json"):
         path = os.path.join(OUT_DIR, name)
@@ -1300,7 +1315,7 @@ def save(edition):
     key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not (url and key):
         log("  (no Supabase credentials — file output only)")
-        return
+        return True
     try:
         r = requests.post(
             f"{url.rstrip('/')}/rest/v1/daily_editions?on_conflict=edition_date",
@@ -1314,6 +1329,7 @@ def save(edition):
             + ("" if r.status_code < 300 else f" — {r.text[:200]}"))
     except Exception as exc:
         log(f"  ! supabase upsert failed: {exc}")
+    return True
 
 
 def main():
@@ -1327,9 +1343,11 @@ def main():
     now = datetime.now(timezone.utc)
     log(f"\nTODAY — edition for {now:%Y-%m-%d}\n" + "=" * 60)
     edition = build(now)
-    save(edition)
+    published = save(edition)
     log("=" * 60)
     log(f"Done: {len(edition['stories'])} stories in {time.time() - started:.0f}s")
+    if not published:
+        return 1
     if len(edition["stories"]) < EDITION_SIZE:
         log(f"WARNING: only {len(edition['stories'])}/{EDITION_SIZE} stories survived writing")
         return 1
